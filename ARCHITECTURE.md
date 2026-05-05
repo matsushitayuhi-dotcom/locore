@@ -1,9 +1,9 @@
 # Locore — システムアーキテクチャ設計書
 
-**バージョン**: 0.1
+**バージョン**: 0.2
 **最終更新**: 2026-05-06
 **対象**: Phase 1 (MVP)
-**前提**: [PRD.md](./PRD.md) v0.3 以降
+**前提**: [PRD.md](./PRD.md) v0.4 以降
 
 ---
 
@@ -852,24 +852,15 @@ pnpm dev                         # Next.js + NestJS 同時起動
 
 ## 12. オープンクエスチョン（要決定事項）
 
-1. **モノレポ vs マルチレポ**
-   - 推奨：モノレポ（pnpm workspace + Turborepo）
-   - 理由：型共有、スキーマ共有、原子的変更
-2. **GraphQL を採用するか**
-   - 推奨：MVP は REST、Phase 2 で必要なら追加
-3. **マイグレーション管理ツール**
-   - 候補：Prisma / Drizzle / Kysely
-   - 推奨：Drizzle（型安全、軽量、Supabase との相性良）
-4. **ORM vs Query Builder**
-   - 推奨：Drizzle（Query Builder 寄り、PostGIS の生 SQL も書きやすい）
-5. **テスト戦略の詳細**
-   - 単体テスト：Vitest
-   - E2E：Playwright
-   - 視覚回帰：Chromatic（Phase 2）
-6. **デザインシステム実装**
-   - 推奨：shadcn/ui ベース + 独自トークン
-7. **i18n の初期準備**
-   - 推奨：Phase 1 から `next-intl` で日本語のみ運用、Phase 3 で英語追加時にスムーズ
+本章のオープンクエスチョン全7項目は **[ARCHITECTURE-DECISIONS.md](./ARCHITECTURE-DECISIONS.md)** で詳細解決済み。要約：
+
+1. ~~**モノレポ vs マルチレポ**~~ → **【決定】モノレポ（pnpm workspace + Turborepo）、`apps/` + `packages/` 構成。詳細は [ARCHITECTURE-DECISIONS.md §1](./ARCHITECTURE-DECISIONS.md)**
+2. ~~**GraphQL vs REST**~~ → **【決定】MVP は REST + zod + OpenAPI、tRPC は採用しない。詳細は [ARCHITECTURE-DECISIONS.md §2](./ARCHITECTURE-DECISIONS.md)**
+3. ~~**マイグレーションツール**~~ → **【決定】Drizzle Kit、ステージング先行適用フロー。詳細は [ARCHITECTURE-DECISIONS.md §3](./ARCHITECTURE-DECISIONS.md)**
+4. ~~**ORM vs Query Builder**~~ → **【決定】Drizzle（Query Builder 寄り）+ PostGIS は生 SQL ヘルパー。詳細は [ARCHITECTURE-DECISIONS.md §4](./ARCHITECTURE-DECISIONS.md)**
+5. ~~**テスト戦略**~~ → **【決定】Vitest（単体）+ Playwright（E2E）+ Storybook（コンポーネント）、VRT は M6 以降。詳細は [ARCHITECTURE-DECISIONS.md §5](./ARCHITECTURE-DECISIONS.md)**
+6. ~~**デザインシステム実装**~~ → **【決定】shadcn/ui + Tailwind + 独自デザイントークン、別紙 [DESIGN.md](./DESIGN.md) に詳細。詳細は [ARCHITECTURE-DECISIONS.md §6](./ARCHITECTURE-DECISIONS.md)**
+7. ~~**i18n 初期準備**~~ → **【決定】Phase 1 から `next-intl` で日本語のみ運用、英語追加可能な構造。詳細は [ARCHITECTURE-DECISIONS.md §7](./ARCHITECTURE-DECISIONS.md)**
 
 ---
 
@@ -878,6 +869,7 @@ pnpm dev                         # Next.js + NestJS 同時起動
 | バージョン | 日付 | 変更内容 | 担当 |
 |---------|-----|--------|-----|
 | 0.1 | 2026-05-06 | 初稿作成（Phase 1 MVP 対象）| yuhi |
+| 0.2 | 2026-05-06 | オープンクエスチョン全7項目を解決、詳細は別紙 ARCHITECTURE-DECISIONS.md に分離（§12, §13 を更新）| yuhi |
 
 ---
 
