@@ -1,0 +1,40 @@
+{
+  "name": "locore",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Locore — 在外邦人向け旅行記事マーケットプレイス（パリ先行）モノレポ",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.11.0 <21",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "clean": "turbo run clean && rimraf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\""
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.2.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.11.0",
+    "@eslint/js": "^9.13.0",
+    "eslint-config-prettier": "^9.1.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@locore/ui"
+      ]
+    }
+  }
+}

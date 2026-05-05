@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @locore/ui のスタイルは UI パッケージ完成後にアンコメント */
+/* @import '@locore/ui/styles.css'; */
+
+:root {
+  --font-sans: 'Inter', 'Noto Sans JP', system-ui, sans-serif;
+  color-scheme: light;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

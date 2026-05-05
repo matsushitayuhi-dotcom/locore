@@ -1,0 +1,43 @@
+{
+  "name": "@locore/shared",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Locore 共有 TypeScript ロジック（純粋関数、enum、定数）",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./enums": {
+      "types": "./src/enums.ts",
+      "default": "./src/enums.ts"
+    },
+    "./pricing": {
+      "types": "./src/pricing.ts",
+      "default": "./src/pricing.ts"
+    },
+    "./geo": {
+      "types": "./src/geo.ts",
+      "default": "./src/geo.ts"
+    },
+    "./constants": {
+      "types": "./src/constants.ts",
+      "default": "./src/constants.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"(no tests yet)\" && exit 0",
+    "clean": "rimraf dist .turbo *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3"
+  }
+}
