@@ -4,11 +4,13 @@ import {
   text,
   integer,
   timestamp,
+  jsonb,
   index,
   customType,
 } from 'drizzle-orm/pg-core';
-import { sql } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import { articles } from './articles';
+import { spotCategoryEnum } from './enums';
 
 /**
  * PostGIS GEOGRAPHY(Point, 4326) 型。
@@ -28,8 +30,23 @@ export const point = customType<{
 });
 
 /**
+ * 営業時間 JSONB の構造（参考）：
+ * { mon: ["09:00-18:00"], tue: [...], ..., note?: string }
+ */
+export type OpeningHours = {
+  mon?: string[];
+  tue?: string[];
+  wed?: string[];
+  thu?: string[];
+  fri?: string[];
+  sat?: string[];
+  sun?: string[];
+  note?: string;
+};
+
+/**
  * spots — 記事に紐づくスポット情報。
- * 地理クエリは GIST インデックスを後続マイグレーションで追加する。
+ * 地理クエリは GIST インデックスを別途マイグレーションで追加する。
  */
 export const spots = pgTable(
   'spots',
@@ -41,9 +58,9 @@ export const spots = pgTable(
     name: text('name').notNull(),
     address: text('address'),
     location: point('location').notNull(),
-    category: text('category'),
+    category: spotCategoryEnum('category'),
     priceEstimate: text('price_estimate'),
-    openingHours: text('opening_hours'),
+    openingHours: jsonb('opening_hours').$type<OpeningHours>(),
     tags: text('tags').array().notNull().default([]),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -51,8 +68,16 @@ export const spots = pgTable(
   },
   (table) => ({
     articleIdx: index('spots_article_id_idx').on(table.articleId),
+    categoryIdx: index('spots_category_idx').on(table.category),
   }),
 );
+
+export const spotsRelations = relations(spots, ({ one }) => ({
+  article: one(articles, {
+    fields: [spots.articleId],
+    references: [articles.id],
+  }),
+}));
 
 export type Spot = typeof spots.$inferSelect;
 export type NewSpot = typeof spots.$inferInsert;

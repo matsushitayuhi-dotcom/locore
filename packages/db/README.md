@@ -1,29 +1,116 @@
 # @locore/db
 
-Drizzle ORM で構築したデータベース層。Postgres + PostGIS 前提。
+Drizzle ORM で構築したデータベース層。Postgres + PostGIS 前提（Supabase）。
 
 ## 構成
 
-- `src/schema/` — テーブル定義（schema-first）
+- `src/schema/` — テーブル定義（schema-first、28 テーブル）
 - `src/client.ts` — `createDbClient(url)` で Drizzle インスタンスを生成
-- `drizzle.config.ts` — drizzle-kit 設定
-- `migrations/` — `pnpm --filter @locore/db db:generate` で生成された SQL
-- `seed/` — シードスクリプト（雛形のみ）
+- `drizzle.config.ts` — drizzle-kit 設定（`DATABASE_URL` / `DIRECT_URL` を参照）
+- `migrations/` — `db:generate` で生成された SQL（drizzle-kit DSL から）
+- `migrations/manual/` — 手書き SQL（拡張、GIST/GIN/部分インデックス、RLS、トリガ）
+- `seed/` — シードスクリプト（パリ + テストユーザー + 5記事）
+
+## テーブル一覧（28）
+
+- **Identity**: users, writer_profiles, residency_verifications, sns_links
+- **Catalog**: cities, articles, article_videos, spots
+- **Commerce**: purchases, payouts
+- **Reviews**: reviews
+- **Trips**: trips, trip_days, trip_items, trip_collaborators
+- **UGC**: light_diaries
+- **Editorial**: editor_collections, collection_articles
+- **Moderation・運営**: article_moderation_scores, founding_applications, reports
+- **Crisis**: crisis_events, crisis_source_feeds, crisis_candidates
+- **System**: push_subscriptions, notification_log, exchange_rates, audit_logs
 
 ## ローカル開発
 
-```bash
-# 1. .env で DATABASE_URL を設定（例: Supabase ローカルの URL）
-# 2. スキーマからマイグレーションを生成
-pnpm --filter @locore/db db:generate
+### 1. 依存関係インストール
 
-# 3. 適用
-pnpm --filter @locore/db db:migrate
+```bash
+pnpm install
 ```
+
+### 2. 環境変数設定
+
+`packages/db/.env.example` をコピーして `.env` を作る：
+
+```bash
+cp packages/db/.env.example packages/db/.env
+# DATABASE_URL / DIRECT_URL を編集
+```
+
+ローカル Postgres を Supabase CLI で起動する場合：
+
+```bash
+supabase init   # 初回のみ
+supabase start  # ローカル DB を起動（PostGIS 入り）
+# 出力された Connection string を DATABASE_URL に設定
+```
+
+### 3. マイグレーション
+
+適用順序（重要）：
+
+```bash
+# 1) 拡張を有効化（手動）
+psql $DIRECT_URL -f packages/db/migrations/manual/0001_enable_extensions.sql
+
+# 2) drizzle-kit でスキーマを生成 → 適用
+pnpm --filter @locore/db db:generate
+pnpm --filter @locore/db db:migrate
+
+# 3) インデックス・RLS・トリガを手動適用
+psql $DIRECT_URL -f packages/db/migrations/manual/0002_indexes.sql
+psql $DIRECT_URL -f packages/db/migrations/manual/0003_rls_policies.sql
+psql $DIRECT_URL -f packages/db/migrations/manual/0004_triggers.sql
+```
+
+開発時の手早い反映なら `db:push`（マイグレーションファイルを介さずに直接スキーマを適用）：
+
+```bash
+pnpm --filter @locore/db db:push
+```
+
+### 4. シード投入
+
+```bash
+pnpm --filter @locore/db db:seed
+```
+
+投入内容：
+- cities: Paris (active) / London / NYC (inactive)
+- users: reader 1 + resident_writer 3 (Tier S/A/B) + editor 1
+- writer_profiles: 3
+- articles: パリ 5本（status=published）
+- spots: 各記事 3-5 個
+
+固定 UUID + ON CONFLICT DO UPDATE で冪等。
+
+### 5. Drizzle Studio
+
+```bash
+pnpm --filter @locore/db db:studio
+```
+
+## スクリプト
+
+| script | 用途 |
+| --- | --- |
+| `db:generate` | スキーマからマイグレーション SQL を生成 |
+| `db:push` | マイグレーション介さず直接 DB に反映（開発のみ） |
+| `db:migrate` | 生成済みマイグレーションを適用 |
+| `db:check` | スキーマと DB の差分を確認 |
+| `db:studio` | Drizzle Studio を起動 |
+| `db:seed` | seed/index.ts を実行 |
 
 ## 注意
 
-- PostGIS 拡張は手書きマイグレーションで `CREATE EXTENSION postgis` する必要あり
-- 部分インデックス（例 `WHERE status = 'published'`）は drizzle-kit のサポート外、
-  生 SQL マイグレーションで追加する
-- enum 値は `@locore/shared` の `Tier`／`ArticleStatus`／`WriterRole` と必ず同期させる
+- PostGIS / pg_trgm は手書きマイグレーション（`0001_enable_extensions.sql`）で先に有効化する必要あり
+- 部分インデックス（例 `WHERE status = 'published'`）と GIST/GIN は drizzle-kit のサポート外 → `0002_indexes.sql`
+- RLS ポリシー（`0003_rls_policies.sql`）は Supabase の `auth.uid()` 前提
+- `updated_at` は `0004_triggers.sql` の汎用トリガで自動更新
+- enum 値は `@locore/shared` の `Tier`／`ArticleStatus`／`WriterRole`／`ReviewTag` と必ず同期させる
+- 論理削除：`articles` と `users` のみ `deleted_at`、その他は hard delete
+- 金額は JPY 基軸の `integer`（小数点なし）
