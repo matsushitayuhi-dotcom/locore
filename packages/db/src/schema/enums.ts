@@ -103,6 +103,9 @@ export const reportTargetTypeEnum = pgEnum('report_target_type', [
   'user',
   'review',
   'light_diary',
+  // 'other' は「お問い合わせフォーム」用。target_id は通報対象がないため
+  // ダミーの UUID（NIL UUID 等）を入れて使う想定。reason 列にバグ報告 / 機能要望 等を格納。
+  'other',
 ]);
 
 export const reportStatusEnum = pgEnum('report_status', [

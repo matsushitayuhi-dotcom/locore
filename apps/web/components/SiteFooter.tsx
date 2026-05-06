@@ -34,9 +34,9 @@ export function SiteFooter() {
           ]}
         />
         <FooterColumn
-          title="運営"
+          title="運営・サポート"
           links={[
-            { href: '#', label: 'About' },
+            { href: '/contact', label: 'お問い合わせ' },
             { href: '#', label: '利用規約' },
             { href: '#', label: 'プライバシー' },
             { href: '#', label: '特定商取引法' },

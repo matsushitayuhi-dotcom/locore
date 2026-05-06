@@ -35,6 +35,7 @@
 | `role` | enum | `resident_writer` / `editor` / `light_diarist` / `reader` |
 | `avatar_url` | text | プロフィール画像 URL |
 | `bio` | text | 自己紹介 |
+| `notification_preferences` | jsonb NOT NULL | 通知設定。`{ web_push: {...}, email: {...} }`、各セクションは `article_published` / `trip_reminder` / `crisis_alert` / `purchase_completed` の boolean。デフォルトは web_push 全 ON、email は記事新着のみ OFF。マイグレーション `manual/0005_notification_prefs.sql`。 |
 | `created_at` | timestamptz | |
 | `updated_at` | timestamptz | |
 | `deleted_at` | timestamptz | soft delete |
@@ -408,15 +409,18 @@ AI モデレーション3次元スコア記録。
 |---|---|---|
 | `id` | uuid PK | |
 | `reporter_id` | uuid FK→users NULL可 | 匿名通報も許可 |
-| `target_type` | enum | `article` / `user` / `review` / `light_diary` |
-| `target_id` | uuid | |
-| `reason` | enum | `spam` / `inappropriate` / `misinformation` / `other` |
-| `body` | text | |
+| `target_type` | enum | `article` / `user` / `review` / `light_diary` / `other`（お問い合わせ） |
+| `target_id` | uuid | `target_type='other'` の場合は NIL UUID（`00000000-0000-0000-0000-000000000000`）を格納 |
+| `reason` | text | 通報: `spam` / `inappropriate` / `misinformation` / `copyright` / `other` ／ お問い合わせ: `bug` / `feature` / `terms` / `payment` / `other` |
+| `body` | text | 通報詳細・お問い合わせ本文（zod で 1〜2000 文字を強制） |
 | `status` | enum | `open` / `investigating` / `resolved` / `dismissed` |
 | `resolved_by` | uuid FK→users | |
 | `resolved_at` / `created_at` | timestamptz | |
 
-**SLA**: 72時間以内の一次対応（PRD §10.2）
+**SLA**: 72時間以内の一次対応（PRD §10.2）。運営画面 `/admin/reports` で残り時間表示（緑/黄/赤）。
+
+**お問い合わせ用途**: `target_type='other'` で `reason` にカテゴリ（`bug` 等）を、件名と本文は `body` に
+`「件名: ...\n\n本文」` 形式で格納する。連絡先メールアドレスは `audit_logs.metadata` 経由で記録する。
 
 ---
 

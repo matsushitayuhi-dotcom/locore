@@ -7,6 +7,7 @@ const NAV = [
   { href: '/map', label: 'マップ', icon: MapIcon },
   { href: '/trips', label: '旅程', icon: LayoutList },
   { href: '/collections/col_paris_spring_2026', label: '特集', icon: Sparkles },
+  { href: '/writer/articles', label: '書く', icon: Compass },
 ];
 
 export function SiteHeader() {
@@ -43,7 +44,7 @@ export function SiteHeader() {
           >
             Founders 枠 →
           </Link>
-          <Link href="/writers/wr_junko" aria-label="プロフィールへ">
+          <Link href="/settings/profile" aria-label="設定">
             <Avatar size="sm" className="ring-1 ring-border">
               <AvatarFallback>J</AvatarFallback>
             </Avatar>

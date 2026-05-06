@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, pgEnum, index, jsonb } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { writerProfiles } from './writer_profiles';
 import { articles } from './articles';
@@ -17,6 +17,46 @@ export const writerRoleEnum = pgEnum('writer_role', [
 ]);
 
 /**
+ * 通知設定（JSONB）の TS 型。
+ * Server / Client の両方から参照される構造リテラル。
+ *
+ * - web_push: ブラウザ Push 通知のチャンネル別 ON/OFF
+ * - email: メール通知のチャンネル別 ON/OFF
+ *
+ * チャンネル名は `notification_log.type` enum 相当で
+ * `article_published / trip_reminder / crisis_alert / purchase_completed` の 4 種を扱う。
+ */
+export type NotificationPreferences = {
+  web_push: {
+    article_published: boolean;
+    trip_reminder: boolean;
+    crisis_alert: boolean;
+    purchase_completed: boolean;
+  };
+  email: {
+    article_published: boolean;
+    trip_reminder: boolean;
+    crisis_alert: boolean;
+    purchase_completed: boolean;
+  };
+};
+
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  web_push: {
+    article_published: true,
+    trip_reminder: true,
+    crisis_alert: true,
+    purchase_completed: true,
+  },
+  email: {
+    article_published: false,
+    trip_reminder: true,
+    crisis_alert: true,
+    purchase_completed: true,
+  },
+};
+
+/**
  * users — Supabase auth.users と 1:1。
  * Supabase の認証行とは別に、アプリ独自のプロフィールを格納。
  * 論理削除は deleted_at を採用（コア User データは復元可能性を残す）。
@@ -30,6 +70,10 @@ export const users = pgTable(
     avatarUrl: text('avatar_url'),
     bio: text('bio'),
     role: writerRoleEnum('role').notNull().default('reader'),
+    notificationPreferences: jsonb('notification_preferences')
+      .$type<NotificationPreferences>()
+      .notNull()
+      .default(DEFAULT_NOTIFICATION_PREFERENCES),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),

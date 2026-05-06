@@ -99,6 +99,9 @@ importers:
       '@locore/api-contracts':
         specifier: workspace:*
         version: link:../../packages/api-contracts
+      '@locore/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@locore/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -108,6 +111,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      drizzle-orm:
+        specifier: ^0.36.0
+        version: 0.36.4(@types/react@18.3.28)(postgres@3.4.9)(react@18.3.1)
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
