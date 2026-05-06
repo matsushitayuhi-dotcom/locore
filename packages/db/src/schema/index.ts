@@ -34,6 +34,9 @@ export * from './trip_collaborators';
 // UGC
 export * from './light_diaries';
 
+// Library / Bookmarks
+export * from './bookmarks';
+
 // Editorial
 export * from './editor_collections';
 export * from './collection_articles';

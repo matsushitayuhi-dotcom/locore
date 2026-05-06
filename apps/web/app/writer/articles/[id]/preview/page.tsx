@@ -4,7 +4,7 @@ import { eq, asc } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { Badge } from '@locore/ui';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 
 export const metadata = {
   title: '公開前プレビュー',
@@ -24,7 +24,7 @@ export default async function PreviewArticlePage({
 }: {
   params: { id: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   const articleRows = await db

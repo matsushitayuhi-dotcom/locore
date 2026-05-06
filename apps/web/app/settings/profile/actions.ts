@@ -5,7 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 
 const SNS_PLATFORMS = ['tiktok', 'instagram', 'youtube', 'x', 'blog'] as const;
 type SnsPlatform = (typeof SNS_PLATFORMS)[number];
@@ -41,7 +41,7 @@ export async function updateProfile(input: unknown): Promise<UpdateProfileResult
     };
   }
   const data = parsed.data;
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   await db
@@ -85,7 +85,7 @@ export async function upsertSnsLink(input: unknown): Promise<SnsActionResult> {
     };
   }
   const { platform, url } = parsed.data;
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   const existing = await db
@@ -122,7 +122,7 @@ export async function deleteSnsLink(input: unknown): Promise<SnsActionResult> {
   if (!parsed.success) {
     return { ok: false, error: '不正なリクエスト' };
   }
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   await db

@@ -35,13 +35,8 @@ export default async function AdminReportDetailPage({
 }) {
   if (!UUID_RE.test(params.id)) notFound();
 
-  let user;
-  try {
-    user = await getCurrentUser();
-  } catch {
-    return <Forbidden />;
-  }
-  if (user.role !== 'editor') return <Forbidden />;
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'editor') return <Forbidden />;
 
   const db = getDb();
   const rows = await db

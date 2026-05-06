@@ -4,6 +4,13 @@
 export type Tier = 'S' | 'A' | 'B';
 export type DurationType = '1h' | '半日' | '1日' | '数時間';
 
+/**
+ * 記事の種別タグ。スポット紹介 vs 旅程プラン。
+ * - spot_guide: 個別の店・場所を紹介する記事
+ * - itinerary : 時間軸ありのコース・モデルプラン
+ */
+export type ArticleType = 'spot_guide' | 'itinerary';
+
 export interface Writer {
   id: string;
   name: string;
@@ -35,6 +42,10 @@ export interface Article {
   priceJpy: number;
   tags: string[];
   durationType: DurationType;
+  /**
+   * 記事の種別。`spot_guide`（場所紹介）または `itinerary`（旅程プラン）。
+   */
+  articleType: ArticleType;
   createdAt: string;
   publishedAt: string;
   localScoreAverage: number;

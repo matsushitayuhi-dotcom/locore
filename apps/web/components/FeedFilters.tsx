@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Slider, Button, Badge } from '@locore/ui';
 import { MapIcon, SlidersHorizontal } from '@locore/ui/icons';
 import { ArticleGrid } from './ArticleGrid';
-import type { Article } from '../lib/mock';
+import type { Article, ArticleType } from '../lib/mock';
 
 const TAGS = [
   '朝食',
@@ -36,18 +37,62 @@ const PRICES = [
   { id: 'high', label: '¥1,500〜', min: 1500, max: 99999 },
 ];
 
+type TypeFilter = 'all' | ArticleType;
+
+const TYPE_TABS: { id: TypeFilter; label: string }[] = [
+  { id: 'all', label: 'すべて' },
+  { id: 'spot_guide', label: 'スポット紹介' },
+  { id: 'itinerary', label: '旅程プラン' },
+];
+
+function isTypeFilter(v: string | null | undefined): v is TypeFilter {
+  return v === 'all' || v === 'spot_guide' || v === 'itinerary';
+}
+
 export function FeedFilters({ articles }: { articles: Article[] }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const initialType: TypeFilter = (() => {
+    const v = searchParams?.get('type');
+    return isTypeFilter(v) ? v : 'all';
+  })();
+
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [localRange, setLocalRange] = useState<number[]>([0, 100]);
   const [price, setPrice] = useState<(typeof PRICES)[number]['id']>('all');
   const [sort, setSort] = useState<(typeof SORTS)[number]['id']>('recommend');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>(initialType);
   const [open, setOpen] = useState(false);
+
+  // URL クエリ ?type=... に追従（戻る/進む対応）
+  useEffect(() => {
+    const v = searchParams?.get('type');
+    setTypeFilter(isTypeFilter(v) ? v : 'all');
+  }, [searchParams]);
+
+  const updateTypeFilter = (next: TypeFilter) => {
+    setTypeFilter(next);
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    if (next === 'all') {
+      params.delete('type');
+    } else {
+      params.set('type', next);
+    }
+    const qs = params.toString();
+    const url = qs ? `${pathname}?${qs}#feed` : `${pathname}#feed`;
+    router.replace(url, { scroll: false });
+  };
 
   const filtered = useMemo(() => {
     const priceCfg = PRICES.find((p) => p.id === price) ?? PRICES[0]!;
     const lo = localRange[0] ?? 0;
     const hi = localRange[1] ?? 100;
     const list = articles.filter((a) => {
+      if (typeFilter !== 'all' && a.articleType !== typeFilter) {
+        return false;
+      }
       if (activeTags.length > 0 && !activeTags.some((t) => a.tags.includes(t))) {
         return false;
       }
@@ -77,10 +122,38 @@ export function FeedFilters({ articles }: { articles: Article[] }) {
       return score(b) - score(a);
     });
     return sorted;
-  }, [articles, activeTags, localRange, price, sort]);
+  }, [articles, activeTags, localRange, price, sort, typeFilter]);
 
   return (
     <div>
+      {/* Type tabs (種別) */}
+      <div
+        role="tablist"
+        aria-label="記事の種別で絞り込む"
+        className="mb-3 flex flex-wrap items-center gap-1.5"
+      >
+        {TYPE_TABS.map((t) => {
+          const active = t.id === typeFilter;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => updateTypeFilter(t.id)}
+              className={
+                'inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-medium transition ' +
+                (active
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'border-border bg-background text-foreground/70 hover:border-foreground/30')
+              }
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Filter bar */}
       <div className="mb-6 rounded-lg border border-border bg-card px-4 py-3 shadow-xs">
         <div className="flex flex-wrap items-center gap-3">

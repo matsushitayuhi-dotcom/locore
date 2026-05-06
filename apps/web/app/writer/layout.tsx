@@ -1,39 +1,23 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 
 /**
  * 書き手ダッシュボード共通レイアウト。
- * `resident_writer` または `editor` ロール以外はアクセス拒否。
+ * - 未ログイン: /auth/login へ（middleware でも保護されるが二重で）
+ * - 'reader' ロール: /become-writer へ誘導
+ * - 'resident_writer' / 'editor': そのまま
  */
 export const dynamic = 'force-dynamic';
 
 const NAV_ITEMS = [{ href: '/writer/articles', label: '記事' }] as const;
 
 export default async function WriterLayout({ children }: { children: ReactNode }) {
-  const user = await getCurrentUser();
+  const user = await requireUser('/writer/articles');
 
   if (user.role !== 'resident_writer' && user.role !== 'editor') {
-    return (
-      <main className="bg-background">
-        <div className="mx-auto max-w-screen-md px-4 py-16 sm:px-6">
-          <h1
-            className="text-[24px] font-semibold tracking-tight text-foreground"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
-          >
-            書き手専用ページです
-          </h1>
-          <p className="mt-3 text-[13px] text-foreground/70">
-            このページは、Locore の書き手として登録された方のみご利用いただけます。
-            書き手登録についてのご案内は{' '}
-            <Link href="/writers" className="text-primary-700 underline-offset-4 hover:underline">
-              書き手紹介ページ
-            </Link>
-            をご覧ください。
-          </p>
-        </div>
-      </main>
-    );
+    redirect('/become-writer');
   }
 
   return (

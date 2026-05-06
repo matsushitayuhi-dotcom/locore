@@ -5,7 +5,7 @@ import { eq, and, asc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 import { runMockModeration } from '@/lib/moderation/mock';
 
 // ---------- 共通 ----------
@@ -24,7 +24,7 @@ export type ActionResult<T = undefined> =
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
 async function assertOwnership(articleId: string) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
   const rows = await db
     .select({
@@ -67,6 +67,7 @@ const updateArticleSchema = z.object({
     })
     .optional(),
   durationType: z.enum(['half_day', 'full_day', 'few_hours', 'other']).optional(),
+  articleType: z.enum(['spot_guide', 'itinerary']).optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   coverImageUrl: z
     .string()
@@ -109,6 +110,7 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
   if (data.body !== undefined) patch.body = data.body;
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
+  if (data.articleType !== undefined) patch.articleType = data.articleType;
   if (data.tags !== undefined) patch.tags = data.tags;
   if (data.coverImageUrl !== undefined) patch.coverImageUrl = data.coverImageUrl ?? null;
   if (data.cityId !== undefined) patch.cityId = data.cityId;

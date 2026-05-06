@@ -83,6 +83,17 @@ export const lightDiaryStatusEnum = pgEnum('light_diary_status', [
   'removed',
 ]);
 
+/**
+ * 記事の種別。スポット紹介 vs 旅程プラン。
+ *
+ * - `spot_guide`: 個別の店・場所を紹介する記事（例: 「マレ地区の隠れベーカリー5軒」）
+ * - `itinerary`: 時間軸ありのコース・モデルプラン（例: 「マレ地区半日ぶらり」）
+ *
+ * 既存の `article_duration` enum（half_day/full_day/...）とは別概念。
+ * spot_guide でも所要時間はあり得るが、明確な「コース性」が itinerary。
+ */
+export const articleTypeEnum = pgEnum('article_type', ['spot_guide', 'itinerary']);
+
 // --- Moderation ---
 export const moderationActionEnum = pgEnum('moderation_action', [
   'pass',

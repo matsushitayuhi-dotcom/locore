@@ -38,13 +38,8 @@ export default async function AdminReportsPage({
 }: {
   searchParams?: { status?: string };
 }) {
-  let user;
-  try {
-    user = await getCurrentUser();
-  } catch {
-    return <Forbidden />;
-  }
-  if (user.role !== 'editor') {
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'editor') {
     return <Forbidden />;
   }
 

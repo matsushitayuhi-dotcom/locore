@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 import { ProfileForm } from '@/components/settings/ProfileForm';
 import { SnsLinksEditor } from '@/components/settings/SnsLinksEditor';
 
@@ -13,7 +13,7 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function ProfileSettingsPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser('/settings/profile');
   const db = getDb();
 
   const isWriter = user.role === 'resident_writer' || user.role === 'editor';

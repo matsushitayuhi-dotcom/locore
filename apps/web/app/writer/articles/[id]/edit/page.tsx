@@ -4,7 +4,7 @@ import { eq, asc } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { Badge } from '@locore/ui';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 import { ArticleForm } from '@/components/writer/ArticleForm';
 import { ArticleBodyEditor } from '@/components/writer/ArticleBodyEditor';
 import { SpotList, type SpotRow } from '@/components/writer/SpotList';
@@ -42,7 +42,7 @@ export default async function EditArticlePage({
   params: { id: string };
   searchParams?: { tab?: string };
 }) {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   const articleRows = await db
@@ -214,6 +214,7 @@ export default async function EditArticlePage({
               title: article.title,
               priceJpy: article.priceJpy,
               durationType: article.durationType,
+              articleType: article.articleType,
               tags: article.tags ?? [],
               cityId: article.cityId,
               coverImageUrl: article.coverImageUrl,

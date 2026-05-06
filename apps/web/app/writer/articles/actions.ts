@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 
 /**
  * 新規記事下書きを作成し、編集画面にリダイレクトする。
@@ -18,7 +18,7 @@ const createSchema = z.object({
 
 export async function createArticleDraft(input: unknown): Promise<never> {
   const parsed = createSchema.parse(input);
-  const user = await getCurrentUser();
+  const user = await requireUser();
   if (user.role !== 'resident_writer' && user.role !== 'editor') {
     throw new Error('書き手のみが作成できます');
   }
@@ -67,7 +67,7 @@ export type WriterArticleSummary = {
 };
 
 export async function listMyArticles(): Promise<WriterArticleSummary[]> {
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   const rows = await db

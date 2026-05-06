@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import { Avatar, AvatarFallback } from '@locore/ui';
+import { Button } from '@locore/ui';
 import { Compass, MapIcon, LayoutList, Sparkles } from '@locore/ui/icons';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { UserMenu } from './auth/UserMenu';
 
 const NAV = [
   { href: '/', label: 'フィード', icon: Compass },
@@ -10,7 +12,9 @@ const NAV = [
   { href: '/writer/articles', label: '書く', icon: Compass },
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const user = await getCurrentUser();
+
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-4 px-4 sm:px-6">
@@ -44,11 +48,26 @@ export function SiteHeader() {
           >
             Founders 枠 →
           </Link>
-          <Link href="/settings/profile" aria-label="設定">
-            <Avatar size="sm" className="ring-1 ring-border">
-              <AvatarFallback>J</AvatarFallback>
-            </Avatar>
-          </Link>
+
+          {user ? (
+            <UserMenu
+              user={{
+                email: user.email,
+                displayName: user.displayName,
+                avatarUrl: user.avatarUrl,
+                role: user.role,
+              }}
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/auth/login">ログイン</Link>
+              </Button>
+              <Button asChild variant="primary" size="sm">
+                <Link href="/auth/signup">サインアップ</Link>
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

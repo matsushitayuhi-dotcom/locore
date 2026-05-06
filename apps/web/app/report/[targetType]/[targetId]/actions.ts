@@ -36,13 +36,8 @@ export async function submitReport(input: unknown): Promise<SubmitReportResult> 
   const data = parsed.data;
   const db = getDb();
 
-  let reporterId: string | null = null;
-  try {
-    const user = await getCurrentUser();
-    reporterId = user.id;
-  } catch {
-    reporterId = null;
-  }
+  const currentUser = await getCurrentUser();
+  const reporterId: string | null = currentUser?.id ?? null;
 
   // 24h 以内の重複検知（同一 reporter / 同一 target）
   let duplicateWarning = false;

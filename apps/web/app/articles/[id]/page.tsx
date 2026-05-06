@@ -92,6 +92,12 @@ export default function ArticleDetailPage({
       {/* Header */}
       <header className="mx-auto max-w-screen-lg px-4 pt-8 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            variant={article.articleType === 'itinerary' ? 'accent' : 'default'}
+            data-locore-article-type={article.articleType}
+          >
+            {article.articleType === 'itinerary' ? '旅程プラン' : 'スポット紹介'}
+          </Badge>
           <Badge variant="outline">パリ・{article.area}</Badge>
           {article.tags.slice(0, 3).map((t) => (
             <Badge key={t} variant="secondary">

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import { schema, DEFAULT_NOTIFICATION_PREFERENCES } from '@locore/db';
 import type { NotificationPreferences } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 import { NotificationPrefsForm } from '@/components/settings/NotificationPrefsForm';
 
 export const metadata = {
@@ -12,7 +12,7 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function NotificationsSettingsPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser('/settings/notifications');
   const db = getDb();
 
   const rows = await db

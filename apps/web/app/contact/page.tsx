@@ -8,12 +8,10 @@ export const metadata = {
 export default async function ContactPage() {
   let initialName = '';
   let initialEmail = '';
-  try {
-    const user = await getCurrentUser();
+  const user = await getCurrentUser();
+  if (user) {
     initialName = user.displayName ?? '';
     initialEmail = user.email ?? '';
-  } catch {
-    // 未ログイン時はそのまま
   }
 
   return (

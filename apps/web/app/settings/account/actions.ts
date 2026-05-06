@@ -5,7 +5,9 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser, clearCurrentUserCache } from '@/lib/auth/current-user';
+import { clearCurrentUserCache } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
+import { createClient as createSupabaseServerClient } from '@/lib/supabase/server';
 
 const deleteAccountSchema = z.object({
   reason: z.string().trim().max(1000).optional(),
@@ -41,7 +43,7 @@ export async function deleteAccount(input: unknown): Promise<DeleteAccountResult
     };
   }
   const { reason } = parsed.data;
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   const now = new Date();
@@ -74,6 +76,14 @@ export async function deleteAccount(input: unknown): Promise<DeleteAccountResult
     targetId: user.id,
     metadata: reason ? { reason } : null,
   });
+
+  // Supabase 側からもサインアウトしてセッション Cookie を破棄
+  try {
+    const supabase = createSupabaseServerClient();
+    await supabase.auth.signOut();
+  } catch {
+    // signOut 失敗は致命的ではない（次回 getUser() で 401 になるだけ）
+  }
 
   clearCurrentUserCache();
   revalidatePath('/settings/account');

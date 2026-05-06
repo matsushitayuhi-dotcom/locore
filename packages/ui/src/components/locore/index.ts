@@ -15,6 +15,7 @@ export {
   type ArticleCardModel,
   type ArticleCardAuthor,
   type DurationType,
+  type ArticleType,
 } from "./ArticleCard";
 export { PriceTag, type PriceTagProps } from "./PriceTag";
 export {

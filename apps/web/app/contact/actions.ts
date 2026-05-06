@@ -45,13 +45,8 @@ export async function submitContact(input: unknown): Promise<SubmitContactResult
   const db = getDb();
 
   // ログイン中なら reporter_id を紐付ける（任意）
-  let reporterId: string | null = null;
-  try {
-    const user = await getCurrentUser();
-    reporterId = user.id;
-  } catch {
-    reporterId = null;
-  }
+  const currentUser = await getCurrentUser();
+  const reporterId: string | null = currentUser?.id ?? null;
 
   // レート制限: 同一メールから直近 1 時間に 5 件を超えたら拒否
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

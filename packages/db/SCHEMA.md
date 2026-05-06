@@ -1,8 +1,8 @@
 # Locore DB スキーマ定義書
 
-**バージョン**: 0.1
+**バージョン**: 0.2
 **最終更新**: 2026-05-06
-**対象**: 28 テーブル（Phase 1 MVP）
+**対象**: 29 テーブル（Phase 1 MVP + Library）
 **実装**: `packages/db/src/schema/*.ts`、`packages/db/migrations/`
 
 ---
@@ -133,6 +133,7 @@
 | `status` | enum | `draft` / `published` / `archived` / `pending_review` |
 | `tags` | text[] | テーマタグ |
 | `duration_type` | enum | `half_day` / `full_day` / `few_hours` / `other` |
+| `article_type` | enum NOT NULL | `spot_guide`（個別の場所紹介）/ `itinerary`（時間軸ありの旅程プラン）。デフォルト `spot_guide`。マイグレーション `manual/0007_article_type.sql`。 |
 | `warned` | boolean | AI モデレーション警告フラグ |
 | `moderation_score` | integer | 最終合成スコア 0-100 |
 | `published_at` | timestamptz | |
@@ -142,6 +143,7 @@
 - 部分: `(city_id, published_at DESC) WHERE status='published' AND deleted_at IS NULL`
 - 部分: `(writer_id, published_at DESC) WHERE status='published' AND deleted_at IS NULL`
 - 部分: `(status, created_at) WHERE status='pending_review'`
+- 部分: `(article_type, published_at DESC) WHERE status='published' AND deleted_at IS NULL`（種別フィルタ用、`manual/0007_article_type.sql`）
 - GIN: `title gin_trgm_ops`（全文検索補助）
 
 **RLS**:
@@ -324,6 +326,30 @@
 | `created_at` | timestamptz | |
 
 **RLS**: published は公開、自分の draft は本人のみ
+
+---
+
+## 🔖 6.5 Library / Bookmarks（1 テーブル）
+
+### `bookmarks`
+ユーザーが「あとで読む / 保存した」記事リスト（ライブラリ機能）。PRD §7 ウィッシュリスト相当。
+
+| カラム | 型 | 説明 |
+|---|---|---|
+| `user_id` | uuid PK FK→users CASCADE | |
+| `article_id` | uuid PK FK→articles CASCADE | |
+| `created_at` | timestamptz NOT NULL DEFAULT now() | 保存した時刻 |
+
+**主キー**: `(user_id, article_id)` の複合 PK（同一ユーザーが同じ記事を二重保存しない）
+
+**インデックス**:
+- `bookmarks_user_created_idx ON (user_id, created_at DESC)` — `/library` の「保存日が新しい順」表示用
+
+**RLS**: `auth.uid() = user_id` でのみ SELECT / INSERT / DELETE。UPDATE 不要（toggle は INSERT or DELETE で表現）
+
+**マイグレーション**: `manual/0008_bookmarks.sql`
+
+**関連**: `users` (N:1), `articles` (N:1)
 
 ---
 
@@ -562,12 +588,16 @@ users ──┬── writer_profiles (1:1)
         ├── purchases (1:N as buyer)
         ├── trips (1:N as owner)
         ├── reviews (via purchases)
-        └── light_diaries (1:N as author)
+        ├── light_diaries (1:N as author)
+        └── bookmarks (1:N as user)
 
 articles ──┬── spots (1:N)
            ├── article_videos (1:N)
            ├── article_moderation_scores (1:N)
-           └── purchases (1:N)
+           ├── purchases (1:N)
+           └── bookmarks (1:N)
+
+bookmarks (M:N between users and articles, composite PK)
 
 trips ──┬── trip_days (1:N) ── trip_items (1:N)
         └── trip_collaborators (M:N via users)
@@ -606,6 +636,7 @@ purchases ── reviews (1:1)
 | `trips` | オーナー + collab | オーナー | オーナー + collab(editor) | オーナー |
 | `trip_days/items/collab` | trips に従う | trips に従う | trips に従う | trips に従う |
 | `light_diaries` | published 公開 | 認証ユーザー | 著者 | 著者 |
+| `bookmarks` | 本人のみ | 本人のみ | - | 本人のみ |
 | `editor_collections` | 公開 | editor | editor | editor |
 | `collection_articles` | 公開 | editor | editor | editor |
 | `article_moderation_scores` | service_role | service_role | service_role | service_role |
@@ -699,3 +730,4 @@ const live = await db.query.articles.findMany({
 | バージョン | 日付 | 変更内容 |
 |--|--|--|
 | 0.1 | 2026-05-06 | 初稿、Phase 1 MVP 全 28 テーブル |
+| 0.1.1 | 2026-05-06 | `articles.article_type`（spot_guide / itinerary）追加 / `manual/0007_article_type.sql` |

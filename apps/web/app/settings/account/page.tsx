@@ -1,7 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 import { DeleteAccountDialog } from '@/components/settings/DeleteAccountDialog';
 
 export const metadata = {
@@ -11,7 +11,7 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AccountSettingsPage() {
-  const user = await getCurrentUser();
+  const user = await requireUser('/settings/account');
   const db = getDb();
   const isWriter = user.role === 'resident_writer' || user.role === 'editor';
   const alreadyDeleted = false; // モック現在ユーザーは生存前提

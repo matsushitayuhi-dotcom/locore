@@ -33,13 +33,8 @@ export default async function ReportPage({
   const db = getDb();
   const targetLabel = await fetchTargetLabel(db, tt, targetId);
 
-  let isAuthenticated = false;
-  try {
-    await getCurrentUser();
-    isAuthenticated = true;
-  } catch {
-    isAuthenticated = false;
-  }
+  const currentUser = await getCurrentUser();
+  const isAuthenticated = currentUser !== null;
 
   return (
     <main className="bg-background">

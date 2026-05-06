@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import type { NotificationPreferences } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { getCurrentUser } from '@/lib/auth/current-user';
+import { requireUser } from '@/lib/auth/require-user';
 
 const channelSchema = z.object({
   article_published: z.boolean(),
@@ -32,7 +32,7 @@ export async function updateNotificationPreferences(
     return { ok: false, error: '入力内容に誤りがあります' };
   }
   const prefs: NotificationPreferences = parsed.data;
-  const user = await getCurrentUser();
+  const user = await requireUser();
   const db = getDb();
 
   await db

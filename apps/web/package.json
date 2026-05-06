@@ -17,6 +17,8 @@
     "@locore/db": "workspace:*",
     "@locore/shared": "workspace:*",
     "@locore/ui": "workspace:*",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.105.3",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.36.0",
     "leaflet": "^1.9.4",

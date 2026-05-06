@@ -31,6 +31,7 @@ export const buildSeedArticles = (parisCityId: string): NewArticle[] => [
     status: 'published',
     tags: ['朝食', 'ビストロ', '路地裏', '常連系'],
     durationType: 'half_day',
+    articleType: 'spot_guide',
     publishedAt: new Date('2026-04-15T08:00:00Z'),
   },
   {
@@ -47,6 +48,7 @@ export const buildSeedArticles = (parisCityId: string): NewArticle[] => [
     status: 'published',
     tags: ['市場', '朝食', '食べ歩き', 'ローカル'],
     durationType: 'half_day',
+    articleType: 'itinerary',
     publishedAt: new Date('2026-04-10T09:00:00Z'),
   },
   {
@@ -62,6 +64,7 @@ export const buildSeedArticles = (parisCityId: string): NewArticle[] => [
     status: 'published',
     tags: ['朝食', 'パン', '老舗'],
     durationType: 'few_hours',
+    articleType: 'spot_guide',
     publishedAt: new Date('2026-03-30T07:00:00Z'),
   },
   {
@@ -77,6 +80,7 @@ export const buildSeedArticles = (parisCityId: string): NewArticle[] => [
     status: 'published',
     tags: ['夜遊び', '路地裏', '雰囲気'],
     durationType: 'half_day',
+    articleType: 'itinerary',
     publishedAt: new Date('2026-04-03T20:00:00Z'),
   },
   {
@@ -92,6 +96,7 @@ export const buildSeedArticles = (parisCityId: string): NewArticle[] => [
     status: 'published',
     tags: ['美術館', '無料', 'カルチャー'],
     durationType: 'full_day',
+    articleType: 'spot_guide',
     publishedAt: new Date('2026-03-25T10:00:00Z'),
   },
 ];

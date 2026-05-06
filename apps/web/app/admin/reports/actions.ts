@@ -33,6 +33,9 @@ export async function updateReportStatus(
   const { reportId, status, notes } = parsed.data;
 
   const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: 'ログインが必要です' };
+  }
   if (user.role !== 'editor') {
     return { ok: false, error: '権限がありません（editor 権限が必要）' };
   }

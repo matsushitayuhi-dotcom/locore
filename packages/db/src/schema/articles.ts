@@ -15,6 +15,7 @@ import { spots } from './spots';
 import { articleVideos } from './article_videos';
 import { purchases } from './purchases';
 import { articleModerationScores } from './article_moderation_scores';
+import { articleTypeEnum } from './enums';
 
 /** article_status enum。@locore/shared の ArticleStatus と同期。 */
 export const articleStatusEnum = pgEnum('article_status', [
@@ -59,6 +60,11 @@ export const articles = pgTable(
     status: articleStatusEnum('status').notNull().default('draft'),
     tags: text('tags').array().notNull().default([]),
     durationType: articleDurationEnum('duration_type'),
+    /**
+     * 記事の種別タグ。スポット紹介 vs 旅程プラン。
+     * 既存記事は spot_guide でデフォルト（後方互換）。
+     */
+    articleType: articleTypeEnum('article_type').notNull().default('spot_guide'),
     warned: boolean('warned').notNull().default(false),
     moderationScore: integer('moderation_score'),
     publishedAt: timestamp('published_at', { withTimezone: true }),
@@ -71,6 +77,7 @@ export const articles = pgTable(
     cityIdx: index('articles_city_id_idx').on(table.cityId),
     statusIdx: index('articles_status_idx').on(table.status),
     publishedAtIdx: index('articles_published_at_idx').on(table.publishedAt),
+    typeIdx: index('articles_type_idx').on(table.articleType, table.publishedAt),
   }),
 );
 

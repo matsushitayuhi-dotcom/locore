@@ -12,6 +12,18 @@ import { SatisfactionStars } from "./SatisfactionStars";
 
 export type DurationType = "1h" | "half-day" | "1day" | "multi-day" | string;
 
+/**
+ * 記事の種別タグ。
+ * - `spot_guide`: 個別の店・場所を紹介する記事
+ * - `itinerary` : 時間軸ありのコース・モデルプラン
+ */
+export type ArticleType = "spot_guide" | "itinerary";
+
+const ARTICLE_TYPE_LABEL: Record<ArticleType, string> = {
+  spot_guide: "スポット",
+  itinerary: "旅程",
+};
+
 export interface ArticleCardAuthor {
   name: string;
   /** 居住している街の表示名（例: "パリ"）。エリアピルとは別の意味。 */
@@ -34,6 +46,8 @@ export interface ArticleCardModel {
   priceJpy: number;
   durationType?: DurationType;
   spotsCount?: number;
+  /** 記事の種別。`spot_guide`（場所紹介）/ `itinerary`（旅程プラン）。 */
+  articleType?: ArticleType;
 }
 
 export interface ArticleCardProps
@@ -93,6 +107,7 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
       priceJpy,
       durationType,
       spotsCount,
+      articleType,
     } = article;
 
     const handleBookmark = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -142,16 +157,35 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
             </div>
           )}
 
-          {area ? (
-            <span
-              className={cn(
-                "absolute left-3 top-3 inline-flex items-center",
-                "rounded-xs bg-neutral-900/80 px-2 py-1",
-                "text-overline uppercase text-neutral-0",
-              )}
-            >
-              {area}
-            </span>
+          {area || articleType ? (
+            <div className="absolute left-3 top-3 flex items-center gap-1.5">
+              {area ? (
+                <span
+                  className={cn(
+                    "inline-flex items-center",
+                    "rounded-xs bg-neutral-900/80 px-2 py-1",
+                    "text-overline uppercase text-neutral-0",
+                  )}
+                >
+                  {area}
+                </span>
+              ) : null}
+              {articleType ? (
+                <span
+                  data-locore-article-type={articleType}
+                  className={cn(
+                    "inline-flex items-center",
+                    "rounded-xs px-2 py-1",
+                    "text-overline font-medium",
+                    articleType === "itinerary"
+                      ? "bg-accent-50/95 text-accent-700"
+                      : "bg-neutral-0/90 text-neutral-700",
+                  )}
+                >
+                  {ARTICLE_TYPE_LABEL[articleType]}
+                </span>
+              ) : null}
+            </div>
           ) : null}
 
           {onBookmark ? (
