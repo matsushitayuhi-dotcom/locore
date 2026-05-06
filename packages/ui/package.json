@@ -7,26 +7,30 @@
   "sideEffects": [
     "**/*.css"
   ],
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./tailwind-preset": {
       "types": "./dist/tailwind-preset.d.ts",
-      "import": "./dist/tailwind-preset.js"
+      "import": "./dist/tailwind-preset.js",
+      "require": "./dist/tailwind-preset.cjs"
     },
     "./styles.css": "./src/styles/globals.css",
     "./tokens": {
       "types": "./dist/tokens/index.d.ts",
-      "import": "./dist/tokens/index.js"
+      "import": "./dist/tokens/index.js",
+      "require": "./dist/tokens/index.cjs"
     },
     "./icons": {
       "types": "./dist/icons/index.d.ts",
-      "import": "./dist/icons/index.js"
+      "import": "./dist/icons/index.js",
+      "require": "./dist/icons/index.cjs"
     }
   },
   "files": [

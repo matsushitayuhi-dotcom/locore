@@ -17,7 +17,8 @@ const sharedExternal = [
 ];
 
 const sharedBuild = {
-  format: ["esm"] as const,
+  // ESM + CJS の両方を出す。Tailwind の jiti ローダーが CJS で require するので CJS も必須。
+  format: ["esm", "cjs"] as const,
   dts: true,
   sourcemap: true,
   treeshake: true,
@@ -42,7 +43,9 @@ export default defineConfig([
     entry: { index: "src/index.ts" },
     clean: true,
     onSuccess: async () => {
+      // ESM 出力（dist/index.js）と CJS 出力（dist/index.cjs）の両方に "use client" を付ける
       ensureUseClient("dist/index.js");
+      ensureUseClient("dist/index.cjs");
     },
   },
   // Server-safe entries (tokens, tailwind preset, icon re-exports)
