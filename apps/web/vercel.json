@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm --filter @locore/web build",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@locore/web",
   "outputDirectory": ".next",
   "regions": ["hnd1"]
 }
