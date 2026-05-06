@@ -1,21 +1,33 @@
 import type { Config } from 'tailwindcss';
+import locorePreset from '@locore/ui/tailwind-preset';
 
-/**
- * Tailwind 設定。
- * デザイントークンは別途 DESIGN.md に従い `theme.extend` 配下に集約する想定。
- */
 const config: Config = {
+  presets: [locorePreset],
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
+    './lib/**/*.{ts,tsx}',
     './i18n/**/*.{ts,tsx}',
-    // 後で @locore/ui を組み込むときに有効化:
-    // '../../packages/ui/src/**/*.{ts,tsx}',
+    '../../packages/ui/dist/**/*.{js,mjs}',
   ],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+        // Override the preset to wire next/font CSS variables.
+        sans: [
+          'var(--font-sans-jp)',
+          'var(--font-sans)',
+          'system-ui',
+          'sans-serif',
+        ],
+        serif: [
+          'var(--font-serif-jp)',
+          'var(--font-serif)',
+          'Georgia',
+          'serif',
+        ],
+        display: ['var(--font-serif)', 'var(--font-serif-jp)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
     },
   },

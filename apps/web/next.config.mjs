@@ -7,25 +7,29 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
-  // ワークスペース内部パッケージをトランスパイル対象にする
-  transpilePackages: ['@locore/shared', '@locore/api-contracts'],
+  transpilePackages: [
+    '@locore/shared',
+    '@locore/api-contracts',
+    '@locore/ui',
+  ],
 
   experimental: {
-    // Server Actions / Server Components 周りは Next.js 14 のデフォルトで OK
     typedRoutes: false,
   },
 
   images: {
-    // R2 / Cloudflare Images / Supabase ストレージ等を許可（Phase 1 のプレースホルダ）
     remotePatterns: [
       { protocol: 'https', hostname: '**.r2.dev' },
       { protocol: 'https', hostname: '**.supabase.co' },
       { protocol: 'https', hostname: 'imagedelivery.net' },
+      { protocol: 'https', hostname: 'picsum.photos' },
+      { protocol: 'https', hostname: 'fastly.picsum.photos' },
+      { protocol: 'https', hostname: 'api.dicebear.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
     formats: ['image/avif', 'image/webp'],
   },
 
-  // PWA 準備：next-pwa は M0 後半で正式導入。今はヘッダだけ。
   async headers() {
     return [
       {
