@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS "spots" (
 	"article_id" uuid NOT NULL,
 	"name" text NOT NULL,
 	"address" text,
-	"location" "geography(Point,4326)" NOT NULL,
+	"location" geography(Point,4326) NOT NULL,
 	"category" "spot_category",
 	"price_estimate" text,
 	"opening_hours" jsonb,

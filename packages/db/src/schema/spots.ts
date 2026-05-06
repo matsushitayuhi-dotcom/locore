@@ -8,24 +8,32 @@ import {
   index,
   customType,
 } from 'drizzle-orm/pg-core';
-import { relations, sql } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 import { articles } from './articles';
 import { spotCategoryEnum } from './enums';
 
 /**
  * PostGIS GEOGRAPHY(Point, 4326) 型。
- * Drizzle のネイティブ対応がないため customType で扱う。
- * 詳細は ARCHITECTURE-DECISIONS.md §4.6.1。
+ * EWKT (Extended Well-Known Text) 形式で送る。
+ * 例: "SRID=4326;POINT(2.3522 48.8566)"
+ * PostGIS は EWKT を自動的に geography に変換する。
  */
 export const point = customType<{
   data: { lat: number; lng: number };
   driverData: string;
 }>({
   dataType() {
+    // PostGIS は public スキーマに入ってる前提（Supabase Dashboard の
+    // Extensions UI で ON にした場合の標準）。
     return 'geography(Point,4326)';
   },
   toDriver(value) {
-    return sql`ST_SetSRID(ST_MakePoint(${value.lng}, ${value.lat}), 4326)::geography`.toString();
+    return `SRID=4326;POINT(${value.lng} ${value.lat})`;
+  },
+  fromDriver(value) {
+    // 読み出し時の変換は SELECT 側で ST_X/ST_Y を使うのが一般的。
+    // ここでは driverData をそのまま返す（必要なら ST_AsGeoJSON 等で別実装）。
+    return value as unknown as { lat: number; lng: number };
   },
 });
 

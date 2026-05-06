@@ -23,10 +23,11 @@ CREATE INDEX IF NOT EXISTS idx_articles_pending_review
 CREATE INDEX IF NOT EXISTS idx_articles_title_trgm
   ON articles USING gin (title gin_trgm_ops);
 
--- アクティブな危機イベント
+-- アクティブな危機イベント（NOW() は IMMUTABLE でないため WHERE 句から外し、
+-- ends_at をインデックスキーに含めてクエリ側で `ends_at > NOW()` を絞る）
 CREATE INDEX IF NOT EXISTS idx_crisis_active
-  ON crisis_events (city_id, severity)
-  WHERE status = 'published' AND (ends_at IS NULL OR ends_at > NOW());
+  ON crisis_events (city_id, severity, ends_at)
+  WHERE status = 'published';
 
 -- 完了済み購入のみインデックス（認可チェック用）
 CREATE INDEX IF NOT EXISTS idx_purchases_buyer_article_completed
