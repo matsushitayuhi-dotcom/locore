@@ -16,37 +16,39 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
+    <header className="sticky top-0 z-30 w-full border-b border-primary-100 bg-white/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-4 px-4 sm:px-6">
         <Link
           href="/"
-          className="font-serif text-[22px] font-semibold tracking-tight text-foreground"
+          className="group inline-flex items-baseline font-semibold tracking-tight"
           style={{ fontFamily: 'var(--font-serif), var(--font-serif-jp), serif' }}
         >
-          Locore
-          <span className="ml-1 align-top text-[10px] font-medium uppercase tracking-[0.2em] text-foreground/40">
+          <span className="text-[24px] bg-gradient-to-br from-primary-500 to-primary-700 bg-clip-text text-transparent transition group-hover:from-primary-300 group-hover:to-primary-500">
+            Locore
+          </span>
+          <span className="ml-1 rounded-full bg-accent-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-900">
             β
           </span>
         </Link>
 
-        <nav className="ml-2 hidden items-center gap-5 text-sm md:flex">
+        <nav className="ml-3 hidden items-center gap-1 text-sm md:flex">
           {NAV.map((n) => (
             <Link
               key={n.href}
               href={n.href}
-              className="text-foreground/70 transition hover:text-foreground"
+              className="rounded-full px-3 py-1.5 font-medium text-neutral-700 transition hover:bg-primary-50 hover:text-primary-700"
             >
               {n.label}
             </Link>
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2">
           <Link
             href="/founders"
-            className="hidden rounded-full border border-secondary-500/40 bg-secondary-50 px-3 py-1.5 text-xs font-medium text-secondary-700 transition hover:bg-secondary-50/70 sm:inline-flex"
+            className="hidden items-center gap-1 rounded-full bg-gradient-to-r from-secondary-50 to-accent-50 px-3 py-1.5 text-xs font-bold text-secondary-700 ring-1 ring-secondary-300/40 transition hover:from-secondary-300/40 hover:to-accent-300/40 sm:inline-flex"
           >
-            Founders 枠 →
+            🌟 Founders 枠 →
           </Link>
 
           {user ? (
@@ -72,12 +74,12 @@ export async function SiteHeader() {
       </div>
 
       {/* Mobile nav strip */}
-      <nav className="flex gap-3 overflow-x-auto border-t border-border/60 px-4 py-2 text-[13px] md:hidden">
+      <nav className="flex gap-2 overflow-x-auto border-t border-primary-100 bg-primary-50/40 px-4 py-2 text-[13px] md:hidden">
         {NAV.map((n) => (
           <Link
             key={n.href}
             href={n.href}
-            className="whitespace-nowrap rounded-full border border-border/60 bg-card px-3 py-1 text-foreground/70"
+            className="whitespace-nowrap rounded-full bg-white px-3 py-1 font-medium text-primary-700 shadow-xs ring-1 ring-primary-100"
           >
             {n.label}
           </Link>

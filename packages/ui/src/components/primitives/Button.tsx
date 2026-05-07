@@ -6,37 +6,60 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
-  // base
+  // base — ポップに丸める + 軽い「飛び出し」シャドウ + hover でふわっと持ち上がる
   [
     "inline-flex items-center justify-center gap-2 whitespace-nowrap",
-    "font-sans font-medium",
-    "rounded-sm",
-    "transition-colors duration-base ease-out",
+    "font-sans font-semibold",
+    "rounded-full",
+    "transition-all duration-base ease-out",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
     "focus-visible:ring-offset-[color:var(--color-bg)]",
     "disabled:opacity-40 disabled:cursor-not-allowed",
     "[&_svg]:shrink-0",
+    "active:scale-[0.97]",
   ].join(" "),
   {
     variants: {
       variant: {
-        primary:
-          "bg-primary-700 text-neutral-0 hover:bg-primary-900 active:bg-primary-900",
-        secondary:
-          "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 active:bg-neutral-200",
+        // primary: emerald グラデ + emerald 影 + hover で持ち上がる
+        primary: [
+          "text-white shadow-sm",
+          "bg-gradient-to-br from-primary-500 to-primary-700",
+          "hover:from-primary-300 hover:to-primary-500 hover:-translate-y-0.5 hover:shadow-md",
+          "active:translate-y-0",
+        ].join(" "),
+        // secondary: coral 系（CTA に程よくアクセント）
+        secondary: [
+          "text-white shadow-sm",
+          "bg-gradient-to-br from-secondary-500 to-secondary-700",
+          "hover:from-secondary-300 hover:to-secondary-500 hover:-translate-y-0.5 hover:shadow-md",
+        ].join(" "),
+        // accent: sun 黄（注目度のあるサブ CTA）
+        accent: [
+          "text-neutral-900 shadow-sm",
+          "bg-gradient-to-br from-accent-300 to-accent-500",
+          "hover:-translate-y-0.5 hover:shadow-md",
+        ].join(" "),
+        // ghost: 透明 → emerald 50 の優しい hover
         ghost:
-          "bg-transparent text-neutral-700 hover:bg-neutral-50 active:bg-neutral-100",
-        destructive:
-          "bg-danger-500 text-neutral-0 hover:bg-[#9a3a34] active:bg-[#8a342f]",
-        outline:
-          "bg-transparent text-neutral-900 border border-neutral-300 hover:bg-neutral-50",
+          "bg-transparent text-neutral-700 hover:bg-primary-50 hover:text-primary-700",
+        // outline: emerald 枠 + 中身白、hover で薄 emerald 塗り
+        outline: [
+          "bg-white text-primary-700 border border-primary-300",
+          "hover:bg-primary-50 hover:border-primary-500 hover:-translate-y-0.5 hover:shadow-sm",
+        ].join(" "),
+        destructive: [
+          "text-white shadow-sm",
+          "bg-gradient-to-br from-danger-500 to-[#c2403a]",
+          "hover:-translate-y-0.5 hover:shadow-md",
+        ].join(" "),
         link:
           "bg-transparent text-primary-700 underline-offset-4 hover:underline px-0 h-auto",
       },
       size: {
-        sm: "h-8 px-3 text-body-sm [&_svg]:size-4",
-        md: "h-10 px-4 text-body-sm [&_svg]:size-4",
-        lg: "h-[52px] px-6 text-heading-sm [&_svg]:size-5",
+        sm: "h-8 px-4 text-body-sm [&_svg]:size-4",
+        md: "h-11 px-5 text-body-md [&_svg]:size-4",
+        lg: "h-[54px] px-7 text-heading-sm [&_svg]:size-5",
         icon: "h-10 w-10 [&_svg]:size-5",
       },
     },

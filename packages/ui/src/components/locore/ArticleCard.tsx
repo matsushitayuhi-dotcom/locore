@@ -129,9 +129,9 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
         data-locore-article-id={article.id}
         onClick={onClick ? handleRootClick : undefined}
         className={cn(
-          "group flex flex-col overflow-hidden rounded-md border border-border bg-card",
-          "shadow-xs transition-all duration-base ease-out",
-          "hover:shadow-sm focus-within:shadow-sm",
+          "group flex flex-col overflow-hidden rounded-2xl bg-white",
+          "shadow-sm ring-1 ring-primary-100 transition-all duration-base ease-out",
+          "hover:-translate-y-1 hover:shadow-md hover:ring-primary-300 focus-within:shadow-md",
           onClick && "cursor-pointer",
           className,
         )}
@@ -162,12 +162,13 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               {area ? (
                 <span
                   className={cn(
-                    "inline-flex items-center",
-                    "rounded-xs bg-neutral-900/80 px-2 py-1",
-                    "text-overline uppercase text-neutral-0",
+                    "inline-flex items-center gap-1",
+                    "rounded-full bg-white/95 px-2.5 py-1 backdrop-blur",
+                    "text-[10px] font-bold uppercase tracking-wider text-primary-700",
+                    "shadow-sm",
                   )}
                 >
-                  {area}
+                  📍 {area}
                 </span>
               ) : null}
               {articleType ? (
@@ -175,11 +176,11 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
                   data-locore-article-type={articleType}
                   className={cn(
                     "inline-flex items-center",
-                    "rounded-xs px-2 py-1",
-                    "text-overline font-medium",
+                    "rounded-full px-2.5 py-1",
+                    "text-[10px] font-bold uppercase tracking-wider shadow-sm",
                     articleType === "itinerary"
-                      ? "bg-accent-50/95 text-accent-700"
-                      : "bg-neutral-0/90 text-neutral-700",
+                      ? "bg-accent-500 text-neutral-900"
+                      : "bg-primary-500 text-white",
                   )}
                 >
                   {ARTICLE_TYPE_LABEL[articleType]}

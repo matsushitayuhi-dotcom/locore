@@ -5,19 +5,22 @@ import { cn } from "../../lib/utils";
 const badgeVariants = cva(
   [
     "inline-flex items-center gap-1",
-    "h-6 px-2 rounded-full",
-    "font-sans text-caption font-medium leading-none",
+    "h-6 px-2.5 rounded-full",
+    "font-sans text-caption font-semibold leading-none",
     "transition-colors duration-base ease-out",
     "[&_svg]:size-3",
   ].join(" "),
   {
     variants: {
       variant: {
-        default: "bg-neutral-100 text-neutral-700",
-        secondary: "bg-primary-100 text-primary-700",
+        // default: emerald 50 ベースに薄く色付け（モノトーンを避ける）
+        default: "bg-primary-50 text-primary-700",
+        // secondary: coral
+        secondary: "bg-secondary-50 text-secondary-700",
+        // accent: sun
         accent: "bg-accent-50 text-accent-700",
         warning: "bg-warning-50 text-warning-700",
-        outline: "bg-transparent text-neutral-700 border border-neutral-300",
+        outline: "bg-white text-primary-700 border border-primary-300",
       },
     },
     defaultVariants: {
