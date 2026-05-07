@@ -21,25 +21,34 @@ import {
   reviewsForArticle,
   spotsForArticle,
 } from '../../../lib/mock';
+import { getDbArticleBundle } from '../../../lib/articles/published';
 import { Paywall } from '../../../components/Paywall';
 import { AddToTripButton } from '../../../components/AddToTripButton';
 import { ArticleGrid } from '../../../components/ArticleGrid';
 
-export function generateStaticParams() {
-  return articles.map((a) => ({ id: a.id }));
-}
+// DB 上の UUID 記事も解決する必要があるため、静的生成はやめて動的レンダリングに
+export const dynamic = 'force-dynamic';
 
-export default function ArticleDetailPage({
+export default async function ArticleDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const article = getArticle(params.id);
-  if (!article) return notFound();
+  // mock を先に当てる（"art_001" などの ID）
+  let article = getArticle(params.id);
+  let writer = article ? getWriter(article.writerId) : undefined;
+  let spots = article ? spotsForArticle(article.id) : [];
+  let reviews = article ? reviewsForArticle(article.id) : [];
 
-  const writer = getWriter(article.writerId);
-  const spots = spotsForArticle(article.id);
-  const reviews = reviewsForArticle(article.id);
+  // mock に無い → UUID なら DB を引く
+  if (!article) {
+    const bundle = await getDbArticleBundle(params.id);
+    if (!bundle) return notFound();
+    article = bundle.article;
+    writer = bundle.writer ?? undefined;
+    spots = bundle.spots;
+    reviews = []; // DB 上のレビュー集計は今後実装
+  }
 
   // Split body: first 2 paragraphs = preview, rest = paywalled
   const paras = article.body.split(/\n\n+/);
