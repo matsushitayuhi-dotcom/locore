@@ -180,9 +180,11 @@
 | `opening_hours` | jsonb | `{ mon: ["09:00-18:00"], ..., note: "..." }` |
 | `tags` | text[] | "予約必要"・"日本語OK" 等 |
 | `position` | integer | 記事内表示順 |
+| `google_place_id` | text | Google Places API の place_id（Autocomplete 経由で取得した場合）。マイグレーション `manual/0009_spots_place_id.sql`。 |
 
 **インデックス**:
 - GIST: `idx_spots_location ON USING GIST (location)`（半径検索・ビューポート検索用）
+- 部分: `idx_spots_place_id ON (google_place_id) WHERE google_place_id IS NOT NULL`（place_id 重複検出・後追い更新用）
 
 ---
 
@@ -731,3 +733,4 @@ const live = await db.query.articles.findMany({
 |--|--|--|
 | 0.1 | 2026-05-06 | 初稿、Phase 1 MVP 全 28 テーブル |
 | 0.1.1 | 2026-05-06 | `articles.article_type`（spot_guide / itinerary）追加 / `manual/0007_article_type.sql` |
+| 0.1.2 | 2026-05-06 | `spots.google_place_id` 追加 / `manual/0009_spots_place_id.sql`（記事編集画面の Google Places Autocomplete 連携） |

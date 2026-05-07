@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button, Input } from '@locore/ui';
 import { upsertSpot, deleteSpot } from '@/app/writer/articles/[id]/edit/actions';
+import { SpotPlacesPicker, type PickedPlace } from './SpotPlacesPicker';
 
 export type SpotEditorValue = {
   id?: string;
@@ -17,6 +18,7 @@ export type SpotEditorValue = {
   openingHoursText: string;
   tagsText: string;
   position: number;
+  googlePlaceId?: string | null;
 };
 
 const CATEGORY_OPTIONS: { value: SpotEditorValue['category']; label: string }[] = [
@@ -32,9 +34,11 @@ type Props = {
   onSaved: (id: string) => void;
   onDeleted: () => void;
   onCancel?: () => void;
+  /** Google Maps API キー（無い場合は SpotPlacesPicker がフォールバック表示） */
+  googleMapsApiKey?: string;
 };
 
-export function SpotEditor({ initial, onSaved, onDeleted, onCancel }: Props) {
+export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsApiKey }: Props) {
   const [v, setV] = useState<SpotEditorValue>(initial);
   const [isPending, startTransition] = useTransition();
 
@@ -79,6 +83,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel }: Props) {
         openingHours,
         tags,
         position: v.position,
+        googlePlaceId: v.googlePlaceId ?? undefined,
       });
       if (res.ok) {
         toast.success(v.id ? 'スポットを更新しました' : 'スポットを追加しました');
@@ -119,8 +124,22 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel }: Props) {
   const showParisWarn =
     typeof v.lat === 'number' && typeof v.lng === 'number' && !inParis;
 
+  const handlePick = (p: PickedPlace) => {
+    setV((prev) => ({
+      ...prev,
+      name: p.name || prev.name,
+      address: p.address || prev.address,
+      lat: p.lat,
+      lng: p.lng,
+      googlePlaceId: p.placeId || prev.googlePlaceId,
+    }));
+    toast.success('店舗情報を反映しました');
+  };
+
   return (
     <div className="space-y-4 rounded-md border border-border bg-card p-4">
+      <SpotPlacesPicker apiKey={googleMapsApiKey} onPick={handlePick} />
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">

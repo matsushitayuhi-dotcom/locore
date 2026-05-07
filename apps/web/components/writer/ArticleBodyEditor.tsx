@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * @deprecated 単画面リニューアル後は `app/writer/articles/[id]/edit/components/BodyEditorSection.tsx` を使用。
+ * 旧 4 タブ UI 用の互換コンポーネント。新規実装からは参照しないこと。
+ */
+
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';

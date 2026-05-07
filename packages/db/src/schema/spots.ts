@@ -71,12 +71,19 @@ export const spots = pgTable(
     openingHours: jsonb('opening_hours').$type<OpeningHours>(),
     tags: text('tags').array().notNull().default([]),
     position: integer('position').notNull().default(0),
+    /**
+     * Google Places の place_id（UI からの自動補完で取得した場合に保持）。
+     * 後から店舗写真・営業時間・レーティング等を Places API で再取得する用途。
+     * マイグレーション: `manual/0009_spots_place_id.sql`
+     */
+    googlePlaceId: text('google_place_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
     articleIdx: index('spots_article_id_idx').on(table.articleId),
     categoryIdx: index('spots_category_idx').on(table.category),
+    placeIdIdx: index('idx_spots_place_id').on(table.googlePlaceId),
   }),
 );
 

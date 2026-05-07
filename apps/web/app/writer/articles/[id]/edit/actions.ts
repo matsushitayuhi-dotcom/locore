@@ -123,6 +123,56 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
   return { ok: true };
 }
 
+/**
+ * 自動保存用の軽量 Server Action。
+ * - Toast やリダイレクトはクライアント側で抑制（戻り値の savedAt のみ表示）
+ * - 公開中の警告 confirm はスキップ（連続保存のため）
+ * - 認可と検証は updateArticle と同じ
+ */
+const autoSaveSchema = updateArticleSchema.extend({});
+
+export async function autoSaveArticle(input: unknown): Promise<
+  ActionResult<{ savedAt: number }>
+> {
+  const parsed = autoSaveSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: '入力内容に誤りがあります',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  const data = parsed.data;
+  const { user, db } = await assertOwnership(data.id);
+
+  if (data.priceJpy != null) {
+    const tier = await getWriterTier(user.id);
+    const cap = TIER_PRICE_CAPS[tier];
+    if (data.priceJpy > cap) {
+      return {
+        ok: false,
+        error: `Tier (${tier}) の上限 ¥${cap.toLocaleString('ja-JP')} を超えています`,
+      };
+    }
+  }
+
+  const patch: Partial<typeof schema.articles.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+  if (data.title !== undefined) patch.title = data.title;
+  if (data.body !== undefined) patch.body = data.body;
+  if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
+  if (data.durationType !== undefined) patch.durationType = data.durationType;
+  if (data.articleType !== undefined) patch.articleType = data.articleType;
+  if (data.tags !== undefined) patch.tags = data.tags;
+  if (data.coverImageUrl !== undefined) patch.coverImageUrl = data.coverImageUrl ?? null;
+  if (data.cityId !== undefined) patch.cityId = data.cityId;
+
+  await db.update(schema.articles).set(patch).where(eq(schema.articles.id, data.id));
+  // 自動保存では revalidatePath を呼ばない（プレビュー画面に副作用を出さない）
+  return { ok: true, data: { savedAt: Date.now() } };
+}
+
 export async function publishArticle(articleId: string): Promise<ActionResult<{
   finalScore: number;
   action: 'pass' | 'warned' | 'held';
@@ -224,6 +274,7 @@ const upsertSpotSchema = z.object({
   openingHours: z.any().optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   position: z.number().int().min(0).default(0),
+  googlePlaceId: z.string().trim().min(1).max(255).optional().nullable(),
 });
 
 export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: string }>> {
@@ -268,6 +319,7 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
         openingHours: data.openingHours ?? null,
         tags: data.tags,
         position: data.position,
+        googlePlaceId: data.googlePlaceId ?? null,
         updatedAt: new Date(),
       })
       .where(eq(schema.spots.id, data.id));
@@ -287,6 +339,7 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
       openingHours: data.openingHours ?? null,
       tags: data.tags,
       position: data.position,
+      googlePlaceId: data.googlePlaceId ?? null,
     })
     .returning({ id: schema.spots.id });
 

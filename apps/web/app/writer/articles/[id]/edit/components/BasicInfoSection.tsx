@@ -1,14 +1,6 @@
 'use client';
 
-/**
- * @deprecated 単画面リニューアル後は `app/writer/articles/[id]/edit/components/BasicInfoSection.tsx` を使用。
- * 旧 4 タブ UI 用の互換コンポーネント。新規実装からは参照しないこと。
- */
-
-import { useState, useTransition } from 'react';
-import { toast } from 'sonner';
-import { Button, Input } from '@locore/ui';
-import { updateArticle } from '@/app/writer/articles/[id]/edit/actions';
+import { Input } from '@locore/ui';
 
 const PRICE_OPTIONS = [300, 500, 800, 1000, 1500, 2000, 3000, 5000] as const;
 
@@ -24,35 +16,9 @@ const ARTICLE_TYPE_OPTIONS: {
   label: string;
   description: string;
 }[] = [
-  {
-    value: 'spot_guide',
-    label: 'スポット紹介',
-    description: '個別の場所を紹介する記事',
-  },
-  {
-    value: 'itinerary',
-    label: '旅程プラン',
-    description: '時間軸ありのコース・モデルプラン',
-  },
+  { value: 'spot_guide', label: 'スポット紹介', description: '個別の場所を紹介する記事' },
+  { value: 'itinerary', label: '旅程プラン', description: '時間軸ありのコース・モデルプラン' },
 ];
-
-export type ArticleFormInitial = {
-  id: string;
-  title: string;
-  priceJpy: number;
-  durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | null;
-  articleType: 'spot_guide' | 'itinerary';
-  tags: string[];
-  cityId: string;
-  coverImageUrl: string | null;
-};
-
-type Props = {
-  initial: ArticleFormInitial;
-  cities: { id: string; nameJa: string }[];
-  tier: 'S' | 'A' | 'B';
-  isPublished: boolean;
-};
 
 const TIER_PRICE_CAPS: Record<'S' | 'A' | 'B', number> = {
   S: 5000,
@@ -60,56 +26,43 @@ const TIER_PRICE_CAPS: Record<'S' | 'A' | 'B', number> = {
   B: 1000,
 };
 
-export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
-  const [title, setTitle] = useState(initial.title);
-  const [priceJpy, setPriceJpy] = useState(initial.priceJpy);
-  const [durationType, setDurationType] = useState(initial.durationType ?? '');
-  const [articleType, setArticleType] = useState<'spot_guide' | 'itinerary'>(
-    initial.articleType ?? 'spot_guide',
-  );
-  const [tagsText, setTagsText] = useState((initial.tags ?? []).join(', '));
-  const [cityId, setCityId] = useState(initial.cityId);
-  const [coverImageUrl, setCoverImageUrl] = useState(initial.coverImageUrl ?? '');
-  const [isPending, startTransition] = useTransition();
+const TITLE_MAX = 200;
 
+export type BasicInfoValue = {
+  title: string;
+  priceJpy: number;
+  durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | '';
+  articleType: 'spot_guide' | 'itinerary';
+  tagsText: string;
+  cityId: string;
+};
+
+type Props = {
+  value: BasicInfoValue;
+  onChange: (next: BasicInfoValue) => void;
+  cities: { id: string; nameJa: string }[];
+  tier: 'S' | 'A' | 'B';
+};
+
+export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
   const cap = TIER_PRICE_CAPS[tier];
   const allowedPrices = PRICE_OPTIONS.filter((p) => p <= cap);
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isPublished) {
-      const ok = window.confirm(
-        '公開中の記事を編集すると変更が即時反映されます。続けますか？',
-      );
-      if (!ok) return;
-    }
-
-    const tags = tagsText
-      .split(/[,、\n]/)
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-
-    startTransition(async () => {
-      const res = await updateArticle({
-        id: initial.id,
-        title,
-        priceJpy,
-        durationType: durationType || undefined,
-        articleType,
-        tags,
-        cityId,
-        coverImageUrl: coverImageUrl || '',
-      });
-      if (res.ok) {
-        toast.success('基本情報を保存しました');
-      } else {
-        toast.error(res.error);
-      }
-    });
+  const set = <K extends keyof BasicInfoValue>(k: K, v: BasicInfoValue[K]) => {
+    onChange({ ...value, [k]: v });
   };
 
+  const titleOver = value.title.length > TITLE_MAX;
+
   return (
-    <form onSubmit={onSubmit} className="space-y-5 rounded-md border border-border bg-card p-5 sm:p-6">
+    <section
+      className="space-y-5 rounded-md border border-border bg-card p-5 sm:p-6"
+      aria-labelledby="basic-section-title"
+    >
+      <h3 id="basic-section-title" className="text-[15px] font-medium tracking-tight">
+        基本情報
+      </h3>
+
       <div>
         <label htmlFor="art-title" className="mb-1 block text-[12px] font-medium text-foreground/70">
           タイトル <span className="text-danger-500">*</span>
@@ -117,25 +70,23 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
         <Input
           id="art-title"
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={200}
+          value={value.title}
+          onChange={(e) => set('title', e.target.value)}
+          maxLength={TITLE_MAX}
           required
         />
-        <p className="mt-1 text-[11px] text-foreground/50">{title.length} / 200</p>
+        <p className={'mt-1 text-[11px] ' + (titleOver ? 'text-danger-500' : 'text-foreground/50')}>
+          {value.title.length} / {TITLE_MAX}
+        </p>
       </div>
 
       <fieldset>
         <legend className="mb-2 block text-[12px] font-medium text-foreground/70">
           記事の種別 <span className="text-danger-500">*</span>
         </legend>
-        <div
-          role="radiogroup"
-          aria-label="記事の種別"
-          className="grid gap-2 sm:grid-cols-2"
-        >
+        <div role="radiogroup" aria-label="記事の種別" className="grid gap-2 sm:grid-cols-2">
           {ARTICLE_TYPE_OPTIONS.map((opt) => {
-            const selected = articleType === opt.value;
+            const selected = value.articleType === opt.value;
             return (
               <label
                 key={opt.value}
@@ -151,14 +102,12 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
                   name="article-type"
                   value={opt.value}
                   checked={selected}
-                  onChange={() => setArticleType(opt.value)}
+                  onChange={() => set('articleType', opt.value)}
                   className="mt-1"
                 />
                 <span className="flex flex-col leading-tight">
                   <span className="font-medium text-foreground">{opt.label}</span>
-                  <span className="mt-0.5 text-[11px] text-foreground/60">
-                    {opt.description}
-                  </span>
+                  <span className="mt-0.5 text-[11px] text-foreground/60">{opt.description}</span>
                 </span>
               </label>
             );
@@ -173,8 +122,8 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
           </label>
           <select
             id="art-price"
-            value={priceJpy}
-            onChange={(e) => setPriceJpy(Number(e.target.value))}
+            value={value.priceJpy}
+            onChange={(e) => set('priceJpy', Number(e.target.value))}
             className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             {allowedPrices.map((p) => (
@@ -194,8 +143,8 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
           </label>
           <select
             id="art-duration"
-            value={durationType}
-            onChange={(e) => setDurationType(e.target.value)}
+            value={value.durationType}
+            onChange={(e) => set('durationType', e.target.value as BasicInfoValue['durationType'])}
             className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             <option value="">選択してください</option>
@@ -214,8 +163,8 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
         </label>
         <select
           id="art-city"
-          value={cityId}
-          onChange={(e) => setCityId(e.target.value)}
+          value={value.cityId}
+          onChange={(e) => set('cityId', e.target.value)}
           className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
         >
           {cities.map((c) => (
@@ -233,36 +182,14 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
         <Input
           id="art-tags"
           type="text"
-          value={tagsText}
-          onChange={(e) => setTagsText(e.target.value)}
+          value={value.tagsText}
+          onChange={(e) => set('tagsText', e.target.value)}
           placeholder="朝食, ビストロ, 路地裏"
         />
         <p className="mt-1 text-[11px] text-foreground/50">
           カンマ区切りで入力してください（最大 20 件）。
         </p>
       </div>
-
-      <div>
-        <label htmlFor="art-cover" className="mb-1 block text-[12px] font-medium text-foreground/70">
-          カバー画像 URL
-        </label>
-        <Input
-          id="art-cover"
-          type="url"
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
-          placeholder="https://picsum.photos/seed/locore-foo/960/640"
-        />
-        <p className="mt-1 text-[11px] text-foreground/50">
-          画像 URL を直接指定できます（直接アップロードは今後対応）。
-        </p>
-      </div>
-
-      <div className="flex justify-end">
-        <Button type="submit" variant="primary" disabled={isPending}>
-          {isPending ? '保存中…' : '基本情報を保存'}
-        </Button>
-      </div>
-    </form>
+    </section>
   );
 }

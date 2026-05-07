@@ -20,11 +20,13 @@ export type SpotRow = {
   openingHoursText: string;
   tags: string[];
   position: number;
+  googlePlaceId?: string | null;
 };
 
 type Props = {
   articleId: string;
   initial: SpotRow[];
+  googleMapsApiKey?: string;
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -48,10 +50,11 @@ function rowToValue(row: SpotRow): SpotEditorValue {
     openingHoursText: row.openingHoursText,
     tagsText: (row.tags ?? []).join(', '),
     position: row.position,
+    googlePlaceId: row.googlePlaceId ?? null,
   };
 }
 
-export function SpotList({ articleId, initial }: Props) {
+export function SpotList({ articleId, initial, googleMapsApiKey }: Props) {
   const [rows, setRows] = useState<SpotRow[]>(
     [...initial].sort((a, b) => a.position - b.position),
   );
@@ -86,6 +89,7 @@ export function SpotList({ articleId, initial }: Props) {
               <div className="p-2">
                 <SpotEditor
                   initial={rowToValue(row)}
+                  googleMapsApiKey={googleMapsApiKey}
                   onSaved={() => {
                     setEditingId(null);
                     // 親で完全な再フェッチは編集ページの revalidate に任せる
@@ -157,7 +161,9 @@ export function SpotList({ articleId, initial }: Props) {
             openingHoursText: '',
             tagsText: '',
             position: newPosition,
+            googlePlaceId: null,
           }}
+          googleMapsApiKey={googleMapsApiKey}
           onSaved={() => {
             setShowNew(false);
             // revalidate 経由で再描画されることを期待
