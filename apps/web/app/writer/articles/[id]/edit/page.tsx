@@ -73,8 +73,13 @@ export default async function EditArticlePage({
       execute: (q: ReturnType<typeof import('drizzle-orm').sql>) => Promise<unknown>;
     };
     const { sql } = await import('drizzle-orm');
+    // postgres-js は drizzle の `${array}` を text[] にエンコードしてしまうため、
+    // ANY(array) ではなく IN (val::uuid, ...) で個別バインドする。
     const result = (await dbAny.execute(
-      sql`select id, ST_Y(location::geometry) as lat, ST_X(location::geometry) as lng from spots where id = ANY(${spotIds})`,
+      sql`select id::text as id, ST_Y(location::geometry) as lat, ST_X(location::geometry) as lng from spots where id IN (${sql.join(
+        spotIds.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})`,
     )) as unknown as
       | Array<{ id: string; lat: number; lng: number }>
       | { rows: Array<{ id: string; lat: number; lng: number }> };

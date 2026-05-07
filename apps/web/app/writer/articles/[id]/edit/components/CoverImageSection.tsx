@@ -20,13 +20,15 @@ export function CoverImageSection({ value, onChange, isPublished }: Props) {
         </h3>
         <p className="mt-1 text-[11px] text-foreground/50">3:2 を推奨。一覧カードや記事ヘッダーに表示されます。</p>
       </div>
-      <ImageUploader
-        value={value}
-        onChange={onChange}
-        aspect="3 / 2"
-        placeholder="https://picsum.photos/seed/locore/960/640"
-        isPublished={isPublished}
-      />
+      <div className="max-w-[360px]">
+        <ImageUploader
+          value={value}
+          onChange={onChange}
+          aspect="3 / 2"
+          placeholder="https://picsum.photos/seed/locore/960/640"
+          isPublished={isPublished}
+        />
+      </div>
     </section>
   );
 }

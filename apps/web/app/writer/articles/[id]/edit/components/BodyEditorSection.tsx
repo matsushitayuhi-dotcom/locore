@@ -33,7 +33,8 @@ const MAX_BODY = 20000;
 const CHAR_PER_MIN = 300;
 
 export function BodyEditorSection({ value, onChange }: Props) {
-  const [mode, setMode] = useState<Mode>('markdown');
+  // デフォルトは WYSIWYG（一般ユーザー向けに優しいモード）
+  const [mode, setMode] = useState<Mode>('wysiwyg');
   // WYSIWYG 内部状態（HTML）
   const [html, setHtml] = useState<string>(() => markdownToHtml(value));
 
