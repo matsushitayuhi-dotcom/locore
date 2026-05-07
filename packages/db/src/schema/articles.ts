@@ -68,6 +68,8 @@ export const articles = pgTable(
     warned: boolean('warned').notNull().default(false),
     moderationScore: integer('moderation_score'),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -78,6 +80,7 @@ export const articles = pgTable(
     statusIdx: index('articles_status_idx').on(table.status),
     publishedAtIdx: index('articles_published_at_idx').on(table.publishedAt),
     typeIdx: index('articles_type_idx').on(table.articleType, table.publishedAt),
+    isSampleIdx: index('articles_is_sample_idx').on(table.isSample),
   }),
 );
 

@@ -29,6 +29,8 @@ export const writerProfiles = pgTable(
     foundingFeeWaiverUntil: timestamp('founding_fee_waiver_until', { withTimezone: true }),
     foundingStatus: foundingStatusEnum('founding_status'),
     bio: text('bio'),
+    /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

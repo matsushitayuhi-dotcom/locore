@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, jsonb, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { cities } from './cities';
@@ -22,6 +22,8 @@ export const lightDiaries = pgTable(
     cityId: uuid('city_id').references(() => cities.id, { onDelete: 'set null' }),
     visitedAt: timestamp('visited_at', { withTimezone: true }),
     status: lightDiaryStatusEnum('status').notNull().default('draft'),
+    /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

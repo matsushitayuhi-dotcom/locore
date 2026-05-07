@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { cities } from './cities';
@@ -19,6 +19,8 @@ export const editorCollections = pgTable(
       .references(() => users.id, { onDelete: 'restrict' }),
     cityId: uuid('city_id').references(() => cities.id, { onDelete: 'set null' }),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

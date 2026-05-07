@@ -75,6 +75,8 @@ pnpm --filter @locore/db db:push
 
 ### 4. シード投入
 
+最小セット（5記事）：
+
 ```bash
 pnpm --filter @locore/db db:seed
 ```
@@ -87,6 +89,28 @@ pnpm --filter @locore/db db:seed
 - spots: 各記事 3-5 個
 
 固定 UUID + ON CONFLICT DO UPDATE で冪等。
+
+### 4'. フルモック投入（is_sample フラグ付き）
+
+`apps/web/lib/mock` の全データ（25 記事 / 95 スポット / 8 ライター / ライト旅行記 / コレクション）を `is_sample = true` で一括投入：
+
+```bash
+# 事前に 0010_is_sample.sql を流して列を追加しておく
+psql $DIRECT_URL -f packages/db/migrations/manual/0010_is_sample.sql
+pnpm --filter @locore/db db:seed-mock
+```
+
+`is_sample = true` の行だけまとめて削除する：
+
+```bash
+# SQL Editor で実行
+psql $DIRECT_URL -f packages/db/migrations/manual/0011_cleanup_samples.sql
+
+# または tsx で
+pnpm --filter @locore/db db:clean-samples
+```
+
+投入は決定論的 UUID + ON CONFLICT DO UPDATE で冪等（mock を編集して再 seed すれば DB 上の値も追従）。
 
 ### 5. Drizzle Studio
 
@@ -103,7 +127,9 @@ pnpm --filter @locore/db db:studio
 | `db:migrate` | 生成済みマイグレーションを適用 |
 | `db:check` | スキーマと DB の差分を確認 |
 | `db:studio` | Drizzle Studio を起動 |
-| `db:seed` | seed/index.ts を実行 |
+| `db:seed` | seed/index.ts を実行（最小 5 記事） |
+| `db:seed-mock` | seed/seed-mock.ts を実行（フルモック・is_sample=true） |
+| `db:clean-samples` | is_sample=true の行を全削除 |
 
 ## 注意
 

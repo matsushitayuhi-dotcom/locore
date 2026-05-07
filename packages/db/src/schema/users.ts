@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, pgEnum, index, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, pgEnum, index, jsonb, boolean } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { writerProfiles } from './writer_profiles';
 import { articles } from './articles';
@@ -74,6 +74,12 @@ export const users = pgTable(
       .$type<NotificationPreferences>()
       .notNull()
       .default(DEFAULT_NOTIFICATION_PREFERENCES),
+    /**
+     * サンプルデータ識別用フラグ。
+     * 投入時 true、`DELETE FROM ... WHERE is_sample = true` で一括クリーンアップ可能。
+     * 本番アカウントは常に false。マイグレーション: `manual/0010_is_sample.sql`
+     */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
@@ -81,6 +87,7 @@ export const users = pgTable(
   (table) => ({
     emailIdx: index('users_email_idx').on(table.email),
     roleIdx: index('users_role_idx').on(table.role),
+    isSampleIdx: index('users_is_sample_idx').on(table.isSample),
   }),
 );
 

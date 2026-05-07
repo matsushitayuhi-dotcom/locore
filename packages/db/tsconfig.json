@@ -10,5 +10,11 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "drizzle.config.ts", "seed/**/*.ts"],
-  "exclude": ["node_modules", "dist", "migrations"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "migrations",
+    "seed/seed-mock.ts",
+    "seed/clean-samples.ts"
+  ]
 }

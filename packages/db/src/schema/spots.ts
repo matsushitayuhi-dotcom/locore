@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   jsonb,
+  boolean,
   index,
   customType,
 } from 'drizzle-orm/pg-core';
@@ -77,6 +78,8 @@ export const spots = pgTable(
      * マイグレーション: `manual/0009_spots_place_id.sql`
      */
     googlePlaceId: text('google_place_id'),
+    /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

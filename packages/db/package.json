@@ -31,6 +31,8 @@
     "db:check": "drizzle-kit check",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx seed/index.ts",
+    "db:seed-mock": "tsx seed/seed-mock.ts",
+    "db:clean-samples": "tsx seed/clean-samples.ts",
     "clean": "rimraf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
