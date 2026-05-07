@@ -26,6 +26,7 @@
  */
 import 'dotenv/config';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { sql } from 'drizzle-orm';
 import { createDbClient } from '../src/client';
 import {
@@ -46,19 +47,61 @@ import {
   type NewCollectionArticle,
 } from '../src/schema';
 
-// mock データは apps/web 側に存在する。tsx は相対パスで TS を直接読めるので
-// そのまま型と値を import する。
-import {
-  writers as mockWriters,
-  articles as mockArticles,
-  spots as mockSpots,
-  lightDiaries as mockLightDiaries,
-  collections as mockCollections,
-  type Writer as MockWriter,
-  type Article as MockArticle,
-  type Spot as MockSpot,
-  type DurationType as MockDurationType,
-} from '../../../apps/web/lib/mock';
+// mock データは apps/web 側（CommonJS パッケージ）に存在する。
+//
+// Node 24 + tsx 環境では `import` 文で apps/web 側の TS を読むと
+// ESM/CJS 境界で named export が見えなくなることがあるため、
+// `createRequire` で CJS 解決に切り替えて読み込む。
+//
+// 型は `import type` で取れば実行時には消えるので副作用なし。
+import type {
+  Writer as MockWriter,
+  Article as MockArticle,
+  Spot as MockSpot,
+  DurationType as MockDurationType,
+} from '../../../apps/web/lib/mock/types';
+
+const require = createRequire(import.meta.url);
+const mockWritersMod = require('../../../apps/web/lib/mock/writers') as {
+  writers: MockWriter[];
+};
+const mockArticlesMod = require('../../../apps/web/lib/mock/articles') as {
+  articles: MockArticle[];
+};
+const mockSpotsMod = require('../../../apps/web/lib/mock/spots') as {
+  spots: MockSpot[];
+};
+const mockLightDiariesMod = require('../../../apps/web/lib/mock/lightDiaries') as {
+  lightDiaries: Array<{
+    id: string;
+    authorName: string;
+    avatarUrl: string;
+    title: string;
+    body: string;
+    cityId: string;
+    visitedAt: string;
+    likes: number;
+  }>;
+};
+const mockCollectionsMod = require('../../../apps/web/lib/mock/collections') as {
+  collections: Array<{
+    id: string;
+    title: string;
+    subtitle: string;
+    intro: string;
+    coverImageUrl: string;
+    curatorName: string;
+    curatorRole: string;
+    articleIds: string[];
+    publishedAt: string;
+  }>;
+};
+
+const mockWriters = mockWritersMod.writers;
+const mockArticles = mockArticlesMod.articles;
+const mockSpots = mockSpotsMod.spots;
+const mockLightDiaries = mockLightDiariesMod.lightDiaries;
+const mockCollections = mockCollectionsMod.collections;
 
 import { seedCities } from './data/cities';
 
