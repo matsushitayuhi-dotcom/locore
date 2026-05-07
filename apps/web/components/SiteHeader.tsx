@@ -46,9 +46,9 @@ export async function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/founders"
-            className="hidden items-center gap-1 rounded-full bg-gradient-to-r from-secondary-50 to-accent-50 px-3 py-1.5 text-xs font-bold text-secondary-700 ring-1 ring-secondary-300/40 transition hover:from-secondary-300/40 hover:to-accent-300/40 sm:inline-flex"
+            className="hidden items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-100 hover:ring-primary-300 sm:inline-flex"
           >
-            🌟 Founders 枠 →
+            Founders 枠 →
           </Link>
 
           {user ? (

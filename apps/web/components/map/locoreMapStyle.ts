@@ -54,7 +54,7 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.attraction', stylers: [{ visibility: 'off' }] },
 
-  // 道路：ほぼ白に近いベージュ
+  // 道路：ほぼ白
   {
     featureType: 'road',
     elementType: 'geometry',
@@ -63,12 +63,12 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   {
     featureType: 'road.highway',
     elementType: 'geometry',
-    stylers: [{ color: '#FFE9C9' }],
+    stylers: [{ color: '#E3EBE7' }],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry.stroke',
-    stylers: [{ color: '#FFD89A' }],
+    stylers: [{ color: '#CDD8D2' }],
   },
   {
     featureType: 'road.arterial',
@@ -96,11 +96,11 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   },
 ];
 
-/** ピンの色（local score に応じて切り替え） */
+/** ピンの色（local score に応じて切り替え）— emerald 単色系の濃淡で */
 export function pinColorForScore(score: number): string {
-  if (score >= 70) return '#14A37C'; // emerald
-  if (score >= 30) return '#F4B400'; // sun
-  return '#FF7A59'; // coral
+  if (score >= 70) return '#0D7A5C'; // 深い emerald
+  if (score >= 30) return '#54C79A'; // 中間
+  return '#C6ECD9'; // 淡い mint
 }
 
 /** ピンの「クラス」（HTML 用、locore-pin と組み合わせ） */

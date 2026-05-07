@@ -34,36 +34,31 @@ export default async function HomePage() {
 
   return (
     <main className="bg-background">
-      {/* Hero — emerald グラデ + ふわっとした blob 装飾 */}
-      <section className="relative overflow-hidden border-b border-primary-100 bg-gradient-to-br from-primary-50 via-white to-secondary-50/40">
-        {/* 装飾 blob — 透明度低めで奥に */}
+      {/* Hero — emerald 単色のソフトグラデ + 控えめ blob 装飾 */}
+      <section className="relative overflow-hidden border-b border-primary-100 bg-gradient-to-br from-primary-50 via-white to-primary-50/30">
+        {/* 装飾 blob — 透明度低めで奥に。emerald のみ */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primary-300/30 blur-3xl"
+          className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primary-200/40 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-secondary-300/30 blur-3xl"
+          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-primary-100/60 blur-3xl"
         />
         <div className="relative mx-auto max-w-screen-xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
             <div>
               <p className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-700 shadow-sm ring-1 ring-primary-100">
-                <Sparkles className="h-3 w-3 text-accent-500" />
+                <Sparkles className="h-3 w-3 text-primary-500" />
                 現地民の "本物" だけ、編集して届ける
               </p>
-              <h1
-                className="text-[44px] font-bold leading-[1.05] tracking-tight text-neutral-900 sm:text-[64px]"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
-              >
+              <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-neutral-900 sm:text-[60px]">
                 その土地の
                 <span className="relative inline-block whitespace-nowrap">
                   <span className="relative z-10 text-primary-700">本当の物語</span>
                   <span
                     aria-hidden
-                    className="absolute inset-x-0 bottom-1 z-0 h-3 rounded-full bg-accent-300/60"
+                    className="absolute inset-x-0 bottom-1 z-0 h-2.5 rounded-full bg-primary-100"
                   />
                 </span>
                 を、
@@ -83,8 +78,8 @@ export default async function HomePage() {
                   </Button>
                 </Link>
                 <Link href="/founders">
-                  <Button variant="accent" size="lg">
-                    🌱 Founders 枠（先着50人）
+                  <Button variant="outline" size="lg">
+                    Founders 枠（先着50人）
                   </Button>
                 </Link>
               </div>
@@ -135,16 +130,11 @@ export default async function HomePage() {
                 priority
                 sizes="(min-width: 768px) 50vw, 100vw"
               />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary-900/80 via-primary-900/40 to-transparent p-5">
-                <p className="inline-flex items-center gap-1 rounded-full bg-accent-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-neutral-900">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary-900/85 via-primary-900/40 to-transparent p-5">
+                <p className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-700">
                   Cover story
                 </p>
-                <p
-                  className="mt-2 text-[20px] font-bold leading-snug text-white"
-                  style={{
-                    fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  }}
-                >
+                <p className="mt-2 text-[20px] font-bold leading-snug text-white">
                   マレ地区で観光客が来ない、地元のおじさんが集う朝のビストロ3軒
                 </p>
               </div>
@@ -187,7 +177,7 @@ export default async function HomePage() {
                 </div>
                 <div className="p-4">
                   <Badge variant="default" className="text-[10px]">
-                    📍 {a.area}
+                    {a.area}
                   </Badge>
                   <p
                     className="mt-2 line-clamp-2 text-[15px] font-semibold leading-snug"
@@ -250,23 +240,18 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Founders — coral グラデで目立つ CTA バナー */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-secondary-50 via-white to-primary-50 p-8 shadow-sm ring-1 ring-secondary-300/40 sm:p-10">
+        {/* Founders — emerald 単色のソフトバナー */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 via-white to-primary-50/40 p-8 shadow-sm ring-1 ring-primary-100 sm:p-10">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-secondary-300/30 blur-3xl"
+            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-200/30 blur-3xl"
           />
           <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
             <div>
-              <p className="inline-flex items-center gap-1 rounded-full bg-secondary-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
-                🌟 Founders 枠（先着 50 人）
+              <p className="inline-flex items-center gap-1 rounded-full bg-primary-700 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+                Founders 枠（先着 50 人）
               </p>
-              <h2
-                className="mt-3 text-[30px] font-bold leading-[1.2] tracking-tight"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
-              >
+              <h2 className="mt-3 text-[28px] font-bold leading-[1.2] tracking-tight">
                 Locore を一緒に育てる書き手、
                 <br className="hidden md:block" />
                 いま探してます。
@@ -278,7 +263,7 @@ export default async function HomePage() {
             </div>
             <div className="flex justify-end">
               <Link href="/founders">
-                <Button size="lg" variant="secondary">
+                <Button size="lg" variant="primary">
                   応募ページを見る
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

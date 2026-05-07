@@ -168,7 +168,8 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
                     "shadow-sm",
                   )}
                 >
-                  📍 {area}
+                  <MapPin className="size-3" aria-hidden />
+                  {area}
                 </span>
               ) : null}
               {articleType ? (
@@ -179,8 +180,8 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
                     "rounded-full px-2.5 py-1",
                     "text-[10px] font-bold uppercase tracking-wider shadow-sm",
                     articleType === "itinerary"
-                      ? "bg-accent-500 text-neutral-900"
-                      : "bg-primary-500 text-white",
+                      ? "bg-primary-700 text-white"
+                      : "bg-white/95 text-primary-700 backdrop-blur",
                   )}
                 >
                   {ARTICLE_TYPE_LABEL[articleType]}

@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — Bright / Pop / Emerald edition.
+ * Locore Design Tokens — Emerald Mono palette.
  *
- * 旅行記事の投稿が「楽しそう・始めやすい」ことを最優先したカラーに変更。
- *   - Primary: Emerald 系（緑）— 安心感と植物感
- *   - Secondary: Coral 系（暖色アクセント）— 価格・CTAなど目を引きたい場所
- *   - Accent: Sun 系（黄）— ハイライト
- *   - Background: ほぼ純白 + 薄いミント — 軽くて明るい
+ * Brand voice:
+ *   - Single emerald hue family (no rainbow).
+ *   - Secondary = deeper emerald, Accent = lighter mint. Same hue, different brightness.
+ *   - Semantic colors (warning / danger) only get a hue shift when meaning requires it.
+ *   - Body text in plain sans (browser-default leaning, Arial first).
  */
 
 @layer base {
   :root {
-    /* === Neutral (Paper) — 明るめにシフト ============================== */
-    --color-neutral-0: #ffffff;
-    --color-neutral-25: #f8fbf9;   /* 微かにミントを乗せた紙 */
-    --color-neutral-50: #f1f6f3;
+    /* === Neutral (paper, text). 微かにミントを乗せる ================== */
+    --color-neutral-0:   #ffffff;
+    --color-neutral-25:  #f8fbf9;
+    --color-neutral-50:  #f1f6f3;
     --color-neutral-100: #e3ebe7;
     --color-neutral-200: #cdd8d2;
     --color-neutral-300: #a8b6af;
@@ -26,41 +26,43 @@
     --color-neutral-700: #2f3d36;
     --color-neutral-900: #16201c;
 
-    /* === Primary: Emerald ============================================== */
+    /* === Primary: Emerald（メイン） ==================================== */
     --color-primary-50:  #e6f7ef;
-    --color-primary-100: #c0ecd6;
+    --color-primary-100: #c6ecd9;
+    --color-primary-200: #95dab8;
     --color-primary-300: #54c79a;
     --color-primary-500: #14a37c;
     --color-primary-700: #0d7a5c;
     --color-primary-900: #06432f;
 
-    /* === Secondary: Coral / Peach（CTAアクセント） ====================== */
-    --color-secondary-50:  #fff0ec;
-    --color-secondary-300: #ffa58c;
-    --color-secondary-500: #ff7a59;   /* Pop なコーラル */
-    --color-secondary-700: #c24a2c;
+    /* === Secondary: 同じ emerald 系の深い側（強調 CTA に使う） ========= */
+    /*    primary-500 と並べたときに「もう一段深い」と感じるように。      */
+    --color-secondary-50:  #d8efe2;
+    --color-secondary-300: #2c8a6d;
+    --color-secondary-500: #0d7a5c;
+    --color-secondary-700: #06432f;
 
-    /* === Accent: Sun（注意を引く黄味系） =============================== */
-    --color-accent-50:  #fff8de;
-    --color-accent-300: #ffdf6b;
-    --color-accent-500: #f4b400;
-    --color-accent-700: #b87f00;
+    /* === Accent: 同じ emerald 系の淡い側（ハイライト / 下線 / pill） == */
+    --color-accent-50:  #ecf9f3;
+    --color-accent-300: #95dab8;
+    --color-accent-500: #54c79a;
+    --color-accent-700: #14a37c;
 
-    /* === Semantic ==================================================== */
+    /* === Semantic — 必要最低限の色相変化のみ（多用しない） ============ */
     --color-success-50:  #e7faec;
-    --color-success-500: #21b85a;
-    --color-warning-50:  #fff3d6;
-    --color-warning-500: #f4a300;
-    --color-warning-700: #a86b00;
-    --color-danger-50:   #fde4e1;
-    --color-danger-500:  #e8514a;
-    --color-info-50:     #e1f0ff;
-    --color-info-500:    #2f86d6;
+    --color-success-500: #14a37c;        /* primary と揃える */
+    --color-warning-50:  #fdf3da;
+    --color-warning-500: #b8860b;        /* くすんだ黄土 */
+    --color-warning-700: #7a5800;
+    --color-danger-50:   #fbe6e3;
+    --color-danger-500:  #c0463f;        /* くすませて派手さを抑える */
+    --color-info-50:     #e1ecec;
+    --color-info-500:    #3d7a78;        /* 青ではなく青緑 */
 
-    /* === Local-score gradient (map pins, score bars) ================== */
-    --color-local-high: #14a37c;   /* ローカル度 70-100 — emerald */
-    --color-local-mid:  #f4b400;   /* 30-69 — sun */
-    --color-local-low:  #ff7a59;   /* 0-29 — coral */
+    /* === Local-score gradient — 全部 emerald の濃淡だけで分ける ======= */
+    --color-local-high: #0d7a5c;   /* 70-100 — 深い emerald */
+    --color-local-mid:  #54c79a;   /* 30-69 — 中間 */
+    --color-local-low:  #c6ecd9;   /* 0-29 — 淡い mint */
 
     /* === Surface roles =============================================== */
     --color-bg: var(--color-neutral-25);
@@ -73,12 +75,19 @@
     --color-fg-subtle: var(--color-neutral-400);
     --color-ring: var(--color-primary-500);
 
-    /* === Typography（変更なし） ====================================== */
-    --font-sans-jp: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
-    --font-serif-jp: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
-    --font-sans-latin: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    --font-display: "Fraunces", Georgia, serif;
-    --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+    /* === Typography ====================================================
+       明朝（serif）は使わない方針。
+       Arial を最優先にしつつ日本語は Hiragino / Yu Gothic / Meiryo の順に。
+       --font-serif-jp / --font-display も同じスタックに redirect することで、
+       過去の `style="font-family: var(--font-serif-jp)..."` も自動的にサンセリフ化。
+    ================================================================== */
+    --font-sans-jp:    Arial, "Helvetica Neue", Helvetica,
+                       "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "メイリオ", Meiryo, sans-serif;
+    --font-sans-latin: Arial, "Helvetica Neue", Helvetica, system-ui, sans-serif;
+    --font-serif-jp:   var(--font-sans-jp);
+    --font-display:    var(--font-sans-jp);
+    --font-serif:      var(--font-sans-jp);
+    --font-mono:       "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
     /* === Spacing scale (4px base) ==================================== */
     --space-0: 0;
@@ -95,20 +104,20 @@
     --space-20: 5rem;
     --space-24: 6rem;
 
-    /* === Radii — ポップに丸めを強化 ================================= */
+    /* === Radii — 中庸に。丸めすぎると "ガチャガチャ" 印象に戻るので控えめ === */
     --radius-none: 0;
     --radius-xs: 4px;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 18px;
-    --radius-xl: 24px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
     --radius-full: 9999px;
 
-    /* === Shadows — emerald 影でほのかに色付ける ===================== */
-    --shadow-xs: 0 1px 2px rgba(20, 163, 124, 0.06);
-    --shadow-sm: 0 2px 8px rgba(20, 163, 124, 0.08);
-    --shadow-md: 0 6px 18px rgba(20, 163, 124, 0.12);
-    --shadow-lg: 0 16px 40px rgba(20, 163, 124, 0.16);
+    /* === Shadows — 中性のニュートラル影に戻す（emerald 影は派手だった） === */
+    --shadow-xs: 0 1px 2px rgba(22, 32, 28, 0.05);
+    --shadow-sm: 0 2px 6px rgba(22, 32, 28, 0.06);
+    --shadow-md: 0 6px 16px rgba(22, 32, 28, 0.08);
+    --shadow-lg: 0 16px 32px rgba(22, 32, 28, 0.12);
 
     /* === Motion ====================================================== */
     --duration-fast: 120ms;
@@ -118,7 +127,6 @@
     --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   }
 
-  /* Body defaults */
   html {
     color-scheme: light;
     -webkit-font-smoothing: antialiased;
@@ -128,37 +136,26 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-fg);
-    font-family: var(--font-sans-jp), var(--font-sans-latin);
+    font-family: var(--font-sans-jp);
     font-feature-settings: "palt" 1;
   }
 
-  /* Headlines opt into the editorial serif by default */
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-serif-jp), var(--font-display);
+  /* 見出しはセリフを使わず、本文と同じ Arial サンセリフのウェイトで強調 */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans-jp);
     color: var(--color-neutral-900);
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
-  /* Tabular numbers for prices, distances, times */
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
   }
 }
 
-/*
- * Locore のグローバル装飾。
- * - 投稿フォームを「書きたくなる」気分にするためのアクセントを少しだけ。
- */
 @layer components {
-  /* Map / リスト用のドット背景 */
-  .bg-dotted {
-    background-image: radial-gradient(rgba(20, 163, 124, 0.15) 1px, transparent 1px);
-    background-size: 12px 12px;
-  }
-
-  /* CTA ボタンの hover で軽く弾むアニメーション */
+  /* CTA がふわっと浮く */
   .pop-on-hover {
     transition: transform var(--duration-base) var(--ease-out),
       box-shadow var(--duration-base) var(--ease-out);

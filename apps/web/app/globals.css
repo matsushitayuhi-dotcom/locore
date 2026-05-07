@@ -3,19 +3,16 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — Bright / Pop / Emerald edition.
+ * Locore Design Tokens — Emerald Mono palette.
  * Source of truth: packages/ui/src/styles/globals.css
- *
- * 直接 @import @locore/ui/styles.css すると postcss-import が @tailwind と
- * @layer の順序を解決できなかったため、トークンの :root 部分のみここに展開している。
  * （変更時は両ファイルを必ずペアで更新すること）
  */
 
 @layer base {
   :root {
-    --color-neutral-0: #ffffff;
-    --color-neutral-25: #f8fbf9;
-    --color-neutral-50: #f1f6f3;
+    --color-neutral-0:   #ffffff;
+    --color-neutral-25:  #f8fbf9;
+    --color-neutral-50:  #f1f6f3;
     --color-neutral-100: #e3ebe7;
     --color-neutral-200: #cdd8d2;
     --color-neutral-300: #a8b6af;
@@ -26,37 +23,38 @@
 
     /* Primary: Emerald */
     --color-primary-50:  #e6f7ef;
-    --color-primary-100: #c0ecd6;
+    --color-primary-100: #c6ecd9;
+    --color-primary-200: #95dab8;
     --color-primary-300: #54c79a;
     --color-primary-500: #14a37c;
     --color-primary-700: #0d7a5c;
     --color-primary-900: #06432f;
 
-    /* Secondary: Coral */
-    --color-secondary-50:  #fff0ec;
-    --color-secondary-300: #ffa58c;
-    --color-secondary-500: #ff7a59;
-    --color-secondary-700: #c24a2c;
+    /* Secondary: 同じ emerald 系の深い側 */
+    --color-secondary-50:  #d8efe2;
+    --color-secondary-300: #2c8a6d;
+    --color-secondary-500: #0d7a5c;
+    --color-secondary-700: #06432f;
 
-    /* Accent: Sun */
-    --color-accent-50:  #fff8de;
-    --color-accent-300: #ffdf6b;
-    --color-accent-500: #f4b400;
-    --color-accent-700: #b87f00;
+    /* Accent: 同じ emerald 系の淡い側 */
+    --color-accent-50:  #ecf9f3;
+    --color-accent-300: #95dab8;
+    --color-accent-500: #54c79a;
+    --color-accent-700: #14a37c;
 
     --color-success-50:  #e7faec;
-    --color-success-500: #21b85a;
-    --color-warning-50:  #fff3d6;
-    --color-warning-500: #f4a300;
-    --color-warning-700: #a86b00;
-    --color-danger-50:   #fde4e1;
-    --color-danger-500:  #e8514a;
-    --color-info-50:     #e1f0ff;
-    --color-info-500:    #2f86d6;
+    --color-success-500: #14a37c;
+    --color-warning-50:  #fdf3da;
+    --color-warning-500: #b8860b;
+    --color-warning-700: #7a5800;
+    --color-danger-50:   #fbe6e3;
+    --color-danger-500:  #c0463f;
+    --color-info-50:     #e1ecec;
+    --color-info-500:    #3d7a78;
 
-    --color-local-high: #14a37c;
-    --color-local-mid:  #f4b400;
-    --color-local-low:  #ff7a59;
+    --color-local-high: #0d7a5c;
+    --color-local-mid:  #54c79a;
+    --color-local-low:  #c6ecd9;
 
     --color-bg: var(--color-neutral-25);
     --color-surface: var(--color-neutral-0);
@@ -68,14 +66,17 @@
     --color-fg-subtle: var(--color-neutral-400);
     --color-ring: var(--color-primary-500);
 
-    /* next/font が <html className> 経由で同名の変数を渡すので、
-       ここではフォールバックのみ定義（next/font が解決すれば上書きされる） */
-    --font-sans-jp: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
-    --font-serif-jp: 'Noto Serif JP', 'Yu Mincho', serif;
-    --font-sans: 'Inter', system-ui, sans-serif;
-    --font-serif: 'Fraunces', Georgia, serif;
-    --font-display: 'Fraunces', 'Noto Serif JP', serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    /* 明朝は廃止。Arial を優先しつつ日本語は OS 同梱フォントへフォールバック。
+       --font-serif-* も含めて同じスタックに redirect することで、
+       過去の inline `font-family: var(--font-serif-jp)...` も自動でサンセリフ化。 */
+    --font-sans-jp:    Arial, "Helvetica Neue", Helvetica,
+                       "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "メイリオ", Meiryo, sans-serif;
+    --font-sans:       Arial, "Helvetica Neue", Helvetica, system-ui, sans-serif;
+    --font-sans-latin: var(--font-sans);
+    --font-serif-jp:   var(--font-sans-jp);
+    --font-serif:      var(--font-sans-jp);
+    --font-display:    var(--font-sans-jp);
+    --font-mono:       "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
     --space-0: 0;
     --space-1: 0.25rem;
@@ -91,20 +92,18 @@
     --space-20: 5rem;
     --space-24: 6rem;
 
-    /* ポップに丸めを強化 */
     --radius-none: 0;
     --radius-xs: 4px;
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 18px;
-    --radius-xl: 24px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
     --radius-full: 9999px;
 
-    /* emerald 影でほのかに色付け */
-    --shadow-xs: 0 1px 2px rgba(20, 163, 124, 0.06);
-    --shadow-sm: 0 2px 8px rgba(20, 163, 124, 0.08);
-    --shadow-md: 0 6px 18px rgba(20, 163, 124, 0.12);
-    --shadow-lg: 0 16px 40px rgba(20, 163, 124, 0.16);
+    --shadow-xs: 0 1px 2px rgba(22, 32, 28, 0.05);
+    --shadow-sm: 0 2px 6px rgba(22, 32, 28, 0.06);
+    --shadow-md: 0 6px 16px rgba(22, 32, 28, 0.08);
+    --shadow-lg: 0 16px 32px rgba(22, 32, 28, 0.12);
 
     --duration-fast: 120ms;
     --duration-base: 200ms;
@@ -122,16 +121,16 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-fg);
-    font-family: var(--font-sans-jp), var(--font-sans);
+    font-family: var(--font-sans-jp);
     font-feature-settings: 'palt' 1;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.005em;
   }
 
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-serif-jp), var(--font-serif);
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans-jp);
     color: var(--color-neutral-900);
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
 
   .tabular {
@@ -140,17 +139,7 @@
   }
 }
 
-/*
- * Locore のグローバル装飾。
- */
 @layer components {
-  /* Map のドット背景（Google Maps のミントベースに馴染ませる） */
-  .bg-dotted {
-    background-image: radial-gradient(rgba(20, 163, 124, 0.15) 1px, transparent 1px);
-    background-size: 12px 12px;
-  }
-
-  /* CTA ホバーで弾むアニメ */
   .pop-on-hover {
     transition: transform var(--duration-base) var(--ease-out),
       box-shadow var(--duration-base) var(--ease-out);
@@ -161,11 +150,11 @@
   }
 }
 
-/* Locore map pin（Google Maps の AdvancedMarker から HTML として埋める） */
+/* Locore map pin — Google Maps の AdvancedMarker に HTML として埋める */
 .locore-pin {
   border-radius: 9999px;
   border: 2px solid white;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 3px 10px rgba(22, 32, 28, 0.18);
   width: 28px;
   height: 28px;
   display: flex;
@@ -180,34 +169,27 @@
 .locore-pin:hover {
   transform: scale(1.12);
 }
-
-.locore-pin--high {
-  background: var(--color-local-high);
-}
-.locore-pin--mid {
-  background: var(--color-local-mid);
-}
-.locore-pin--low {
-  background: var(--color-local-low);
-}
+.locore-pin--high { background: var(--color-local-high); }
+.locore-pin--mid  { background: var(--color-local-mid); color: var(--color-neutral-900); }
+.locore-pin--low  { background: var(--color-local-low); color: var(--color-neutral-900); }
 
 .prose-locore p {
   margin-bottom: 1.25em;
-  line-height: 1.95;
+  line-height: 1.85;
   color: var(--color-neutral-700);
   font-size: 16px;
 }
 
 .prose-locore h2 {
-  font-family: var(--font-serif-jp), var(--font-serif);
+  font-family: var(--font-sans-jp);
   font-size: 22px;
+  font-weight: 700;
   margin-top: 2em;
   margin-bottom: 0.75em;
   letter-spacing: -0.01em;
 }
 
-/* Google Maps の InfoWindow / 標準コントロールはあえて読み込まない（独自 UI でカード表示）。
-   gmnoprint クラス（コントロール群）をすべて隠して、Google らしさを抑える。 */
+/* Google Maps の標準ウィジェットを隠して "Google感" を排除 */
 .locore-map-canvas .gmnoprint,
 .locore-map-canvas .gm-style-cc,
 .locore-map-canvas a[href^="https://maps.google.com/maps"] {

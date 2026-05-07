@@ -13,12 +13,12 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        // default: emerald 50 ベースに薄く色付け（モノトーンを避ける）
+        // default: 薄い emerald
         default: "bg-primary-50 text-primary-700",
-        // secondary: coral
-        secondary: "bg-secondary-50 text-secondary-700",
-        // accent: sun
-        accent: "bg-accent-50 text-accent-700",
+        // secondary: 1段濃い emerald（同色相のまま明度で差別化）
+        secondary: "bg-primary-100 text-primary-900",
+        // accent: ニュートラル背景に primary 文字。インラインのキャプション向け。
+        accent: "bg-neutral-50 text-primary-700",
         warning: "bg-warning-50 text-warning-700",
         outline: "bg-white text-primary-700 border border-primary-300",
       },

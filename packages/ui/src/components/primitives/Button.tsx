@@ -21,24 +21,24 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // primary: emerald グラデ + emerald 影 + hover で持ち上がる
+        // primary: solid emerald-700。hover で 1段明るく持ち上がる。
         primary: [
           "text-white shadow-sm",
-          "bg-gradient-to-br from-primary-500 to-primary-700",
-          "hover:from-primary-300 hover:to-primary-500 hover:-translate-y-0.5 hover:shadow-md",
+          "bg-primary-700",
+          "hover:bg-primary-500 hover:-translate-y-0.5 hover:shadow-md",
           "active:translate-y-0",
         ].join(" "),
-        // secondary: coral 系（CTA に程よくアクセント）
+        // secondary: 1段薄い emerald。サブ CTA に。
         secondary: [
           "text-white shadow-sm",
-          "bg-gradient-to-br from-secondary-500 to-secondary-700",
-          "hover:from-secondary-300 hover:to-secondary-500 hover:-translate-y-0.5 hover:shadow-md",
+          "bg-primary-500",
+          "hover:bg-primary-300 hover:-translate-y-0.5 hover:shadow-md",
         ].join(" "),
-        // accent: sun 黄（注目度のあるサブ CTA）
+        // accent: emerald-100 の地に primary-700 文字。中性的なサブ CTA。
         accent: [
-          "text-neutral-900 shadow-sm",
-          "bg-gradient-to-br from-accent-300 to-accent-500",
-          "hover:-translate-y-0.5 hover:shadow-md",
+          "text-primary-700 shadow-sm",
+          "bg-primary-100",
+          "hover:bg-primary-200 hover:-translate-y-0.5 hover:shadow-md",
         ].join(" "),
         // ghost: 透明 → emerald 50 の優しい hover
         ghost:
@@ -46,11 +46,11 @@ const buttonVariants = cva(
         // outline: emerald 枠 + 中身白、hover で薄 emerald 塗り
         outline: [
           "bg-white text-primary-700 border border-primary-300",
-          "hover:bg-primary-50 hover:border-primary-500 hover:-translate-y-0.5 hover:shadow-sm",
+          "hover:bg-primary-50 hover:border-primary-500",
         ].join(" "),
         destructive: [
           "text-white shadow-sm",
-          "bg-gradient-to-br from-danger-500 to-[#c2403a]",
+          "bg-danger-500 hover:bg-[#a73c36]",
           "hover:-translate-y-0.5 hover:shadow-md",
         ].join(" "),
         link:
