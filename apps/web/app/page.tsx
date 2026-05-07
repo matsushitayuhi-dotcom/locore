@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { Button, Badge, Avatar, AvatarImage, AvatarFallback } from '@locore/ui';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import {
-  articles,
+  articles as mockArticles,
   collections,
   crisisEvents,
   lightDiaries,
@@ -11,8 +11,20 @@ import {
 } from '../lib/mock';
 import { CrisisBanner } from '../components/CrisisBanner';
 import { FeedFilters } from '../components/FeedFilters';
+import { getPublishedDbArticles } from '../lib/articles/published';
 
-export default function HomePage() {
+// DB から最新の published 記事を読むため、フィードは動的レンダリング
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  // 実 DB の published 記事を先頭に、後ろに mock 記事を続ける（重複は ID で除外）
+  const dbArticles = await getPublishedDbArticles(50);
+  const dbIdSet = new Set(dbArticles.map((a) => a.id));
+  const articles = [
+    ...dbArticles,
+    ...mockArticles.filter((a) => !dbIdSet.has(a.id)),
+  ];
+
   const pickedCollection = collections[0]!;
   const pickedArticles = pickedCollection.articleIds
     .map(getArticle)
