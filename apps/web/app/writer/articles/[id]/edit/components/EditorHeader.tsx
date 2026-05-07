@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge } from '@locore/ui';
+import { Badge, Button } from '@locore/ui';
+import { Save } from '@locore/ui/icons';
 import { PublishControls } from '@/components/writer/PublishControls';
 
 type Props = {
@@ -15,6 +16,10 @@ type Props = {
   lastSavedAt: Date | null;
   /** 公開申請の前提条件（足りないものリスト） */
   missing: string[];
+  /** 「下書きを保存」ボタンが押されたときに即時保存を走らせる */
+  onSaveDraft: () => void;
+  /** 即時保存中フラグ */
+  isSavingDraft?: boolean;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -44,6 +49,8 @@ export function EditorHeader({
   saveState,
   lastSavedAt,
   missing,
+  onSaveDraft,
+  isSavingDraft,
 }: Props) {
   return (
     <div className="space-y-3">
@@ -70,7 +77,20 @@ export function EditorHeader({
             <SaveBadge state={saveState} lastSavedAt={lastSavedAt} />
           </div>
         </div>
-        <PublishControls articleId={articleId} status={status} bodyLength={bodyLength} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onSaveDraft}
+            disabled={isSavingDraft}
+            className="pop-on-hover"
+          >
+            <Save className="mr-1 h-4 w-4" />
+            {isSavingDraft ? '保存中…' : '下書きを保存'}
+          </Button>
+          <PublishControls articleId={articleId} status={status} bodyLength={bodyLength} />
+        </div>
       </div>
 
       {missing.length > 0 ? (

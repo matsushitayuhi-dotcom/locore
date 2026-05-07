@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';
 import { uploadImage } from '@/lib/storage/uploadImage';
@@ -39,14 +39,21 @@ export function ImageUploader({
   isPublished,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
   const [dragOver, setDragOver] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlDraft, setUrlDraft] = useState(value);
 
-  const handleFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const file = files[0]!;
+  const handleFiles = (files: FileList | File[] | null) => {
+    if (!files) return;
+    const arr = Array.from(files);
+    if (arr.length === 0) return;
+    const file = arr[0]!;
+    if (!file.type.startsWith('image/')) {
+      toast.error('画像ファイルを選択してください');
+      return;
+    }
     const fd = new FormData();
     fd.append('file', file);
     startTransition(async () => {
@@ -66,6 +73,33 @@ export function ImageUploader({
     setDragOver(false);
     handleFiles(e.dataTransfer.files);
   };
+
+  /**
+   * クリップボードペースト対応：ドロップゾーンにフォーカスがある状態で⌘V/Ctrl+V を押すと
+   * クリップボードに画像が乗っていれば取り込む。
+   * ドロップゾーン全体に paste イベントを張ることで、URL 入力欄等を干渉させない。
+   */
+  useEffect(() => {
+    const el = dropZoneRef.current;
+    if (!el) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const files: File[] = [];
+      for (const item of Array.from(items)) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const f = item.getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (files.length === 0) return;
+      e.preventDefault();
+      handleFiles(files);
+    };
+    el.addEventListener('paste', onPaste);
+    return () => el.removeEventListener('paste', onPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onRemove = () => {
     onChange('');
@@ -113,6 +147,7 @@ export function ImageUploader({
         </div>
       ) : (
         <div
+          ref={dropZoneRef}
           onDragOver={(e) => {
             e.preventDefault();
             setDragOver(true);
@@ -122,7 +157,7 @@ export function ImageUploader({
           onClick={() => inputRef.current?.click()}
           role="button"
           tabIndex={0}
-          aria-label="画像をアップロード"
+          aria-label="画像をアップロード（クリック / ドラッグ&ドロップ / ⌘V）"
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
@@ -132,15 +167,15 @@ export function ImageUploader({
           className={
             'flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed px-4 py-10 text-center text-[12px] transition ' +
             (dragOver
-              ? 'border-primary-700 bg-primary-50/40'
-              : 'border-border bg-card hover:border-foreground/30')
+              ? 'border-primary-500 bg-primary-50/60'
+              : 'border-border bg-card hover:border-primary-300 hover:bg-primary-50/30')
           }
           style={{ aspectRatio: aspect }}
         >
           <p className="font-medium text-foreground/80">
             {isPending ? 'アップロード中…' : '画像をドラッグ & ドロップ'}
           </p>
-          <p className="text-foreground/50">クリックでファイルを選択</p>
+          <p className="text-foreground/50">クリックで選択 / ⌘V で貼り付け</p>
           <p className="text-[11px] text-foreground/40">JPEG / PNG / WebP / GIF（最大 8MB）</p>
         </div>
       )}

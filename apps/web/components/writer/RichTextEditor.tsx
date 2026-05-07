@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -11,6 +11,22 @@ import { Color } from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
 import { toast } from 'sonner';
 import { uploadImage } from '@/lib/storage/uploadImage';
+
+/**
+ * クリップボード / ドロップから画像 File を取り出すユーティリティ。
+ * 画像が含まれるなら File[] を返し、含まれないなら空配列を返す。
+ */
+function extractImageFiles(items: DataTransferItemList | null | undefined): File[] {
+  if (!items) return [];
+  const files: File[] = [];
+  for (const item of Array.from(items)) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const f = item.getAsFile();
+      if (f) files.push(f);
+    }
+  }
+  return files;
+}
 
 /**
  * TipTap ベースの WYSIWYG エディタ。
@@ -249,6 +265,32 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
     setMounted(true);
   }, []);
 
+  /**
+   * 画像 File を Supabase Storage にアップロードして TipTap に挿入する共通ヘルパ。
+   * クリップボードペースト・ドラッグドロップ・ツールバーの 3 経路から呼ばれる。
+   */
+  const insertImagesFromFiles = useCallback(
+    async (editor: Editor, files: File[]) => {
+      if (files.length === 0) return;
+      // 画像挿入中は連続トーストにしないためまとめて処理
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append('file', file);
+        // eslint-disable-next-line no-await-in-loop
+        const res = await uploadImage(fd);
+        if (res.ok) {
+          editor.chain().focus().setImage({ src: res.url }).run();
+        } else {
+          toast.error(res.error);
+        }
+      }
+      if (files.length > 0) {
+        toast.success(`${files.length} 枚の画像を挿入しました`);
+      }
+    },
+    [],
+  );
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -269,11 +311,43 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm sm:prose-base max-w-none rounded-sm border border-border bg-card px-4 py-3 min-h-[420px] focus:outline-none focus:ring-2 focus:ring-primary-700 focus:ring-offset-1',
+          'prose prose-sm sm:prose-base max-w-none rounded-md border border-border bg-card px-4 py-3 min-h-[420px] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1',
+      },
+      // クリップボード画像ペースト：cmd/ctrl+V で貼り付けた image を Supabase に上げて挿入
+      handlePaste(view, event) {
+        const files = extractImageFiles(event.clipboardData?.items);
+        if (files.length === 0) return false;
+        event.preventDefault();
+        // editor インスタンスはクロージャで取れないので view から再取得
+        const ed = (view as unknown as { _tiptapEditor?: Editor })._tiptapEditor;
+        if (ed) {
+          void insertImagesFromFiles(ed, files);
+        }
+        return true;
+      },
+      // ドラッグドロップ：エディタ領域への画像ドロップを Supabase に上げて挿入
+      handleDrop(view, event) {
+        const dt = (event as DragEvent).dataTransfer;
+        const files = extractImageFiles(dt?.items);
+        if (files.length === 0) return false;
+        event.preventDefault();
+        const ed = (view as unknown as { _tiptapEditor?: Editor })._tiptapEditor;
+        if (ed) {
+          void insertImagesFromFiles(ed, files);
+        }
+        return true;
       },
     },
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
+      // editor インスタンスを view 経由でも参照できるように
+      // （上の handlePaste/handleDrop で使う）
+      const view = editor.view as unknown as { _tiptapEditor?: Editor };
+      view._tiptapEditor = editor;
+    },
+    onCreate: ({ editor }) => {
+      const view = editor.view as unknown as { _tiptapEditor?: Editor };
+      view._tiptapEditor = editor;
     },
     immediatelyRender: false,
   });
@@ -301,7 +375,7 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
       <p className="text-[11px] text-foreground/40">
-        ヒント: 文章を選択してから書式を適用できます。画像は Supabase Storage にアップロードされます。
+        ヒント: 文章を選択してから書式を適用できます。画像はツールバーから挿入のほか、コピー → 貼り付け（⌘V / Ctrl+V）／ドラッグ&ドロップでも追加できます。
       </p>
     </div>
   );

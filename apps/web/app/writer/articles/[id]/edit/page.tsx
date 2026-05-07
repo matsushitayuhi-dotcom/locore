@@ -133,6 +133,7 @@ export default async function EditArticlePage({
         id: article.id,
         title: article.title,
         body: article.body,
+        bodyPaid: article.bodyPaid,
         priceJpy: article.priceJpy,
         durationType: article.durationType,
         articleType: article.articleType,

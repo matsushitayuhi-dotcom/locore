@@ -26,6 +26,7 @@ export {
   Map as MapIcon,
   MapPin,
   Plus,
+  Save,
   Search,
   Share2,
   SlidersHorizontal,

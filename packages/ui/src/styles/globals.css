@@ -3,62 +3,66 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — Light theme only (Phase 1).
- * Source of truth: DESIGN.md §2 (Calm / Curated / Inked / Slow / Insider).
- * Color values are HEX-fixed; light mode is currently the only supported theme.
+ * Locore Design Tokens — Bright / Pop / Emerald edition.
+ *
+ * 旅行記事の投稿が「楽しそう・始めやすい」ことを最優先したカラーに変更。
+ *   - Primary: Emerald 系（緑）— 安心感と植物感
+ *   - Secondary: Coral 系（暖色アクセント）— 価格・CTAなど目を引きたい場所
+ *   - Accent: Sun 系（黄）— ハイライト
+ *   - Background: ほぼ純白 + 薄いミント — 軽くて明るい
  */
 
 @layer base {
   :root {
-    /* === Neutral (Paper & Ink) === */
+    /* === Neutral (Paper) — 明るめにシフト ============================== */
     --color-neutral-0: #ffffff;
-    --color-neutral-25: #faf8f5;
-    --color-neutral-50: #f4f1eb;
-    --color-neutral-100: #eae5dd;
-    --color-neutral-200: #d8d2c7;
-    --color-neutral-300: #b8b0a2;
-    --color-neutral-400: #8a8275;
-    --color-neutral-500: #5e574c;
-    --color-neutral-700: #3a352d;
-    --color-neutral-900: #1a1814;
+    --color-neutral-25: #f8fbf9;   /* 微かにミントを乗せた紙 */
+    --color-neutral-50: #f1f6f3;
+    --color-neutral-100: #e3ebe7;
+    --color-neutral-200: #cdd8d2;
+    --color-neutral-300: #a8b6af;
+    --color-neutral-400: #7c8c84;
+    --color-neutral-500: #51625a;
+    --color-neutral-700: #2f3d36;
+    --color-neutral-900: #16201c;
 
-    /* === Primary (Locore Ink: indigo) === */
-    --color-primary-50: #eef1f8;
-    --color-primary-100: #d5dcec;
-    --color-primary-300: #7e8dbf;
-    --color-primary-500: #3d4f8c;
-    --color-primary-700: #26356b;
-    --color-primary-900: #141e45;
+    /* === Primary: Emerald ============================================== */
+    --color-primary-50:  #e6f7ef;
+    --color-primary-100: #c0ecd6;
+    --color-primary-300: #54c79a;
+    --color-primary-500: #14a37c;
+    --color-primary-700: #0d7a5c;
+    --color-primary-900: #06432f;
 
-    /* === Secondary (Locore Terracotta) === */
-    --color-secondary-50: #fbf1ec;
-    --color-secondary-300: #d89a7e;
-    --color-secondary-500: #b8623f;
-    --color-secondary-700: #8a4525;
+    /* === Secondary: Coral / Peach（CTAアクセント） ====================== */
+    --color-secondary-50:  #fff0ec;
+    --color-secondary-300: #ffa58c;
+    --color-secondary-500: #ff7a59;   /* Pop なコーラル */
+    --color-secondary-700: #c24a2c;
 
-    /* === Accent (Locore Moss) === */
-    --color-accent-50: #eef2ea;
-    --color-accent-300: #8fa37a;
-    --color-accent-500: #5e7548;
-    --color-accent-700: #3f5230;
+    /* === Accent: Sun（注意を引く黄味系） =============================== */
+    --color-accent-50:  #fff8de;
+    --color-accent-300: #ffdf6b;
+    --color-accent-500: #f4b400;
+    --color-accent-700: #b87f00;
 
-    /* === Semantic === */
-    --color-success-50: #eaf3ec;
-    --color-success-500: #3f8a57;
-    --color-warning-50: #faf1dd;
-    --color-warning-500: #c68a2e;
-    --color-warning-700: #8a5e1f;
-    --color-danger-50: #f8e7e5;
-    --color-danger-500: #b8453e;
-    --color-info-50: #e5eef5;
-    --color-info-500: #3d6a8a;
+    /* === Semantic ==================================================== */
+    --color-success-50:  #e7faec;
+    --color-success-500: #21b85a;
+    --color-warning-50:  #fff3d6;
+    --color-warning-500: #f4a300;
+    --color-warning-700: #a86b00;
+    --color-danger-50:   #fde4e1;
+    --color-danger-500:  #e8514a;
+    --color-info-50:     #e1f0ff;
+    --color-info-500:    #2f86d6;
 
-    /* === Local-score gradient (mapped to map pin colors) === */
-    --color-local-high: #5e7548;   /* Local (70-100) — moss */
-    --color-local-mid: #6b5b8a;    /* 30-69 — dusty purple */
-    --color-local-low: #b8623f;    /* 0-29 — terracotta */
+    /* === Local-score gradient (map pins, score bars) ================== */
+    --color-local-high: #14a37c;   /* ローカル度 70-100 — emerald */
+    --color-local-mid:  #f4b400;   /* 30-69 — sun */
+    --color-local-low:  #ff7a59;   /* 0-29 — coral */
 
-    /* === Surface roles === */
+    /* === Surface roles =============================================== */
     --color-bg: var(--color-neutral-25);
     --color-surface: var(--color-neutral-0);
     --color-surface-muted: var(--color-neutral-50);
@@ -67,16 +71,16 @@
     --color-fg: var(--color-neutral-900);
     --color-fg-muted: var(--color-neutral-500);
     --color-fg-subtle: var(--color-neutral-400);
-    --color-ring: var(--color-primary-700);
+    --color-ring: var(--color-primary-500);
 
-    /* === Typography === */
+    /* === Typography（変更なし） ====================================== */
     --font-sans-jp: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
     --font-serif-jp: "Noto Serif JP", "Yu Mincho", "Hiragino Mincho ProN", serif;
     --font-sans-latin: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     --font-display: "Fraunces", Georgia, serif;
     --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
 
-    /* === Spacing scale (4px base) === */
+    /* === Spacing scale (4px base) ==================================== */
     --space-0: 0;
     --space-1: 0.25rem;
     --space-2: 0.5rem;
@@ -91,22 +95,22 @@
     --space-20: 5rem;
     --space-24: 6rem;
 
-    /* === Radii === */
+    /* === Radii — ポップに丸めを強化 ================================= */
     --radius-none: 0;
-    --radius-xs: 2px;
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
     --radius-full: 9999px;
 
-    /* === Shadows (subtle, paper-like) === */
-    --shadow-xs: 0 1px 2px rgba(26, 24, 20, 0.04);
-    --shadow-sm: 0 2px 8px rgba(26, 24, 20, 0.06);
-    --shadow-md: 0 4px 16px rgba(26, 24, 20, 0.08);
-    --shadow-lg: 0 12px 32px rgba(26, 24, 20, 0.12);
+    /* === Shadows — emerald 影でほのかに色付ける ===================== */
+    --shadow-xs: 0 1px 2px rgba(20, 163, 124, 0.06);
+    --shadow-sm: 0 2px 8px rgba(20, 163, 124, 0.08);
+    --shadow-md: 0 6px 18px rgba(20, 163, 124, 0.12);
+    --shadow-lg: 0 16px 40px rgba(20, 163, 124, 0.16);
 
-    /* === Motion === */
+    /* === Motion ====================================================== */
     --duration-fast: 120ms;
     --duration-base: 200ms;
     --duration-slow: 360ms;
@@ -140,5 +144,27 @@
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
+  }
+}
+
+/*
+ * Locore のグローバル装飾。
+ * - 投稿フォームを「書きたくなる」気分にするためのアクセントを少しだけ。
+ */
+@layer components {
+  /* Map / リスト用のドット背景 */
+  .bg-dotted {
+    background-image: radial-gradient(rgba(20, 163, 124, 0.15) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+
+  /* CTA ボタンの hover で軽く弾むアニメーション */
+  .pop-on-hover {
+    transition: transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out);
+  }
+  .pop-on-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
   }
 }

@@ -10,7 +10,7 @@ import type { Article, Spot } from '../lib/mock';
 const InnerMap = dynamic(() => import('./MapInner').then((m) => m.MapInner), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center bg-muted text-[13px] text-foreground/50">
+    <div className="flex h-full items-center justify-center bg-primary-50/40 text-[13px] text-primary-700">
       地図を読み込み中…
     </div>
   ),
@@ -19,6 +19,8 @@ const InnerMap = dynamic(() => import('./MapInner').then((m) => m.MapInner), {
 interface MapViewProps {
   articles: Article[];
   spots: Spot[];
+  /** Google Maps API キー（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY を渡す） */
+  googleMapsApiKey?: string;
 }
 
 const CITIES = [
@@ -29,7 +31,7 @@ const CITIES = [
 
 const TAGS = ['朝食', '夜遊び', 'デート', '雨の日', 'カフェ', '雑貨', 'アート'];
 
-export function MapView({ articles, spots }: MapViewProps) {
+export function MapView({ articles, spots, googleMapsApiKey }: MapViewProps) {
   const [activeArticleId, setActiveArticleId] = useState<string | null>(null);
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -56,6 +58,7 @@ export function MapView({ articles, spots }: MapViewProps) {
         articles={filteredArticles}
         showHeatmap={showHeatmap}
         onPinClick={(spot) => setActiveArticleId(spot.articleId)}
+        apiKey={googleMapsApiKey}
       />
 
       {/* Top-left: back to feed */}

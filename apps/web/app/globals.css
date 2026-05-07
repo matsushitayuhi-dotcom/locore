@@ -3,56 +3,60 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — copied from @locore/ui/styles.css
- * Source of truth: DESIGN.md §2 / packages/ui/src/styles/globals.css.
+ * Locore Design Tokens — Bright / Pop / Emerald edition.
+ * Source of truth: packages/ui/src/styles/globals.css
  *
  * 直接 @import @locore/ui/styles.css すると postcss-import が @tailwind と
- * @layer の順序を解決できなかったため、トークンの :root 部分のみここに展開する。
+ * @layer の順序を解決できなかったため、トークンの :root 部分のみここに展開している。
+ * （変更時は両ファイルを必ずペアで更新すること）
  */
 
 @layer base {
   :root {
     --color-neutral-0: #ffffff;
-    --color-neutral-25: #faf8f5;
-    --color-neutral-50: #f4f1eb;
-    --color-neutral-100: #eae5dd;
-    --color-neutral-200: #d8d2c7;
-    --color-neutral-300: #b8b0a2;
-    --color-neutral-400: #8a8275;
-    --color-neutral-500: #5e574c;
-    --color-neutral-700: #3a352d;
-    --color-neutral-900: #1a1814;
+    --color-neutral-25: #f8fbf9;
+    --color-neutral-50: #f1f6f3;
+    --color-neutral-100: #e3ebe7;
+    --color-neutral-200: #cdd8d2;
+    --color-neutral-300: #a8b6af;
+    --color-neutral-400: #7c8c84;
+    --color-neutral-500: #51625a;
+    --color-neutral-700: #2f3d36;
+    --color-neutral-900: #16201c;
 
-    --color-primary-50: #eef1f8;
-    --color-primary-100: #d5dcec;
-    --color-primary-300: #7e8dbf;
-    --color-primary-500: #3d4f8c;
-    --color-primary-700: #26356b;
-    --color-primary-900: #141e45;
+    /* Primary: Emerald */
+    --color-primary-50:  #e6f7ef;
+    --color-primary-100: #c0ecd6;
+    --color-primary-300: #54c79a;
+    --color-primary-500: #14a37c;
+    --color-primary-700: #0d7a5c;
+    --color-primary-900: #06432f;
 
-    --color-secondary-50: #fbf1ec;
-    --color-secondary-300: #d89a7e;
-    --color-secondary-500: #b8623f;
-    --color-secondary-700: #8a4525;
+    /* Secondary: Coral */
+    --color-secondary-50:  #fff0ec;
+    --color-secondary-300: #ffa58c;
+    --color-secondary-500: #ff7a59;
+    --color-secondary-700: #c24a2c;
 
-    --color-accent-50: #eef2ea;
-    --color-accent-300: #8fa37a;
-    --color-accent-500: #5e7548;
-    --color-accent-700: #3f5230;
+    /* Accent: Sun */
+    --color-accent-50:  #fff8de;
+    --color-accent-300: #ffdf6b;
+    --color-accent-500: #f4b400;
+    --color-accent-700: #b87f00;
 
-    --color-success-50: #eaf3ec;
-    --color-success-500: #3f8a57;
-    --color-warning-50: #faf1dd;
-    --color-warning-500: #c68a2e;
-    --color-warning-700: #8a5e1f;
-    --color-danger-50: #f8e7e5;
-    --color-danger-500: #b8453e;
-    --color-info-50: #e5eef5;
-    --color-info-500: #3d6a8a;
+    --color-success-50:  #e7faec;
+    --color-success-500: #21b85a;
+    --color-warning-50:  #fff3d6;
+    --color-warning-500: #f4a300;
+    --color-warning-700: #a86b00;
+    --color-danger-50:   #fde4e1;
+    --color-danger-500:  #e8514a;
+    --color-info-50:     #e1f0ff;
+    --color-info-500:    #2f86d6;
 
-    --color-local-high: #5e7548;
-    --color-local-mid: #6b5b8a;
-    --color-local-low: #b8623f;
+    --color-local-high: #14a37c;
+    --color-local-mid:  #f4b400;
+    --color-local-low:  #ff7a59;
 
     --color-bg: var(--color-neutral-25);
     --color-surface: var(--color-neutral-0);
@@ -62,7 +66,7 @@
     --color-fg: var(--color-neutral-900);
     --color-fg-muted: var(--color-neutral-500);
     --color-fg-subtle: var(--color-neutral-400);
-    --color-ring: var(--color-primary-700);
+    --color-ring: var(--color-primary-500);
 
     /* next/font が <html className> 経由で同名の変数を渡すので、
        ここではフォールバックのみ定義（next/font が解決すれば上書きされる） */
@@ -87,18 +91,20 @@
     --space-20: 5rem;
     --space-24: 6rem;
 
+    /* ポップに丸めを強化 */
     --radius-none: 0;
-    --radius-xs: 2px;
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
+    --radius-xs: 4px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
     --radius-full: 9999px;
 
-    --shadow-xs: 0 1px 2px rgba(26, 24, 20, 0.04);
-    --shadow-sm: 0 2px 8px rgba(26, 24, 20, 0.06);
-    --shadow-md: 0 4px 16px rgba(26, 24, 20, 0.08);
-    --shadow-lg: 0 12px 32px rgba(26, 24, 20, 0.12);
+    /* emerald 影でほのかに色付け */
+    --shadow-xs: 0 1px 2px rgba(20, 163, 124, 0.06);
+    --shadow-sm: 0 2px 8px rgba(20, 163, 124, 0.08);
+    --shadow-md: 0 6px 18px rgba(20, 163, 124, 0.12);
+    --shadow-lg: 0 16px 40px rgba(20, 163, 124, 0.16);
 
     --duration-fast: 120ms;
     --duration-base: 200ms;
@@ -134,14 +140,32 @@
   }
 }
 
-/* Leaflet */
-@import 'leaflet/dist/leaflet.css';
+/*
+ * Locore のグローバル装飾。
+ */
+@layer components {
+  /* Map のドット背景（Google Maps のミントベースに馴染ませる） */
+  .bg-dotted {
+    background-image: radial-gradient(rgba(20, 163, 124, 0.15) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
 
-/* Locore map pin */
+  /* CTA ホバーで弾むアニメ */
+  .pop-on-hover {
+    transition: transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out);
+  }
+  .pop-on-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* Locore map pin（Google Maps の AdvancedMarker から HTML として埋める） */
 .locore-pin {
   border-radius: 9999px;
   border: 2px solid white;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
   width: 28px;
   height: 28px;
   display: flex;
@@ -149,7 +173,12 @@
   justify-content: center;
   color: white;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+.locore-pin:hover {
+  transform: scale(1.12);
 }
 
 .locore-pin--high {
@@ -177,7 +206,10 @@
   letter-spacing: -0.01em;
 }
 
-.leaflet-container {
-  font-family: var(--font-sans-jp), var(--font-sans);
-  background: var(--color-neutral-50);
+/* Google Maps の InfoWindow / 標準コントロールはあえて読み込まない（独自 UI でカード表示）。
+   gmnoprint クラス（コントロール群）をすべて隠して、Google らしさを抑える。 */
+.locore-map-canvas .gmnoprint,
+.locore-map-canvas .gm-style-cc,
+.locore-map-canvas a[href^="https://maps.google.com/maps"] {
+  display: none !important;
 }

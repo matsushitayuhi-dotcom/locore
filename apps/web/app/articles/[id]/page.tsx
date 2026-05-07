@@ -50,10 +50,20 @@ export default async function ArticleDetailPage({
     reviews = []; // DB 上のレビュー集計は今後実装
   }
 
-  // Split body: first 2 paragraphs = preview, rest = paywalled
-  const paras = article.body.split(/\n\n+/);
-  const preview = paras.slice(0, 2).join('\n\n');
-  const after = paras.slice(2).join('\n\n');
+  // 本文の分割：
+  //   * `bodyPaid` が明示的に保存されていれば：body 全体 = 無料プレビュー、bodyPaid = 有料部分
+  //   * 旧記事（bodyPaid が NULL/空）：body の冒頭 2 段落を無料、残りを有料の旧仕様にフォールバック
+  const hasExplicitSplit = !!article.bodyPaid && article.bodyPaid.trim().length > 0;
+  let preview: string;
+  let after: string;
+  if (hasExplicitSplit) {
+    preview = article.body;
+    after = article.bodyPaid!;
+  } else {
+    const paras = article.body.split(/\n\n+/);
+    preview = paras.slice(0, 2).join('\n\n');
+    after = paras.slice(2).join('\n\n');
+  }
 
   const related = [
     ...(writer ? articlesByWriter(writer.id).filter((a) => a.id !== article.id) : []),

@@ -34,7 +34,13 @@ export interface Writer {
 export interface Article {
   id: string;
   title: string;
+  /** 無料プレビュー本文（購入前に見える） */
   body: string; // markdown-ish
+  /**
+   * 有料部分本文（購入後に解放）。NULL のときは記事詳細側で旧フォールバックが動く
+   * （body の冒頭2段落を free、残りを paid とみなす）。
+   */
+  bodyPaid?: string | null;
   coverImageUrl: string;
   writerId: string;
   cityId: string;

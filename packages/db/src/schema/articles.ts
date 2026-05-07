@@ -54,7 +54,13 @@ export const articles = pgTable(
       .notNull()
       .references(() => cities.id, { onDelete: 'restrict' }),
     title: text('title').notNull(),
+    /** 無料プレビュー本文（購入前にも見える）。Markdown。 */
     body: text('body').notNull(),
+    /**
+     * 有料部分本文（購入後表示）。NULL のときは旧ロジック（body の途中で自動分割）に
+     * フォールバック。マイグレーション: `manual/0012_body_paid.sql`
+     */
+    bodyPaid: text('body_paid'),
     coverImageUrl: text('cover_image_url'),
     priceJpy: integer('price_jpy').notNull(),
     status: articleStatusEnum('status').notNull().default('draft'),

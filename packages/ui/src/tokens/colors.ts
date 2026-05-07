@@ -3,65 +3,68 @@
  * `src/styles/globals.css` and the Tailwind preset. Use this when JS code
  * needs a concrete HEX (e.g. SVG `fill`, canvas, map styling).
  *
- * Source of truth: DESIGN.md §2.1.
+ * Bright / Pop / Emerald edition.
  */
 
 export const neutral = {
   0: "#FFFFFF",
-  25: "#FAF8F5",
-  50: "#F4F1EB",
-  100: "#EAE5DD",
-  200: "#D8D2C7",
-  300: "#B8B0A2",
-  400: "#8A8275",
-  500: "#5E574C",
-  700: "#3A352D",
-  900: "#1A1814",
+  25: "#F8FBF9",
+  50: "#F1F6F3",
+  100: "#E3EBE7",
+  200: "#CDD8D2",
+  300: "#A8B6AF",
+  400: "#7C8C84",
+  500: "#51625A",
+  700: "#2F3D36",
+  900: "#16201C",
 } as const;
 
+/** Primary: Emerald */
 export const primary = {
-  50: "#EEF1F8",
-  100: "#D5DCEC",
-  300: "#7E8DBF",
-  500: "#3D4F8C",
-  700: "#26356B",
-  900: "#141E45",
+  50:  "#E6F7EF",
+  100: "#C0ECD6",
+  300: "#54C79A",
+  500: "#14A37C",
+  700: "#0D7A5C",
+  900: "#06432F",
 } as const;
 
+/** Secondary: Coral / Peach (CTA / 価格) */
 export const secondary = {
-  50: "#FBF1EC",
-  300: "#D89A7E",
-  500: "#B8623F",
-  700: "#8A4525",
+  50:  "#FFF0EC",
+  300: "#FFA58C",
+  500: "#FF7A59",
+  700: "#C24A2C",
 } as const;
 
+/** Accent: Sun (注意・ハイライト) */
 export const accent = {
-  50: "#EEF2EA",
-  300: "#8FA37A",
-  500: "#5E7548",
-  700: "#3F5230",
+  50:  "#FFF8DE",
+  300: "#FFDF6B",
+  500: "#F4B400",
+  700: "#B87F00",
 } as const;
 
 export const semantic = {
-  success50: "#EAF3EC",
-  success500: "#3F8A57",
-  warning50: "#FAF1DD",
-  warning500: "#C68A2E",
-  warning700: "#8A5E1F",
-  danger50: "#F8E7E5",
-  danger500: "#B8453E",
-  info50: "#E5EEF5",
-  info500: "#3D6A8A",
+  success50: "#E7FAEC",
+  success500: "#21B85A",
+  warning50: "#FFF3D6",
+  warning500: "#F4A300",
+  warning700: "#A86B00",
+  danger50: "#FDE4E1",
+  danger500: "#E8514A",
+  info50: "#E1F0FF",
+  info500: "#2F86D6",
 } as const;
 
 /**
  * Local score gradient — drives map pins and the LocalScoreBar fill.
- * 70-100 = high (moss), 30-69 = mid (dusty purple), 0-29 = low (terracotta).
+ * 70-100 = emerald (high local), 30-69 = sun (mid), 0-29 = coral (tourist).
  */
 export const local = {
-  high: "#5E7548",
-  mid: "#6B5B8A",
-  low: "#B8623F",
+  high: "#14A37C",
+  mid: "#F4B400",
+  low: "#FF7A59",
 } as const;
 
 export const colors = {

@@ -58,7 +58,10 @@ async function getWriterTier(userId: string): Promise<'S' | 'A' | 'B'> {
 const updateArticleSchema = z.object({
   id: z.string().uuid(),
   title: z.string().trim().min(1).max(200).optional(),
+  /** 無料プレビュー本文（Markdown） */
   body: z.string().max(20000).optional(),
+  /** 有料部分本文（Markdown）。空文字 → null として扱う */
+  bodyPaid: z.string().max(40000).optional().nullable(),
   priceJpy: z
     .number()
     .int()
@@ -108,6 +111,10 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
   };
   if (data.title !== undefined) patch.title = data.title;
   if (data.body !== undefined) patch.body = data.body;
+  if (data.bodyPaid !== undefined) {
+    // 空文字は NULL にする（旧フォールバックを有効化したまま）
+    patch.bodyPaid = data.bodyPaid && data.bodyPaid.trim() ? data.bodyPaid : null;
+  }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
   if (data.articleType !== undefined) patch.articleType = data.articleType;
@@ -161,6 +168,9 @@ export async function autoSaveArticle(input: unknown): Promise<
   };
   if (data.title !== undefined) patch.title = data.title;
   if (data.body !== undefined) patch.body = data.body;
+  if (data.bodyPaid !== undefined) {
+    patch.bodyPaid = data.bodyPaid && data.bodyPaid.trim() ? data.bodyPaid : null;
+  }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
   if (data.articleType !== undefined) patch.articleType = data.articleType;
@@ -170,6 +180,59 @@ export async function autoSaveArticle(input: unknown): Promise<
 
   await db.update(schema.articles).set(patch).where(eq(schema.articles.id, data.id));
   // 自動保存では revalidatePath を呼ばない（プレビュー画面に副作用を出さない）
+  return { ok: true, data: { savedAt: Date.now() } };
+}
+
+/**
+ * 明示的「下書き保存」アクション。
+ * 自動保存と中身は同じだが、UI 側で debounce を待たずに即時呼び出す用途。
+ * revalidatePath は走らせる（明示保存後はプレビュー側も最新にしたい）。
+ */
+export async function saveDraftArticle(input: unknown): Promise<
+  ActionResult<{ savedAt: number }>
+> {
+  const parsed = autoSaveSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: '入力内容に誤りがあります',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  const data = parsed.data;
+  const { user, db } = await assertOwnership(data.id);
+
+  if (data.priceJpy != null) {
+    const tier = await getWriterTier(user.id);
+    const cap = TIER_PRICE_CAPS[tier];
+    if (data.priceJpy > cap) {
+      return {
+        ok: false,
+        error: `Tier (${tier}) の上限 ¥${cap.toLocaleString('ja-JP')} を超えています`,
+      };
+    }
+  }
+
+  const patch: Partial<typeof schema.articles.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+  if (data.title !== undefined) patch.title = data.title;
+  if (data.body !== undefined) patch.body = data.body;
+  if (data.bodyPaid !== undefined) {
+    patch.bodyPaid = data.bodyPaid && data.bodyPaid.trim() ? data.bodyPaid : null;
+  }
+  if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
+  if (data.durationType !== undefined) patch.durationType = data.durationType;
+  if (data.articleType !== undefined) patch.articleType = data.articleType;
+  if (data.tags !== undefined) patch.tags = data.tags;
+  if (data.coverImageUrl !== undefined) patch.coverImageUrl = data.coverImageUrl ?? null;
+  if (data.cityId !== undefined) patch.cityId = data.cityId;
+
+  await db.update(schema.articles).set(patch).where(eq(schema.articles.id, data.id));
+
+  revalidatePath(`/writer/articles/${data.id}/edit`);
+  revalidatePath(`/writer/articles/${data.id}/preview`);
+  revalidatePath('/writer/articles');
   return { ok: true, data: { savedAt: Date.now() } };
 }
 

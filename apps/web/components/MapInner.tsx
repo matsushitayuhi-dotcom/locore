@@ -1,95 +1,154 @@
 'use client';
 
-import { MapContainer, TileLayer, Marker, CircleMarker } from 'react-leaflet';
-import L from 'leaflet';
-import { useMemo } from 'react';
-import { localScoreColor } from '@locore/ui';
+import { useEffect, useMemo } from 'react';
+import {
+  APIProvider,
+  Map as GoogleMap,
+  AdvancedMarker,
+  useMap,
+} from '@vis.gl/react-google-maps';
 import type { Article, Spot } from '../lib/mock';
+import {
+  locoreMapStyles,
+  pinModifierClass,
+} from './map/locoreMapStyle';
 
-const PARIS_CENTER: [number, number] = [48.8606, 2.3376];
+const PARIS_CENTER = { lat: 48.8606, lng: 2.3376 };
+
+/**
+ * Google Maps をベースに、Google らしさ（POI / business / labels / 標準コントロール）を
+ * 抑えた独自スタイルで描画するマップ。
+ *
+ * - APIProvider は MapInner 内に持たせる（ページ側のラップ忘れを避ける）
+ * - スタイルは `components/map/locoreMapStyle.ts` の配列で集中管理
+ * - マーカーは AdvancedMarker + HTML（locore-pin）で Locore のピンに統一
+ * - 観光客密度ヒートマップは Google の HeatmapLayer を使わず、
+ *   半透明の円（自前で <Circle> を描画）で Locore 風に維持
+ */
 
 interface MapInnerProps {
   spots: Spot[];
   articles: Article[];
   onPinClick?: (spot: Spot) => void;
   showHeatmap?: boolean;
+  /** Google Maps API キー（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY） */
+  apiKey?: string;
 }
 
-function buildIcon(color: string) {
-  return L.divIcon({
-    className: 'locore-pin-wrapper',
-    html: `<span class="locore-pin" style="background:${color}"></span>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  });
-}
-
-const ARRONDISSEMENT_DENSITY: { center: [number, number]; intensity: number }[] = [
-  { center: [48.8606, 2.3376], intensity: 0.85 },
-  { center: [48.8674, 2.3617], intensity: 0.55 },
-  { center: [48.852, 2.3433], intensity: 0.65 },
-  { center: [48.853, 2.3325], intensity: 0.6 },
-  { center: [48.8584, 2.2945], intensity: 0.95 },
-  { center: [48.8867, 2.343], intensity: 0.75 },
-  { center: [48.8718, 2.3658], intensity: 0.35 },
-  { center: [48.8639, 2.3786], intensity: 0.25 },
-  { center: [48.872, 2.385], intensity: 0.2 },
-  { center: [48.825, 2.36], intensity: 0.3 },
+const ARRONDISSEMENT_DENSITY: { center: { lat: number; lng: number }; intensity: number }[] = [
+  { center: { lat: 48.8606, lng: 2.3376 }, intensity: 0.85 },
+  { center: { lat: 48.8674, lng: 2.3617 }, intensity: 0.55 },
+  { center: { lat: 48.852, lng: 2.3433 }, intensity: 0.65 },
+  { center: { lat: 48.853, lng: 2.3325 }, intensity: 0.6 },
+  { center: { lat: 48.8584, lng: 2.2945 }, intensity: 0.95 },
+  { center: { lat: 48.8867, lng: 2.343 }, intensity: 0.75 },
+  { center: { lat: 48.8718, lng: 2.3658 }, intensity: 0.35 },
+  { center: { lat: 48.8639, lng: 2.3786 }, intensity: 0.25 },
+  { center: { lat: 48.872, lng: 2.385 }, intensity: 0.2 },
+  { center: { lat: 48.825, lng: 2.36 }, intensity: 0.3 },
 ];
 
-export function MapInner({
+/**
+ * Google Maps の Circle は @vis.gl/react-google-maps から直接 export されてないので、
+ * useMap() でインスタンスを掴んで native Circle を描く。
+ */
+function HeatmapCircles() {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    const circles = ARRONDISSEMENT_DENSITY.map((d) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Circle = (window as any).google?.maps?.Circle;
+      if (!Circle) return null;
+      const c = new Circle({
+        center: d.center,
+        radius: 350 + d.intensity * 200,
+        map,
+        strokeWeight: 0,
+        fillColor: '#FF7A59',
+        fillOpacity: 0.16 + d.intensity * 0.18,
+        clickable: false,
+      });
+      return c as { setMap: (m: unknown) => void };
+    }).filter(Boolean) as { setMap: (m: unknown) => void }[];
+    return () => {
+      circles.forEach((c) => c.setMap(null));
+    };
+  }, [map]);
+  return null;
+}
+
+function MapBody({
   spots,
   articles,
   onPinClick,
   showHeatmap,
-}: MapInnerProps) {
-  const articleColor = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const a of articles) {
-      map.set(a.id, localScoreColor(a.localScoreAverage));
-    }
-    return map;
+}: Omit<MapInnerProps, 'apiKey'>) {
+  const articleScore = useMemo(() => {
+    const out: Record<string, number> = {};
+    for (const a of articles) out[a.id] = a.localScoreAverage;
+    return out;
   }, [articles]);
 
   return (
-    <MapContainer
-      center={PARIS_CENTER}
-      zoom={13}
-      scrollWheelZoom
-      style={{ height: '100%', width: '100%' }}
+    <GoogleMap
+      defaultCenter={PARIS_CENTER}
+      defaultZoom={13}
+      gestureHandling="greedy"
+      disableDefaultUI
+      clickableIcons={false}
+      mapId="locore-map"
+      styles={locoreMapStyles}
+      className="locore-map-canvas"
+      style={{ width: '100%', height: '100%' }}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-      />
-      {showHeatmap
-        ? ARRONDISSEMENT_DENSITY.map((d, i) => (
-            <CircleMarker
-              key={`heat-${i}`}
-              center={d.center}
-              radius={45 + d.intensity * 20}
-              pathOptions={{
-                color: '#b8623f',
-                weight: 0,
-                fillColor: '#b8623f',
-                fillOpacity: 0.18 + d.intensity * 0.18,
-              }}
-            />
-          ))
-        : null}
+      {showHeatmap ? <HeatmapCircles /> : null}
       {spots.map((s) => {
-        const color = articleColor.get(s.articleId) ?? '#6b5b8a';
+        const score = articleScore[s.articleId] ?? 50;
+        const cls = pinModifierClass(score);
         return (
-          <Marker
+          <AdvancedMarker
             key={s.id}
-            position={[s.lat, s.lng]}
-            icon={buildIcon(color)}
-            eventHandlers={{
-              click: () => onPinClick?.(s),
-            }}
-          />
+            position={{ lat: s.lat, lng: s.lng }}
+            onClick={() => onPinClick?.(s)}
+            title={s.name}
+          >
+            <span className={`locore-pin ${cls}`} aria-label={s.name} />
+          </AdvancedMarker>
         );
       })}
-    </MapContainer>
+    </GoogleMap>
+  );
+}
+
+export function MapInner({ spots, articles, onPinClick, showHeatmap, apiKey }: MapInnerProps) {
+  if (!apiKey) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-primary-50/40 px-6 text-center">
+        <div className="max-w-md">
+          <p className="text-[14px] font-semibold text-primary-700">
+            地図を表示するには Google Maps API キーが必要です
+          </p>
+          <p className="mt-2 text-[12px] text-foreground/60">
+            <code className="rounded-sm bg-card px-1 py-0.5 text-[11px]">
+              NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+            </code>{' '}
+            を <code className="rounded-sm bg-card px-1 py-0.5 text-[11px]">.env.local</code>{' '}
+            に設定して再起動すると、Locore 仕様の独自スタイルでマップが表示されます。
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <APIProvider apiKey={apiKey} libraries={['marker']}>
+      <MapBody
+        spots={spots}
+        articles={articles}
+        onPinClick={onPinClick}
+        showHeatmap={showHeatmap}
+      />
+    </APIProvider>
   );
 }
