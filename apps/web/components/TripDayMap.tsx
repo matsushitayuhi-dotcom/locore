@@ -122,19 +122,23 @@ function TripDayMapBody({ day }: { day: TripDay }) {
   }
 
   return (
-    <GoogleMap
-      defaultCenter={center}
-      defaultZoom={13}
-      gestureHandling="cooperative"
-      disableDefaultUI
-      clickableIcons={false}
-      styles={locoreMapStyles}
+    <div
       className="locore-map-canvas"
-      style={{ width: '100%', height: '100%' }}
+      style={{ position: 'absolute', inset: 0 }}
     >
-      <PolylineLayer points={points} />
-      <NumberedMarkers points={points} />
-    </GoogleMap>
+      <GoogleMap
+        defaultCenter={center}
+        defaultZoom={13}
+        gestureHandling="cooperative"
+        disableDefaultUI
+        clickableIcons={false}
+        styles={locoreMapStyles}
+        style={{ width: '100%', height: '100%' }}
+      >
+        <PolylineLayer points={points} />
+        <NumberedMarkers points={points} />
+      </GoogleMap>
+    </div>
   );
 }
 
@@ -153,7 +157,7 @@ export function TripDayMap({ day }: { day: TripDay }) {
   }
 
   return (
-    <div style={{ height: 260 }}>
+    <div style={{ height: 260, position: 'relative' }}>
       <APIProvider apiKey={apiKey}>
         <TripDayMapBody day={day} />
       </APIProvider>

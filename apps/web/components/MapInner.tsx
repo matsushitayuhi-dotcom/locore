@@ -126,6 +126,15 @@ function MarkersLayer({
   return null;
 }
 
+/**
+ * `<Map>` を `position: absolute; inset: 0` の明示ラッパー内に置くことで
+ * 親の高さがどうあれ確実にコンテナを埋めるようにする。
+ * `style={{ height: '100%' }}` 単体だと親の `h-[calc(100vh-56px)]` が
+ * （Next.js のレイアウト経由で）解決しないケースがあった。
+ *
+ * `styles` は `mapOptions` 経由で渡す。@vis.gl の実装/バージョンによって
+ * トップレベル prop の `styles` が無視されることがあるため。
+ */
 function MapBody({
   spots,
   articles,
@@ -139,23 +148,27 @@ function MapBody({
   }, [articles]);
 
   return (
-    <GoogleMap
-      defaultCenter={PARIS_CENTER}
-      defaultZoom={13}
-      gestureHandling="greedy"
-      disableDefaultUI
-      clickableIcons={false}
-      styles={locoreMapStyles}
+    <div
       className="locore-map-canvas"
-      style={{ width: '100%', height: '100%' }}
+      style={{ position: 'absolute', inset: 0 }}
     >
-      {showHeatmap ? <HeatmapCircles /> : null}
-      <MarkersLayer
-        spots={spots}
-        articleScore={articleScore}
-        onPinClick={onPinClick}
-      />
-    </GoogleMap>
+      <GoogleMap
+        defaultCenter={PARIS_CENTER}
+        defaultZoom={13}
+        gestureHandling="greedy"
+        disableDefaultUI
+        clickableIcons={false}
+        styles={locoreMapStyles}
+        style={{ width: '100%', height: '100%' }}
+      >
+        {showHeatmap ? <HeatmapCircles /> : null}
+        <MarkersLayer
+          spots={spots}
+          articleScore={articleScore}
+          onPinClick={onPinClick}
+        />
+      </GoogleMap>
+    </div>
   );
 }
 
