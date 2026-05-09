@@ -1,12 +1,14 @@
-import { pgTable, uuid, text, integer, timestamp, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, timestamp, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { snsPlatformEnum } from './enums';
 
 /**
- * sns_links — ライターの SNS リンクとフォロワー数。
+ * sns_links — ユーザーの SNS リンクとフォロワー数。
  *
- * Founding 申請の評価や、プロフィール表示で使用。
+ * - 1 ユーザーあたり同じプラットフォームを複数登録可能
+ *   （個人 / 仕事用 / サブアカウント等）
+ * - 識別は `id` 単位で。プロフィール表示でもこの id をキーに削除する。
  */
 export const snsLinks = pgTable(
   'sns_links',
@@ -24,7 +26,6 @@ export const snsLinks = pgTable(
   },
   (table) => ({
     userIdx: index('sns_links_user_idx').on(table.userId),
-    userPlatformUq: uniqueIndex('sns_links_user_platform_uq').on(table.userId, table.platform),
   }),
 );
 

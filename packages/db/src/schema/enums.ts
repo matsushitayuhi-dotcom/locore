@@ -28,6 +28,7 @@ export const snsPlatformEnum = pgEnum('sns_platform', [
   'instagram',
   'youtube',
   'x',
+  'threads',
   'blog',
 ]);
 

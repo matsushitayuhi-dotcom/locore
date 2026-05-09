@@ -1,125 +1,323 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { eq, and, isNull, desc } from 'drizzle-orm';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Button,
   CreatorBadge,
   ResidencyBadge,
 } from '@locore/ui';
 import { ExternalLink } from '@locore/ui/icons';
-import { articlesByWriter, getWriter, writers } from '../../../lib/mock';
+import { schema } from '@locore/db';
+import { getDb } from '@/lib/db/client';
+import {
+  articlesByWriter,
+  getWriter,
+  writers as mockWriters,
+} from '../../../lib/mock';
 import { ArticleGrid } from '../../../components/ArticleGrid';
+import type { Article } from '../../../lib/mock';
 
-export function generateStaticParams() {
-  return writers.map((w) => ({ id: w.id }));
+export const dynamic = 'force-dynamic';
+
+/**
+ * ユーザープロフィールページ。
+ *
+ * - 書き手 / 読者 を区別せず、誰でも持つ「公開プロフィール」として扱う。
+ * - mock の wr_xxx ID は従来通り mock から、UUID は DB から解決する。
+ * - DB 上のユーザーは sns_links / writer_profiles を JOIN して取得。
+ * - 「この人のおすすめ記事」をタイルグリッドで並べる。
+ */
+
+const PLATFORM_LABEL: Record<string, string> = {
+  tiktok: 'TikTok',
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  x: 'X',
+  threads: 'Threads',
+  blog: 'Blog',
+};
+
+type DurationMap = Record<string, '1h' | '半日' | '1日' | '数時間'>;
+const durationMap: DurationMap = {
+  half_day: '半日',
+  full_day: '1日',
+  few_hours: '数時間',
+  other: '半日',
+};
+
+type ResolvedWriter = {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  bio: string;
+  city: string;
+  residencyYears: number;
+  tier: 'S' | 'A' | 'B';
+  isFounding: boolean;
+  isVerifiedCreator: boolean;
+  followerCount: number;
+  snsLinks: { id: string; platform: string; url: string }[];
+};
+
+async function loadWriter(id: string): Promise<{
+  writer: ResolvedWriter;
+  articles: Article[];
+} | null> {
+  // mock 側を先にあたる（"wr_xxx" の固定 ID）
+  const mock = getWriter(id);
+  if (mock) {
+    const articles = articlesByWriter(mock.id);
+    const snsLinks = Object.entries(mock.social)
+      .filter(([, v]) => Boolean(v))
+      .map(([platform, url], i) => ({
+        id: `mock-${mock.id}-${platform}-${i}`,
+        platform,
+        url: url as string,
+      }));
+    return {
+      writer: {
+        id: mock.id,
+        name: mock.name,
+        avatarUrl: mock.avatarUrl,
+        bio: mock.bio,
+        city: mock.city,
+        residencyYears: mock.residencyYears,
+        tier: mock.tier,
+        isFounding: mock.isFounding,
+        isVerifiedCreator: mock.isVerifiedCreator,
+        followerCount: mock.followerCount,
+        snsLinks,
+      },
+      articles,
+    };
+  }
+
+  // UUID 形式じゃなければ早期 return
+  const uuidPat =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidPat.test(id)) return null;
+
+  try {
+    const db = getDb();
+
+    const userRows = await db
+      .select({
+        id: schema.users.id,
+        displayName: schema.users.displayName,
+        avatarUrl: schema.users.avatarUrl,
+        bio: schema.users.bio,
+        role: schema.users.role,
+        deletedAt: schema.users.deletedAt,
+        wpTier: schema.writerProfiles.tier,
+        wpYears: schema.writerProfiles.residencyYears,
+        wpCountry: schema.writerProfiles.residencyCountry,
+        wpFounding: schema.writerProfiles.foundingMember,
+      })
+      .from(schema.users)
+      .leftJoin(
+        schema.writerProfiles,
+        eq(schema.writerProfiles.userId, schema.users.id),
+      )
+      .where(eq(schema.users.id, id))
+      .limit(1);
+
+    if (userRows.length === 0) return null;
+    const u = userRows[0]!;
+    if (u.deletedAt) return null;
+
+    const [snsRows, dbArticles] = await Promise.all([
+      db
+        .select({
+          id: schema.snsLinks.id,
+          platform: schema.snsLinks.platform,
+          url: schema.snsLinks.url,
+        })
+        .from(schema.snsLinks)
+        .where(eq(schema.snsLinks.userId, u.id)),
+      db
+        .select({
+          id: schema.articles.id,
+          title: schema.articles.title,
+          body: schema.articles.body,
+          coverImageUrl: schema.articles.coverImageUrl,
+          writerId: schema.articles.writerId,
+          cityId: schema.articles.cityId,
+          priceJpy: schema.articles.priceJpy,
+          tags: schema.articles.tags,
+          durationType: schema.articles.durationType,
+          articleType: schema.articles.articleType,
+          createdAt: schema.articles.createdAt,
+          publishedAt: schema.articles.publishedAt,
+          cityNameJa: schema.cities.nameJa,
+        })
+        .from(schema.articles)
+        .leftJoin(schema.cities, eq(schema.articles.cityId, schema.cities.id))
+        .where(
+          and(
+            eq(schema.articles.writerId, u.id),
+            eq(schema.articles.status, 'published'),
+            isNull(schema.articles.deletedAt),
+          ),
+        )
+        .orderBy(desc(schema.articles.publishedAt))
+        .limit(30),
+    ]);
+
+    const articles: Article[] = dbArticles.map((a) => ({
+      id: a.id,
+      title: a.title,
+      body: a.body ?? '',
+      coverImageUrl:
+        a.coverImageUrl ?? `https://picsum.photos/seed/${a.id}/960/640`,
+      writerId: a.writerId,
+      cityId: a.cityId,
+      area: a.cityNameJa ?? 'パリ',
+      priceJpy: a.priceJpy,
+      tags: a.tags ?? [],
+      durationType: durationMap[a.durationType ?? 'other'] ?? '半日',
+      articleType: a.articleType,
+      createdAt: a.createdAt.toISOString(),
+      publishedAt: (a.publishedAt ?? a.createdAt).toISOString(),
+      localScoreAverage: 70,
+      satisfactionAverage: 4.5,
+      reviewCount: 0,
+      purchaseCount: 0,
+      spotIds: [],
+    }));
+
+    const fallbackAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+      u.displayName ?? 'L',
+    )}`;
+
+    return {
+      writer: {
+        id: u.id,
+        name: u.displayName ?? '匿名ユーザー',
+        avatarUrl: u.avatarUrl ?? fallbackAvatar,
+        bio: u.bio ?? '',
+        city: u.wpCountry ?? '—',
+        residencyYears: u.wpYears ?? 0,
+        tier: (u.wpTier ?? 'B') as 'S' | 'A' | 'B',
+        isFounding: u.wpFounding ?? false,
+        isVerifiedCreator: false,
+        followerCount: 0,
+        snsLinks: snsRows.map((r) => ({
+          id: r.id,
+          platform: r.platform,
+          url: r.url,
+        })),
+      },
+      articles,
+    };
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[writers/[id]] DB lookup failed:', err);
+    return null;
+  }
 }
 
-export default function WriterPage({ params }: { params: { id: string } }) {
-  const writer = getWriter(params.id);
-  if (!writer) return notFound();
-  const articles = articlesByWriter(writer.id);
-  const totalRevenue = articles.reduce(
-    (acc, a) => acc + a.purchaseCount * a.priceJpy,
-    0,
-  );
-  const avgLocal =
-    articles.length > 0
-      ? Math.round(
-          articles.reduce((acc, a) => acc + a.localScoreAverage, 0) /
-            articles.length,
-        )
-      : 0;
-  const avgSat =
-    articles.length > 0
-      ? +(
-          articles.reduce((acc, a) => acc + a.satisfactionAverage, 0) /
-          articles.length
-        ).toFixed(1)
-      : 0;
+export default async function WriterPage({ params }: { params: { id: string } }) {
+  const resolved = await loadWriter(params.id);
+  if (!resolved) return notFound();
+  const { writer, articles } = resolved;
+
+  const isWriter =
+    writer.tier === 'S' ||
+    writer.tier === 'A' ||
+    writer.tier === 'B' ||
+    articles.length > 0;
 
   return (
     <main className="bg-background">
-      <div className="border-b border-border bg-neutral-25">
+      <div className="border-b border-primary-100 bg-gradient-to-br from-primary-50/50 via-white to-primary-50/30">
         <div className="mx-auto flex max-w-screen-lg flex-col items-start gap-6 px-4 py-12 sm:flex-row sm:px-6">
-          <Avatar size="xl" className="ring-2 ring-border shadow-sm">
+          <Avatar size="xl" className="shadow-sm ring-2 ring-primary-100">
             <AvatarImage src={writer.avatarUrl} alt={writer.name} />
             <AvatarFallback>{writer.name[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1
-                className="text-[28px] font-semibold tracking-tight"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
-              >
+              <h1 className="text-[28px] font-bold tracking-tight">
                 {writer.name}
               </h1>
-              <ResidencyBadge tier={writer.tier} years={writer.residencyYears} />
-              {writer.isVerifiedCreator ? <CreatorBadge type="verified" /> : null}
+              {isWriter ? (
+                <ResidencyBadge
+                  tier={writer.tier}
+                  years={writer.residencyYears}
+                />
+              ) : null}
+              {writer.isVerifiedCreator ? (
+                <CreatorBadge type="verified" />
+              ) : null}
               {writer.isFounding ? <CreatorBadge type="founding" /> : null}
             </div>
-            <p className="mt-2 text-[13px] text-foreground/60">
-              パリ在住 {writer.residencyYears}年 ・ {writer.followerCount.toLocaleString('ja-JP')} followers
-            </p>
-            <p className="mt-4 max-w-2xl text-[15px] leading-[1.95] text-foreground/80">
-              {writer.bio}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {Object.entries(writer.social).map(([k, v]) =>
-                v ? (
+            {isWriter && writer.residencyYears > 0 ? (
+              <p className="mt-2 text-[13px] text-foreground/60">
+                パリ在住 {writer.residencyYears} 年
+                {writer.followerCount > 0 ? (
+                  <>
+                    {' ・ '}
+                    {writer.followerCount.toLocaleString('ja-JP')} followers
+                  </>
+                ) : null}
+              </p>
+            ) : null}
+            {writer.bio ? (
+              <p className="mt-4 max-w-2xl whitespace-pre-line text-[15px] leading-[1.85] text-neutral-700">
+                {writer.bio}
+              </p>
+            ) : null}
+
+            {writer.snsLinks.length > 0 ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {writer.snsLinks.map((s) => (
                   <a
-                    key={k}
-                    href={v}
-                    className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-[12px] text-foreground/70 transition hover:bg-muted"
+                    key={s.id}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[12px] font-medium text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-50 hover:ring-primary-300"
                   >
                     <ExternalLink className="h-3 w-3" />
-                    {k.toUpperCase()}
+                    {PLATFORM_LABEL[s.platform] ?? s.platform.toUpperCase()}
                   </a>
-                ) : null,
-              )}
-              <Button variant="outline" size="sm">
-                フォロー
-              </Button>
-            </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
 
-      <section className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6">
-        <dl className="grid grid-cols-2 gap-3 rounded-md border border-border bg-card p-5 sm:grid-cols-4">
-          <Stat label="記事数" value={`${articles.length}本`} />
-          <Stat
-            label="累計売上（推定）"
-            value={`¥${totalRevenue.toLocaleString('ja-JP')}`}
-          />
-          <Stat label="平均ローカル度" value={`${avgLocal} / 100`} />
-          <Stat label="平均満足度" value={`★ ${avgSat}`} />
-        </dl>
-      </section>
+      <section className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6">
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
+              この人のおすすめ
+            </p>
+            <h2 className="mt-2 text-[22px] font-bold tracking-tight">
+              {writer.name} の記事
+              <span className="ml-2 text-[14px] font-medium text-foreground/50">
+                {articles.length} 本
+              </span>
+            </h2>
+          </div>
+        </div>
 
-      <section className="mx-auto max-w-screen-xl px-4 pb-16 sm:px-6">
-        <h2
-          className="mb-5 text-[20px] font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
-        >
-          {writer.name}さんの記事
-        </h2>
-        <ArticleGrid articles={articles} hideAuthor />
+        {articles.length === 0 ? (
+          <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">
+            {writer.name} はまだ記事を公開していません。
+          </div>
+        ) : (
+          <ArticleGrid articles={articles} hideAuthor />
+        )}
       </section>
     </main>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-        {label}
-      </dt>
-      <dd className="mt-1 text-[16px] font-semibold tabular">{value}</dd>
-    </div>
-  );
+// 既存の mock writer 用に静的生成のヒントだけ残す
+export async function generateStaticParams() {
+  return mockWriters.map((w) => ({ id: w.id }));
 }

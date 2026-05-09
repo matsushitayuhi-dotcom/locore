@@ -7,15 +7,10 @@ import { requireUser } from '@/lib/auth/require-user';
 /**
  * Supabase Storage に画像をアップロードして公開 URL を返す Server Action。
  *
- * - バケット: `article-images`（Public、JPEG/PNG/WebP/GIF）
+ * - バケット: `article-images`（記事用） / `profile-avatars`（プロフィール用）
  * - パス: `<userId>/<uuid>.<ext>`
  * - 返却: `{ url, path }`
- *
- * バケットが未作成だと `404 Bucket not found` が返るので、UI 側で
- * 「Supabase でバケットを作成してください」と誘導する。
  */
-
-const BUCKET = 'article-images';
 
 const ALLOWED_TYPES = new Set([
   'image/jpeg',
@@ -24,7 +19,8 @@ const ALLOWED_TYPES = new Set([
   'image/gif',
 ]);
 
-const MAX_BYTES = 8 * 1024 * 1024; // 8MB
+const MAX_BYTES_ARTICLE = 8 * 1024 * 1024; // 8MB
+const MAX_BYTES_AVATAR = 4 * 1024 * 1024; // 4MB（アバターは小さく）
 
 export type UploadImageResult =
   | { ok: true; url: string; path: string }
@@ -45,13 +41,12 @@ function extFromType(type: string): string {
   }
 }
 
-export async function uploadImage(formData: FormData): Promise<UploadImageResult> {
+async function uploadToBucket(
+  bucket: 'article-images' | 'profile-avatars',
+  file: File,
+  maxBytes: number,
+): Promise<UploadImageResult> {
   const user = await requireUser();
-  const file = formData.get('file');
-
-  if (!(file instanceof File)) {
-    return { ok: false, error: 'ファイルが指定されていません' };
-  }
 
   if (!ALLOWED_TYPES.has(file.type)) {
     return {
@@ -59,9 +54,9 @@ export async function uploadImage(formData: FormData): Promise<UploadImageResult
       error: `${file.type} は許可されていない形式です（JPEG / PNG / WebP / GIF のみ）`,
     };
   }
-
-  if (file.size > MAX_BYTES) {
-    return { ok: false, error: '画像サイズは 8MB 以下にしてください' };
+  if (file.size > maxBytes) {
+    const mb = Math.round(maxBytes / 1024 / 1024);
+    return { ok: false, error: `画像サイズは ${mb}MB 以下にしてください` };
   }
 
   const supabase = createSupabaseServerClient();
@@ -74,7 +69,7 @@ export async function uploadImage(formData: FormData): Promise<UploadImageResult
 
   const arrayBuffer = await file.arrayBuffer();
   const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
+    .from(bucket)
     .upload(path, arrayBuffer, {
       contentType: file.type,
       cacheControl: '3600',
@@ -82,20 +77,44 @@ export async function uploadImage(formData: FormData): Promise<UploadImageResult
     });
 
   if (uploadError) {
-    // バケット未作成のケースをユーザーに分かるメッセージで返す
     const msg = uploadError.message ?? '';
     if (/Bucket not found|bucket.*not.*exist/i.test(msg)) {
       return {
         ok: false,
         error:
-          `Supabase Storage に "${BUCKET}" バケットがありません。` +
+          `Supabase Storage に "${bucket}" バケットがありません。` +
           ' ダッシュボードで Public バケットを作成してください。',
+      };
+    }
+    if (/violates row-level security/i.test(msg)) {
+      return {
+        ok: false,
+        error:
+          `バケット "${bucket}" の RLS ポリシーが未設定です。` +
+          ' migrations/manual/0013_storage_policies.sql または 0014_*.sql を適用してください。',
       };
     }
     return { ok: false, error: `アップロードに失敗しました: ${msg}` };
   }
 
-  const { data: publicUrl } = supabase.storage.from(BUCKET).getPublicUrl(path);
-
+  const { data: publicUrl } = supabase.storage.from(bucket).getPublicUrl(path);
   return { ok: true, url: publicUrl.publicUrl, path };
+}
+
+/** 記事用画像（カバー、本文中）のアップロード */
+export async function uploadImage(formData: FormData): Promise<UploadImageResult> {
+  const file = formData.get('file');
+  if (!(file instanceof File)) {
+    return { ok: false, error: 'ファイルが指定されていません' };
+  }
+  return uploadToBucket('article-images', file, MAX_BYTES_ARTICLE);
+}
+
+/** プロフィールアバター画像のアップロード */
+export async function uploadAvatar(formData: FormData): Promise<UploadImageResult> {
+  const file = formData.get('file');
+  if (!(file instanceof File)) {
+    return { ok: false, error: 'ファイルが指定されていません' };
+  }
+  return uploadToBucket('profile-avatars', file, MAX_BYTES_AVATAR);
 }

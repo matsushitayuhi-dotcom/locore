@@ -9,45 +9,27 @@ export const metadata = {
   title: 'プロフィール編集',
 };
 
-// 認証ユーザー依存・DB アクセスがあるため常に動的レンダリング
 export const dynamic = 'force-dynamic';
 
 export default async function ProfileSettingsPage() {
   const user = await requireUser('/settings/profile');
   const db = getDb();
 
-  const isWriter = user.role === 'resident_writer' || user.role === 'editor';
-
-  const [writerProfileRows, snsRows] = await Promise.all([
-    isWriter
-      ? db
-          .select({ bio: schema.writerProfiles.bio })
-          .from(schema.writerProfiles)
-          .where(eq(schema.writerProfiles.userId, user.id))
-          .limit(1)
-      : Promise.resolve([] as { bio: string | null }[]),
-    db
-      .select({
-        platform: schema.snsLinks.platform,
-        url: schema.snsLinks.url,
-      })
-      .from(schema.snsLinks)
-      .where(eq(schema.snsLinks.userId, user.id)),
-  ]);
-
-  const writerBio = writerProfileRows[0]?.bio ?? null;
+  const snsRows = await db
+    .select({
+      id: schema.snsLinks.id,
+      platform: schema.snsLinks.platform,
+      url: schema.snsLinks.url,
+    })
+    .from(schema.snsLinks)
+    .where(eq(schema.snsLinks.userId, user.id));
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <header>
-        <h2
-          className="text-[20px] font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
-        >
-          プロフィール
-        </h2>
+        <h2 className="text-[20px] font-semibold tracking-tight">プロフィール</h2>
         <p className="mt-1 text-[12px] text-foreground/60">
-          表示名・自己紹介・アバター画像を編集できます。
+          表示名・自己紹介・プロフィール画像・SNS リンクを編集できます。
         </p>
       </header>
 
@@ -56,13 +38,15 @@ export default async function ProfileSettingsPage() {
           displayName: user.displayName ?? '',
           bio: user.bio ?? '',
           avatarUrl: user.avatarUrl ?? '',
-          writerBio: writerBio ?? '',
         }}
-        isWriter={isWriter}
       />
 
       <SnsLinksEditor
-        initial={snsRows.map((r) => ({ platform: r.platform, url: r.url }))}
+        initial={snsRows.map((r) => ({
+          id: r.id,
+          platform: r.platform,
+          url: r.url,
+        }))}
       />
     </div>
   );

@@ -7,10 +7,24 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 
-const SNS_PLATFORMS = ['tiktok', 'instagram', 'youtube', 'x', 'blog'] as const;
+/**
+ * プロフィール / SNS リンク 編集 Server Actions。
+ *
+ * 設計:
+ *   - SNS リンクは「同じプラットフォームを複数登録可能」に変更（id 単位の CRUD）
+ *   - writer 用 bio 編集は廃止（書き手 / 読者でフォームを分けない方針）
+ */
+
+const SNS_PLATFORMS = [
+  'tiktok',
+  'instagram',
+  'youtube',
+  'x',
+  'threads',
+  'blog',
+] as const;
 type SnsPlatform = (typeof SNS_PLATFORMS)[number];
 
-/** 空文字 → undefined にして optional URL を扱いやすくする */
 const optionalUrl = z
   .string()
   .trim()
@@ -23,8 +37,6 @@ const updateProfileSchema = z.object({
   displayName: z.string().trim().min(1, '表示名を入力してください').max(50),
   bio: z.string().trim().max(500).optional().or(z.literal('').transform(() => undefined)),
   avatarUrl: optionalUrl,
-  /** 書き手向け bio（writer_profiles.bio）。書き手以外の入力は無視する */
-  writerBio: z.string().trim().max(500).optional().or(z.literal('').transform(() => undefined)),
 });
 
 export type UpdateProfileResult =
@@ -54,29 +66,37 @@ export async function updateProfile(input: unknown): Promise<UpdateProfileResult
     })
     .where(eq(schema.users.id, user.id));
 
-  // 書き手の場合のみ writer_profiles.bio を更新（行が無ければスキップ）
+  // writer_profiles.bio は users.bio と一本化したので個別更新は廃止。
+  // 既存の writer_profiles.bio は users.bio で上書き反映する。
   if (user.role === 'resident_writer' || user.role === 'editor') {
     await db
       .update(schema.writerProfiles)
-      .set({ bio: data.writerBio ?? null, updatedAt: new Date() })
+      .set({ bio: data.bio ?? null, updatedAt: new Date() })
       .where(eq(schema.writerProfiles.userId, user.id));
   }
 
   revalidatePath('/settings/profile');
+  // 公開プロフィールも再生成（自分のアバター / 表示名変更が反映される）
+  revalidatePath(`/writers/${user.id}`);
   return { ok: true };
 }
 
-const upsertSnsSchema = z.object({
+// =============================================================================
+// SNS リンク（同プラットフォーム複数 OK / id 単位 CRUD）
+// =============================================================================
+
+const addSnsSchema = z.object({
   platform: z.enum(SNS_PLATFORMS),
   url: z.string().trim().min(1).max(2048).url(),
 });
 
 export type SnsActionResult =
-  | { ok: true }
+  | { ok: true; data?: { id: string } }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
-export async function upsertSnsLink(input: unknown): Promise<SnsActionResult> {
-  const parsed = upsertSnsSchema.safeParse(input);
+/** 新規追加（複数登録 OK） */
+export async function addSnsLink(input: unknown): Promise<SnsActionResult> {
+  const parsed = addSnsSchema.safeParse(input);
   if (!parsed.success) {
     return {
       ok: false,
@@ -88,37 +108,27 @@ export async function upsertSnsLink(input: unknown): Promise<SnsActionResult> {
   const user = await requireUser();
   const db = getDb();
 
-  const existing = await db
-    .select({ id: schema.snsLinks.id })
-    .from(schema.snsLinks)
-    .where(
-      and(eq(schema.snsLinks.userId, user.id), eq(schema.snsLinks.platform, platform)),
-    )
-    .limit(1);
-
-  if (existing.length > 0) {
-    await db
-      .update(schema.snsLinks)
-      .set({ url, updatedAt: new Date() })
-      .where(eq(schema.snsLinks.id, existing[0]!.id));
-  } else {
-    await db.insert(schema.snsLinks).values({
+  const inserted = await db
+    .insert(schema.snsLinks)
+    .values({
       userId: user.id,
       platform: platform as SnsPlatform,
       url,
-    });
-  }
+    })
+    .returning({ id: schema.snsLinks.id });
 
   revalidatePath('/settings/profile');
-  return { ok: true };
+  revalidatePath(`/writers/${user.id}`);
+  return { ok: true, data: { id: inserted[0]!.id } };
 }
 
-const deleteSnsSchema = z.object({
-  platform: z.enum(SNS_PLATFORMS),
+const deleteByIdSchema = z.object({
+  id: z.string().uuid(),
 });
 
+/** id 指定で削除 */
 export async function deleteSnsLink(input: unknown): Promise<SnsActionResult> {
-  const parsed = deleteSnsSchema.safeParse(input);
+  const parsed = deleteByIdSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: '不正なリクエスト' };
   }
@@ -129,11 +139,12 @@ export async function deleteSnsLink(input: unknown): Promise<SnsActionResult> {
     .delete(schema.snsLinks)
     .where(
       and(
+        eq(schema.snsLinks.id, parsed.data.id),
         eq(schema.snsLinks.userId, user.id),
-        eq(schema.snsLinks.platform, parsed.data.platform),
       ),
     );
 
   revalidatePath('/settings/profile');
+  revalidatePath(`/writers/${user.id}`);
   return { ok: true };
 }
