@@ -19,6 +19,8 @@ interface MapViewProps {
   spots: Spot[];
   /** Google Maps API キー（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY を渡す） */
   googleMapsApiKey?: string;
+  /** サーバ側で取得した購入済み記事 ID */
+  purchasedArticleIds?: string[];
 }
 
 const CITIES = [
@@ -29,7 +31,12 @@ const CITIES = [
 
 const TAGS = ['朝食', '夜遊び', 'デート', '雨の日', 'カフェ', '雑貨', 'アート'];
 
-export function MapView({ articles, spots, googleMapsApiKey }: MapViewProps) {
+export function MapView({
+  articles,
+  spots,
+  googleMapsApiKey,
+  purchasedArticleIds,
+}: MapViewProps) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -51,6 +58,7 @@ export function MapView({ articles, spots, googleMapsApiKey }: MapViewProps) {
         articles={filteredArticles}
         showHeatmap={showHeatmap}
         apiKey={googleMapsApiKey}
+        purchasedArticleIds={purchasedArticleIds}
       />
 
       {/* Top-left: city pills + back to feed */}

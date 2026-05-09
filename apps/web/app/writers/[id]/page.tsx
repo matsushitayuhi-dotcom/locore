@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { eq, and, isNull, desc } from 'drizzle-orm';
+import { eq, and, isNull, desc, asc } from 'drizzle-orm';
 import {
   Avatar,
   AvatarFallback,
@@ -16,6 +16,12 @@ import {
   writers as mockWriters,
 } from '../../../lib/mock';
 import { ArticleGrid } from '../../../components/ArticleGrid';
+import {
+  UserServicesList,
+  type PublicService,
+} from '../../../components/profile/UserServicesList';
+import { ContactButton } from '../../../components/profile/ContactButton';
+import { getCurrentUser } from '@/lib/auth/current-user';
 import type { Article } from '../../../lib/mock';
 
 export const dynamic = 'force-dynamic';
@@ -58,6 +64,9 @@ type ResolvedWriter = {
   isVerifiedCreator: boolean;
   followerCount: number;
   snsLinks: { id: string; platform: string; url: string }[];
+  /** DB ユーザーかどうか（mock writer は services / chat 機能なし） */
+  isDbUser: boolean;
+  services: PublicService[];
 };
 
 async function loadWriter(id: string): Promise<{
@@ -88,6 +97,8 @@ async function loadWriter(id: string): Promise<{
         isVerifiedCreator: mock.isVerifiedCreator,
         followerCount: mock.followerCount,
         snsLinks,
+        isDbUser: false,
+        services: [],
       },
       articles,
     };
@@ -126,7 +137,7 @@ async function loadWriter(id: string): Promise<{
     const u = userRows[0]!;
     if (u.deletedAt) return null;
 
-    const [snsRows, dbArticles] = await Promise.all([
+    const [snsRows, dbArticles, serviceRows] = await Promise.all([
       db
         .select({
           id: schema.snsLinks.id,
@@ -162,6 +173,25 @@ async function loadWriter(id: string): Promise<{
         )
         .orderBy(desc(schema.articles.publishedAt))
         .limit(30),
+      db
+        .select({
+          id: schema.userServices.id,
+          title: schema.userServices.title,
+          description: schema.userServices.description,
+          category: schema.userServices.category,
+          priceJpy: schema.userServices.priceJpy,
+          priceUnit: schema.userServices.priceUnit,
+          contactMethod: schema.userServices.contactMethod,
+          externalUrl: schema.userServices.externalUrl,
+        })
+        .from(schema.userServices)
+        .where(
+          and(
+            eq(schema.userServices.userId, u.id),
+            eq(schema.userServices.isActive, true),
+          ),
+        )
+        .orderBy(asc(schema.userServices.position)),
     ]);
 
     const articles: Article[] = dbArticles.map((a) => ({
@@ -207,6 +237,18 @@ async function loadWriter(id: string): Promise<{
           platform: r.platform,
           url: r.url,
         })),
+        isDbUser: true,
+        services: serviceRows.map((s) => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          category: s.category,
+          priceJpy: s.priceJpy,
+          priceUnit: s.priceUnit,
+          contactMethod:
+            (s.contactMethod as 'chat' | 'external_url') ?? 'chat',
+          externalUrl: s.externalUrl,
+        })),
       },
       articles,
     };
@@ -218,7 +260,10 @@ async function loadWriter(id: string): Promise<{
 }
 
 export default async function WriterPage({ params }: { params: { id: string } }) {
-  const resolved = await loadWriter(params.id);
+  const [resolved, viewer] = await Promise.all([
+    loadWriter(params.id),
+    getCurrentUser(),
+  ]);
   if (!resolved) return notFound();
   const { writer, articles } = resolved;
 
@@ -269,25 +314,40 @@ export default async function WriterPage({ params }: { params: { id: string } })
               </p>
             ) : null}
 
-            {writer.snsLinks.length > 0 ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {writer.snsLinks.map((s) => (
-                  <a
-                    key={s.id}
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[12px] font-medium text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-50 hover:ring-primary-300"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    {PLATFORM_LABEL[s.platform] ?? s.platform.toUpperCase()}
-                  </a>
-                ))}
-              </div>
-            ) : null}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {writer.snsLinks.map((s) => (
+                <a
+                  key={s.id}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[12px] font-medium text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-50 hover:ring-primary-300"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {PLATFORM_LABEL[s.platform] ?? s.platform.toUpperCase()}
+                </a>
+              ))}
+              {writer.isDbUser ? (
+                <ContactButton
+                  ownerUserId={writer.id}
+                  viewerUserId={viewer?.id ?? null}
+                />
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
+
+      {writer.services.length > 0 ? (
+        <section className="mx-auto max-w-screen-xl px-4 pt-10 sm:px-6">
+          <UserServicesList
+            ownerUserId={writer.id}
+            ownerName={writer.name}
+            services={writer.services}
+            viewerUserId={viewer?.id ?? null}
+          />
+        </section>
+      ) : null}
 
       <section className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6">
         <div className="mb-5 flex items-end justify-between gap-4">

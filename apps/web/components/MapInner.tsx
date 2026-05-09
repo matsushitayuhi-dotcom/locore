@@ -9,7 +9,9 @@ import {
   InfoWindow,
   useMap,
 } from '@vis.gl/react-google-maps';
+import { Lock } from '@locore/ui/icons';
 import type { Article, Spot } from '../lib/mock';
+import { Purchases } from '../lib/storage/local';
 import { locoreMapStyles, pinColorForScore } from './map/locoreMapStyle';
 
 const PARIS_CENTER = { lat: 48.8606, lng: 2.3376 };
@@ -27,6 +29,8 @@ interface MapInnerProps {
   articles: Article[];
   showHeatmap?: boolean;
   apiKey?: string;
+  /** サーバ側で取得した購入済み記事 ID（DB の purchases テーブル由来） */
+  purchasedArticleIds?: string[];
 }
 
 const ARRONDISSEMENT_DENSITY: { center: { lat: number; lng: number }; intensity: number }[] = [
@@ -173,13 +177,31 @@ function MapBody({
   spots,
   articles,
   showHeatmap,
+  purchasedArticleIds,
 }: Omit<MapInnerProps, 'apiKey'>) {
   const groups = useMemo(() => buildGroups(spots, articles), [spots, articles]);
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
+  // 購入状態：サーバ由来 + クライアントの localStorage を合算
+  const [localPurchases, setLocalPurchases] = useState<Set<string>>(
+    () => new Set(),
+  );
+  useEffect(() => {
+    setLocalPurchases(new Set(Purchases.list()));
+  }, []);
+  const purchasedSet = useMemo(() => {
+    const s = new Set(localPurchases);
+    for (const id of purchasedArticleIds ?? []) s.add(id);
+    return s;
+  }, [localPurchases, purchasedArticleIds]);
+
   const activeGroup = activeKey
     ? groups.find((g) => g.key === activeKey) ?? null
     : null;
+  const isUnlocked = (a: Article) => purchasedSet.has(a.id);
+  const groupHasUnlock = activeGroup
+    ? activeGroup.articles.some(isUnlocked)
+    : false;
 
   return (
     <div
@@ -207,19 +229,28 @@ function MapBody({
             pixelOffset={[0, -18]}
             onCloseClick={() => setActiveKey(null)}
           >
-            <div className="min-w-[260px] max-w-[320px] p-1">
+            <div className="min-w-[280px] max-w-[340px] p-1">
               <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-700">
                 スポット
               </p>
-              <h4 className="mt-0.5 text-[15px] font-bold leading-snug text-neutral-900">
-                {activeGroup.name}
-              </h4>
-              {activeGroup.placeId ? (
+              {/* スポット名：いずれかの記事を購入していれば本物 + ハイライト、
+                  していなければマスクして「??????」+ ロック表示 */}
+              {groupHasUnlock ? (
+                <h4 className="mt-0.5 inline-block bg-primary-50 px-1.5 py-0.5 text-[15px] font-extrabold leading-snug text-primary-900">
+                  {activeGroup.name}
+                </h4>
+              ) : (
+                <h4 className="mt-0.5 inline-flex items-center gap-1.5 text-[15px] font-bold leading-snug text-foreground/40">
+                  <Lock className="h-3.5 w-3.5" />
+                  ?????????
+                </h4>
+              )}
+              {groupHasUnlock && activeGroup.placeId ? (
                 <a
                   href={`https://www.google.com/maps/place/?q=place_id:${activeGroup.placeId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 inline-block text-[11px] text-primary-700 underline-offset-4 hover:underline"
+                  className="mt-1 block text-[11px] text-primary-700 underline-offset-4 hover:underline"
                 >
                   Google マップで見る →
                 </a>
@@ -229,40 +260,76 @@ function MapBody({
                 この場所に紐づく記事（{activeGroup.articles.length}）
               </p>
               <ul className="mt-1 max-h-[260px] space-y-2 overflow-y-auto pr-1">
-                {activeGroup.articles.map((a) => (
-                  <li key={a.id}>
-                    <Link
-                      href={`/articles/${a.id}`}
-                      className="flex gap-2 rounded-md p-1.5 transition hover:bg-primary-50"
-                    >
-                      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-sm bg-primary-50">
-                        <Image
-                          src={a.coverImageUrl}
-                          alt={a.title}
-                          fill
-                          sizes="64px"
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-neutral-900">
-                          {a.title}
-                        </p>
-                        <p className="mt-0.5 flex items-center gap-2 text-[10px] text-foreground/60">
-                          <span className="tabular">
-                            ¥{a.priceJpy.toLocaleString('ja-JP')}
-                          </span>
-                          <span>·</span>
-                          <span>
-                            ローカル度{' '}
-                            <strong className="tabular">{a.localScoreAverage}</strong>
-                          </span>
-                        </p>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
+                {activeGroup.articles.map((a) => {
+                  const unlocked = isUnlocked(a);
+                  return (
+                    <li key={a.id}>
+                      <Link
+                        href={`/articles/${a.id}`}
+                        className={
+                          'flex gap-2 rounded-md p-1.5 transition ' +
+                          (unlocked
+                            ? 'bg-primary-50/60 ring-1 ring-primary-200 hover:bg-primary-50'
+                            : 'hover:bg-primary-50/30')
+                        }
+                      >
+                        <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-sm bg-primary-50">
+                          <Image
+                            src={a.coverImageUrl}
+                            alt={a.title}
+                            fill
+                            sizes="64px"
+                            className={
+                              'object-cover ' +
+                              (unlocked ? '' : 'opacity-90')
+                            }
+                          />
+                          {!unlocked ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/30">
+                              <Lock className="h-3 w-3 text-white" />
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className={
+                              'line-clamp-2 text-[12px] leading-snug ' +
+                              (unlocked
+                                ? 'font-extrabold text-primary-900'
+                                : 'font-semibold text-foreground/70')
+                            }
+                          >
+                            {a.title}
+                          </p>
+                          <p className="mt-0.5 flex items-center gap-2 text-[10px] text-foreground/60">
+                            {unlocked ? (
+                              <span className="rounded-full bg-primary-700 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white">
+                                Unlocked
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-0.5 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[9px] font-semibold text-foreground/50">
+                                <Lock className="h-2.5 w-2.5" />
+                                ロック
+                              </span>
+                            )}
+                            <span className="tabular">
+                              ¥{a.priceJpy.toLocaleString('ja-JP')}
+                            </span>
+                          </p>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
+
+              {!groupHasUnlock ? (
+                <p className="mt-3 rounded-md bg-accent-50 px-2 py-1.5 text-[10px] leading-relaxed text-foreground/70">
+                  記事を購入すると、このスポット名・住所・営業時間が
+                  <strong className="ml-0.5 text-primary-700">アンロック</strong>
+                  されます。
+                </p>
+              ) : null}
             </div>
           </InfoWindow>
         ) : null}
@@ -271,7 +338,13 @@ function MapBody({
   );
 }
 
-export function MapInner({ spots, articles, showHeatmap, apiKey }: MapInnerProps) {
+export function MapInner({
+  spots,
+  articles,
+  showHeatmap,
+  apiKey,
+  purchasedArticleIds,
+}: MapInnerProps) {
   if (!apiKey) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-primary-50/40 px-6 text-center">
@@ -292,7 +365,12 @@ export function MapInner({ spots, articles, showHeatmap, apiKey }: MapInnerProps
 
   return (
     <APIProvider apiKey={apiKey}>
-      <MapBody spots={spots} articles={articles} showHeatmap={showHeatmap} />
+      <MapBody
+        spots={spots}
+        articles={articles}
+        showHeatmap={showHeatmap}
+        purchasedArticleIds={purchasedArticleIds}
+      />
     </APIProvider>
   );
 }
