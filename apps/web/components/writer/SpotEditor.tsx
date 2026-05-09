@@ -75,7 +75,11 @@ const CATEGORY_OPTIONS: { value: SpotEditorValue['category']; label: string }[] 
 
 type Props = {
   initial: SpotEditorValue;
-  onSaved: (id: string) => void;
+  /**
+   * 保存成功時に呼ばれる。`value` は保存後のフォーム値（id 付き）。
+   * 親側（SpotList）はこれを使って一覧を即座に更新する（revalidate を待たない）。
+   */
+  onSaved: (value: SpotEditorValue) => void;
   onDeleted: () => void;
   onCancel?: () => void;
   /** Google Maps API キー（無い場合は SpotPlacesPicker がフォールバック表示） */
@@ -137,7 +141,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
       });
       if (res.ok) {
         toast.success(v.id ? 'スポットを更新しました' : 'スポットを追加しました');
-        onSaved(res.data!.id);
+        onSaved({ ...v, id: res.data!.id });
       } else {
         toast.error(res.error);
       }

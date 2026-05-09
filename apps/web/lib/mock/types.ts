@@ -31,6 +31,26 @@ export interface Writer {
   followerCount: number;
 }
 
+/** 旅程プラン記事の構造化ブロック（articles.itinerary_blocks JSONB と一致） */
+export interface ArticleItineraryBlock {
+  id: string;
+  startTime: string;
+  endTime?: string | null;
+  spotId?: string | null;
+  freeName?: string | null;
+  notes?: string | null;
+  transportToNext?:
+    | 'walk'
+    | 'metro'
+    | 'bus'
+    | 'taxi'
+    | 'bike'
+    | 'train'
+    | 'other'
+    | null;
+  travelMinutesAfter?: number | null;
+}
+
 export interface Article {
   id: string;
   title: string;
@@ -41,6 +61,8 @@ export interface Article {
    * （body の冒頭2段落を free、残りを paid とみなす）。
    */
   bodyPaid?: string | null;
+  /** 旅程プラン記事の構造化ブロック（articleType==='itinerary' のときに使う） */
+  itineraryBlocks?: ArticleItineraryBlock[] | null;
   coverImageUrl: string;
   writerId: string;
   cityId: string;

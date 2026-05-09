@@ -55,6 +55,30 @@ async function getWriterTier(userId: string): Promise<'S' | 'A' | 'B'> {
 
 // ---------- 記事本体 ----------
 
+const itineraryBlockSchema = z.object({
+  id: z.string().min(1),
+  startTime: z.string().regex(/^\d{2}:\d{2}$/),
+  endTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/)
+    .nullable()
+    .optional(),
+  spotId: z.string().uuid().nullable().optional(),
+  freeName: z.string().max(200).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  transportToNext: z
+    .enum(['walk', 'metro', 'bus', 'taxi', 'bike', 'train', 'other'])
+    .nullable()
+    .optional(),
+  travelMinutesAfter: z
+    .number()
+    .int()
+    .min(0)
+    .max(24 * 60)
+    .nullable()
+    .optional(),
+});
+
 const updateArticleSchema = z.object({
   id: z.string().uuid(),
   title: z.string().trim().min(1).max(200).optional(),
@@ -62,6 +86,8 @@ const updateArticleSchema = z.object({
   body: z.string().max(20000).optional(),
   /** 有料部分本文（Markdown）。空文字 → null として扱う */
   bodyPaid: z.string().max(40000).optional().nullable(),
+  /** 旅程プラン記事の構造化ブロック（articleType='itinerary' 用） */
+  itineraryBlocks: z.array(itineraryBlockSchema).max(60).optional().nullable(),
   priceJpy: z
     .number()
     .int()
@@ -114,6 +140,12 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
   if (data.bodyPaid !== undefined) {
     // 空文字は NULL にする（旧フォールバックを有効化したまま）
     patch.bodyPaid = data.bodyPaid && data.bodyPaid.trim() ? data.bodyPaid : null;
+  }
+  if (data.itineraryBlocks !== undefined) {
+    patch.itineraryBlocks =
+      data.itineraryBlocks && data.itineraryBlocks.length > 0
+        ? data.itineraryBlocks
+        : null;
   }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
@@ -171,6 +203,13 @@ export async function autoSaveArticle(input: unknown): Promise<
   if (data.bodyPaid !== undefined) {
     patch.bodyPaid = data.bodyPaid && data.bodyPaid.trim() ? data.bodyPaid : null;
   }
+  if (data.itineraryBlocks !== undefined) {
+    // null or 空配列のときは NULL として保存（以後 spot_guide に戻したケース）
+    patch.itineraryBlocks =
+      data.itineraryBlocks && data.itineraryBlocks.length > 0
+        ? data.itineraryBlocks
+        : null;
+  }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
   if (data.articleType !== undefined) patch.articleType = data.articleType;
@@ -220,6 +259,13 @@ export async function saveDraftArticle(input: unknown): Promise<
   if (data.body !== undefined) patch.body = data.body;
   if (data.bodyPaid !== undefined) {
     patch.bodyPaid = data.bodyPaid && data.bodyPaid.trim() ? data.bodyPaid : null;
+  }
+  if (data.itineraryBlocks !== undefined) {
+    // null or 空配列のときは NULL として保存（以後 spot_guide に戻したケース）
+    patch.itineraryBlocks =
+      data.itineraryBlocks && data.itineraryBlocks.length > 0
+        ? data.itineraryBlocks
+        : null;
   }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;

@@ -25,6 +25,11 @@ import { getDbArticleBundle } from '../../../lib/articles/published';
 import { Paywall } from '../../../components/Paywall';
 import { AddToTripButton } from '../../../components/AddToTripButton';
 import { ArticleGrid } from '../../../components/ArticleGrid';
+import { ItineraryTimeline } from '../../../components/ItineraryTimeline';
+import { getCurrentUser } from '@/lib/auth/current-user';
+import { eq, and } from 'drizzle-orm';
+import { schema } from '@locore/db';
+import { getDb } from '@/lib/db/client';
 
 // DB 上の UUID 記事も解決する必要があるため、静的生成はやめて動的レンダリングに
 export const dynamic = 'force-dynamic';
@@ -71,6 +76,28 @@ export default async function ArticleDetailPage({
       (a) => a.area === article.area && a.id !== article.id && a.writerId !== article.writerId,
     ),
   ].slice(0, 3);
+
+  // 旅程タイムラインの解放判定：DB の purchases に該当行があれば true
+  const me = await getCurrentUser();
+  let purchasedFromDb = false;
+  if (me) {
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({ id: schema.purchases.id })
+        .from(schema.purchases)
+        .where(
+          and(
+            eq(schema.purchases.buyerId, me.id),
+            eq(schema.purchases.articleId, article.id),
+          ),
+        )
+        .limit(1);
+      purchasedFromDb = rows.length > 0;
+    } catch {
+      purchasedFromDb = false;
+    }
+  }
 
   return (
     <main className="bg-background">
@@ -222,6 +249,18 @@ export default async function ArticleDetailPage({
               </p>
             ))}
           </article>
+
+          {/* 旅程プラン記事のときだけ構造化タイムラインを差し込む */}
+          {article.articleType === 'itinerary' &&
+          article.itineraryBlocks &&
+          article.itineraryBlocks.length > 0 ? (
+            <ItineraryTimeline
+              articleId={article.id}
+              blocks={article.itineraryBlocks}
+              spots={spots}
+              defaultUnlocked={purchasedFromDb}
+            />
+          ) : null}
 
           <Paywall article={article} bodyAfter={after} spots={spots} />
 

@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   boolean,
+  jsonb,
   pgEnum,
   index,
 } from 'drizzle-orm/pg-core';
@@ -16,6 +17,39 @@ import { articleVideos } from './article_videos';
 import { purchases } from './purchases';
 import { articleModerationScores } from './article_moderation_scores';
 import { articleTypeEnum } from './enums';
+
+/**
+ * 旅程ブロックの構造（articles.itinerary_blocks JSONB の中身）。
+ *
+ * - 1 ブロック = 1 つの「時間帯にどこに行くか」
+ * - `spotId` を入れると spots テーブルの行と紐付く（座標 / 営業時間など Google から取った情報を共有）
+ * - `freeName` はまだ spot を作っていない場合のフォールバック
+ * - `transportToNext` は「このブロックから次のブロックへの移動手段」
+ */
+export type ItineraryBlock = {
+  /** クライアント側の一意識別子（保存後は固定） */
+  id: string;
+  /** 開始時刻 'HH:MM'（必須） */
+  startTime: string;
+  /** 終了時刻 'HH:MM'（任意） */
+  endTime?: string | null;
+  /** spots テーブルの行を参照する場合 */
+  spotId?: string | null;
+  /** spot を作っていない / 自由記述の場合の場所名 */
+  freeName?: string | null;
+  notes?: string | null;
+  transportToNext?:
+    | 'walk'
+    | 'metro'
+    | 'bus'
+    | 'taxi'
+    | 'bike'
+    | 'train'
+    | 'other'
+    | null;
+  /** 次のブロックへの移動所要時間（分） */
+  travelMinutesAfter?: number | null;
+};
 
 /** article_status enum。@locore/shared の ArticleStatus と同期。 */
 export const articleStatusEnum = pgEnum('article_status', [
@@ -71,6 +105,12 @@ export const articles = pgTable(
      * 既存記事は spot_guide でデフォルト（後方互換）。
      */
     articleType: articleTypeEnum('article_type').notNull().default('spot_guide'),
+    /**
+     * 旅程プラン用の構造化ブロック配列（articleType='itinerary' のとき使う）。
+     * { startTime, endTime, spotId|freeName, transportToNext, travelMinutesAfter, notes }[]
+     * マイグレーション: `manual/0018_itinerary_blocks.sql`
+     */
+    itineraryBlocks: jsonb('itinerary_blocks').$type<ItineraryBlock[]>(),
     warned: boolean('warned').notNull().default(false),
     moderationScore: integer('moderation_score'),
     publishedAt: timestamp('published_at', { withTimezone: true }),

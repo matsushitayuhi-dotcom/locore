@@ -12,7 +12,11 @@ import { runMockModeration } from '@/lib/moderation/mock';
 import { EditorHeader } from './EditorHeader';
 import { BasicInfoSection, type BasicInfoValue } from './BasicInfoSection';
 import { CoverImageSection } from './CoverImageSection';
-import { BodySplitSection } from './BodySplitSection';
+import { TitleBodySection } from './TitleBodySection';
+import {
+  ItineraryBlocksEditor,
+  type ItineraryBlock,
+} from './ItineraryBlocksEditor';
 import { SpotsSection } from './SpotsSection';
 import { VideosSection } from './VideosSection';
 import { PreviewPane } from './PreviewPane';
@@ -22,20 +26,18 @@ import type { VideoRow } from '@/components/writer/VideoEmbedEditor';
 /**
  * 単画面化された記事編集の統括コンポーネント。
  *
- * - 基本情報・本文（無料/有料）・カバー画像は autoSave で 3 秒 debounce 保存
- * - 「下書きを保存」ボタンで debounce を待たずに即時保存
- * - スポットと動画は子コンポーネントの専用アクションで保存
- * - 公開申請の前提条件（タイトル、本文100字、スポット、カバー画像）を即時可視化
- * - サイドバイサイドプレビューは大画面でトグル
- * - mock モデレーションを 800ms debounce で再計算してスコア表示
+ * - タイトル + 本文（無料 / 有料）は TitleBodySection に統合
+ * - メタ情報（種別 / 価格 / 都市 / タグ / 所要時間）は BasicInfoSection
+ * - 旅程プラン（articleType='itinerary'）の場合は ItineraryBlocksEditor を表示
+ * - 自動保存 3 秒 debounce + 「下書きを保存」即時保存
  */
 
 type ArticleInitial = {
   id: string;
   title: string;
   body: string;
-  /** 有料部分本文（NULL の場合は空文字として扱い、旧フォールバックで分割される） */
   bodyPaid: string | null;
+  itineraryBlocks: ItineraryBlock[] | null;
   priceJpy: number;
   durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | null;
   articleType: 'spot_guide' | 'itinerary';
@@ -60,24 +62,31 @@ type Props = {
 export function EditorShell({ article, spots, videos, cities, tier, googleMapsApiKey }: Props) {
   const isPublished = article.status === 'published';
 
+  // タイトルと本文は別 state（TitleBodySection が両方扱う）
+  const [title, setTitle] = useState(article.title);
+  const [body, setBody] = useState(article.body);
+  const [bodyPaid, setBodyPaid] = useState(article.bodyPaid ?? '');
+
   const [basic, setBasic] = useState<BasicInfoValue>({
-    title: article.title,
     priceJpy: article.priceJpy,
     durationType: article.durationType ?? '',
     articleType: article.articleType,
     tagsText: (article.tags ?? []).join(', '),
     cityId: article.cityId,
   });
-  const [body, setBody] = useState(article.body);
-  const [bodyPaid, setBodyPaid] = useState(article.bodyPaid ?? '');
   const [coverImageUrl, setCoverImageUrl] = useState(article.coverImageUrl ?? '');
+  const [itineraryBlocks, setItineraryBlocks] = useState<ItineraryBlock[]>(
+    article.itineraryBlocks ?? [],
+  );
+
+  // SpotsSection は内部状態を持つので参照だけ受け渡し（旅程ブロックの選択肢に使う）
+  // 実際の rows の足し引きは SpotsSection 内部で行うため、ここでは初期値を保持してドロップダウン候補に
+  const [spotsForDropdown, setSpotsForDropdown] = useState<SpotRow[]>(spots);
 
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
-
   const [showPreview, setShowPreview] = useState(false);
 
-  // 公開申請の前提条件 — body と bodyPaid 両方を文字数カウント対象にする
   const tags = useMemo(
     () =>
       basic.tagsText
@@ -91,41 +100,58 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
 
   const missing = useMemo(() => {
     const m: string[] = [];
-    if (!basic.title.trim()) m.push('タイトル');
+    if (!title.trim()) m.push('タイトル');
     if (totalBodyLength < 100) m.push('本文 100 字以上');
-    if (spots.length === 0) m.push('スポット 1 件以上');
+    if (spotsForDropdown.length === 0) m.push('スポット 1 件以上');
     if (!coverImageUrl.trim()) m.push('カバー画像');
+    if (basic.articleType === 'itinerary' && itineraryBlocks.length < 2) {
+      m.push('旅程ブロック 2 件以上');
+    }
     return m;
-  }, [basic.title, totalBodyLength, spots.length, coverImageUrl]);
+  }, [
+    title,
+    totalBodyLength,
+    spotsForDropdown.length,
+    coverImageUrl,
+    basic.articleType,
+    itineraryBlocks.length,
+  ]);
 
-  // モデレーションスコア（事前表示用）— 無料 + 有料を結合してチェック
+  // モデレーション
   const [modScore, setModScore] = useState<{ finalScore: number; action: string } | null>(null);
   useEffect(() => {
     const t = setTimeout(() => {
       const r = runMockModeration({
-        title: basic.title,
+        title,
         body: body + '\n\n' + bodyPaid,
         tags,
       });
       setModScore({ finalScore: r.finalScore, action: r.action });
     }, 800);
     return () => clearTimeout(t);
-  }, [basic.title, body, bodyPaid, tags]);
+  }, [title, body, bodyPaid, tags]);
 
-  // 自動保存（基本情報 + 本文 + カバー画像）3 秒 debounce
+  // 自動保存（タイトル含めて全項目）
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
+    // タイトルが空なら保存しない（書き始めるまで何も起きない仕様）
+    if (!title.trim()) {
+      setSaveState('idle');
+      return;
+    }
     setSaveState('saving');
     const handle = setTimeout(async () => {
       const res = await autoSaveArticle({
         id: article.id,
-        title: basic.title || undefined,
+        title: title || undefined,
         body,
-        bodyPaid: bodyPaid,
+        bodyPaid,
+        itineraryBlocks:
+          basic.articleType === 'itinerary' ? itineraryBlocks : null,
         priceJpy: basic.priceJpy,
         durationType: basic.durationType || undefined,
         articleType: basic.articleType,
@@ -143,9 +169,9 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
     }, 3000);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [basic, body, bodyPaid, coverImageUrl, tags]);
+  }, [title, basic, body, bodyPaid, coverImageUrl, tags, itineraryBlocks]);
 
-  // 「保存済み」表示の経過時間を 10 秒ごとに再描画したいので軽く再レンダー
+  // 「保存済み」表示の経過時間を 10 秒ごとに再描画
   const [, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick((n) => n + 1), 10000);
@@ -155,13 +181,19 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
   // 明示的「下書きを保存」
   const [isSavingDraft, startSavingDraft] = useTransition();
   const handleSaveDraft = () => {
+    if (!title.trim()) {
+      toast.error('タイトルを入力すると保存できます');
+      return;
+    }
     setSaveState('saving');
     startSavingDraft(async () => {
       const res = await saveDraftArticle({
         id: article.id,
-        title: basic.title || undefined,
+        title,
         body,
-        bodyPaid: bodyPaid,
+        bodyPaid,
+        itineraryBlocks:
+          basic.articleType === 'itinerary' ? itineraryBlocks : null,
         priceJpy: basic.priceJpy,
         durationType: basic.durationType || undefined,
         articleType: basic.articleType,
@@ -184,7 +216,7 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
     <div className="space-y-6">
       <EditorHeader
         articleId={article.id}
-        title={basic.title}
+        title={title}
         status={article.status}
         bodyLength={totalBodyLength}
         updatedAt={article.updatedAt}
@@ -234,26 +266,48 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
 
       <div className={showPreview ? 'grid gap-6 lg:grid-cols-[1fr_minmax(280px,360px)]' : ''}>
         <div className="space-y-6">
-          <BasicInfoSection value={basic} onChange={setBasic} cities={cities} tier={tier} />
-          <CoverImageSection value={coverImageUrl} onChange={setCoverImageUrl} isPublished={isPublished} />
-          <BodySplitSection
+          {/* タイトル + 本文（無料 / 有料）— 統合表示 */}
+          <TitleBodySection
+            title={title}
             bodyFree={body}
             bodyPaid={bodyPaid}
-            onChangeFree={setBody}
-            onChangePaid={setBodyPaid}
+            onChangeTitle={setTitle}
+            onChangeBodyFree={setBody}
+            onChangeBodyPaid={setBodyPaid}
           />
+
+          {/* 旅程プランのときだけ表示 */}
+          {basic.articleType === 'itinerary' ? (
+            <ItineraryBlocksEditor
+              blocks={itineraryBlocks}
+              onChange={setItineraryBlocks}
+              spots={spotsForDropdown}
+            />
+          ) : null}
+
+          {/* メタ情報（種別 / 価格 / 都市 / タグ / 所要時間） */}
+          <BasicInfoSection value={basic} onChange={setBasic} cities={cities} tier={tier} />
+
+          <CoverImageSection
+            value={coverImageUrl}
+            onChange={setCoverImageUrl}
+            isPublished={isPublished}
+          />
+
           <SpotsSection
             articleId={article.id}
             initial={spots}
             googleMapsApiKey={googleMapsApiKey}
+            onSpotsChange={setSpotsForDropdown}
           />
+
           <VideosSection articleId={article.id} initial={videos} />
         </div>
 
         {showPreview ? (
           <div className="lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
             <PreviewPane
-              title={basic.title}
+              title={title}
               body={body + (bodyPaid ? '\n\n' + bodyPaid : '')}
               coverImageUrl={coverImageUrl}
               priceJpy={basic.priceJpy}

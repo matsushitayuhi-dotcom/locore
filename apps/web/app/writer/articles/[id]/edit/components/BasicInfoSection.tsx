@@ -26,10 +26,11 @@ const TIER_PRICE_CAPS: Record<'S' | 'A' | 'B', number> = {
   B: 1000,
 };
 
-const TITLE_MAX = 200;
-
+/**
+ * 記事のメタ情報（種別 / 価格 / 所要時間 / 都市 / タグ）。
+ * タイトルと本文は別途 TitleBodySection で統合的に編集する。
+ */
 export type BasicInfoValue = {
-  title: string;
   priceJpy: number;
   durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | '';
   articleType: 'spot_guide' | 'itinerary';
@@ -52,33 +53,14 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
     onChange({ ...value, [k]: v });
   };
 
-  const titleOver = value.title.length > TITLE_MAX;
-
   return (
     <section
-      className="space-y-5 rounded-md border border-border bg-card p-5 sm:p-6"
+      className="space-y-5 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6"
       aria-labelledby="basic-section-title"
     >
-      <h3 id="basic-section-title" className="text-[15px] font-medium tracking-tight">
-        基本情報
+      <h3 id="basic-section-title" className="text-[15px] font-semibold tracking-tight">
+        メタ情報
       </h3>
-
-      <div>
-        <label htmlFor="art-title" className="mb-1 block text-[12px] font-medium text-foreground/70">
-          タイトル <span className="text-danger-500">*</span>
-        </label>
-        <Input
-          id="art-title"
-          type="text"
-          value={value.title}
-          onChange={(e) => set('title', e.target.value)}
-          maxLength={TITLE_MAX}
-          required
-        />
-        <p className={'mt-1 text-[11px] ' + (titleOver ? 'text-danger-500' : 'text-foreground/50')}>
-          {value.title.length} / {TITLE_MAX}
-        </p>
-      </div>
 
       <fieldset>
         <legend className="mb-2 block text-[12px] font-medium text-foreground/70">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';
 import { ChevronDown, Plus } from '@locore/ui/icons';
@@ -27,6 +27,8 @@ type Props = {
   articleId: string;
   initial: SpotRow[];
   googleMapsApiKey?: string;
+  /** 行が変化したときに親へ最新のリストを通知（旅程ブロックのドロップダウン候補等で使う） */
+  onRowsChange?: (rows: SpotRow[]) => void;
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -54,13 +56,45 @@ function rowToValue(row: SpotRow): SpotEditorValue {
   };
 }
 
-export function SpotList({ articleId, initial, googleMapsApiKey }: Props) {
+/** SpotEditor から戻る `value` を一覧表示用 SpotRow に変換 */
+function valueToRow(v: SpotEditorValue): SpotRow {
+  return {
+    id: v.id!,
+    articleId: v.articleId,
+    name: v.name,
+    address: v.address || null,
+    lat: typeof v.lat === 'number' ? v.lat : Number(v.lat) || 0,
+    lng: typeof v.lng === 'number' ? v.lng : Number(v.lng) || 0,
+    category: (v.category || null) as SpotRow['category'],
+    priceEstimate: v.priceEstimate || null,
+    openingHoursText: v.openingHoursText,
+    tags: v.tagsText
+      .split(/[,、\n]/)
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0),
+    position: v.position,
+    googlePlaceId: v.googlePlaceId ?? null,
+  };
+}
+
+export function SpotList({
+  articleId,
+  initial,
+  googleMapsApiKey,
+  onRowsChange,
+}: Props) {
   const [rows, setRows] = useState<SpotRow[]>(
     [...initial].sort((a, b) => a.position - b.position),
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [, startTransition] = useTransition();
+
+  // 親に行の変化を通知
+  useEffect(() => {
+    onRowsChange?.(rows);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
 
   const move = (idx: number, dir: -1 | 1) => {
     const next = [...rows];
@@ -90,9 +124,14 @@ export function SpotList({ articleId, initial, googleMapsApiKey }: Props) {
                 <SpotEditor
                   initial={rowToValue(row)}
                   googleMapsApiKey={googleMapsApiKey}
-                  onSaved={() => {
+                  onSaved={(value) => {
                     setEditingId(null);
-                    // 親で完全な再フェッチは編集ページの revalidate に任せる
+                    // 既存行を保存後の値で上書き（revalidate を待たずに即時反映）
+                    setRows((prev) =>
+                      prev.map((r) =>
+                        r.id === value.id ? valueToRow(value) : r,
+                      ),
+                    );
                   }}
                   onDeleted={() => {
                     setEditingId(null);
@@ -164,9 +203,10 @@ export function SpotList({ articleId, initial, googleMapsApiKey }: Props) {
             googlePlaceId: null,
           }}
           googleMapsApiKey={googleMapsApiKey}
-          onSaved={() => {
+          onSaved={(value) => {
             setShowNew(false);
-            // revalidate 経由で再描画されることを期待
+            // 新規行を末尾に追加して累積表示（revalidate を待たない）
+            setRows((prev) => [...prev, valueToRow(value)]);
           }}
           onDeleted={() => setShowNew(false)}
           onCancel={() => setShowNew(false)}
@@ -177,6 +217,12 @@ export function SpotList({ articleId, initial, googleMapsApiKey }: Props) {
           スポットを追加
         </Button>
       )}
+
+      {rows.length > 0 ? (
+        <p className="text-[11px] text-foreground/50">
+          現在 {rows.length} 件のスポットが登録されています。
+        </p>
+      ) : null}
     </div>
   );
 }
