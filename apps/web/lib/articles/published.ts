@@ -249,6 +249,17 @@ export async function getDbArticleBundle(id: string): Promise<{
 
     const spots: Spot[] = spotRows.map((s) => {
       const coords = coordsMap.get(s.id) ?? { lat: 0, lng: 0 };
+      // DB は jsonb（{note:"..."} or {mon:[...]} など）。mock の Spot.openingHours は
+      // string のため、ここで人間可読な文字列に潰す。
+      const oh = s.openingHours;
+      const openingHoursText: string =
+        oh == null
+          ? ''
+          : typeof oh === 'object' &&
+              'note' in oh &&
+              Object.keys(oh as object).length === 1
+            ? (oh as { note?: string }).note ?? ''
+            : JSON.stringify(oh);
       return {
         id: s.id,
         articleId: s.articleId,
@@ -258,7 +269,7 @@ export async function getDbArticleBundle(id: string): Promise<{
         lng: coords.lng,
         category: (s.category ?? 'other') as Spot['category'],
         priceEstimate: s.priceEstimate ?? '',
-        openingHours: s.openingHours as Spot['openingHours'],
+        openingHours: openingHoursText,
         tags: s.tags ?? [],
       };
     });
