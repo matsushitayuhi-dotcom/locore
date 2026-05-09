@@ -38,6 +38,8 @@ export const crisisEvents = pgTable(
     publishedBy: uuid('published_by').references(() => users.id, { onDelete: 'set null' }),
     publishedAt: timestamp('published_at', { withTimezone: true }),
     autoCollected: boolean('auto_collected').notNull().default(false),
+    /** サンプルデータ識別用。`manual/0019_extend_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

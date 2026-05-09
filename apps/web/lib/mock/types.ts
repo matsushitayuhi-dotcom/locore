@@ -63,6 +63,14 @@ export interface Article {
   bodyPaid?: string | null;
   /** 旅程プラン記事の構造化ブロック（articleType==='itinerary' のときに使う） */
   itineraryBlocks?: ArticleItineraryBlock[] | null;
+  /**
+   * 書き手のサマリ情報（DB 連携で記事と一緒に JOIN して詰められる）。
+   * mock や旧データでは undefined のまま → ArticleGrid 側で「匿名」表示。
+   */
+  writerName?: string;
+  writerAvatarUrl?: string | null;
+  writerTier?: 'S' | 'A' | 'B';
+  writerYears?: number;
   coverImageUrl: string;
   writerId: string;
   cityId: string;

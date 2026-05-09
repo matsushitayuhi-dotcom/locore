@@ -38,6 +38,12 @@ import {
   lightDiaries,
   editorCollections,
   collectionArticles,
+  purchases,
+  reviews,
+  trips,
+  tripDays,
+  tripItems,
+  crisisEvents,
   type NewUser,
   type NewWriterProfile,
   type NewArticle,
@@ -45,6 +51,12 @@ import {
   type NewLightDiary,
   type NewEditorCollection,
   type NewCollectionArticle,
+  type NewPurchase,
+  type NewReview,
+  type NewTrip,
+  type NewTripDay,
+  type NewTripItem,
+  type NewCrisisEvent,
 } from '../src/schema';
 
 // mock データは apps/web 側（CommonJS パッケージ）に存在する。
@@ -96,12 +108,64 @@ const mockCollectionsMod = require('../../../apps/web/lib/mock/collections') as 
     publishedAt: string;
   }>;
 };
+const mockReviewsMod = require('../../../apps/web/lib/mock/reviews') as {
+  reviews: Array<{
+    id: string;
+    articleId: string;
+    authorName: string;
+    localScore: number;
+    satisfaction: number;
+    tags: string[];
+    body: string;
+    visitedAt: string;
+  }>;
+};
+const mockTripsMod = require('../../../apps/web/lib/mock/trips') as {
+  trips: Array<{
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    travelers: number;
+    cityId: string;
+    days: Array<{
+      id: string;
+      date: string;
+      label: string;
+      items: Array<{
+        id: string;
+        startTime: string;
+        endTime: string;
+        spotId?: string;
+        freeSpotName?: string;
+        notes?: string;
+        budgetJpy?: number;
+        travelMinutesAfter?: number;
+      }>;
+    }>;
+  }>;
+};
+const mockCrisisMod = require('../../../apps/web/lib/mock/crisisEvents') as {
+  crisisEvents: Array<{
+    id: string;
+    cityId: string;
+    severity: 1 | 2 | 3 | 4 | 5;
+    title: string;
+    summary: string;
+    affectedRoutes?: string[];
+    startsAt: string;
+    endsAt: string;
+  }>;
+};
 
 const mockWriters = mockWritersMod.writers;
 const mockArticles = mockArticlesMod.articles;
 const mockSpots = mockSpotsMod.spots;
 const mockLightDiaries = mockLightDiariesMod.lightDiaries;
 const mockCollections = mockCollectionsMod.collections;
+const mockReviews = mockReviewsMod.reviews;
+const mockTrips = mockTripsMod.trips;
+const mockCrisisEvents = mockCrisisMod.crisisEvents;
 
 import { seedCities } from './data/cities';
 
@@ -472,6 +536,231 @@ async function main() {
   );
   if (caRows.length > 0) {
     await db.insert(collectionArticles).values(caRows).onConflictDoNothing();
+  }
+
+  // ---- sample readers + purchases + reviews ---------------------------------
+  console.log('[seed-mock] sample readers ...');
+  // 10 人のサンプル読者を作って、レビュー著者として共有する
+  const READER_COUNT = 10;
+  const readerIds: string[] = [];
+  for (let i = 0; i < READER_COUNT; i++) {
+    readerIds.push(stableUuid(`reader:${i}`));
+  }
+  const readerRows: NewUser[] = readerIds.map((id, i) => ({
+    id,
+    email: `reader${i}@sample.locore.test`,
+    displayName: `読者サンプル ${i + 1}`,
+    role: 'reader',
+    isSample: true,
+  }));
+  await db
+    .insert(users)
+    .values(readerRows)
+    .onConflictDoUpdate({
+      target: users.id,
+      set: {
+        displayName: sql`excluded.display_name`,
+        isSample: sql`excluded.is_sample`,
+      },
+    });
+
+  console.log(`[seed-mock] purchases + reviews (${mockReviews.length}) ...`);
+  // 1 review = 1 purchase + 1 review。reader は readerIds をラウンドロビン。
+  const purchaseRows: NewPurchase[] = [];
+  const reviewRows: NewReview[] = [];
+  for (let i = 0; i < mockReviews.length; i++) {
+    const r = mockReviews[i]!;
+    const articleId = articleUuids[r.articleId];
+    if (!articleId) continue;
+    const buyerId = readerIds[i % readerIds.length]!;
+    const purchaseId = stableUuid(`purchase:${r.id}`);
+    const articleObj = mockArticles.find((a) => a.id === r.articleId);
+    purchaseRows.push({
+      id: purchaseId,
+      buyerId,
+      articleId,
+      amountJpy: articleObj?.priceJpy ?? 800,
+      feeJpy: Math.floor((articleObj?.priceJpy ?? 800) * 0.3),
+      payoutJpy: Math.floor((articleObj?.priceJpy ?? 800) * 0.7),
+      status: 'completed',
+      purchasedAt: new Date(r.visitedAt),
+      isSample: true,
+    });
+    reviewRows.push({
+      id: stableUuid(`review:${r.id}`),
+      purchaseId,
+      localScore: r.localScore,
+      satisfactionStars: Math.max(1, Math.min(5, Math.round(r.satisfaction))),
+      tags: r.tags,
+      body: r.body,
+      visitedAt: new Date(r.visitedAt),
+      isSample: true,
+    });
+  }
+  if (purchaseRows.length > 0) {
+    await db
+      .insert(purchases)
+      .values(purchaseRows)
+      .onConflictDoUpdate({
+        target: purchases.id,
+        set: {
+          status: sql`excluded.status`,
+          isSample: sql`excluded.is_sample`,
+        },
+      });
+  }
+  if (reviewRows.length > 0) {
+    await db
+      .insert(reviews)
+      .values(reviewRows)
+      .onConflictDoUpdate({
+        target: reviews.id,
+        set: {
+          localScore: sql`excluded.local_score`,
+          satisfactionStars: sql`excluded.satisfaction_stars`,
+          body: sql`excluded.body`,
+          tags: sql`excluded.tags`,
+          isSample: sql`excluded.is_sample`,
+        },
+      });
+  }
+
+  // ---- sample trips ---------------------------------------------------------
+  console.log(`[seed-mock] trips (${mockTrips.length}) ...`);
+
+  // 全 spots の mock id → DB UUID マップ（trip_items.spot_id に使う）
+  const spotUuidByMockId: Record<string, string> = {};
+  for (const s of mockSpots) {
+    spotUuidByMockId[s.id] = stableUuid(`spot:${s.id}`);
+  }
+
+  // trips のオーナーは読者 0 番（共有公開）
+  const sampleTripOwner = readerIds[0]!;
+
+  const tripRows: NewTrip[] = [];
+  const tripDayRows: NewTripDay[] = [];
+  const tripItemRows: NewTripItem[] = [];
+  for (const t of mockTrips) {
+    const tripId = stableUuid(`trip:${t.id}`);
+    tripRows.push({
+      id: tripId,
+      ownerId: sampleTripOwner,
+      cityId: paris.id,
+      name: t.name,
+      startDate: t.startDate,
+      endDate: t.endDate,
+      partySize: t.travelers,
+      isSample: true,
+    });
+    t.days.forEach((d, idx) => {
+      const dayId = stableUuid(`trip_day:${t.id}:${d.id}`);
+      tripDayRows.push({
+        id: dayId,
+        tripId,
+        dayNumber: idx + 1,
+        date: d.date,
+        isSample: true,
+      });
+      d.items.forEach((it, j) => {
+        const spotUuid = it.spotId ? spotUuidByMockId[it.spotId] : null;
+        tripItemRows.push({
+          id: stableUuid(`trip_item:${t.id}:${d.id}:${it.id}`),
+          tripDayId: dayId,
+          type: spotUuid ? 'spot' : 'free',
+          spotId: spotUuid ?? null,
+          customName: spotUuid ? null : it.freeSpotName ?? null,
+          scheduledTime: it.startTime,
+          position: j,
+          notes: it.notes ?? null,
+          budgetJpy: it.budgetJpy ?? null,
+          isSample: true,
+        });
+      });
+    });
+  }
+  if (tripRows.length > 0) {
+    await db
+      .insert(trips)
+      .values(tripRows)
+      .onConflictDoUpdate({
+        target: trips.id,
+        set: {
+          name: sql`excluded.name`,
+          startDate: sql`excluded.start_date`,
+          endDate: sql`excluded.end_date`,
+          partySize: sql`excluded.party_size`,
+          isSample: sql`excluded.is_sample`,
+        },
+      });
+  }
+  if (tripDayRows.length > 0) {
+    await db
+      .insert(tripDays)
+      .values(tripDayRows)
+      .onConflictDoUpdate({
+        target: tripDays.id,
+        set: {
+          dayNumber: sql`excluded.day_number`,
+          date: sql`excluded.date`,
+          isSample: sql`excluded.is_sample`,
+        },
+      });
+  }
+  if (tripItemRows.length > 0) {
+    await db
+      .insert(tripItems)
+      .values(tripItemRows)
+      .onConflictDoUpdate({
+        target: tripItems.id,
+        set: {
+          spotId: sql`excluded.spot_id`,
+          customName: sql`excluded.custom_name`,
+          scheduledTime: sql`excluded.scheduled_time`,
+          position: sql`excluded.position`,
+          notes: sql`excluded.notes`,
+          budgetJpy: sql`excluded.budget_jpy`,
+          isSample: sql`excluded.is_sample`,
+        },
+      });
+  }
+
+  // ---- sample crisis_events --------------------------------------------------
+  console.log(`[seed-mock] crisis_events (${mockCrisisEvents.length}) ...`);
+  const crisisRows: NewCrisisEvent[] = mockCrisisEvents.map((c) => ({
+    id: stableUuid(`crisis:${c.id}`),
+    cityId: paris.id,
+    type: 'other',
+    severity: c.severity,
+    title: c.title,
+    description: c.summary,
+    japaneseSummary: c.summary,
+    affectedLines: c.affectedRoutes ?? null,
+    startsAt: new Date(c.startsAt),
+    endsAt: new Date(c.endsAt),
+    status: 'published',
+    publishedAt: new Date(c.startsAt),
+    autoCollected: false,
+    isSample: true,
+  }));
+  if (crisisRows.length > 0) {
+    await db
+      .insert(crisisEvents)
+      .values(crisisRows)
+      .onConflictDoUpdate({
+        target: crisisEvents.id,
+        set: {
+          severity: sql`excluded.severity`,
+          title: sql`excluded.title`,
+          description: sql`excluded.description`,
+          japaneseSummary: sql`excluded.japanese_summary`,
+          affectedLines: sql`excluded.affected_lines`,
+          startsAt: sql`excluded.starts_at`,
+          endsAt: sql`excluded.ends_at`,
+          status: sql`excluded.status`,
+          publishedAt: sql`excluded.published_at`,
+          isSample: sql`excluded.is_sample`,
+        },
+      });
   }
 
   console.log('[seed-mock] done.');

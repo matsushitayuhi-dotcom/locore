@@ -2,35 +2,33 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button, Badge, Avatar, AvatarImage, AvatarFallback } from '@locore/ui';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import {
-  articles as mockArticles,
-  collections,
-  crisisEvents,
-  lightDiaries,
-  getArticle,
-} from '../lib/mock';
 import { CrisisBanner } from '../components/CrisisBanner';
 import { FeedFilters } from '../components/FeedFilters';
 import { getPublishedDbArticles } from '../lib/articles/published';
+import { listCollections } from '../lib/collections/db';
+import { listCrisisEvents } from '../lib/crisis/db';
+import { listLightDiaries } from '../lib/lightDiaries/db';
 
-// DB から最新の published 記事を読むため、フィードは動的レンダリング
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // 実 DB の published 記事を先頭に、後ろに mock 記事を続ける（重複は ID で除外）
-  const dbArticles = await getPublishedDbArticles(50);
-  const dbIdSet = new Set(dbArticles.map((a) => a.id));
-  const articles = [
-    ...dbArticles,
-    ...mockArticles.filter((a) => !dbIdSet.has(a.id)),
-  ];
+  // すべて DB から取得（mock からの fallback は廃止）
+  const [articles, allCollections, crises, lightDiaries] = await Promise.all([
+    getPublishedDbArticles(50),
+    listCollections(),
+    listCrisisEvents(20),
+    listLightDiaries(6),
+  ]);
 
-  const pickedCollection = collections[0]!;
-  const pickedArticles = pickedCollection.articleIds
-    .map(getArticle)
-    .filter((a): a is NonNullable<typeof a> => Boolean(a))
-    .slice(0, 3);
-  const seriousCrisis = crisisEvents.find((e) => e.severity >= 3);
+  const articleById = new Map(articles.map((a) => [a.id, a]));
+  const pickedCollection = allCollections[0] ?? null;
+  const pickedArticles = pickedCollection
+    ? pickedCollection.articleIds
+        .map((id) => articleById.get(id))
+        .filter((a): a is NonNullable<typeof a> => Boolean(a))
+        .slice(0, 3)
+    : [];
+  const seriousCrisis = crises.find((e) => e.severity >= 3);
 
   return (
     <main className="bg-background">
@@ -152,6 +150,7 @@ export default async function HomePage() {
         ) : null}
 
         {/* Featured collection */}
+        {pickedCollection ? (
         <section>
           <SectionHeader
             kicker="編集チーム特集"
@@ -193,6 +192,7 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+        ) : null}
 
         {/* Feed */}
         <section id="feed">

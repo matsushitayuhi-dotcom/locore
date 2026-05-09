@@ -1,4 +1,13 @@
-import { pgTable, uuid, integer, timestamp, date, index, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  integer,
+  timestamp,
+  date,
+  boolean,
+  index,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { trips } from './trips';
 import { tripItems } from './trip_items';
@@ -15,6 +24,8 @@ export const tripDays = pgTable(
       .references(() => trips.id, { onDelete: 'cascade' }),
     dayNumber: integer('day_number').notNull(),
     date: date('date').notNull(),
+    /** サンプルデータ識別用。`manual/0019_extend_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({

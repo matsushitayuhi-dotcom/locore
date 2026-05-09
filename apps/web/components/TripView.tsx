@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { Button, Badge } from '@locore/ui';
 import { Share2, ExternalLink, Sparkles, Users, Clock } from '@locore/ui/icons';
 import type { Trip, Spot, TripDay, TripItem } from '../lib/mock';
-import { getSpot } from '../lib/mock';
 
 const TripDayMap = dynamic(
   () => import('./TripDayMap').then((m) => m.TripDayMap),
@@ -22,6 +21,11 @@ const TripDayMap = dynamic(
 
 interface TripViewProps {
   trip: Trip;
+  /**
+   * spot.id → Spot のマップ。サーバ側で DB から解決して渡す。
+   * 渡されない場合は item.freeSpotName 等のフォールバック表示のみ。
+   */
+  spotsById?: Map<string, Spot>;
 }
 
 function distanceKm(a: Spot, b: Spot) {
@@ -34,7 +38,10 @@ function distanceKm(a: Spot, b: Spot) {
   return Math.sqrt(x * x + y * y) * r;
 }
 
-function shuffleAndSort(items: TripItem[]): TripItem[] {
+function shuffleAndSort(
+  items: TripItem[],
+  getSpot: (id: string) => Spot | undefined,
+): TripItem[] {
   const placed = items.filter((i) => i.spotId);
   const free = items.filter((i) => !i.spotId);
   if (placed.length <= 1) return items;
@@ -73,12 +80,15 @@ function shuffleAndSort(items: TripItem[]): TripItem[] {
   return [...ordered, ...free];
 }
 
-export function TripView({ trip: initialTrip }: TripViewProps) {
+export function TripView({ trip: initialTrip, spotsById }: TripViewProps) {
   const [trip, setTrip] = useState(initialTrip);
   const [activeDayId, setActiveDayId] = useState<string>(
     trip.days[0]?.id ?? '',
   );
   const [shareOpen, setShareOpen] = useState(false);
+
+  // ローカル getSpot：渡された spotsById から解決（無ければ undefined）
+  const getSpot = (id: string): Spot | undefined => spotsById?.get(id);
 
   const activeDay = (trip.days.find((d) => d.id === activeDayId) ??
     trip.days[0])!;
@@ -95,7 +105,9 @@ export function TripView({ trip: initialTrip }: TripViewProps) {
     setTrip((t) => ({
       ...t,
       days: t.days.map((d) =>
-        d.id === activeDay.id ? { ...d, items: shuffleAndSort(d.items) } : d,
+        d.id === activeDay.id
+          ? { ...d, items: shuffleAndSort(d.items, getSpot) }
+          : d,
       ),
     }));
     toast.success('最短順に並べ替えました', {
@@ -187,10 +199,10 @@ export function TripView({ trip: initialTrip }: TripViewProps) {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">
-        <Timeline day={activeDay} />
+        <Timeline day={activeDay} spotsById={spotsById} />
         <div className="space-y-4">
           <div className="overflow-hidden rounded-md border border-border">
-            <TripDayMap day={activeDay} />
+            <TripDayMap day={activeDay} spotsById={spotsById ?? new Map()} />
           </div>
           <DayBudget day={activeDay} />
         </div>
@@ -244,11 +256,17 @@ export function TripView({ trip: initialTrip }: TripViewProps) {
   );
 }
 
-function Timeline({ day }: { day: TripDay }) {
+function Timeline({
+  day,
+  spotsById,
+}: {
+  day: TripDay;
+  spotsById?: Map<string, Spot>;
+}) {
   return (
     <ol className="relative space-y-3 border-l border-dashed border-border pl-6">
       {day.items.map((item, idx) => {
-        const spot = item.spotId ? getSpot(item.spotId) : null;
+        const spot = item.spotId ? spotsById?.get(item.spotId) ?? null : null;
         return (
           <li key={item.id} className="relative">
             <span className="absolute -left-[28px] top-2 inline-flex h-3 w-3 rounded-full border-2 border-background bg-primary-700" />

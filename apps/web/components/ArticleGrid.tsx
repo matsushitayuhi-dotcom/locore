@@ -5,7 +5,6 @@ import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { ArticleCard } from '@locore/ui';
 import type { Article } from '../lib/mock';
-import { getWriter } from '../lib/mock';
 import { TripAdds } from '../lib/storage/local';
 import { addBookmark, removeBookmark } from '../lib/bookmarks/actions';
 
@@ -21,17 +20,16 @@ interface ArticleGridProps {
 }
 
 function toCardModel(article: Article) {
-  const writer = getWriter(article.writerId);
   return {
     id: article.id,
     title: article.title,
     coverImageUrl: article.coverImageUrl,
     area: `パリ・${article.area.replace(/^パリ・?/, '')}`,
     author: {
-      name: writer?.name ?? '匿名',
-      tier: (writer?.tier ?? 'A') as 'S' | 'A' | 'B',
-      residencyYears: writer?.residencyYears,
-      avatarUrl: writer?.avatarUrl,
+      name: article.writerName ?? '匿名',
+      tier: (article.writerTier ?? 'B') as 'S' | 'A' | 'B',
+      residencyYears: article.writerYears,
+      avatarUrl: article.writerAvatarUrl ?? undefined,
     },
     localScore: article.localScoreAverage,
     satisfactionStars: article.satisfactionAverage,

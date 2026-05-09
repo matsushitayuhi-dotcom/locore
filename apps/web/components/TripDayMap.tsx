@@ -6,8 +6,7 @@ import {
   Map as GoogleMap,
   useMap,
 } from '@vis.gl/react-google-maps';
-import type { TripDay } from '../lib/mock';
-import { getSpot } from '../lib/mock';
+import type { TripDay, Spot } from '../lib/mock';
 import { locoreMapStyles } from './map/locoreMapStyle';
 
 /**
@@ -18,7 +17,7 @@ import { locoreMapStyles } from './map/locoreMapStyle';
  * その代わり Marker と Polyline は useMap() 経由で native API を直接叩く。
  */
 
-type Point = { spot: NonNullable<ReturnType<typeof getSpot>>; label: number };
+type Point = { spot: Spot; label: number };
 
 /** 番号入りの emerald ピン SVG を data URL で返す */
 function makeNumberedPinSvg(color: string, label: number): string {
@@ -93,16 +92,22 @@ function PolylineLayer({ points }: { points: Point[] }) {
   return null;
 }
 
-function TripDayMapBody({ day }: { day: TripDay }) {
+function TripDayMapBody({
+  day,
+  spotsById,
+}: {
+  day: TripDay;
+  spotsById: Map<string, Spot>;
+}) {
   const points: Point[] = useMemo(
     () =>
       day.items
         .map((item, i) => {
-          const s = item.spotId ? getSpot(item.spotId) : null;
+          const s = item.spotId ? spotsById.get(item.spotId) : null;
           return s ? { spot: s, label: i + 1 } : null;
         })
         .filter((p): p is Point => Boolean(p)),
-    [day],
+    [day, spotsById],
   );
 
   const center = useMemo(() => {
@@ -142,7 +147,13 @@ function TripDayMapBody({ day }: { day: TripDay }) {
   );
 }
 
-export function TripDayMap({ day }: { day: TripDay }) {
+export function TripDayMap({
+  day,
+  spotsById,
+}: {
+  day: TripDay;
+  spotsById: Map<string, Spot>;
+}) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
@@ -159,7 +170,7 @@ export function TripDayMap({ day }: { day: TripDay }) {
   return (
     <div style={{ height: 260, position: 'relative' }}>
       <APIProvider apiKey={apiKey}>
-        <TripDayMapBody day={day} />
+        <TripDayMapBody day={day} spotsById={spotsById} />
       </APIProvider>
     </div>
   );

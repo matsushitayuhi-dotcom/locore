@@ -1,8 +1,8 @@
 import 'server-only';
-import { eq, desc, isNull, and, asc, sql } from 'drizzle-orm';
+import { eq, desc, isNull, and, asc, sql, ne, or, inArray } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import type { Article, Writer, Spot } from '@/lib/mock';
+import type { Article, Writer, Spot, Review } from '@/lib/mock';
 
 /**
  * DB に保存されている publish 済み記事を、フィード等で表示できる
@@ -95,6 +95,10 @@ export async function getPublishedDbArticles(limit = 50): Promise<Article[]> {
     body: r.body ?? '',
     coverImageUrl: r.coverImageUrl ?? `https://picsum.photos/seed/${r.id}/960/640`,
     writerId: r.writerId,
+    writerName: r.writerName ?? '匿名',
+    writerAvatarUrl: r.writerAvatar ?? null,
+    writerTier: (r.writerTier ?? 'B') as 'S' | 'A' | 'B',
+    writerYears: r.writerYears ?? 0,
     cityId: r.cityId,
     area: r.cityNameJa ?? 'パリ',
     priceJpy: r.priceJpy,
@@ -123,6 +127,8 @@ export async function getDbArticleBundle(id: string): Promise<{
   article: Article;
   writer: Writer | null;
   spots: Spot[];
+  reviews: Review[];
+  related: Article[];
 } | null> {
   // UUID v4 形式のみ DB を引く（mock の "art_001" などは早期 return）
   const uuidPat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -257,6 +263,109 @@ export async function getDbArticleBundle(id: string): Promise<{
       };
     });
 
+    // ----- レビュー（purchases 経由で article に紐付ける） -----
+    const reviewRows = await db
+      .select({
+        id: schema.reviews.id,
+        localScore: schema.reviews.localScore,
+        satisfactionStars: schema.reviews.satisfactionStars,
+        tags: schema.reviews.tags,
+        body: schema.reviews.body,
+        visitedAt: schema.reviews.visitedAt,
+        purchaseId: schema.reviews.purchaseId,
+        buyerName: schema.users.displayName,
+      })
+      .from(schema.reviews)
+      .innerJoin(
+        schema.purchases,
+        eq(schema.purchases.id, schema.reviews.purchaseId),
+      )
+      .leftJoin(schema.users, eq(schema.users.id, schema.purchases.buyerId))
+      .where(eq(schema.purchases.articleId, a.id))
+      .orderBy(desc(schema.reviews.createdAt))
+      .limit(50);
+
+    const reviews: Review[] = reviewRows.map((r) => ({
+      id: r.id,
+      articleId: a.id,
+      authorName: r.buyerName ?? '匿名',
+      localScore: r.localScore,
+      satisfaction: r.satisfactionStars,
+      tags: r.tags ?? [],
+      body: r.body ?? '',
+      visitedAt: (r.visitedAt ?? new Date()).toISOString(),
+    }));
+
+    // 集計（mock 互換のための average/count）
+    const reviewCount = reviews.length;
+    const localScoreAverage =
+      reviews.length > 0
+        ? Math.round(
+            reviews.reduce((acc, r) => acc + r.localScore, 0) / reviews.length,
+          )
+        : 70;
+    const satisfactionAverage =
+      reviews.length > 0
+        ? +(
+            reviews.reduce((acc, r) => acc + r.satisfaction, 0) / reviews.length
+          ).toFixed(1)
+        : 4.5;
+
+    // ----- 関連記事（同じ書き手 + 同じ街） -----
+    const relatedRows = await db
+      .select({
+        id: schema.articles.id,
+        title: schema.articles.title,
+        body: schema.articles.body,
+        coverImageUrl: schema.articles.coverImageUrl,
+        writerId: schema.articles.writerId,
+        cityId: schema.articles.cityId,
+        priceJpy: schema.articles.priceJpy,
+        tags: schema.articles.tags,
+        durationType: schema.articles.durationType,
+        articleType: schema.articles.articleType,
+        createdAt: schema.articles.createdAt,
+        publishedAt: schema.articles.publishedAt,
+        cityNameJa: schema.cities.nameJa,
+      })
+      .from(schema.articles)
+      .leftJoin(schema.cities, eq(schema.articles.cityId, schema.cities.id))
+      .where(
+        and(
+          ne(schema.articles.id, a.id),
+          eq(schema.articles.status, 'published'),
+          isNull(schema.articles.deletedAt),
+          or(
+            eq(schema.articles.writerId, a.writerId),
+            eq(schema.articles.cityId, a.cityId),
+          ),
+        ),
+      )
+      .orderBy(desc(schema.articles.publishedAt))
+      .limit(6);
+
+    const related: Article[] = relatedRows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      body: r.body ?? '',
+      coverImageUrl:
+        r.coverImageUrl ?? `https://picsum.photos/seed/${r.id}/960/640`,
+      writerId: r.writerId,
+      cityId: r.cityId,
+      area: r.cityNameJa ?? 'パリ',
+      priceJpy: r.priceJpy,
+      tags: r.tags ?? [],
+      durationType: durationMap[r.durationType ?? 'other'] ?? '半日',
+      articleType: r.articleType,
+      createdAt: r.createdAt.toISOString(),
+      publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
+      localScoreAverage: 70,
+      satisfactionAverage: 4.5,
+      reviewCount: 0,
+      purchaseCount: 0,
+      spotIds: [],
+    }));
+
     const article: Article = {
       id: a.id,
       title: a.title,
@@ -265,6 +374,10 @@ export async function getDbArticleBundle(id: string): Promise<{
       itineraryBlocks: (a.itineraryBlocks as Article['itineraryBlocks']) ?? null,
       coverImageUrl: a.coverImageUrl ?? `https://picsum.photos/seed/${a.id}/960/640`,
       writerId: a.writerId,
+      writerName: writer?.name,
+      writerAvatarUrl: writer?.avatarUrl ?? null,
+      writerTier: writer?.tier,
+      writerYears: writer?.residencyYears,
       cityId: a.cityId,
       area: a.cityNameJa ?? 'パリ',
       priceJpy: a.priceJpy,
@@ -273,14 +386,14 @@ export async function getDbArticleBundle(id: string): Promise<{
       articleType: a.articleType,
       createdAt: a.createdAt.toISOString(),
       publishedAt: (a.publishedAt ?? a.createdAt).toISOString(),
-      localScoreAverage: 70,
-      satisfactionAverage: 4.5,
-      reviewCount: 0,
-      purchaseCount: 0,
+      localScoreAverage,
+      satisfactionAverage,
+      reviewCount,
+      purchaseCount: 0, // 必要なら count(*) で集計
       spotIds: spots.map((s) => s.id),
     };
 
-    return { article, writer, spots };
+    return { article, writer, spots, reviews, related };
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[getDbArticleBundle] failed:', err);

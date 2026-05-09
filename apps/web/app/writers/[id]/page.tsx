@@ -10,11 +10,6 @@ import {
 import { ExternalLink } from '@locore/ui/icons';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import {
-  articlesByWriter,
-  getWriter,
-  writers as mockWriters,
-} from '../../../lib/mock';
 import { ArticleGrid } from '../../../components/ArticleGrid';
 import {
   UserServicesList,
@@ -73,38 +68,7 @@ async function loadWriter(id: string): Promise<{
   writer: ResolvedWriter;
   articles: Article[];
 } | null> {
-  // mock 側を先にあたる（"wr_xxx" の固定 ID）
-  const mock = getWriter(id);
-  if (mock) {
-    const articles = articlesByWriter(mock.id);
-    const snsLinks = Object.entries(mock.social)
-      .filter(([, v]) => Boolean(v))
-      .map(([platform, url], i) => ({
-        id: `mock-${mock.id}-${platform}-${i}`,
-        platform,
-        url: url as string,
-      }));
-    return {
-      writer: {
-        id: mock.id,
-        name: mock.name,
-        avatarUrl: mock.avatarUrl,
-        bio: mock.bio,
-        city: mock.city,
-        residencyYears: mock.residencyYears,
-        tier: mock.tier,
-        isFounding: mock.isFounding,
-        isVerifiedCreator: mock.isVerifiedCreator,
-        followerCount: mock.followerCount,
-        snsLinks,
-        isDbUser: false,
-        services: [],
-      },
-      articles,
-    };
-  }
-
-  // UUID 形式じゃなければ早期 return
+  // DB ファースト（mock fallback は廃止）
   const uuidPat =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidPat.test(id)) return null;
@@ -377,7 +341,4 @@ export default async function WriterPage({ params }: { params: { id: string } })
   );
 }
 
-// 既存の mock writer 用に静的生成のヒントだけ残す
-export async function generateStaticParams() {
-  return mockWriters.map((w) => ({ id: w.id }));
-}
+// 静的生成は使わず force-dynamic で DB から動的に解決

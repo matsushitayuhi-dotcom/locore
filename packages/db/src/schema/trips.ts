@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   date,
+  boolean,
   index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
@@ -36,6 +37,8 @@ export const trips = pgTable(
     partySize: integer('party_size').notNull().default(1),
     shareToken: uuid('share_token').notNull().defaultRandom(),
     shareRole: tripShareRoleEnum('share_role').notNull().default('none'),
+    /** サンプルデータ識別用。`manual/0019_extend_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

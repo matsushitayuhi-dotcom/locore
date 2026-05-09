@@ -1,4 +1,12 @@
-import { pgTable, uuid, text, integer, timestamp, index } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  integer,
+  timestamp,
+  boolean,
+  index,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { articles } from './articles';
@@ -29,6 +37,8 @@ export const purchases = pgTable(
     purchasedAt: timestamp('purchased_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
+    /** サンプルデータ識別用。`manual/0019_extend_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

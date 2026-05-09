@@ -13,14 +13,6 @@ import {
   SatisfactionStars,
 } from '@locore/ui';
 import { ChevronRight, MapPin, Clock, Users } from '@locore/ui/icons';
-import {
-  articles,
-  articlesByWriter,
-  getArticle,
-  getWriter,
-  reviewsForArticle,
-  spotsForArticle,
-} from '../../../lib/mock';
 import { getDbArticleBundle } from '../../../lib/articles/published';
 import { Paywall } from '../../../components/Paywall';
 import { AddToTripButton } from '../../../components/AddToTripButton';
@@ -31,7 +23,6 @@ import { eq, and } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 
-// DB 上の UUID 記事も解決する必要があるため、静的生成はやめて動的レンダリングに
 export const dynamic = 'force-dynamic';
 
 export default async function ArticleDetailPage({
@@ -39,21 +30,14 @@ export default async function ArticleDetailPage({
 }: {
   params: { id: string };
 }) {
-  // mock を先に当てる（"art_001" などの ID）
-  let article = getArticle(params.id);
-  let writer = article ? getWriter(article.writerId) : undefined;
-  let spots = article ? spotsForArticle(article.id) : [];
-  let reviews = article ? reviewsForArticle(article.id) : [];
-
-  // mock に無い → UUID なら DB を引く
-  if (!article) {
-    const bundle = await getDbArticleBundle(params.id);
-    if (!bundle) return notFound();
-    article = bundle.article;
-    writer = bundle.writer ?? undefined;
-    spots = bundle.spots;
-    reviews = []; // DB 上のレビュー集計は今後実装
-  }
+  // DB ファースト：mock を経由せず直接 DB を引く
+  const bundle = await getDbArticleBundle(params.id);
+  if (!bundle) return notFound();
+  const article = bundle.article;
+  const writer = bundle.writer ?? undefined;
+  const spots = bundle.spots;
+  const reviews = bundle.reviews;
+  const relatedDb = bundle.related;
 
   // 本文の分割：
   //   * `bodyPaid` が明示的に保存されていれば：body 全体 = 無料プレビュー、bodyPaid = 有料部分
@@ -70,12 +54,8 @@ export default async function ArticleDetailPage({
     after = paras.slice(2).join('\n\n');
   }
 
-  const related = [
-    ...(writer ? articlesByWriter(writer.id).filter((a) => a.id !== article.id) : []),
-    ...articles.filter(
-      (a) => a.area === article.area && a.id !== article.id && a.writerId !== article.writerId,
-    ),
-  ].slice(0, 3);
+  // 関連記事は DB から取得済み
+  const related = relatedDb.slice(0, 6);
 
   // 旅程タイムラインの解放判定：DB の purchases に該当行があれば true
   const me = await getCurrentUser();

@@ -5,6 +5,7 @@ import {
   integer,
   timestamp,
   doublePrecision,
+  boolean,
   index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
@@ -36,6 +37,8 @@ export const tripItems = pgTable(
     position: integer('position').notNull().default(0),
     notes: text('notes'),
     budgetJpy: integer('budget_jpy'),
+    /** サンプルデータ識別用。`manual/0019_extend_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

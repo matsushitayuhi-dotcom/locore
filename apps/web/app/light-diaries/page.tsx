@@ -2,16 +2,18 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Button,
 } from '@locore/ui';
-import { lightDiaries } from '../../lib/mock';
+import { listLightDiaries } from '@/lib/lightDiaries/db';
 import { LightDiaryPostButton } from '../../components/LightDiaryPostButton';
 
 export const metadata = {
   title: 'ライト旅行記 — Locore',
 };
 
-export default function LightDiariesPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function LightDiariesPage() {
+  const lightDiaries = await listLightDiaries(50);
   return (
     <main className="mx-auto max-w-screen-md px-4 py-10 sm:px-6">
       <div className="mb-8 flex items-end justify-between gap-4">

@@ -1,17 +1,26 @@
 import { notFound } from 'next/navigation';
-import { getTrip, trips } from '../../../lib/mock';
+import { getSampleTrip, getSpotsByIds } from '@/lib/trips/db';
 import { TripView } from '../../../components/TripView';
 
-export function generateStaticParams() {
-  return trips.map((t) => ({ id: t.id }));
-}
+export const dynamic = 'force-dynamic';
 
-export default function TripDetailPage({
+export default async function TripDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const trip = getTrip(params.id);
+  const trip = await getSampleTrip(params.id);
   if (!trip) return notFound();
-  return <TripView trip={trip} />;
+
+  // 旅程内の全 spotId を集めて DB から解決
+  const spotIds = Array.from(
+    new Set(
+      trip.days.flatMap((d) =>
+        d.items.map((i) => i.spotId).filter(Boolean) as string[],
+      ),
+    ),
+  );
+  const spotsById = await getSpotsByIds(spotIds);
+
+  return <TripView trip={trip} spotsById={spotsById} />;
 }

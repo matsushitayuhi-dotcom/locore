@@ -4,6 +4,7 @@ import {
   text,
   integer,
   timestamp,
+  boolean,
   index,
   uniqueIndex,
   check,
@@ -31,6 +32,8 @@ export const reviews = pgTable(
     tags: text('tags').array().notNull().default([]),
     body: text('body'),
     visitedAt: timestamp('visited_at', { withTimezone: true }),
+    /** サンプルデータ識別用。`manual/0019_extend_is_sample.sql` */
+    isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({
