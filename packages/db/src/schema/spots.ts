@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   integer,
+  numeric,
   timestamp,
   jsonb,
   boolean,
@@ -78,6 +79,21 @@ export const spots = pgTable(
      * マイグレーション: `manual/0009_spots_place_id.sql`
      */
     googlePlaceId: text('google_place_id'),
+
+    // ----- Google Places 詳細キャッシュ（manual/0015_spot_place_details.sql） -----
+    /** Google から取得した電話番号（formatted） */
+    phoneNumber: text('phone_number'),
+    /** Google から取得した公式サイト URL */
+    website: text('website'),
+    /** Google の星評価（0.0–5.0） */
+    googleRating: numeric('google_rating', { precision: 3, scale: 1 }),
+    /** Google の評価件数 */
+    googleUserRatingsTotal: integer('google_user_ratings_total'),
+    /** 0=無料 ～ 4=とても高価（Google price_level） */
+    googlePriceLevel: integer('google_price_level'),
+    /** Google Places の types[] */
+    googleTypes: text('google_types').array(),
+
     /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
     isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

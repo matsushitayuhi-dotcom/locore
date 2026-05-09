@@ -19,7 +19,51 @@ export type SpotEditorValue = {
   tagsText: string;
   position: number;
   googlePlaceId?: string | null;
+  // Google Places 詳細（picker 経由で流入）
+  phoneNumber?: string | null;
+  website?: string | null;
+  googleRating?: number | null;
+  googleUserRatingsTotal?: number | null;
+  googlePriceLevel?: number | null;
+  googleTypes?: string[] | null;
 };
+
+/**
+ * Google Places の types[] から Locore のカテゴリを推定する。
+ * 例: ['cafe', 'food'] → 'food'
+ *     ['museum', 'tourist_attraction'] → 'sight'
+ */
+function inferCategoryFromTypes(
+  types: string[],
+): 'food' | 'sight' | 'shopping' | 'lodging' | 'other' | '' {
+  const t = new Set(types);
+  if (t.has('lodging')) return 'lodging';
+  if (
+    t.has('restaurant') ||
+    t.has('cafe') ||
+    t.has('bar') ||
+    t.has('bakery') ||
+    t.has('food') ||
+    t.has('meal_takeaway')
+  )
+    return 'food';
+  if (
+    t.has('store') ||
+    t.has('shopping_mall') ||
+    t.has('clothing_store') ||
+    t.has('book_store')
+  )
+    return 'shopping';
+  if (
+    t.has('museum') ||
+    t.has('tourist_attraction') ||
+    t.has('park') ||
+    t.has('art_gallery') ||
+    t.has('point_of_interest')
+  )
+    return 'sight';
+  return '';
+}
 
 const CATEGORY_OPTIONS: { value: SpotEditorValue['category']; label: string }[] = [
   { value: 'food', label: '食事・ドリンク' },
@@ -84,6 +128,12 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
         tags,
         position: v.position,
         googlePlaceId: v.googlePlaceId ?? undefined,
+        phoneNumber: v.phoneNumber ?? undefined,
+        website: v.website ?? undefined,
+        googleRating: v.googleRating ?? undefined,
+        googleUserRatingsTotal: v.googleUserRatingsTotal ?? undefined,
+        googlePriceLevel: v.googlePriceLevel ?? undefined,
+        googleTypes: v.googleTypes ?? undefined,
       });
       if (res.ok) {
         toast.success(v.id ? 'スポットを更新しました' : 'スポットを追加しました');
@@ -129,16 +179,69 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
       ...prev,
       name: p.name || prev.name,
       address: p.address || prev.address,
-      lat: p.lat,
-      lng: p.lng,
+      lat: p.lat || prev.lat,
+      lng: p.lng || prev.lng,
       googlePlaceId: p.placeId || prev.googlePlaceId,
+      // 営業時間：weekday_text を openingHours.note として保存
+      openingHoursText:
+        p.openingHoursText && p.openingHoursText.trim().length > 0
+          ? p.openingHoursText
+          : prev.openingHoursText,
+      // カテゴリ：未選択なら types から推定
+      category:
+        prev.category ||
+        (p.types && p.types.length > 0
+          ? inferCategoryFromTypes(p.types)
+          : prev.category),
+      // Google 拡張データ
+      phoneNumber: p.phoneNumber,
+      website: p.website,
+      googleRating: p.rating,
+      googleUserRatingsTotal: p.userRatingsTotal,
+      googlePriceLevel: p.priceLevel,
+      googleTypes: p.types,
     }));
-    toast.success('店舗情報を反映しました');
+    toast.success(
+      p.openingHoursText
+        ? 'Google から営業時間まで取得して反映しました'
+        : '店舗情報を反映しました',
+    );
   };
+
+  // Google から拾った情報のサマリ（picker → 自動充填の確認用）
+  const placeSummary = v.googlePlaceId
+    ? [
+        v.googleRating != null
+          ? `★ ${v.googleRating.toFixed(1)}${
+              v.googleUserRatingsTotal
+                ? `（${v.googleUserRatingsTotal.toLocaleString('ja-JP')} 件）`
+                : ''
+            }`
+          : null,
+        v.phoneNumber ? `📞 ${v.phoneNumber}` : null,
+        v.website ? '🌐 公式サイト' : null,
+      ].filter(Boolean)
+    : [];
 
   return (
     <div className="space-y-4 rounded-md border border-border bg-card p-4">
       <SpotPlacesPicker apiKey={googleMapsApiKey} onPick={handlePick} />
+
+      {v.googlePlaceId ? (
+        <div className="rounded-md bg-primary-50/60 px-3 py-2 text-[12px] text-primary-700 ring-1 ring-primary-100">
+          <p className="font-semibold">Google から自動取得済み</p>
+          {placeSummary.length > 0 ? (
+            <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-foreground/80">
+              {placeSummary.map((s, i) => (
+                <span key={i}>{s}</span>
+              ))}
+            </p>
+          ) : null}
+          <p className="mt-1 text-[11px] text-foreground/60">
+            place_id: <code className="font-mono">{v.googlePlaceId}</code>
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>

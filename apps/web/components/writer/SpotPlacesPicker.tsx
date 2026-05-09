@@ -3,7 +3,44 @@
 import { useEffect, useRef, useState } from 'react';
 import { APIProvider, useMapsLibrary, useApiIsLoaded } from '@vis.gl/react-google-maps';
 
-// Google Maps types を window 経由で扱う（tsconfig の types に google.maps を明示しない方針）
+/**
+ * Google Places Autocomplete でスポットを検索 → 選択時に Places Details も取得し
+ * 営業時間 / 電話 / WEB / 評価まで一気に親へ返す UI。
+ *
+ * 親（SpotEditor）はこの値をフォームに自動充填する。
+ */
+
+export type PickedPlace = {
+  /** Place の正式名称 */
+  name: string;
+  /** 整形済み住所 */
+  address: string;
+  lat: number;
+  lng: number;
+  /** Google Place ID（再取得や重複検出のキー） */
+  placeId: string;
+  /** weekday_text を1つの文字列にまとめたもの（人間可読） */
+  openingHoursText: string | null;
+  /** Place のカテゴリ（types[]）。Locore のカテゴリへの自動マッピング用 */
+  types: string[];
+  /** 電話番号（国際表記） */
+  phoneNumber: string | null;
+  /** 公式サイト URL */
+  website: string | null;
+  /** Google の星評価（0-5、小数点1桁） */
+  rating: number | null;
+  /** 評価件数 */
+  userRatingsTotal: number | null;
+  /** 0 (無料) ～ 4 (とても高価) */
+  priceLevel: number | null;
+};
+
+type Props = {
+  apiKey: string | undefined;
+  onPick: (place: PickedPlace) => void;
+};
+
+// Google Maps types を window 経由で扱う（tsconfig 簡素化）
 type GMaps = typeof window & {
   google: {
     maps: {
@@ -13,73 +50,126 @@ type GMaps = typeof window & {
   };
 };
 
-/**
- * Google Places Autocomplete を使ったスポット検索 UI。
- *
- * - 親から `apiKey` が無い場合はフォールバック（手動入力 UI に切り替え）
- * - 候補から選択した場合 `onPick({ name, address, lat, lng, placeId })` を呼ぶ
- */
-
-export type PickedPlace = {
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  placeId: string;
-};
-
-type Props = {
-  /** Google Maps API キー（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY） */
-  apiKey: string | undefined;
-  onPick: (place: PickedPlace) => void;
-};
-
 function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
   const isLoaded = useApiIsLoaded();
   const places = useMapsLibrary('places');
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [text, setText] = useState('');
 
   useEffect(() => {
-    if (!isLoaded || !places || !inputRef.current) return;
+    if (!isLoaded || !places || !inputRef.current || !containerRef.current) return;
+
     const w = window as unknown as GMaps;
     const gmaps = w.google?.maps;
-    // 旧 API：Autocomplete（PlaceAutocompleteElement は新仕様だが互換のため Autocomplete を採用）
+
+    // Autocomplete はサジェスト → place_id 取得まで。
+    // 詳細（opening_hours など）は別途 PlacesService.getDetails で取る。
     const acOptions: Record<string, unknown> = {
-      fields: ['place_id', 'name', 'formatted_address', 'geometry'],
+      // Autocomplete 段階では place_id だけあれば十分（getDetails で残りを取る）
+      fields: ['place_id', 'name'],
     };
     if (gmaps) {
-      // 任意：パリ周辺バイアス（PRD 既定都市）
       acOptions.bounds = new gmaps.LatLngBounds(
         new gmaps.LatLng(48.7, 2.2),
         new gmaps.LatLng(48.95, 2.5),
       );
     }
+
+    // PlacesService は地図 or HTMLDivElement にバインドする必要がある
+    const placesService = new (places as unknown as {
+      PlacesService: new (attr: HTMLDivElement) => {
+        getDetails: (
+          req: { placeId: string; fields: string[] },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          cb: (result: any, status: string) => void,
+        ) => void;
+      };
+    }).PlacesService(containerRef.current);
+
     const ac = new (places as unknown as {
-      Autocomplete: new (el: HTMLInputElement, opts: Record<string, unknown>) => {
-        getPlace: () => {
-          name?: string;
-          formatted_address?: string;
-          place_id?: string;
-          geometry?: { location?: { lat: () => number; lng: () => number } };
-        };
+      Autocomplete: new (
+        el: HTMLInputElement,
+        opts: Record<string, unknown>,
+      ) => {
+        getPlace: () => { place_id?: string; name?: string };
         addListener: (ev: string, cb: () => void) => { remove: () => void };
       };
     }).Autocomplete(inputRef.current, acOptions);
+
     const listener = ac.addListener('place_changed', () => {
-      const place = ac.getPlace();
-      if (!place || !place.geometry || !place.geometry.location) {
-        return;
-      }
-      onPick({
-        name: place.name ?? '',
-        address: place.formatted_address ?? '',
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng(),
-        placeId: place.place_id ?? '',
-      });
-      setText(place.name ?? '');
+      const picked = ac.getPlace();
+      if (!picked.place_id) return;
+
+      placesService.getDetails(
+        {
+          placeId: picked.place_id,
+          fields: [
+            'place_id',
+            'name',
+            'formatted_address',
+            'geometry',
+            'types',
+            'opening_hours',
+            'formatted_phone_number',
+            'international_phone_number',
+            'website',
+            'rating',
+            'user_ratings_total',
+            'price_level',
+          ],
+        },
+        (result, status) => {
+          if (status !== 'OK' || !result) {
+            // フォールバック：autocomplete 取れた最低限だけ流す
+            onPick({
+              name: picked.name ?? '',
+              address: '',
+              lat: 0,
+              lng: 0,
+              placeId: picked.place_id ?? '',
+              openingHoursText: null,
+              types: [],
+              phoneNumber: null,
+              website: null,
+              rating: null,
+              userRatingsTotal: null,
+              priceLevel: null,
+            });
+            return;
+          }
+
+          const loc = result.geometry?.location;
+          const openingHoursText: string | null = result.opening_hours?.weekday_text
+            ? (result.opening_hours.weekday_text as string[]).join('\n')
+            : null;
+
+          onPick({
+            name: result.name ?? '',
+            address: result.formatted_address ?? '',
+            lat: loc ? loc.lat() : 0,
+            lng: loc ? loc.lng() : 0,
+            placeId: result.place_id ?? picked.place_id ?? '',
+            openingHoursText,
+            types: (result.types as string[] | undefined) ?? [],
+            phoneNumber:
+              result.formatted_phone_number ??
+              result.international_phone_number ??
+              null,
+            website: result.website ?? null,
+            rating: typeof result.rating === 'number' ? result.rating : null,
+            userRatingsTotal:
+              typeof result.user_ratings_total === 'number'
+                ? result.user_ratings_total
+                : null,
+            priceLevel:
+              typeof result.price_level === 'number' ? result.price_level : null,
+          });
+          setText(result.name ?? '');
+        },
+      );
     });
+
     return () => {
       listener.remove();
     };
@@ -96,11 +186,13 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="例：Pierre Hermé Bonaparte"
-        className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+        className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
       />
       <p className="mt-1 text-[11px] text-foreground/50">
-        候補から選ぶと住所・緯度経度・place_id を自動で記入します。
+        候補から選ぶと住所・座標・営業時間・電話・WEB・Google 評価をまとめて取得します。
       </p>
+      {/* PlacesService の attribution 用ホスト要素（非表示） */}
+      <div ref={containerRef} className="hidden" aria-hidden />
     </div>
   );
 }

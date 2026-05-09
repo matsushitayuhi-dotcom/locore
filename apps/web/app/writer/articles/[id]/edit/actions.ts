@@ -338,6 +338,13 @@ const upsertSpotSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
   position: z.number().int().min(0).default(0),
   googlePlaceId: z.string().trim().min(1).max(255).optional().nullable(),
+  // ----- Google Places 詳細（picker から流れてくる） -----
+  phoneNumber: z.string().trim().max(50).optional().nullable(),
+  website: z.string().trim().url().max(2048).optional().nullable(),
+  googleRating: z.number().min(0).max(5).optional().nullable(),
+  googleUserRatingsTotal: z.number().int().min(0).optional().nullable(),
+  googlePriceLevel: z.number().int().min(0).max(4).optional().nullable(),
+  googleTypes: z.array(z.string()).optional().nullable(),
 });
 
 export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: string }>> {
@@ -361,6 +368,19 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
   // inParis フラグは UI で使う想定（現状ログのみ）
   void inParis;
 
+  // 共通の Place 詳細フィールド
+  const placeDetails = {
+    phoneNumber: data.phoneNumber ?? null,
+    website: data.website ?? null,
+    googleRating:
+      typeof data.googleRating === 'number'
+        ? data.googleRating.toFixed(1)
+        : null,
+    googleUserRatingsTotal: data.googleUserRatingsTotal ?? null,
+    googlePriceLevel: data.googlePriceLevel ?? null,
+    googleTypes: data.googleTypes ?? null,
+  };
+
   if (data.id) {
     // 既存 spot 更新（記事 ID 一致確認）
     const existing = await db
@@ -383,6 +403,7 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
         tags: data.tags,
         position: data.position,
         googlePlaceId: data.googlePlaceId ?? null,
+        ...placeDetails,
         updatedAt: new Date(),
       })
       .where(eq(schema.spots.id, data.id));
@@ -403,6 +424,7 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
       tags: data.tags,
       position: data.position,
       googlePlaceId: data.googlePlaceId ?? null,
+      ...placeDetails,
     })
     .returning({ id: schema.spots.id });
 

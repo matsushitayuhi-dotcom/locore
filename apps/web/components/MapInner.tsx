@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import {
   APIProvider,
   Map as GoogleMap,
+  InfoWindow,
   useMap,
 } from '@vis.gl/react-google-maps';
 import type { Article, Spot } from '../lib/mock';
@@ -12,22 +15,16 @@ import { locoreMapStyles, pinColorForScore } from './map/locoreMapStyle';
 const PARIS_CENTER = { lat: 48.8606, lng: 2.3376 };
 
 /**
- * Google Maps をベースに、Google らしさ（POI / business / labels / 標準コントロール）を
- * 抑えた独自スタイルで描画するマップ。
+ * Google Maps をベースに、Google らしさを抑えた独自スタイルで描画するマップ。
  *
- * 設計メモ:
- *   - `mapId` を指定すると Google が JS の `styles` プロパティを無視するため、
- *     Locore の emerald 単色スタイルを保つために mapId は使わない。
- *   - mapId が無いと `AdvancedMarker` が描画できないため、native の
- *     `google.maps.Marker` を `useMap()` 経由で手動描画する。
- *   - ピンの形は SVG（円）を data URL にして渡す。色は local score 連動。
- *   - 観光客密度ヒートマップは半透明の Circle を自前で描画。
+ * - 同じ Google Place（または同じ座標）に紐づく spots はマーカー1本に集約
+ * - マーカークリックで InfoWindow を上に出し、その場所に紐づく記事を
+ *   公開日降順で並べる
  */
 
 interface MapInnerProps {
   spots: Spot[];
   articles: Article[];
-  onPinClick?: (spot: Spot) => void;
   showHeatmap?: boolean;
   apiKey?: string;
 }
@@ -45,6 +42,19 @@ const ARRONDISSEMENT_DENSITY: { center: { lat: number; lng: number }; intensity:
   { center: { lat: 48.825, lng: 2.36 }, intensity: 0.3 },
 ];
 
+/**
+ * 「同じスポット」を表すグループ。Google Place ID があれば最優先、無ければ
+ * 緯度経度を 5 桁丸めた値で集約（半径 ≈ 1m）。
+ */
+type SpotGroup = {
+  key: string;
+  name: string;
+  position: { lat: number; lng: number };
+  topScore: number; // 含まれる記事の最大ローカル度（ピン色用）
+  articles: Article[]; // 公開日降順
+  placeId: string | null;
+};
+
 function HeatmapCircles() {
   const map = useMap();
   useEffect(() => {
@@ -58,7 +68,6 @@ function HeatmapCircles() {
         radius: 350 + d.intensity * 200,
         map,
         strokeWeight: 0,
-        // 観光客密度はやや暖色寄りにせず、warning 系のくすんだ橙でほのめかす程度
         fillColor: '#B8860B',
         fillOpacity: 0.1 + d.intensity * 0.12,
         clickable: false,
@@ -72,7 +81,6 @@ function HeatmapCircles() {
   return null;
 }
 
-/** SVG の円ピンを data URL にして返す（color は HEX） */
 function makePinSvg(color: string): string {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">` +
@@ -81,18 +89,54 @@ function makePinSvg(color: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-/**
- * native google.maps.Marker を React 経由で描画するレイヤー。
- * AdvancedMarker は mapId 必須のため避けて、こちらで実装。
- */
+/** spots を groupKey で集約して、マーカー描画 / InfoWindow 用のグループに変換 */
+function buildGroups(spots: Spot[], articles: Article[]): SpotGroup[] {
+  const articleById = new Map(articles.map((a) => [a.id, a]));
+  const groups = new Map<string, SpotGroup>();
+
+  for (const s of spots) {
+    const article = articleById.get(s.articleId);
+    if (!article) continue;
+    // mock の Spot 型は googlePlaceId を持たないので、安全に optional として読む
+    const placeId =
+      (s as unknown as { googlePlaceId?: string | null }).googlePlaceId ?? null;
+    // Place ID 優先、なければ緯度経度を 5 桁で丸めて key に
+    const key = placeId ?? `${s.lat.toFixed(5)},${s.lng.toFixed(5)}`;
+
+    let g = groups.get(key);
+    if (!g) {
+      g = {
+        key,
+        name: s.name,
+        position: { lat: s.lat, lng: s.lng },
+        topScore: article.localScoreAverage,
+        articles: [],
+        placeId,
+      };
+      groups.set(key, g);
+    } else if (article.localScoreAverage > g.topScore) {
+      g.topScore = article.localScoreAverage;
+    }
+    g.articles.push(article);
+  }
+
+  // 各グループの記事を「公開日降順」で並べる（最近公開された順 ≈ 最近書き手が出した記事順）
+  for (const g of groups.values()) {
+    g.articles.sort((a, b) => {
+      const ta = new Date(b.publishedAt).getTime();
+      const tb = new Date(a.publishedAt).getTime();
+      return ta - tb;
+    });
+  }
+  return Array.from(groups.values());
+}
+
 function MarkersLayer({
-  spots,
-  articleScore,
+  groups,
   onPinClick,
 }: {
-  spots: Spot[];
-  articleScore: Record<string, number>;
-  onPinClick?: (spot: Spot) => void;
+  groups: SpotGroup[];
+  onPinClick: (g: SpotGroup) => void;
 }) {
   const map = useMap();
   useEffect(() => {
@@ -100,20 +144,19 @@ function MarkersLayer({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const G = (window as any).google?.maps;
     if (!G) return;
-    const markers = spots.map((s) => {
-      const score = articleScore[s.articleId] ?? 50;
-      const color = pinColorForScore(score);
+    const markers = groups.map((g) => {
+      const color = pinColorForScore(g.topScore);
       const m = new G.Marker({
-        position: { lat: s.lat, lng: s.lng },
+        position: g.position,
         map,
-        title: s.name,
+        title: g.name,
         icon: {
           url: makePinSvg(color),
           scaledSize: new G.Size(28, 28),
           anchor: new G.Point(14, 14),
         },
       });
-      const listener = m.addListener('click', () => onPinClick?.(s));
+      const listener = m.addListener('click', () => onPinClick(g));
       return { m, listener };
     });
     return () => {
@@ -122,30 +165,21 @@ function MarkersLayer({
         m.setMap(null);
       });
     };
-  }, [map, spots, articleScore, onPinClick]);
+  }, [map, groups, onPinClick]);
   return null;
 }
 
-/**
- * `<Map>` を `position: absolute; inset: 0` の明示ラッパー内に置くことで
- * 親の高さがどうあれ確実にコンテナを埋めるようにする。
- * `style={{ height: '100%' }}` 単体だと親の `h-[calc(100vh-56px)]` が
- * （Next.js のレイアウト経由で）解決しないケースがあった。
- *
- * `styles` は `mapOptions` 経由で渡す。@vis.gl の実装/バージョンによって
- * トップレベル prop の `styles` が無視されることがあるため。
- */
 function MapBody({
   spots,
   articles,
-  onPinClick,
   showHeatmap,
 }: Omit<MapInnerProps, 'apiKey'>) {
-  const articleScore = useMemo(() => {
-    const out: Record<string, number> = {};
-    for (const a of articles) out[a.id] = a.localScoreAverage;
-    return out;
-  }, [articles]);
+  const groups = useMemo(() => buildGroups(spots, articles), [spots, articles]);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  const activeGroup = activeKey
+    ? groups.find((g) => g.key === activeKey) ?? null
+    : null;
 
   return (
     <div
@@ -160,19 +194,84 @@ function MapBody({
         clickableIcons={false}
         styles={locoreMapStyles}
         style={{ width: '100%', height: '100%' }}
+        onClick={() => setActiveKey(null)}
       >
         {showHeatmap ? <HeatmapCircles /> : null}
         <MarkersLayer
-          spots={spots}
-          articleScore={articleScore}
-          onPinClick={onPinClick}
+          groups={groups}
+          onPinClick={(g) => setActiveKey(g.key)}
         />
+        {activeGroup ? (
+          <InfoWindow
+            position={activeGroup.position}
+            pixelOffset={[0, -18]}
+            onCloseClick={() => setActiveKey(null)}
+          >
+            <div className="min-w-[260px] max-w-[320px] p-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-700">
+                スポット
+              </p>
+              <h4 className="mt-0.5 text-[15px] font-bold leading-snug text-neutral-900">
+                {activeGroup.name}
+              </h4>
+              {activeGroup.placeId ? (
+                <a
+                  href={`https://www.google.com/maps/place/?q=place_id:${activeGroup.placeId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block text-[11px] text-primary-700 underline-offset-4 hover:underline"
+                >
+                  Google マップで見る →
+                </a>
+              ) : null}
+
+              <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/50">
+                この場所に紐づく記事（{activeGroup.articles.length}）
+              </p>
+              <ul className="mt-1 max-h-[260px] space-y-2 overflow-y-auto pr-1">
+                {activeGroup.articles.map((a) => (
+                  <li key={a.id}>
+                    <Link
+                      href={`/articles/${a.id}`}
+                      className="flex gap-2 rounded-md p-1.5 transition hover:bg-primary-50"
+                    >
+                      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-sm bg-primary-50">
+                        <Image
+                          src={a.coverImageUrl}
+                          alt={a.title}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-neutral-900">
+                          {a.title}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-2 text-[10px] text-foreground/60">
+                          <span className="tabular">
+                            ¥{a.priceJpy.toLocaleString('ja-JP')}
+                          </span>
+                          <span>·</span>
+                          <span>
+                            ローカル度{' '}
+                            <strong className="tabular">{a.localScoreAverage}</strong>
+                          </span>
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </InfoWindow>
+        ) : null}
       </GoogleMap>
     </div>
   );
 }
 
-export function MapInner({ spots, articles, onPinClick, showHeatmap, apiKey }: MapInnerProps) {
+export function MapInner({ spots, articles, showHeatmap, apiKey }: MapInnerProps) {
   if (!apiKey) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-primary-50/40 px-6 text-center">
@@ -184,8 +283,7 @@ export function MapInner({ spots, articles, onPinClick, showHeatmap, apiKey }: M
             <code className="rounded-sm bg-card px-1 py-0.5 text-[11px]">
               NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
             </code>{' '}
-            を <code className="rounded-sm bg-card px-1 py-0.5 text-[11px]">.env.local</code>{' '}
-            に設定して再起動すると、Locore 仕様の独自スタイルでマップが表示されます。
+            を Vercel の環境変数に追加して再デプロイしてください。
           </p>
         </div>
       </div>
@@ -194,12 +292,7 @@ export function MapInner({ spots, articles, onPinClick, showHeatmap, apiKey }: M
 
   return (
     <APIProvider apiKey={apiKey}>
-      <MapBody
-        spots={spots}
-        articles={articles}
-        onPinClick={onPinClick}
-        showHeatmap={showHeatmap}
-      />
+      <MapBody spots={spots} articles={articles} showHeatmap={showHeatmap} />
     </APIProvider>
   );
 }
