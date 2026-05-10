@@ -229,34 +229,69 @@ export function TransportPicker({
 
           let noteText = '';
           if (active === 'public_transit') {
-            // TRANSIT step を全部収集して、最初の TRANSIT 区間を 3 フィールドに分解
+            // TRANSIT step を全部収集して、最初の TRANSIT 区間を 3 フィールドに分解。
+            //
+            // 注意: Google Maps JS SDK の DirectionsStep では、
+            //   - `step.travel_mode`（または `travelMode`）が "TRANSIT"
+            //   - 乗り換え詳細は `step.transit`（古い API は `transit_details`）
+            // と複数の名前が並走しているため両対応する。短い名前 ('M12' 等) は
+            // line.short_name に、人間可読 ('Métro 12') は line.name に入る。
+            // 車両種別は line.vehicle.name（"Subway" / "Bus" / "Tram" 等）。
             const transitDetails = (leg.steps as Array<Record<string, unknown>>)
-              .filter((s) => s.travel_mode === 'TRANSIT')
+              .filter((s) => {
+                const mode =
+                  (s.travel_mode as string | undefined) ??
+                  (s.travelMode as string | undefined);
+                return mode === 'TRANSIT';
+              })
               .map((s) => {
-                const t = s.transit_details as
+                const t = (s.transit ?? s.transit_details) as
                   | {
-                      line?: { short_name?: string; name?: string };
+                      line?: {
+                        short_name?: string;
+                        name?: string;
+                        vehicle?: { name?: string; type?: string };
+                      };
                       departure_stop?: { name?: string };
                       arrival_stop?: { name?: string };
                     }
                   | undefined;
+                const short = t?.line?.short_name?.trim() ?? '';
+                const long = t?.line?.name?.trim() ?? '';
+                const vehicle = t?.line?.vehicle?.name?.trim() ?? '';
+                // 例: "Métro 12 号線" / "RER A" / "Bus 38" を組み立てる
+                const lineLabel =
+                  short && long
+                    ? `${short}（${long}）`
+                    : short || long || vehicle || '';
                 return {
-                  lineName: t?.line?.short_name ?? t?.line?.name ?? '',
-                  dep: t?.departure_stop?.name ?? '',
-                  arr: t?.arrival_stop?.name ?? '',
+                  lineName: lineLabel,
+                  dep: t?.departure_stop?.name?.trim() ?? '',
+                  arr: t?.arrival_stop?.name?.trim() ?? '',
                 };
               });
 
             const first = transitDetails[0];
-            // 複数 TRANSIT 区間のときは「線A → 線B」のように繋ぐ。基本は最初の区間で
-            // 構造化フィールドを埋めて、残りは note 末尾に「+ 線B...」の形で残す。
+            const last = transitDetails[transitDetails.length - 1];
+            // 複数 TRANSIT 区間のときは「線A → 線B」のように繋ぐ。
             const composedLine = transitDetails
-              .map((d) => d.lineName || 'Transit')
+              .map((d) => d.lineName)
+              .filter((s) => s.length > 0)
               .join(' → ');
-            const newLine = composedLine || 'Transit';
+            const newLine = composedLine || (leg.duration?.text ?? '');
             const newFrom = first?.dep ?? '';
-            const newTo =
-              transitDetails[transitDetails.length - 1]?.arr ?? '';
+            const newTo = last?.arr ?? '';
+
+            if (transitDetails.length === 0) {
+              // 何も取れなかった → ユーザーに知らせる（公共交通機関 NG エリア / 時間外等）
+              toast.error(
+                'この区間で公共交通機関の経路が見つかりませんでした（時刻 / エリア外の可能性）',
+              );
+            } else if (!first?.dep || !last?.arr) {
+              toast.message(
+                '駅情報が一部取得できませんでした。手動で補ってください',
+              );
+            }
 
             // 構造化フィールドにも反映（複数線のときは合成名がそのまま入る）
             setTransitLine(newLine);
