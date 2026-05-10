@@ -132,40 +132,32 @@ function transportToTravelMode(
 }
 
 /**
- * 移動手段ごとの SVG アイコンを data URL で返す（白背景の丸いバッジ + 線画）。
- * Google Maps の Marker icon に渡せる形式。
+ * 移動手段ごとの SVG アイコン（白い丸バッジ + 中央に Material Icons 風シルエット）。
+ *
+ * 旧実装は手書きのラインアートで小さくすると判別不能だったので、
+ * Material Symbols (Outlined) のソリッドパスを採用。24x24 viewBox を白い丸の中に
+ * 流し込んでいる。サイズは 36x36 まで上げて視認性を確保。
  */
 function transportIconSvg(
   mode: ArticleItineraryBlock['transportToNext'],
 ): string | null {
-  // 各モードの線画 path（28x28 viewBox 内）。
+  // 各 path は Material Icons (24x24 viewBox) からの引用（Apache-2.0）。
   const paths: Record<string, string> = {
+    // directions_walk
     walk:
-      // 歩行者
-      '<circle cx="14" cy="7" r="2"/>' +
-      '<path d="M11 21l2-6-2-3 4-2 3 4M16 14l3 5"/>',
+      'M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9 7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7Z',
+    // directions_bike
     bike:
-      // 自転車（車輪 2 つ + フレーム簡略）
-      '<circle cx="9" cy="18" r="3.2"/>' +
-      '<circle cx="19" cy="18" r="3.2"/>' +
-      '<path d="M9 18l3-7h3l4 7M12 11l-1-3h2"/>',
+      'M5 20.5C3.62 20.5 2.5 19.38 2.5 18S3.62 15.5 5 15.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5zM5 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm6.8-3l1.9-1.9.6.6C15.35 11.65 16.71 12.2 18.4 12.2V10.3c-1.18 0-2.05-.34-2.78-1.07l-1.5-1.5c-.55-.55-1.18-.62-1.6-.62s-1.05.07-1.6.62L7.5 10.3c-.39.39-.39 1.02 0 1.41l3.3 3.3v3.6h2v-5.1l-1-1zM10 5.5c.83 0 1.5-.67 1.5-1.5S10.83 2.5 10 2.5 8.5 3.17 8.5 4 9.17 5.5 10 5.5zM19 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
+    // local_taxi
     taxi:
-      // 車（簡略）
-      '<rect x="6" y="13" width="16" height="6" rx="1.5"/>' +
-      '<path d="M8 13l1.5-3h9L20 13"/>' +
-      '<circle cx="10" cy="20" r="1.4"/>' +
-      '<circle cx="18" cy="20" r="1.4"/>',
+      'M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z',
+    // train
     transit:
-      // 電車（窓付き四角）
-      '<rect x="9" y="6" width="10" height="14" rx="2"/>' +
-      '<line x1="9" y1="13" x2="19" y2="13"/>' +
-      '<circle cx="12" cy="17" r="0.8"/>' +
-      '<circle cx="16" cy="17" r="0.8"/>',
+      'M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zM11 11H6V6h5v5zm2 0V6h5v5h-5zm3.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z',
+    // more_horiz
     other:
-      // 三点リーダ
-      '<circle cx="9" cy="14" r="1.4"/>' +
-      '<circle cx="14" cy="14" r="1.4"/>' +
-      '<circle cx="19" cy="14" r="1.4"/>',
+      'M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
   };
 
   let key: string;
@@ -176,12 +168,17 @@ function transportIconSvg(
     key = 'transit';
   else key = 'other';
 
+  // 28x28 viewBox の中央に 24x24 のアイコンを配置（translate(2,2)）。
+  // 白丸は半径 13、エメラルド枠 + ドロップシャドウ（影は SVG 標準）。
   const inner = paths[key]!;
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">` +
-    `<circle cx="14" cy="14" r="13" fill="white" stroke="#0D7A5C" stroke-width="2"/>` +
-    `<g fill="none" stroke="#0D7A5C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">` +
-    inner +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 28 28">` +
+    `<defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%">` +
+    `<feDropShadow dx="0" dy="0.5" stdDeviation="0.6" flood-opacity="0.3"/>` +
+    `</filter></defs>` +
+    `<circle cx="14" cy="14" r="13" fill="white" stroke="#0D7A5C" stroke-width="1.6" filter="url(#s)"/>` +
+    `<g transform="translate(2 2)" fill="#0D7A5C">` +
+    `<path d="${inner}"/>` +
     `</g></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -246,8 +243,9 @@ function DirectionsPolylines({
         zIndex: 5,
         icon: {
           url,
-          scaledSize: new G.Size(28, 28),
-          anchor: new G.Point(14, 14),
+          // 32px → 36px に拡大して視認性アップ
+          scaledSize: new G.Size(36, 36),
+          anchor: new G.Point(18, 18),
         },
       });
       created.push(marker);
