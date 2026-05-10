@@ -77,7 +77,10 @@ function MarkersLayer({
   return null;
 }
 
-function PolylineLayer({ points }: { points: Point[] }) {
+/**
+ * 直線（フォールバック用）。Directions が取れないときに使う。
+ */
+function StraightPolyline({ points }: { points: Point[] }) {
   const map = useMap();
   useEffect(() => {
     if (!map || points.length < 2) return;
@@ -111,6 +114,134 @@ function PolylineLayer({ points }: { points: Point[] }) {
   return null;
 }
 
+/**
+ * itinerary block の transportToNext から Google DirectionsService の travelMode を返す。
+ * 'other' / null は null（直線フォールバック）。
+ */
+function transportToTravelMode(
+  v: ArticleItineraryBlock['transportToNext'],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  G: any,
+): string | null {
+  if (!v) return null;
+  if (v === 'walk') return G.TravelMode.WALKING;
+  if (v === 'bike') return G.TravelMode.BICYCLING;
+  if (v === 'taxi') return G.TravelMode.DRIVING;
+  if (v === 'metro' || v === 'bus' || v === 'train') return G.TravelMode.TRANSIT;
+  return null;
+}
+
+/**
+ * 旅程記事用：itineraryBlocks の連続するペアごとに DirectionsService.route を呼んで
+ * 実際に辿るルートを Polyline で描く。block.transportToNext が null / 'other' の
+ * 区間だけ直線（点線）に落とす。
+ */
+function DirectionsPolylines({
+  segments,
+}: {
+  segments: Array<{
+    from: { lat: number; lng: number };
+    to: { lat: number; lng: number };
+    mode: ArticleItineraryBlock['transportToNext'];
+  }>;
+}) {
+  const map = useMap();
+  // 経路ごとに描画したインスタンスを ref ではなく state でも closure でも追跡できる
+  // ようにするため、useEffect の cleanup で逐次破棄。
+  useEffect(() => {
+    if (!map || segments.length === 0) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const G = (window as any).google?.maps;
+    if (!G) return;
+
+    const created: Array<{ setMap: (m: unknown) => void }> = [];
+    let cancelled = false;
+
+    const service = new G.DirectionsService();
+
+    segments.forEach((seg) => {
+      const mode = transportToTravelMode(seg.mode, G);
+      if (!mode) {
+        // 移動手段なし → 直線（点線）で結ぶ
+        const line = new G.Polyline({
+          path: [seg.from, seg.to],
+          geodesic: true,
+          strokeColor: '#14A37C',
+          strokeOpacity: 0,
+          icons: [
+            {
+              icon: {
+                path: G.SymbolPath.CIRCLE,
+                fillColor: '#14A37C',
+                fillOpacity: 1,
+                strokeOpacity: 0,
+                scale: 3,
+              },
+              offset: '0',
+              repeat: '14px',
+            },
+          ],
+          map,
+        });
+        created.push(line);
+        return;
+      }
+
+      service.route(
+        {
+          origin: seg.from,
+          destination: seg.to,
+          travelMode: mode,
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (result: any, status: string) => {
+          if (cancelled) return;
+          if (status !== 'OK' || !result?.routes?.[0]?.overview_path) {
+            // 取得できなかった区間は直線フォールバック
+            const fallback = new G.Polyline({
+              path: [seg.from, seg.to],
+              geodesic: true,
+              strokeColor: '#14A37C',
+              strokeOpacity: 0,
+              icons: [
+                {
+                  icon: {
+                    path: G.SymbolPath.CIRCLE,
+                    fillColor: '#14A37C',
+                    fillOpacity: 1,
+                    strokeOpacity: 0,
+                    scale: 3,
+                  },
+                  offset: '0',
+                  repeat: '14px',
+                },
+              ],
+              map,
+            });
+            created.push(fallback);
+            return;
+          }
+          const line = new G.Polyline({
+            path: result.routes[0].overview_path,
+            geodesic: true,
+            strokeColor: '#0D7A5C',
+            strokeOpacity: 0.85,
+            strokeWeight: 4,
+            map,
+          });
+          created.push(line);
+        },
+      );
+    });
+
+    return () => {
+      cancelled = true;
+      for (const l of created) l.setMap(null);
+    };
+  }, [map, segments]);
+  return null;
+}
+
 function FitBounds({ points }: { points: Point[] }) {
   const map = useMap();
   useEffect(() => {
@@ -139,7 +270,7 @@ type Props = {
 function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
   // 旅程記事のときは itineraryBlocks の順序にしたがって番号付きで並べる。
   // それ以外（spot_guide）はスポット配列の順序で番号なしピンを表示。
-  const points: Point[] = useMemo(() => {
+  const { points, segments } = useMemo(() => {
     const valid = spots.filter(
       (s): s is Spot =>
         Boolean(s) &&
@@ -152,22 +283,46 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
 
     if (articleType === 'itinerary' && itineraryBlocks?.length) {
       const ordered: Point[] = [];
+      const segs: Array<{
+        from: { lat: number; lng: number };
+        to: { lat: number; lng: number };
+        mode: ArticleItineraryBlock['transportToNext'];
+      }> = [];
+      let prevSpot: Spot | null = null;
+      let prevBlock: ArticleItineraryBlock | null = null;
       let n = 1;
       for (const b of itineraryBlocks) {
         if (!b.spotId) continue;
         const s = byId.get(b.spotId);
         if (!s) continue;
         ordered.push({ spot: s, label: n++ });
+        if (prevSpot && prevBlock) {
+          segs.push({
+            from: { lat: prevSpot.lat, lng: prevSpot.lng },
+            to: { lat: s.lat, lng: s.lng },
+            // 直前ブロックの transportToNext = 「その地点から次の地点へ」の手段
+            mode: prevBlock.transportToNext ?? null,
+          });
+        }
+        prevSpot = s;
+        prevBlock = b;
       }
-      // itinerary に出てこないスポットも一応番号なしで残す
+      // itinerary に出てこないスポットも一応番号なしで残す（接続線は引かない）
       const usedIds = new Set(ordered.map((p) => p.spot.id));
       for (const s of valid) {
         if (!usedIds.has(s.id)) ordered.push({ spot: s });
       }
-      return ordered;
+      return { points: ordered, segments: segs };
     }
 
-    return valid.map((s) => ({ spot: s }));
+    return {
+      points: valid.map((s) => ({ spot: s })),
+      segments: [] as Array<{
+        from: { lat: number; lng: number };
+        to: { lat: number; lng: number };
+        mode: ArticleItineraryBlock['transportToNext'];
+      }>,
+    };
   }, [spots, articleType, itineraryBlocks]);
 
   const center = useMemo(() => {
@@ -201,7 +356,11 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
         style={{ width: '100%', height: '100%' }}
       >
         <FitBounds points={points} />
-        {articleType === 'itinerary' ? <PolylineLayer points={points} /> : null}
+        {articleType === 'itinerary' && segments.length > 0 ? (
+          <DirectionsPolylines segments={segments} />
+        ) : articleType === 'itinerary' ? (
+          <StraightPolyline points={points} />
+        ) : null}
         <MarkersLayer
           points={points}
           numbered={articleType === 'itinerary'}

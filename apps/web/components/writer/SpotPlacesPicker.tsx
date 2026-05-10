@@ -148,18 +148,35 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
             ? (result.opening_hours.weekday_text as string[]).join('\n')
             : null;
 
-          // 写真 URL 抽出（最大 5 枚、maxWidth=800）
-          // photos[i].getUrl({ maxWidth }) は Google CDN 上の URL を返す。
-          // この URL は当面安定（数ヶ月単位）なので DB に保存して OK。
+          // 写真 URL 抽出（横長＝景観 / 店構え系を優先）
+          //
+          // - photos[0] は Google Maps のサムネに出る「代表」写真と一致することが多いが、
+          //   menu / 内装の縦写真がトップに来ることもある。
+          // - 縦長を排除してランドスケープに絞ると「店の外観 / 主要な皿」系に揃う。
+          // - 縦写真しか無いお店は仕方ないので、結局 photos[0] にフォールバック。
+          // - 最大 3 枚に絞ってカルーセルで見せる。
           const photoUrls: string[] = (() => {
             const photos = (result.photos ?? []) as Array<{
+              width?: number;
+              height?: number;
               getUrl?: (opts: { maxWidth?: number; maxHeight?: number }) => string;
             }>;
-            return photos
-              .slice(0, 5)
+            if (photos.length === 0) return [];
+
+            const isLandscape = (p: { width?: number; height?: number }) => {
+              if (!p.width || !p.height) return true;
+              return p.width >= p.height * 0.95; // ほぼ正方形以上は OK
+            };
+
+            // ランドスケープ優先 + 元の並び順を保持
+            const landscape = photos.filter(isLandscape);
+            const ranked = landscape.length > 0 ? landscape : photos;
+
+            return ranked
+              .slice(0, 3)
               .map((p) =>
                 typeof p.getUrl === 'function'
-                  ? p.getUrl({ maxWidth: 800 })
+                  ? p.getUrl({ maxWidth: 1200 })
                   : null,
               )
               .filter((u): u is string => Boolean(u));

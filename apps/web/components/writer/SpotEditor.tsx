@@ -251,17 +251,39 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           {v.googlePhotoUrls && v.googlePhotoUrls.length > 0 ? (
             <div>
               <p className="mb-1 text-[11px] font-medium text-foreground/70">
-                取得した写真（{v.googlePhotoUrls.length} 枚）
+                取得した写真（{v.googlePhotoUrls.length} 枚） ・
+                変な写真は ✕ で外してください
               </p>
               <div className="flex gap-2 overflow-x-auto">
                 {v.googlePhotoUrls.map((url, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={i}
-                    src={url}
-                    alt=""
-                    className="h-16 w-24 shrink-0 rounded-sm object-cover ring-1 ring-primary-100"
-                  />
+                  <div key={i} className="relative shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt=""
+                      className="h-16 w-24 rounded-sm object-cover ring-1 ring-primary-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        set(
+                          'googlePhotoUrls',
+                          (v.googlePhotoUrls ?? []).filter(
+                            (_, idx) => idx !== i,
+                          ),
+                        )
+                      }
+                      aria-label="この写真を外す"
+                      className="absolute right-0 top-0 -translate-y-1 translate-x-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[11px] font-bold text-danger-500 shadow-sm ring-1 ring-primary-100 hover:bg-white"
+                    >
+                      ✕
+                    </button>
+                    {i === 0 ? (
+                      <span className="absolute bottom-0 left-0 rounded-tr-sm bg-primary-700/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                        代表
+                      </span>
+                    ) : null}
+                  </div>
                 ))}
               </div>
             </div>

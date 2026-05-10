@@ -84,6 +84,10 @@ export default async function ArticleDetailPage({
     }
   }
 
+  // 自分の記事は常に全解放（オーナー / editor）
+  const isOwner = !!me && (me.id === article.writerId || me.role === 'editor');
+  const unlocked = isFreeArticle || purchasedFromDb || isOwner;
+
   // お気に入りスポット + いいね / ブックマーク数 を並列取得
   const [{ folders }, bookmarkedSpotIds, socialCounts, likedSet] =
     await Promise.all([
@@ -271,11 +275,11 @@ export default async function ArticleDetailPage({
               articleId={article.id}
               blocks={article.itineraryBlocks}
               spots={spots}
-              defaultUnlocked={isFreeArticle || purchasedFromDb}
+              defaultUnlocked={unlocked}
             />
           ) : null}
 
-          {isFreeArticle ? (
+          {unlocked ? (
             <SpotsCardList
               spots={spots}
               folders={folders}
@@ -290,16 +294,28 @@ export default async function ArticleDetailPage({
               folders={folders}
               bookmarkedSpotIds={bookmarkedSpotIds}
               viewerLoggedIn={viewerLoggedIn}
-              alreadyPurchased={purchasedFromDb}
+              alreadyPurchased={purchasedFromDb || isOwner}
             />
           )}
 
-          {/* スポット地図（旅程記事はルート線、スポット紹介はピンのみ） */}
-          <ArticleSpotsMap
-            spots={spots}
-            articleType={article.articleType}
-            itineraryBlocks={article.itineraryBlocks ?? null}
-          />
+          {/* スポット地図（旅程記事はルート線、スポット紹介はピンのみ）。
+              有料記事は購入後 / オーナー時のみ表示。 */}
+          {unlocked ? (
+            <ArticleSpotsMap
+              spots={spots}
+              articleType={article.articleType}
+              itineraryBlocks={article.itineraryBlocks ?? null}
+            />
+          ) : (
+            <section className="rounded-md bg-primary-50/40 p-6 text-center text-[12px] text-primary-700 ring-1 ring-primary-100">
+              <p className="font-semibold">スポット地図は購入後に解放されます</p>
+              <p className="mt-1 text-foreground/60">
+                {article.articleType === 'itinerary'
+                  ? '実際に辿るルートと所要時間を地図上で確認できます'
+                  : 'すべてのスポットの位置をまとめて確認できます'}
+              </p>
+            </section>
+          )}
 
           {/* Reviews */}
           <section>
