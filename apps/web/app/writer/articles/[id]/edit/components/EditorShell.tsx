@@ -233,21 +233,12 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
         status={article.status}
       />
 
-      {modScore ? (
-        <div
-          className={
-            'flex flex-wrap items-center gap-3 rounded-md border px-4 py-3 text-[12px] ' +
-            (modScore.action === 'held'
-              ? 'border-warning-700 bg-warning-50 text-warning-700'
-              : modScore.action === 'warned'
-                ? 'border-warning-500 bg-warning-50 text-warning-700'
-                : 'border-border bg-card text-foreground/60')
-          }
-        >
+      {modScore && (modScore.action === 'warned' || modScore.action === 'held') ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-md border border-warning-500 bg-warning-50 px-4 py-3 text-[12px] text-warning-700">
           <span className="font-medium">事前モデレーション</span>
           <span>映え過剰度: {modScore.finalScore} / 100</span>
           <span className="text-[11px] opacity-70">
-            （85+ 編集者ホールド／70+ 警告／その他はそのまま公開）
+            観光客向けに寄り過ぎてないか、独自視点を確認してください
           </span>
         </div>
       ) : null}

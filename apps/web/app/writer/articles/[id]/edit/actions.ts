@@ -70,6 +70,7 @@ const itineraryBlockSchema = z.object({
     .enum(['walk', 'metro', 'bus', 'taxi', 'bike', 'train', 'other'])
     .nullable()
     .optional(),
+  transportNote: z.string().max(200).nullable().optional(),
   travelMinutesAfter: z
     .number()
     .int()
@@ -325,21 +326,20 @@ export async function publishArticle(articleId: string): Promise<ActionResult<{
     textBreakdown: moderation.breakdown,
   });
 
-  // status の更新ルール
-  // - held → pending_review（編集者ホールドキューへ）
-  // - warned → published（警告フラグ付きで公開）
-  // - pass → published
-  const nextStatus =
-    moderation.action === 'held' ? ('pending_review' as const) : ('published' as const);
-  const isPublishing = nextStatus === 'published';
+  // 編集者ホールド機能は撤廃。モデレーションが warned/held でも常に published に。
+  //  - warned: published + warned=true（注意マーカーは残す）
+  //  - held: published + warned=true（強い警告として extends warned）
+  //  - pass: published
+  const isWarned =
+    moderation.action === 'warned' || moderation.action === 'held';
 
   await db
     .update(schema.articles)
     .set({
-      status: nextStatus,
-      warned: moderation.action === 'warned',
+      status: 'published',
+      warned: isWarned,
       moderationScore: moderation.finalScore,
-      publishedAt: isPublishing ? new Date() : null,
+      publishedAt: new Date(),
       updatedAt: new Date(),
     })
     .where(eq(schema.articles.id, article.id));

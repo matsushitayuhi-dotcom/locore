@@ -127,8 +127,8 @@ export function ItineraryTimeline({
                 </div>
               </div>
               {/* 次への移動手段 */}
-              {!isLast && (b.transportToNext || b.travelMinutesAfter) ? (
-                <div className="ml-[76px] flex items-center gap-2">
+              {!isLast && (b.transportToNext || b.travelMinutesAfter || b.transportNote) ? (
+                <div className="ml-[76px] flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold text-primary-700">
                     <Clock className="h-3 w-3" />
                     {b.transportToNext
@@ -138,6 +138,11 @@ export function ItineraryTimeline({
                       ? ` ${b.travelMinutesAfter} 分`
                       : ''}
                   </span>
+                  {b.transportNote ? (
+                    <span className="text-[11px] text-foreground/70">
+                      {b.transportNote}
+                    </span>
+                  ) : null}
                 </div>
               ) : null}
             </li>

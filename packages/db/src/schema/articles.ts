@@ -47,6 +47,8 @@ export type ItineraryBlock = {
     | 'train'
     | 'other'
     | null;
+  /** 「Métro 12号線」のような自由テキスト */
+  transportNote?: string | null;
   /** 次のブロックへの移動所要時間（分） */
   travelMinutesAfter?: number | null;
 };

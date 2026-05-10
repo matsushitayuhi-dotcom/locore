@@ -30,6 +30,11 @@ export type ItineraryBlock = {
     | 'train'
     | 'other'
     | null;
+  /**
+   * 移動手段の補足テキスト（例: "12号線 République→Bastille"、"ベルリンSバーン"）。
+   * フリーフォーマット。空でも OK。
+   */
+  transportNote?: string | null;
   travelMinutesAfter?: number | null;
 };
 
@@ -204,7 +209,7 @@ export function ItineraryBlocksEditor({ blocks, onChange, spots }: Props) {
 
               {/* 移動手段（最後のブロック以外で表示） */}
               {!isLast ? (
-                <div className="flex items-center gap-2 pl-2">
+                <div className="flex flex-wrap items-center gap-2 pl-2">
                   <span className="text-[18px] leading-none text-primary-300">↓</span>
                   <select
                     value={b.transportToNext ?? ''}
@@ -224,6 +229,15 @@ export function ItineraryBlocksEditor({ blocks, onChange, spots }: Props) {
                       </option>
                     ))}
                   </select>
+                  <Input
+                    type="text"
+                    value={b.transportNote ?? ''}
+                    onChange={(e) =>
+                      update(idx, 'transportNote', e.target.value || undefined)
+                    }
+                    placeholder="例: Métro 12号線 / 北行き / 4駅"
+                    className="h-8 min-w-[160px] flex-1"
+                  />
                   <Input
                     type="number"
                     value={b.travelMinutesAfter ?? ''}

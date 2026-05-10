@@ -6,6 +6,7 @@ import { Button, PriceTag } from '@locore/ui';
 import { Lock, Check } from '@locore/ui/icons';
 import { Purchases } from '../lib/storage/local';
 import type { Article, Spot } from '../lib/mock';
+import { SpotsCardList } from './SpotsCardList';
 
 interface PaywallProps {
   article: Article;
@@ -39,8 +40,8 @@ export function Paywall({ article, bodyAfter, spots }: PaywallProps) {
   if (purchased) {
     return (
       <div className="space-y-8">
-        <div className="rounded-md border border-accent-300/40 bg-accent-50/60 px-4 py-3 text-[13px] text-accent-700">
-          <span className="font-medium">購入済み</span> — 全文と詳細スポット情報が表示されています。
+        <div className="rounded-md bg-primary-50 px-4 py-3 text-[13px] text-primary-700 ring-1 ring-primary-100">
+          <span className="font-bold">購入済み</span> — 全文とスポットが解放されています。
         </div>
         <article className="prose-locore">
           {bodyAfter.split(/\n\n+/).map((para, i) =>
@@ -54,7 +55,7 @@ export function Paywall({ article, bodyAfter, spots }: PaywallProps) {
           )}
         </article>
 
-        <SpotList spots={spots} unlocked />
+        <SpotsCardList spots={spots} />
       </div>
     );
   }
@@ -100,7 +101,7 @@ export function Paywall({ article, bodyAfter, spots }: PaywallProps) {
         </div>
       </div>
 
-      <SpotList spots={spots} />
+      <SpotsCardList spots={spots} locked />
 
       {open ? (
         <div

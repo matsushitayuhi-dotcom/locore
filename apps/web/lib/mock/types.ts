@@ -48,6 +48,7 @@ export interface ArticleItineraryBlock {
     | 'train'
     | 'other'
     | null;
+  transportNote?: string | null;
   travelMinutesAfter?: number | null;
 }
 

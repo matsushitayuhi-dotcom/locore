@@ -8,19 +8,19 @@ type Props = {
 
 /**
  * 直近のモデレーション結果を記事編集画面に表示するバナー。
- * - score >= 85: held（編集者ホールド／pending_review）
- * - score >= 70: warned（公開はされるが警告フラグ）
- * - それ未満: pass（バナーは出さない）
+ * - warned: 公開はされるが「観光客度合い高め」の警告フラグ
+ * - それ未満: バナーは出さない
+ *
+ * （編集者ホールド機能は撤廃。pending_review status は使わない方針）
  */
 export function ModerationBanner({ finalScore, warned, status }: Props) {
+  // pending_review は撤廃したが、過去データ互換のため簡易表示
   if (status === 'pending_review') {
     return (
-      <div className="rounded-md border border-warning-700 bg-warning-50 p-4 text-warning-700">
-        <p className="text-[13px] font-medium">編集者の審査待ち</p>
-        <p className="mt-1 text-[12px] leading-relaxed text-warning-700/90">
-          AI 判定により、この記事は編集者ホールドキューに入りました
-          {finalScore != null ? `（最終スコア ${finalScore}）` : ''}。
-          編集者が確認後に公開／差し戻しのいずれかが行われます。
+      <div className="rounded-md border border-warning-500 bg-warning-50 p-4 text-warning-700">
+        <p className="text-[13px] font-medium">公開保留中の記事です</p>
+        <p className="mt-1 text-[12px] leading-relaxed">
+          status を published に手動更新するか、再公開すれば公開状態になります。
         </p>
       </div>
     );

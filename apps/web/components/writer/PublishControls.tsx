@@ -20,24 +20,18 @@ export function PublishControls({ articleId, status, bodyLength }: Props) {
 
   const onPublish = () => {
     if (bodyLength < 100) {
-      toast.error('公開申請には本文 100 文字以上が必要です');
+      toast.error('公開には本文 100 文字以上が必要です');
       return;
     }
-    if (
-      !window.confirm('公開申請を行います。AI モデレーション後に公開／編集者ホールドのいずれかになります。')
-    ) {
-      return;
-    }
+    if (!window.confirm('この記事を公開します。よろしいですか？')) return;
     startTransition(async () => {
       const res = await publishArticle(articleId);
       if (res.ok) {
         const a = res.data!;
         if (a.action === 'pass') {
-          toast.success(`公開しました（最終スコア ${a.finalScore}）`);
-        } else if (a.action === 'warned') {
-          toast.warning(`警告付きで公開しました（スコア ${a.finalScore}）`);
+          toast.success('公開しました');
         } else {
-          toast.warning(`編集者の確認待ちです（スコア ${a.finalScore}）`);
+          toast.warning(`公開しました（観光客寄り警告：スコア ${a.finalScore}）`);
         }
       } else {
         toast.error(res.error);
@@ -62,9 +56,9 @@ export function PublishControls({ articleId, status, bodyLength }: Props) {
       <Button asChild variant="outline" size="sm">
         <Link href={`/writer/articles/${articleId}/preview`}>プレビュー</Link>
       </Button>
-      {status === 'draft' || status === 'archived' ? (
+      {status === 'draft' || status === 'archived' || status === 'pending_review' ? (
         <Button type="button" variant="primary" size="sm" onClick={onPublish} disabled={isPending}>
-          {isPending ? '処理中…' : '公開申請'}
+          {isPending ? '処理中…' : '公開する'}
         </Button>
       ) : null}
       {status === 'published' || status === 'pending_review' ? (

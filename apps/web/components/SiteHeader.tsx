@@ -9,7 +9,6 @@ const NAV = [
   { href: '/map', label: 'マップ', icon: MapIcon },
   { href: '/trips', label: '旅程', icon: LayoutList },
   { href: '/chat', label: 'メッセージ', icon: Compass },
-  { href: '/collections/col_paris_spring_2026', label: '特集', icon: Sparkles },
   { href: '/writer/articles', label: '書く', icon: Compass },
 ];
 

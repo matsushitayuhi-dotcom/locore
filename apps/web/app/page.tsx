@@ -5,29 +5,18 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { CrisisBanner } from '../components/CrisisBanner';
 import { FeedFilters } from '../components/FeedFilters';
 import { getPublishedDbArticles } from '../lib/articles/published';
-import { listCollections } from '../lib/collections/db';
 import { listCrisisEvents } from '../lib/crisis/db';
 import { listLightDiaries } from '../lib/lightDiaries/db';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  // すべて DB から取得（mock からの fallback は廃止）
-  const [articles, allCollections, crises, lightDiaries] = await Promise.all([
+  const [articles, crises, lightDiaries] = await Promise.all([
     getPublishedDbArticles(50),
-    listCollections(),
     listCrisisEvents(20),
     listLightDiaries(6),
   ]);
 
-  const articleById = new Map(articles.map((a) => [a.id, a]));
-  const pickedCollection = allCollections[0] ?? null;
-  const pickedArticles = pickedCollection
-    ? pickedCollection.articleIds
-        .map((id) => articleById.get(id))
-        .filter((a): a is NonNullable<typeof a> => Boolean(a))
-        .slice(0, 3)
-    : [];
   const seriousCrisis = crises.find((e) => e.severity >= 3);
 
   return (
@@ -147,51 +136,6 @@ export default async function HomePage() {
           <section>
             <CrisisBanner event={seriousCrisis} />
           </section>
-        ) : null}
-
-        {/* Featured collection */}
-        {pickedCollection ? (
-        <section>
-          <SectionHeader
-            kicker="編集チーム特集"
-            title={pickedCollection.title}
-            subtitle={pickedCollection.subtitle}
-            href={`/collections/${pickedCollection.id}`}
-          />
-          <div className="grid gap-4 md:grid-cols-3">
-            {pickedArticles.map((a) => (
-              <Link
-                key={a.id}
-                href={`/articles/${a.id}`}
-                className="group block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-primary-100 transition-all duration-base ease-out hover:-translate-y-1 hover:shadow-md hover:ring-primary-300"
-              >
-                <div className="relative aspect-cover bg-primary-50/50">
-                  <Image
-                    src={a.coverImageUrl}
-                    alt={a.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                  />
-                </div>
-                <div className="p-4">
-                  <Badge variant="default" className="text-[10px]">
-                    {a.area}
-                  </Badge>
-                  <p
-                    className="mt-2 line-clamp-2 text-[15px] font-semibold leading-snug"
-                    style={{
-                      fontFamily:
-                        'var(--font-serif-jp), var(--font-serif), serif',
-                    }}
-                  >
-                    {a.title}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
         ) : null}
 
         {/* Feed */}

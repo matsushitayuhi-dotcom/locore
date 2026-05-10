@@ -18,6 +18,7 @@ import { Paywall } from '../../../components/Paywall';
 import { AddToTripButton } from '../../../components/AddToTripButton';
 import { ArticleGrid } from '../../../components/ArticleGrid';
 import { ItineraryTimeline } from '../../../components/ItineraryTimeline';
+import { SpotsCardList } from '../../../components/SpotsCardList';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { eq, and } from 'drizzle-orm';
 import { schema } from '@locore/db';
@@ -40,19 +41,12 @@ export default async function ArticleDetailPage({
   const relatedDb = bundle.related;
 
   // 本文の分割：
-  //   * `bodyPaid` が明示的に保存されていれば：body 全体 = 無料プレビュー、bodyPaid = 有料部分
-  //   * 旧記事（bodyPaid が NULL/空）：body の冒頭 2 段落を無料、残りを有料の旧仕様にフォールバック
-  const hasExplicitSplit = !!article.bodyPaid && article.bodyPaid.trim().length > 0;
-  let preview: string;
-  let after: string;
-  if (hasExplicitSplit) {
-    preview = article.body;
-    after = article.bodyPaid!;
-  } else {
-    const paras = article.body.split(/\n\n+/);
-    preview = paras.slice(0, 2).join('\n\n');
-    after = paras.slice(2).join('\n\n');
-  }
+  //   * bodyPaid が空 → 全文無料記事として扱い Paywall を出さない
+  //   * bodyPaid が入っていれば → body=無料プレビュー / bodyPaid=有料部分
+  const hasPaid = !!article.bodyPaid && article.bodyPaid.trim().length > 0;
+  const preview: string = article.body;
+  const after: string = hasPaid ? article.bodyPaid! : '';
+  const isFreeArticle = !hasPaid;
 
   // 関連記事は DB から取得済み
   const related = relatedDb.slice(0, 6);
@@ -238,11 +232,16 @@ export default async function ArticleDetailPage({
               articleId={article.id}
               blocks={article.itineraryBlocks}
               spots={spots}
-              defaultUnlocked={purchasedFromDb}
+              defaultUnlocked={isFreeArticle || purchasedFromDb}
             />
           ) : null}
 
-          <Paywall article={article} bodyAfter={after} spots={spots} />
+          {isFreeArticle ? (
+            // 無料記事：Paywall を出さずスポット一覧だけ表示
+            <SpotsCardList spots={spots} />
+          ) : (
+            <Paywall article={article} bodyAfter={after} spots={spots} />
+          )}
 
           {/* Reviews */}
           <section>
