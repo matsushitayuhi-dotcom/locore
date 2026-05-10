@@ -37,6 +37,7 @@ export function SiteFooter() {
           title="運営・サポート"
           links={[
             { href: '/contact', label: 'お問い合わせ' },
+            { href: '/contact?category=takedown', label: '送信防止措置申出（プロ責法）' },
             { href: '#', label: '利用規約' },
             { href: '#', label: 'プライバシー' },
             { href: '#', label: '特定商取引法' },

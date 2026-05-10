@@ -132,6 +132,79 @@ function transportToTravelMode(
 }
 
 /**
+ * 移動手段ごとの SVG アイコンを data URL で返す（白背景の丸いバッジ + 線画）。
+ * Google Maps の Marker icon に渡せる形式。
+ */
+function transportIconSvg(
+  mode: ArticleItineraryBlock['transportToNext'],
+): string | null {
+  // 各モードの線画 path（28x28 viewBox 内）。
+  const paths: Record<string, string> = {
+    walk:
+      // 歩行者
+      '<circle cx="14" cy="7" r="2"/>' +
+      '<path d="M11 21l2-6-2-3 4-2 3 4M16 14l3 5"/>',
+    bike:
+      // 自転車（車輪 2 つ + フレーム簡略）
+      '<circle cx="9" cy="18" r="3.2"/>' +
+      '<circle cx="19" cy="18" r="3.2"/>' +
+      '<path d="M9 18l3-7h3l4 7M12 11l-1-3h2"/>',
+    taxi:
+      // 車（簡略）
+      '<rect x="6" y="13" width="16" height="6" rx="1.5"/>' +
+      '<path d="M8 13l1.5-3h9L20 13"/>' +
+      '<circle cx="10" cy="20" r="1.4"/>' +
+      '<circle cx="18" cy="20" r="1.4"/>',
+    transit:
+      // 電車（窓付き四角）
+      '<rect x="9" y="6" width="10" height="14" rx="2"/>' +
+      '<line x1="9" y1="13" x2="19" y2="13"/>' +
+      '<circle cx="12" cy="17" r="0.8"/>' +
+      '<circle cx="16" cy="17" r="0.8"/>',
+    other:
+      // 三点リーダ
+      '<circle cx="9" cy="14" r="1.4"/>' +
+      '<circle cx="14" cy="14" r="1.4"/>' +
+      '<circle cx="19" cy="14" r="1.4"/>',
+  };
+
+  let key: string;
+  if (mode === 'walk') key = 'walk';
+  else if (mode === 'bike') key = 'bike';
+  else if (mode === 'taxi') key = 'taxi';
+  else if (mode === 'metro' || mode === 'bus' || mode === 'train')
+    key = 'transit';
+  else key = 'other';
+
+  const inner = paths[key]!;
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">` +
+    `<circle cx="14" cy="14" r="13" fill="white" stroke="#0D7A5C" stroke-width="2"/>` +
+    `<g fill="none" stroke="#0D7A5C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">` +
+    inner +
+    `</g></svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/**
+ * Polyline の中央付近の LatLng を返す（path[Math.floor(len/2)]）。
+ * Directions の overview_path は LatLng[] なので getMidpoint で代用。
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function midpointOf(path: any[]): { lat: number; lng: number } | null {
+  if (!path || path.length === 0) return null;
+  const mid = path[Math.floor(path.length / 2)];
+  if (!mid) return null;
+  if (typeof mid.lat === 'function' && typeof mid.lng === 'function') {
+    return { lat: mid.lat(), lng: mid.lng() };
+  }
+  if (typeof mid.lat === 'number' && typeof mid.lng === 'number') {
+    return { lat: mid.lat, lng: mid.lng };
+  }
+  return null;
+}
+
+/**
  * 旅程記事用：itineraryBlocks の連続するペアごとに DirectionsService.route を呼んで
  * 実際に辿るルートを Polyline で描く。block.transportToNext が null / 'other' の
  * 区間だけ直線（点線）に落とす。
@@ -159,6 +232,27 @@ function DirectionsPolylines({
 
     const service = new G.DirectionsService();
 
+    const placeIcon = (
+      pos: { lat: number; lng: number },
+      mode: ArticleItineraryBlock['transportToNext'],
+    ) => {
+      const url = transportIconSvg(mode);
+      if (!url) return;
+      const marker = new G.Marker({
+        position: pos,
+        map,
+        // クリック不可 → ピン上を素通りしやすく
+        clickable: false,
+        zIndex: 5,
+        icon: {
+          url,
+          scaledSize: new G.Size(28, 28),
+          anchor: new G.Point(14, 14),
+        },
+      });
+      created.push(marker);
+    };
+
     segments.forEach((seg) => {
       const mode = transportToTravelMode(seg.mode, G);
       if (!mode) {
@@ -184,6 +278,14 @@ function DirectionsPolylines({
           map,
         });
         created.push(line);
+        // 直線の中点にもアイコンを置く（移動手段が "other" なら…で）
+        placeIcon(
+          {
+            lat: (seg.from.lat + seg.to.lat) / 2,
+            lng: (seg.from.lng + seg.to.lng) / 2,
+          },
+          seg.mode,
+        );
         return;
       }
 
@@ -219,10 +321,18 @@ function DirectionsPolylines({
               map,
             });
             created.push(fallback);
+            placeIcon(
+              {
+                lat: (seg.from.lat + seg.to.lat) / 2,
+                lng: (seg.from.lng + seg.to.lng) / 2,
+              },
+              seg.mode,
+            );
             return;
           }
+          const path = result.routes[0].overview_path;
           const line = new G.Polyline({
-            path: result.routes[0].overview_path,
+            path,
             geodesic: true,
             strokeColor: '#0D7A5C',
             strokeOpacity: 0.85,
@@ -230,6 +340,9 @@ function DirectionsPolylines({
             map,
           });
           created.push(line);
+          // ルートの中点にアイコンを置く
+          const mid = midpointOf(path);
+          if (mid) placeIcon(mid, seg.mode);
         },
       );
     });

@@ -7,16 +7,56 @@ import { getDb } from '@/lib/db/client';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { NIL_UUID, toReceiptCode } from '@/lib/contact/utils';
 
-const submitContactSchema = z.object({
-  name: z.string().min(1).max(50).optional(),
-  email: z.string().email('有効なメールアドレスを入力してください'),
-  category: z.enum(['bug', 'feature', 'terms', 'payment', 'other']),
-  subject: z.string().min(1, '件名を入力してください').max(100),
-  body: z
-    .string()
-    .min(10, '本文は 10 文字以上で入力してください')
-    .max(2000, '本文は 2000 文字以内で入力してください'),
-});
+const submitContactSchema = z
+  .object({
+    name: z.string().min(1).max(50).optional(),
+    email: z.string().email('有効なメールアドレスを入力してください'),
+    category: z.enum([
+      'bug',
+      'feature',
+      'terms',
+      'payment',
+      'takedown', // プロバイダ責任制限法に基づく送信防止措置申出
+      'other',
+    ]),
+    subject: z.string().min(1, '件名を入力してください').max(100),
+    body: z
+      .string()
+      .min(10, '本文は 10 文字以上で入力してください')
+      .max(4000, '本文は 4000 文字以内で入力してください'),
+    /** プロ責法フォーム用: 申立人氏名（実名） */
+    legalFullName: z.string().trim().max(120).optional(),
+    /** プロ責法フォーム用: 申立人住所 */
+    legalAddress: z.string().trim().max(300).optional(),
+    /** プロ責法フォーム用: 申立人電話番号 */
+    legalPhone: z.string().trim().max(40).optional(),
+    /** プロ責法フォーム用: 削除依頼対象 URL */
+    targetUrl: z.string().trim().url().max(2048).optional().or(z.literal('')),
+    /** プロ責法フォーム用: 侵害された権利の種類 */
+    legalRightType: z
+      .enum([
+        'copyright',
+        'defamation',
+        'privacy',
+        'portrait',
+        'trademark',
+        'other_legal',
+      ])
+      .optional(),
+  })
+  // takedown のときは追加情報を必須にする
+  .refine(
+    (v) =>
+      v.category !== 'takedown' ||
+      (v.legalFullName &&
+        v.legalAddress &&
+        v.targetUrl &&
+        v.legalRightType),
+    {
+      message:
+        '送信防止措置申出には申立人氏名・住所・対象 URL・権利種別がすべて必須です',
+    },
+  );
 
 export type SubmitContactResult =
   | { ok: true; receiptCode: string }
@@ -68,7 +108,20 @@ export async function submitContact(input: unknown): Promise<SubmitContactResult
     };
   }
 
-  const composedBody = `件名: ${data.subject}\n\n${data.body}`;
+  // takedown は追加情報を本文先頭に付ける（admin/reports で読みやすいように）
+  const legalHeader =
+    data.category === 'takedown'
+      ? [
+          '【プロバイダ責任制限法 送信防止措置申出】',
+          `申立人氏名: ${data.legalFullName ?? ''}`,
+          `申立人住所: ${data.legalAddress ?? ''}`,
+          `申立人電話: ${data.legalPhone ?? '（記載なし）'}`,
+          `対象 URL: ${data.targetUrl ?? ''}`,
+          `権利種別: ${data.legalRightType ?? ''}`,
+          '',
+        ].join('\n')
+      : '';
+  const composedBody = `${legalHeader}件名: ${data.subject}\n\n${data.body}`;
 
   const [inserted] = await db
     .insert(schema.reports)
@@ -97,6 +150,16 @@ export async function submitContact(input: unknown): Promise<SubmitContactResult
       name: data.name ?? null,
       category: data.category,
       subject: data.subject,
+      legal:
+        data.category === 'takedown'
+          ? {
+              fullName: data.legalFullName ?? null,
+              address: data.legalAddress ?? null,
+              phone: data.legalPhone ?? null,
+              targetUrl: data.targetUrl ?? null,
+              rightType: data.legalRightType ?? null,
+            }
+          : null,
     },
   });
 
