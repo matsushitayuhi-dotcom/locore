@@ -1,21 +1,19 @@
 ﻿import Link from 'next/link';
 import Image from 'next/image';
-import { Button, Badge, Avatar, AvatarImage, AvatarFallback } from '@locore/ui';
+import { Button, Badge } from '@locore/ui';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { CrisisBanner } from '../components/CrisisBanner';
 import { FeedFilters } from '../components/FeedFilters';
 import { getPublishedDbArticles } from '../lib/articles/published';
 import { listCrisisEvents } from '../lib/crisis/db';
-import { listLightDiaries } from '../lib/lightDiaries/db';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [articles, crises, lightDiaries] = await Promise.all([
+  const [articles, crises] = await Promise.all([
     getPublishedDbArticles(50),
     listCrisisEvents(20),
-    listLightDiaries(6),
   ]);
   const socialCounts = await getArticleSocialCounts(
     articles.map((a) => a.id),
@@ -150,42 +148,6 @@ export default async function HomePage() {
             subtitle="ローカル度・価格・テーマで絞り込んで、自分の旅にあうものを選ぶ"
           />
           <FeedFilters articles={articles} socialCounts={socialCounts} />
-        </section>
-
-        {/* Light diaries */}
-        <section>
-          <SectionHeader
-            kicker="無料 / ライト旅行記"
-            title="一般ユーザーの、短い記録"
-            subtitle="編集を経ない、生の声。気軽に読める"
-            href="/light-diaries"
-          />
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {lightDiaries.slice(0, 3).map((d) => (
-              <article
-                key={d.id}
-                className="rounded-md border border-border bg-card p-5 shadow-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar size="sm">
-                    <AvatarImage src={d.avatarUrl} alt={d.authorName} />
-                    <AvatarFallback>{d.authorName[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-[13px] font-medium">{d.authorName}</p>
-                    <p className="text-[11px] text-foreground/50">{d.visitedAt}</p>
-                  </div>
-                </div>
-                <h3 className="mt-3 text-[15px] font-semibold leading-snug">
-                  {d.title}
-                </h3>
-                <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-foreground/70">
-                  {d.body}
-                </p>
-                <p className="mt-3 text-[11px] text-foreground/40">♡ {d.likes}</p>
-              </article>
-            ))}
-          </div>
         </section>
 
         {/* Founders — emerald 単色のソフトバナー */}

@@ -22,7 +22,7 @@ export function SiteFooter() {
             { href: '/', label: 'フィード' },
             { href: '/map', label: 'マップ' },
             { href: '/trips', label: '旅程' },
-            { href: '/light-diaries', label: 'ライト旅行記' },
+            { href: '/library', label: 'お気に入り' },
           ]}
         />
         <FooterColumn
