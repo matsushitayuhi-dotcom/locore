@@ -39,10 +39,12 @@ export default async function ChatListPage() {
 
       {diagnostic ? (
         <div className="mb-4 rounded-md bg-warning-50 p-4 text-[12px] text-warning-700 ring-1 ring-warning-500">
-          <p className="font-bold">⚠ チャット用テーブルが用意されていない可能性があります</p>
-          <p className="mt-1 font-mono text-[11px] leading-relaxed">{diagnostic}</p>
+          <p className="font-bold">⚠ チャットの読み込みで問題が発生しています</p>
+          <p className="mt-1 font-mono text-[11px] leading-relaxed break-all">
+            {diagnostic}
+          </p>
           <p className="mt-2 text-[11px]">
-            Supabase SQL Editor で{' '}
+            未適用の migration があれば Supabase SQL Editor で{' '}
             <code className="rounded bg-card px-1 py-0.5">
               packages/db/migrations/manual/0017_chat.sql
             </code>{' '}

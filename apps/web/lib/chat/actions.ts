@@ -353,6 +353,7 @@ export async function listMyThreads(): Promise<
   // 各 thread の相手 + 最新メッセージ + 未読
   const summaries: ThreadSummary[] = [];
   let perThreadErrors = 0;
+  let firstErrorMsg: string | null = null;
   for (const t of threadRows) {
     try {
       const myMembership = myMemberships.find((m) => m.threadId === t.id);
@@ -418,6 +419,9 @@ export async function listMyThreads(): Promise<
     } catch (err) {
       // 個別 thread の取得失敗はスキップして続ける（プレビュー表示優先）
       perThreadErrors += 1;
+      if (!firstErrorMsg) {
+        firstErrorMsg = err instanceof Error ? err.message : String(err);
+      }
       // eslint-disable-next-line no-console
       console.warn('[listMyThreads] thread summary failed:', t.id, err);
       // 失敗してもスレッド自体は最低限表示する（パートナー / プレビュー無し）
@@ -437,7 +441,7 @@ export async function listMyThreads(): Promise<
       threads: summaries,
       diagnostic:
         perThreadErrors > 0
-          ? `${perThreadErrors} 件のスレッドで詳細取得に失敗しました（パートナー名やプレビューが空）`
+          ? `${perThreadErrors} 件のスレッドで詳細取得に失敗しました。原因: ${firstErrorMsg ?? '不明'}`
           : undefined,
     },
   };
