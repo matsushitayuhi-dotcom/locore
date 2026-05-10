@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Users, MapPin } from '@locore/ui/icons';
 import { listSampleTrips, getSpotsByIds } from '@/lib/trips/db';
 
@@ -25,7 +25,7 @@ export default async function TripsPage() {
           サンプル旅程
         </h1>
         <p className="mt-1 text-[13px] text-foreground/60">
-          記事のスポットを束ねて Day 別に整理した、書き手提案のサンプル旅程です。
+          記事のスポットを束ねて Day 別に整理した、クリエイター提案のサンプル旅程です。
         </p>
       </div>
 

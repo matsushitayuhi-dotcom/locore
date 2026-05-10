@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+﻿import { and, eq, isNull } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
@@ -16,7 +16,7 @@ export default async function AccountSettingsPage() {
   const isWriter = user.role === 'resident_writer' || user.role === 'editor';
   const alreadyDeleted = false; // モック現在ユーザーは生存前提
 
-  // 書き手の場合、未精算の集計（簡易：完了購入の payout 合算と payouts の completed の差分）
+  // クリエイターの場合、未精算の集計（簡易：完了購入の payout 合算と payouts の completed の差分）
   let unsettledJpy = 0;
   let publishedCount = 0;
 

@@ -1,4 +1,4 @@
-import type { Collection } from './types';
+﻿import type { Collection } from './types';
 
 export const collections: Collection[] = [
   {
@@ -6,7 +6,7 @@ export const collections: Collection[] = [
     title: '春のパリ：花見スポットと、その近くの本物のビストロ20選',
     subtitle: '4月〜5月のパリを、観光地の桜並木以外で楽しむ',
     intro:
-      '4月のパリは桜だけではなく、マロニエ、リラ、藤、と花の入れ替わる季節。地元の書き手たちが、観光地のリストにはない「春に通いたい店」と「人がいない花見の場所」を組み合わせて編みました。',
+      '4月のパリは桜だけではなく、マロニエ、リラ、藤、と花の入れ替わる季節。地元のクリエイターたちが、観光地のリストにはない「春に通いたい店」と「人がいない花見の場所」を組み合わせて編みました。',
     coverImageUrl: 'https://picsum.photos/seed/locore-collection-spring/1280/720',
     curatorName: 'Locore 編集部',
     curatorRole: '特集編集',
@@ -18,7 +18,7 @@ export const collections: Collection[] = [
     title: '雨のパリで、外せない屋内12箇所',
     subtitle: '雨だからこそ、街の本気が見える',
     intro:
-      'パリは年間100日以上雨が降る街。観光客が困っている瞬間こそ、現地民が普段使う場所が輝きます。屋内で半日〜1日過ごせるコースを、書き手3人の視点で編集しました。',
+      'パリは年間100日以上雨が降る街。観光客が困っている瞬間こそ、現地民が普段使う場所が輝きます。屋内で半日〜1日過ごせるコースを、クリエイター3人の視点で編集しました。',
     coverImageUrl: 'https://picsum.photos/seed/locore-collection-rainy/1280/720',
     curatorName: '中野 マリエ',
     curatorRole: 'ゲストキュレーター',

@@ -1,4 +1,4 @@
-import 'server-only';
+﻿import 'server-only';
 import { eq, desc, isNull, and, asc, sql, ne, or, inArray } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -322,7 +322,7 @@ export async function getDbArticleBundle(id: string): Promise<{
           ).toFixed(1)
         : 4.5;
 
-    // ----- 関連記事（同じ書き手 + 同じ街） -----
+    // ----- 関連記事（同じクリエイター + 同じ街） -----
     const relatedRows = await db
       .select({
         id: schema.articles.id,

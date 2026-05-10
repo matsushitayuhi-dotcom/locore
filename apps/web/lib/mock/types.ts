@@ -1,4 +1,4 @@
-// Lightweight types for the mock data layer (prototype only).
+﻿// Lightweight types for the mock data layer (prototype only).
 // Real types live in @locore/api-contracts; here we keep them minimal.
 
 export type Tier = 'S' | 'A' | 'B';
@@ -65,7 +65,7 @@ export interface Article {
   /** 旅程プラン記事の構造化ブロック（articleType==='itinerary' のときに使う） */
   itineraryBlocks?: ArticleItineraryBlock[] | null;
   /**
-   * 書き手のサマリ情報（DB 連携で記事と一緒に JOIN して詰められる）。
+   * クリエイターのサマリ情報（DB 連携で記事と一緒に JOIN して詰められる）。
    * mock や旧データでは undefined のまま → ArticleGrid 側で「匿名」表示。
    */
   writerName?: string;

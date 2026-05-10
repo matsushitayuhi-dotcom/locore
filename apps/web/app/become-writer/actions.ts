@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
@@ -14,12 +14,12 @@ const becomeWriterSchema = z.object({
   agreeTerms: z
     .union([z.literal('on'), z.literal('true'), z.boolean()])
     .refine((v) => v === true || v === 'on' || v === 'true', {
-      message: '書き手規約に同意してください',
+      message: 'クリエイター規約に同意してください',
     }),
 });
 
 /**
- * 書き手登録（Tier B 自己申告）。
+ * クリエイター登録（Tier B 自己申告）。
  *
  * - users.role を 'resident_writer' に更新
  * - writer_profiles を Tier B で INSERT（既存があれば何もしない）
@@ -34,7 +34,7 @@ export async function becomeWriter(formData: FormData): Promise<void> {
   const user = await requireUser('/become-writer');
 
   if (user.role === 'resident_writer' || user.role === 'editor') {
-    // 既に書き手 → ダッシュボードへ
+    // 既にクリエイター → ダッシュボードへ
     redirect('/writer/articles');
   }
 

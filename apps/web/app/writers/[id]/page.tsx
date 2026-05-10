@@ -26,7 +26,7 @@ export const dynamic = 'force-dynamic';
 /**
  * ユーザープロフィールページ。
  *
- * - 書き手 / 読者 を区別せず、誰でも持つ「公開プロフィール」として扱う。
+ * - クリエイター / 読者 を区別せず、誰でも持つ「公開プロフィール」として扱う。
  * - mock の wr_xxx ID は従来通り mock から、UUID は DB から解決する。
  * - DB 上のユーザーは sns_links / writer_profiles を JOIN して取得。
  * - 「この人のおすすめ記事」をタイルグリッドで並べる。

@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { z } from 'zod';
 import { eq, and } from 'drizzle-orm';
@@ -12,7 +12,7 @@ import { requireUser } from '@/lib/auth/require-user';
  *
  * 設計:
  *   - SNS リンクは「同じプラットフォームを複数登録可能」に変更（id 単位の CRUD）
- *   - writer 用 bio 編集は廃止（書き手 / 読者でフォームを分けない方針）
+ *   - writer 用 bio 編集は廃止（クリエイター / 読者でフォームを分けない方針）
  */
 
 const SNS_PLATFORMS = [

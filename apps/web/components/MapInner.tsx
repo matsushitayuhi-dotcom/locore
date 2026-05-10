@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -124,7 +124,7 @@ function buildGroups(spots: Spot[], articles: Article[]): SpotGroup[] {
     g.articles.push(article);
   }
 
-  // 各グループの記事を「公開日降順」で並べる（最近公開された順 ≈ 最近書き手が出した記事順）
+  // 各グループの記事を「公開日降順」で並べる（最近公開された順 ≈ 最近クリエイターが出した記事順）
   for (const g of groups.values()) {
     g.articles.sort((a, b) => {
       const ta = new Date(b.publishedAt).getTime();

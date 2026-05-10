@@ -71,7 +71,7 @@ export default async function PreviewArticlePage({
           </Link>
         </div>
         <p className="mt-1 text-[12px]">
-          これは書き手専用のプレビュー画面です。公開済みページとは別実装のため、
+          これはクリエイター専用のプレビュー画面です。公開済みページとは別実装のため、
           実際の表示と微妙に異なる場合があります。
         </p>
       </div>

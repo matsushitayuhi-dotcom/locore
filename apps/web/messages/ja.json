@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "name": "Locore",
     "tagline": "在外邦人がつくる、もう一段深い旅"
@@ -7,7 +7,7 @@
     "heroTitle": "Locore",
     "heroSubtitle": "在外邦人ライターが書く、その街の濃い旅。",
     "ctaPrimary": "記事を見る",
-    "ctaSecondary": "書き手として参加"
+    "ctaSecondary": "クリエイターとして参加"
   },
   "common": {
     "loading": "読み込み中...",

@@ -1,4 +1,4 @@
-import type { Metadata, Viewport } from 'next';
+﻿import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     template: '%s | Locore',
   },
   description:
-    'Locore は現地で生活する書き手が綴る、観光ガイドにはない深い街の物語。映え目当てではなく、その土地の本当の輪郭を持ち帰るための、有料・短尺の旅行誌。',
+    'Locore は現地で生活するクリエイターが綴る、観光ガイドにはない深い街の物語。映え目当てではなく、その土地の本当の輪郭を持ち帰るための、有料・短尺の旅行誌。',
   applicationName: 'Locore',
 };
 

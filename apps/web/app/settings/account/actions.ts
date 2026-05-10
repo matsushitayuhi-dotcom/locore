@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { z } from 'zod';
 import { and, eq, isNull } from 'drizzle-orm';
@@ -24,7 +24,7 @@ export type DeleteAccountResult =
  * アカウント退会（soft delete）。
  *
  * - users.deleted_at に NOW をセット（論理削除）
- * - 書き手の場合、自分の published 記事を archived へ（販売停止）
+ * - クリエイターの場合、自分の published 記事を archived へ（販売停止）
  *   既存購入者は引き続き閲覧可能（articles 自体は残す）
  * - 退会理由を audit_logs に記録
  *
@@ -54,7 +54,7 @@ export async function deleteAccount(input: unknown): Promise<DeleteAccountResult
     .set({ deletedAt: now, updatedAt: now })
     .where(eq(schema.users.id, user.id));
 
-  // 2) 書き手なら published 記事を archived に
+  // 2) クリエイターなら published 記事を archived に
   if (user.role === 'resident_writer' || user.role === 'editor') {
     await db
       .update(schema.articles)

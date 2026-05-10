@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -81,11 +81,11 @@ export function UserMenu({ user }: Props) {
             </MenuItem>
             {isWriter ? (
               <MenuItem href="/writer/articles" onSelect={() => setOpen(false)}>
-                書き手ダッシュボード
+                クリエイターダッシュボード
               </MenuItem>
             ) : (
               <MenuItem href="/become-writer" onSelect={() => setOpen(false)}>
-                書き手になる
+                クリエイターになる
               </MenuItem>
             )}
           </ul>

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 
 export function SiteFooter() {
   return (
@@ -29,7 +29,7 @@ export function SiteFooter() {
           title="参加する"
           links={[
             { href: '/founders', label: 'Founders 枠（先着50人）' },
-            { href: '/writers/wr_junko', label: '書き手として' },
+            { href: '/writers/wr_junko', label: 'クリエイターとして' },
             { href: '/collections/col_paris_spring_2026', label: '特集を読む' },
           ]}
         />

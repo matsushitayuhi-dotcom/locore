@@ -1,11 +1,11 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input, Badge } from '@locore/ui';
 import { requireUser } from '@/lib/auth/require-user';
 import { becomeWriter } from './actions';
 
 export const metadata = {
-  title: '書き手になる',
+  title: 'クリエイターになる',
 };
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function BecomeWriterPage() {
   const user = await requireUser('/become-writer');
 
-  // 既に書き手 → ダッシュボードへ
+  // 既にクリエイター → ダッシュボードへ
   if (user.role === 'resident_writer' || user.role === 'editor') {
     redirect('/writer/articles');
   }
@@ -29,10 +29,10 @@ export default async function BecomeWriterPage() {
             className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[36px]"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            書き手になる
+            クリエイターになる
           </h1>
           <p className="mt-3 text-[14px] leading-relaxed text-foreground/70">
-            Locore は、現地で生活する書き手が綴る短尺の旅行誌です。
+            Locore は、現地で生活するクリエイターが綴る短尺の旅行誌です。
             自己申告での登録（Tier B）から始められ、後から滞在ビザ等を提出することで
             Tier A / Tier S にアップグレードできます。
           </p>
@@ -94,7 +94,7 @@ export default async function BecomeWriterPage() {
               <Link href="/legal#terms" className="text-primary-700 underline-offset-4 hover:underline">
                 利用規約
               </Link>{' '}
-              および書き手規約（オリジナル記事の保証、ステマ禁止、禁止コンテンツ等）に同意します。
+              およびクリエイター規約（オリジナル記事の保証、ステマ禁止、禁止コンテンツ等）に同意します。
             </span>
           </label>
 
@@ -103,7 +103,7 @@ export default async function BecomeWriterPage() {
               <Link href="/">キャンセル</Link>
             </Button>
             <Button type="submit" variant="primary" size="md">
-              書き手として登録する
+              クリエイターとして登録する
             </Button>
           </div>
 

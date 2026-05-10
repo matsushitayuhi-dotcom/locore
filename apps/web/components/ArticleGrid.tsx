@@ -24,6 +24,18 @@ interface ArticleGridProps {
   socialCounts?: Map<string, { likeCount: number; bookmarkCount: number }>;
 }
 
+/**
+ * area の表示用整形：
+ * - 'パリ' そのもの → 'パリ'（重複防止）
+ * - 'パリ・マレ' のような既にプレフィックス付き → そのまま
+ * - 'マレ（3区）' のようなサブエリアのみ → 'パリ・<sub>'（旧 mock 互換）
+ */
+function formatArea(area: string): string {
+  if (!area) return 'パリ';
+  if (area === 'パリ' || area.startsWith('パリ')) return area;
+  return `パリ・${area}`;
+}
+
 function toCardModel(
   article: Article,
   counts?: { likeCount?: number; bookmarkCount?: number },
@@ -32,7 +44,7 @@ function toCardModel(
     id: article.id,
     title: article.title,
     coverImageUrl: article.coverImageUrl,
-    area: `パリ・${article.area.replace(/^パリ・?/, '')}`,
+    area: formatArea(article.area),
     author: {
       name: article.writerName ?? '匿名',
       tier: (article.writerTier ?? 'B') as 'S' | 'A' | 'B',

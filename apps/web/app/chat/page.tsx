@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import {
   Avatar,
   AvatarFallback,
@@ -26,15 +26,30 @@ export default async function ChatListPage() {
   await requireUser('/chat');
   const res = await listMyThreads();
   const threads = res.ok ? res.data?.threads ?? [] : [];
+  const diagnostic = res.ok ? res.data?.diagnostic ?? null : null;
 
   return (
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6">
       <header className="mb-6">
         <h1 className="text-[24px] font-bold tracking-tight">メッセージ</h1>
         <p className="mt-1 text-[13px] text-foreground/60">
-          書き手とのやり取りや、サービスへの問い合わせがここに集まります。
+          クリエイターとのやり取りや、サービスへの問い合わせがここに集まります。
         </p>
       </header>
+
+      {diagnostic ? (
+        <div className="mb-4 rounded-md bg-warning-50 p-4 text-[12px] text-warning-700 ring-1 ring-warning-500">
+          <p className="font-bold">⚠ チャット用テーブルが用意されていない可能性があります</p>
+          <p className="mt-1 font-mono text-[11px] leading-relaxed">{diagnostic}</p>
+          <p className="mt-2 text-[11px]">
+            Supabase SQL Editor で{' '}
+            <code className="rounded bg-card px-1 py-0.5">
+              packages/db/migrations/manual/0017_chat.sql
+            </code>{' '}
+            を実行してください。
+          </p>
+        </div>
+      ) : null}
 
       {threads.length === 0 ? (
         <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">

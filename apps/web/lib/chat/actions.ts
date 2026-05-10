@@ -246,7 +246,9 @@ export type ThreadSummary = {
   unread: number;
 };
 
-export async function listMyThreads(): Promise<ChatActionResult<{ threads: ThreadSummary[] }>> {
+export async function listMyThreads(): Promise<
+  ChatActionResult<{ threads: ThreadSummary[]; diagnostic?: string }>
+> {
   const me = await requireUser();
   const db = getDb();
 
@@ -270,7 +272,14 @@ export async function listMyThreads(): Promise<ChatActionResult<{ threads: Threa
       '[listMyThreads] chat tables not ready, returning empty list:',
       err,
     );
-    return { ok: true, data: { threads: [] } };
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      ok: true,
+      data: {
+        threads: [],
+        diagnostic: `chat_thread_members の取得に失敗: ${msg}`,
+      },
+    };
   }
 
   if (myMemberships.length === 0) {

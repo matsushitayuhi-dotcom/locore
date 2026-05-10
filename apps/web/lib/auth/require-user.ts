@@ -1,4 +1,4 @@
-import 'server-only';
+﻿import 'server-only';
 import { redirect } from 'next/navigation';
 import { getCurrentUser, type CurrentUser } from './current-user';
 
@@ -20,7 +20,7 @@ export async function requireUser(redirectTo?: string): Promise<CurrentUser> {
 }
 
 /**
- * 書き手ロール必須ガード。reader の場合 `/become-writer` へ誘導。
+ * クリエイターロール必須ガード。reader の場合 `/become-writer` へ誘導。
  */
 export async function requireWriter(redirectTo?: string): Promise<CurrentUser> {
   const user = await requireUser(redirectTo);

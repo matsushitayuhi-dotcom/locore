@@ -1,4 +1,4 @@
-'use server';
+﻿'use server';
 
 import { z } from 'zod';
 import { eq, and, desc } from 'drizzle-orm';
@@ -10,7 +10,7 @@ import { requireUser } from '@/lib/auth/require-user';
 
 /**
  * 新規記事下書きを作成し、編集画面にリダイレクトする。
- * 価格・本文・都市は仮値で埋め、編集画面で書き手が変更する。
+ * 価格・本文・都市は仮値で埋め、編集画面でクリエイターが変更する。
  */
 const createSchema = z.object({
   title: z.string().trim().min(1, 'タイトルを入力してください').max(200),
@@ -20,7 +20,7 @@ export async function createArticleDraft(input: unknown): Promise<never> {
   const parsed = createSchema.parse(input);
   const user = await requireUser();
   if (user.role !== 'resident_writer' && user.role !== 'editor') {
-    throw new Error('書き手のみが作成できます');
+    throw new Error('クリエイターのみが作成できます');
   }
   const db = getDb();
 

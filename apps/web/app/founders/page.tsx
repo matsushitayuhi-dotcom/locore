@@ -1,4 +1,4 @@
-import { Badge } from '@locore/ui';
+﻿import { Badge } from '@locore/ui';
 import { Sparkles, Check } from '@locore/ui/icons';
 import { FoundersForm } from '../../components/FoundersForm';
 
@@ -17,7 +17,7 @@ const PERKS = [
   },
   {
     title: '編集チームへの提案権',
-    body: '月次のオンライン MTG で、書き手目線でのフィードバックを直接運営に届けられます。',
+    body: '月次のオンライン MTG で、クリエイター目線でのフィードバックを直接運営に届けられます。',
   },
   {
     title: '記事の優先配信',
@@ -129,7 +129,7 @@ export default function FoundersPage() {
                     Gross
                   </th>
                   <th className="px-4 py-3 text-right font-semibold tabular text-secondary-700">
-                    書き手取り分（75%）
+                    クリエイター取り分（75%）
                   </th>
                 </tr>
               </thead>

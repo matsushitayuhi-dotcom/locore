@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import { Button, Badge, Avatar, AvatarImage, AvatarFallback } from '@locore/ui';
 import { ArrowRight, Sparkles } from 'lucide-react';
@@ -200,7 +200,7 @@ export default async function HomePage() {
                 Founders 枠（先着 50 人）
               </p>
               <h2 className="mt-3 text-[28px] font-bold leading-[1.2] tracking-tight">
-                Locore を一緒に育てる書き手、
+                Locore を一緒に育てるクリエイター、
                 <br className="hidden md:block" />
                 いま探してます。
               </h2>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -9,7 +9,7 @@ import { uploadAvatar } from '@/lib/storage/uploadImage';
 /**
  * プロフィール編集フォーム。
  *
- * - 書き手 / 読者の区別なし（"writer 用 bio" は廃止）
+ * - クリエイター / 読者の区別なし（"writer 用 bio" は廃止）
  * - アバター画像はファイル選択 / D&D / クリップボード貼り付けで Supabase Storage にアップロード
  */
 

@@ -143,7 +143,7 @@ export default async function ArticleDetailPage({
           >
             {article.articleType === 'itinerary' ? '旅程プラン' : 'スポット紹介'}
           </Badge>
-          <Badge variant="outline">パリ・{article.area}</Badge>
+          <Badge variant="outline">{article.area === 'パリ' || article.area.startsWith('パリ') ? article.area : `パリ・${article.area}`}</Badge>
           {article.tags.slice(0, 3).map((t) => (
             <Badge key={t} variant="secondary">
               {t}
@@ -221,7 +221,7 @@ export default async function ArticleDetailPage({
         <div className="mt-3 flex flex-wrap gap-3 text-[12px] text-foreground/60">
           <span className="inline-flex items-center gap-1">
             <MapPin className="h-3 w-3" />
-            エリア：パリ・{article.area}（具体住所はマスク）
+            エリア：{article.area === 'パリ' || article.area.startsWith('パリ') ? article.area : `パリ・${article.area}`}（具体住所はマスク）
           </span>
           <span className="inline-flex items-center gap-1">
             <Clock className="h-3 w-3" />
@@ -351,10 +351,10 @@ export default async function ArticleDetailPage({
                 fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
               }}
             >
-              パリ・{article.area}
+              {article.area === 'パリ' || article.area.startsWith('パリ') ? article.area : `パリ・${article.area}`}
             </h4>
             <p className="mt-2 text-[13px] leading-relaxed text-foreground/70">
-              観光地から少し外れた、書き手が日常的に歩いているエリア。
+              観光地から少し外れた、クリエイターが日常的に歩いているエリア。
             </p>
             <Link
               href="/map"
@@ -407,7 +407,7 @@ export default async function ArticleDetailPage({
           className="mb-5 text-[20px] font-semibold tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          同じ書き手・同じ街の記事
+          同じクリエイター・同じ街の記事
         </h3>
         <ArticleGrid articles={related} />
       </section>

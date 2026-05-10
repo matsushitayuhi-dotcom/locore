@@ -1,10 +1,10 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { requireUser } from '@/lib/auth/require-user';
 
 /**
- * 書き手ダッシュボード共通レイアウト。
+ * クリエイターダッシュボード共通レイアウト。
  * - 未ログイン: /auth/login へ（middleware でも保護されるが二重で）
  * - 'reader' ロール: /become-writer へ誘導
  * - 'resident_writer' / 'editor': そのまま
@@ -31,14 +31,14 @@ export default async function WriterLayout({ children }: { children: ReactNode }
             className="text-[28px] font-semibold tracking-tight text-foreground sm:text-[32px]"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            書き手ダッシュボード
+            クリエイターダッシュボード
           </h1>
           <p className="mt-2 text-[13px] text-foreground/60">
             ようこそ、{user.displayName ?? user.email} さん。
           </p>
         </header>
 
-        <nav aria-label="書き手ナビゲーション" className="mb-8 border-b border-border">
+        <nav aria-label="クリエイターナビゲーション" className="mb-8 border-b border-border">
           <ul className="flex gap-1">
             {NAV_ITEMS.map((item) => (
               <li key={item.href}>

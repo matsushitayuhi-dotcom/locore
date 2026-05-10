@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ const TOPICS: { key: Topic; label: string; description: string }[] = [
   {
     key: 'article_published',
     label: '記事の新着',
-    description: 'フォロー中の書き手や注目都市の新しい記事',
+    description: 'フォロー中のクリエイターや注目都市の新しい記事',
   },
   {
     key: 'trip_reminder',
