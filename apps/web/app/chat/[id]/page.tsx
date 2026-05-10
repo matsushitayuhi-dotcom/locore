@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { eq, and, asc, sql } from 'drizzle-orm';
+import { eq, and, asc, ne } from 'drizzle-orm';
 import {
   Avatar,
   AvatarFallback,
@@ -48,7 +48,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
     .where(
       and(
         eq(schema.chatThreadMembers.threadId, params.id),
-        sql`${schema.chatThreadMembers.userId} <> ${me.id}`,
+        ne(schema.chatThreadMembers.userId, me.id),
       ),
     )
     .limit(5);

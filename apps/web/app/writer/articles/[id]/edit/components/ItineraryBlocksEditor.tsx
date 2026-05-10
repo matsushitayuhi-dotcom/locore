@@ -101,16 +101,36 @@ export function ItineraryBlocksEditor({
       className="space-y-3 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6"
       aria-labelledby="itinerary-blocks-title"
     >
-      <header>
-        <h3
-          id="itinerary-blocks-title"
-          className="text-[15px] font-semibold tracking-tight"
-        >
-          旅程ブロック
-        </h3>
-        <p className="mt-1 text-[12px] text-foreground/60">
-          時刻 → スポット → 移動手段 → 次の場所の順で並べると、読者は当日のタイムラインとしてそのまま使えます。公共交通機関は Google で経路を提案できます。
-        </p>
+      <header className="flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <h3
+            id="itinerary-blocks-title"
+            className="text-[15px] font-semibold tracking-tight"
+          >
+            旅程ブロック ／ 移動手段
+          </h3>
+          <p className="mt-1 text-[12px] text-foreground/60">
+            上のスポットをこの順番に巡る前提で、時刻と「次のスポットへの移動手段」を入れていきます。徒歩 / 自転車 / タクシー / 公共交通機関は Google から所要時間を自動取得できます。
+          </p>
+        </div>
+        {spots.length >= 2 && blocks.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => {
+              // スポットを順番に旅程ブロックへ流し込む
+              const next = spots.map((s, i) => ({
+                id: 'tmp-' + Math.random().toString(36).slice(2),
+                startTime:
+                  String(9 + i).padStart(2, '0') + ':00', // 9:00 から 1h 刻みのデフォルト
+                spotId: s.id,
+              }));
+              onChange(next);
+            }}
+            className="rounded-full bg-primary-50 px-3 py-1.5 text-[11px] font-bold text-primary-700 ring-1 ring-primary-100 hover:bg-primary-100"
+          >
+            上のスポットから自動生成
+          </button>
+        ) : null}
       </header>
 
       {blocks.length === 0 ? (

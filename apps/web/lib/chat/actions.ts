@@ -2,7 +2,7 @@
 
 import 'server-only';
 import { z } from 'zod';
-import { eq, and, desc, asc, sql, inArray } from 'drizzle-orm';
+import { eq, and, desc, asc, sql, inArray, gt, ne } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -233,7 +233,7 @@ export async function fetchThreadMessages(
     .where(
       and(
         eq(schema.chatMessages.threadId, parsed.data.threadId),
-        sql`${schema.chatMessages.createdAt} > ${sinceDate}`,
+        gt(schema.chatMessages.createdAt, sinceDate),
       ),
     )
     .orderBy(asc(schema.chatMessages.createdAt))
@@ -373,7 +373,7 @@ export async function listMyThreads(): Promise<
         .where(
           and(
             eq(schema.chatThreadMembers.threadId, t.id),
-            sql`${schema.chatThreadMembers.userId} <> ${me.id}`,
+            ne(schema.chatThreadMembers.userId, me.id),
           ),
         )
         .limit(1);
@@ -404,8 +404,8 @@ export async function listMyThreads(): Promise<
         .where(
           and(
             eq(schema.chatMessages.threadId, t.id),
-            sql`${schema.chatMessages.createdAt} > ${lastReadAt}`,
-            sql`${schema.chatMessages.senderId} <> ${me.id}`,
+            gt(schema.chatMessages.createdAt, lastReadAt),
+            ne(schema.chatMessages.senderId, me.id),
           ),
         );
 

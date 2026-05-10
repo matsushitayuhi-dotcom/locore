@@ -127,7 +127,20 @@ export function TransportPicker({
     update(active, note, m);
   };
 
-  const onFetchTransit = () => {
+  /** 選択中のカテゴリに応じた Google DirectionsService の travelMode を返す */
+  const googleTravelMode = (
+    cat: Category | null,
+    G: { TravelMode: Record<string, string> } | null,
+  ): string | null => {
+    if (!cat || !G) return null;
+    if (cat === 'walk') return G.TravelMode.WALKING ?? null;
+    if (cat === 'bike') return G.TravelMode.BICYCLING ?? null;
+    if (cat === 'taxi') return G.TravelMode.DRIVING ?? null;
+    if (cat === 'public_transit') return G.TravelMode.TRANSIT ?? null;
+    return null;
+  };
+
+  const onFetchRoute = () => {
     if (!fromLatLng || !toLatLng) {
       toast.error('起点・終点のスポット情報が足りません');
       return;
@@ -135,7 +148,14 @@ export function TransportPicker({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const G = (window as any).google?.maps;
     if (!G) {
-      toast.error('Google Maps SDK が読み込まれていません（地図ページを一度開くと読み込まれます）');
+      toast.error(
+        'Google Maps SDK が読み込まれていません（地図ページを一度開くと読み込まれます）',
+      );
+      return;
+    }
+    const mode = googleTravelMode(active, G);
+    if (!mode) {
+      toast.error('このカテゴリでは自動取得できません');
       return;
     }
     startFetch(() => {
@@ -144,7 +164,7 @@ export function TransportPicker({
         {
           origin: fromLatLng,
           destination: toLatLng,
-          travelMode: G.TravelMode.TRANSIT,
+          travelMode: mode,
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (result: any, status: string) => {
@@ -154,31 +174,41 @@ export function TransportPicker({
           }
           const leg = result.routes[0].legs?.[0];
           if (!leg) return;
-          const transitSteps = (leg.steps as Array<Record<string, unknown>>)
-            .filter((s) => s.travel_mode === 'TRANSIT')
-            .map((s) => {
-              const t = s.transit_details as
-                | {
-                    line?: { short_name?: string; name?: string };
-                    departure_stop?: { name?: string };
-                    arrival_stop?: { name?: string };
-                  }
-                | undefined;
-              const lineName =
-                t?.line?.short_name ?? t?.line?.name ?? 'Transit';
-              const dep = t?.departure_stop?.name ?? '';
-              const arr = t?.arrival_stop?.name ?? '';
-              return `${lineName}（${dep} → ${arr}）`;
-            });
-          const noteText =
-            transitSteps.length > 0 ? transitSteps.join(' → ') : leg.duration?.text ?? '';
-          const durationMin = Math.round(
-            (leg.duration?.value ?? 0) / 60,
-          );
+
+          let noteText = '';
+          if (active === 'public_transit') {
+            const transitSteps = (leg.steps as Array<Record<string, unknown>>)
+              .filter((s) => s.travel_mode === 'TRANSIT')
+              .map((s) => {
+                const t = s.transit_details as
+                  | {
+                      line?: { short_name?: string; name?: string };
+                      departure_stop?: { name?: string };
+                      arrival_stop?: { name?: string };
+                    }
+                  | undefined;
+                const lineName =
+                  t?.line?.short_name ?? t?.line?.name ?? 'Transit';
+                const dep = t?.departure_stop?.name ?? '';
+                const arr = t?.arrival_stop?.name ?? '';
+                return `${lineName}（${dep} → ${arr}）`;
+              });
+            noteText =
+              transitSteps.length > 0
+                ? transitSteps.join(' → ')
+                : leg.duration?.text ?? '';
+          } else {
+            // walk / bike / taxi: 距離 + duration を載せる
+            const dist = leg.distance?.text ?? '';
+            const dur = leg.duration?.text ?? '';
+            noteText = [dist, dur].filter(Boolean).join(' / ');
+          }
+
+          const durationMin = Math.round((leg.duration?.value ?? 0) / 60);
           setNote(noteText);
           if (durationMin > 0) setMinutes(durationMin);
           update(active, noteText, durationMin > 0 ? durationMin : minutes);
-          toast.success('経路を取得しました');
+          toast.success('Google から経路情報を取得しました');
         },
       );
     });
@@ -230,14 +260,22 @@ export function TransportPicker({
             }
             className="h-9"
           />
-          {active === 'public_transit' ? (
+          {active === 'walk' ||
+          active === 'bike' ||
+          active === 'taxi' ||
+          active === 'public_transit' ? (
             <button
               type="button"
-              onClick={onFetchTransit}
+              onClick={onFetchRoute}
               disabled={isFetching || !fromLatLng || !toLatLng}
+              title={
+                !fromLatLng || !toLatLng
+                  ? '起点・終点の両方にスポットを紐付けると自動取得できます'
+                  : 'Google から所要時間を取得'
+              }
               className="rounded-md bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-primary-500 disabled:opacity-40"
             >
-              {isFetching ? '取得中…' : 'Google で経路'}
+              {isFetching ? '取得中…' : 'Google で時間取得'}
             </button>
           ) : null}
         </div>

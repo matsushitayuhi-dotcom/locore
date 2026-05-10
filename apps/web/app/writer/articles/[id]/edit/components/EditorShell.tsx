@@ -267,16 +267,6 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
             onChangeBodyPaid={setBodyPaid}
           />
 
-          {/* 旅程プランのときだけ表示 */}
-          {basic.articleType === 'itinerary' ? (
-            <ItineraryBlocksEditor
-              blocks={itineraryBlocks}
-              onChange={setItineraryBlocks}
-              spots={spotsForDropdown}
-              googleMapsApiKey={googleMapsApiKey}
-            />
-          ) : null}
-
           {/* メタ情報（種別 / 価格 / 都市 / タグ / 所要時間） */}
           <BasicInfoSection value={basic} onChange={setBasic} cities={cities} tier={tier} />
 
@@ -286,12 +276,23 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
             isPublished={isPublished}
           />
 
+          {/* スポット → 旅程ブロック（移動手段）の順で並べ、視覚的に隣接させる */}
           <SpotsSection
             articleId={article.id}
             initial={spots}
             googleMapsApiKey={googleMapsApiKey}
             onSpotsChange={setSpotsForDropdown}
           />
+
+          {/* 旅程プランのときだけ：スポットの直後に「移動手段」セクションを置く */}
+          {basic.articleType === 'itinerary' ? (
+            <ItineraryBlocksEditor
+              blocks={itineraryBlocks}
+              onChange={setItineraryBlocks}
+              spots={spotsForDropdown}
+              googleMapsApiKey={googleMapsApiKey}
+            />
+          ) : null}
 
           <VideosSection articleId={article.id} initial={videos} />
         </div>

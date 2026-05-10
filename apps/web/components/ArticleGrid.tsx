@@ -7,6 +7,8 @@ import { ArticleCard } from '@locore/ui';
 import type { Article } from '../lib/mock';
 import { TripAdds } from '../lib/storage/local';
 import { addBookmark, removeBookmark } from '../lib/bookmarks/actions';
+import type { BookmarkFolderSummary } from '../lib/bookmarks/actions';
+import { BookmarkFolderDialog } from './bookmarks/BookmarkFolderDialog';
 
 interface ArticleGridProps {
   articles: Article[];
@@ -22,6 +24,12 @@ interface ArticleGridProps {
    * `getArticleSocialCounts(articleIds)` を呼んで渡す。
    */
   socialCounts?: Map<string, { likeCount: number; bookmarkCount: number }>;
+  /**
+   * 自分のブックマークフォルダ一覧。渡されたら、ブックマーク追加時に
+   * フォルダ選択ダイアログを開く。空配列なら「未分類のみ」扱いだが
+   * 「新しいフォルダを作る」UI は提供する。
+   */
+  bookmarkFolders?: BookmarkFolderSummary[];
 }
 
 /**
@@ -68,6 +76,7 @@ export function ArticleGrid({
   hideAuthor,
   bookmarkedIds,
   socialCounts,
+  bookmarkFolders,
 }: ArticleGridProps) {
   const router = useRouter();
   // 楽観的 UI 用のローカル state。サーバから渡された Set を初期値にする。
@@ -75,6 +84,8 @@ export function ArticleGrid({
     () => new Set(bookmarkedIds ?? []),
   );
   const [, startTransition] = useTransition();
+  // フォルダ選択ダイアログの対象記事
+  const [pickerArticleId, setPickerArticleId] = useState<string | null>(null);
 
   // bookmarkedIds prop が外から更新された場合（例: 親が再評価）に追随
   useEffect(() => {
@@ -116,7 +127,19 @@ export function ArticleGrid({
           : await addBookmark({ articleId });
 
         if (res.ok) {
-          toast(wasOn ? 'ブックマークを外しました' : 'ブックマークしました');
+          if (wasOn) {
+            toast('ブックマークを外しました');
+          } else if (bookmarkFolders) {
+            // 追加直後にフォルダ選択ダイアログを開く（未分類のままが嫌な人向け）
+            toast.success('ブックマークしました', {
+              action: {
+                label: 'フォルダを選ぶ',
+                onClick: () => setPickerArticleId(articleId),
+              },
+            });
+          } else {
+            toast('ブックマークしました');
+          }
           return;
         }
 
@@ -145,24 +168,40 @@ export function ArticleGrid({
     });
   }
 
+  const pickerArticle =
+    pickerArticleId != null
+      ? articles.find((a) => a.id === pickerArticleId)
+      : null;
+
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {articles.map((article) => (
-        <ArticleCard
-          key={article.id}
-          article={toCardModel(article, socialCounts?.get(article.id))}
-          hideAuthor={hideAuthor}
-          bookmarked={bookmarked.has(article.id)}
-          onClick={() => router.push(`/articles/${article.id}`)}
-          onBookmark={() => handleBookmark(article.id)}
-          onAddToTrip={() => {
-            TripAdds.add(article.id);
-            toast.success('旅程に追加しました', {
-              description: '「旅程」ページから確認できます',
-            });
-          }}
+    <>
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {articles.map((article) => (
+          <ArticleCard
+            key={article.id}
+            article={toCardModel(article, socialCounts?.get(article.id))}
+            hideAuthor={hideAuthor}
+            bookmarked={bookmarked.has(article.id)}
+            onClick={() => router.push(`/articles/${article.id}`)}
+            onBookmark={() => handleBookmark(article.id)}
+            onAddToTrip={() => {
+              TripAdds.add(article.id);
+              toast.success('旅程に追加しました', {
+                description: '「旅程」ページから確認できます',
+              });
+            }}
+          />
+        ))}
+      </div>
+
+      {bookmarkFolders ? (
+        <BookmarkFolderDialog
+          articleId={pickerArticleId}
+          articleTitle={pickerArticle?.title}
+          initialFolders={bookmarkFolders}
+          onClose={() => setPickerArticleId(null)}
         />
-      ))}
-    </div>
+      ) : null}
+    </>
   );
 }
