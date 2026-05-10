@@ -250,14 +250,28 @@ export async function listMyThreads(): Promise<ChatActionResult<{ threads: Threa
   const me = await requireUser();
   const db = getDb();
 
-  // 自分が参加してる thread を取得
-  const myMemberships = await db
-    .select({
-      threadId: schema.chatThreadMembers.threadId,
-      lastReadAt: schema.chatThreadMembers.lastReadAt,
-    })
-    .from(schema.chatThreadMembers)
-    .where(eq(schema.chatThreadMembers.userId, me.id));
+  // 自分が参加してる thread を取得（テーブル未作成のときは空で返してページを落とさない）
+  let myMemberships: Array<{
+    threadId: string;
+    lastReadAt: Date | null;
+  }> = [];
+  try {
+    myMemberships = await db
+      .select({
+        threadId: schema.chatThreadMembers.threadId,
+        lastReadAt: schema.chatThreadMembers.lastReadAt,
+      })
+      .from(schema.chatThreadMembers)
+      .where(eq(schema.chatThreadMembers.userId, me.id));
+  } catch (err) {
+    // chat_thread_members テーブルが未作成（migration 0017 未適用）等
+    // eslint-disable-next-line no-console
+    console.warn(
+      '[listMyThreads] chat tables not ready, returning empty list:',
+      err,
+    );
+    return { ok: true, data: { threads: [] } };
+  }
 
   if (myMemberships.length === 0) {
     return { ok: true, data: { threads: [] } };
@@ -265,78 +279,91 @@ export async function listMyThreads(): Promise<ChatActionResult<{ threads: Threa
 
   const threadIds = myMemberships.map((m) => m.threadId);
 
-  const threadRows = await db
-    .select({
-      id: schema.chatThreads.id,
-      lastMessageAt: schema.chatThreads.lastMessageAt,
-    })
-    .from(schema.chatThreads)
-    .where(inArray(schema.chatThreads.id, threadIds))
-    .orderBy(desc(schema.chatThreads.lastMessageAt));
+  let threadRows: Array<{ id: string; lastMessageAt: Date }> = [];
+  try {
+    threadRows = await db
+      .select({
+        id: schema.chatThreads.id,
+        lastMessageAt: schema.chatThreads.lastMessageAt,
+      })
+      .from(schema.chatThreads)
+      .where(inArray(schema.chatThreads.id, threadIds))
+      .orderBy(desc(schema.chatThreads.lastMessageAt));
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[listMyThreads] chat_threads query failed:', err);
+    return { ok: true, data: { threads: [] } };
+  }
 
   // 各 thread の相手 + 最新メッセージ + 未読
   const summaries: ThreadSummary[] = [];
   for (const t of threadRows) {
-    const myMembership = myMemberships.find((m) => m.threadId === t.id);
-    const lastReadAt = myMembership?.lastReadAt ?? new Date(0);
+    try {
+      const myMembership = myMemberships.find((m) => m.threadId === t.id);
+      const lastReadAt = myMembership?.lastReadAt ?? new Date(0);
 
-    const otherMembers = await db
-      .select({
-        userId: schema.chatThreadMembers.userId,
-        displayName: schema.users.displayName,
-        avatarUrl: schema.users.avatarUrl,
-      })
-      .from(schema.chatThreadMembers)
-      .leftJoin(
-        schema.users,
-        eq(schema.users.id, schema.chatThreadMembers.userId),
-      )
-      .where(
-        and(
-          eq(schema.chatThreadMembers.threadId, t.id),
-          sql`${schema.chatThreadMembers.userId} <> ${me.id}`,
-        ),
-      )
-      .limit(1);
+      const otherMembers = await db
+        .select({
+          userId: schema.chatThreadMembers.userId,
+          displayName: schema.users.displayName,
+          avatarUrl: schema.users.avatarUrl,
+        })
+        .from(schema.chatThreadMembers)
+        .leftJoin(
+          schema.users,
+          eq(schema.users.id, schema.chatThreadMembers.userId),
+        )
+        .where(
+          and(
+            eq(schema.chatThreadMembers.threadId, t.id),
+            sql`${schema.chatThreadMembers.userId} <> ${me.id}`,
+          ),
+        )
+        .limit(1);
 
-    const partner = otherMembers[0]
-      ? {
-          id: otherMembers[0].userId,
-          displayName: otherMembers[0].displayName ?? '匿名',
-          avatarUrl: otherMembers[0].avatarUrl ?? null,
-        }
-      : null;
+      const partner = otherMembers[0]
+        ? {
+            id: otherMembers[0].userId,
+            displayName: otherMembers[0].displayName ?? '匿名',
+            avatarUrl: otherMembers[0].avatarUrl ?? null,
+          }
+        : null;
 
-    const lastMsgRows = await db
-      .select({
-        body: schema.chatMessages.body,
-        createdAt: schema.chatMessages.createdAt,
-      })
-      .from(schema.chatMessages)
-      .where(eq(schema.chatMessages.threadId, t.id))
-      .orderBy(desc(schema.chatMessages.createdAt))
-      .limit(1);
+      const lastMsgRows = await db
+        .select({
+          body: schema.chatMessages.body,
+          createdAt: schema.chatMessages.createdAt,
+        })
+        .from(schema.chatMessages)
+        .where(eq(schema.chatMessages.threadId, t.id))
+        .orderBy(desc(schema.chatMessages.createdAt))
+        .limit(1);
 
-    const unreadResult = await db
-      .select({
-        cnt: sql<number>`count(*)::int`,
-      })
-      .from(schema.chatMessages)
-      .where(
-        and(
-          eq(schema.chatMessages.threadId, t.id),
-          sql`${schema.chatMessages.createdAt} > ${lastReadAt}`,
-          sql`${schema.chatMessages.senderId} <> ${me.id}`,
-        ),
-      );
+      const unreadResult = await db
+        .select({
+          cnt: sql<number>`count(*)::int`,
+        })
+        .from(schema.chatMessages)
+        .where(
+          and(
+            eq(schema.chatMessages.threadId, t.id),
+            sql`${schema.chatMessages.createdAt} > ${lastReadAt}`,
+            sql`${schema.chatMessages.senderId} <> ${me.id}`,
+          ),
+        );
 
-    summaries.push({
-      threadId: t.id,
-      partner,
-      lastMessageAt: t.lastMessageAt.toISOString(),
-      preview: lastMsgRows[0]?.body.slice(0, 80) ?? '',
-      unread: unreadResult[0]?.cnt ?? 0,
-    });
+      summaries.push({
+        threadId: t.id,
+        partner,
+        lastMessageAt: t.lastMessageAt.toISOString(),
+        preview: lastMsgRows[0]?.body.slice(0, 80) ?? '',
+        unread: unreadResult[0]?.cnt ?? 0,
+      });
+    } catch (err) {
+      // 個別 thread の取得失敗はスキップして続ける（プレビュー表示優先）
+      // eslint-disable-next-line no-console
+      console.warn('[listMyThreads] thread summary failed:', t.id, err);
+    }
   }
 
   return { ok: true, data: { threads: summaries } };
