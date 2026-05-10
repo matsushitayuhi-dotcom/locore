@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bookmark, Clock, MapPin } from "lucide-react";
+import { Bookmark, Clock, Heart, MapPin } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Avatar, AvatarFallback, AvatarImage, getInitials } from "../primitives/Avatar";
 import { Button } from "../primitives/Button";
@@ -48,6 +48,10 @@ export interface ArticleCardModel {
   spotsCount?: number;
   /** 記事の種別。`spot_guide`（場所紹介）/ `itinerary`（旅程プラン）。 */
   articleType?: ArticleType;
+  /** いいね件数（任意。0 でも表示する） */
+  likeCount?: number;
+  /** お気に入り保存数（任意。0 でも表示する） */
+  bookmarkCount?: number;
 }
 
 export interface ArticleCardProps
@@ -108,6 +112,8 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
       durationType,
       spotsCount,
       articleType,
+      likeCount,
+      bookmarkCount,
     } = article;
 
     const handleBookmark = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -271,6 +277,20 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
                 <span aria-hidden>·</span>
                 <MapPin className="size-3" aria-hidden />
                 <span>{spotsCount}箇所</span>
+              </span>
+            ) : null}
+            {typeof likeCount === "number" ? (
+              <span className="inline-flex items-center gap-1">
+                <span aria-hidden>·</span>
+                <Heart className="size-3" aria-hidden />
+                <span className="tabular">{likeCount.toLocaleString("ja-JP")}</span>
+              </span>
+            ) : null}
+            {typeof bookmarkCount === "number" ? (
+              <span className="inline-flex items-center gap-1">
+                <span aria-hidden>·</span>
+                <Bookmark className="size-3" aria-hidden />
+                <span className="tabular">{bookmarkCount.toLocaleString("ja-JP")}</span>
               </span>
             ) : null}
           </div>

@@ -7,6 +7,7 @@ import { FeedFilters } from '../components/FeedFilters';
 import { getPublishedDbArticles } from '../lib/articles/published';
 import { listCrisisEvents } from '../lib/crisis/db';
 import { listLightDiaries } from '../lib/lightDiaries/db';
+import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,9 @@ export default async function HomePage() {
     listCrisisEvents(20),
     listLightDiaries(6),
   ]);
+  const socialCounts = await getArticleSocialCounts(
+    articles.map((a) => a.id),
+  );
 
   const seriousCrisis = crises.find((e) => e.severity >= 3);
 
@@ -145,7 +149,7 @@ export default async function HomePage() {
             title="パリ・ぜんぶの記事"
             subtitle="ローカル度・価格・テーマで絞り込んで、自分の旅にあうものを選ぶ"
           />
-          <FeedFilters articles={articles} />
+          <FeedFilters articles={articles} socialCounts={socialCounts} />
         </section>
 
         {/* Light diaries */}

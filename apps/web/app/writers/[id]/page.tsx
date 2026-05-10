@@ -16,7 +16,9 @@ import {
   type PublicService,
 } from '../../../components/profile/UserServicesList';
 import { ContactButton } from '../../../components/profile/ContactButton';
+import { FollowButton } from '../../../components/profile/FollowButton';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { getFollowCounts, isFollowing } from '@/lib/follow/actions';
 import type { Article } from '../../../lib/mock';
 
 export const dynamic = 'force-dynamic';
@@ -237,6 +239,16 @@ export default async function WriterPage({ params }: { params: { id: string } })
     writer.tier === 'B' ||
     articles.length > 0;
 
+  // フォロー数 + 自分のフォロー状態（DB ユーザーのみ）
+  const followCounts = writer.isDbUser
+    ? await getFollowCounts(writer.id)
+    : { followers: 0, following: 0 };
+  const viewerIsFollowing =
+    writer.isDbUser && viewer && viewer.id !== writer.id
+      ? await isFollowing(writer.id)
+      : false;
+  const isOwn = !!viewer && viewer.id === writer.id;
+
   return (
     <main className="bg-background">
       <div className="border-b border-primary-100 bg-gradient-to-br from-primary-50/50 via-white to-primary-50/30">
@@ -261,15 +273,32 @@ export default async function WriterPage({ params }: { params: { id: string } })
               ) : null}
               {writer.isFounding ? <CreatorBadge type="founding" /> : null}
             </div>
-            {isWriter && writer.residencyYears > 0 ? (
-              <p className="mt-2 text-[13px] text-foreground/60">
-                パリ在住 {writer.residencyYears} 年
-                {writer.followerCount > 0 ? (
+            {/* フォロー数 / フォロー中数（誰でも見られるが、リスト自体は非公開） */}
+            {writer.isDbUser ? (
+              <p className="mt-2 flex flex-wrap items-center gap-x-3 text-[13px] text-foreground/60">
+                {isWriter && writer.residencyYears > 0 ? (
                   <>
-                    {' ・ '}
-                    {writer.followerCount.toLocaleString('ja-JP')} followers
+                    <span>パリ在住 {writer.residencyYears} 年</span>
+                    <span className="text-foreground/30">·</span>
                   </>
                 ) : null}
+                <span>
+                  <strong className="tabular text-foreground/80">
+                    {followCounts.followers.toLocaleString('ja-JP')}
+                  </strong>{' '}
+                  フォロワー
+                </span>
+                <span className="text-foreground/30">·</span>
+                <span>
+                  <strong className="tabular text-foreground/80">
+                    {followCounts.following.toLocaleString('ja-JP')}
+                  </strong>{' '}
+                  フォロー中
+                </span>
+              </p>
+            ) : isWriter && writer.residencyYears > 0 ? (
+              <p className="mt-2 text-[13px] text-foreground/60">
+                パリ在住 {writer.residencyYears} 年
               </p>
             ) : null}
             {writer.bio ? (
@@ -291,6 +320,14 @@ export default async function WriterPage({ params }: { params: { id: string } })
                   {PLATFORM_LABEL[s.platform] ?? s.platform.toUpperCase()}
                 </a>
               ))}
+              {writer.isDbUser && !isOwn ? (
+                <FollowButton
+                  targetUserId={writer.id}
+                  initialFollowing={viewerIsFollowing}
+                  initialFollowerCount={followCounts.followers}
+                  viewerLoggedIn={!!viewer}
+                />
+              ) : null}
               {writer.isDbUser ? (
                 <ContactButton
                   ownerUserId={writer.id}

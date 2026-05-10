@@ -49,7 +49,13 @@ function isTypeFilter(v: string | null | undefined): v is TypeFilter {
   return v === 'all' || v === 'spot_guide' || v === 'itinerary';
 }
 
-export function FeedFilters({ articles }: { articles: Article[] }) {
+type FeedFiltersProps = {
+  articles: Article[];
+  /** 記事 ID → 社会数（いいね / 保存）。サーバ側で fetch して渡す */
+  socialCounts?: Map<string, { likeCount: number; bookmarkCount: number }>;
+};
+
+export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -272,7 +278,7 @@ export function FeedFilters({ articles }: { articles: Article[] }) {
         </div>
       </div>
 
-      <ArticleGrid articles={filtered} />
+      <ArticleGrid articles={filtered} socialCounts={socialCounts} />
     </div>
   );
 }

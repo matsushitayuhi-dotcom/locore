@@ -19,10 +19,16 @@ import { AddToTripButton } from '../../../components/AddToTripButton';
 import { ArticleGrid } from '../../../components/ArticleGrid';
 import { ItineraryTimeline } from '../../../components/ItineraryTimeline';
 import { SpotsCardList } from '../../../components/SpotsCardList';
+import { LikeButton } from '../../../components/article/LikeButton';
 import {
   listMyFolders,
   listMyBookmarkedSpotIds,
 } from '@/lib/spotFavorites/actions';
+import {
+  getArticleSocialCounts,
+  listMyLikedArticleIds,
+} from '@/lib/articleLikes/actions';
+import { Bookmark } from '@locore/ui/icons';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { eq, and } from 'drizzle-orm';
 import { schema } from '@locore/db';
@@ -77,12 +83,20 @@ export default async function ArticleDetailPage({
     }
   }
 
-  // お気に入りスポット用：自分のフォルダ + 既登録 spot id
-  const [{ folders }, bookmarkedSpotIds] = await Promise.all([
-    listMyFolders(),
-    listMyBookmarkedSpotIds(),
-  ]);
+  // お気に入りスポット + いいね / ブックマーク数 を並列取得
+  const [{ folders }, bookmarkedSpotIds, socialCounts, likedSet] =
+    await Promise.all([
+      listMyFolders(),
+      listMyBookmarkedSpotIds(),
+      getArticleSocialCounts([article.id]),
+      listMyLikedArticleIds(),
+    ]);
   const viewerLoggedIn = !!me;
+  const counts = socialCounts.get(article.id) ?? {
+    likeCount: 0,
+    bookmarkCount: 0,
+  };
+  const initialLiked = likedSet.has(article.id);
 
   return (
     <main className="bg-background">
@@ -219,8 +233,21 @@ export default async function ArticleDetailPage({
           </span>
         </div>
 
-        <div className="mt-5">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <AddToTripButton articleId={article.id} size="md" />
+          <LikeButton
+            articleId={article.id}
+            initialLiked={initialLiked}
+            initialCount={counts.likeCount}
+            viewerLoggedIn={viewerLoggedIn}
+          />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[13px] font-semibold text-foreground/70 ring-1 ring-primary-100">
+            <Bookmark className="h-4 w-4" />
+            <span className="tabular">
+              {counts.bookmarkCount.toLocaleString('ja-JP')}
+            </span>
+            <span className="text-[11px] text-foreground/50">保存</span>
+          </span>
         </div>
       </header>
 

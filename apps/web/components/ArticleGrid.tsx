@@ -17,9 +17,17 @@ interface ArticleGridProps {
    * 渡されない場合は空集合扱い（誰もブックマークしていない状態）。
    */
   bookmarkedIds?: Set<string>;
+  /**
+   * 記事 ID → いいね件数 / ブックマーク件数。サーバ側で
+   * `getArticleSocialCounts(articleIds)` を呼んで渡す。
+   */
+  socialCounts?: Map<string, { likeCount: number; bookmarkCount: number }>;
 }
 
-function toCardModel(article: Article) {
+function toCardModel(
+  article: Article,
+  counts?: { likeCount?: number; bookmarkCount?: number },
+) {
   return {
     id: article.id,
     title: article.title,
@@ -38,6 +46,8 @@ function toCardModel(article: Article) {
     durationType: article.durationType,
     spotsCount: article.spotIds.length,
     articleType: article.articleType,
+    likeCount: counts?.likeCount,
+    bookmarkCount: counts?.bookmarkCount,
   };
 }
 
@@ -45,6 +55,7 @@ export function ArticleGrid({
   articles,
   hideAuthor,
   bookmarkedIds,
+  socialCounts,
 }: ArticleGridProps) {
   const router = useRouter();
   // 楽観的 UI 用のローカル state。サーバから渡された Set を初期値にする。
@@ -127,7 +138,7 @@ export function ArticleGrid({
       {articles.map((article) => (
         <ArticleCard
           key={article.id}
-          article={toCardModel(article)}
+          article={toCardModel(article, socialCounts?.get(article.id))}
           hideAuthor={hideAuthor}
           bookmarked={bookmarked.has(article.id)}
           onClick={() => router.push(`/articles/${article.id}`)}
