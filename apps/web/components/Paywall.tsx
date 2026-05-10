@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button, PriceTag } from '@locore/ui';
 import { Lock, Check } from '@locore/ui/icons';
 import { Purchases } from '../lib/storage/local';
 import type { Article, Spot } from '../lib/mock';
 import { SpotsCardList } from './SpotsCardList';
+import { purchaseArticleMock } from '../lib/purchases/actions';
 
 interface PaywallProps {
   article: Article;
@@ -16,6 +18,8 @@ interface PaywallProps {
   folders?: import('@/lib/spotFavorites/actions').FolderSummary[];
   bookmarkedSpotIds?: Set<string>;
   viewerLoggedIn?: boolean;
+  /** サーバ側で確認済みの「DB に購入レコードあり」フラグ。あれば即解放 */
+  alreadyPurchased?: boolean;
 }
 
 export function Paywall({
@@ -25,22 +29,42 @@ export function Paywall({
   folders = [],
   bookmarkedSpotIds,
   viewerLoggedIn = false,
+  alreadyPurchased = false,
 }: PaywallProps) {
-  const [purchased, setPurchased] = useState(false);
+  const router = useRouter();
+  const [purchased, setPurchased] = useState(alreadyPurchased);
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    setPurchased(Purchases.has(article.id));
+    // サーバから渡された確定情報優先。それ以外は localStorage で判定
+    setPurchased(alreadyPurchased || Purchases.has(article.id));
     setHydrated(true);
-  }, [article.id]);
+  }, [article.id, alreadyPurchased]);
 
   const onConfirm = () => {
-    Purchases.add(article.id);
-    setPurchased(true);
-    setOpen(false);
-    toast.success('購入完了：本文とスポットが解放されました', {
-      description: 'localStorage に保存（モック決済）',
+    if (!viewerLoggedIn) {
+      toast.error('購入にはログインが必要です');
+      router.push(`/auth/login?redirect_to=/articles/${article.id}`);
+      return;
+    }
+    startTransition(async () => {
+      const res = await purchaseArticleMock({ articleId: article.id });
+      if (res.ok) {
+        Purchases.add(article.id);
+        setPurchased(true);
+        setOpen(false);
+        toast.success(
+          res.alreadyOwned
+            ? 'すでに購入済みでした'
+            : '購入完了：本文とスポットが解放されました',
+          { description: 'プロト版のため決済は発生していません' },
+        );
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
     });
   };
 
@@ -157,8 +181,12 @@ export function Paywall({
               <Button variant="ghost" onClick={() => setOpen(false)}>
                 キャンセル
               </Button>
-              <Button variant="primary" onClick={onConfirm}>
-                購入する
+              <Button
+                variant="primary"
+                onClick={onConfirm}
+                disabled={isPending}
+              >
+                {isPending ? '処理中…' : '購入する'}
               </Button>
             </div>
           </div>

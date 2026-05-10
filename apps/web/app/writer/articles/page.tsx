@@ -10,13 +10,14 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 const STATUS_LABEL: Record<string, string> = {
-  draft: '下書き',
-  pending_review: '審査中',
   published: '公開中',
+  draft: '下書き',
   archived: 'アーカイブ',
 };
 
-const STATUS_TABS = ['draft', 'pending_review', 'published', 'archived'] as const;
+// 公開中をデフォルト → 下書き → アーカイブ。審査中タブは廃止
+// （pending_review の記事があっても下書き枠にまとめて表示）。
+const STATUS_TABS = ['published', 'draft', 'archived'] as const;
 
 export default async function WriterArticlesPage({
   searchParams,
@@ -25,14 +26,29 @@ export default async function WriterArticlesPage({
 }) {
   const articles = await listMyArticles();
   const activeTab = (
-    STATUS_TABS.includes((searchParams?.status as (typeof STATUS_TABS)[number]) ?? 'draft')
+    STATUS_TABS.includes(
+      (searchParams?.status as (typeof STATUS_TABS)[number]) ?? 'published',
+    )
       ? searchParams?.status
-      : 'draft'
+      : 'published'
   ) as (typeof STATUS_TABS)[number];
 
-  const counts: Record<string, number> = { draft: 0, pending_review: 0, published: 0, archived: 0 };
-  for (const a of articles) counts[a.status] = (counts[a.status] ?? 0) + 1;
-  const filtered = articles.filter((a) => a.status === activeTab);
+  const counts: Record<string, number> = {
+    published: 0,
+    draft: 0,
+    archived: 0,
+  };
+  for (const a of articles) {
+    // pending_review は実質「公開申請中の下書き」なので下書きにまとめる
+    const bucket =
+      a.status === 'pending_review' ? 'draft' : (a.status as keyof typeof counts);
+    counts[bucket] = (counts[bucket] ?? 0) + 1;
+  }
+  const filtered = articles.filter((a) =>
+    activeTab === 'draft'
+      ? a.status === 'draft' || a.status === 'pending_review'
+      : a.status === activeTab,
+  );
 
   return (
     <div className="space-y-6">

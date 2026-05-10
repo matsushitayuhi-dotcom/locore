@@ -21,6 +21,7 @@ export type SpotRow = {
   tags: string[];
   position: number;
   googlePlaceId?: string | null;
+  googlePhotoUrls?: string[] | null;
 };
 
 type Props = {
@@ -53,6 +54,7 @@ function rowToValue(row: SpotRow): SpotEditorValue {
     tagsText: (row.tags ?? []).join(', '),
     position: row.position,
     googlePlaceId: row.googlePlaceId ?? null,
+    googlePhotoUrls: row.googlePhotoUrls ?? null,
   };
 }
 
@@ -74,6 +76,7 @@ function valueToRow(v: SpotEditorValue): SpotRow {
       .filter((t) => t.length > 0),
     position: v.position,
     googlePlaceId: v.googlePlaceId ?? null,
+    googlePhotoUrls: v.googlePhotoUrls ?? null,
   };
 }
 

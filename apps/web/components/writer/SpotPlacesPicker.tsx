@@ -33,6 +33,8 @@ export type PickedPlace = {
   userRatingsTotal: number | null;
   /** 0 (無料) ～ 4 (とても高価) */
   priceLevel: number | null;
+  /** Google から取得した写真の URL 一覧（最大 5 枚） */
+  photoUrls: string[];
 };
 
 type Props = {
@@ -117,6 +119,7 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
             'rating',
             'user_ratings_total',
             'price_level',
+            'photos',
           ],
         },
         (result, status) => {
@@ -135,6 +138,7 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
               rating: null,
               userRatingsTotal: null,
               priceLevel: null,
+              photoUrls: [],
             });
             return;
           }
@@ -143,6 +147,23 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
           const openingHoursText: string | null = result.opening_hours?.weekday_text
             ? (result.opening_hours.weekday_text as string[]).join('\n')
             : null;
+
+          // 写真 URL 抽出（最大 5 枚、maxWidth=800）
+          // photos[i].getUrl({ maxWidth }) は Google CDN 上の URL を返す。
+          // この URL は当面安定（数ヶ月単位）なので DB に保存して OK。
+          const photoUrls: string[] = (() => {
+            const photos = (result.photos ?? []) as Array<{
+              getUrl?: (opts: { maxWidth?: number; maxHeight?: number }) => string;
+            }>;
+            return photos
+              .slice(0, 5)
+              .map((p) =>
+                typeof p.getUrl === 'function'
+                  ? p.getUrl({ maxWidth: 800 })
+                  : null,
+              )
+              .filter((u): u is string => Boolean(u));
+          })();
 
           onPick({
             name: result.name ?? '',
@@ -164,6 +185,7 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
                 : null,
             priceLevel:
               typeof result.price_level === 'number' ? result.price_level : null,
+            photoUrls,
           });
           setText(result.name ?? '');
         },

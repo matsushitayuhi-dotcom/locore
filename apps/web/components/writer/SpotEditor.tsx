@@ -26,6 +26,8 @@ export type SpotEditorValue = {
   googleUserRatingsTotal?: number | null;
   googlePriceLevel?: number | null;
   googleTypes?: string[] | null;
+  /** Google Places から拾った写真 URL の配列（最大 5 枚） */
+  googlePhotoUrls?: string[] | null;
 };
 
 /**
@@ -138,6 +140,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
         googleUserRatingsTotal: v.googleUserRatingsTotal ?? undefined,
         googlePriceLevel: v.googlePriceLevel ?? undefined,
         googleTypes: v.googleTypes ?? undefined,
+        googlePhotoUrls: v.googlePhotoUrls ?? undefined,
       });
       if (res.ok) {
         toast.success(v.id ? 'スポットを更新しました' : 'スポットを追加しました');
@@ -204,6 +207,10 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
       googleUserRatingsTotal: p.userRatingsTotal,
       googlePriceLevel: p.priceLevel,
       googleTypes: p.types,
+      googlePhotoUrls:
+        p.photoUrls && p.photoUrls.length > 0
+          ? p.photoUrls
+          : prev.googlePhotoUrls,
     }));
     toast.success(
       p.openingHoursText
@@ -232,16 +239,34 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
       <SpotPlacesPicker apiKey={googleMapsApiKey} onPick={handlePick} />
 
       {v.googlePlaceId ? (
-        <div className="rounded-md bg-primary-50/60 px-3 py-2 text-[12px] text-primary-700 ring-1 ring-primary-100">
+        <div className="space-y-2 rounded-md bg-primary-50/60 px-3 py-2 text-[12px] text-primary-700 ring-1 ring-primary-100">
           <p className="font-semibold">Google から自動取得済み</p>
           {placeSummary.length > 0 ? (
-            <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-foreground/80">
+            <p className="flex flex-wrap gap-x-3 gap-y-1 text-foreground/80">
               {placeSummary.map((s, i) => (
                 <span key={i}>{s}</span>
               ))}
             </p>
           ) : null}
-          <p className="mt-1 text-[11px] text-foreground/60">
+          {v.googlePhotoUrls && v.googlePhotoUrls.length > 0 ? (
+            <div>
+              <p className="mb-1 text-[11px] font-medium text-foreground/70">
+                取得した写真（{v.googlePhotoUrls.length} 枚）
+              </p>
+              <div className="flex gap-2 overflow-x-auto">
+                {v.googlePhotoUrls.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={i}
+                    src={url}
+                    alt=""
+                    className="h-16 w-24 shrink-0 rounded-sm object-cover ring-1 ring-primary-100"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <p className="text-[11px] text-foreground/60">
             place_id: <code className="font-mono">{v.googlePlaceId}</code>
           </p>
         </div>

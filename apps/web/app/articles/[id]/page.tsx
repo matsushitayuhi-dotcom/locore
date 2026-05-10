@@ -290,6 +290,7 @@ export default async function ArticleDetailPage({
               folders={folders}
               bookmarkedSpotIds={bookmarkedSpotIds}
               viewerLoggedIn={viewerLoggedIn}
+              alreadyPurchased={purchasedFromDb}
             />
           )}
 

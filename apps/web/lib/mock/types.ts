@@ -104,6 +104,8 @@ export interface Spot {
   openingHours: string;
   tags: string[];
   description?: string;
+  /** Google Places から拾った写真 URL の配列（最大 5 枚） */
+  photoUrls?: string[];
 }
 
 export interface Review {

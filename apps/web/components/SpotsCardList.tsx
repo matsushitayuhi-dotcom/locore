@@ -70,7 +70,7 @@ export function SpotsCardList({
                 aria-expanded={open}
                 onClick={() => setActiveId((prev) => (prev === s.id ? null : s.id))}
                 className={
-                  'flex w-full items-center gap-3 px-4 py-3 text-left transition ' +
+                  'flex w-full items-center gap-3 px-3 py-3 text-left transition sm:px-4 ' +
                   (locked
                     ? 'cursor-not-allowed opacity-70'
                     : 'hover:bg-primary-50/40')
@@ -79,6 +79,15 @@ export function SpotsCardList({
                 <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-50 text-[12px] font-bold text-primary-700">
                   {String(i + 1).padStart(2, '0')}
                 </span>
+                {/* Google Places から拾った代表写真（あれば） */}
+                {!locked && s.photoUrls && s.photoUrls.length > 0 ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={s.photoUrls[0]}
+                    alt=""
+                    className="h-12 w-16 shrink-0 rounded-sm bg-muted object-cover ring-1 ring-primary-100 sm:h-14 sm:w-20"
+                  />
+                ) : null}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[14px] font-semibold text-neutral-900">
                     {locked ? '????????' : s.name}
@@ -104,7 +113,22 @@ export function SpotsCardList({
 
               {/* 詳細メニュー */}
               {open && !locked ? (
-                <div className="flex flex-wrap items-center gap-2 border-t border-primary-100 bg-primary-50/30 px-4 py-3">
+                <div className="space-y-3 border-t border-primary-100 bg-primary-50/30 px-4 py-3">
+                  {/* 写真ギャラリー（最大 5 枚 / 横スクロール） */}
+                  {s.photoUrls && s.photoUrls.length > 1 ? (
+                    <div className="flex gap-2 overflow-x-auto">
+                      {s.photoUrls.map((url, idx) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={idx}
+                          src={url}
+                          alt=""
+                          className="h-24 w-32 shrink-0 rounded-sm object-cover ring-1 ring-primary-100"
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-2">
                   <SpotFavoriteButton
                     spotId={s.id}
                     spotName={s.name}
@@ -133,6 +157,7 @@ export function SpotsCardList({
                       window.open(url, '_blank', 'noopener,noreferrer');
                     }}
                   />
+                  </div>
                 </div>
               ) : null}
             </li>

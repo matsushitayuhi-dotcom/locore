@@ -181,9 +181,21 @@ export function ItineraryBlocksEditor({
                     <select
                       value={b.spotId ?? ''}
                       onChange={(e) => {
+                        // 2 回 update() を呼ぶと 2 回目が古い blocks 配列に基づいて
+                        // 上書きしてしまうので、spotId と freeName は同時に 1 度の
+                        // onChange でまとめて反映させる。
                         const v = e.target.value;
-                        update(idx, 'spotId', v || undefined);
-                        if (v) update(idx, 'freeName', undefined);
+                        onChange(
+                          blocks.map((bb, i) =>
+                            i === idx
+                              ? {
+                                  ...bb,
+                                  spotId: v || undefined,
+                                  freeName: v ? undefined : bb.freeName,
+                                }
+                              : bb,
+                          ),
+                        );
                       }}
                       className="flex h-10 w-full rounded-sm border border-neutral-200 bg-white px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
                     >

@@ -34,22 +34,49 @@ export default async function EditArticlePage({
   }
 
   const [spotRowsRaw, videoRowsRaw, cityRows, writerProfileRows] = await Promise.all([
-    db
-      .select({
-        id: schema.spots.id,
-        articleId: schema.spots.articleId,
-        name: schema.spots.name,
-        address: schema.spots.address,
-        category: schema.spots.category,
-        priceEstimate: schema.spots.priceEstimate,
-        openingHours: schema.spots.openingHours,
-        tags: schema.spots.tags,
-        position: schema.spots.position,
-        googlePlaceId: schema.spots.googlePlaceId,
-      })
-      .from(schema.spots)
-      .where(eq(schema.spots.articleId, params.id))
-      .orderBy(asc(schema.spots.position)),
+    (async () => {
+      try {
+        return await db
+          .select({
+            id: schema.spots.id,
+            articleId: schema.spots.articleId,
+            name: schema.spots.name,
+            address: schema.spots.address,
+            category: schema.spots.category,
+            priceEstimate: schema.spots.priceEstimate,
+            openingHours: schema.spots.openingHours,
+            tags: schema.spots.tags,
+            position: schema.spots.position,
+            googlePlaceId: schema.spots.googlePlaceId,
+            googlePhotoUrls: schema.spots.googlePhotoUrls,
+          })
+          .from(schema.spots)
+          .where(eq(schema.spots.articleId, params.id))
+          .orderBy(asc(schema.spots.position));
+      } catch {
+        // 0025_spot_photos 未適用：列なしでフォールバック
+        const fallback = await db
+          .select({
+            id: schema.spots.id,
+            articleId: schema.spots.articleId,
+            name: schema.spots.name,
+            address: schema.spots.address,
+            category: schema.spots.category,
+            priceEstimate: schema.spots.priceEstimate,
+            openingHours: schema.spots.openingHours,
+            tags: schema.spots.tags,
+            position: schema.spots.position,
+            googlePlaceId: schema.spots.googlePlaceId,
+          })
+          .from(schema.spots)
+          .where(eq(schema.spots.articleId, params.id))
+          .orderBy(asc(schema.spots.position));
+        return fallback.map((r) => ({
+          ...r,
+          googlePhotoUrls: null as string[] | null,
+        }));
+      }
+    })(),
     db
       .select()
       .from(schema.articleVideos)
@@ -111,6 +138,7 @@ export default async function EditArticlePage({
       tags: s.tags ?? [],
       position: s.position,
       googlePlaceId: s.googlePlaceId,
+      googlePhotoUrls: s.googlePhotoUrls ?? null,
     };
   });
 

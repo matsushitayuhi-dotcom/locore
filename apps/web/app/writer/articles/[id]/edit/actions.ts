@@ -391,6 +391,11 @@ const upsertSpotSchema = z.object({
   googleUserRatingsTotal: z.number().int().min(0).optional().nullable(),
   googlePriceLevel: z.number().int().min(0).max(4).optional().nullable(),
   googleTypes: z.array(z.string()).optional().nullable(),
+  googlePhotoUrls: z
+    .array(z.string().url().max(2048))
+    .max(10)
+    .optional()
+    .nullable(),
 });
 
 export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: string }>> {
@@ -425,6 +430,7 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
     googleUserRatingsTotal: data.googleUserRatingsTotal ?? null,
     googlePriceLevel: data.googlePriceLevel ?? null,
     googleTypes: data.googleTypes ?? null,
+    googlePhotoUrls: data.googlePhotoUrls ?? null,
   };
 
   if (data.id) {

@@ -93,6 +93,12 @@ export const spots = pgTable(
     googlePriceLevel: integer('google_price_level'),
     /** Google Places の types[] */
     googleTypes: text('google_types').array(),
+    /**
+     * Google Places から取得した写真 URL の配列（最大 5 枚）。
+     * Place Details の photos[] を `getUrl({ maxWidth })` で URL 化したもの。
+     * マイグレーション: `manual/0025_spot_photos.sql`
+     */
+    googlePhotoUrls: text('google_photo_urls').array(),
 
     /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
     isSample: boolean('is_sample').notNull().default(false),
