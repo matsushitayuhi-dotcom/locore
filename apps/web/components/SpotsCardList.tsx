@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { toast } from 'sonner';
-import { MapPin, ExternalLink, Bookmark } from '@locore/ui/icons';
+import { MapPin, ExternalLink } from '@locore/ui/icons';
 import type { Spot } from '../lib/mock';
+import { SpotFavoriteButton } from './SpotFavoriteButton';
+import type { FolderSummary } from '@/lib/spotFavorites/actions';
 
 /**
  * 記事ページのスポット一覧。
@@ -28,9 +29,21 @@ type Props = {
    * 詳細メニューも開けないようにする。
    */
   locked?: boolean;
+  /** ログイン中ユーザーのお気に入りフォルダ（SpotFavoriteButton に渡す） */
+  folders?: FolderSummary[];
+  /** 既にお気に入り登録されている spot id 集合 */
+  bookmarkedSpotIds?: Set<string>;
+  /** ログイン状態（未ログインなら favorite ボタンが /auth/login にリダイレクト） */
+  viewerLoggedIn?: boolean;
 };
 
-export function SpotsCardList({ spots, locked = false }: Props) {
+export function SpotsCardList({
+  spots,
+  locked = false,
+  folders = [],
+  bookmarkedSpotIds,
+  viewerLoggedIn = false,
+}: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
   if (spots.length === 0) return null;
@@ -91,36 +104,18 @@ export function SpotsCardList({ spots, locked = false }: Props) {
 
               {/* 詳細メニュー */}
               {open && !locked ? (
-                <div className="grid gap-2 border-t border-primary-100 bg-primary-50/30 px-4 py-3 sm:grid-cols-3">
-                  <ActionButton
-                    label="お気に入りに追加"
-                    icon={<Bookmark className="h-4 w-4" />}
-                    onClick={() => {
-                      // TODO: お気に入りスポット機能と連携（次フェーズ）
-                      toast.success(`${s.name} をお気に入りに追加しました`, {
-                        description: 'プロト：localStorage に保存',
-                      });
-                      try {
-                        const key = 'locore.fav-spots.v1';
-                        const cur = JSON.parse(
-                          window.localStorage.getItem(key) ?? '[]',
-                        ) as string[];
-                        if (!cur.includes(s.id)) {
-                          window.localStorage.setItem(
-                            key,
-                            JSON.stringify([...cur, s.id]),
-                          );
-                        }
-                      } catch {
-                        /* noop */
-                      }
-                    }}
+                <div className="flex flex-wrap items-center gap-2 border-t border-primary-100 bg-primary-50/30 px-4 py-3">
+                  <SpotFavoriteButton
+                    spotId={s.id}
+                    spotName={s.name}
+                    bookmarked={bookmarkedSpotIds?.has(s.id) ?? false}
+                    folders={folders}
+                    viewerLoggedIn={viewerLoggedIn}
                   />
                   <ActionButton
                     label="地図で開く"
                     icon={<MapPin className="h-4 w-4" />}
                     onClick={() => {
-                      // 内部の Google Map 連動ページへ
                       window.open(
                         `/map?spot=${encodeURIComponent(s.id)}`,
                         '_self',
@@ -131,7 +126,6 @@ export function SpotsCardList({ spots, locked = false }: Props) {
                     label="Google マップに追加"
                     icon={<ExternalLink className="h-4 w-4" />}
                     onClick={() => {
-                      // Google マップで Save するには place_id が必要。なければ name+lat,lng で開く
                       const url =
                         s.lat && s.lng
                           ? `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}&query_place_id=${encodeURIComponent(s.name)}`

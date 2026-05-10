@@ -36,6 +36,7 @@ export * from './light_diaries';
 
 // Library / Bookmarks
 export * from './bookmarks';
+export * from './spot_favorites';
 
 // Services & Chat
 export * from './user_services';

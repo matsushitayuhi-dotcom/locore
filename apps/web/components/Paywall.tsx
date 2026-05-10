@@ -12,9 +12,20 @@ interface PaywallProps {
   article: Article;
   bodyAfter: string;
   spots: Spot[];
+  /** 親から SpotsCardList へ流すデータ */
+  folders?: import('@/lib/spotFavorites/actions').FolderSummary[];
+  bookmarkedSpotIds?: Set<string>;
+  viewerLoggedIn?: boolean;
 }
 
-export function Paywall({ article, bodyAfter, spots }: PaywallProps) {
+export function Paywall({
+  article,
+  bodyAfter,
+  spots,
+  folders = [],
+  bookmarkedSpotIds,
+  viewerLoggedIn = false,
+}: PaywallProps) {
   const [purchased, setPurchased] = useState(false);
   const [open, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -55,7 +66,12 @@ export function Paywall({ article, bodyAfter, spots }: PaywallProps) {
           )}
         </article>
 
-        <SpotsCardList spots={spots} />
+        <SpotsCardList
+          spots={spots}
+          folders={folders}
+          bookmarkedSpotIds={bookmarkedSpotIds}
+          viewerLoggedIn={viewerLoggedIn}
+        />
       </div>
     );
   }

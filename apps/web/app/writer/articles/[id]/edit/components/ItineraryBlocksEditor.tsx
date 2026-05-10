@@ -2,13 +2,16 @@
 
 import { Button, Input } from '@locore/ui';
 import { Plus, Trash2 } from 'lucide-react';
+import { APIProvider } from '@vis.gl/react-google-maps';
 import type { SpotRow } from '@/components/writer/SpotList';
+import { TransportPicker } from './TransportPicker';
 
 /**
  * 旅程プラン記事の構造化エディタ。
  *
  * articleType === 'itinerary' のときに表示し、
- * 「時刻 / スポット / 移動手段 / 所要時間 / メモ」をブロック単位で記入する。
+ * 「時刻 / スポット / 移動手段（カテゴリ + 詳細） / 所要時間 / メモ」を
+ * ブロック単位で記入する。
  *
  * 値は親 (EditorShell) で配列として保持し、autoSave のときに JSONB 列
  * `articles.itinerary_blocks` に書き込まれる。
@@ -31,28 +34,20 @@ export type ItineraryBlock = {
     | 'other'
     | null;
   /**
-   * 移動手段の補足テキスト（例: "12号線 République→Bastille"、"ベルリンSバーン"）。
-   * フリーフォーマット。空でも OK。
+   * 移動手段の補足テキスト（例: "12号線 République→Bastille"）。
+   * 公共交通機関のとき Google Directions が自動で埋めてくれることもある。
    */
   transportNote?: string | null;
   travelMinutesAfter?: number | null;
 };
-
-const TRANSPORT_OPTIONS: { value: NonNullable<ItineraryBlock['transportToNext']>; label: string }[] = [
-  { value: 'walk', label: '徒歩' },
-  { value: 'metro', label: 'メトロ' },
-  { value: 'bus', label: 'バス' },
-  { value: 'train', label: '電車' },
-  { value: 'taxi', label: 'タクシー' },
-  { value: 'bike', label: '自転車' },
-  { value: 'other', label: 'その他' },
-];
 
 type Props = {
   blocks: ItineraryBlock[];
   onChange: (next: ItineraryBlock[]) => void;
   /** 既存スポットのドロップダウン候補。articleType='itinerary' でも spots テーブルは活用する */
   spots: SpotRow[];
+  /** Google Directions（公共交通機関の経路提案）に使う API キー */
+  googleMapsApiKey?: string;
 };
 
 function newBlock(prev: ItineraryBlock | undefined): ItineraryBlock {
@@ -70,7 +65,12 @@ function newBlock(prev: ItineraryBlock | undefined): ItineraryBlock {
   };
 }
 
-export function ItineraryBlocksEditor({ blocks, onChange, spots }: Props) {
+export function ItineraryBlocksEditor({
+  blocks,
+  onChange,
+  spots,
+  googleMapsApiKey,
+}: Props) {
   const update = <K extends keyof ItineraryBlock>(
     idx: number,
     key: K,
@@ -89,7 +89,14 @@ export function ItineraryBlocksEditor({ blocks, onChange, spots }: Props) {
     onChange([...blocks, newBlock(blocks[blocks.length - 1])]);
   };
 
-  return (
+  const spotById = new Map(spots.map((s) => [s.id, s]));
+  const blockLatLng = (b: ItineraryBlock) => {
+    if (!b.spotId) return null;
+    const s = spotById.get(b.spotId);
+    return s ? { lat: s.lat, lng: s.lng } : null;
+  };
+
+  const inner = (
     <section
       className="space-y-3 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6"
       aria-labelledby="itinerary-blocks-title"
@@ -102,7 +109,7 @@ export function ItineraryBlocksEditor({ blocks, onChange, spots }: Props) {
           旅程ブロック
         </h3>
         <p className="mt-1 text-[12px] text-foreground/60">
-          時刻 → スポット → 移動手段 → 次の場所の順で並べると、読者は当日のタイムラインとしてそのまま使えます。
+          時刻 → スポット → 移動手段 → 次の場所の順で並べると、読者は当日のタイムラインとしてそのまま使えます。公共交通機関は Google で経路を提案できます。
         </p>
       </header>
 
@@ -209,52 +216,31 @@ export function ItineraryBlocksEditor({ blocks, onChange, spots }: Props) {
 
               {/* 移動手段（最後のブロック以外で表示） */}
               {!isLast ? (
-                <div className="flex flex-wrap items-center gap-2 pl-2">
-                  <span className="text-[18px] leading-none text-primary-300">↓</span>
-                  <select
-                    value={b.transportToNext ?? ''}
-                    onChange={(e) =>
-                      update(
-                        idx,
-                        'transportToNext',
-                        (e.target.value || undefined) as ItineraryBlock['transportToNext'],
-                      )
-                    }
-                    className="h-8 rounded-full border border-primary-200 bg-white px-3 text-[12px] font-medium text-primary-700 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
-                  >
-                    <option value="">移動手段</option>
-                    {TRANSPORT_OPTIONS.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.label}
-                      </option>
-                    ))}
-                  </select>
-                  <Input
-                    type="text"
-                    value={b.transportNote ?? ''}
-                    onChange={(e) =>
-                      update(idx, 'transportNote', e.target.value || undefined)
-                    }
-                    placeholder="例: Métro 12号線 / 北行き / 4駅"
-                    className="h-8 min-w-[160px] flex-1"
+                <div className="ml-2 space-y-2 border-l-2 border-dashed border-primary-200 pl-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-700/70">
+                    次のスポットへの移動
+                  </p>
+                  <TransportPicker
+                    transportToNext={b.transportToNext}
+                    transportNote={b.transportNote}
+                    travelMinutesAfter={b.travelMinutesAfter}
+                    fromLatLng={blockLatLng(b)}
+                    toLatLng={blockLatLng(blocks[idx + 1]!)}
+                    onChange={(next) => {
+                      onChange(
+                        blocks.map((bb, i) =>
+                          i === idx
+                            ? {
+                                ...bb,
+                                transportToNext: next.transportToNext,
+                                transportNote: next.transportNote,
+                                travelMinutesAfter: next.travelMinutesAfter,
+                              }
+                            : bb,
+                        ),
+                      );
+                    }}
                   />
-                  <Input
-                    type="number"
-                    value={b.travelMinutesAfter ?? ''}
-                    onChange={(e) =>
-                      update(
-                        idx,
-                        'travelMinutesAfter',
-                        e.target.value === ''
-                          ? undefined
-                          : Number(e.target.value),
-                      )
-                    }
-                    placeholder="所要分"
-                    className="h-8 max-w-[100px]"
-                    min={0}
-                  />
-                  <span className="text-[12px] text-foreground/60">分</span>
                 </div>
               ) : null}
             </li>
@@ -268,4 +254,10 @@ export function ItineraryBlocksEditor({ blocks, onChange, spots }: Props) {
       </Button>
     </section>
   );
+
+  // 公共交通機関の経路取得用に Google Maps SDK をロード（API キーがあれば）
+  if (googleMapsApiKey) {
+    return <APIProvider apiKey={googleMapsApiKey}>{inner}</APIProvider>;
+  }
+  return inner;
 }

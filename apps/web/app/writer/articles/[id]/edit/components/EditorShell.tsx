@@ -273,6 +273,7 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
               blocks={itineraryBlocks}
               onChange={setItineraryBlocks}
               spots={spotsForDropdown}
+              googleMapsApiKey={googleMapsApiKey}
             />
           ) : null}
 

@@ -19,6 +19,10 @@ import { AddToTripButton } from '../../../components/AddToTripButton';
 import { ArticleGrid } from '../../../components/ArticleGrid';
 import { ItineraryTimeline } from '../../../components/ItineraryTimeline';
 import { SpotsCardList } from '../../../components/SpotsCardList';
+import {
+  listMyFolders,
+  listMyBookmarkedSpotIds,
+} from '@/lib/spotFavorites/actions';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { eq, and } from 'drizzle-orm';
 import { schema } from '@locore/db';
@@ -72,6 +76,13 @@ export default async function ArticleDetailPage({
       purchasedFromDb = false;
     }
   }
+
+  // お気に入りスポット用：自分のフォルダ + 既登録 spot id
+  const [{ folders }, bookmarkedSpotIds] = await Promise.all([
+    listMyFolders(),
+    listMyBookmarkedSpotIds(),
+  ]);
+  const viewerLoggedIn = !!me;
 
   return (
     <main className="bg-background">
@@ -237,10 +248,21 @@ export default async function ArticleDetailPage({
           ) : null}
 
           {isFreeArticle ? (
-            // 無料記事：Paywall を出さずスポット一覧だけ表示
-            <SpotsCardList spots={spots} />
+            <SpotsCardList
+              spots={spots}
+              folders={folders}
+              bookmarkedSpotIds={bookmarkedSpotIds}
+              viewerLoggedIn={viewerLoggedIn}
+            />
           ) : (
-            <Paywall article={article} bodyAfter={after} spots={spots} />
+            <Paywall
+              article={article}
+              bodyAfter={after}
+              spots={spots}
+              folders={folders}
+              bookmarkedSpotIds={bookmarkedSpotIds}
+              viewerLoggedIn={viewerLoggedIn}
+            />
           )}
 
           {/* Reviews */}
