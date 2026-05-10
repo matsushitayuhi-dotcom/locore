@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';
 import {
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props) {
+  const router = useRouter();
   const [messages, setMessages] = useState<ChatMessageView[]>(initialMessages);
   const [draft, setDraft] = useState('');
   const [isSending, startSend] = useTransition();
@@ -74,6 +76,9 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
           },
         ]);
         setDraft('');
+        // /chat 一覧側のキャッシュを確実に飛ばす（revalidatePath だけだと
+        // Next 14 のクライアント Router キャッシュが残ることがあるため）
+        router.refresh();
       } else {
         toast.error(res.error);
       }

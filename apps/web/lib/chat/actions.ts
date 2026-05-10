@@ -49,28 +49,38 @@ export async function startDirectThread(
 
   // 既存？
   let threadId: string | null = null;
-  const existing = await db
-    .select({ id: schema.chatThreads.id })
-    .from(schema.chatThreads)
-    .where(eq(schema.chatThreads.directPairKey, key))
-    .limit(1);
-  if (existing.length > 0) {
-    threadId = existing[0]!.id;
-  } else {
-    // 新規 thread + メンバー 2 人
-    const inserted = await db
-      .insert(schema.chatThreads)
-      .values({ directPairKey: key })
-      .returning({ id: schema.chatThreads.id });
-    threadId = inserted[0]!.id;
+  try {
+    const existing = await db
+      .select({ id: schema.chatThreads.id })
+      .from(schema.chatThreads)
+      .where(eq(schema.chatThreads.directPairKey, key))
+      .limit(1);
+    if (existing.length > 0) {
+      threadId = existing[0]!.id;
+    } else {
+      // 新規 thread + メンバー 2 人
+      const inserted = await db
+        .insert(schema.chatThreads)
+        .values({ directPairKey: key })
+        .returning({ id: schema.chatThreads.id });
+      threadId = inserted[0]!.id;
 
-    await db
-      .insert(schema.chatThreadMembers)
-      .values([
-        { threadId, userId: me.id },
-        { threadId, userId: withUserId },
-      ])
-      .onConflictDoNothing();
+      await db
+        .insert(schema.chatThreadMembers)
+        .values([
+          { threadId, userId: me.id },
+          { threadId, userId: withUserId },
+        ])
+        .onConflictDoNothing();
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[startDirectThread] DB error:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `スレッド作成に失敗しました（${msg}）。Supabase に 0017_chat.sql が適用されているか確認してください。`,
+    };
   }
 
   if (initialMessage) {
@@ -105,34 +115,44 @@ export async function sendChatMessage(
   const me = await requireUser();
   const db = getDb();
 
-  // メンバー確認
-  const member = await db
-    .select({ threadId: schema.chatThreadMembers.threadId })
-    .from(schema.chatThreadMembers)
-    .where(
-      and(
-        eq(schema.chatThreadMembers.threadId, threadId),
-        eq(schema.chatThreadMembers.userId, me.id),
-      ),
-    )
-    .limit(1);
-  if (member.length === 0) {
-    return { ok: false, error: 'このスレッドに参加していません' };
+  try {
+    // メンバー確認
+    const member = await db
+      .select({ threadId: schema.chatThreadMembers.threadId })
+      .from(schema.chatThreadMembers)
+      .where(
+        and(
+          eq(schema.chatThreadMembers.threadId, threadId),
+          eq(schema.chatThreadMembers.userId, me.id),
+        ),
+      )
+      .limit(1);
+    if (member.length === 0) {
+      return { ok: false, error: 'このスレッドに参加していません' };
+    }
+
+    const inserted = await db
+      .insert(schema.chatMessages)
+      .values({ threadId, senderId: me.id, body })
+      .returning({ id: schema.chatMessages.id });
+
+    await db
+      .update(schema.chatThreads)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(schema.chatThreads.id, threadId));
+
+    revalidatePath(`/chat/${threadId}`);
+    revalidatePath('/chat');
+    return { ok: true, data: { messageId: inserted[0]!.id } };
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[sendChatMessage] DB error:', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `送信に失敗しました（${msg}）`,
+    };
   }
-
-  const inserted = await db
-    .insert(schema.chatMessages)
-    .values({ threadId, senderId: me.id, body })
-    .returning({ id: schema.chatMessages.id });
-
-  await db
-    .update(schema.chatThreads)
-    .set({ lastMessageAt: new Date() })
-    .where(eq(schema.chatThreads.id, threadId));
-
-  revalidatePath(`/chat/${threadId}`);
-  revalidatePath('/chat');
-  return { ok: true, data: { messageId: inserted[0]!.id } };
 }
 
 const markReadSchema = z.object({ threadId: z.string().uuid() });
@@ -283,7 +303,33 @@ export async function listMyThreads(): Promise<
   }
 
   if (myMemberships.length === 0) {
-    return { ok: true, data: { threads: [] } };
+    // テーブルはあるけどメンバー行が無い → 一度もチャットを始めていない、または
+    // 何らかの理由でメンバー登録に失敗している。デバッグ用に raw 件数を見せる
+    let totalThreads = 0;
+    let totalMessagesByMe = 0;
+    try {
+      const tRows = await db
+        .select({ cnt: sql<number>`count(*)::int` })
+        .from(schema.chatThreads);
+      totalThreads = tRows[0]?.cnt ?? 0;
+      const mRows = await db
+        .select({ cnt: sql<number>`count(*)::int` })
+        .from(schema.chatMessages)
+        .where(eq(schema.chatMessages.senderId, me.id));
+      totalMessagesByMe = mRows[0]?.cnt ?? 0;
+    } catch {
+      // ignore
+    }
+    return {
+      ok: true,
+      data: {
+        threads: [],
+        diagnostic:
+          totalMessagesByMe > 0
+            ? `あなたは ${totalMessagesByMe} 件のメッセージを送信していますが、自分が参加するスレッドが見つかりません（chat_thread_members の登録漏れ）。userId=${me.id}`
+            : undefined,
+      },
+    };
   }
 
   const threadIds = myMemberships.map((m) => m.threadId);
@@ -306,6 +352,7 @@ export async function listMyThreads(): Promise<
 
   // 各 thread の相手 + 最新メッセージ + 未読
   const summaries: ThreadSummary[] = [];
+  let perThreadErrors = 0;
   for (const t of threadRows) {
     try {
       const myMembership = myMemberships.find((m) => m.threadId === t.id);
@@ -370,10 +417,28 @@ export async function listMyThreads(): Promise<
       });
     } catch (err) {
       // 個別 thread の取得失敗はスキップして続ける（プレビュー表示優先）
+      perThreadErrors += 1;
       // eslint-disable-next-line no-console
       console.warn('[listMyThreads] thread summary failed:', t.id, err);
+      // 失敗してもスレッド自体は最低限表示する（パートナー / プレビュー無し）
+      summaries.push({
+        threadId: t.id,
+        partner: null,
+        lastMessageAt: t.lastMessageAt.toISOString(),
+        preview: '（読み込みに失敗）',
+        unread: 0,
+      });
     }
   }
 
-  return { ok: true, data: { threads: summaries } };
+  return {
+    ok: true,
+    data: {
+      threads: summaries,
+      diagnostic:
+        perThreadErrors > 0
+          ? `${perThreadErrors} 件のスレッドで詳細取得に失敗しました（パートナー名やプレビューが空）`
+          : undefined,
+    },
+  };
 }
