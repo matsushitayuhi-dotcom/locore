@@ -19,6 +19,7 @@ import { AddToTripButton } from '../../../components/AddToTripButton';
 import { ArticleGrid } from '../../../components/ArticleGrid';
 import { ItineraryTimeline } from '../../../components/ItineraryTimeline';
 import { SpotsCardList } from '../../../components/SpotsCardList';
+import { ArticleSpotsMap } from '../../../components/ArticleSpotsMap';
 import { LikeButton } from '../../../components/article/LikeButton';
 import {
   listMyFolders,
@@ -291,6 +292,13 @@ export default async function ArticleDetailPage({
               viewerLoggedIn={viewerLoggedIn}
             />
           )}
+
+          {/* スポット地図（旅程記事はルート線、スポット紹介はピンのみ） */}
+          <ArticleSpotsMap
+            spots={spots}
+            articleType={article.articleType}
+            itineraryBlocks={article.itineraryBlocks ?? null}
+          />
 
           {/* Reviews */}
           <section>

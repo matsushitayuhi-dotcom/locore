@@ -9,6 +9,7 @@ const NAV = [
   { href: '/map', label: 'マップ', icon: MapIcon },
   { href: '/trips', label: '旅程', icon: LayoutList },
   { href: '/library', label: 'お気に入り', icon: Compass },
+  { href: '/purchases', label: '購入記事', icon: Compass },
   { href: '/writer/articles', label: '記事投稿', icon: Compass },
   // メッセージはタブの一番最後（重要度的にナビ末尾）
   { href: '/chat', label: 'メッセージ', icon: Compass },

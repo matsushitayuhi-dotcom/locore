@@ -16,11 +16,11 @@ import { toast } from 'sonner';
  */
 
 const CATEGORIES = [
-  { value: 'walk', label: '徒歩', icon: '🚶' },
-  { value: 'bike', label: '自転車', icon: '🚲' },
-  { value: 'taxi', label: 'タクシー', icon: '🚕' },
-  { value: 'public_transit', label: '公共交通機関', icon: '🚇' },
-  { value: 'other', label: 'その他', icon: '・・・' },
+  { value: 'walk', label: '徒歩' },
+  { value: 'bike', label: '自転車' },
+  { value: 'taxi', label: 'タクシー' },
+  { value: 'public_transit', label: '公共交通機関' },
+  { value: 'other', label: 'その他' },
 ] as const;
 
 type Category = (typeof CATEGORIES)[number]['value'];
@@ -202,7 +202,6 @@ export function TransportPicker({
                   : 'bg-white text-primary-700 ring-1 ring-primary-200 hover:bg-primary-50')
               }
             >
-              <span aria-hidden>{c.icon}</span>
               {c.label}
             </button>
           );

@@ -118,6 +118,11 @@ export function ItineraryBlocksEditor({
           まだ旅程ブロックがありません。「ブロックを追加」から最初の予定を入れましょう。
         </p>
       ) : null}
+      {blocks.length === 1 ? (
+        <p className="rounded-md bg-primary-50/40 px-3 py-2 text-[12px] text-primary-700">
+          もう 1 ブロック追加すると、間に「次のスポットへの移動手段」が設定できます。
+        </p>
+      ) : null}
 
       <ol className="space-y-3">
         {blocks.map((b, idx) => {

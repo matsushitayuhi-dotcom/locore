@@ -62,7 +62,7 @@ export function SpotsCardList({
           return (
             <li
               key={s.id}
-              className="overflow-hidden rounded-lg bg-card ring-1 ring-primary-100"
+              className="rounded-lg bg-card ring-1 ring-primary-100"
             >
               <button
                 type="button"
