@@ -5,22 +5,22 @@ import { cn } from "../../lib/utils";
 const badgeVariants = cva(
   [
     "inline-flex items-center gap-1",
-    "h-6 px-2.5 rounded-full",
-    "font-sans text-caption font-semibold leading-none",
+    "h-5 px-2 rounded-full",
+    "font-sans text-[10px] font-semibold leading-none",
     "transition-colors duration-base ease-out",
-    "[&_svg]:size-3",
+    "[&_svg]:size-2.5",
   ].join(" "),
   {
     variants: {
       variant: {
-        // default: 薄い emerald
-        default: "bg-primary-50 text-primary-700",
-        // secondary: 1段濃い emerald（同色相のまま明度で差別化）
-        secondary: "bg-primary-100 text-primary-900",
-        // accent: ニュートラル背景に primary 文字。インラインのキャプション向け。
-        accent: "bg-neutral-50 text-primary-700",
-        warning: "bg-warning-50 text-warning-700",
-        outline: "bg-white text-primary-700 border border-primary-300",
+        // default: 薄い amber
+        default: "bg-primary-500/15 text-primary-300",
+        // secondary: ややニュートラルなチップ
+        secondary: "bg-muted text-foreground/80",
+        // accent: アクセント色（重要バッジ向け）
+        accent: "bg-primary-500 text-neutral-950",
+        warning: "bg-warning-500/15 text-warning-500",
+        outline: "bg-transparent text-foreground/80 border border-border",
       },
     },
     defaultVariants: {

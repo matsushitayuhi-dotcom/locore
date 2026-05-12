@@ -204,12 +204,7 @@ export function ArticleGrid({
               bookmarked={bookmarked.has(article.id)}
               onClick={() => router.push(`/articles/${article.id}`)}
               onBookmark={() => handleBookmark(article.id)}
-              onAddToTrip={() => {
-                TripAdds.add(article.id);
-                toast.success('旅程に追加しました', {
-                  description: '「旅程」ページから確認できます',
-                });
-              }}
+              // 「+ 旅程」ボタンはフィード / ライブラリでは出さない（記事詳細ページに集約）
             />
           </div>
         ))}

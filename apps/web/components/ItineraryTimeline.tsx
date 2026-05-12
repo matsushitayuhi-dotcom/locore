@@ -15,6 +15,15 @@ const TRANSPORT_LABEL: Record<string, string> = {
   other: 'その他',
 };
 
+/** 分を「X時間Y分」形式に。60 分未満は「Y分」のみ。0/負は空文字。 */
+function formatDuration(min: number | null | undefined): string {
+  if (!min || min <= 0) return '';
+  if (min < 60) return `${min}分`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m === 0 ? `${h}時間` : `${h}時間${m}分`;
+}
+
 type Props = {
   articleId: string;
   blocks: ArticleItineraryBlock[];
@@ -135,7 +144,7 @@ export function ItineraryTimeline({
                       ? TRANSPORT_LABEL[b.transportToNext] ?? b.transportToNext
                       : '移動'}
                     {b.travelMinutesAfter
-                      ? ` ${b.travelMinutesAfter} 分`
+                      ? ` ${formatDuration(b.travelMinutesAfter)}`
                       : ''}
                   </span>
                   {b.transportNote ? (
