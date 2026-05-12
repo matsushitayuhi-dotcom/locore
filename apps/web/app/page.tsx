@@ -37,6 +37,7 @@ export default async function HomePage() {
   const itineraryArticles = articles.filter(
     (a) => a.articleType === 'itinerary',
   );
+  const expatArticles = articles.filter((a) => a.articleType === 'expat_info');
 
   return (
     <main className="bg-background">
@@ -119,6 +120,23 @@ export default async function HomePage() {
             socialCounts={socialCounts}
           />
         </section>
+
+        {/* 5. 駐在者情報 */}
+        {expatArticles.length > 0 ? (
+          <section id="expat-info">
+            <SectionHeader
+              kicker="駐在者情報"
+              title="現地で暮らすための実用情報"
+              subtitle="日用品・行政手続き・医療など、現地で困った時の知恵袋。"
+              href="/articles?type=expat_info"
+            />
+            <ArticleScrollSection
+              articles={expatArticles}
+              moreHref="/articles?type=expat_info"
+              socialCounts={socialCounts}
+            />
+          </section>
+        ) : null}
       </div>
     </main>
   );

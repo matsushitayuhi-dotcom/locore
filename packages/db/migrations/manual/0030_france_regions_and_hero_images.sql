@@ -47,8 +47,10 @@ UPDATE countries SET hero_image_url = 'https://images.unsplash.com/photo-1580060
 -- フランス国内の地域を一気に追加（パリ以外の人も巻き込む）
 -- =========================================================================
 -- France country_id を一旦キャッシュするのに WITH を使う代わりに INSERT FROM。
+-- VALUES 側の列名を r_slug / r_name_ja ... のように prefix することで、
+-- countries.name_ja / cities.name_ja との「ambiguous reference」を回避。
 INSERT INTO cities (slug, name_ja, name_en, country, country_id, kind, position, lat, lng, timezone, is_active, emoji, hero_image_url)
-SELECT slug, name_ja, name_en, 'fr', co.id, kind, position, lat, lng, 'Europe/Paris', true, emoji, hero_image_url
+SELECT v.r_slug, v.r_name_ja, v.r_name_en, 'fr', co.id, v.r_kind, v.r_position, v.r_lat, v.r_lng, 'Europe/Paris', true, v.r_emoji, v.r_hero_image_url
 FROM countries co, (VALUES
   ('paris',           'パリ＆近郊',           'Paris & Île-de-France',  'metro',  10, 48.8566,  2.3522, '🗼', 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&auto=format&fit=crop&q=80'),
   ('lyon',            'リヨン',               'Lyon',                   'metro',  20, 45.7640,  4.8357, '🍷', 'https://images.unsplash.com/photo-1524396309943-e03f5249f002?w=1200&auto=format&fit=crop&q=80'),
@@ -64,7 +66,7 @@ FROM countries co, (VALUES
   ('toulouse',        'トゥールーズ',         'Toulouse',               'metro', 120, 43.6047,  1.4442, '🌹', 'https://images.unsplash.com/photo-1591289297030-9e92a8e9c673?w=1200&auto=format&fit=crop&q=80'),
   ('champagne',       'シャンパーニュ',       'Champagne & Reims',      'area',  130, 49.2583,  4.0317, '🥂', 'https://images.unsplash.com/photo-1568213816046-0ee1c42bd559?w=1200&auto=format&fit=crop&q=80'),
   ('dordogne',        'ドルドーニュ',         'Dordogne',               'area',  140, 45.0386,  0.7270, '🍯', 'https://images.unsplash.com/photo-1551634979-2b11f8c946fe?w=1200&auto=format&fit=crop&q=80')
-) AS v(slug, name_ja, name_en, kind, position, lat, lng, emoji, hero_image_url)
+) AS v(r_slug, r_name_ja, r_name_en, r_kind, r_position, r_lat, r_lng, r_emoji, r_hero_image_url)
 WHERE co.code = 'fr'
 ON CONFLICT (slug) DO UPDATE SET
   name_ja        = EXCLUDED.name_ja,

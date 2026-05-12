@@ -33,7 +33,7 @@ export async function getPublishedDbArticles(
     priceJpy: number;
     tags: string[];
     durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | null;
-    articleType: 'spot_guide' | 'itinerary';
+    articleType: 'spot_guide' | 'itinerary' | 'expat_info';
     createdAt: Date;
     publishedAt: Date | null;
     writerName: string | null;

@@ -5,11 +5,12 @@ export type Tier = 'S' | 'A' | 'B';
 export type DurationType = '1h' | '半日' | '1日' | '数時間';
 
 /**
- * 記事の種別タグ。スポット紹介 vs 旅程プラン。
- * - spot_guide: 個別の店・場所を紹介する記事
- * - itinerary : 時間軸ありのコース・モデルプラン
+ * 記事の種別タグ。
+ * - spot_guide : 個別の店・場所を紹介する記事
+ * - itinerary  : 時間軸ありのコース・モデルプラン
+ * - expat_info : 駐在者・在外邦人向けの生活雑学（殺虫剤どこで買う？医療手続き等）
  */
-export type ArticleType = 'spot_guide' | 'itinerary';
+export type ArticleType = 'spot_guide' | 'itinerary' | 'expat_info';
 
 export interface Writer {
   id: string;

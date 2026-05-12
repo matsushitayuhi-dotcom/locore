@@ -4,7 +4,7 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireWriter } from '@/lib/auth/require-user';
 
-export const metadata = { title: 'クリエイターダッシュボード' };
+export const metadata = { title: '売上レポート' };
 export const dynamic = 'force-dynamic';
 
 export default async function WriterDashboardPage() {
@@ -194,7 +194,7 @@ export default async function WriterDashboardPage() {
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-              Creator Studio
+              Sales Report
             </p>
             <h1
               className="text-[32px] font-semibold tracking-tight"
@@ -202,10 +202,11 @@ export default async function WriterDashboardPage() {
                 fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
               }}
             >
-              ダッシュボード
+              売上レポート
             </h1>
             <p className="mt-2 text-[13px] text-foreground/60">
-              {me.displayName ?? '匿名'} さんの執筆活動サマリ。月末締めの今月分支払い予定額もここで確認できます。
+              {me.displayName ?? '匿名'} さんの記事が購入されるたびに自動で計上されます。
+              月末締め・翌月 15 日のお振込予定額もここで確認できます。
             </p>
           </div>
           <div className="flex gap-2">

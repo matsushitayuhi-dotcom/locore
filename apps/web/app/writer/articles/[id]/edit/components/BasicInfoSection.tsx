@@ -12,12 +12,17 @@ const DURATION_OPTIONS: { value: 'half_day' | 'full_day' | 'few_hours' | 'other'
 ];
 
 const ARTICLE_TYPE_OPTIONS: {
-  value: 'spot_guide' | 'itinerary';
+  value: 'spot_guide' | 'itinerary' | 'expat_info';
   label: string;
   description: string;
 }[] = [
   { value: 'spot_guide', label: 'スポット紹介', description: '個別の場所を紹介する記事' },
   { value: 'itinerary', label: '旅程プラン', description: '時間軸ありのコース・モデルプラン' },
+  {
+    value: 'expat_info',
+    label: '駐在者情報',
+    description: '殺虫剤・医療・行政手続きなど、現地生活の実用情報',
+  },
 ];
 
 const TIER_PRICE_CAPS: Record<'S' | 'A' | 'B', number> = {
@@ -33,7 +38,7 @@ const TIER_PRICE_CAPS: Record<'S' | 'A' | 'B', number> = {
 export type BasicInfoValue = {
   priceJpy: number;
   durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | '';
-  articleType: 'spot_guide' | 'itinerary';
+  articleType: 'spot_guide' | 'itinerary' | 'expat_info';
   tagsText: string;
   cityId: string;
 };

@@ -93,7 +93,7 @@ export const lightDiaryStatusEnum = pgEnum('light_diary_status', [
  * 既存の `article_duration` enum（half_day/full_day/...）とは別概念。
  * spot_guide でも所要時間はあり得るが、明確な「コース性」が itinerary。
  */
-export const articleTypeEnum = pgEnum('article_type', ['spot_guide', 'itinerary']);
+export const articleTypeEnum = pgEnum('article_type', ['spot_guide', 'itinerary', 'expat_info']);
 
 // --- Moderation ---
 export const moderationActionEnum = pgEnum('moderation_action', [

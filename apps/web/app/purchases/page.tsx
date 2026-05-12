@@ -70,7 +70,7 @@ export default async function PurchasesPage() {
       title: string;
       coverImageUrl: string | null;
       area: string;
-      articleType: 'spot_guide' | 'itinerary';
+      articleType: 'spot_guide' | 'itinerary' | 'expat_info';
       durationType: string;
       writerName: string;
     }

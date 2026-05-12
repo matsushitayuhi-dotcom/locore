@@ -97,7 +97,7 @@ const updateArticleSchema = z.object({
     })
     .optional(),
   durationType: z.enum(['half_day', 'full_day', 'few_hours', 'other']).optional(),
-  articleType: z.enum(['spot_guide', 'itinerary']).optional(),
+  articleType: z.enum(['spot_guide', 'itinerary', 'expat_info']).optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   coverImageUrl: z
     .string()

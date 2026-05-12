@@ -25,13 +25,12 @@ export default async function WriterArticlesPage({
   searchParams?: { status?: string };
 }) {
   const articles = await listMyArticles();
-  const activeTab = (
-    STATUS_TABS.includes(
-      (searchParams?.status as (typeof STATUS_TABS)[number]) ?? 'published',
-    )
-      ? searchParams?.status
-      : 'published'
-  ) as (typeof STATUS_TABS)[number];
+  // 旧実装は ternary が undefined を返す経路があり、結果として「全件」になっていた。
+  // searchParams.status が STATUS_TABS のどれかに一致するならそれを、そうでなければ
+  // 必ず 'published' をデフォルトにする。
+  const requested = searchParams?.status as (typeof STATUS_TABS)[number] | undefined;
+  const activeTab: (typeof STATUS_TABS)[number] =
+    requested && STATUS_TABS.includes(requested) ? requested : 'published';
 
   const counts: Record<string, number> = {
     published: 0,

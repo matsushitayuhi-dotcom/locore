@@ -31,6 +31,8 @@ import {
 } from '@/lib/articleLikes/actions';
 import { Bookmark } from '@locore/ui/icons';
 import { getMyBookmarkedIdSet } from '@/lib/bookmarks/actions';
+import { getMyReviewForArticle } from '@/lib/reviews/actions';
+import { ReviewForm } from '@/components/ReviewForm';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { eq, and } from 'drizzle-orm';
 import { schema } from '@locore/db';
@@ -89,15 +91,22 @@ export default async function ArticleDetailPage({
   const isOwner = !!me && (me.id === article.writerId || me.role === 'editor');
   const unlocked = isFreeArticle || purchasedFromDb || isOwner;
 
-  // お気に入りスポット + いいね / ブックマーク数 を並列取得
-  const [{ folders }, bookmarkedSpotIds, socialCounts, likedSet, bookmarkedArticleIds] =
-    await Promise.all([
-      listMyFolders(),
-      listMyBookmarkedSpotIds(),
-      getArticleSocialCounts([article.id]),
-      listMyLikedArticleIds(),
-      getMyBookmarkedIdSet(),
-    ]);
+  // お気に入りスポット + いいね / ブックマーク数 + 自分の既存レビュー を並列取得
+  const [
+    { folders },
+    bookmarkedSpotIds,
+    socialCounts,
+    likedSet,
+    bookmarkedArticleIds,
+    myReview,
+  ] = await Promise.all([
+    listMyFolders(),
+    listMyBookmarkedSpotIds(),
+    getArticleSocialCounts([article.id]),
+    listMyLikedArticleIds(),
+    getMyBookmarkedIdSet(),
+    getMyReviewForArticle(article.id),
+  ]);
   const alreadySavedByMe = bookmarkedArticleIds.has(article.id);
   const viewerLoggedIn = !!me;
   const counts = socialCounts.get(article.id) ?? {
@@ -323,6 +332,14 @@ export default async function ArticleDetailPage({
               </p>
             </section>
           )}
+
+          {/* レビュー投稿フォーム（購入済みのみ表示） */}
+          {unlocked && !isOwner ? (
+            <ReviewForm
+              articleId={article.id}
+              initial={myReview}
+            />
+          ) : null}
 
           {/* Reviews */}
           <section>

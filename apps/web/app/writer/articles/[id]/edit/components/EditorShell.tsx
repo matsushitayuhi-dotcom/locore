@@ -40,7 +40,7 @@ type ArticleInitial = {
   itineraryBlocks: ItineraryBlock[] | null;
   priceJpy: number;
   durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | null;
-  articleType: 'spot_guide' | 'itinerary';
+  articleType: 'spot_guide' | 'itinerary' | 'expat_info';
   tags: string[];
   cityId: string;
   coverImageUrl: string | null;

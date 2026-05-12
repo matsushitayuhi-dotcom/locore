@@ -28,13 +28,18 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
   const typeParam = searchParams?.type;
   const titleByType: Record<string, { title: string; subtitle: string }> = {
     spot_guide: {
-      title: 'パリ・スポット紹介',
+      title: 'スポット紹介',
       subtitle: '1 地点を深掘りした記事。お気に入りスポットを増やすのに最適。',
     },
     itinerary: {
-      title: 'パリ・旅程プラン',
+      title: '旅程プラン',
       subtitle:
         '半日・1 日かけて辿る、現地民がデザインしたルート。所要時間つき。',
+    },
+    expat_info: {
+      title: '駐在者情報',
+      subtitle:
+        '日用品・行政手続き・医療など、現地で暮らす人のための実用情報。',
     },
   };
   const heading = typeParam && titleByType[typeParam]

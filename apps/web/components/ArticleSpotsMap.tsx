@@ -376,7 +376,7 @@ function FitBounds({ points }: { points: Point[] }) {
 
 type Props = {
   spots: Spot[];
-  articleType: 'spot_guide' | 'itinerary';
+  articleType: 'spot_guide' | 'itinerary' | 'expat_info';
   itineraryBlocks?: ArticleItineraryBlock[] | null;
 };
 
