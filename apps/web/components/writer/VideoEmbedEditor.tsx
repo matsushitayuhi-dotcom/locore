@@ -115,7 +115,7 @@ export function VideoEmbedEditor({ articleId, initial }: Props) {
           <select
             value={platform}
             onChange={(e) => setPlatform(e.target.value as VideoRow['platform'])}
-            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           >
             {Object.entries(PLATFORM_LABEL).map(([v, l]) => (
               <option key={v} value={v}>

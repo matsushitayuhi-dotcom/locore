@@ -54,7 +54,7 @@ export function ReportStatusEditor({
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as ReportStatus)}
-          className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-sm focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px]"
+          className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-sm focus:border-2 focus:border-primary-500 focus:outline-none focus:px-[11px]"
         >
           {STATUSES.map((s) => (
             <option key={s.value} value={s.value}>
@@ -73,7 +73,7 @@ export function ReportStatusEditor({
           rows={3}
           maxLength={2000}
           placeholder="対応内容・判断理由など"
-          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-sm focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px] focus:py-[7px]"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-sm focus:border-2 focus:border-primary-500 focus:outline-none focus:px-[11px] focus:py-[7px]"
         />
       </div>
       <Button

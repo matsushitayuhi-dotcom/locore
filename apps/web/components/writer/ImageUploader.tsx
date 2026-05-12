@@ -195,7 +195,7 @@ export function ImageUploader({
             value={urlDraft}
             onChange={(e) => setUrlDraft(e.target.value)}
             placeholder={placeholder}
-            className="flex h-9 w-full rounded-sm border border-border bg-card px-3 text-[12px] text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-9 w-full rounded-sm border border-border bg-card px-3 text-[12px] text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           />
           <Button
             type="button"

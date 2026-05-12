@@ -251,7 +251,7 @@ export default async function WriterPage({ params }: { params: { id: string } })
 
   return (
     <main className="bg-background">
-      <div className="border-b border-border bg-gradient-to-br from-primary-50/50 via-white to-primary-50/30">
+      <div className="border-b border-border bg-gradient-to-br from-primary-500/10 via-card to-card">
         <div className="mx-auto flex max-w-screen-lg flex-col items-start gap-6 px-4 py-12 sm:flex-row sm:px-6">
           <Avatar size="xl" className="shadow-sm ring-2 ring-border">
             <AvatarImage src={writer.avatarUrl} alt={writer.name} />

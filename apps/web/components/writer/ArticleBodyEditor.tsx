@@ -50,7 +50,7 @@ export function ArticleBodyEditor({ articleId, initialBody, isPublished }: Props
           maxLength={20000}
           rows={20}
           aria-describedby="art-body-help"
-          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 font-mono text-[13px] leading-relaxed text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 font-mono text-[13px] leading-relaxed text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
           placeholder={'# 見出し\n\n本文を書きましょう。\n\n## サブ見出し\n\n…'}
         />
         <p id="art-body-help" className="mt-1 text-[11px] text-foreground/50">

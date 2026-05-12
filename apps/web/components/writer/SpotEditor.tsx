@@ -314,7 +314,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           <select
             value={v.category}
             onChange={(e) => set('category', e.target.value as SpotEditorValue['category'])}
-            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           >
             <option value="">選択してください</option>
             {CATEGORY_OPTIONS.map((c) => (
@@ -420,7 +420,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           value={v.openingHoursText}
           onChange={(e) => set('openingHoursText', e.target.value)}
           rows={3}
-          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
           placeholder='例：月-金 9:00-18:00、日曜定休 — JSON でも可：{"mon":["09:00-18:00"]}'
         />
       </div>

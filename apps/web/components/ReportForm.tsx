@@ -107,7 +107,7 @@ export function ReportForm({
           rows={5}
           maxLength={2000}
           placeholder="通報の詳細・該当箇所など（任意・最大 2000 文字）"
-          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px] focus:py-[7px]"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground focus:border-2 focus:border-primary-500 focus:outline-none focus:px-[11px] focus:py-[7px]"
         />
         <p className="mt-1 text-right text-[11px] text-foreground/50">
           {body.length} / 2000

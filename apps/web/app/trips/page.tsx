@@ -52,7 +52,7 @@ export default async function TripsPage() {
                 href={`/trips/${t.id}`}
                 className="group block overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition-all duration-base ease-out hover:-translate-y-1 hover:shadow-md hover:ring-primary-300"
               >
-                <div className="flex h-40 items-end bg-gradient-to-br from-primary-50 via-white to-primary-50/40 p-5">
+                <div className="flex h-40 items-end bg-gradient-to-br from-primary-500/15 via-card to-card/80 p-5">
                   <div>
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
                       {t.startDate} – {t.endDate}

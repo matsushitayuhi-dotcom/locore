@@ -106,7 +106,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
             id="art-price"
             value={value.priceJpy}
             onChange={(e) => set('priceJpy', Number(e.target.value))}
-            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           >
             {allowedPrices.map((p) => (
               <option key={p} value={p}>
@@ -127,7 +127,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
             id="art-duration"
             value={value.durationType}
             onChange={(e) => set('durationType', e.target.value as BasicInfoValue['durationType'])}
-            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           >
             <option value="">選択してください</option>
             {DURATION_OPTIONS.map((d) => (
@@ -147,7 +147,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
           id="art-city"
           value={value.cityId}
           onChange={(e) => set('cityId', e.target.value)}
-          className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+          className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
         >
           {cities.map((c) => (
             <option key={c.id} value={c.id}>
