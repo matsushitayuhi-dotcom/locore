@@ -70,10 +70,10 @@ WITH inserted_article AS (
 **実用情報**: いずれもメトロ7号線 Tolbiac から徒歩10分圏内。木曜・金曜の夜が活気のピーク。日曜は4軒中3軒が休みなので注意。',
     'https://picsum.photos/seed/locore-sample-1/960/640',
     1300,
-    'published',
+    'published'::article_status,
     ARRAY['13区', 'イタリアン', '老舗', '夜ごはん', '移民食堂'],
-    'half_day',
-    'spot_guide',
+    'half_day'::article_duration,
+    'spot_guide'::article_type,
     '2026-05-09T18:00:00+02:00',
     true
   )
@@ -81,19 +81,19 @@ WITH inserted_article AS (
 )
 INSERT INTO spots (article_id, name, address, location, category, position, is_sample)
 SELECT id, 'Trattoria del Vecchio Mario', 'Rue de Tolbiac 142, 75013 Paris',
-       'SRID=4326;POINT(2.3611 48.8278)'::geography, 'food', 0, true
+       'SRID=4326;POINT(2.3611 48.8278)'::geography, 'food'::spot_category, 0, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Osteria Piemonte', 'Rue Bobillot 48, 75013 Paris',
-       'SRID=4326;POINT(2.3528 48.8244)'::geography, 'food', 1, true
+       'SRID=4326;POINT(2.3528 48.8244)'::geography, 'food'::spot_category, 1, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Pasticceria Romana Bianchi', 'Rue de la Glaciere 87, 75013 Paris',
-       'SRID=4326;POINT(2.3445 48.8302)'::geography, 'food', 2, true
+       'SRID=4326;POINT(2.3445 48.8302)'::geography, 'food'::spot_category, 2, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Enoteca Sicilia', 'Rue du Moulin des Pres 34, 75013 Paris',
-       'SRID=4326;POINT(2.3552 48.8261)'::geography, 'food', 3, true
+       'SRID=4326;POINT(2.3552 48.8261)'::geography, 'food'::spot_category, 3, true
 FROM inserted_article;
 
 -- ============================================================
@@ -154,10 +154,10 @@ WITH inserted_article AS (
 **実用情報**: メトロ7bis Botzaris から徒歩6分、または5号線 Laumiere から徒歩10分。土曜午前が情報密度のピーク。冬は8時前は店も市も出ていないので、9時以降に到着するのが無難。',
     'https://picsum.photos/seed/locore-sample-2/960/640',
     1100,
-    'published',
+    'published'::article_status,
     ARRAY['19区', 'アフリカ', '食材店', '土曜朝', 'ローカル'],
-    'half_day',
-    'spot_guide',
+    'half_day'::article_duration,
+    'spot_guide'::article_type,
     '2026-05-04T09:00:00+02:00',
     true
   )
@@ -165,23 +165,23 @@ WITH inserted_article AS (
 )
 INSERT INTO spots (article_id, name, address, location, category, position, is_sample)
 SELECT id, 'Chez Aminata', 'Rue de Crimee 215, 75019 Paris',
-       'SRID=4326;POINT(2.3878 48.8881)'::geography, 'food', 0, true
+       'SRID=4326;POINT(2.3878 48.8881)'::geography, 'food'::spot_category, 0, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Epicerie Le Manguier', 'Rue de Joinville 23, 75019 Paris',
-       'SRID=4326;POINT(2.3856 48.8895)'::geography, 'shopping', 1, true
+       'SRID=4326;POINT(2.3856 48.8895)'::geography, 'shopping'::spot_category, 1, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'La Cantine de Brazza', 'Avenue de Flandre 132, 75019 Paris',
-       'SRID=4326;POINT(2.3791 48.8902)'::geography, 'food', 2, true
+       'SRID=4326;POINT(2.3791 48.8902)'::geography, 'food'::spot_category, 2, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Marche aux Epices Dakar', 'Rue de Crimee x Rue de Joinville, 75019 Paris',
-       'SRID=4326;POINT(2.3862 48.8889)'::geography, 'shopping', 3, true
+       'SRID=4326;POINT(2.3862 48.8889)'::geography, 'shopping'::spot_category, 3, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Cafe La Goutte', 'Avenue Jean Jaures 178, 75019 Paris',
-       'SRID=4326;POINT(2.3823 48.8866)'::geography, 'food', 4, true
+       'SRID=4326;POINT(2.3823 48.8866)'::geography, 'food'::spot_category, 4, true
 FROM inserted_article;
 
 -- ============================================================
@@ -239,10 +239,10 @@ WITH inserted_article AS (
 **実用情報**: メトロ4号線 Saint-Sulpice または 10号線 Mabillon が起点。所要は文房具・古書・教会・カフェの4箇所で約2時間半。平日の午後3時〜5時半が一番この街の本来の顔が見える時間帯。',
     'https://picsum.photos/seed/locore-sample-3/960/640',
     750,
-    'published',
+    'published'::article_status,
     ARRAY['6区', '文房具', '古書', 'カフェ', '学生街'],
-    'few_hours',
-    'spot_guide',
+    'few_hours'::article_duration,
+    'spot_guide'::article_type,
     '2026-05-02T15:00:00+02:00',
     true
   )
@@ -250,19 +250,19 @@ WITH inserted_article AS (
 )
 INSERT INTO spots (article_id, name, address, location, category, position, is_sample)
 SELECT id, 'Papeterie Saint-Sulpice', 'Rue Servandoni 12, 75006 Paris',
-       'SRID=4326;POINT(2.3338 48.8503)'::geography, 'shopping', 0, true
+       'SRID=4326;POINT(2.3338 48.8503)'::geography, 'shopping'::spot_category, 0, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Librairie du Quartier Latin', 'Rue Monsieur-le-Prince 41, 75006 Paris',
-       'SRID=4326;POINT(2.3401 48.8493)'::geography, 'shopping', 1, true
+       'SRID=4326;POINT(2.3401 48.8493)'::geography, 'shopping'::spot_category, 1, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Eglise Saint-Severin', 'Rue des Pretres-Saint-Severin 3, 75005 Paris',
-       'SRID=4326;POINT(2.3458 48.8521)'::geography, 'sight', 2, true
+       'SRID=4326;POINT(2.3458 48.8521)'::geography, 'sight'::spot_category, 2, true
 FROM inserted_article
 UNION ALL
 SELECT id, 'Cafe de la Mairie', 'Place Saint-Sulpice 8, 75006 Paris',
-       'SRID=4326;POINT(2.3325 48.8511)'::geography, 'food', 3, true
+       'SRID=4326;POINT(2.3325 48.8511)'::geography, 'food'::spot_category, 3, true
 FROM inserted_article;
 
 COMMIT;
