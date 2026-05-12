@@ -9,10 +9,18 @@ import {
   InfoWindow,
   useMap,
 } from '@vis.gl/react-google-maps';
+import { latLngToCell, cellToBoundary, cellToLatLng } from 'h3-js';
 import { Lock } from '@locore/ui/icons';
 import type { Article, Spot } from '../lib/mock';
 import { Purchases } from '../lib/storage/local';
 import { locoreMapStyles, pinColorForScore } from './map/locoreMapStyle';
+
+/**
+ * H3 ヘキサゴン解像度。Res 9 は約 460m 辺 / 0.1 km² 面積。
+ * パリ市内のような都市部にちょうど良いブロックサイズ。
+ * Uber と同じ H3 を採用しているので、NYC / 東京等にもそのまま拡張可能。
+ */
+const H3_RESOLUTION = 9;
 
 const PARIS_CENTER = { lat: 48.8606, lng: 2.3376 };
 
@@ -101,6 +109,25 @@ function makeOwnPinSvg(): string {
     `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">` +
     `<circle cx="16" cy="16" r="13" fill="#F59E0B" stroke="white" stroke-width="2.5"/>` +
     `<path d="M16 9.5l1.9 4 4.4.6-3.2 3.1.8 4.3L16 19.5l-3.9 2 .8-4.3-3.2-3.1 4.4-.6z" fill="white"/>` +
+    `</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/** ヘキサゴン中央のカウントバッジ（鍵 + 件数）*/
+function makeHexCountSvg(count: number): string {
+  const label = String(count);
+  // 数字の桁数で幅を調整
+  const w = label.length === 1 ? 32 : label.length === 2 ? 38 : 44;
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="32" viewBox="0 0 ${w} 32">` +
+    `<rect x="1" y="1" width="${w - 2}" height="30" rx="15" ` +
+    `fill="#0E0E10" stroke="#F59E0B" stroke-width="1.5" opacity="0.92"/>` +
+    `<path d="M11 14V12a3 3 0 0 1 6 0v2M9 14h10v8H9z" ` +
+    `fill="none" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" ` +
+    `transform="scale(0.55) translate(7 6)"/>` +
+    `<text x="${w - 9}" y="20" text-anchor="end" ` +
+    `font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#F4F4F0">` +
+    `${label}</text>` +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -197,6 +224,131 @@ type GroupWithUnlock = SpotGroup & {
   displayPosition: { lat: number; lng: number };
 };
 
+/**
+ * H3 ヘキサゴン集約。locked グループを同じ hex セル内で 1 つにまとめ、
+ * ヘキサ中心 = 幾何的な固定点なので逆算で実際のスポット位置を割り出せない。
+ */
+type HexAggregate = {
+  cellId: string;
+  center: { lat: number; lng: number };
+  boundary: Array<{ lat: number; lng: number }>;
+  groups: GroupWithUnlock[];
+  articles: Article[]; // 重複排除済み
+};
+
+function buildHexAggregates(lockedGroups: GroupWithUnlock[]): HexAggregate[] {
+  const byCell = new Map<string, GroupWithUnlock[]>();
+  for (const g of lockedGroups) {
+    const cellId = latLngToCell(g.position.lat, g.position.lng, H3_RESOLUTION);
+    const arr = byCell.get(cellId) ?? [];
+    arr.push(g);
+    byCell.set(cellId, arr);
+  }
+  return Array.from(byCell.entries()).map(([cellId, groups]) => {
+    const [centerLat, centerLng] = cellToLatLng(cellId);
+    const boundary = cellToBoundary(cellId).map(([lat, lng]) => ({
+      lat,
+      lng,
+    }));
+    // 含まれる記事を重複排除（同じ記事が複数スポット持つことがあるため）
+    const articleMap = new Map<string, Article>();
+    for (const g of groups) {
+      for (const a of g.articles) {
+        articleMap.set(a.id, a);
+      }
+    }
+    return {
+      cellId,
+      center: { lat: centerLat, lng: centerLng },
+      boundary,
+      groups,
+      articles: Array.from(articleMap.values()).sort((a, b) => {
+        const ta = new Date(b.publishedAt).getTime();
+        const tb = new Date(a.publishedAt).getTime();
+        return ta - tb;
+      }),
+    };
+  });
+}
+
+/**
+ * ロック中スポット用のヘキサゴンレイヤー。
+ *   - 半透明の amber 塗りのヘキサ（H3 セル境界）
+ *   - 中央にカウントバッジ（鍵 + N）
+ *   - バッジクリック → 親に hex セル ID を通知
+ * 中心が H3 セルの幾何中心に固定されているので、逆算で店位置がバレない。
+ */
+function HexagonLayer({
+  hexes,
+  onHexClick,
+}: {
+  hexes: HexAggregate[];
+  onHexClick: (cellId: string) => void;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const G = (window as any).google?.maps;
+    if (!G) return;
+
+    const created: Array<{
+      m?: { setMap: (m: unknown) => void };
+      poly?: { setMap: (m: unknown) => void };
+      listener?: { remove?: () => void };
+    }> = [];
+
+    hexes.forEach((h) => {
+      // 1. ヘキサのポリゴン
+      const polygon = new G.Polygon({
+        paths: h.boundary,
+        strokeColor: '#F59E0B',
+        strokeOpacity: 0.55,
+        strokeWeight: 1.5,
+        fillColor: '#F59E0B',
+        fillOpacity: 0.12,
+        clickable: false,
+        zIndex: 1,
+        map,
+      });
+      created.push({ poly: polygon });
+
+      // 2. 中央のカウントバッジ
+      const badge = new G.Marker({
+        position: h.center,
+        map,
+        // ホバーで「N 件の記事」だけ。具体名は絶対に出さない。
+        title: `このエリアに ${h.articles.length} 件のロック中の記事`,
+        icon: {
+          url: makeHexCountSvg(h.articles.length),
+          // SVG の幅は桁数で 32〜44、高さ 32 固定
+          scaledSize: new G.Size(
+            h.articles.length < 10 ? 32 : h.articles.length < 100 ? 38 : 44,
+            32,
+          ),
+          anchor: new G.Point(
+            h.articles.length < 10 ? 16 : h.articles.length < 100 ? 19 : 22,
+            16,
+          ),
+        },
+        opacity: 0.92,
+        zIndex: 3,
+      });
+      const listener = badge.addListener('click', () => onHexClick(h.cellId));
+      created.push({ m: badge, listener });
+    });
+
+    return () => {
+      created.forEach((x) => {
+        x.listener?.remove?.();
+        x.m?.setMap(null);
+        x.poly?.setMap(null);
+      });
+    };
+  }, [map, hexes, onHexClick]);
+  return null;
+}
+
 function MarkersLayer({
   groups,
   onPinClick,
@@ -248,38 +400,8 @@ function MarkersLayer({
         });
         const listener = m.addListener('click', () => onPinClick(g));
         created.push({ m, listener });
-      } else {
-        // ロック中: Airbnb 風のぼかし円 + 中央にグレー鍵ピン
-        // 円は半径 280m、薄いグレー塗り
-        const circle = new G.Circle({
-          center: g.displayPosition,
-          radius: 280,
-          map,
-          strokeWeight: 1.5,
-          strokeColor: '#6B7280',
-          strokeOpacity: 0.45,
-          fillColor: '#9CA3AF',
-          fillOpacity: 0.18,
-          clickable: false,
-        });
-        created.push({ circle });
-
-        const m = new G.Marker({
-          position: g.displayPosition,
-          map,
-          // ⚠️ title を設定しない or 汎用 → ホバーで実名が出ないように
-          title: 'ロック中（このエリアに記事あり）',
-          icon: {
-            url: makeLockedPinSvg(),
-            scaledSize: new G.Size(24, 24),
-            anchor: new G.Point(12, 12),
-          },
-          opacity: 0.92,
-          zIndex: 1, // 解放済みピンより下に
-        });
-        const listener = m.addListener('click', () => onPinClick(g));
-        created.push({ m, listener });
       }
+      // locked グループはここで処理しない。HexagonLayer で H3 セル単位に集約描画。
     });
 
     return () => {
@@ -302,6 +424,7 @@ function MapBody({
 }: Omit<MapInnerProps, 'apiKey'>) {
   const groups = useMemo(() => buildGroups(spots, articles), [spots, articles]);
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [activeHexId, setActiveHexId] = useState<string | null>(null);
 
   // 購入状態：サーバ由来 + クライアントの localStorage を合算
   const [localPurchases, setLocalPurchases] = useState<Set<string>>(
@@ -336,8 +459,17 @@ function MapBody({
     });
   }, [groups, purchasedSet, ownSet]);
 
+  // locked グループだけを H3 ヘキサに集約。unlocked / own は普通のピンで描画。
+  const hexes = useMemo(() => {
+    const locked = groupsWithUnlock.filter((g) => !g.unlocked && !g.isOwn);
+    return buildHexAggregates(locked);
+  }, [groupsWithUnlock]);
+
   const activeGroup = activeKey
     ? groupsWithUnlock.find((g) => g.key === activeKey) ?? null
+    : null;
+  const activeHex = activeHexId
+    ? hexes.find((h) => h.cellId === activeHexId) ?? null
     : null;
   const isUnlocked = (a: Article) => purchasedSet.has(a.id);
   const groupHasUnlock = activeGroup ? activeGroup.unlocked : false;
@@ -355,12 +487,25 @@ function MapBody({
         clickableIcons={false}
         styles={locoreMapStyles}
         style={{ width: '100%', height: '100%' }}
-        onClick={() => setActiveKey(null)}
+        onClick={() => {
+          setActiveKey(null);
+          setActiveHexId(null);
+        }}
       >
         {showHeatmap ? <HeatmapCircles /> : null}
         <MarkersLayer
           groups={groupsWithUnlock}
-          onPinClick={(g) => setActiveKey(g.key)}
+          onPinClick={(g) => {
+            setActiveHexId(null);
+            setActiveKey(g.key);
+          }}
+        />
+        <HexagonLayer
+          hexes={hexes}
+          onHexClick={(cellId) => {
+            setActiveKey(null);
+            setActiveHexId(cellId);
+          }}
         />
         {activeGroup ? (
           <InfoWindow
@@ -463,12 +608,72 @@ function MapBody({
               </ul>
 
               {!groupHasUnlock ? (
-                <p className="mt-3 rounded-md bg-accent-50 px-2 py-1.5 text-[10px] leading-relaxed text-foreground/70">
-                  地図上のグレーの円は <strong>おおよそのエリア（半径 280m）</strong> を示しています。記事を購入すると、正確な位置・店舗名・住所・営業時間が
+                <p className="mt-3 rounded-md bg-primary-500/10 px-2 py-1.5 text-[10px] leading-relaxed text-foreground/70">
+                  地図上の amber ヘキサは <strong>このエリアに記事がある</strong> ことだけ伝えます。記事を購入すると、正確な位置・店舗名・住所・営業時間が
                   <strong className="ml-0.5 text-primary-300">アンロック</strong>
                   されます。
                 </p>
               ) : null}
+            </div>
+          </InfoWindow>
+        ) : null}
+
+        {/* ヘキサクリック → このエリアに紐づくロック中記事のリスト */}
+        {activeHex ? (
+          <InfoWindow
+            position={activeHex.center}
+            pixelOffset={[0, -16]}
+            onCloseClick={() => setActiveHexId(null)}
+          >
+            <div className="min-w-[280px] max-w-[340px] p-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-700">
+                このエリア
+              </p>
+              <h4 className="mt-0.5 inline-flex items-center gap-1.5 text-[15px] font-bold leading-snug text-neutral-900">
+                <Lock className="h-3.5 w-3.5" />
+                {activeHex.articles.length} 件の記事
+              </h4>
+              <p className="mt-1 text-[11px] text-neutral-600">
+                約 460m 四方のヘキサ。正確な場所は記事を購入すると解放されます。
+              </p>
+
+              <ul className="mt-3 max-h-[260px] space-y-2 overflow-y-auto pr-1">
+                {activeHex.articles.map((a) => (
+                  <li key={a.id}>
+                    <Link
+                      href={`/articles/${a.id}`}
+                      className="flex gap-2 rounded-md p-1.5 transition hover:bg-neutral-100"
+                    >
+                      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-sm bg-neutral-100">
+                        <Image
+                          src={a.coverImageUrl}
+                          alt={a.title}
+                          fill
+                          sizes="64px"
+                          className="object-cover opacity-90"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-neutral-900/30">
+                          <Lock className="h-3 w-3 text-white" />
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-neutral-700">
+                          {a.title}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-2 text-[10px] text-neutral-600">
+                          <span className="inline-flex items-center gap-0.5 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[9px] font-semibold text-neutral-500">
+                            <Lock className="h-2.5 w-2.5" />
+                            ロック
+                          </span>
+                          <span className="tabular">
+                            ¥{a.priceJpy.toLocaleString('ja-JP')}
+                          </span>
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </InfoWindow>
         ) : null}
