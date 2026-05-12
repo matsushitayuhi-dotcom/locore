@@ -3,71 +3,69 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — Premium Dark (v2).
+ * Locore Design Tokens — Editorial Light (v3).
  * Source of truth: packages/ui/src/styles/globals.css
- * （変更時は両ファイルを必ずペアで更新すること）
  */
 
 @layer base {
   :root {
     --color-neutral-0:   #ffffff;
     --color-neutral-25:  #fafaf7;
-    --color-neutral-50:  #f4f4f0;
-    --color-neutral-100: #d4d4d8;
-    --color-neutral-200: #a1a1aa;
-    --color-neutral-300: #71717a;
-    --color-neutral-400: #52525b;
-    --color-neutral-500: #3f3f46;
-    --color-neutral-700: #27272a;
+    --color-neutral-50:  #f4f2ec;
+    --color-neutral-100: #e7e5e0;
+    --color-neutral-200: #c9c5bb;
+    --color-neutral-300: #a5a09a;
+    --color-neutral-400: #837f78;
+    --color-neutral-500: #71717a;
+    --color-neutral-700: #3f3f46;
     --color-neutral-900: #18181b;
-    --color-neutral-950: #0e0e10;
+    --color-neutral-950: #0e0e0f;
 
-    /* Primary: Warm Amber */
-    --color-primary-50:  #fef6e7;
-    --color-primary-100: #fde8b5;
-    --color-primary-200: #fbd27d;
-    --color-primary-300: #fab840;
-    --color-primary-500: #f59e0b;
-    --color-primary-700: #b97808;
-    --color-primary-900: #6b4504;
+    /* Primary: Terra-cotta */
+    --color-primary-50:  #faf1ed;
+    --color-primary-100: #f4dace;
+    --color-primary-200: #ebc0ad;
+    --color-primary-300: #dd9477;
+    --color-primary-500: #d4634a;
+    --color-primary-700: #a84a35;
+    --color-primary-900: #6e2f1f;
 
-    /* Secondary: Deep Navy */
+    /* Secondary: Deep blue */
     --color-secondary-50:  #dceaf5;
     --color-secondary-300: #6ba1c9;
     --color-secondary-500: #2c7eb4;
     --color-secondary-700: #1c5384;
 
-    /* Accent: Warm Coral (likes / saves) */
-    --color-accent-50:  #ffe8e0;
-    --color-accent-300: #ff9f7a;
-    --color-accent-500: #ff6b47;
-    --color-accent-700: #c8472a;
+    /* Accent: Deeper terra-red (hearts / saves) */
+    --color-accent-50:  #fce5dc;
+    --color-accent-300: #db8467;
+    --color-accent-500: #c84a2c;
+    --color-accent-700: #903019;
 
-    --color-success-50:  #064e3b;
-    --color-success-500: #10b981;
-    --color-warning-50:  #422d04;
-    --color-warning-500: #f59e0b;
-    --color-warning-700: #b97808;
-    --color-danger-50:   #4c1d1d;
-    --color-danger-500:  #ef4444;
-    --color-info-50:     #172554;
-    --color-info-500:    #3b82f6;
+    --color-success-50:  #dcfce7;
+    --color-success-500: #15803d;
+    --color-warning-50:  #fef3c7;
+    --color-warning-500: #d97706;
+    --color-warning-700: #92400e;
+    --color-danger-50:   #fee2e2;
+    --color-danger-500:  #dc2626;
+    --color-info-50:     #dbeafe;
+    --color-info-500:    #2563eb;
 
-    --color-local-high: #f59e0b;
-    --color-local-mid:  #fbd27d;
-    --color-local-low:  #6b4504;
+    --color-local-high: #d4634a;
+    --color-local-mid:  #dd9477;
+    --color-local-low:  #c9c5bb;
 
-    --color-bg: var(--color-neutral-950);
-    --color-surface: var(--color-neutral-900);
-    --color-surface-muted: #1f1f23;
-    --color-border: var(--color-neutral-700);
-    --color-border-strong: var(--color-neutral-500);
-    --color-fg: var(--color-neutral-50);
-    --color-fg-muted: var(--color-neutral-200);
-    --color-fg-subtle: var(--color-neutral-300);
+    --color-bg: var(--color-neutral-25);
+    --color-surface: var(--color-neutral-0);
+    --color-surface-muted: var(--color-neutral-50);
+    --color-border: var(--color-neutral-100);
+    --color-border-strong: var(--color-neutral-200);
+    --color-fg: var(--color-neutral-900);
+    --color-fg-muted: var(--color-neutral-500);
+    --color-fg-subtle: var(--color-neutral-400);
     --color-ring: var(--color-primary-500);
 
-    /* Typography — next/font の変数は apps/web/app/layout.tsx で wire される */
     --font-sans:       "Inter Tight", "Inter", "Helvetica Neue", Helvetica,
                        system-ui, sans-serif;
     --font-sans-jp:    "Noto Sans JP", "Hiragino Sans", "Yu Gothic Medium",
@@ -102,10 +100,10 @@
     --radius-xl: 24px;
     --radius-full: 9999px;
 
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+    --shadow-xs: 0 1px 2px rgba(24, 24, 27, 0.04);
+    --shadow-sm: 0 2px 6px rgba(24, 24, 27, 0.06);
+    --shadow-md: 0 6px 16px rgba(24, 24, 27, 0.08);
+    --shadow-lg: 0 16px 32px rgba(24, 24, 27, 0.12);
 
     --duration-fast: 120ms;
     --duration-base: 200ms;
@@ -115,7 +113,7 @@
   }
 
   html {
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -130,7 +128,7 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif-jp);
-    color: var(--color-neutral-50);
+    color: var(--color-neutral-900);
     font-weight: 600;
     letter-spacing: -0.01em;
   }
@@ -169,17 +167,17 @@
   }
 }
 
-/* Locore map pin — Google Maps の AdvancedMarker に HTML として埋める */
+/* Locore map pin — pin uses local-high amber-ish */
 .locore-pin {
   border-radius: 9999px;
-  border: 2px solid var(--color-neutral-900);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
+  border: 2px solid white;
+  box-shadow: 0 3px 10px rgba(24, 24, 27, 0.15);
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-neutral-950);
+  color: white;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -188,14 +186,14 @@
 .locore-pin:hover {
   transform: scale(1.12);
 }
-.locore-pin--high { background: var(--color-local-high); color: var(--color-neutral-950); }
-.locore-pin--mid  { background: var(--color-local-mid); color: var(--color-neutral-950); }
-.locore-pin--low  { background: var(--color-local-low); color: var(--color-neutral-50); }
+.locore-pin--high { background: var(--color-local-high); color: #ffffff; }
+.locore-pin--mid  { background: var(--color-local-mid);  color: #18181b; }
+.locore-pin--low  { background: var(--color-local-low);  color: #18181b; }
 
 .prose-locore p {
   margin-bottom: 1.25em;
   line-height: 1.85;
-  color: var(--color-neutral-100);
+  color: var(--color-neutral-700);
   font-size: 16px;
 }
 
@@ -206,10 +204,9 @@
   margin-top: 2em;
   margin-bottom: 0.75em;
   letter-spacing: -0.01em;
-  color: var(--color-neutral-50);
+  color: var(--color-neutral-900);
 }
 
-/* Google Maps の標準ウィジェットを隠して "Google感" を排除 */
 .locore-map-canvas .gmnoprint,
 .locore-map-canvas .gm-style-cc,
 .locore-map-canvas a[href^="https://maps.google.com/maps"] {

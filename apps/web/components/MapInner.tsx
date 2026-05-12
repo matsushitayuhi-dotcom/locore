@@ -107,7 +107,7 @@ function makePinSvg(color: string): string {
 function makeOwnPinSvg(): string {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">` +
-    `<circle cx="16" cy="16" r="13" fill="#F59E0B" stroke="white" stroke-width="2.5"/>` +
+    `<circle cx="16" cy="16" r="13" fill="#D4634A" stroke="white" stroke-width="2.5"/>` +
     `<path d="M16 9.5l1.9 4 4.4.6-3.2 3.1.8 4.3L16 19.5l-3.9 2 .8-4.3-3.2-3.1 4.4-.6z" fill="white"/>` +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -121,12 +121,12 @@ function makeHexCountSvg(count: number): string {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="32" viewBox="0 0 ${w} 32">` +
     `<rect x="1" y="1" width="${w - 2}" height="30" rx="15" ` +
-    `fill="#0E0E10" stroke="#F59E0B" stroke-width="1.5" opacity="0.92"/>` +
+    `fill="#FFFFFF" stroke="#D4634A" stroke-width="1.5" opacity="0.92"/>` +
     `<path d="M11 14V12a3 3 0 0 1 6 0v2M9 14h10v8H9z" ` +
-    `fill="none" stroke="#F59E0B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" ` +
+    `fill="none" stroke="#D4634A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" ` +
     `transform="scale(0.55) translate(7 6)"/>` +
     `<text x="${w - 9}" y="20" text-anchor="end" ` +
-    `font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#F4F4F0">` +
+    `font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#18181B">` +
     `${label}</text>` +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -302,10 +302,10 @@ function HexagonLayer({
       // 1. ヘキサのポリゴン
       const polygon = new G.Polygon({
         paths: h.boundary,
-        strokeColor: '#F59E0B',
+        strokeColor: '#D4634A',
         strokeOpacity: 0.55,
         strokeWeight: 1.5,
-        fillColor: '#F59E0B',
+        fillColor: '#D4634A',
         fillOpacity: 0.12,
         clickable: false,
         zIndex: 1,

@@ -3,85 +3,80 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — Premium Dark (v2).
+ * Locore Design Tokens — Editorial Light (v3).
  *
  * Brand voice:
- *   - Dark background lets travel photos pop (Netflix-style cinematic feel).
- *   - One warm amber accent (#F59E0B) for CTAs, highlights, and price tags.
- *   - One coral accent for likes/saves (treated as the "heart" color).
- *   - Editorial typography stack: Inter Tight for UI/numbers, Noto Sans JP
+ *   - Warm off-white background (#FAFAF7) for the editorial reading feel.
+ *   - One mature terra-cotta accent (#D4634A) for CTAs / highlights.
+ *   - Neutrals are warm-gray, no green tint.
+ *   - Editorial typography: Inter Tight for UI/numbers, Noto Sans JP
  *     for body, Noto Serif JP for editorial headings.
- *   - Neutrals are warm-gray (Zinc-ish) — no green tint.
  */
 
 @layer base {
   :root {
-    /* === Neutral (warm dark scale — Zinc-ish, never green) ============ */
-    --color-neutral-0:   #ffffff;      /* pure white, used sparingly */
-    --color-neutral-25:  #fafaf7;      /* off-white (light overlays only) */
-    --color-neutral-50:  #f4f4f0;      /* warm off-white = main text */
-    --color-neutral-100: #d4d4d8;
-    --color-neutral-200: #a1a1aa;
-    --color-neutral-300: #71717a;
-    --color-neutral-400: #52525b;
-    --color-neutral-500: #3f3f46;
-    --color-neutral-700: #27272a;      /* border-strong */
-    --color-neutral-900: #18181b;      /* surface (card) */
-    --color-neutral-950: #0e0e10;      /* background — near-black, warm */
+    /* === Neutral (warm gray scale, light → dark) ===================== */
+    --color-neutral-0:   #ffffff;      /* pure white (cards)            */
+    --color-neutral-25:  #fafaf7;      /* warm off-white (background)   */
+    --color-neutral-50:  #f4f2ec;      /* muted surface                 */
+    --color-neutral-100: #e7e5e0;      /* border                        */
+    --color-neutral-200: #c9c5bb;      /* border-strong                 */
+    --color-neutral-300: #a5a09a;
+    --color-neutral-400: #837f78;
+    --color-neutral-500: #71717a;      /* fg-muted (secondary text)     */
+    --color-neutral-700: #3f3f46;
+    --color-neutral-900: #18181b;      /* fg (primary text)             */
+    --color-neutral-950: #0e0e0f;
 
-    /* === Primary: Warm Amber — the new emerald ======================= */
-    --color-primary-50:  #fef6e7;
-    --color-primary-100: #fde8b5;
-    --color-primary-200: #fbd27d;
-    --color-primary-300: #fab840;
-    --color-primary-500: #f59e0b;      /* main amber */
-    --color-primary-700: #b97808;
-    --color-primary-900: #6b4504;
+    /* === Primary: Terra-cotta — the mature warm accent =============== */
+    --color-primary-50:  #faf1ed;
+    --color-primary-100: #f4dace;
+    --color-primary-200: #ebc0ad;
+    --color-primary-300: #dd9477;
+    --color-primary-500: #d4634a;      /* main terra-cotta              */
+    --color-primary-700: #a84a35;
+    --color-primary-900: #6e2f1f;
 
-    /* === Secondary: Deep navy (rare, for trust signals / links) ===== */
+    /* === Secondary: Deep blue — rare, for trust signals ============== */
     --color-secondary-50:  #dceaf5;
     --color-secondary-300: #6ba1c9;
     --color-secondary-500: #2c7eb4;
     --color-secondary-700: #1c5384;
 
-    /* === Accent: Warm Coral (for likes / "save" / heart icons) ====== */
-    --color-accent-50:  #ffe8e0;
-    --color-accent-300: #ff9f7a;
-    --color-accent-500: #ff6b47;       /* warm coral */
-    --color-accent-700: #c8472a;
+    /* === Accent: Deeper terra-red for hearts / saves ================= */
+    --color-accent-50:  #fce5dc;
+    --color-accent-300: #db8467;
+    --color-accent-500: #c84a2c;
+    --color-accent-700: #903019;
 
     /* === Semantic — used sparingly =================================== */
-    --color-success-50:  #064e3b;      /* tinted bg for dark mode */
-    --color-success-500: #10b981;
-    --color-warning-50:  #422d04;
-    --color-warning-500: #f59e0b;
-    --color-warning-700: #b97808;
-    --color-danger-50:   #4c1d1d;
-    --color-danger-500:  #ef4444;
-    --color-info-50:     #172554;
-    --color-info-500:    #3b82f6;
+    --color-success-50:  #dcfce7;
+    --color-success-500: #15803d;
+    --color-warning-50:  #fef3c7;
+    --color-warning-500: #d97706;
+    --color-warning-700: #92400e;
+    --color-danger-50:   #fee2e2;
+    --color-danger-500:  #dc2626;
+    --color-info-50:     #dbeafe;
+    --color-info-500:    #2563eb;
 
-    /* === Local-score scale — amber gradient ========================== */
-    --color-local-high: #f59e0b;   /* 70-100, vivid amber */
-    --color-local-mid:  #fbd27d;   /* 30-69, soft amber */
-    --color-local-low:  #6b4504;   /* 0-29, dark amber/brown */
+    /* === Local-score scale (terra gradient) ========================== */
+    --color-local-high: #d4634a;       /* 70-100, vivid terra           */
+    --color-local-mid:  #dd9477;       /* 30-69, soft terra             */
+    --color-local-low:  #c9c5bb;       /* 0-29, muted gray              */
 
-    /* === Surface roles (the bones of dark mode) ===================== */
-    --color-bg: var(--color-neutral-950);          /* page background */
-    --color-surface: var(--color-neutral-900);     /* cards */
-    --color-surface-muted: #1f1f23;                /* card hover/muted */
-    --color-border: var(--color-neutral-700);
-    --color-border-strong: var(--color-neutral-500);
-    --color-fg: var(--color-neutral-50);           /* primary text */
-    --color-fg-muted: var(--color-neutral-200);    /* secondary text */
-    --color-fg-subtle: var(--color-neutral-300);   /* tertiary text */
+    /* === Surface roles =============================================== */
+    --color-bg: var(--color-neutral-25);
+    --color-surface: var(--color-neutral-0);
+    --color-surface-muted: var(--color-neutral-50);
+    --color-border: var(--color-neutral-100);
+    --color-border-strong: var(--color-neutral-200);
+    --color-fg: var(--color-neutral-900);
+    --color-fg-muted: var(--color-neutral-500);
+    --color-fg-subtle: var(--color-neutral-400);
     --color-ring: var(--color-primary-500);
 
-    /* === Typography ====================================================
-       Editorial stack — Inter Tight for UI/numbers, Noto Sans JP for body,
-       Noto Serif JP for headings. next/font wires the variables in
-       apps/web/app/layout.tsx; here we keep fallbacks.
-    ================================================================== */
+    /* === Typography ================================================== */
     --font-sans:       "Inter Tight", "Inter", "Helvetica Neue", Helvetica,
                        system-ui, sans-serif;
     --font-sans-jp:    "Noto Sans JP", "Hiragino Sans", "Yu Gothic Medium",
@@ -109,20 +104,20 @@
     --space-20: 5rem;
     --space-24: 6rem;
 
-    /* === Radii — Airbnb-inspired, slightly more pronounced =========== */
+    /* === Radii ======================================================= */
     --radius-none: 0;
     --radius-xs: 6px;
     --radius-sm: 8px;
-    --radius-md: 12px;     /* Airbnb cards use 12px */
+    --radius-md: 12px;
     --radius-lg: 16px;
     --radius-xl: 24px;
     --radius-full: 9999px;
 
-    /* === Shadows — recalibrated for dark backgrounds ================ */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
+    /* === Shadows (light mode, gentle) ================================ */
+    --shadow-xs: 0 1px 2px rgba(24, 24, 27, 0.04);
+    --shadow-sm: 0 2px 6px rgba(24, 24, 27, 0.06);
+    --shadow-md: 0 6px 16px rgba(24, 24, 27, 0.08);
+    --shadow-lg: 0 16px 32px rgba(24, 24, 27, 0.12);
 
     /* === Motion ====================================================== */
     --duration-fast: 120ms;
@@ -133,7 +128,7 @@
   }
 
   html {
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -145,15 +140,13 @@
     font-feature-settings: "palt" 1;
   }
 
-  /* 見出しは Noto Serif JP（エディトリアル感）。本文は Sans。 */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif-jp);
-    color: var(--color-neutral-50);
+    color: var(--color-neutral-900);
     font-weight: 600;
     letter-spacing: -0.01em;
   }
 
-  /* 数字 / UI 部品は Inter Tight で打ち抜く（タビュラー含む） */
   .tabular,
   [class*="text-"][class*="tabular"] {
     font-family: var(--font-sans);
@@ -172,7 +165,6 @@
     box-shadow: var(--shadow-md);
   }
 
-  /* Airbnb 風カード: 角丸 12px + 軽い影 + ホバーで僅かに浮く */
   .locore-card {
     background-color: var(--color-surface);
     border-radius: var(--radius-md);

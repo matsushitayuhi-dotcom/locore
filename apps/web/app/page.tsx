@@ -23,16 +23,16 @@ export default async function HomePage() {
 
   return (
     <main className="bg-background">
-      {/* Hero — Premium Dark：暗背景 + 温かみのある amber blob */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-neutral-950 via-card to-neutral-950">
-        {/* 装飾 blob — amber を薄く乗せて奥行きを出す */}
+      {/* Hero — Editorial Light：オフホワイト + 温かみのある terra blob */}
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary-50 via-card to-card">
+        {/* 装飾 blob — terra を薄く乗せて奥行きを出す */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primary-500/15 blur-3xl"
+          className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primary-200/40 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-accent-500/10 blur-3xl"
+          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-accent-300/20 blur-3xl"
         />
         <div className="relative mx-auto max-w-screen-xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">

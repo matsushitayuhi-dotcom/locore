@@ -45,7 +45,7 @@ const TRANSPORT_LABEL: Record<string, string> = {
   other: 'その他',
 };
 
-const PIN_COLOR = '#F59E0B'; // primary-500 amber
+const PIN_COLOR = '#D4634A'; // primary-500 amber
 
 function formatDuration(min: number | null | undefined): string {
   if (!min || min <= 0) return '';

@@ -1,17 +1,17 @@
 /**
- * Locore 用の Google Maps スタイル — Premium Dark v2。
+ * Locore 用の Google Maps スタイル — Editorial Light v3。
  *
  * 設計指針:
- *   - 全体を near-black 寄りの warm gray にして、amber ピンが最大限映えるように。
- *   - 道路は薄いグレーで地形の輪郭だけ残す（道の名前は主要なもの以外消す）。
- *   - 水域・公園は彩度を抑えたダーク。
- *   - POI / transit / business は全部 OFF（"Google 地図感" の消去）。
+ *   - 全体をウォームオフホワイト (#FAFAF7) ベースで「紙の地図」感を出す
+ *   - 道路は控えめな白〜薄ベージュで地形の主張を抑え、terra ピンが目立つようにする
+ *   - 水域は穏やかな青グレー、公園は淡い warm green
+ *   - POI / transit は全部 OFF（"Google 地図感" の消去）
  */
 export const locoreMapStyles: google.maps.MapTypeStyle[] = [
-  // 全体ベース：温かみのあるダーク
+  // 全体ベース：ウォームオフホワイト
   {
     elementType: 'geometry',
-    stylers: [{ color: '#18181B' }],
+    stylers: [{ color: '#FAFAF7' }],
   },
   {
     elementType: 'labels',
@@ -23,30 +23,30 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   },
   {
     elementType: 'labels.text.stroke',
-    stylers: [{ color: '#0E0E10' }],
+    stylers: [{ color: '#FFFFFF' }],
   },
 
   // 行政界・ラベルは「主要都市・国名」だけ薄く残す
   {
     featureType: 'administrative.country',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#A1A1AA' }],
+    stylers: [{ color: '#A5A09A' }],
   },
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#A1A1AA' }, { visibility: 'on' }],
+    stylers: [{ color: '#A5A09A' }, { visibility: 'on' }],
   },
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.stroke',
-    stylers: [{ color: '#0E0E10' }, { weight: 3 }],
+    stylers: [{ color: '#FFFFFF' }, { weight: 3 }],
   },
   // 主要道路の名前だけ薄く残す
   {
     featureType: 'road.arterial',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#71717A' }, { visibility: 'on' }],
+    stylers: [{ color: '#A5A09A' }, { visibility: 'on' }],
   },
 
   // POI (店・観光地アイコン) は全部消す
@@ -55,53 +55,53 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.attraction', stylers: [{ visibility: 'off' }] },
 
-  // 道路：ダークグレー（道の存在は分かるが主張しない）
+  // 道路：ほぼ白
   {
     featureType: 'road',
     elementType: 'geometry',
-    stylers: [{ color: '#27272A' }],
+    stylers: [{ color: '#FFFFFF' }],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry',
-    stylers: [{ color: '#3F3F46' }],
+    stylers: [{ color: '#F4F2EC' }],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry.stroke',
-    stylers: [{ color: '#52525B' }],
+    stylers: [{ color: '#E7E5E0' }],
   },
   {
     featureType: 'road.arterial',
     elementType: 'geometry',
-    stylers: [{ color: '#2A2A2D' }],
+    stylers: [{ color: '#FBFAF5' }],
   },
 
-  // 公園：暗いミュート緑（自然を残しつつ主張しない）
+  // 公園：淡い warm green
   {
     featureType: 'landscape.natural',
     elementType: 'geometry',
-    stylers: [{ color: '#1F2A24' }],
+    stylers: [{ color: '#EDF1E5' }],
   },
   {
     featureType: 'poi.park',
     elementType: 'geometry',
-    stylers: [{ visibility: 'on' }, { color: '#1F3328' }],
+    stylers: [{ visibility: 'on' }, { color: '#E4ECD2' }],
   },
 
-  // 水域：暗いミュート青（コントラストで川や海が分かる）
+  // 水域：穏やかな青グレー
   {
     featureType: 'water',
     elementType: 'geometry',
-    stylers: [{ color: '#0F1F2E' }],
+    stylers: [{ color: '#DCEAF5' }],
   },
 ];
 
-/** ピンの色（local score に応じて切り替え）— amber 系の濃淡で */
+/** ピンの色（local score に応じて切り替え）— terra-cotta 系の濃淡で */
 export function pinColorForScore(score: number): string {
-  if (score >= 70) return '#F59E0B'; // 鮮やかな amber（最もローカル）
-  if (score >= 30) return '#FBD27D'; // 中間
-  return '#6B4504'; // 深いブラウン（観光地寄り）
+  if (score >= 70) return '#D4634A'; // 鮮やか terra-cotta（最もローカル）
+  if (score >= 30) return '#DD9477'; // 中間
+  return '#C9C5BB'; // 淡いグレー（観光地寄り）
 }
 
 /** ピンの「クラス」（HTML 用、locore-pin と組み合わせ） */
