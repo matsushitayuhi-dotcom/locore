@@ -132,7 +132,7 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
         data-locore-article-id={article.id}
         onClick={onClick ? handleRootClick : undefined}
         className={cn(
-          "group flex flex-col gap-3 transition-transform duration-fast ease-out",
+          "group flex flex-col gap-2 transition-transform duration-fast ease-out",
           "active:scale-[0.98]",
           onClick && "cursor-pointer",
           className,
@@ -159,35 +159,21 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
             </div>
           )}
 
-          {/* Top-left: area + type pills */}
-          {(area || articleType) && (
-            <div className="absolute left-3 top-3 flex items-center gap-1.5">
-              {area ? (
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1",
-                    "rounded-full bg-neutral-950/70 px-2.5 py-1 backdrop-blur-md",
-                    "text-[10px] font-bold uppercase tracking-wider text-neutral-50",
-                  )}
-                >
-                  <MapPin className="size-3" aria-hidden />
-                  {area}
-                </span>
-              ) : null}
-              {articleType ? (
-                <span
-                  data-locore-article-type={articleType}
-                  className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-1 backdrop-blur-md",
-                    "text-[10px] font-bold uppercase tracking-wider",
-                    articleType === "itinerary"
-                      ? "bg-primary-500 text-neutral-950"
-                      : "bg-neutral-950/70 text-neutral-50",
-                  )}
-                >
-                  {ARTICLE_TYPE_LABEL[articleType]}
-                </span>
-              ) : null}
+          {/* Top-left: type pill (area は下のメタに） */}
+          {articleType && (
+            <div className="absolute left-2 top-2">
+              <span
+                data-locore-article-type={articleType}
+                className={cn(
+                  "inline-flex items-center rounded-full px-2 py-0.5 backdrop-blur-md",
+                  "text-[9px] font-bold uppercase tracking-wider",
+                  articleType === "itinerary"
+                    ? "bg-primary-500 text-neutral-950"
+                    : "bg-neutral-950/70 text-neutral-50",
+                )}
+              >
+                {ARTICLE_TYPE_LABEL[articleType]}
+              </span>
             </div>
           )}
 
@@ -199,7 +185,7 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               aria-label={bookmarked ? "保存を外す" : "保存"}
               aria-pressed={bookmarked}
               className={cn(
-                "absolute right-3 top-3 inline-flex size-9 items-center justify-center",
+                "absolute right-2 top-2 inline-flex size-7 items-center justify-center",
                 "rounded-full backdrop-blur-md transition-transform duration-fast ease-out",
                 "hover:scale-110 active:scale-95",
                 bookmarked
@@ -209,7 +195,7 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               )}
             >
               <Heart
-                className="size-5"
+                className="size-4"
                 fill={bookmarked ? "currentColor" : "none"}
                 strokeWidth={2.2}
                 aria-hidden
@@ -217,11 +203,11 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
             </button>
           ) : null}
 
-          {/* Bottom-left: local score pill */}
+          {/* Bottom-left: local score pill (コンパクト) */}
           <div
             className={cn(
-              "absolute bottom-3 left-3 inline-flex items-center gap-1.5",
-              "rounded-full bg-neutral-950/80 px-2.5 py-1 backdrop-blur-md",
+              "absolute bottom-2 left-2 inline-flex items-center gap-1",
+              "rounded-full bg-neutral-950/80 px-2 py-0.5 backdrop-blur-md",
             )}
           >
             <span
@@ -234,44 +220,38 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
                     : "bg-primary-900",
               )}
             />
-            <span className="text-[10px] font-bold tracking-wider text-neutral-50">
-              <span className="tabular">{localScore}</span>
-              <span className="ml-0.5 opacity-60">/100</span>
+            <span className="text-[9px] font-bold tabular tracking-wider text-neutral-50">
+              {localScore}
             </span>
           </div>
         </div>
 
-        {/* Below image (Airbnb-style text on page bg) ---------------------- */}
+        {/* Below image — Airbnb 風コンパクトテキスト ---------------------- */}
         <div className="flex flex-col gap-0.5 px-0.5">
-          {/* Line 1: author + rating */}
+          {/* Line 1: area + rating */}
           <div className="flex items-center justify-between gap-2">
-            {!hideAuthor ? (
-              <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
-                {author.name}
-                {typeof author.residencyYears === "number" ? (
-                  <span className="ml-1.5 text-foreground/50">
-                    ・{author.residencyYears}年目
-                  </span>
-                ) : null}
-              </p>
-            ) : (
-              <span aria-hidden />
-            )}
+            <p className="min-w-0 truncate text-[11px] font-medium text-foreground/70">
+              {area ? (
+                <span className="inline-flex items-center gap-0.5">
+                  <MapPin className="size-3 shrink-0" aria-hidden />
+                  {area}
+                </span>
+              ) : null}
+            </p>
             {typeof reviewCount === "number" && reviewCount > 0 ? (
-              <div className="flex shrink-0 items-center gap-1 text-[13px] text-foreground">
-                <Star className="size-3.5 fill-current text-primary-500" aria-hidden />
+              <div className="flex shrink-0 items-center gap-0.5 text-[11px] text-foreground">
+                <Star className="size-3 fill-current text-primary-500" aria-hidden />
                 <span className="tabular font-medium">
                   {satisfactionStars.toFixed(1)}
                 </span>
-                <span className="tabular text-foreground/50">({reviewCount})</span>
               </div>
             ) : null}
           </div>
 
-          {/* Line 2: title (the article headline) */}
+          {/* Line 2: title (Noto Serif) — 1 行クランプで圧縮 */}
           <h3
             className={cn(
-              "line-clamp-2 text-[15px] font-semibold leading-snug text-foreground/95",
+              "line-clamp-2 text-[13px] font-semibold leading-snug text-foreground",
             )}
             style={{
               fontFamily: "var(--font-serif-jp), var(--font-serif), serif",
@@ -280,53 +260,44 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
             {title}
           </h3>
 
-          {/* Line 3: duration / spots */}
-          {(durationLabel || typeof spotsCount === "number") && (
-            <div className="flex flex-wrap items-center gap-x-2 text-[12px] text-foreground/55">
-              {durationLabel ? (
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="size-3" aria-hidden />
-                  <span>{durationLabel}</span>
-                </span>
-              ) : null}
-              {typeof spotsCount === "number" ? (
-                <>
-                  {durationLabel ? <span aria-hidden>·</span> : null}
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="size-3" aria-hidden />
-                    <span>
-                      <span className="tabular">{spotsCount}</span> 箇所
-                    </span>
-                  </span>
-                </>
-              ) : null}
-            </div>
-          )}
-
-          {/* Line 4: price + add to trip */}
-          <div className="mt-1.5 flex items-center justify-between">
-            <p className="text-[15px] font-semibold text-foreground">
-              <span className="tabular">¥{priceJpy.toLocaleString("ja-JP")}</span>
-              <span className="ml-1 text-[12px] font-normal text-foreground/50">
-                / 1記事
-              </span>
+          {/* Line 3: author (1 行、短く) */}
+          {!hideAuthor ? (
+            <p className="truncate text-[11px] text-foreground/55">
+              {author.name}
             </p>
-            {onAddToTrip ? (
-              <button
-                type="button"
-                onClick={handleAddToTrip}
-                aria-label="旅程に追加"
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-3 py-1.5",
-                  "bg-muted text-[12px] font-medium text-foreground",
-                  "ring-1 ring-border transition-colors duration-fast ease-out",
-                  "hover:bg-card hover:ring-border-strong",
-                )}
-              >
-                + 旅程
-              </button>
+          ) : null}
+
+          {/* Line 4: price (右端の "旅程に追加" は画像上のハートで代替済み) */}
+          <div className="mt-0.5 flex items-center justify-between gap-1">
+            <p className="text-[13px] font-semibold tabular text-foreground">
+              ¥{priceJpy.toLocaleString("ja-JP")}
+            </p>
+            {durationLabel || typeof spotsCount === "number" ? (
+              <p className="shrink-0 text-[10px] text-foreground/50">
+                {durationLabel}
+                {durationLabel && typeof spotsCount === "number" ? " · " : ""}
+                {typeof spotsCount === "number" ? `${spotsCount}箇所` : ""}
+              </p>
             ) : null}
           </div>
+
+          {/* オプション: 旅程に追加ボタン（スクロール時はノイズになるので
+              小さなアイコンボタンで右下端に） */}
+          {onAddToTrip ? (
+            <button
+              type="button"
+              onClick={handleAddToTrip}
+              aria-label="旅程に追加"
+              className={cn(
+                "mt-1 inline-flex w-full items-center justify-center gap-1 rounded-full px-2 py-1",
+                "bg-muted text-[11px] font-medium text-foreground/80",
+                "ring-1 ring-border transition-colors duration-fast ease-out",
+                "hover:bg-card hover:text-foreground",
+              )}
+            >
+              + 旅程
+            </button>
+          ) : null}
         </div>
       </article>
     );
