@@ -75,18 +75,7 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile nav strip — TODO: BottomNav に置き換える */}
-      <nav className="flex gap-2 overflow-x-auto border-t border-border bg-surface-muted/40 px-4 py-2 text-[13px] md:hidden">
-        {NAV.map((n) => (
-          <Link
-            key={n.href}
-            href={n.href}
-            className="whitespace-nowrap rounded-full bg-card px-3 py-1 font-medium text-foreground/80 ring-1 ring-border"
-          >
-            {n.label}
-          </Link>
-        ))}
-      </nav>
+      {/* モバイル：以前あった pill nav 帯は BottomNav に置き換え済み */}
     </header>
   );
 }

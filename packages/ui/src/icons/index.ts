@@ -25,6 +25,8 @@ export {
   Lock,
   Map as MapIcon,
   MapPin,
+  MessageCircle,
+  Heart,
   Plus,
   Save,
   Search,

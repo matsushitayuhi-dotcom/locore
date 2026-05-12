@@ -12,6 +12,7 @@ import { Toaster } from 'sonner';
 import './globals.css';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
+import { BottomNav } from '../components/BottomNav';
 
 const notoSansJp = Noto_Sans_JP({
   subsets: ['latin'],
@@ -86,10 +87,15 @@ export default async function RootLayout({
       <body className="bg-background text-foreground min-h-screen antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <SiteHeader />
-          <div className="min-h-[calc(100vh-180px)]">{children}</div>
+          {/* モバイルは BottomNav 分の余白を確保（pb-20）。md 以上では不要 */}
+          <div className="min-h-[calc(100vh-180px)] pb-20 md:pb-0">
+            {children}
+          </div>
           <SiteFooter />
+          <BottomNav />
           <Toaster
             position="bottom-center"
+            offset={80}
             toastOptions={{
               style: {
                 fontFamily: 'var(--font-sans-jp), var(--font-sans), sans-serif',
