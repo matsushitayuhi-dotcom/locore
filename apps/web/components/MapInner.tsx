@@ -31,6 +31,8 @@ interface MapInnerProps {
   apiKey?: string;
   /** サーバ側で取得した購入済み記事 ID（DB の purchases テーブル由来） */
   purchasedArticleIds?: string[];
+  /** 自分が書いた記事 ID（マップ上で別色のクリエイターピンに） */
+  myArticleIds?: string[];
 }
 
 const ARRONDISSEMENT_DENSITY: { center: { lat: number; lng: number }; intensity: number }[] = [
@@ -89,6 +91,16 @@ function makePinSvg(color: string): string {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">` +
     `<circle cx="14" cy="14" r="11" fill="${color}" stroke="white" stroke-width="2"/>` +
+    `</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/** 自分の投稿スポット用のアクセント色ピン（オレンジ系 + 中央に星マーク） */
+function makeOwnPinSvg(): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">` +
+    `<circle cx="16" cy="16" r="13" fill="#F59E0B" stroke="white" stroke-width="2.5"/>` +
+    `<path d="M16 9.5l1.9 4 4.4.6-3.2 3.1.8 4.3L16 19.5l-3.9 2 .8-4.3-3.2-3.1 4.4-.6z" fill="white"/>` +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -179,6 +191,8 @@ function buildGroups(spots: Spot[], articles: Article[]): SpotGroup[] {
 
 type GroupWithUnlock = SpotGroup & {
   unlocked: boolean;
+  /** 自分が書いた記事のスポットかどうか（オーナーピン表示用）*/
+  isOwn: boolean;
   /** 描画用座標（locked のときは obfuscated）*/
   displayPosition: { lat: number; lng: number };
 };
@@ -204,8 +218,23 @@ function MarkersLayer({
     }> = [];
 
     groups.forEach((g) => {
-      if (g.unlocked) {
-        // 解放済み: ピン色は localScore、正確な座標、ホバーで名前表示
+      if (g.isOwn) {
+        // 自分の投稿: アクセント色（オレンジ）の星付きピン、最前面に表示
+        const m = new G.Marker({
+          position: g.position,
+          map,
+          title: `★ あなたの投稿: ${g.name}`,
+          icon: {
+            url: makeOwnPinSvg(),
+            scaledSize: new G.Size(32, 32),
+            anchor: new G.Point(16, 16),
+          },
+          zIndex: 10, // 他のピンより前
+        });
+        const listener = m.addListener('click', () => onPinClick(g));
+        created.push({ m, listener });
+      } else if (g.unlocked) {
+        // 購入済み: ピン色は localScore、正確な座標、ホバーで名前表示
         const color = pinColorForScore(g.topScore);
         const m = new G.Marker({
           position: g.position,
@@ -269,6 +298,7 @@ function MapBody({
   articles,
   showHeatmap,
   purchasedArticleIds,
+  myArticleIds,
 }: Omit<MapInnerProps, 'apiKey'>) {
   const groups = useMemo(() => buildGroups(spots, articles), [spots, articles]);
   const [activeKey, setActiveKey] = useState<string | null>(null);
@@ -286,20 +316,25 @@ function MapBody({
     return s;
   }, [localPurchases, purchasedArticleIds]);
 
-  // 各グループに unlocked と表示用座標を計算してくっつける。
+  const ownSet = useMemo(() => new Set(myArticleIds ?? []), [myArticleIds]);
+
+  // 各グループに unlocked / isOwn と表示用座標を計算。
   // locked なときは Airbnb 風に 150〜250m ずらしたぼかし座標を使う。
+  // 自分の投稿（isOwn）は locked 判定より優先（常に解放扱い）。
   const groupsWithUnlock: GroupWithUnlock[] = useMemo(() => {
     return groups.map((g) => {
-      const unlocked = g.articles.some((a) => purchasedSet.has(a.id));
+      const isOwn = g.articles.some((a) => ownSet.has(a.id));
+      const unlocked = isOwn || g.articles.some((a) => purchasedSet.has(a.id));
       return {
         ...g,
         unlocked,
+        isOwn,
         displayPosition: unlocked
           ? g.position
           : obfuscatePosition(g.position, g.key),
       };
     });
-  }, [groups, purchasedSet]);
+  }, [groups, purchasedSet, ownSet]);
 
   const activeGroup = activeKey
     ? groupsWithUnlock.find((g) => g.key === activeKey) ?? null
@@ -448,6 +483,7 @@ export function MapInner({
   showHeatmap,
   apiKey,
   purchasedArticleIds,
+  myArticleIds,
 }: MapInnerProps) {
   if (!apiKey) {
     return (
@@ -474,6 +510,7 @@ export function MapInner({
         articles={articles}
         showHeatmap={showHeatmap}
         purchasedArticleIds={purchasedArticleIds}
+        myArticleIds={myArticleIds}
       />
     </APIProvider>
   );

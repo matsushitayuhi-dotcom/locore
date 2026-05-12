@@ -21,6 +21,8 @@ interface MapViewProps {
   googleMapsApiKey?: string;
   /** サーバ側で取得した購入済み記事 ID */
   purchasedArticleIds?: string[];
+  /** 自分が書いた記事 ID（マップ上で別色表示） */
+  myArticleIds?: string[];
 }
 
 const CITIES = [
@@ -36,6 +38,7 @@ export function MapView({
   spots,
   googleMapsApiKey,
   purchasedArticleIds,
+  myArticleIds,
 }: MapViewProps) {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -59,6 +62,7 @@ export function MapView({
         showHeatmap={showHeatmap}
         apiKey={googleMapsApiKey}
         purchasedArticleIds={purchasedArticleIds}
+        myArticleIds={myArticleIds}
       />
 
       {/* Top-left: city pills + back to feed */}
@@ -159,6 +163,9 @@ export function MapView({
             <Legend color="bg-local-low" label="0–29 定番寄り" />
             <Legend color="bg-local-mid" label="30–69 中間" />
             <Legend color="bg-local-high" label="70–100 ローカル" />
+            {myArticleIds && myArticleIds.length > 0 ? (
+              <Legend color="bg-accent-500 ring-2 ring-accent-700" label="あなたの投稿" />
+            ) : null}
           </div>
         </div>
       </div>

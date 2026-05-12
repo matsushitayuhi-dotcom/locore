@@ -19,9 +19,10 @@ export default async function MapPage() {
   const articles = await getPublishedDbArticles(100);
   const spots = await getSpotsForArticles(articles.map((a) => a.id));
 
-  // ログイン中なら購入済み記事 ID を取得
+  // ログイン中なら購入済み記事 ID + 自分が書いた記事 ID を取得
   const me = await getCurrentUser();
   let purchasedArticleIds: string[] = [];
+  let myArticleIds: string[] = [];
   if (me) {
     try {
       const db = getDb();
@@ -33,6 +34,8 @@ export default async function MapPage() {
     } catch {
       purchasedArticleIds = [];
     }
+    // 自分のクリエイター記事 ID（マップで別色表示する用）
+    myArticleIds = articles.filter((a) => a.writerId === me.id).map((a) => a.id);
   }
 
   return (
@@ -42,6 +45,7 @@ export default async function MapPage() {
         spots={spots}
         googleMapsApiKey={googleMapsApiKey}
         purchasedArticleIds={purchasedArticleIds}
+        myArticleIds={myArticleIds}
       />
     </main>
   );
