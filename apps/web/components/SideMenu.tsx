@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import {
   Menu,
@@ -129,7 +130,13 @@ type Props = {
 
 export function SideMenu({ viewerLoggedIn, isWriter, unreadChatCount = 0 }: Props) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname() ?? '/';
+
+  // SSR では document が存在しないので、マウント後に Portal を有効化
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // pathname が変わったら閉じる（リンククリック後）
   useEffect(() => {
@@ -168,22 +175,64 @@ export function SideMenu({ viewerLoggedIn, isWriter, unreadChatCount = 0 }: Prop
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* オーバーレイ */}
+      {/*
+        オーバーレイ + ドロワーは React Portal で body 直下に描画する。
+        親 (SiteHeader = sticky z-30) の stacking context に閉じ込められると
+        BottomNav (z-40) より下に潜って下半分が隠れてしまうため。
+      */}
+      {mounted &&
+        createPortal(
+          <DrawerPanel
+            open={open}
+            onClose={() => setOpen(false)}
+            viewerLoggedIn={viewerLoggedIn}
+            isWriter={isWriter}
+            unreadChatCount={unreadChatCount}
+            pathname={pathname}
+          />,
+          document.body,
+        )}
+    </>
+  );
+}
+
+/**
+ * ドロワー本体（オーバーレイ + パネル）。document.body に portal される前提。
+ */
+function DrawerPanel({
+  open,
+  onClose,
+  viewerLoggedIn,
+  isWriter,
+  unreadChatCount,
+  pathname,
+}: {
+  open: boolean;
+  onClose: () => void;
+  viewerLoggedIn: boolean;
+  isWriter: boolean;
+  unreadChatCount: number;
+  pathname: string;
+}) {
+  return (
+    <>
       {open ? (
         <div
           aria-hidden
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[60] bg-neutral-900/40 backdrop-blur-sm"
+          onClick={onClose}
+          className="fixed inset-0 z-[1000] bg-neutral-900/40 backdrop-blur-sm"
         />
       ) : null}
 
-      {/* ドロワー本体 — 右からスライドイン */}
       <aside
         aria-hidden={!open}
+        // h-[100dvh] = モバイル Safari の動的ビューポートにも追従。
+        // safe-area-inset-bottom 分も内側で確保する。
         className={
-          'fixed inset-y-0 right-0 z-[70] flex w-[320px] max-w-[88vw] flex-col bg-card shadow-xl transition-transform duration-200 ease-out ' +
+          'fixed right-0 top-0 z-[1001] flex h-[100dvh] w-[320px] max-w-[88vw] flex-col bg-card shadow-xl transition-transform duration-200 ease-out ' +
           (open ? 'translate-x-0' : 'translate-x-full')
         }
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <Link
@@ -192,7 +241,7 @@ export function SideMenu({ viewerLoggedIn, isWriter, unreadChatCount = 0 }: Prop
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
-            onClick={() => setOpen(false)}
+            onClick={onClose}
           >
             <span className="text-[22px] bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent">
               Locore
@@ -204,7 +253,7 @@ export function SideMenu({ viewerLoggedIn, isWriter, unreadChatCount = 0 }: Prop
           <button
             type="button"
             aria-label="メニューを閉じる"
-            onClick={() => setOpen(false)}
+            onClick={onClose}
             className="inline-flex h-8 w-8 items-center justify-center rounded-full text-foreground/60 hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />

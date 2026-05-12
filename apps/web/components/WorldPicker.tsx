@@ -1,6 +1,24 @@
 import Link from 'next/link';
-import { Lock, Sparkles, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import { Lock, MapPin, Sparkles, ArrowRight } from 'lucide-react';
 import type { CountryListItem } from '@/lib/geo/countries';
+
+/**
+ * 世界ピッカー v2 — Airbnb／Booking 風の画像ファーストレイアウト。
+ *
+ * 構成:
+ *   1. Hero band（タイトル + サブコピー、背景に大きい blob 系装飾）
+ *   2. 「今すぐ旅できる」セクション — active 国を大判カードで横並び
+ *   3. 「もうすぐ会える街」 — coming_soon 国を大陸ごとに中判で
+ *
+ * 操作モデル:
+ *   - active 国カード → /country/<code>（その国の地域一覧へ）
+ *   - locked 国カード → クリックでは何も起きない（カードに「準備中」を明示）
+ *
+ * 画像:
+ *   - countries.hero_image_url を使用（Unsplash 安定 URL を seed しておく）
+ *   - 無ければ picsum フォールバック
+ */
 
 const CONTINENT_LABEL: Record<string, { label: string; order: number }> = {
   europe: { label: 'ヨーロッパ', order: 1 },
@@ -11,29 +29,29 @@ const CONTINENT_LABEL: Record<string, { label: string; order: number }> = {
   middle_east_africa: { label: '中東・アフリカ', order: 6 },
 };
 
-/**
- * 世界ピッカー — 大陸ごとに国カードを並べる。
- *
- * - status='active' な国はクリックで `/region/<primaryRegionSlug>` に遷移
- * - status='coming_soon' は薄く + Lock アイコン、クリック不可
- * - レイアウト: モバイル 2 列、sm 3 列、md 4 列、lg 5 列
- */
+function fallbackImage(slug: string): string {
+  return `https://picsum.photos/seed/${slug}/1200/800`;
+}
+
 export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
   if (countries.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-card px-6 py-12 text-center text-[13px] text-foreground/55">
-        国マスタが空です。マイグレーション 0029 を適用してください。
+        国マスタが空です。マイグレーション 0029 / 0030 を Supabase で実行してください。
       </div>
     );
   }
 
+  const active = countries.filter((c) => c.status === 'active');
+  const coming = countries.filter((c) => c.status === 'coming_soon');
+
+  // 大陸ごとにグルーピング（coming_soon のみ）
   const byContinent = new Map<string, CountryListItem[]>();
-  for (const c of countries) {
+  for (const c of coming) {
     const arr = byContinent.get(c.continent) ?? [];
     arr.push(c);
     byContinent.set(c.continent, arr);
   }
-
   const continents = Array.from(byContinent.entries()).sort(
     (a, b) =>
       (CONTINENT_LABEL[a[0]]?.order ?? 99) -
@@ -41,16 +59,57 @@ export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
   );
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-14">
+      {/* 1. 「今すぐ旅できる」 — 大判 hero カード */}
+      <section>
+        <header className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
+              <Sparkles className="h-3 w-3" />
+              今すぐ旅できる
+            </p>
+            <h2
+              className="mt-2 text-[24px] font-bold leading-tight tracking-tight sm:text-[28px]"
+              style={{
+                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+              }}
+            >
+              現地に住むクリエイターが、案内します
+            </h2>
+            <p className="mt-1 text-[13px] text-foreground/65">
+              タップして、その国の地域一覧へ。
+            </p>
+          </div>
+        </header>
+
+        {active.length === 0 ? (
+          <p className="rounded-lg bg-card px-4 py-6 text-center text-[13px] text-foreground/55 ring-1 ring-border">
+            準備中です
+          </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {active.map((c) => (
+              <ActiveCountryCard key={c.code} country={c} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 2. 「もうすぐ会える街」 — 大陸ごと */}
       {continents.map(([continent, list]) => (
         <section key={continent}>
-          <h2 className="mb-3 text-[14px] font-bold uppercase tracking-[0.18em] text-foreground/55">
-            {CONTINENT_LABEL[continent]?.label ?? continent}
-          </h2>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+          <header className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-[14px] font-bold uppercase tracking-[0.18em] text-foreground/55">
+              {CONTINENT_LABEL[continent]?.label ?? continent}
+            </h2>
+            <span className="text-[10px] text-foreground/40">
+              {list.length} カ国・準備中
+            </span>
+          </header>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {list.map((c) => (
               <li key={c.code}>
-                <CountryCard country={c} />
+                <ComingSoonCard country={c} />
               </li>
             ))}
           </ul>
@@ -60,59 +119,114 @@ export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
   );
 }
 
-function CountryCard({ country }: { country: CountryListItem }) {
-  const active = country.status === 'active' && !!country.primaryRegionSlug;
-  const inner = (
-    <div
-      className={
-        'relative flex h-full flex-col items-start justify-between gap-2 rounded-xl bg-card p-4 ring-1 ring-border transition ' +
-        (active
-          ? 'hover:bg-primary-500/10 hover:ring-primary-300 cursor-pointer'
-          : 'opacity-70 cursor-not-allowed')
-      }
-    >
-      <div>
-        <p className="text-[28px] leading-none">{country.emoji ?? '🌐'}</p>
-        <p className="mt-2 text-[15px] font-bold leading-tight tracking-tight text-foreground">
-          {country.nameJa}
-        </p>
-        <p className="mt-0.5 text-[10px] uppercase tracking-wider text-foreground/45">
-          {country.code}
-        </p>
-        {country.shortDescription ? (
-          <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-foreground/65">
-            {country.shortDescription}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold">
-        {active ? (
-          <span className="inline-flex items-center gap-1 text-primary-300">
-            <Sparkles className="h-3 w-3" />
-            旅する
-            <ArrowRight className="h-3 w-3" />
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-foreground/45">
-            <Lock className="h-3 w-3" />
-            Coming Soon
-          </span>
-        )}
-      </div>
-    </div>
-  );
-
-  if (active) {
-    return (
-      <Link href={`/region/${country.primaryRegionSlug}`} className="block h-full">
-        {inner}
-      </Link>
-    );
-  }
+/**
+ * Active 国カード — 大判、画像メイン、CTA 強調。
+ * クリックで /country/<code> へ。
+ */
+function ActiveCountryCard({ country }: { country: CountryListItem }) {
   return (
-    <div aria-disabled className="block h-full">
-      {inner}
+    <Link
+      href={`/country/${country.code}`}
+      className="group relative block overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition hover:shadow-md hover:ring-primary-300"
+    >
+      <div className="relative aspect-[5/4] w-full overflow-hidden bg-muted">
+        <Image
+          src={country.heroImageUrl ?? fallbackImage(country.code)}
+          alt={country.nameJa}
+          fill
+          sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover transition duration-500 group-hover:scale-[1.04]"
+          unoptimized
+        />
+        {/* グラデーション overlay */}
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-neutral-900/85 via-neutral-900/35 to-transparent"
+        />
+        {/* 国旗 emoji（右上に小さく） */}
+        {country.emoji ? (
+          <span className="absolute right-3 top-3 rounded-full bg-card/90 px-2.5 py-1 text-[18px] leading-none shadow-sm backdrop-blur">
+            {country.emoji}
+          </span>
+        ) : null}
+        {/* タイトル群 */}
+        <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
+            {country.nameEn}
+          </p>
+          <h3
+            className="mt-1 text-[26px] font-bold leading-tight tracking-tight"
+            style={{
+              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+            }}
+          >
+            {country.nameJa}
+          </h3>
+          {country.shortDescription ? (
+            <p className="mt-1.5 line-clamp-2 text-[12px] leading-snug text-white/85">
+              {country.shortDescription}
+            </p>
+          ) : null}
+          <div className="mt-3 flex items-center justify-between">
+            <span className="inline-flex items-center gap-1 text-[11px] text-white/85">
+              <MapPin className="h-3 w-3" />
+              {country.activeRegionCount} 地域で公開中
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold text-neutral-950 transition group-hover:bg-primary-300">
+              旅する
+              <ArrowRight className="h-3 w-3" />
+            </span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/**
+ * Coming Soon カード — 画像は出すがグレースケール + Lock。
+ * クリックでは何も起きないが、aria/visual で disabled を明示。
+ */
+function ComingSoonCard({ country }: { country: CountryListItem }) {
+  return (
+    <div
+      aria-disabled
+      title="準備中"
+      className="group relative block cursor-not-allowed overflow-hidden rounded-xl bg-card ring-1 ring-border"
+    >
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+        <Image
+          src={country.heroImageUrl ?? fallbackImage(country.code)}
+          alt={country.nameJa}
+          fill
+          sizes="(min-width: 1280px) 20vw, (min-width: 640px) 33vw, 50vw"
+          className="object-cover grayscale-[60%] opacity-80"
+          unoptimized
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 via-neutral-900/35 to-transparent"
+        />
+        {/* Lock バッジ */}
+        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65 backdrop-blur">
+          <Lock className="h-2.5 w-2.5" />
+          準備中
+        </span>
+        <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+          <p className="text-[20px] leading-none">{country.emoji ?? '🌐'}</p>
+          <h3
+            className="mt-1.5 text-[14px] font-bold leading-tight tracking-tight"
+            style={{
+              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+            }}
+          >
+            {country.nameJa}
+          </h3>
+          <p className="mt-0.5 text-[10px] uppercase tracking-wider text-white/65">
+            {country.nameEn}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
