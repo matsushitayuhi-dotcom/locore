@@ -43,7 +43,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="block whitespace-nowrap rounded-sm px-3 py-2 text-[13px] text-foreground/70 transition-colors hover:bg-neutral-50 hover:text-foreground"
+                    className="block whitespace-nowrap rounded-sm px-3 py-2 text-[13px] text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
                   >
                     {item.label}
                   </Link>

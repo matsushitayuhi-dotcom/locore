@@ -120,7 +120,7 @@ function TripDayMapBody({
 
   if (points.length === 0) {
     return (
-      <div className="flex h-[260px] items-center justify-center bg-primary-50/40 text-[13px] text-primary-700">
+      <div className="flex h-[260px] items-center justify-center bg-primary-500/10 text-[13px] text-primary-300">
         この日のスポット情報なし
       </div>
     );
@@ -159,7 +159,7 @@ export function TripDayMap({
   if (!apiKey) {
     return (
       <div
-        className="flex items-center justify-center bg-primary-50/40 text-[12px] text-primary-700"
+        className="flex items-center justify-center bg-primary-500/10 text-[12px] text-primary-300"
         style={{ height: 260 }}
       >
         Google Maps API キーが未設定です（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY）

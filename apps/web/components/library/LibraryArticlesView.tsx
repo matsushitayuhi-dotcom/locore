@@ -95,7 +95,7 @@ export function LibraryArticlesView({
 
       <div className="mt-6">
         {filtered.length === 0 ? (
-          <div className="rounded-md bg-card p-12 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">
+          <div className="rounded-md bg-card p-12 text-center text-[13px] text-foreground/60 ring-1 ring-border">
             {selected === null
               ? emptyLabel
               : 'このフォルダにはまだ何もありません'}

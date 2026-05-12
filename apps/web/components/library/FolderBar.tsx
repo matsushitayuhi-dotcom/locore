@@ -106,7 +106,7 @@ export function FolderBar({
                 setDraftName('');
               }
             }}
-            className="h-9 w-[180px] rounded-full border border-primary-200 bg-white px-3 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+            className="h-9 w-[180px] rounded-full border border-primary-500/40 bg-card px-3 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           />
           <button
             type="button"
@@ -123,7 +123,7 @@ export function FolderBar({
               setDraftName('');
             }}
             aria-label="キャンセル"
-            className="rounded-full p-1.5 text-foreground/50 hover:bg-neutral-50"
+            className="rounded-full p-1.5 text-foreground/50 hover:bg-muted"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -132,7 +132,7 @@ export function FolderBar({
         <button
           type="button"
           onClick={() => setDrafting(true)}
-          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 text-[12px] font-medium text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-100"
+          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-500/10 px-3 py-1.5 text-[12px] font-medium text-primary-300 ring-1 ring-border transition hover:bg-primary-500/15"
         >
           <Plus className="h-3.5 w-3.5" />
           フォルダ
@@ -161,7 +161,7 @@ function Chip({
         'inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition ' +
         (active
           ? 'bg-primary-700 text-white shadow-sm'
-          : 'bg-white text-primary-700 ring-1 ring-primary-100 hover:bg-primary-50')
+          : 'bg-card text-primary-300 ring-1 ring-border hover:bg-primary-500/10')
       }
     >
       <span>{label}</span>

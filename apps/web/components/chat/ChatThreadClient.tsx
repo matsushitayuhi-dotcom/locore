@@ -89,7 +89,7 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
     <>
       <div
         ref={scrollerRef}
-        className="flex-1 space-y-2 overflow-y-auto bg-primary-50/30 px-4 py-4 sm:px-6"
+        className="flex-1 space-y-2 overflow-y-auto bg-primary-500/10 px-4 py-4 sm:px-6"
       >
         {messages.length === 0 ? (
           <p className="py-12 text-center text-[12px] text-foreground/50">
@@ -108,7 +108,7 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
                   'max-w-[78%] rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed shadow-xs ' +
                   (mine
                     ? 'bg-primary-700 text-white'
-                    : 'bg-white text-neutral-900 ring-1 ring-border')
+                    : 'bg-card text-foreground ring-1 ring-border')
                 }
               >
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
@@ -131,7 +131,7 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
 
       <form
         onSubmit={onSend}
-        className="flex items-end gap-2 border-t border-primary-100 bg-white px-4 py-3 sm:px-6"
+        className="flex items-end gap-2 border-t border-border bg-card px-4 py-3 sm:px-6"
       >
         <textarea
           value={draft}
@@ -145,7 +145,7 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
               onSend(e);
             }
           }}
-          className="flex-1 resize-none rounded-md border border-neutral-200 bg-white px-3 py-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
+          className="flex-1 resize-none rounded-md border border-border bg-card px-3 py-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
         />
         <Button
           type="submit"

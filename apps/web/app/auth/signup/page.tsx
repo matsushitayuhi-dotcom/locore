@@ -58,7 +58,7 @@ export default async function SignupPage({
           既にアカウントをお持ちの方は{' '}
           <Link
             href={loginHref}
-            className="font-medium text-primary-700 underline-offset-4 hover:underline"
+            className="font-medium text-primary-300 underline-offset-4 hover:underline"
           >
             ログイン
           </Link>

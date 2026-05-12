@@ -76,8 +76,8 @@ function ToolbarButton({
       className={
         'inline-flex h-8 min-w-8 items-center justify-center rounded-sm px-2 text-[12px] transition ' +
         (active
-          ? 'bg-primary-50 text-primary-700'
-          : 'text-foreground/70 hover:bg-neutral-50 hover:text-foreground') +
+          ? 'bg-primary-500/10 text-primary-300'
+          : 'text-foreground/70 hover:bg-muted hover:text-foreground') +
         (disabled ? ' opacity-40 cursor-not-allowed' : '')
       }
     >

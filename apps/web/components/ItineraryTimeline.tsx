@@ -47,10 +47,10 @@ export function ItineraryTimeline({
   if (blocks.length === 0) return null;
 
   return (
-    <section className="rounded-2xl bg-card p-5 ring-1 ring-primary-100 sm:p-6">
+    <section className="rounded-2xl bg-card p-5 ring-1 ring-border sm:p-6">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
             1日の流れ
           </p>
@@ -78,7 +78,7 @@ export function ItineraryTimeline({
               <div className="flex gap-3">
                 {/* 時刻列 */}
                 <div className="w-16 shrink-0 text-right">
-                  <p className="text-[13px] font-bold tabular text-primary-700">
+                  <p className="text-[13px] font-bold tabular text-primary-300">
                     {b.startTime}
                   </p>
                   {b.endTime ? (
@@ -89,11 +89,11 @@ export function ItineraryTimeline({
                 </div>
                 {/* 縦線アンカー */}
                 <div className="relative flex flex-col items-center">
-                  <span className="block h-3 w-3 rounded-full bg-primary-500 ring-4 ring-primary-100" />
+                  <span className="block h-3 w-3 rounded-full bg-primary-500 ring-4 ring-border" />
                   {!isLast ? (
                     <span
                       aria-hidden
-                      className="mt-1 flex-1 border-l-2 border-dashed border-primary-200"
+                      className="mt-1 flex-1 border-l-2 border-dashed border-primary-500/40"
                     />
                   ) : null}
                 </div>
@@ -102,7 +102,7 @@ export function ItineraryTimeline({
                   <p
                     className={
                       unlocked
-                        ? 'text-[15px] font-bold leading-snug text-neutral-900'
+                        ? 'text-[15px] font-bold leading-snug text-foreground'
                         : 'inline-flex items-center gap-1.5 text-[15px] font-semibold text-foreground/40'
                     }
                   >
@@ -118,7 +118,7 @@ export function ItineraryTimeline({
                     <p
                       className={
                         'mt-1 whitespace-pre-line text-[13px] leading-relaxed ' +
-                        (unlocked ? 'text-neutral-700' : 'text-foreground/30')
+                        (unlocked ? 'text-foreground/80' : 'text-foreground/30')
                       }
                     >
                       {unlocked ? b.notes : 'メモは購入後に表示されます'}
@@ -129,7 +129,7 @@ export function ItineraryTimeline({
               {/* 次への移動手段 */}
               {!isLast && (b.transportToNext || b.travelMinutesAfter || b.transportNote) ? (
                 <div className="ml-[76px] flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-3 py-1 text-[11px] font-semibold text-primary-700">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-semibold text-primary-300">
                     <Clock className="h-3 w-3" />
                     {b.transportToNext
                       ? TRANSPORT_LABEL[b.transportToNext] ?? b.transportToNext

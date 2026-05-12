@@ -64,7 +64,7 @@ export function SnsLinksEditor({ initial }: Props) {
   };
 
   return (
-    <section className="space-y-4 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6">
+    <section className="space-y-4 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
       <header>
         <h3 className="text-[16px] font-semibold tracking-tight">SNS リンク</h3>
         <p className="mt-1 text-[12px] text-foreground/60">
@@ -81,14 +81,14 @@ export function SnsLinksEditor({ initial }: Props) {
               key={r.id}
               className="flex items-center gap-3 px-3 py-2.5 text-[13px]"
             >
-              <span className="w-20 shrink-0 font-medium text-primary-700">
+              <span className="w-20 shrink-0 font-medium text-primary-300">
                 {PLATFORMS.find((p) => p.value === r.platform)?.label ?? r.platform}
               </span>
               <a
                 href={r.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 truncate text-foreground/80 underline-offset-4 hover:text-primary-700 hover:underline"
+                className="flex-1 truncate text-foreground/80 underline-offset-4 hover:text-primary-300 hover:underline"
               >
                 {r.url}
               </a>
@@ -96,7 +96,7 @@ export function SnsLinksEditor({ initial }: Props) {
                 type="button"
                 onClick={() => onDelete(r.id)}
                 disabled={isPending}
-                className="rounded-sm p-1.5 text-foreground/50 transition-colors hover:bg-neutral-50 hover:text-danger-500"
+                className="rounded-sm p-1.5 text-foreground/50 transition-colors hover:bg-muted hover:text-danger-500"
                 aria-label="削除"
               >
                 <Trash2 className="h-4 w-4" />
@@ -110,7 +110,7 @@ export function SnsLinksEditor({ initial }: Props) {
         <select
           value={draftPlatform}
           onChange={(e) => setDraftPlatform(e.target.value as Platform)}
-          className="h-11 rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+          className="h-11 rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
         >
           {PLATFORMS.map((p) => (
             <option key={p.value} value={p.value}>

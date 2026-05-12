@@ -24,7 +24,7 @@ export default async function HomePage() {
   return (
     <main className="bg-background">
       {/* Hero — emerald 単色のソフトグラデ + 控えめ blob 装飾 */}
-      <section className="relative overflow-hidden border-b border-primary-100 bg-gradient-to-br from-primary-50 via-white to-primary-50/30">
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary-50 via-white to-primary-50/30">
         {/* 装飾 blob — 透明度低めで奥に。emerald のみ */}
         <div
           aria-hidden
@@ -32,32 +32,32 @@ export default async function HomePage() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-primary-100/60 blur-3xl"
+          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-primary-500/15/60 blur-3xl"
         />
         <div className="relative mx-auto max-w-screen-xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
             <div>
-              <p className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-700 shadow-sm ring-1 ring-primary-100">
+              <p className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300 shadow-sm ring-1 ring-border">
                 <Sparkles className="h-3 w-3 text-primary-500" />
                 現地民の "本物" だけ、編集して届ける
               </p>
-              <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-neutral-900 sm:text-[60px]">
+              <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-foreground sm:text-[60px]">
                 その土地の
                 <span className="relative inline-block whitespace-nowrap">
-                  <span className="relative z-10 text-primary-700">本当の物語</span>
+                  <span className="relative z-10 text-primary-300">本当の物語</span>
                   <span
                     aria-hidden
-                    className="absolute inset-x-0 bottom-1 z-0 h-2.5 rounded-full bg-primary-100"
+                    className="absolute inset-x-0 bottom-1 z-0 h-2.5 rounded-full bg-primary-500/15"
                   />
                 </span>
                 を、
                 <br className="hidden sm:block" />
                 現地民が語る。
               </h1>
-              <p className="mt-6 max-w-xl text-[17px] leading-[1.85] text-neutral-700">
+              <p className="mt-6 max-w-xl text-[17px] leading-[1.85] text-foreground/80">
                 Locore は、在外邦人ライターが現地で書く、観光ガイドにはない短尺の旅行誌。
                 映え目当てではなく、街の輪郭を持ち帰るための有料・編集的な記事が、1 本{' '}
-                <span className="font-bold text-primary-700">¥600〜</span>。
+                <span className="font-bold text-primary-300">¥600〜</span>。
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link href="#feed">
@@ -73,12 +73,12 @@ export default async function HomePage() {
                 </Link>
               </div>
 
-              <dl className="mt-10 grid grid-cols-3 gap-3 rounded-2xl bg-white/70 p-4 text-[13px] shadow-sm ring-1 ring-primary-100 backdrop-blur sm:gap-4 sm:p-5">
+              <dl className="mt-10 grid grid-cols-3 gap-3 rounded-2xl bg-card/70 p-4 text-[13px] shadow-sm ring-1 ring-border backdrop-blur sm:gap-4 sm:p-5">
                 <div>
-                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-primary-700/70">
+                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-primary-300/70">
                     対応都市
                   </dt>
-                  <dd className="mt-1 font-bold text-neutral-900">
+                  <dd className="mt-1 font-bold text-foreground">
                     パリ
                     <span className="ml-1 text-[10px] font-medium text-foreground/50">
                       / NYC・London Soon
@@ -86,10 +86,10 @@ export default async function HomePage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-primary-700/70">
+                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-primary-300/70">
                     記事
                   </dt>
-                  <dd className="mt-1 font-bold tabular text-neutral-900">
+                  <dd className="mt-1 font-bold tabular text-foreground">
                     {articles.length}
                     <span className="ml-0.5 text-[12px] font-medium text-foreground/60">
                       本
@@ -97,10 +97,10 @@ export default async function HomePage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-primary-700/70">
+                  <dt className="text-[11px] font-semibold uppercase tracking-wider text-primary-300/70">
                     価格
                   </dt>
-                  <dd className="mt-1 font-bold tabular text-neutral-900">
+                  <dd className="mt-1 font-bold tabular text-foreground">
                     ¥600〜
                     <span className="ml-0.5 text-[12px] font-medium text-foreground/60">
                       1,500
@@ -110,7 +110,7 @@ export default async function HomePage() {
               </dl>
             </div>
 
-            <div className="relative aspect-cover overflow-hidden rounded-2xl shadow-md ring-1 ring-primary-100">
+            <div className="relative aspect-cover overflow-hidden rounded-2xl shadow-md ring-1 ring-border">
               <Image
                 src="https://picsum.photos/seed/locore-hero/1200/800"
                 alt="パリの路地裏のビストロ前で、地元の人が新聞を読みながらコーヒーを飲んでいる様子"
@@ -120,7 +120,7 @@ export default async function HomePage() {
                 sizes="(min-width: 768px) 50vw, 100vw"
               />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary-900/85 via-primary-900/40 to-transparent p-5">
-                <p className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-700">
+                <p className="inline-flex items-center gap-1 rounded-full bg-card/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary-300">
                   Cover story
                 </p>
                 <p className="mt-2 text-[20px] font-bold leading-snug text-white">
@@ -151,7 +151,7 @@ export default async function HomePage() {
         </section>
 
         {/* Founders — emerald 単色のソフトバナー */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 via-white to-primary-50/40 p-8 shadow-sm ring-1 ring-primary-100 sm:p-10">
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 via-white to-primary-50/40 p-8 shadow-sm ring-1 ring-border sm:p-10">
           <div
             aria-hidden
             className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-200/30 blur-3xl"
@@ -166,7 +166,7 @@ export default async function HomePage() {
                 <br className="hidden md:block" />
                 いま探してます。
               </h2>
-              <p className="mt-4 text-[15px] leading-[1.9] text-neutral-700">
+              <p className="mt-4 text-[15px] leading-[1.9] text-foreground/80">
                 取り分の優遇、永久バッジ、編集チームへのフィードバック権。
                 フォロワー数ではなく、街への深さを最優先で選びます。
               </p>
@@ -200,7 +200,7 @@ function SectionHeader({
   return (
     <div className="mb-5 flex items-end justify-between gap-4">
       <div>
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
           {kicker}
         </p>
@@ -213,13 +213,13 @@ function SectionHeader({
           {title}
         </h2>
         {subtitle ? (
-          <p className="mt-1 text-[13px] text-neutral-700">{subtitle}</p>
+          <p className="mt-1 text-[13px] text-foreground/80">{subtitle}</p>
         ) : null}
       </div>
       {href ? (
         <Link
           href={href}
-          className="hidden whitespace-nowrap rounded-full bg-white px-4 py-1.5 text-[13px] font-semibold text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-50 hover:ring-primary-300 sm:inline-flex"
+          className="hidden whitespace-nowrap rounded-full bg-card px-4 py-1.5 text-[13px] font-semibold text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:inline-flex"
         >
           すべて見る →
         </Link>

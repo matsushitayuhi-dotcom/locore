@@ -91,7 +91,7 @@ export default async function BecomeWriterPage() {
               className="mt-0.5 size-4 accent-primary-700"
             />
             <span>
-              <Link href="/legal#terms" className="text-primary-700 underline-offset-4 hover:underline">
+              <Link href="/legal#terms" className="text-primary-300 underline-offset-4 hover:underline">
                 利用規約
               </Link>{' '}
               およびクリエイター規約（オリジナル記事の保証、ステマ禁止、禁止コンテンツ等）に同意します。

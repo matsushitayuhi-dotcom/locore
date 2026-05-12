@@ -115,7 +115,7 @@ export function ImageUploader({
       {value ? (
         <div className="space-y-2">
           <div
-            className="relative w-full overflow-hidden rounded-md border border-border bg-neutral-50"
+            className="relative w-full overflow-hidden rounded-md border border-border bg-muted"
             style={{ aspectRatio: aspect }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -167,8 +167,8 @@ export function ImageUploader({
           className={
             'flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed px-4 py-10 text-center text-[12px] transition ' +
             (dragOver
-              ? 'border-primary-500 bg-primary-50/60'
-              : 'border-border bg-card hover:border-primary-300 hover:bg-primary-50/30')
+              ? 'border-primary-500 bg-primary-500/10'
+              : 'border-border bg-card hover:border-primary-300 hover:bg-primary-500/10')
           }
           style={{ aspectRatio: aspect }}
         >
@@ -195,7 +195,7 @@ export function ImageUploader({
             value={urlDraft}
             onChange={(e) => setUrlDraft(e.target.value)}
             placeholder={placeholder}
-            className="flex h-9 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-[12px] text-neutral-900 placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-9 w-full rounded-sm border border-border bg-card px-3 text-[12px] text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           />
           <Button
             type="button"

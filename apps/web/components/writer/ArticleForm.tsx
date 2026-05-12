@@ -142,7 +142,7 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
                 className={
                   'flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2.5 text-[13px] transition ' +
                   (selected
-                    ? 'border-primary-700 bg-primary-50/60'
+                    ? 'border-primary-700 bg-primary-500/10'
                     : 'border-border bg-background hover:border-foreground/30')
                 }
               >
@@ -175,7 +175,7 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
             id="art-price"
             value={priceJpy}
             onChange={(e) => setPriceJpy(Number(e.target.value))}
-            className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             {allowedPrices.map((p) => (
               <option key={p} value={p}>
@@ -196,7 +196,7 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
             id="art-duration"
             value={durationType}
             onChange={(e) => setDurationType(e.target.value)}
-            className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             <option value="">選択してください</option>
             {DURATION_OPTIONS.map((d) => (
@@ -216,7 +216,7 @@ export function ArticleForm({ initial, cities, tier, isPublished }: Props) {
           id="art-city"
           value={cityId}
           onChange={(e) => setCityId(e.target.value)}
-          className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+          className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
         >
           {cities.map((c) => (
             <option key={c.id} value={c.id}>

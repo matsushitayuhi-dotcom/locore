@@ -246,7 +246,7 @@ export default async function ArticleDetailPage({
             initialCount={counts.likeCount}
             viewerLoggedIn={viewerLoggedIn}
           />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-[13px] font-semibold text-foreground/70 ring-1 ring-primary-100">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-[13px] font-semibold text-foreground/70 ring-1 ring-border">
             <Bookmark className="h-4 w-4" />
             <span className="tabular">
               {counts.bookmarkCount.toLocaleString('ja-JP')}
@@ -307,7 +307,7 @@ export default async function ArticleDetailPage({
               itineraryBlocks={article.itineraryBlocks ?? null}
             />
           ) : (
-            <section className="rounded-md bg-primary-50/40 p-6 text-center text-[12px] text-primary-700 ring-1 ring-primary-100">
+            <section className="rounded-md bg-primary-500/10 p-6 text-center text-[12px] text-primary-300 ring-1 ring-border">
               <p className="font-semibold">スポット地図は購入後に解放されます</p>
               <p className="mt-1 text-foreground/60">
                 {article.articleType === 'itinerary'
@@ -383,7 +383,7 @@ export default async function ArticleDetailPage({
             </p>
             <Link
               href="/map"
-              className="mt-4 inline-flex text-[13px] font-medium text-primary-700 hover:underline"
+              className="mt-4 inline-flex text-[13px] font-medium text-primary-300 hover:underline"
             >
               地図で確認する →
             </Link>

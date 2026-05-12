@@ -47,7 +47,7 @@ export default function VerifyPage({
             <li>確認リンクの有効期限は 24 時間です。</li>
             <li>
               登録メールアドレスを間違えた場合は、もう一度{' '}
-              <Link href="/auth/signup" className="text-primary-700 underline-offset-4 hover:underline">
+              <Link href="/auth/signup" className="text-primary-300 underline-offset-4 hover:underline">
                 サインアップ画面
               </Link>{' '}
               からやり直してください。
@@ -59,7 +59,7 @@ export default function VerifyPage({
           既に確認済みの方は{' '}
           <Link
             href="/auth/login"
-            className="font-medium text-primary-700 underline-offset-4 hover:underline"
+            className="font-medium text-primary-300 underline-offset-4 hover:underline"
           >
             ログイン
           </Link>

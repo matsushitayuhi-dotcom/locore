@@ -27,16 +27,16 @@ export function BodySplitSection({
 }: Props) {
   return (
     <div className="space-y-5">
-      <div className="rounded-md border border-primary-100 bg-primary-50/40 px-4 py-3 text-[12px] text-primary-700">
+      <div className="rounded-md border border-border bg-primary-500/10 px-4 py-3 text-[12px] text-primary-300">
         <p className="font-semibold">本文は 2 段に分かれています</p>
-        <p className="mt-1 text-primary-700/80">
+        <p className="mt-1 text-primary-300/80">
           上の「無料プレビュー」は購入前の読者にも表示されます。下の「有料部分」は購入後にだけ解放されます（空のままにすると、無料プレビューの後半を自動的に有料扱いにします）。
         </p>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-[13px] font-medium text-foreground/80">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary-100 text-[11px] text-primary-700">
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary-500/15 text-[11px] text-primary-300">
             無
           </span>
           無料プレビュー（購入前にも見える）

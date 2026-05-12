@@ -150,7 +150,7 @@ export function SpotList({
                     aria-label="上に移動"
                     onClick={() => move(idx, -1)}
                     disabled={idx === 0}
-                    className="rounded-sm p-1 text-foreground/50 hover:bg-neutral-50 hover:text-foreground disabled:opacity-30"
+                    className="rounded-sm p-1 text-foreground/50 hover:bg-muted hover:text-foreground disabled:opacity-30"
                   >
                     <ChevronUp className="h-4 w-4" />
                   </button>
@@ -159,7 +159,7 @@ export function SpotList({
                     aria-label="下に移動"
                     onClick={() => move(idx, 1)}
                     disabled={idx === rows.length - 1}
-                    className="rounded-sm p-1 text-foreground/50 hover:bg-neutral-50 hover:text-foreground disabled:opacity-30"
+                    className="rounded-sm p-1 text-foreground/50 hover:bg-muted hover:text-foreground disabled:opacity-30"
                   >
                     <ChevronDown className="h-4 w-4" />
                   </button>

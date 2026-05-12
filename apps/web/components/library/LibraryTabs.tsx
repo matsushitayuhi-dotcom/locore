@@ -17,7 +17,7 @@ type Props = {
 
 export function LibraryTabs({ active, counts }: Props) {
   return (
-    <nav className="flex gap-1 border-b border-primary-100">
+    <nav className="flex gap-1 border-b border-border">
       {TABS.map((t) => {
         const isOn = active === t.value;
         return (
@@ -27,8 +27,8 @@ export function LibraryTabs({ active, counts }: Props) {
             className={
               'rounded-t-md px-4 py-2 text-[13px] font-semibold transition ' +
               (isOn
-                ? 'border-b-2 border-primary-700 -mb-px text-primary-700'
-                : 'text-foreground/60 hover:text-primary-700')
+                ? 'border-b-2 border-primary-700 -mb-px text-primary-300'
+                : 'text-foreground/60 hover:text-primary-300')
             }
           >
             {t.label}

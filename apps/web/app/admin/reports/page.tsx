@@ -95,7 +95,7 @@ export default async function AdminReportsPage({
                 className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${
                   active
                     ? 'border-primary-700 bg-primary-700 text-neutral-0'
-                    : 'border-border bg-card text-foreground/70 hover:bg-neutral-50'
+                    : 'border-border bg-card text-foreground/70 hover:bg-muted'
                 }`}
               >
                 {f.label}
@@ -162,7 +162,7 @@ export default async function AdminReportsPage({
                       <td className="px-3 py-2">
                         <Link
                           href={`/admin/reports/${r.id}`}
-                          className="text-[12px] text-primary-700 hover:underline"
+                          className="text-[12px] text-primary-300 hover:underline"
                         >
                           詳細 →
                         </Link>

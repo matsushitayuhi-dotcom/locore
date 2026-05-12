@@ -100,7 +100,7 @@ export function EditorHeader({
             {missing.map((m) => (
               <li
                 key={m}
-                className="rounded-full border border-warning-500 bg-white px-2 py-0.5 text-[11px] text-warning-700"
+                className="rounded-full border border-warning-500 bg-card px-2 py-0.5 text-[11px] text-warning-700"
               >
                 {m}
               </li>
@@ -123,7 +123,7 @@ function SaveBadge({
   let cls = 'text-foreground/50';
   if (state === 'saving') {
     label = '保存中…';
-    cls = 'text-primary-700';
+    cls = 'text-primary-300';
   } else if (state === 'saved') {
     label = lastSavedAt
       ? `保存済み（${formatRelative(lastSavedAt)}）`

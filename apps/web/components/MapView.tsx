@@ -8,7 +8,7 @@ import type { Article, Spot } from '../lib/mock';
 const InnerMap = dynamic(() => import('./MapInner').then((m) => m.MapInner), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full items-center justify-center bg-primary-50/40 text-[13px] text-primary-700">
+    <div className="flex h-full items-center justify-center bg-primary-500/10 text-[13px] text-primary-300">
       地図を読み込み中…
     </div>
   ),
@@ -67,7 +67,7 @@ export function MapView({
 
       {/* Top-left: city pills + back to feed */}
       <div className="pointer-events-none absolute left-4 top-4 z-[400] flex flex-col gap-3">
-        <div className="pointer-events-auto rounded-md bg-white/95 p-2 shadow-sm ring-1 ring-primary-100 backdrop-blur">
+        <div className="pointer-events-auto rounded-md bg-card/95 p-2 shadow-sm ring-1 ring-border backdrop-blur">
           <div className="flex flex-wrap gap-1">
             {CITIES.map((c) => (
               <button
@@ -88,7 +88,7 @@ export function MapView({
         </div>
         <Link
           href="/"
-          className="pointer-events-auto inline-flex items-center gap-1 self-start rounded-full bg-white/95 px-3 py-1.5 text-[12px] font-medium text-primary-700 shadow-xs ring-1 ring-primary-100 backdrop-blur transition hover:bg-primary-50"
+          className="pointer-events-auto inline-flex items-center gap-1 self-start rounded-full bg-card/95 px-3 py-1.5 text-[12px] font-medium text-primary-300 shadow-xs ring-1 ring-border backdrop-blur transition hover:bg-primary-500/10"
         >
           ← フィードに戻る
         </Link>
@@ -96,11 +96,11 @@ export function MapView({
 
       {/* Top-right: filters */}
       <div className="pointer-events-none absolute right-4 top-4 z-[400] w-[260px]">
-        <div className="pointer-events-auto rounded-md bg-white/95 shadow-sm ring-1 ring-primary-100 backdrop-blur">
+        <div className="pointer-events-auto rounded-md bg-card/95 shadow-sm ring-1 ring-border backdrop-blur">
           <button
             type="button"
             onClick={() => setFiltersOpen((v) => !v)}
-            className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] font-medium text-primary-700"
+            className="flex w-full items-center justify-between px-4 py-2.5 text-[13px] font-medium text-primary-300"
           >
             フィルタ
             <span className="text-[11px] text-foreground/50">
@@ -108,7 +108,7 @@ export function MapView({
             </span>
           </button>
           {filtersOpen ? (
-            <div className="space-y-3 border-t border-primary-100 px-4 py-3">
+            <div className="space-y-3 border-t border-border px-4 py-3">
               <div>
                 <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-foreground/50">
                   テーマ
@@ -128,7 +128,7 @@ export function MapView({
                         className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium transition ${
                           on
                             ? 'bg-primary-700 text-white'
-                            : 'bg-primary-50 text-primary-700 hover:bg-primary-100'
+                            : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15'
                         }`}
                       >
                         {t}
@@ -146,7 +146,7 @@ export function MapView({
                   className="h-4 w-4 accent-primary-700"
                 />
               </label>
-              <div className="rounded-md bg-primary-50/60 px-3 py-2 text-[11px] text-primary-700">
+              <div className="rounded-md bg-primary-500/10 px-3 py-2 text-[11px] text-primary-300">
                 <span className="tabular font-semibold">{visibleSpots.length}</span> スポット表示中（
                 <span className="tabular font-semibold">{filteredArticles.length}</span> 記事）
               </div>
@@ -155,7 +155,7 @@ export function MapView({
         </div>
 
         {/* Pin legend */}
-        <div className="pointer-events-auto mt-3 rounded-md bg-white/95 px-3 py-2.5 text-[11px] shadow-sm ring-1 ring-primary-100 backdrop-blur">
+        <div className="pointer-events-auto mt-3 rounded-md bg-card/95 px-3 py-2.5 text-[11px] shadow-sm ring-1 ring-border backdrop-blur">
           <p className="mb-1.5 font-semibold uppercase tracking-[0.16em] text-foreground/50">
             ピン色の凡例
           </p>

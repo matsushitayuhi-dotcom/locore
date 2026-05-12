@@ -62,7 +62,7 @@ export function SpotsCardList({
           return (
             <li
               key={s.id}
-              className="rounded-lg bg-card ring-1 ring-primary-100"
+              className="rounded-lg bg-card ring-1 ring-border"
             >
               <button
                 type="button"
@@ -73,10 +73,10 @@ export function SpotsCardList({
                   'flex w-full items-center gap-3 px-3 py-3 text-left transition sm:px-4 ' +
                   (locked
                     ? 'cursor-not-allowed opacity-70'
-                    : 'hover:bg-primary-50/40')
+                    : 'hover:bg-primary-500/10')
                 }
               >
-                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-50 text-[12px] font-bold text-primary-700">
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-[12px] font-bold text-primary-300">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 {/* Google Places から拾った代表写真（あれば） */}
@@ -85,11 +85,11 @@ export function SpotsCardList({
                   <img
                     src={s.photoUrls[0]}
                     alt=""
-                    className="h-12 w-16 shrink-0 rounded-sm bg-muted object-cover ring-1 ring-primary-100 sm:h-14 sm:w-20"
+                    className="h-12 w-16 shrink-0 rounded-sm bg-muted object-cover ring-1 ring-border sm:h-14 sm:w-20"
                   />
                 ) : null}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-semibold text-neutral-900">
+                  <p className="truncate text-[14px] font-semibold text-foreground">
                     {locked ? '????????' : s.name}
                   </p>
                   <p className="truncate text-[11px] text-foreground/60">
@@ -113,7 +113,7 @@ export function SpotsCardList({
 
               {/* 詳細メニュー */}
               {open && !locked ? (
-                <div className="space-y-3 border-t border-primary-100 bg-primary-50/30 px-4 py-3">
+                <div className="space-y-3 border-t border-border bg-primary-500/10 px-4 py-3">
                   {/* 写真ギャラリー（最大 5 枚 / 横スクロール） */}
                   {s.photoUrls && s.photoUrls.length > 1 ? (
                     <div className="flex gap-2 overflow-x-auto">
@@ -123,7 +123,7 @@ export function SpotsCardList({
                           key={idx}
                           src={url}
                           alt=""
-                          className="h-24 w-32 shrink-0 rounded-sm object-cover ring-1 ring-primary-100"
+                          className="h-24 w-32 shrink-0 rounded-sm object-cover ring-1 ring-border"
                         />
                       ))}
                     </div>
@@ -184,7 +184,7 @@ function ActionButton({
         e.stopPropagation();
         onClick();
       }}
-      className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white px-3 py-2 text-[12px] font-medium text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-50 hover:ring-primary-300"
+      className="inline-flex items-center justify-center gap-1.5 rounded-md bg-card px-3 py-2 text-[12px] font-medium text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
     >
       {icon}
       {label}

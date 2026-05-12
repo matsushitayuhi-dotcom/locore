@@ -171,14 +171,14 @@ export default async function PreviewArticlePage({
                   key={v.id}
                   className="rounded-md border border-border bg-card p-3 text-[12px]"
                 >
-                  <span className="mr-2 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
+                  <span className="mr-2 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-foreground/80">
                     {v.platform}
                   </span>
                   <a
                     href={v.embedUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary-700 underline-offset-4 hover:underline"
+                    className="text-primary-300 underline-offset-4 hover:underline"
                   >
                     {v.embedUrl}
                   </a>

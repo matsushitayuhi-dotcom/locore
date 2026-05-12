@@ -54,16 +54,16 @@ export default async function ChatListPage() {
       ) : null}
 
       {threads.length === 0 ? (
-        <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">
+        <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-border">
           まだメッセージはありません。プロフィールページの「メッセージを送る」から会話を始められます。
         </div>
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-md bg-card ring-1 ring-primary-100">
+        <ul className="divide-y divide-border overflow-hidden rounded-md bg-card ring-1 ring-border">
           {threads.map((t) => (
             <li key={t.threadId}>
               <Link
                 href={`/chat/${t.threadId}`}
-                className="flex items-start gap-3 px-4 py-3 transition hover:bg-primary-50/40"
+                className="flex items-start gap-3 px-4 py-3 transition hover:bg-primary-500/10"
               >
                 <Avatar size="md">
                   {t.partner?.avatarUrl ? (

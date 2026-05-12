@@ -75,7 +75,7 @@ export function Paywall({
   if (purchased) {
     return (
       <div className="space-y-8">
-        <div className="rounded-md bg-primary-50 px-4 py-3 text-[13px] text-primary-700 ring-1 ring-primary-100">
+        <div className="rounded-md bg-primary-500/10 px-4 py-3 text-[13px] text-primary-300 ring-1 ring-border">
           <span className="font-bold">購入済み</span> — 全文とスポットが解放されています。
         </div>
         <article className="prose-locore">
@@ -114,8 +114,8 @@ export function Paywall({
         </div>
       </div>
 
-      <div className="rounded-lg border border-primary-100 bg-primary-50/40 p-6 text-center">
-        <Lock className="mx-auto mb-3 h-5 w-5 text-primary-700" />
+      <div className="rounded-lg border border-primary-500/30 bg-primary-500/10 p-6 text-center">
+        <Lock className="mx-auto mb-3 h-5 w-5 text-primary-300" />
         <p
           className="text-[18px] font-semibold tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}

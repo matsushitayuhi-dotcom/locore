@@ -34,7 +34,7 @@ export function MarkdownEditor({
         maxLength={maxLength}
         placeholder={placeholder}
         aria-label="本文（Markdown）"
-        className="flex w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 py-2 font-mono text-[13px] leading-relaxed text-neutral-900 placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
+        className="flex w-full rounded-sm border border-border bg-card px-3 py-2 font-mono text-[13px] leading-relaxed text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
       />
     </div>
   );

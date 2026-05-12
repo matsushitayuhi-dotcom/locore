@@ -146,7 +146,7 @@ export function ServicesEditor({ initial }: Props) {
   };
 
   return (
-    <section className="space-y-4 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6">
+    <section className="space-y-4 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
       <header>
         <h3 className="text-[16px] font-semibold tracking-tight">提供サービス</h3>
         <p className="mt-1 text-[12px] text-foreground/60">
@@ -163,7 +163,7 @@ export function ServicesEditor({ initial }: Props) {
         {rows.map((r, idx) => (
           <li
             key={r.id ?? `draft-${idx}`}
-            className="space-y-3 rounded-md bg-white p-4 ring-1 ring-border"
+            className="space-y-3 rounded-md bg-card p-4 ring-1 ring-border"
           >
             <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
               <div>
@@ -184,7 +184,7 @@ export function ServicesEditor({ initial }: Props) {
                 <select
                   value={r.category}
                   onChange={(e) => update(idx, 'category', e.target.value)}
-                  className="flex h-10 w-full rounded-sm border border-neutral-200 bg-white px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+                  className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
                 >
                   <option value="">未設定</option>
                   {CATEGORIES.map((c) => (
@@ -205,7 +205,7 @@ export function ServicesEditor({ initial }: Props) {
                 onChange={(e) => update(idx, 'description', e.target.value)}
                 rows={3}
                 maxLength={2000}
-                className="flex w-full rounded-sm border border-neutral-200 bg-white px-3 py-2 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
+                className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
               />
             </div>
 
@@ -235,7 +235,7 @@ export function ServicesEditor({ initial }: Props) {
                 <select
                   value={r.priceUnit}
                   onChange={(e) => update(idx, 'priceUnit', e.target.value)}
-                  className="flex h-10 w-full rounded-sm border border-neutral-200 bg-white px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+                  className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
                 >
                   {PRICE_UNITS.map((u) => (
                     <option key={u} value={u}>
@@ -253,7 +253,7 @@ export function ServicesEditor({ initial }: Props) {
                   onChange={(e) =>
                     update(idx, 'contactMethod', e.target.value as Service['contactMethod'])
                   }
-                  className="flex h-10 w-full rounded-sm border border-neutral-200 bg-white px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+                  className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
                 >
                   <option value="chat">Locore チャット（推奨）</option>
                   <option value="external_url">外部 URL に飛ばす</option>
@@ -312,8 +312,8 @@ export function ServicesEditor({ initial }: Props) {
       </ul>
 
       {drafting ? (
-        <div className="space-y-3 rounded-md bg-primary-50/40 p-4 ring-1 ring-primary-100">
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+        <div className="space-y-3 rounded-md bg-primary-500/10 p-4 ring-1 ring-border">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
             新しいサービス
           </p>
           <Input
@@ -328,13 +328,13 @@ export function ServicesEditor({ initial }: Props) {
             rows={3}
             maxLength={2000}
             placeholder="サービスの内容、対象、所要時間など"
-            className="flex w-full rounded-sm border border-neutral-200 bg-white px-3 py-2 text-body-md"
+            className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md"
           />
           <div className="grid gap-3 sm:grid-cols-3">
             <select
               value={draft.category}
               onChange={(e) => setDraft({ ...draft, category: e.target.value })}
-              className="h-10 rounded-sm border border-neutral-200 bg-white px-3 text-body-md"
+              className="h-10 rounded-sm border border-border bg-card px-3 text-body-md"
             >
               <option value="">カテゴリ</option>
               {CATEGORIES.map((c) => (
@@ -358,7 +358,7 @@ export function ServicesEditor({ initial }: Props) {
             <select
               value={draft.priceUnit}
               onChange={(e) => setDraft({ ...draft, priceUnit: e.target.value })}
-              className="h-10 rounded-sm border border-neutral-200 bg-white px-3 text-body-md"
+              className="h-10 rounded-sm border border-border bg-card px-3 text-body-md"
             >
               {PRICE_UNITS.map((u) => (
                 <option key={u} value={u}>

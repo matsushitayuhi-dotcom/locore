@@ -135,7 +135,7 @@ export function SpotFavoriteButton({
           'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[12px] font-medium ring-1 transition ' +
           (bookmarked
             ? 'bg-primary-700 text-white ring-primary-700 hover:bg-primary-500'
-            : 'bg-white text-primary-700 ring-primary-100 hover:bg-primary-50 hover:ring-primary-300')
+            : 'bg-card text-primary-300 ring-border hover:bg-primary-500/10 hover:ring-primary-300')
         }
       >
         <Bookmark
@@ -146,16 +146,16 @@ export function SpotFavoriteButton({
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-30 mt-2 w-[280px] rounded-lg bg-white p-3 shadow-md ring-1 ring-primary-100">
+        <div className="absolute right-0 z-30 mt-2 w-[280px] rounded-lg bg-card p-3 shadow-md ring-1 ring-border">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
               フォルダを選ぶ
             </p>
             <button
               type="button"
               aria-label="閉じる"
               onClick={() => setOpen(false)}
-              className="rounded-sm p-1 text-foreground/40 hover:bg-neutral-50 hover:text-foreground"
+              className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -167,7 +167,7 @@ export function SpotFavoriteButton({
                 type="button"
                 onClick={() => onPickFolder(null, '未分類')}
                 disabled={isPending}
-                className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] hover:bg-primary-50/40"
+                className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] hover:bg-primary-500/10"
               >
                 <span className="font-medium">未分類</span>
                 <span className="text-[10px] text-foreground/50">
@@ -181,7 +181,7 @@ export function SpotFavoriteButton({
                   type="button"
                   onClick={() => onPickFolder(f.id, f.name)}
                   disabled={isPending}
-                  className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] hover:bg-primary-50/40"
+                  className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] hover:bg-primary-500/10"
                 >
                   <span className="truncate font-medium">{f.name}</span>
                   <span className="ml-2 shrink-0 text-[10px] text-foreground/50">
@@ -192,7 +192,7 @@ export function SpotFavoriteButton({
             ))}
           </ul>
 
-          <div className="mt-2 border-t border-primary-100 pt-2">
+          <div className="mt-2 border-t border-border pt-2">
             {drafting ? (
               <div className="flex gap-1.5">
                 <input
@@ -202,7 +202,7 @@ export function SpotFavoriteButton({
                   placeholder="新しいフォルダ名"
                   maxLength={60}
                   autoFocus
-                  className="h-8 flex-1 rounded-sm border border-primary-200 bg-white px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
+                  className="h-8 flex-1 rounded-sm border border-primary-500/40 bg-card px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
                 />
                 <button
                   type="button"
@@ -217,7 +217,7 @@ export function SpotFavoriteButton({
               <button
                 type="button"
                 onClick={() => setDrafting(true)}
-                className="inline-flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-primary-700 hover:bg-primary-50/40"
+                className="inline-flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-primary-300 hover:bg-primary-500/10"
               >
                 <Plus className="h-3.5 w-3.5" />
                 新しいフォルダを作る
@@ -230,7 +230,7 @@ export function SpotFavoriteButton({
               type="button"
               onClick={onUnbookmark}
               disabled={isPending}
-              className="mt-2 w-full rounded-md border border-danger-500/40 bg-white px-2 py-1.5 text-[12px] font-medium text-danger-500 hover:bg-danger-50"
+              className="mt-2 w-full rounded-md border border-danger-500/40 bg-card px-2 py-1.5 text-[12px] font-medium text-danger-500 hover:bg-danger-50"
             >
               お気に入りから外す
             </button>

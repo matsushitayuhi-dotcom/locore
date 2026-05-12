@@ -78,7 +78,7 @@ export function LibrarySpotsView({ bookmarks, folders: initialFolders }: Props) 
 
       <div className="mt-6">
         {filtered.length === 0 ? (
-          <div className="rounded-md bg-card p-12 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">
+          <div className="rounded-md bg-card p-12 text-center text-[13px] text-foreground/60 ring-1 ring-border">
             {selected === null
               ? 'お気に入りスポットはまだありません'
               : 'このフォルダにはまだスポットがありません'}
@@ -88,7 +88,7 @@ export function LibrarySpotsView({ bookmarks, folders: initialFolders }: Props) 
             {filtered.map((r) => (
               <li
                 key={r.spotId}
-                className="rounded-md bg-white p-3 ring-1 ring-primary-100"
+                className="rounded-md bg-card p-3 ring-1 ring-border"
               >
                 <p className="text-[13px] font-semibold">{r.name}</p>
                 {r.address ? (
@@ -97,12 +97,12 @@ export function LibrarySpotsView({ bookmarks, folders: initialFolders }: Props) 
                   </p>
                 ) : null}
                 {r.notes ? (
-                  <p className="mt-1 text-[11px] text-primary-700">{r.notes}</p>
+                  <p className="mt-1 text-[11px] text-primary-300">{r.notes}</p>
                 ) : null}
                 {r.articleId ? (
                   <Link
                     href={`/articles/${r.articleId}`}
-                    className="mt-2 inline-block text-[11px] text-primary-700 underline-offset-4 hover:underline"
+                    className="mt-2 inline-block text-[11px] text-primary-300 underline-offset-4 hover:underline"
                   >
                     元の記事を見る →
                   </Link>

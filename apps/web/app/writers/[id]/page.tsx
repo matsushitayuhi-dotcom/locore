@@ -251,9 +251,9 @@ export default async function WriterPage({ params }: { params: { id: string } })
 
   return (
     <main className="bg-background">
-      <div className="border-b border-primary-100 bg-gradient-to-br from-primary-50/50 via-white to-primary-50/30">
+      <div className="border-b border-border bg-gradient-to-br from-primary-50/50 via-white to-primary-50/30">
         <div className="mx-auto flex max-w-screen-lg flex-col items-start gap-6 px-4 py-12 sm:flex-row sm:px-6">
-          <Avatar size="xl" className="shadow-sm ring-2 ring-primary-100">
+          <Avatar size="xl" className="shadow-sm ring-2 ring-border">
             <AvatarImage src={writer.avatarUrl} alt={writer.name} />
             <AvatarFallback>{writer.name[0]}</AvatarFallback>
           </Avatar>
@@ -302,7 +302,7 @@ export default async function WriterPage({ params }: { params: { id: string } })
               </p>
             ) : null}
             {writer.bio ? (
-              <p className="mt-4 max-w-2xl whitespace-pre-line text-[15px] leading-[1.85] text-neutral-700">
+              <p className="mt-4 max-w-2xl whitespace-pre-line text-[15px] leading-[1.85] text-foreground/80">
                 {writer.bio}
               </p>
             ) : null}
@@ -314,7 +314,7 @@ export default async function WriterPage({ params }: { params: { id: string } })
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[12px] font-medium text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-50 hover:ring-primary-300"
+                  className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1 text-[12px] font-medium text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
                 >
                   <ExternalLink className="h-3 w-3" />
                   {PLATFORM_LABEL[s.platform] ?? s.platform.toUpperCase()}
@@ -353,7 +353,7 @@ export default async function WriterPage({ params }: { params: { id: string } })
       <section className="mx-auto max-w-screen-xl px-4 py-12 sm:px-6">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div>
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
               <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
               この人のおすすめ
             </p>
@@ -367,7 +367,7 @@ export default async function WriterPage({ params }: { params: { id: string } })
         </div>
 
         {articles.length === 0 ? (
-          <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">
+          <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-border">
             {writer.name} はまだ記事を公開していません。
           </div>
         ) : (

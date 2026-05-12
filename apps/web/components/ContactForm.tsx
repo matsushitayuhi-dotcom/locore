@@ -114,7 +114,7 @@ export function ContactForm({
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="flex h-11 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px]"
+          className="flex h-11 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px]"
           required
         >
           {CATEGORIES.map((c) => (
@@ -176,7 +176,7 @@ export function ContactForm({
             <select
               value={legalRightType}
               onChange={(e) => setLegalRightType(e.target.value)}
-              className="flex h-11 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px]"
+              className="flex h-11 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px]"
               required={isTakedown}
             >
               {RIGHT_TYPES.map((r) => (
@@ -214,7 +214,7 @@ export function ContactForm({
               ? '侵害される権利の根拠（著作物の表題・URL、事実関係など）を具体的にご記入ください。'
               : 'お問い合わせ内容を 10 〜 4000 文字でご記入ください。'
           }
-          className="flex w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 py-2 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px] focus:py-[7px]"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:outline-none focus:px-[11px] focus:py-[7px]"
         />
         <CharCount value={body} max={4000} min={10} />
       </Field>

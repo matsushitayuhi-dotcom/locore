@@ -98,7 +98,7 @@ export function ItineraryBlocksEditor({
 
   const inner = (
     <section
-      className="space-y-3 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6"
+      className="space-y-3 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
       aria-labelledby="itinerary-blocks-title"
     >
       <header className="flex flex-wrap items-baseline justify-between gap-2">
@@ -126,7 +126,7 @@ export function ItineraryBlocksEditor({
               }));
               onChange(next);
             }}
-            className="rounded-full bg-primary-50 px-3 py-1.5 text-[11px] font-bold text-primary-700 ring-1 ring-primary-100 hover:bg-primary-100"
+            className="rounded-full bg-primary-500/10 px-3 py-1.5 text-[11px] font-bold text-primary-300 ring-1 ring-border hover:bg-primary-500/15"
           >
             上のスポットから自動生成
           </button>
@@ -134,12 +134,12 @@ export function ItineraryBlocksEditor({
       </header>
 
       {blocks.length === 0 ? (
-        <p className="rounded-md bg-primary-50/40 px-3 py-3 text-[12px] text-primary-700">
+        <p className="rounded-md bg-primary-500/10 px-3 py-3 text-[12px] text-primary-300">
           まだ旅程ブロックがありません。「ブロックを追加」から最初の予定を入れましょう。
         </p>
       ) : null}
       {blocks.length === 1 ? (
-        <p className="rounded-md bg-primary-50/40 px-3 py-2 text-[12px] text-primary-700">
+        <p className="rounded-md bg-primary-500/10 px-3 py-2 text-[12px] text-primary-300">
           もう 1 ブロック追加すると、間に「次のスポットへの移動手段」が設定できます。
         </p>
       ) : null}
@@ -150,7 +150,7 @@ export function ItineraryBlocksEditor({
           return (
             <li key={b.id} className="space-y-2">
               {/* 1 ブロック */}
-              <div className="grid gap-2 rounded-md bg-white p-3 ring-1 ring-border sm:grid-cols-[80px_80px_1fr_auto]">
+              <div className="grid gap-2 rounded-md bg-card p-3 ring-1 ring-border sm:grid-cols-[80px_80px_1fr_auto]">
                 <div>
                   <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
                     開始
@@ -197,7 +197,7 @@ export function ItineraryBlocksEditor({
                           ),
                         );
                       }}
-                      className="flex h-10 w-full rounded-sm border border-neutral-200 bg-white px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+                      className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
                     >
                       <option value="">— スポット未選択（自由記述）—</option>
                       {spots.map((s) => (
@@ -207,7 +207,7 @@ export function ItineraryBlocksEditor({
                       ))}
                     </select>
                   ) : (
-                    <p className="rounded-sm bg-primary-50/40 px-2 py-2 text-[11px] text-primary-700">
+                    <p className="rounded-sm bg-primary-500/10 px-2 py-2 text-[11px] text-primary-300">
                       下のスポット欄でスポットを追加すると、ここから選べるようになります。
                     </p>
                   )}
@@ -228,7 +228,7 @@ export function ItineraryBlocksEditor({
                     type="button"
                     aria-label="このブロックを削除"
                     onClick={() => remove(idx)}
-                    className="rounded-sm p-2 text-foreground/50 transition hover:bg-neutral-50 hover:text-danger-500"
+                    className="rounded-sm p-2 text-foreground/50 transition hover:bg-muted hover:text-danger-500"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -246,15 +246,15 @@ export function ItineraryBlocksEditor({
                     }
                     rows={2}
                     placeholder="例: モーニングセット €9.50 を頼む。テラス席は早朝が空いてる"
-                    className="flex w-full rounded-sm border border-neutral-200 bg-white px-3 py-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
+                    className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* 移動手段（最後のブロック以外で表示） */}
               {!isLast ? (
-                <div className="ml-2 space-y-2 border-l-2 border-dashed border-primary-200 pl-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-700/70">
+                <div className="ml-2 space-y-2 border-l-2 border-dashed border-primary-500/40 pl-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-300/70">
                     次のスポットへの移動
                   </p>
                   <TransportPicker

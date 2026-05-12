@@ -31,7 +31,7 @@ export function TitleBodySection({
   const titleOver = title.length > TITLE_MAX;
   return (
     <section
-      className="space-y-5 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6"
+      className="space-y-5 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
       aria-labelledby="title-body-section"
     >
       <header>
@@ -50,7 +50,7 @@ export function TitleBodySection({
       <div>
         <label
           htmlFor="art-title"
-          className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-700"
+          className="mb-1 block text-[11px] font-semibold uppercase tracking-[0.16em] text-primary-300"
         >
           タイトル <span className="text-danger-500">*</span>
         </label>
@@ -62,7 +62,7 @@ export function TitleBodySection({
           maxLength={TITLE_MAX}
           required
           placeholder="例: マレ地区で観光客が来ない、地元のおじさんが集う朝のビストロ3軒"
-          className="block w-full border-0 border-b-2 border-primary-100 bg-transparent px-0 py-2 text-[24px] font-bold leading-snug text-neutral-900 placeholder:text-foreground/30 focus:border-primary-500 focus:outline-none sm:text-[28px]"
+          className="block w-full border-0 border-b-2 border-border bg-transparent px-0 py-2 text-[24px] font-bold leading-snug text-foreground placeholder:text-foreground/30 focus:border-primary-500 focus:outline-none sm:text-[28px]"
         />
         <p
           className={

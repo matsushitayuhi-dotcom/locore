@@ -369,13 +369,13 @@ function MapBody({
             onCloseClick={() => setActiveKey(null)}
           >
             <div className="min-w-[280px] max-w-[340px] p-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-700">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-300">
                 スポット
               </p>
               {/* スポット名：いずれかの記事を購入していれば本物 + ハイライト、
                   していなければマスクして「??????」+ ロック表示 */}
               {groupHasUnlock ? (
-                <h4 className="mt-0.5 inline-block bg-primary-50 px-1.5 py-0.5 text-[15px] font-extrabold leading-snug text-primary-900">
+                <h4 className="mt-0.5 inline-block bg-primary-500/10 px-1.5 py-0.5 text-[15px] font-extrabold leading-snug text-primary-200">
                   {activeGroup.name}
                 </h4>
               ) : (
@@ -389,7 +389,7 @@ function MapBody({
                   href={`https://www.google.com/maps/place/?q=place_id:${activeGroup.placeId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 block text-[11px] text-primary-700 underline-offset-4 hover:underline"
+                  className="mt-1 block text-[11px] text-primary-300 underline-offset-4 hover:underline"
                 >
                   Google マップで見る →
                 </a>
@@ -408,11 +408,11 @@ function MapBody({
                         className={
                           'flex gap-2 rounded-md p-1.5 transition ' +
                           (unlocked
-                            ? 'bg-primary-50/60 ring-1 ring-primary-200 hover:bg-primary-50'
-                            : 'hover:bg-primary-50/30')
+                            ? 'bg-primary-500/10 ring-1 ring-primary-200 hover:bg-primary-500/10'
+                            : 'hover:bg-primary-500/10')
                         }
                       >
-                        <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-sm bg-primary-50">
+                        <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-sm bg-primary-500/10">
                           <Image
                             src={a.coverImageUrl}
                             alt={a.title}
@@ -434,7 +434,7 @@ function MapBody({
                             className={
                               'line-clamp-2 text-[12px] leading-snug ' +
                               (unlocked
-                                ? 'font-extrabold text-primary-900'
+                                ? 'font-extrabold text-primary-200'
                                 : 'font-semibold text-foreground/70')
                             }
                           >
@@ -465,7 +465,7 @@ function MapBody({
               {!groupHasUnlock ? (
                 <p className="mt-3 rounded-md bg-accent-50 px-2 py-1.5 text-[10px] leading-relaxed text-foreground/70">
                   地図上のグレーの円は <strong>おおよそのエリア（半径 280m）</strong> を示しています。記事を購入すると、正確な位置・店舗名・住所・営業時間が
-                  <strong className="ml-0.5 text-primary-700">アンロック</strong>
+                  <strong className="ml-0.5 text-primary-300">アンロック</strong>
                   されます。
                 </p>
               ) : null}
@@ -487,9 +487,9 @@ export function MapInner({
 }: MapInnerProps) {
   if (!apiKey) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-primary-50/40 px-6 text-center">
+      <div className="flex h-full w-full items-center justify-center bg-primary-500/10 px-6 text-center">
         <div className="max-w-md">
-          <p className="text-[14px] font-semibold text-primary-700">
+          <p className="text-[14px] font-semibold text-primary-300">
             地図を表示するには Google Maps API キーが必要です
           </p>
           <p className="mt-2 text-[12px] text-foreground/60">

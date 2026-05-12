@@ -62,7 +62,7 @@ export function LikeButton({
         'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition ' +
         (liked
           ? 'bg-primary-700 text-white shadow-sm'
-          : 'bg-white text-primary-700 ring-1 ring-primary-100 hover:bg-primary-50')
+          : 'bg-card text-primary-300 ring-1 ring-border hover:bg-primary-500/10')
       }
     >
       <Heart

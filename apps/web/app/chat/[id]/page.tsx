@@ -87,10 +87,10 @@ export default async function ChatThreadPage({ params }: PageProps) {
 
   return (
     <main className="flex h-[calc(100vh-56px)] flex-col">
-      <header className="flex items-center gap-3 border-b border-primary-100 bg-white px-4 py-3">
+      <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
         <Link
           href="/chat"
-          className="text-[12px] text-primary-700 underline-offset-4 hover:underline"
+          className="text-[12px] text-primary-300 underline-offset-4 hover:underline"
         >
           ←
         </Link>

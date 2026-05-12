@@ -47,7 +47,7 @@ export function PreviewPane({ title, body, coverImageUrl, priceJpy, tags }: Prop
       </h2>
 
       <div className="flex flex-wrap items-center gap-2 text-[11px]">
-        <span className="rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">
+        <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-primary-300">
           ¥{priceJpy.toLocaleString('ja-JP')}
         </span>
         {tags.slice(0, 5).map((t) => (

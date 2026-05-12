@@ -30,7 +30,7 @@ export default async function TripsPage() {
       </div>
 
       {trips.length === 0 ? (
-        <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">
+        <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-border">
           まだサンプル旅程はありません。
         </div>
       ) : (
@@ -50,7 +50,7 @@ export default async function TripsPage() {
               <Link
                 key={t.id}
                 href={`/trips/${t.id}`}
-                className="group block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-primary-100 transition-all duration-base ease-out hover:-translate-y-1 hover:shadow-md hover:ring-primary-300"
+                className="group block overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border transition-all duration-base ease-out hover:-translate-y-1 hover:shadow-md hover:ring-primary-300"
               >
                 <div className="flex h-40 items-end bg-gradient-to-br from-primary-50 via-white to-primary-50/40 p-5">
                   <div>
@@ -82,7 +82,7 @@ export default async function TripsPage() {
                       </li>
                     ))}
                   </ul>
-                  <p className="text-[11px] font-medium text-primary-700">
+                  <p className="text-[11px] font-medium text-primary-300">
                     詳細を見る →
                   </p>
                 </div>

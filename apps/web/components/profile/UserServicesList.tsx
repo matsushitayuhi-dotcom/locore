@@ -78,7 +78,7 @@ export function UserServicesList({
   return (
     <section className="space-y-4">
       <div>
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
           {ownerName} のサービス
         </p>
@@ -91,16 +91,16 @@ export function UserServicesList({
         {services.map((s) => (
           <li
             key={s.id}
-            className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-primary-100 transition hover:shadow-md hover:ring-primary-300"
+            className="flex flex-col rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border transition hover:shadow-md hover:ring-primary-300"
           >
             <div className="flex flex-wrap items-start gap-2">
               {s.category ? (
-                <span className="rounded-full bg-primary-50 px-2 py-0.5 text-[10px] font-semibold text-primary-700">
+                <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
                   {CATEGORY_LABEL[s.category] ?? s.category}
                 </span>
               ) : null}
               {s.priceJpy != null ? (
-                <span className="ml-auto text-[14px] font-bold tabular text-primary-700">
+                <span className="ml-auto text-[14px] font-bold tabular text-primary-300">
                   ¥{s.priceJpy.toLocaleString('ja-JP')}
                   {s.priceUnit ? (
                     <span className="ml-0.5 text-[10px] font-medium text-foreground/60">

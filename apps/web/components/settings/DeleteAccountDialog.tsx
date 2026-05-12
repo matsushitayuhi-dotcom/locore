@@ -113,7 +113,7 @@ export function DeleteAccountDialog({ disabled, hasUnsettled }: Props) {
                       onChange={(e) => setReason(e.target.value)}
                       maxLength={1000}
                       rows={3}
-                      className="flex w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 py-2 text-body-md text-neutral-900 placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
+                      className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
                       placeholder="改善のため、よろしければご記入ください"
                     />
                   </div>

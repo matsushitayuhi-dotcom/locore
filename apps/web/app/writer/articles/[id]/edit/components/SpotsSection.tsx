@@ -18,7 +18,7 @@ export function SpotsSection({
 }: Props) {
   return (
     <section
-      className="space-y-4 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6"
+      className="space-y-4 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
       aria-labelledby="spots-section-title"
     >
       <div>

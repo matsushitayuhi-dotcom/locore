@@ -105,11 +105,11 @@ export function BookmarkFolderDialog({
     >
       <div
         ref={dialogRef}
-        className="w-full max-w-[360px] rounded-lg bg-white p-4 shadow-xl"
+        className="w-full max-w-[360px] rounded-lg bg-card p-4 shadow-xl"
       >
         <div className="mb-3 flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
               フォルダを選ぶ
             </p>
             {articleTitle ? (
@@ -122,7 +122,7 @@ export function BookmarkFolderDialog({
             type="button"
             aria-label="閉じる"
             onClick={onClose}
-            className="rounded-sm p-1 text-foreground/40 hover:bg-neutral-50 hover:text-foreground"
+            className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -134,7 +134,7 @@ export function BookmarkFolderDialog({
               type="button"
               onClick={() => onPick(null, '未分類')}
               disabled={isPending}
-              className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[13px] hover:bg-primary-50/40 disabled:opacity-50"
+              className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[13px] hover:bg-primary-500/10 disabled:opacity-50"
             >
               <span className="font-medium">未分類</span>
               <span className="text-[10px] text-foreground/50">既定フォルダ</span>
@@ -146,7 +146,7 @@ export function BookmarkFolderDialog({
                 type="button"
                 onClick={() => onPick(f.id, f.name)}
                 disabled={isPending}
-                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[13px] hover:bg-primary-50/40 disabled:opacity-50"
+                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[13px] hover:bg-primary-500/10 disabled:opacity-50"
               >
                 <span className="truncate font-medium">{f.name}</span>
                 <span className="ml-2 shrink-0 text-[10px] text-foreground/50">
@@ -157,7 +157,7 @@ export function BookmarkFolderDialog({
           ))}
         </ul>
 
-        <div className="mt-3 border-t border-primary-100 pt-3">
+        <div className="mt-3 border-t border-border pt-3">
           {drafting ? (
             <div className="flex gap-1.5">
               <input
@@ -173,7 +173,7 @@ export function BookmarkFolderDialog({
                     onCreateAndPick();
                   }
                 }}
-                className="h-9 flex-1 rounded-sm border border-primary-200 bg-white px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
+                className="h-9 flex-1 rounded-sm border border-primary-500/40 bg-card px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
               />
               <button
                 type="button"
@@ -188,7 +188,7 @@ export function BookmarkFolderDialog({
             <button
               type="button"
               onClick={() => setDrafting(true)}
-              className="inline-flex w-full items-center justify-center gap-1 rounded-md px-3 py-2 text-[13px] font-medium text-primary-700 hover:bg-primary-50/40"
+              className="inline-flex w-full items-center justify-center gap-1 rounded-md px-3 py-2 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
             >
               <Plus className="h-3.5 w-3.5" />
               新しいフォルダを作る

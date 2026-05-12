@@ -225,7 +225,7 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="例：Pierre Hermé Bonaparte"
-        className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+        className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
       />
       <p className="mt-1 text-[11px] text-foreground/50">
         候補から選ぶと住所・座標・営業時間・電話・WEB・Google 評価をまとめて取得します。
@@ -239,7 +239,7 @@ function PlacesAutocompleteInner({ onPick }: { onPick: Props['onPick'] }) {
 export function SpotPlacesPicker({ apiKey, onPick }: Props) {
   if (!apiKey) {
     return (
-      <div className="rounded-sm border border-dashed border-border bg-neutral-50 p-3 text-[12px] text-foreground/60">
+      <div className="rounded-sm border border-dashed border-border bg-muted p-3 text-[12px] text-foreground/60">
         <p className="font-medium text-foreground/70">店名検索は未設定です</p>
         <p className="mt-1">
           下の手動入力欄から店舗名・住所・緯度経度を直接入力してください。

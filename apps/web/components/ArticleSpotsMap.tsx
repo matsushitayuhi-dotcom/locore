@@ -446,7 +446,7 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
 
   if (points.length === 0) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-lg bg-primary-50/40 text-[13px] text-primary-700 ring-1 ring-primary-100">
+      <div className="flex h-[320px] items-center justify-center rounded-lg bg-primary-500/10 text-[13px] text-primary-300 ring-1 ring-border">
         スポットの位置情報が登録されていません
       </div>
     );
@@ -454,7 +454,7 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
 
   return (
     <div
-      className="locore-map-canvas overflow-hidden rounded-lg ring-1 ring-primary-100"
+      className="locore-map-canvas overflow-hidden rounded-lg ring-1 ring-border"
       style={{ position: 'relative', height: 360 }}
     >
       <GoogleMap
@@ -504,7 +504,7 @@ export function ArticleSpotsMap({
         <h3 className="mb-3 text-[16px] font-bold tracking-tight">
           スポット地図
         </h3>
-        <div className="flex h-[200px] items-center justify-center rounded-lg bg-primary-50/40 text-[12px] text-primary-700 ring-1 ring-primary-100">
+        <div className="flex h-[200px] items-center justify-center rounded-lg bg-primary-500/10 text-[12px] text-primary-300 ring-1 ring-border">
           Google Maps API キーが未設定です（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY）
         </div>
       </section>

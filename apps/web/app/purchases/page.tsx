@@ -137,11 +137,11 @@ export default async function PurchasesPage() {
       ) : null}
 
       {purchaseRows.length === 0 ? (
-        <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-primary-100">
+        <div className="rounded-md bg-card p-8 text-center text-[13px] text-foreground/60 ring-1 ring-border">
           購入した記事はまだありません。気になる記事を見つけたら購入してここにまとめて見返せます。
         </div>
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-md bg-card ring-1 ring-primary-100">
+        <ul className="divide-y divide-border overflow-hidden rounded-md bg-card ring-1 ring-border">
           {purchaseRows.map((p) => {
             const article = articleMap.get(p.articleId);
             const isRefunded = p.status === 'refunded';
@@ -151,7 +151,7 @@ export default async function PurchasesPage() {
                 {article ? (
                   <Link
                     href={`/articles/${article.id}`}
-                    className="flex items-start gap-3 px-4 py-3 transition hover:bg-primary-50/40 sm:gap-4"
+                    className="flex items-start gap-3 px-4 py-3 transition hover:bg-primary-500/10 sm:gap-4"
                   >
                     <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-sm bg-muted sm:h-20 sm:w-28">
                       {article.coverImageUrl ? (

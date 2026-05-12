@@ -85,14 +85,14 @@ export function VideoEmbedEditor({ articleId, initial }: Props) {
               key={r.id}
               className="flex items-center gap-3 rounded-md border border-border bg-card p-3"
             >
-              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-700">
+              <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-foreground/80">
                 {PLATFORM_LABEL[r.platform]}
               </span>
               <a
                 href={r.embedUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-w-0 flex-1 truncate text-[12px] text-primary-700 underline-offset-4 hover:underline"
+                className="min-w-0 flex-1 truncate text-[12px] text-primary-300 underline-offset-4 hover:underline"
               >
                 {r.embedUrl}
               </a>
@@ -100,7 +100,7 @@ export function VideoEmbedEditor({ articleId, initial }: Props) {
                 type="button"
                 aria-label="動画を削除"
                 onClick={() => onRemove(r.id)}
-                className="rounded-sm p-1 text-foreground/50 hover:bg-neutral-50 hover:text-danger-500"
+                className="rounded-sm p-1 text-foreground/50 hover:bg-muted hover:text-danger-500"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -115,7 +115,7 @@ export function VideoEmbedEditor({ articleId, initial }: Props) {
           <select
             value={platform}
             onChange={(e) => setPlatform(e.target.value as VideoRow['platform'])}
-            className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             {Object.entries(PLATFORM_LABEL).map(([v, l]) => (
               <option key={v} value={v}>

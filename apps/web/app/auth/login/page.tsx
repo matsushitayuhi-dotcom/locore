@@ -70,7 +70,7 @@ export default async function LoginPage({
           アカウントをお持ちでない方は{' '}
           <Link
             href={signupHref}
-            className="font-medium text-primary-700 underline-offset-4 hover:underline"
+            className="font-medium text-primary-300 underline-offset-4 hover:underline"
           >
             新規登録
           </Link>

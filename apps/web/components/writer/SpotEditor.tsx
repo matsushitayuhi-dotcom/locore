@@ -239,7 +239,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
       <SpotPlacesPicker apiKey={googleMapsApiKey} onPick={handlePick} />
 
       {v.googlePlaceId ? (
-        <div className="space-y-2 rounded-md bg-primary-50/60 px-3 py-2 text-[12px] text-primary-700 ring-1 ring-primary-100">
+        <div className="space-y-2 rounded-md bg-primary-500/10 px-3 py-2 text-[12px] text-primary-300 ring-1 ring-border">
           <p className="font-semibold">Google から自動取得済み</p>
           {placeSummary.length > 0 ? (
             <p className="flex flex-wrap gap-x-3 gap-y-1 text-foreground/80">
@@ -261,7 +261,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
                     <img
                       src={url}
                       alt=""
-                      className="h-16 w-24 rounded-sm object-cover ring-1 ring-primary-100"
+                      className="h-16 w-24 rounded-sm object-cover ring-1 ring-border"
                     />
                     <button
                       type="button"
@@ -274,7 +274,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
                         )
                       }
                       aria-label="この写真を外す"
-                      className="absolute right-0 top-0 -translate-y-1 translate-x-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[11px] font-bold text-danger-500 shadow-sm ring-1 ring-primary-100 hover:bg-white"
+                      className="absolute right-0 top-0 -translate-y-1 translate-x-1 rounded-full bg-card/95 px-1.5 py-0.5 text-[11px] font-bold text-danger-500 shadow-sm ring-1 ring-border hover:bg-card"
                     >
                       ✕
                     </button>
@@ -314,7 +314,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           <select
             value={v.category}
             onChange={(e) => set('category', e.target.value as SpotEditorValue['category'])}
-            className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             <option value="">選択してください</option>
             {CATEGORY_OPTIONS.map((c) => (
@@ -375,7 +375,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           href="https://www.google.com/maps"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-700 underline-offset-4 hover:underline"
+          className="text-primary-300 underline-offset-4 hover:underline"
         >
           Google Maps
         </a>
@@ -420,7 +420,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           value={v.openingHoursText}
           onChange={(e) => set('openingHoursText', e.target.value)}
           rows={3}
-          className="flex w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 py-2 text-body-md text-neutral-900 placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:py-[7px] focus:outline-none"
           placeholder='例：月-金 9:00-18:00、日曜定休 — JSON でも可：{"mon":["09:00-18:00"]}'
         />
       </div>

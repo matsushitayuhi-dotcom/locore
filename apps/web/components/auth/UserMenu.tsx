@@ -98,7 +98,7 @@ export function UserMenu({ user }: Props) {
             <button
               type="submit"
               role="menuitem"
-              className="block w-full px-3 py-2 text-left text-foreground/80 transition-colors hover:bg-neutral-50 hover:text-foreground"
+              className="block w-full px-3 py-2 text-left text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
             >
               ログアウト
             </button>
@@ -124,7 +124,7 @@ function MenuItem({
         role="menuitem"
         href={href}
         onClick={onSelect}
-        className="block px-3 py-2 text-foreground/80 transition-colors hover:bg-neutral-50 hover:text-foreground"
+        className="block px-3 py-2 text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
       >
         {children}
       </Link>

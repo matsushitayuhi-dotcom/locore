@@ -336,7 +336,7 @@ export function TransportPicker({
                 'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
                 (isOn
                   ? 'bg-primary-700 text-white shadow-sm'
-                  : 'bg-white text-primary-700 ring-1 ring-primary-200 hover:bg-primary-50')
+                  : 'bg-card text-primary-300 ring-1 ring-primary-200 hover:bg-primary-500/10')
               }
             >
               {c.label}
@@ -347,7 +347,7 @@ export function TransportPicker({
 
       {/* 詳細入力（カテゴリ選択後） */}
       {active === 'public_transit' ? (
-        <div className="space-y-2 rounded-md bg-primary-50/40 p-2.5">
+        <div className="space-y-2 rounded-md bg-primary-500/10 p-2.5">
           <div className="flex items-end gap-2">
             <div className="w-[100px]">
               <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
@@ -437,7 +437,7 @@ export function TransportPicker({
           </p>
         </div>
       ) : active ? (
-        <div className="grid gap-2 rounded-md bg-primary-50/40 p-2.5 sm:grid-cols-[100px_1fr_auto]">
+        <div className="grid gap-2 rounded-md bg-primary-500/10 p-2.5 sm:grid-cols-[100px_1fr_auto]">
           <Input
             type="number"
             value={minutes}

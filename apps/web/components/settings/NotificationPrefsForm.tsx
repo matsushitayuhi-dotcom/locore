@@ -165,7 +165,7 @@ function Toggle({
       }`}
     >
       <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-neutral-0 shadow-xs transition-transform duration-150 ${
+        className={`inline-block h-5 w-5 transform rounded-full bg-card shadow-xs transition-transform duration-150 ${
           checked ? 'translate-x-5' : 'translate-x-0.5'
         }`}
       />

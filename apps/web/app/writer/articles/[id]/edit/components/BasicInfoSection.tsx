@@ -55,7 +55,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
 
   return (
     <section
-      className="space-y-5 rounded-md bg-card p-5 ring-1 ring-primary-100 sm:p-6"
+      className="space-y-5 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
       aria-labelledby="basic-section-title"
     >
       <h3 id="basic-section-title" className="text-[15px] font-semibold tracking-tight">
@@ -75,7 +75,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
                 className={
                   'flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2.5 text-[13px] transition ' +
                   (selected
-                    ? 'border-primary-700 bg-primary-50/60'
+                    ? 'border-primary-700 bg-primary-500/10'
                     : 'border-border bg-background hover:border-foreground/30')
                 }
               >
@@ -106,7 +106,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
             id="art-price"
             value={value.priceJpy}
             onChange={(e) => set('priceJpy', Number(e.target.value))}
-            className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             {allowedPrices.map((p) => (
               <option key={p} value={p}>
@@ -127,7 +127,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
             id="art-duration"
             value={value.durationType}
             onChange={(e) => set('durationType', e.target.value as BasicInfoValue['durationType'])}
-            className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+            className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
           >
             <option value="">選択してください</option>
             {DURATION_OPTIONS.map((d) => (
@@ -147,7 +147,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
           id="art-city"
           value={value.cityId}
           onChange={(e) => set('cityId', e.target.value)}
-          className="flex h-10 w-full rounded-sm border border-neutral-200 bg-neutral-0 px-3 text-body-md text-neutral-900 focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
+          className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md text-foreground focus:border-2 focus:border-primary-700 focus:px-[11px] focus:outline-none"
         >
           {cities.map((c) => (
             <option key={c.id} value={c.id}>
