@@ -102,18 +102,8 @@ export function Paywall({
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-md border border-border bg-card">
-        <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-card via-card/95 to-transparent" />
-        <div className="space-y-4 p-6 [filter:blur(2.5px)] [user-select:none] pointer-events-none">
-          <p className="prose-locore">
-            {bodyAfter.split(/\n\n+/)[0] ?? ''}
-          </p>
-          <p className="prose-locore">
-            {bodyAfter.split(/\n\n+/)[1] ?? '...'}
-          </p>
-        </div>
-      </div>
-
+      {/* 有料部分のプレビューは表示しない。
+         ぼかし表示は「頑張れば読める」状態だったので、購入導線のみに集約。 */}
       <div className="rounded-lg border border-primary-500/30 bg-primary-500/10 p-6 text-center">
         <Lock className="mx-auto mb-3 h-5 w-5 text-primary-300" />
         <p

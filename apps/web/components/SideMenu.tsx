@@ -44,7 +44,13 @@ type MenuItem = {
 };
 
 const VIEW_ITEMS: MenuItem[] = [
-  { href: '/', label: 'フィード', icon: Compass, matchPrefix: '/$' },
+  { href: '/', label: '世界（行き先を選ぶ）', icon: Compass, matchPrefix: '/$' },
+  {
+    href: '/region/paris',
+    label: 'パリのフィード',
+    icon: Compass,
+    matchPrefix: '/region/paris',
+  },
   { href: '/map', label: 'マップ', icon: MapIcon, matchPrefix: '/map' },
   { href: '/board', label: '掲示板', icon: Megaphone, matchPrefix: '/board' },
   { href: '/library', label: 'お気に入り', icon: Bookmark, matchPrefix: '/library' },

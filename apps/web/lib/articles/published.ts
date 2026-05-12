@@ -13,9 +13,16 @@ import type { Article, Writer, Spot, Review } from '@/lib/mock';
  * - 集計値（localScore/satisfaction/review/purchase）はまだ DB 集計してない
  *   ため、暫定で 0 / null 寄りのデフォルト
  *
+ * @param limit       取得件数上限
+ * @param regionSlug  指定すると cities.slug = regionSlug の記事だけ返す
+ *                    （/region/[slug] ホーム用）
+ *
  * 将来：reviews / purchases の集計をマテビュー化して反映
  */
-export async function getPublishedDbArticles(limit = 50): Promise<Article[]> {
+export async function getPublishedDbArticles(
+  limit = 50,
+  regionSlug?: string,
+): Promise<Article[]> {
   let rows: Array<{
     id: string;
     title: string;
@@ -34,6 +41,9 @@ export async function getPublishedDbArticles(limit = 50): Promise<Article[]> {
     writerTier: 'S' | 'A' | 'B' | null;
     writerYears: number | null;
     cityNameJa: string | null;
+    citySlug: string | null;
+    countryCode: string | null;
+    countryNameJa: string | null;
   }> = [];
 
   try {
@@ -57,6 +67,9 @@ export async function getPublishedDbArticles(limit = 50): Promise<Article[]> {
         writerTier: schema.writerProfiles.tier,
         writerYears: schema.writerProfiles.residencyYears,
         cityNameJa: schema.cities.nameJa,
+        citySlug: schema.cities.slug,
+        countryCode: schema.countries.code,
+        countryNameJa: schema.countries.nameJa,
       })
       .from(schema.articles)
       .leftJoin(schema.users, eq(schema.articles.writerId, schema.users.id))
@@ -65,10 +78,15 @@ export async function getPublishedDbArticles(limit = 50): Promise<Article[]> {
         eq(schema.writerProfiles.userId, schema.articles.writerId),
       )
       .leftJoin(schema.cities, eq(schema.articles.cityId, schema.cities.id))
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
+      )
       .where(
         and(
           eq(schema.articles.status, 'published'),
           isNull(schema.articles.deletedAt),
+          regionSlug ? eq(schema.cities.slug, regionSlug) : sql`true`,
         ),
       )
       .orderBy(desc(schema.articles.publishedAt))
@@ -89,31 +107,38 @@ export async function getPublishedDbArticles(limit = 50): Promise<Article[]> {
     other: '半日',
   };
 
-  return rows.map((r) => ({
-    id: r.id,
-    title: r.title,
-    body: r.body ?? '',
-    coverImageUrl: r.coverImageUrl ?? `https://picsum.photos/seed/${r.id}/960/640`,
-    writerId: r.writerId,
-    writerName: r.writerName ?? '匿名',
-    writerAvatarUrl: r.writerAvatar ?? null,
-    writerTier: (r.writerTier ?? 'B') as 'S' | 'A' | 'B',
-    writerYears: r.writerYears ?? 0,
-    cityId: r.cityId,
-    area: r.cityNameJa ?? 'パリ',
-    priceJpy: r.priceJpy,
-    tags: r.tags ?? [],
-    durationType: durationMap[r.durationType ?? 'other'] ?? '半日',
-    articleType: r.articleType,
-    createdAt: r.createdAt.toISOString(),
-    publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
-    // DB 集計が未実装のため暫定デフォルト
-    localScoreAverage: 70,
-    satisfactionAverage: 4.5,
-    reviewCount: 0,
-    purchaseCount: 0,
-    spotIds: [],
-  }));
+  return rows.map((r) => {
+    const country = r.countryNameJa ?? '';
+    const region = r.cityNameJa ?? 'パリ';
+    // 国・地域タグ。例: 「フランス・パリ＆近郊」
+    const area = country && country !== region ? `${country}・${region}` : region;
+    return {
+      id: r.id,
+      title: r.title,
+      body: r.body ?? '',
+      coverImageUrl:
+        r.coverImageUrl ?? `https://picsum.photos/seed/${r.id}/960/640`,
+      writerId: r.writerId,
+      writerName: r.writerName ?? '匿名',
+      writerAvatarUrl: r.writerAvatar ?? null,
+      writerTier: (r.writerTier ?? 'B') as 'S' | 'A' | 'B',
+      writerYears: r.writerYears ?? 0,
+      cityId: r.cityId,
+      area,
+      priceJpy: r.priceJpy,
+      tags: r.tags ?? [],
+      durationType: durationMap[r.durationType ?? 'other'] ?? '半日',
+      articleType: r.articleType,
+      createdAt: r.createdAt.toISOString(),
+      publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
+      // DB 集計が未実装のため暫定デフォルト
+      localScoreAverage: 70,
+      satisfactionAverage: 4.5,
+      reviewCount: 0,
+      purchaseCount: 0,
+      spotIds: [],
+    };
+  });
 }
 
 /**

@@ -15,11 +15,11 @@ import { SideMenu } from './SideMenu';
  */
 
 const NAV = [
-  { href: '/', label: 'フィード' },
+  { href: '/', label: '世界' },
+  { href: '/region/paris', label: 'パリ' },
   { href: '/map', label: 'マップ' },
   { href: '/board', label: '掲示板' },
   { href: '/library', label: 'お気に入り' },
-  { href: '/purchases', label: '購入記事' },
 ];
 
 export async function SiteHeader() {

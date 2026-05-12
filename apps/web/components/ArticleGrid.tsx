@@ -34,12 +34,14 @@ interface ArticleGridProps {
 
 /**
  * area の表示用整形：
- * - 'パリ' そのもの → 'パリ'（重複防止）
- * - 'パリ・マレ' のような既にプレフィックス付き → そのまま
- * - 'マレ（3区）' のようなサブエリアのみ → 'パリ・<sub>'（旧 mock 互換）
+ * - 既に「フランス・パリ」のようにサーバ側で連結済みならそのまま
+ * - レガシー mock データ（'マレ' 等の素のサブエリア）が来た場合は 'パリ・' を補う
+ * - 空文字は 'パリ' フォールバック
  */
 function formatArea(area: string): string {
   if (!area) return 'パリ';
+  // 国名 + ・ で始まる or '〇〇都' '〇〇市' 系を含むならサーバ整形済み
+  if (area.includes('・')) return area;
   if (area === 'パリ' || area.startsWith('パリ')) return area;
   return `パリ・${area}`;
 }

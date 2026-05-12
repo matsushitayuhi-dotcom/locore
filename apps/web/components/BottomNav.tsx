@@ -24,10 +24,10 @@ type Tab = {
 
 const TABS: Tab[] = [
   {
-    href: '/',
+    href: '/region/paris',
     label: 'フィード',
     icon: Compass,
-    match: (p) => p === '/',
+    match: (p) => p === '/' || p.startsWith('/region/'),
   },
   {
     href: '/map',

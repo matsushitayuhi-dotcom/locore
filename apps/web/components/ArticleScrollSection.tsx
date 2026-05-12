@@ -28,6 +28,7 @@ type Props = {
 
 function formatArea(area: string): string {
   if (!area) return 'パリ';
+  if (area.includes('・')) return area;
   if (area === 'パリ' || area.startsWith('パリ')) return area;
   return `パリ・${area}`;
 }

@@ -13,6 +13,7 @@ export * from './residency_verifications';
 export * from './sns_links';
 
 // Catalog
+export * from './countries';
 export * from './cities';
 export * from './articles';
 export * from './article_videos';

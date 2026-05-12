@@ -7,7 +7,7 @@ import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 export const dynamic = 'force-dynamic';
 
 type Props = {
-  searchParams?: { type?: string };
+  searchParams?: { type?: string; region?: string };
 };
 
 export const metadata = { title: '記事一覧 — Locore' };
@@ -15,13 +15,14 @@ export const metadata = { title: '記事一覧 — Locore' };
 /**
  * 記事一覧ページ。
  *
- * - クエリパラメータ `?type=spot_guide` or `?type=itinerary` でデフォルト絞り込み
- * - FeedFilters が searchParams を読んでタブを初期化する作りなのでそのまま渡せばよい
- * - ホームの「スポット 10 件 / 旅程 10 件」横スクロールから「続きを見る」で
- *   ここに遷移してきたユーザーに、全件 + 詳細フィルタを提供する
+ * - クエリパラメータ:
+ *   - `?type=spot_guide` or `?type=itinerary` → FeedFilters の初期タブ
+ *   - `?region=paris`   → 地域 slug で絞り込み（地域ホームの「続きを見る」から渡される）
+ * - 何も指定なしなら全地域・全タイプ
  */
 export default async function ArticlesIndexPage({ searchParams }: Props) {
-  const articles = await getPublishedDbArticles(200);
+  const regionSlug = searchParams?.region;
+  const articles = await getPublishedDbArticles(200, regionSlug);
   const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
 
   const typeParam = searchParams?.type;

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { X } from '@locore/ui/icons';
 import type { Article, Spot } from '../lib/mock';
 
 const InnerMap = dynamic(() => import('./MapInner').then((m) => m.MapInner), {
@@ -43,6 +44,7 @@ export function MapView({
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(true);
 
   const filteredArticles = useMemo(() => {
     if (activeTags.length === 0) return articles;
@@ -154,20 +156,37 @@ export function MapView({
           ) : null}
         </div>
 
-        {/* Pin legend */}
-        <div className="pointer-events-auto mt-3 rounded-md bg-card/95 px-3 py-2.5 text-[11px] shadow-sm ring-1 ring-border backdrop-blur">
-          <p className="mb-1.5 font-semibold uppercase tracking-[0.16em] text-foreground/50">
-            ピン色の凡例
-          </p>
-          <div className="space-y-1">
-            <Legend swatch={<Dot color="bg-local-low" />} label="0–29 定番寄り" />
-            <Legend swatch={<Dot color="bg-local-mid" />} label="30–69 中間" />
-            <Legend swatch={<Dot color="bg-local-high" />} label="70–100 ローカル" />
-            {myArticleIds && myArticleIds.length > 0 ? (
-              <Legend swatch={<OwnPinDot />} label="あなたの投稿" />
-            ) : null}
+        {/* Pin legend — 閉じるボタン付き、ローカルスコア凡例は削除（使わない） */}
+        {legendOpen ? (
+          <div className="pointer-events-auto mt-3 rounded-md bg-card/95 px-3 py-2.5 text-[11px] shadow-sm ring-1 ring-border backdrop-blur">
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="font-semibold uppercase tracking-[0.16em] text-foreground/50">
+                凡例
+              </p>
+              <button
+                type="button"
+                onClick={() => setLegendOpen(false)}
+                aria-label="凡例を閉じる"
+                className="-mr-1 rounded-full p-1 text-foreground/45 hover:bg-primary-500/10 hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            <div className="space-y-1">
+              <Legend
+                swatch={<HexSwatch />}
+                label="このエリアに記事あり（位置はぼかし）"
+              />
+              <Legend
+                swatch={<UnlockedPinDot />}
+                label="購入済 / 公開された記事のピン"
+              />
+              {myArticleIds && myArticleIds.length > 0 ? (
+                <Legend swatch={<OwnPinDot />} label="あなたの投稿" />
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );
@@ -182,8 +201,27 @@ function Legend({ swatch, label }: { swatch: React.ReactNode; label: string }) {
   );
 }
 
-function Dot({ color }: { color: string }) {
-  return <span className={`inline-block h-3 w-3 rounded-full ${color}`} />;
+/** ロック中ヘキサのスウォッチ（薄い terra 塗り）*/
+function HexSwatch() {
+  return (
+    <svg viewBox="0 0 18 18" className="h-4 w-4" aria-hidden>
+      <polygon
+        points="9,1.5 16,5.5 16,12.5 9,16.5 2,12.5 2,5.5"
+        fill="#D4634A"
+        fillOpacity={0.15}
+        stroke="#D4634A"
+        strokeOpacity={0.5}
+        strokeWidth={1.2}
+      />
+    </svg>
+  );
+}
+
+/** 解放済みピンのスウォッチ（terra 単色 + 白縁）*/
+function UnlockedPinDot() {
+  return (
+    <span className="inline-block h-3.5 w-3.5 rounded-full bg-local-high ring-[1.5px] ring-white" />
+  );
 }
 
 /**

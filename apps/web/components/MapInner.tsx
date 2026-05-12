@@ -16,11 +16,12 @@ import { Purchases } from '../lib/storage/local';
 import { locoreMapStyles, pinColorForScore } from './map/locoreMapStyle';
 
 /**
- * H3 ヘキサゴン解像度。Res 8 は約 461m 辺 / 0.74 km² 面積。
- * パリの 1 区画より少し大きいくらいで、エリア感を掴みやすい。
+ * H3 ヘキサゴン解像度。Res 7 は約 1.22 km 辺 / 5.16 km² 面積。
+ * パリ全体（105 km²）が 20 個程度のヘキサで覆われるサイズ感で、
+ * 「だいたいの区しか分からない」レベルまで位置を秘匿できる。
  * Uber と同じ H3 を採用しているので、NYC / 東京等にもそのまま拡張可能。
  */
-const H3_RESOLUTION = 8;
+const H3_RESOLUTION = 7;
 
 const PARIS_CENTER = { lat: 48.8606, lng: 2.3376 };
 
@@ -634,7 +635,7 @@ function MapBody({
                 {activeHex.articles.length} 件の記事
               </h4>
               <p className="mt-1 text-[11px] text-neutral-600">
-                約 1km 四方のヘキサ。正確な場所は記事を購入すると解放されます。
+                約 2.5km 四方のヘキサ。正確な場所は記事を購入すると解放されます。
               </p>
 
               <ul className="mt-3 max-h-[260px] space-y-2 overflow-y-auto pr-1">
