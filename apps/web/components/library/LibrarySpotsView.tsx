@@ -1,11 +1,20 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { ChevronRight, Plus, X } from '@locore/ui/icons';
+import { ChevronRight, MapPin, Plus, X } from '@locore/ui/icons';
 import { createSpotFolder } from '@/lib/spotFavorites/actions';
 import { WishlistFolderCard } from './WishlistFolderCard';
+
+const CATEGORY_LABEL: Record<string, string> = {
+  food: '食事',
+  sight: '観光',
+  shopping: '買い物',
+  lodging: '宿泊',
+  other: 'その他',
+};
 
 /**
  * /library の「スポット」タブ用クライアントビュー（v2: Airbnb Wishlists 風）。
@@ -124,29 +133,10 @@ export function LibrarySpotsView({ bookmarks, folders: initialFolders }: Props) 
             このフォルダにはまだスポットがありません
           </div>
         ) : (
-          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="space-y-2 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0 lg:grid-cols-3">
             {filtered.map((r) => (
-              <li
-                key={r.spotId}
-                className="rounded-md bg-card p-3 ring-1 ring-border"
-              >
-                <p className="text-[13px] font-semibold">{r.name}</p>
-                {r.address ? (
-                  <p className="mt-0.5 text-[11px] text-foreground/60">
-                    {r.address}
-                  </p>
-                ) : null}
-                {r.notes ? (
-                  <p className="mt-1 text-[11px] text-primary-300">{r.notes}</p>
-                ) : null}
-                {r.articleId ? (
-                  <Link
-                    href={`/articles/${r.articleId}`}
-                    className="mt-2 inline-block text-[11px] text-primary-300 underline-offset-4 hover:underline"
-                  >
-                    元の記事を見る →
-                  </Link>
-                ) : null}
+              <li key={r.spotId}>
+                <SpotRowItem row={r} />
               </li>
             ))}
           </ul>
@@ -269,6 +259,62 @@ export function LibrarySpotsView({ bookmarks, folders: initialFolders }: Props) 
             </div>
           </button>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * フォルダ内のスポット 1 行表示。
+ * 左に小画像 (64x64)、右にスポット名・住所・カテゴリ・元記事へのリンク。
+ */
+function SpotRowItem({ row }: { row: SpotRow }) {
+  const fallback = `https://picsum.photos/seed/${row.spotId}/200/200`;
+  return (
+    <div className="flex gap-3 rounded-lg bg-card p-2.5 ring-1 ring-border transition hover:ring-primary-300">
+      <Link
+        href={row.articleId ? `/articles/${row.articleId}` : '#'}
+        className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-muted ring-1 ring-border sm:h-20 sm:w-20"
+      >
+        <Image
+          src={row.previewImageUrl ?? fallback}
+          alt=""
+          fill
+          sizes="80px"
+          className="object-cover"
+          unoptimized
+        />
+      </Link>
+      <div className="min-w-0 flex-1 py-0.5">
+        <p className="line-clamp-1 text-[13px] font-semibold text-foreground">
+          {row.name}
+        </p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/60">
+          {row.category ? (
+            <span className="rounded-sm bg-primary-500/10 px-1.5 py-0.5 font-semibold text-primary-300">
+              {CATEGORY_LABEL[row.category] ?? row.category}
+            </span>
+          ) : null}
+          {row.address ? (
+            <span className="inline-flex items-center gap-0.5 truncate">
+              <MapPin className="h-2.5 w-2.5" />
+              {row.address}
+            </span>
+          ) : null}
+        </p>
+        {row.notes ? (
+          <p className="mt-1 line-clamp-1 text-[11px] text-primary-300">
+            {row.notes}
+          </p>
+        ) : null}
+        {row.articleId ? (
+          <Link
+            href={`/articles/${row.articleId}`}
+            className="mt-1 inline-block text-[10px] text-primary-300 underline-offset-4 hover:underline"
+          >
+            元の記事を見る
+          </Link>
+        ) : null}
       </div>
     </div>
   );

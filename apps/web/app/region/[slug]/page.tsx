@@ -52,8 +52,7 @@ export default async function RegionHomePage({ params }: Props) {
         </Link>
 
         <div className="mt-8 rounded-3xl bg-card p-10 text-center ring-1 ring-border">
-          <p className="text-[60px] leading-none">{region.emoji ?? '🌐'}</p>
-          <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-foreground/55">
+          <p className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-foreground/55">
             <Lock className="h-3 w-3" />
             Coming Soon
           </p>
@@ -115,7 +114,6 @@ export default async function RegionHomePage({ params }: Props) {
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
           >
-            {region.emoji ? <span className="mr-1.5">{region.emoji}</span> : null}
             {region.nameJa}
           </h1>
         </header>
@@ -129,7 +127,7 @@ export default async function RegionHomePage({ params }: Props) {
         <section>
           <SectionHeader
             kicker="新着ニュース"
-            title={`${region.nameJa}・今日明日にあること`}
+            title={`${region.nameJa}・今日明日に起きていること`}
             subtitle="マルシェ・展覧会・地元イベント。AI が毎朝公開情報からまとめます。"
             href="/board"
           />

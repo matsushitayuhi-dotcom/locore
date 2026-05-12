@@ -78,7 +78,6 @@ export default async function CountryPage({ params }: Props) {
                 fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
               }}
             >
-              {country.emoji ? <span className="mr-1.5">{country.emoji}</span> : null}
               {country.nameJa}
             </h1>
             {country.shortDescription ? (
@@ -91,7 +90,7 @@ export default async function CountryPage({ params }: Props) {
       </section>
 
       <div className="mx-auto max-w-screen-xl space-y-12 px-4 py-10 sm:px-6 sm:py-14">
-        {/* Active regions */}
+        {/* Active regions — もう少し小さめのグリッドで密度を上げる */}
         {activeRegions.length > 0 ? (
           <section>
             <SectionHeader
@@ -99,13 +98,12 @@ export default async function CountryPage({ params }: Props) {
               title="クリエイターが現地から書いています"
               count={activeRegions.length}
             />
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
               {activeRegions.map((r) => (
                 <li key={r.id}>
                   <RegionCard region={r} variant="active" />
                 </li>
               ))}
-              {/* 「その他」もアクティブな国にだけ薄く出す */}
               {otherRegion && otherRegion.isActive ? (
                 <li>
                   <RegionCard region={otherRegion} variant="other" />
@@ -115,8 +113,7 @@ export default async function CountryPage({ params }: Props) {
           </section>
         ) : (
           <section className="rounded-2xl bg-card p-10 text-center ring-1 ring-border">
-            <p className="text-[48px] leading-none">{country.emoji ?? '🌐'}</p>
-            <p className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-foreground/55">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-foreground/55">
               <Lock className="h-3 w-3" />
               準備中
             </p>
@@ -209,13 +206,13 @@ function RegionCard({
   const inner = (
     <div
       className={
-        'group relative h-full overflow-hidden rounded-2xl bg-card ring-1 transition ' +
+        'group relative h-full overflow-hidden rounded-xl ring-1 transition ' +
         (locked
-          ? 'cursor-not-allowed ring-border'
-          : 'ring-border hover:shadow-md hover:ring-primary-300')
+          ? 'cursor-not-allowed bg-neutral-100 opacity-70 ring-border'
+          : 'bg-card ring-border hover:shadow-md hover:ring-primary-300')
       }
     >
-      <div className="relative aspect-[5/4] w-full overflow-hidden bg-muted">
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
         <Image
           src={
             region.heroImageUrl ??
@@ -223,54 +220,45 @@ function RegionCard({
           }
           alt={region.nameJa}
           fill
-          sizes="(min-width: 1024px) 33vw, 50vw"
+          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
           className={
             'object-cover transition duration-500 ' +
-            (locked
-              ? 'grayscale-[60%] opacity-80'
-              : 'group-hover:scale-[1.04]')
+            (locked ? 'grayscale' : 'group-hover:scale-[1.04]')
           }
           unoptimized
         />
+        {locked ? (
+          <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
+        ) : null}
         <div
           aria-hidden
           className={
             'absolute inset-0 ' +
             (locked
-              ? 'bg-gradient-to-t from-neutral-900/85 via-neutral-900/35 to-transparent'
+              ? 'bg-gradient-to-t from-neutral-700/80 via-neutral-700/30 to-transparent'
               : 'bg-gradient-to-t from-neutral-900/80 via-neutral-900/25 to-transparent')
           }
         />
-        {region.emoji ? (
-          <span className="absolute right-3 top-3 rounded-full bg-card/90 px-2 py-0.5 text-[16px] leading-none shadow-sm backdrop-blur">
-            {region.emoji}
-          </span>
-        ) : null}
         {locked ? (
-          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65 backdrop-blur">
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
             <Lock className="h-2.5 w-2.5" />
             準備中
           </span>
         ) : null}
-        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+        <div className="absolute inset-x-0 bottom-0 p-3 text-white">
           <h3
-            className="text-[18px] font-bold leading-tight tracking-tight sm:text-[20px]"
+            className="text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
           >
             {region.nameJa}
           </h3>
-          {region.nameEn ? (
-            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-white/65">
-              {region.nameEn}
-            </p>
-          ) : null}
           {!locked ? (
-            <div className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-white/90">
-              <MapPin className="h-3 w-3" />
+            <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white/90">
+              <MapPin className="h-2.5 w-2.5" />
               {isOther ? 'その他のエリア' : '記事を見る'}
-              <ArrowRight className="h-3 w-3" />
+              <ArrowRight className="h-2.5 w-2.5" />
             </div>
           ) : null}
         </div>

@@ -143,12 +143,6 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
           aria-hidden
           className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-neutral-900/85 via-neutral-900/35 to-transparent"
         />
-        {/* 国旗 emoji（右上に小さく） */}
-        {country.emoji ? (
-          <span className="absolute right-3 top-3 rounded-full bg-card/90 px-2.5 py-1 text-[18px] leading-none shadow-sm backdrop-blur">
-            {country.emoji}
-          </span>
-        ) : null}
         {/* タイトル群 */}
         <div className="absolute inset-x-0 bottom-0 p-5 text-white">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
@@ -184,15 +178,15 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
 }
 
 /**
- * Coming Soon カード — 画像は出すがグレースケール + Lock。
- * クリックでは何も起きないが、aria/visual で disabled を明示。
+ * Coming Soon カード — タイル全体をグレーアウト（フルグレースケール画像 +
+ * 灰色オーバーレイ + 文字も muted）。タップ不可。
  */
 function ComingSoonCard({ country }: { country: CountryListItem }) {
   return (
     <div
       aria-disabled
       title="準備中"
-      className="group relative block cursor-not-allowed overflow-hidden rounded-xl bg-card ring-1 ring-border"
+      className="group relative block cursor-not-allowed overflow-hidden rounded-xl bg-neutral-100 opacity-70 ring-1 ring-border"
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
         <Image
@@ -200,29 +194,33 @@ function ComingSoonCard({ country }: { country: CountryListItem }) {
           alt={country.nameJa}
           fill
           sizes="(min-width: 1280px) 20vw, (min-width: 640px) 33vw, 50vw"
-          className="object-cover grayscale-[60%] opacity-80"
+          className="object-cover grayscale"
           unoptimized
+        />
+        {/* タイル全体に灰色 wash */}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-neutral-100/45"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-neutral-900/80 via-neutral-900/35 to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-neutral-700/80 via-neutral-700/30 to-transparent"
         />
         {/* Lock バッジ */}
-        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65 backdrop-blur">
+        <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
           <Lock className="h-2.5 w-2.5" />
           準備中
         </span>
-        <div className="absolute inset-x-0 bottom-0 p-3 text-white">
-          <p className="text-[20px] leading-none">{country.emoji ?? '🌐'}</p>
+        <div className="absolute inset-x-0 bottom-0 p-3 text-white/85">
           <h3
-            className="mt-1.5 text-[14px] font-bold leading-tight tracking-tight"
+            className="text-[14px] font-bold leading-tight tracking-tight"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
           >
             {country.nameJa}
           </h3>
-          <p className="mt-0.5 text-[10px] uppercase tracking-wider text-white/65">
+          <p className="mt-0.5 text-[10px] uppercase tracking-wider text-white/55">
             {country.nameEn}
           </p>
         </div>

@@ -30,6 +30,7 @@ import {
   listMyLikedArticleIds,
 } from '@/lib/articleLikes/actions';
 import { Bookmark } from '@locore/ui/icons';
+import { getMyBookmarkedIdSet } from '@/lib/bookmarks/actions';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { eq, and } from 'drizzle-orm';
 import { schema } from '@locore/db';
@@ -89,13 +90,15 @@ export default async function ArticleDetailPage({
   const unlocked = isFreeArticle || purchasedFromDb || isOwner;
 
   // お気に入りスポット + いいね / ブックマーク数 を並列取得
-  const [{ folders }, bookmarkedSpotIds, socialCounts, likedSet] =
+  const [{ folders }, bookmarkedSpotIds, socialCounts, likedSet, bookmarkedArticleIds] =
     await Promise.all([
       listMyFolders(),
       listMyBookmarkedSpotIds(),
       getArticleSocialCounts([article.id]),
       listMyLikedArticleIds(),
+      getMyBookmarkedIdSet(),
     ]);
+  const alreadySavedByMe = bookmarkedArticleIds.has(article.id);
   const viewerLoggedIn = !!me;
   const counts = socialCounts.get(article.id) ?? {
     likeCount: 0,
@@ -239,7 +242,11 @@ export default async function ArticleDetailPage({
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <AddToTripButton articleId={article.id} size="md" />
+          <AddToTripButton
+            articleId={article.id}
+            size="md"
+            initialSaved={alreadySavedByMe}
+          />
           <LikeButton
             articleId={article.id}
             initialLiked={initialLiked}
