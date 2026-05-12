@@ -3,91 +3,96 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — Emerald Mono palette.
+ * Locore Design Tokens — Premium Dark (v2).
  *
  * Brand voice:
- *   - Single emerald hue family (no rainbow).
- *   - Secondary = deeper emerald, Accent = lighter mint. Same hue, different brightness.
- *   - Semantic colors (warning / danger) only get a hue shift when meaning requires it.
- *   - Body text in plain sans (browser-default leaning, Arial first).
+ *   - Dark background lets travel photos pop (Netflix-style cinematic feel).
+ *   - One warm amber accent (#F59E0B) for CTAs, highlights, and price tags.
+ *   - One coral accent for likes/saves (treated as the "heart" color).
+ *   - Editorial typography stack: Inter Tight for UI/numbers, Noto Sans JP
+ *     for body, Noto Serif JP for editorial headings.
+ *   - Neutrals are warm-gray (Zinc-ish) — no green tint.
  */
 
 @layer base {
   :root {
-    /* === Neutral (paper, text). 微かにミントを乗せる ================== */
-    --color-neutral-0:   #ffffff;
-    --color-neutral-25:  #f8fbf9;
-    --color-neutral-50:  #f1f6f3;
-    --color-neutral-100: #e3ebe7;
-    --color-neutral-200: #cdd8d2;
-    --color-neutral-300: #a8b6af;
-    --color-neutral-400: #7c8c84;
-    --color-neutral-500: #51625a;
-    --color-neutral-700: #2f3d36;
-    --color-neutral-900: #16201c;
+    /* === Neutral (warm dark scale — Zinc-ish, never green) ============ */
+    --color-neutral-0:   #ffffff;      /* pure white, used sparingly */
+    --color-neutral-25:  #fafaf7;      /* off-white (light overlays only) */
+    --color-neutral-50:  #f4f4f0;      /* warm off-white = main text */
+    --color-neutral-100: #d4d4d8;
+    --color-neutral-200: #a1a1aa;
+    --color-neutral-300: #71717a;
+    --color-neutral-400: #52525b;
+    --color-neutral-500: #3f3f46;
+    --color-neutral-700: #27272a;      /* border-strong */
+    --color-neutral-900: #18181b;      /* surface (card) */
+    --color-neutral-950: #0e0e10;      /* background — near-black, warm */
 
-    /* === Primary: Emerald（メイン） ==================================== */
-    --color-primary-50:  #e6f7ef;
-    --color-primary-100: #c6ecd9;
-    --color-primary-200: #95dab8;
-    --color-primary-300: #54c79a;
-    --color-primary-500: #14a37c;
-    --color-primary-700: #0d7a5c;
-    --color-primary-900: #06432f;
+    /* === Primary: Warm Amber — the new emerald ======================= */
+    --color-primary-50:  #fef6e7;
+    --color-primary-100: #fde8b5;
+    --color-primary-200: #fbd27d;
+    --color-primary-300: #fab840;
+    --color-primary-500: #f59e0b;      /* main amber */
+    --color-primary-700: #b97808;
+    --color-primary-900: #6b4504;
 
-    /* === Secondary: 同じ emerald 系の深い側（強調 CTA に使う） ========= */
-    /*    primary-500 と並べたときに「もう一段深い」と感じるように。      */
-    --color-secondary-50:  #d8efe2;
-    --color-secondary-300: #2c8a6d;
-    --color-secondary-500: #0d7a5c;
-    --color-secondary-700: #06432f;
+    /* === Secondary: Deep navy (rare, for trust signals / links) ===== */
+    --color-secondary-50:  #dceaf5;
+    --color-secondary-300: #6ba1c9;
+    --color-secondary-500: #2c7eb4;
+    --color-secondary-700: #1c5384;
 
-    /* === Accent: 同じ emerald 系の淡い側（ハイライト / 下線 / pill） == */
-    --color-accent-50:  #ecf9f3;
-    --color-accent-300: #95dab8;
-    --color-accent-500: #54c79a;
-    --color-accent-700: #14a37c;
+    /* === Accent: Warm Coral (for likes / "save" / heart icons) ====== */
+    --color-accent-50:  #ffe8e0;
+    --color-accent-300: #ff9f7a;
+    --color-accent-500: #ff6b47;       /* warm coral */
+    --color-accent-700: #c8472a;
 
-    /* === Semantic — 必要最低限の色相変化のみ（多用しない） ============ */
-    --color-success-50:  #e7faec;
-    --color-success-500: #14a37c;        /* primary と揃える */
-    --color-warning-50:  #fdf3da;
-    --color-warning-500: #b8860b;        /* くすんだ黄土 */
-    --color-warning-700: #7a5800;
-    --color-danger-50:   #fbe6e3;
-    --color-danger-500:  #c0463f;        /* くすませて派手さを抑える */
-    --color-info-50:     #e1ecec;
-    --color-info-500:    #3d7a78;        /* 青ではなく青緑 */
+    /* === Semantic — used sparingly =================================== */
+    --color-success-50:  #064e3b;      /* tinted bg for dark mode */
+    --color-success-500: #10b981;
+    --color-warning-50:  #422d04;
+    --color-warning-500: #f59e0b;
+    --color-warning-700: #b97808;
+    --color-danger-50:   #4c1d1d;
+    --color-danger-500:  #ef4444;
+    --color-info-50:     #172554;
+    --color-info-500:    #3b82f6;
 
-    /* === Local-score gradient — 全部 emerald の濃淡だけで分ける ======= */
-    --color-local-high: #0d7a5c;   /* 70-100 — 深い emerald */
-    --color-local-mid:  #54c79a;   /* 30-69 — 中間 */
-    --color-local-low:  #c6ecd9;   /* 0-29 — 淡い mint */
+    /* === Local-score scale — amber gradient ========================== */
+    --color-local-high: #f59e0b;   /* 70-100, vivid amber */
+    --color-local-mid:  #fbd27d;   /* 30-69, soft amber */
+    --color-local-low:  #6b4504;   /* 0-29, dark amber/brown */
 
-    /* === Surface roles =============================================== */
-    --color-bg: var(--color-neutral-25);
-    --color-surface: var(--color-neutral-0);
-    --color-surface-muted: var(--color-neutral-50);
-    --color-border: var(--color-neutral-200);
-    --color-border-strong: var(--color-neutral-300);
-    --color-fg: var(--color-neutral-900);
-    --color-fg-muted: var(--color-neutral-500);
-    --color-fg-subtle: var(--color-neutral-400);
+    /* === Surface roles (the bones of dark mode) ===================== */
+    --color-bg: var(--color-neutral-950);          /* page background */
+    --color-surface: var(--color-neutral-900);     /* cards */
+    --color-surface-muted: #1f1f23;                /* card hover/muted */
+    --color-border: var(--color-neutral-700);
+    --color-border-strong: var(--color-neutral-500);
+    --color-fg: var(--color-neutral-50);           /* primary text */
+    --color-fg-muted: var(--color-neutral-200);    /* secondary text */
+    --color-fg-subtle: var(--color-neutral-300);   /* tertiary text */
     --color-ring: var(--color-primary-500);
 
     /* === Typography ====================================================
-       明朝（serif）は使わない方針。
-       Arial を最優先にしつつ日本語は Hiragino / Yu Gothic / Meiryo の順に。
-       --font-serif-jp / --font-display も同じスタックに redirect することで、
-       過去の `style="font-family: var(--font-serif-jp)..."` も自動的にサンセリフ化。
+       Editorial stack — Inter Tight for UI/numbers, Noto Sans JP for body,
+       Noto Serif JP for headings. next/font wires the variables in
+       apps/web/app/layout.tsx; here we keep fallbacks.
     ================================================================== */
-    --font-sans-jp:    Arial, "Helvetica Neue", Helvetica,
-                       "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "メイリオ", Meiryo, sans-serif;
-    --font-sans-latin: Arial, "Helvetica Neue", Helvetica, system-ui, sans-serif;
-    --font-serif-jp:   var(--font-sans-jp);
-    --font-display:    var(--font-sans-jp);
-    --font-serif:      var(--font-sans-jp);
-    --font-mono:       "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --font-sans:       "Inter Tight", "Inter", "Helvetica Neue", Helvetica,
+                       system-ui, sans-serif;
+    --font-sans-jp:    "Noto Sans JP", "Hiragino Sans", "Yu Gothic Medium",
+                       "Yu Gothic", "メイリオ", Meiryo, sans-serif;
+    --font-sans-latin: var(--font-sans);
+    --font-serif-jp:   "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho",
+                       serif;
+    --font-serif:      "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    --font-display:    var(--font-serif-jp);
+    --font-mono:       "SF Mono", "SFMono-Regular", Consolas,
+                       "Liberation Mono", monospace;
 
     /* === Spacing scale (4px base) ==================================== */
     --space-0: 0;
@@ -104,20 +109,20 @@
     --space-20: 5rem;
     --space-24: 6rem;
 
-    /* === Radii — 中庸に。丸めすぎると "ガチャガチャ" 印象に戻るので控えめ === */
+    /* === Radii — Airbnb-inspired, slightly more pronounced =========== */
     --radius-none: 0;
-    --radius-xs: 4px;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 20px;
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 12px;     /* Airbnb cards use 12px */
+    --radius-lg: 16px;
+    --radius-xl: 24px;
     --radius-full: 9999px;
 
-    /* === Shadows — 中性のニュートラル影に戻す（emerald 影は派手だった） === */
-    --shadow-xs: 0 1px 2px rgba(22, 32, 28, 0.05);
-    --shadow-sm: 0 2px 6px rgba(22, 32, 28, 0.06);
-    --shadow-md: 0 6px 16px rgba(22, 32, 28, 0.08);
-    --shadow-lg: 0 16px 32px rgba(22, 32, 28, 0.12);
+    /* === Shadows — recalibrated for dark backgrounds ================ */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
 
     /* === Motion ====================================================== */
     --duration-fast: 120ms;
@@ -128,7 +133,7 @@
   }
 
   html {
-    color-scheme: light;
+    color-scheme: dark;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -140,22 +145,24 @@
     font-feature-settings: "palt" 1;
   }
 
-  /* 見出しはセリフを使わず、本文と同じ Arial サンセリフのウェイトで強調 */
+  /* 見出しは Noto Serif JP（エディトリアル感）。本文は Sans。 */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans-jp);
-    color: var(--color-neutral-900);
-    font-weight: 700;
+    font-family: var(--font-serif-jp);
+    color: var(--color-neutral-50);
+    font-weight: 600;
     letter-spacing: -0.01em;
   }
 
-  .tabular {
+  /* 数字 / UI 部品は Inter Tight で打ち抜く（タビュラー含む） */
+  .tabular,
+  [class*="text-"][class*="tabular"] {
+    font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
   }
 }
 
 @layer components {
-  /* CTA がふわっと浮く */
   .pop-on-hover {
     transition: transform var(--duration-base) var(--ease-out),
       box-shadow var(--duration-base) var(--ease-out);
@@ -163,5 +170,22 @@
   .pop-on-hover:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
+  }
+
+  /* Airbnb 風カード: 角丸 12px + 軽い影 + ホバーで僅かに浮く */
+  .locore-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: transform var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .locore-card:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+  .locore-card:active {
+    transform: scale(0.98);
   }
 }

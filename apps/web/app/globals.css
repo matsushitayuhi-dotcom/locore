@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
- * Locore Design Tokens — Emerald Mono palette.
+ * Locore Design Tokens — Premium Dark (v2).
  * Source of truth: packages/ui/src/styles/globals.css
  * （変更時は両ファイルを必ずペアで更新すること）
  */
@@ -11,72 +11,74 @@
 @layer base {
   :root {
     --color-neutral-0:   #ffffff;
-    --color-neutral-25:  #f8fbf9;
-    --color-neutral-50:  #f1f6f3;
-    --color-neutral-100: #e3ebe7;
-    --color-neutral-200: #cdd8d2;
-    --color-neutral-300: #a8b6af;
-    --color-neutral-400: #7c8c84;
-    --color-neutral-500: #51625a;
-    --color-neutral-700: #2f3d36;
-    --color-neutral-900: #16201c;
+    --color-neutral-25:  #fafaf7;
+    --color-neutral-50:  #f4f4f0;
+    --color-neutral-100: #d4d4d8;
+    --color-neutral-200: #a1a1aa;
+    --color-neutral-300: #71717a;
+    --color-neutral-400: #52525b;
+    --color-neutral-500: #3f3f46;
+    --color-neutral-700: #27272a;
+    --color-neutral-900: #18181b;
+    --color-neutral-950: #0e0e10;
 
-    /* Primary: Emerald */
-    --color-primary-50:  #e6f7ef;
-    --color-primary-100: #c6ecd9;
-    --color-primary-200: #95dab8;
-    --color-primary-300: #54c79a;
-    --color-primary-500: #14a37c;
-    --color-primary-700: #0d7a5c;
-    --color-primary-900: #06432f;
+    /* Primary: Warm Amber */
+    --color-primary-50:  #fef6e7;
+    --color-primary-100: #fde8b5;
+    --color-primary-200: #fbd27d;
+    --color-primary-300: #fab840;
+    --color-primary-500: #f59e0b;
+    --color-primary-700: #b97808;
+    --color-primary-900: #6b4504;
 
-    /* Secondary: 同じ emerald 系の深い側 */
-    --color-secondary-50:  #d8efe2;
-    --color-secondary-300: #2c8a6d;
-    --color-secondary-500: #0d7a5c;
-    --color-secondary-700: #06432f;
+    /* Secondary: Deep Navy */
+    --color-secondary-50:  #dceaf5;
+    --color-secondary-300: #6ba1c9;
+    --color-secondary-500: #2c7eb4;
+    --color-secondary-700: #1c5384;
 
-    /* Accent: 同じ emerald 系の淡い側 */
-    --color-accent-50:  #ecf9f3;
-    --color-accent-300: #95dab8;
-    --color-accent-500: #54c79a;
-    --color-accent-700: #14a37c;
+    /* Accent: Warm Coral (likes / saves) */
+    --color-accent-50:  #ffe8e0;
+    --color-accent-300: #ff9f7a;
+    --color-accent-500: #ff6b47;
+    --color-accent-700: #c8472a;
 
-    --color-success-50:  #e7faec;
-    --color-success-500: #14a37c;
-    --color-warning-50:  #fdf3da;
-    --color-warning-500: #b8860b;
-    --color-warning-700: #7a5800;
-    --color-danger-50:   #fbe6e3;
-    --color-danger-500:  #c0463f;
-    --color-info-50:     #e1ecec;
-    --color-info-500:    #3d7a78;
+    --color-success-50:  #064e3b;
+    --color-success-500: #10b981;
+    --color-warning-50:  #422d04;
+    --color-warning-500: #f59e0b;
+    --color-warning-700: #b97808;
+    --color-danger-50:   #4c1d1d;
+    --color-danger-500:  #ef4444;
+    --color-info-50:     #172554;
+    --color-info-500:    #3b82f6;
 
-    --color-local-high: #0d7a5c;
-    --color-local-mid:  #54c79a;
-    --color-local-low:  #c6ecd9;
+    --color-local-high: #f59e0b;
+    --color-local-mid:  #fbd27d;
+    --color-local-low:  #6b4504;
 
-    --color-bg: var(--color-neutral-25);
-    --color-surface: var(--color-neutral-0);
-    --color-surface-muted: var(--color-neutral-50);
-    --color-border: var(--color-neutral-200);
-    --color-border-strong: var(--color-neutral-300);
-    --color-fg: var(--color-neutral-900);
-    --color-fg-muted: var(--color-neutral-500);
-    --color-fg-subtle: var(--color-neutral-400);
+    --color-bg: var(--color-neutral-950);
+    --color-surface: var(--color-neutral-900);
+    --color-surface-muted: #1f1f23;
+    --color-border: var(--color-neutral-700);
+    --color-border-strong: var(--color-neutral-500);
+    --color-fg: var(--color-neutral-50);
+    --color-fg-muted: var(--color-neutral-200);
+    --color-fg-subtle: var(--color-neutral-300);
     --color-ring: var(--color-primary-500);
 
-    /* 明朝は廃止。Arial を優先しつつ日本語は OS 同梱フォントへフォールバック。
-       --font-serif-* も含めて同じスタックに redirect することで、
-       過去の inline `font-family: var(--font-serif-jp)...` も自動でサンセリフ化。 */
-    --font-sans-jp:    Arial, "Helvetica Neue", Helvetica,
-                       "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", "メイリオ", Meiryo, sans-serif;
-    --font-sans:       Arial, "Helvetica Neue", Helvetica, system-ui, sans-serif;
+    /* Typography — next/font の変数は apps/web/app/layout.tsx で wire される */
+    --font-sans:       "Inter Tight", "Inter", "Helvetica Neue", Helvetica,
+                       system-ui, sans-serif;
+    --font-sans-jp:    "Noto Sans JP", "Hiragino Sans", "Yu Gothic Medium",
+                       "Yu Gothic", "メイリオ", Meiryo, sans-serif;
     --font-sans-latin: var(--font-sans);
-    --font-serif-jp:   var(--font-sans-jp);
-    --font-serif:      var(--font-sans-jp);
-    --font-display:    var(--font-sans-jp);
-    --font-mono:       "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    --font-serif-jp:   "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho",
+                       serif;
+    --font-serif:      "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
+    --font-display:    var(--font-serif-jp);
+    --font-mono:       "SF Mono", "SFMono-Regular", Consolas,
+                       "Liberation Mono", monospace;
 
     --space-0: 0;
     --space-1: 0.25rem;
@@ -93,17 +95,17 @@
     --space-24: 6rem;
 
     --radius-none: 0;
-    --radius-xs: 4px;
-    --radius-sm: 6px;
-    --radius-md: 10px;
-    --radius-lg: 14px;
-    --radius-xl: 20px;
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
     --radius-full: 9999px;
 
-    --shadow-xs: 0 1px 2px rgba(22, 32, 28, 0.05);
-    --shadow-sm: 0 2px 6px rgba(22, 32, 28, 0.06);
-    --shadow-md: 0 6px 16px rgba(22, 32, 28, 0.08);
-    --shadow-lg: 0 16px 32px rgba(22, 32, 28, 0.12);
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
 
     --duration-fast: 120ms;
     --duration-base: 200ms;
@@ -113,7 +115,7 @@
   }
 
   html {
-    color-scheme: light;
+    color-scheme: dark;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -127,13 +129,14 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans-jp);
-    color: var(--color-neutral-900);
-    font-weight: 700;
+    font-family: var(--font-serif-jp);
+    color: var(--color-neutral-50);
+    font-weight: 600;
     letter-spacing: -0.01em;
   }
 
   .tabular {
+    font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
   }
@@ -148,19 +151,35 @@
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
   }
+
+  .locore-card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: transform var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+  .locore-card:hover {
+    border-color: var(--color-border-strong);
+    transform: translateY(-2px);
+  }
+  .locore-card:active {
+    transform: scale(0.98);
+  }
 }
 
 /* Locore map pin — Google Maps の AdvancedMarker に HTML として埋める */
 .locore-pin {
   border-radius: 9999px;
-  border: 2px solid white;
-  box-shadow: 0 3px 10px rgba(22, 32, 28, 0.18);
+  border: 2px solid var(--color-neutral-900);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--color-neutral-950);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -169,24 +188,25 @@
 .locore-pin:hover {
   transform: scale(1.12);
 }
-.locore-pin--high { background: var(--color-local-high); }
-.locore-pin--mid  { background: var(--color-local-mid); color: var(--color-neutral-900); }
-.locore-pin--low  { background: var(--color-local-low); color: var(--color-neutral-900); }
+.locore-pin--high { background: var(--color-local-high); color: var(--color-neutral-950); }
+.locore-pin--mid  { background: var(--color-local-mid); color: var(--color-neutral-950); }
+.locore-pin--low  { background: var(--color-local-low); color: var(--color-neutral-50); }
 
 .prose-locore p {
   margin-bottom: 1.25em;
   line-height: 1.85;
-  color: var(--color-neutral-700);
+  color: var(--color-neutral-100);
   font-size: 16px;
 }
 
 .prose-locore h2 {
-  font-family: var(--font-sans-jp);
+  font-family: var(--font-serif-jp);
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   margin-top: 2em;
   margin-bottom: 0.75em;
   letter-spacing: -0.01em;
+  color: var(--color-neutral-50);
 }
 
 /* Google Maps の標準ウィジェットを隠して "Google感" を排除 */

@@ -11,7 +11,6 @@ const NAV = [
   { href: '/library', label: 'お気に入り', icon: Compass },
   { href: '/purchases', label: '購入記事', icon: Compass },
   { href: '/writer/articles', label: '記事投稿', icon: Compass },
-  // メッセージはタブの一番最後（重要度的にナビ末尾）
   { href: '/chat', label: 'メッセージ', icon: Compass },
 ];
 
@@ -19,17 +18,17 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-primary-100 bg-white/85 backdrop-blur">
+    <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-4 px-4 sm:px-6">
         <Link
           href="/"
           className="group inline-flex items-baseline font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif), var(--font-serif-jp), serif' }}
+          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          <span className="text-[24px] bg-gradient-to-br from-primary-500 to-primary-700 bg-clip-text text-transparent transition group-hover:from-primary-300 group-hover:to-primary-500">
+          <span className="text-[24px] bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent transition group-hover:from-primary-200 group-hover:to-primary-300">
             Locore
           </span>
-          <span className="ml-1 rounded-full bg-accent-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-900">
+          <span className="ml-1 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950">
             β
           </span>
         </Link>
@@ -39,7 +38,7 @@ export async function SiteHeader() {
             <Link
               key={n.href}
               href={n.href}
-              className="rounded-full px-3 py-1.5 font-medium text-neutral-700 transition hover:bg-primary-50 hover:text-primary-700"
+              className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-surface-muted hover:text-foreground"
             >
               {n.label}
             </Link>
@@ -49,7 +48,7 @@ export async function SiteHeader() {
         <div className="ml-auto flex items-center gap-2">
           <Link
             href="/founders"
-            className="hidden items-center gap-1 rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700 ring-1 ring-primary-100 transition hover:bg-primary-100 hover:ring-primary-300 sm:inline-flex"
+            className="hidden items-center gap-1 rounded-full bg-primary-500/10 px-3 py-1.5 text-xs font-semibold text-primary-300 ring-1 ring-primary-500/30 transition hover:bg-primary-500/20 hover:ring-primary-500/50 sm:inline-flex"
           >
             Founders 枠 →
           </Link>
@@ -76,13 +75,13 @@ export async function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile nav strip */}
-      <nav className="flex gap-2 overflow-x-auto border-t border-primary-100 bg-primary-50/40 px-4 py-2 text-[13px] md:hidden">
+      {/* Mobile nav strip — TODO: BottomNav に置き換える */}
+      <nav className="flex gap-2 overflow-x-auto border-t border-border bg-surface-muted/40 px-4 py-2 text-[13px] md:hidden">
         {NAV.map((n) => (
           <Link
             key={n.href}
             href={n.href}
-            className="whitespace-nowrap rounded-full bg-white px-3 py-1 font-medium text-primary-700 shadow-xs ring-1 ring-primary-100"
+            className="whitespace-nowrap rounded-full bg-card px-3 py-1 font-medium text-foreground/80 ring-1 ring-border"
           >
             {n.label}
           </Link>

@@ -2,12 +2,12 @@
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-border bg-card">
+    <footer className="mt-16 border-t border-border bg-surface-muted/40">
       <div className="mx-auto grid max-w-screen-xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">
         <div>
           <p
-            className="text-[20px] font-semibold tracking-tight"
-            style={{ fontFamily: 'var(--font-serif), var(--font-serif-jp), serif' }}
+            className="text-[20px] font-semibold tracking-tight text-foreground"
+            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             Locore
           </p>
