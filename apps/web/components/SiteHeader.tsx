@@ -1,31 +1,42 @@
 import Link from 'next/link';
 import { Button } from '@locore/ui';
-import { Compass, MapIcon, LayoutList, Sparkles } from '@locore/ui/icons';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { UserMenu } from './auth/UserMenu';
+import { SideMenu } from './SideMenu';
+
+/**
+ * トップバー。見る専門の主要ナビと、左サイドメニュー（SideMenu）への入口を持つ。
+ *
+ * - 左端: ハンバーガー（SideMenu）+ ロゴ
+ * - 中央: 見る専門ナビ（フィード / マップ / 掲示板 / お気に入り / 購入記事）
+ *   - クリエイター系（新規投稿 / 投稿記事一覧 / 売上 / メッセージ）は
+ *     SideMenu 側に移したのでここには出さない
+ * - 右端: Founders 入口 + UserMenu / ログイン
+ */
 
 const NAV = [
-  { href: '/', label: 'フィード', icon: Compass },
-  { href: '/map', label: 'マップ', icon: MapIcon },
-  { href: '/trips', label: '旅程', icon: LayoutList },
-  { href: '/library', label: 'お気に入り', icon: Compass },
-  { href: '/purchases', label: '購入記事', icon: Compass },
-  { href: '/writer/articles', label: '記事投稿', icon: Compass },
-  { href: '/chat', label: 'メッセージ', icon: Compass },
+  { href: '/', label: 'フィード' },
+  { href: '/map', label: 'マップ' },
+  { href: '/board', label: '掲示板' },
+  { href: '/library', label: 'お気に入り' },
+  { href: '/purchases', label: '購入記事' },
 ];
 
 export async function SiteHeader() {
   const user = await getCurrentUser();
+  const isWriter = user?.role === 'resident_writer' || user?.role === 'editor';
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-4 px-4 sm:px-6">
+      <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-2 px-3 sm:gap-4 sm:px-6">
+        <SideMenu viewerLoggedIn={!!user} isWriter={isWriter} />
+
         <Link
           href="/"
           className="group inline-flex items-baseline font-semibold tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          <span className="text-[24px] bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent transition group-hover:from-primary-200 group-hover:to-primary-300">
+          <span className="text-[22px] sm:text-[24px] bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent transition group-hover:from-primary-200 group-hover:to-primary-300">
             Locore
           </span>
           <span className="ml-1 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950">
@@ -38,7 +49,7 @@ export async function SiteHeader() {
             <Link
               key={n.href}
               href={n.href}
-              className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-surface-muted hover:text-foreground"
+              className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
             >
               {n.label}
             </Link>
@@ -67,15 +78,13 @@ export async function SiteHeader() {
               <Button asChild variant="ghost" size="sm">
                 <Link href="/auth/login">ログイン</Link>
               </Button>
-              <Button asChild variant="primary" size="sm">
+              <Button asChild variant="primary" size="sm" className="hidden sm:inline-flex">
                 <Link href="/auth/signup">サインアップ</Link>
               </Button>
             </div>
           )}
         </div>
       </div>
-
-      {/* モバイル：以前あった pill nav 帯は BottomNav に置き換え済み */}
     </header>
   );
 }
