@@ -4,16 +4,19 @@ import { Button, Badge } from '@locore/ui';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { CrisisBanner } from '../components/CrisisBanner';
 import { FeedFilters } from '../components/FeedFilters';
+import { BoardWidget } from '../components/BoardWidget';
 import { getPublishedDbArticles } from '../lib/articles/published';
 import { listCrisisEvents } from '../lib/crisis/db';
+import { listBoardPosts } from '../lib/board/db';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const [articles, crises] = await Promise.all([
+  const [articles, crises, boardPosts] = await Promise.all([
     getPublishedDbArticles(50),
     listCrisisEvents(20),
+    listBoardPosts(10),
   ]);
   const socialCounts = await getArticleSocialCounts(
     articles.map((a) => a.id),
@@ -139,6 +142,17 @@ export default async function HomePage() {
             <CrisisBanner event={seriousCrisis} />
           </section>
         ) : null}
+
+        {/* Board — パリ掲示板（タイトル 10 件、AI 自動収集 + 編集部投稿） */}
+        <section>
+          <SectionHeader
+            kicker="掲示板"
+            title="パリ・今日明日にあること"
+            subtitle="マルシェ・展覧会・地元イベント。AI が毎朝公開情報からまとめます。"
+            href="/board"
+          />
+          <BoardWidget posts={boardPosts} />
+        </section>
 
         {/* Feed */}
         <section id="feed">

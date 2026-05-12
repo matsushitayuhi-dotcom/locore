@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MapPin, ExternalLink } from '@locore/ui/icons';
 import type { Spot } from '../lib/mock';
 import { SpotFavoriteButton } from './SpotFavoriteButton';
+import { BulkSpotFavoriteButton } from './BulkSpotFavoriteButton';
 import type { FolderSummary } from '@/lib/spotFavorites/actions';
 
 /**
@@ -50,12 +51,22 @@ export function SpotsCardList({
 
   return (
     <section>
-      <h3 className="mb-3 text-[16px] font-bold tracking-tight">
-        この記事のスポット
-        <span className="ml-2 text-[12px] font-medium text-foreground/50">
-          {spots.length} 箇所
-        </span>
-      </h3>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <h3 className="text-[16px] font-bold tracking-tight">
+          この記事のスポット
+          <span className="ml-2 text-[12px] font-medium text-foreground/50">
+            {spots.length} 箇所
+          </span>
+        </h3>
+        {!locked ? (
+          <BulkSpotFavoriteButton
+            spotIds={spots.map((s) => s.id)}
+            folders={folders}
+            viewerLoggedIn={viewerLoggedIn}
+            bookmarkedSpotIds={bookmarkedSpotIds}
+          />
+        ) : null}
+      </div>
       <ul className="space-y-2">
         {spots.map((s, i) => {
           const open = activeId === s.id;

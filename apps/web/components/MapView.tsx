@@ -160,11 +160,11 @@ export function MapView({
             ピン色の凡例
           </p>
           <div className="space-y-1">
-            <Legend color="bg-local-low" label="0–29 定番寄り" />
-            <Legend color="bg-local-mid" label="30–69 中間" />
-            <Legend color="bg-local-high" label="70–100 ローカル" />
+            <Legend swatch={<Dot color="bg-local-low" />} label="0–29 定番寄り" />
+            <Legend swatch={<Dot color="bg-local-mid" />} label="30–69 中間" />
+            <Legend swatch={<Dot color="bg-local-high" />} label="70–100 ローカル" />
             {myArticleIds && myArticleIds.length > 0 ? (
-              <Legend color="bg-accent-500 ring-2 ring-accent-700" label="あなたの投稿" />
+              <Legend swatch={<OwnPinDot />} label="あなたの投稿" />
             ) : null}
           </div>
         </div>
@@ -173,11 +173,35 @@ export function MapView({
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
+function Legend({ swatch, label }: { swatch: React.ReactNode; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={`inline-block h-3 w-3 rounded-full ${color}`} />
+      {swatch}
       <span className="text-foreground/70">{label}</span>
     </div>
+  );
+}
+
+function Dot({ color }: { color: string }) {
+  return <span className={`inline-block h-3 w-3 rounded-full ${color}`} />;
+}
+
+/**
+ * 「あなたの投稿」ピンの凡例スウォッチ。
+ * MapInner.makeOwnPinSvg と同じ色 (#D4634A = local-high) + 中央に星マーク。
+ * 普通の local-high ピンと混同しないよう、星アイコンで区別する。
+ */
+function OwnPinDot() {
+  return (
+    <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-local-high ring-[1.5px] ring-white">
+      <svg
+        aria-hidden
+        viewBox="0 0 16 16"
+        className="h-2.5 w-2.5"
+        fill="#ffffff"
+      >
+        <path d="M8 1.5l1.9 4 4.4.6-3.2 3.1.8 4.3L8 11.5l-3.9 2 .8-4.3-3.2-3.1 4.4-.6z" />
+      </svg>
+    </span>
   );
 }

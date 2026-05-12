@@ -154,6 +154,55 @@ export async function bookmarkSpot(
   return { ok: true };
 }
 
+const bookmarkSpotsBulkSchema = z.object({
+  spotIds: z.array(z.string().uuid()).min(1).max(50),
+  folderId: z.string().uuid().nullable().optional(),
+});
+
+/**
+ * 記事の全スポットなどをまとめてお気に入り登録する。
+ * 既に登録済みのスポットは folderId を上書きせず、未登録のものだけ insert。
+ * 戻り値で新規追加件数と既存件数を返す。
+ */
+export async function bookmarkSpotsBulk(
+  input: unknown,
+): Promise<SpotFavActionResult<{ added: number; existing: number }>> {
+  const parsed = bookmarkSpotsBulkSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: '入力が不正です' };
+  const me = await requireUser();
+  const db = getDb();
+
+  // 既に登録済みの spot を取得
+  const existing = await db
+    .select({ spotId: schema.spotBookmarks.spotId })
+    .from(schema.spotBookmarks)
+    .where(
+      and(
+        eq(schema.spotBookmarks.userId, me.id),
+        inArray(schema.spotBookmarks.spotId, parsed.data.spotIds),
+      ),
+    );
+  const existingSet = new Set(existing.map((r) => r.spotId));
+  const toAdd = parsed.data.spotIds.filter((id) => !existingSet.has(id));
+
+  if (toAdd.length > 0) {
+    await db.insert(schema.spotBookmarks).values(
+      toAdd.map((spotId) => ({
+        userId: me.id,
+        spotId,
+        folderId: parsed.data.folderId ?? null,
+        notes: null,
+      })),
+    );
+  }
+
+  revalidatePath('/library/spots');
+  return {
+    ok: true,
+    data: { added: toAdd.length, existing: existingSet.size },
+  };
+}
+
 const unbookmarkSpotSchema = z.object({ spotId: z.string().uuid() });
 
 export async function unbookmarkSpot(
