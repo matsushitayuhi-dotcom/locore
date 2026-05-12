@@ -93,6 +93,48 @@ function makePinSvg(color: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+/** ロック中スポット用のグレー鍵アイコン（白丸 + 中央に鍵マーク） */
+function makeLockedPinSvg(): string {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">` +
+    `<circle cx="12" cy="12" r="10" fill="#9CA3AF" stroke="white" stroke-width="2" fill-opacity="0.85"/>` +
+    `<path d="M9.5 11V9.5a2.5 2.5 0 0 1 5 0V11M8 11h8v5H8z" fill="none" stroke="white" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/**
+ * 文字列から決定論的な疑似乱数を 0-1 で返す。
+ * spotGroup の key からズラし座標を生成する用。
+ */
+function seededRandom01(seedStr: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seedStr.length; i++) {
+    h ^= seedStr.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 1000000) / 1000000;
+}
+
+/**
+ * Airbnb 風の位置ぼかし。決定論的に 150〜250m 範囲でずらす。
+ * 同じ key からは常に同じズレが生成される（再読込で位置が変わらない）。
+ */
+function obfuscatePosition(
+  pos: { lat: number; lng: number },
+  seedKey: string,
+): { lat: number; lng: number } {
+  const r1 = seededRandom01(seedKey);
+  const r2 = seededRandom01(seedKey + ':angle');
+  const radiusM = 150 + r1 * 100; // 150〜250m
+  const angle = r2 * Math.PI * 2;
+  const dLat = (Math.cos(angle) * radiusM) / 111_000;
+  const dLng =
+    (Math.sin(angle) * radiusM) /
+    (111_000 * Math.cos((pos.lat * Math.PI) / 180));
+  return { lat: pos.lat + dLat, lng: pos.lng + dLng };
+}
+
 /** spots を groupKey で集約して、マーカー描画 / InfoWindow 用のグループに変換 */
 function buildGroups(spots: Spot[], articles: Article[]): SpotGroup[] {
   const articleById = new Map(articles.map((a) => [a.id, a]));
@@ -135,12 +177,18 @@ function buildGroups(spots: Spot[], articles: Article[]): SpotGroup[] {
   return Array.from(groups.values());
 }
 
+type GroupWithUnlock = SpotGroup & {
+  unlocked: boolean;
+  /** 描画用座標（locked のときは obfuscated）*/
+  displayPosition: { lat: number; lng: number };
+};
+
 function MarkersLayer({
   groups,
   onPinClick,
 }: {
-  groups: SpotGroup[];
-  onPinClick: (g: SpotGroup) => void;
+  groups: GroupWithUnlock[];
+  onPinClick: (g: GroupWithUnlock) => void;
 }) {
   const map = useMap();
   useEffect(() => {
@@ -148,25 +196,68 @@ function MarkersLayer({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const G = (window as any).google?.maps;
     if (!G) return;
-    const markers = groups.map((g) => {
-      const color = pinColorForScore(g.topScore);
-      const m = new G.Marker({
-        position: g.position,
-        map,
-        title: g.name,
-        icon: {
-          url: makePinSvg(color),
-          scaledSize: new G.Size(28, 28),
-          anchor: new G.Point(14, 14),
-        },
-      });
-      const listener = m.addListener('click', () => onPinClick(g));
-      return { m, listener };
+
+    const created: Array<{
+      m?: { setMap: (m: unknown) => void };
+      circle?: { setMap: (m: unknown) => void };
+      listener?: { remove?: () => void };
+    }> = [];
+
+    groups.forEach((g) => {
+      if (g.unlocked) {
+        // 解放済み: ピン色は localScore、正確な座標、ホバーで名前表示
+        const color = pinColorForScore(g.topScore);
+        const m = new G.Marker({
+          position: g.position,
+          map,
+          title: g.name,
+          icon: {
+            url: makePinSvg(color),
+            scaledSize: new G.Size(28, 28),
+            anchor: new G.Point(14, 14),
+          },
+        });
+        const listener = m.addListener('click', () => onPinClick(g));
+        created.push({ m, listener });
+      } else {
+        // ロック中: Airbnb 風のぼかし円 + 中央にグレー鍵ピン
+        // 円は半径 280m、薄いグレー塗り
+        const circle = new G.Circle({
+          center: g.displayPosition,
+          radius: 280,
+          map,
+          strokeWeight: 1.5,
+          strokeColor: '#6B7280',
+          strokeOpacity: 0.45,
+          fillColor: '#9CA3AF',
+          fillOpacity: 0.18,
+          clickable: false,
+        });
+        created.push({ circle });
+
+        const m = new G.Marker({
+          position: g.displayPosition,
+          map,
+          // ⚠️ title を設定しない or 汎用 → ホバーで実名が出ないように
+          title: 'ロック中（このエリアに記事あり）',
+          icon: {
+            url: makeLockedPinSvg(),
+            scaledSize: new G.Size(24, 24),
+            anchor: new G.Point(12, 12),
+          },
+          opacity: 0.92,
+          zIndex: 1, // 解放済みピンより下に
+        });
+        const listener = m.addListener('click', () => onPinClick(g));
+        created.push({ m, listener });
+      }
     });
+
     return () => {
-      markers.forEach(({ m, listener }) => {
-        listener.remove?.();
-        m.setMap(null);
+      created.forEach((x) => {
+        x.listener?.remove?.();
+        x.m?.setMap(null);
+        x.circle?.setMap(null);
       });
     };
   }, [map, groups, onPinClick]);
@@ -195,13 +286,26 @@ function MapBody({
     return s;
   }, [localPurchases, purchasedArticleIds]);
 
+  // 各グループに unlocked と表示用座標を計算してくっつける。
+  // locked なときは Airbnb 風に 150〜250m ずらしたぼかし座標を使う。
+  const groupsWithUnlock: GroupWithUnlock[] = useMemo(() => {
+    return groups.map((g) => {
+      const unlocked = g.articles.some((a) => purchasedSet.has(a.id));
+      return {
+        ...g,
+        unlocked,
+        displayPosition: unlocked
+          ? g.position
+          : obfuscatePosition(g.position, g.key),
+      };
+    });
+  }, [groups, purchasedSet]);
+
   const activeGroup = activeKey
-    ? groups.find((g) => g.key === activeKey) ?? null
+    ? groupsWithUnlock.find((g) => g.key === activeKey) ?? null
     : null;
   const isUnlocked = (a: Article) => purchasedSet.has(a.id);
-  const groupHasUnlock = activeGroup
-    ? activeGroup.articles.some(isUnlocked)
-    : false;
+  const groupHasUnlock = activeGroup ? activeGroup.unlocked : false;
 
   return (
     <div
@@ -220,12 +324,12 @@ function MapBody({
       >
         {showHeatmap ? <HeatmapCircles /> : null}
         <MarkersLayer
-          groups={groups}
+          groups={groupsWithUnlock}
           onPinClick={(g) => setActiveKey(g.key)}
         />
         {activeGroup ? (
           <InfoWindow
-            position={activeGroup.position}
+            position={activeGroup.displayPosition}
             pixelOffset={[0, -18]}
             onCloseClick={() => setActiveKey(null)}
           >
@@ -325,7 +429,7 @@ function MapBody({
 
               {!groupHasUnlock ? (
                 <p className="mt-3 rounded-md bg-accent-50 px-2 py-1.5 text-[10px] leading-relaxed text-foreground/70">
-                  記事を購入すると、このスポット名・住所・営業時間が
+                  地図上のグレーの円は <strong>おおよそのエリア（半径 280m）</strong> を示しています。記事を購入すると、正確な位置・店舗名・住所・営業時間が
                   <strong className="ml-0.5 text-primary-700">アンロック</strong>
                   されます。
                 </p>
