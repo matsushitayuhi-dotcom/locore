@@ -205,15 +205,21 @@ export default async function LibraryPage({ searchParams }: SearchProps) {
 
           {tab === 'spots' ? (
             <LibrarySpotsView
-              bookmarks={bookmarkRows.map((r) => ({
-                spotId: r.spotId,
-                folderId: r.folderId,
-                name: r.name ?? '（削除済み）',
-                address: r.address,
-                category: r.category,
-                articleId: r.articleId ?? '',
-                notes: r.notes,
-              }))}
+              bookmarks={bookmarkRows.map((r) => {
+                // スポットに紐づく記事のカバー画像をプレビューに流用
+                // （Wishlist カードの 2x2 コラージュ用）
+                const article = articles.find((a) => a.id === r.articleId);
+                return {
+                  spotId: r.spotId,
+                  folderId: r.folderId,
+                  name: r.name ?? '（削除済み）',
+                  address: r.address,
+                  category: r.category,
+                  articleId: r.articleId ?? '',
+                  notes: r.notes,
+                  previewImageUrl: article?.coverImageUrl ?? null,
+                };
+              })}
               folders={foldersRows}
             />
           ) : null}
