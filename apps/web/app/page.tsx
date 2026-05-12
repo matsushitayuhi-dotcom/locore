@@ -23,16 +23,16 @@ export default async function HomePage() {
 
   return (
     <main className="bg-background">
-      {/* Hero — emerald 単色のソフトグラデ + 控えめ blob 装飾 */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary-50 via-white to-primary-50/30">
-        {/* 装飾 blob — 透明度低めで奥に。emerald のみ */}
+      {/* Hero — Premium Dark：暗背景 + 温かみのある amber blob */}
+      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-neutral-950 via-card to-neutral-950">
+        {/* 装飾 blob — amber を薄く乗せて奥行きを出す */}
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primary-200/40 blur-3xl"
+          className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primary-500/15 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-primary-500/15/60 blur-3xl"
+          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-accent-500/10 blur-3xl"
         />
         <div className="relative mx-auto max-w-screen-xl px-4 py-12 sm:px-6 sm:py-20">
           <div className="grid gap-10 md:grid-cols-[1.1fr_0.9fr] md:items-center">
@@ -150,18 +150,18 @@ export default async function HomePage() {
           <FeedFilters articles={articles} socialCounts={socialCounts} />
         </section>
 
-        {/* Founders — emerald 単色のソフトバナー */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 via-white to-primary-50/40 p-8 shadow-sm ring-1 ring-border sm:p-10">
+        {/* Founders — Premium Dark のソフトバナー */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500/15 via-card to-card p-8 shadow-sm ring-1 ring-border sm:p-10">
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-200/30 blur-3xl"
+            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl"
           />
           <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
             <div>
-              <p className="inline-flex items-center gap-1 rounded-full bg-primary-700 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+              <p className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-950">
                 Founders 枠（先着 50 人）
               </p>
-              <h2 className="mt-3 text-[28px] font-bold leading-[1.2] tracking-tight">
+              <h2 className="mt-3 text-[28px] font-bold leading-[1.2] tracking-tight text-foreground">
                 Locore を一緒に育てるクリエイター、
                 <br className="hidden md:block" />
                 いま探してます。
