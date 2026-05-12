@@ -36,6 +36,7 @@ export function SiteFooter() {
         <FooterColumn
           title="運営・サポート"
           links={[
+            { href: '/about', label: 'Locore とは' },
             { href: '/contact', label: 'お問い合わせ' },
             { href: '#', label: '利用規約' },
             { href: '#', label: 'プライバシー' },
