@@ -97,7 +97,10 @@ const preset: Partial<Config> = {
           DEFAULT: "var(--color-surface)",
           foreground: "var(--color-fg)",
         },
-        border: "var(--color-border)",
+        border: {
+          DEFAULT: "var(--color-border)",
+          strong: "var(--color-border-strong)",
+        },
         input: "var(--color-border)",
         ring: "var(--color-ring)",
       },

@@ -1,14 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Bookmark, Clock, Heart, MapPin } from "lucide-react";
+import { Clock, Heart, MapPin, Star } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { Avatar, AvatarFallback, AvatarImage, getInitials } from "../primitives/Avatar";
-import { Button } from "../primitives/Button";
-import { LocalScoreBar } from "./LocalScoreBar";
-import { PriceTag } from "./PriceTag";
-import { ResidencyBadge, type ResidencyTier } from "./ResidencyBadge";
-import { SatisfactionStars } from "./SatisfactionStars";
+import { type ResidencyTier } from "./ResidencyBadge";
 
 export type DurationType = "1h" | "half-day" | "1day" | "multi-day" | string;
 
@@ -26,7 +21,7 @@ const ARTICLE_TYPE_LABEL: Record<ArticleType, string> = {
 
 export interface ArticleCardAuthor {
   name: string;
-  /** 居住している街の表示名（例: "パリ"）。エリアピルとは別の意味。 */
+  /** 居住している街の表示名（例: "パリ"）。 */
   residency?: string;
   tier: ResidencyTier;
   residencyYears?: number;
@@ -63,8 +58,6 @@ export interface ArticleCardProps
   onBookmark?: (article: ArticleCardModel) => void;
   /** Already bookmarked. */
   bookmarked?: boolean;
-  /** Add-to-trip button label. Defaults to `+ 旅程に追加`. */
-  addToTripLabel?: string;
   /** Hide the author row (used on author profile pages). */
   hideAuthor?: boolean;
 }
@@ -82,8 +75,15 @@ function formatDuration(d?: DurationType): string | null {
 }
 
 /**
- * ArticleCard — feed card for an article. DESIGN.md §3.2.
- * Cover aspect ratio is 3:2 (NOT 16:9), per DESIGN.md §1.3 「映え禁止」 rationale.
+ * ArticleCard v2 — Airbnb 風フィードカード。
+ *
+ * デザイン方針:
+ *  - 画像主導：aspect-square のフルブリードカバー、角丸 `rounded-xl`
+ *  - カード自体に背景・ボーダーは持たせず、画像が「カード」を兼ねる
+ *  - 画像の上には pill オーバーレイのみ（エリア / 種別 / ローカル度）
+ *  - 画像の下は本文ページ背景の上に直接タイポを置く（Airbnb スタイル）
+ *  - ハートで「保存」、コーラル色でフィル
+ *  - タップで scale(0.98)、ホバーで画像のみ僅かに opacity 落とす
  */
 export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
   (
@@ -93,7 +93,6 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
       onAddToTrip,
       onBookmark,
       bookmarked = false,
-      addToTripLabel = "旅程に追加",
       hideAuthor = false,
       className,
       ...rest
@@ -112,8 +111,6 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
       durationType,
       spotsCount,
       articleType,
-      likeCount,
-      bookmarkCount,
     } = article;
 
     const handleBookmark = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -135,16 +132,15 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
         data-locore-article-id={article.id}
         onClick={onClick ? handleRootClick : undefined}
         className={cn(
-          "group flex flex-col overflow-hidden rounded-2xl bg-white",
-          "shadow-sm ring-1 ring-primary-100 transition-all duration-base ease-out",
-          "hover:-translate-y-1 hover:shadow-md hover:ring-primary-300 focus-within:shadow-md",
+          "group flex flex-col gap-3 transition-transform duration-fast ease-out",
+          "active:scale-[0.98]",
           onClick && "cursor-pointer",
           className,
         )}
         {...rest}
       >
-        {/* Cover (3:2) ----------------------------------------------------- */}
-        <div className="relative aspect-cover w-full overflow-hidden bg-neutral-100">
+        {/* Image (square, card-style rounded) ----------------------------- */}
+        <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted">
           {coverImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -154,24 +150,24 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               className={cn(
                 "h-full w-full object-cover",
                 "transition-transform duration-slow ease-out",
-                onClick && "group-hover:scale-[1.02]",
+                onClick && "group-hover:scale-[1.03]",
               )}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-neutral-300">
-              <span className="text-overline uppercase">No Cover</span>
+            <div className="flex h-full w-full items-center justify-center text-foreground/30">
+              <span className="text-[11px] font-medium uppercase tracking-wider">No Cover</span>
             </div>
           )}
 
-          {area || articleType ? (
+          {/* Top-left: area + type pills */}
+          {(area || articleType) && (
             <div className="absolute left-3 top-3 flex items-center gap-1.5">
               {area ? (
                 <span
                   className={cn(
                     "inline-flex items-center gap-1",
-                    "rounded-full bg-white/95 px-2.5 py-1 backdrop-blur",
-                    "text-[10px] font-bold uppercase tracking-wider text-primary-700",
-                    "shadow-sm",
+                    "rounded-full bg-neutral-950/70 px-2.5 py-1 backdrop-blur-md",
+                    "text-[10px] font-bold uppercase tracking-wider text-neutral-50",
                   )}
                 >
                   <MapPin className="size-3" aria-hidden />
@@ -182,130 +178,153 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
                 <span
                   data-locore-article-type={articleType}
                   className={cn(
-                    "inline-flex items-center",
-                    "rounded-full px-2.5 py-1",
-                    "text-[10px] font-bold uppercase tracking-wider shadow-sm",
+                    "inline-flex items-center rounded-full px-2.5 py-1 backdrop-blur-md",
+                    "text-[10px] font-bold uppercase tracking-wider",
                     articleType === "itinerary"
-                      ? "bg-primary-700 text-white"
-                      : "bg-white/95 text-primary-700 backdrop-blur",
+                      ? "bg-primary-500 text-neutral-950"
+                      : "bg-neutral-950/70 text-neutral-50",
                   )}
                 >
                   {ARTICLE_TYPE_LABEL[articleType]}
                 </span>
               ) : null}
             </div>
-          ) : null}
+          )}
 
+          {/* Top-right: heart save */}
           {onBookmark ? (
             <button
               type="button"
               onClick={handleBookmark}
-              aria-label={bookmarked ? "ブックマークを外す" : "ブックマークに追加"}
+              aria-label={bookmarked ? "保存を外す" : "保存"}
               aria-pressed={bookmarked}
               className={cn(
-                "absolute right-3 top-3 inline-flex size-8 items-center justify-center",
-                "rounded-full bg-neutral-0/80 backdrop-blur-sm",
-                "text-neutral-900 hover:bg-neutral-0",
-                "transition-colors duration-fast ease-out",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "absolute right-3 top-3 inline-flex size-9 items-center justify-center",
+                "rounded-full backdrop-blur-md transition-transform duration-fast ease-out",
+                "hover:scale-110 active:scale-95",
+                bookmarked
+                  ? "bg-accent-500/90 text-neutral-50"
+                  : "bg-neutral-950/55 text-neutral-50 hover:bg-neutral-950/70",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500",
               )}
             >
-              <Bookmark
-                className="size-4"
+              <Heart
+                className="size-5"
                 fill={bookmarked ? "currentColor" : "none"}
+                strokeWidth={2.2}
                 aria-hidden
               />
             </button>
           ) : null}
+
+          {/* Bottom-left: local score pill */}
+          <div
+            className={cn(
+              "absolute bottom-3 left-3 inline-flex items-center gap-1.5",
+              "rounded-full bg-neutral-950/80 px-2.5 py-1 backdrop-blur-md",
+            )}
+          >
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                localScore >= 70
+                  ? "bg-primary-500"
+                  : localScore >= 30
+                    ? "bg-primary-300"
+                    : "bg-primary-900",
+              )}
+            />
+            <span className="text-[10px] font-bold tracking-wider text-neutral-50">
+              <span className="tabular">{localScore}</span>
+              <span className="ml-0.5 opacity-60">/100</span>
+            </span>
+          </div>
         </div>
 
-        {/* Body ------------------------------------------------------------- */}
-        <div className="flex flex-col gap-3 p-4">
+        {/* Below image (Airbnb-style text on page bg) ---------------------- */}
+        <div className="flex flex-col gap-0.5 px-0.5">
+          {/* Line 1: author + rating */}
+          <div className="flex items-center justify-between gap-2">
+            {!hideAuthor ? (
+              <p className="min-w-0 truncate text-[13px] font-medium text-foreground">
+                {author.name}
+                {typeof author.residencyYears === "number" ? (
+                  <span className="ml-1.5 text-foreground/50">
+                    ・{author.residencyYears}年目
+                  </span>
+                ) : null}
+              </p>
+            ) : (
+              <span aria-hidden />
+            )}
+            {typeof reviewCount === "number" && reviewCount > 0 ? (
+              <div className="flex shrink-0 items-center gap-1 text-[13px] text-foreground">
+                <Star className="size-3.5 fill-current text-primary-500" aria-hidden />
+                <span className="tabular font-medium">
+                  {satisfactionStars.toFixed(1)}
+                </span>
+                <span className="tabular text-foreground/50">({reviewCount})</span>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Line 2: title (the article headline) */}
           <h3
             className={cn(
-              "font-serif text-heading-md text-neutral-900",
-              "line-clamp-2",
+              "line-clamp-2 text-[15px] font-semibold leading-snug text-foreground/95",
             )}
+            style={{
+              fontFamily: "var(--font-serif-jp), var(--font-serif), serif",
+            }}
           >
             {title}
           </h3>
 
-          {!hideAuthor && (
-            <div className="flex items-center gap-2">
-              <Avatar size="sm">
-                {author.avatarUrl ? (
-                  <AvatarImage src={author.avatarUrl} alt="" />
-                ) : null}
-                <AvatarFallback>{getInitials(author.name)}</AvatarFallback>
-              </Avatar>
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="truncate text-body-sm text-neutral-700">
-                  {author.name}
+          {/* Line 3: duration / spots */}
+          {(durationLabel || typeof spotsCount === "number") && (
+            <div className="flex flex-wrap items-center gap-x-2 text-[12px] text-foreground/55">
+              {durationLabel ? (
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="size-3" aria-hidden />
+                  <span>{durationLabel}</span>
                 </span>
-                <ResidencyBadge
-                  tier={author.tier}
-                  years={author.residencyYears}
-                  iconOnly
-                />
-                {typeof author.residencyYears === "number" ? (
-                  <span className="whitespace-nowrap text-caption text-neutral-500">
-                    · 居住{author.residencyYears}年
+              ) : null}
+              {typeof spotsCount === "number" ? (
+                <>
+                  {durationLabel ? <span aria-hidden>·</span> : null}
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="size-3" aria-hidden />
+                    <span>
+                      <span className="tabular">{spotsCount}</span> 箇所
+                    </span>
                   </span>
-                ) : null}
-              </div>
+                </>
+              ) : null}
             </div>
           )}
 
-          <LocalScoreBar value={localScore} size="md" />
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption text-neutral-500">
-            <SatisfactionStars
-              rating={satisfactionStars}
-              count={reviewCount}
-              size="sm"
-              showStars={false}
-            />
-            {durationLabel ? (
-              <span className="inline-flex items-center gap-1">
-                <span aria-hidden>·</span>
-                <Clock className="size-3" aria-hidden />
-                <span>{durationLabel}</span>
+          {/* Line 4: price + add to trip */}
+          <div className="mt-1.5 flex items-center justify-between">
+            <p className="text-[15px] font-semibold text-foreground">
+              <span className="tabular">¥{priceJpy.toLocaleString("ja-JP")}</span>
+              <span className="ml-1 text-[12px] font-normal text-foreground/50">
+                / 1記事
               </span>
-            ) : null}
-            {typeof spotsCount === "number" ? (
-              <span className="inline-flex items-center gap-1">
-                <span aria-hidden>·</span>
-                <MapPin className="size-3" aria-hidden />
-                <span>{spotsCount}箇所</span>
-              </span>
-            ) : null}
-            {typeof likeCount === "number" ? (
-              <span className="inline-flex items-center gap-1">
-                <span aria-hidden>·</span>
-                <Heart className="size-3" aria-hidden />
-                <span className="tabular">{likeCount.toLocaleString("ja-JP")}</span>
-              </span>
-            ) : null}
-            {typeof bookmarkCount === "number" ? (
-              <span className="inline-flex items-center gap-1">
-                <span aria-hidden>·</span>
-                <Bookmark className="size-3" aria-hidden />
-                <span className="tabular">{bookmarkCount.toLocaleString("ja-JP")}</span>
-              </span>
-            ) : null}
-          </div>
-
-          <div className="mt-1 flex items-center justify-between border-t border-border pt-3">
-            <PriceTag amount={priceJpy} size="md" />
+            </p>
             {onAddToTrip ? (
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 onClick={handleAddToTrip}
-                aria-label={addToTripLabel}
+                aria-label="旅程に追加"
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-3 py-1.5",
+                  "bg-muted text-[12px] font-medium text-foreground",
+                  "ring-1 ring-border transition-colors duration-fast ease-out",
+                  "hover:bg-card hover:ring-border-strong",
+                )}
               >
-                + {addToTripLabel}
-              </Button>
+                + 旅程
+              </button>
             ) : null}
           </div>
         </div>
