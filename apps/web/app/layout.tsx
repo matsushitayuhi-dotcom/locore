@@ -13,6 +13,7 @@ import './globals.css';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
 import { BottomNav } from '../components/BottomNav';
+import { getMyUnreadChatSummary } from '@/lib/chat/unread';
 
 const notoSansJp = Noto_Sans_JP({
   subsets: ['latin'],
@@ -73,6 +74,7 @@ export default async function RootLayout({
 }) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const unread = await getMyUnreadChatSummary();
 
   const fontVars = [
     notoSansJp.variable,
@@ -92,7 +94,7 @@ export default async function RootLayout({
             {children}
           </div>
           <SiteFooter />
-          <BottomNav />
+          <BottomNav unreadChatCount={unread.count} />
           <Toaster
             position="bottom-center"
             offset={80}

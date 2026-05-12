@@ -465,7 +465,7 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
       <GoogleMap
         defaultCenter={center}
         defaultZoom={13}
-        gestureHandling="cooperative"
+        gestureHandling="greedy"
         disableDefaultUI
         clickableIcons={false}
         styles={locoreMapStyles}

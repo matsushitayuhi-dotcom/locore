@@ -134,7 +134,7 @@ function TripDayMapBody({
       <GoogleMap
         defaultCenter={center}
         defaultZoom={13}
-        gestureHandling="cooperative"
+        gestureHandling="greedy"
         disableDefaultUI
         clickableIcons={false}
         styles={locoreMapStyles}

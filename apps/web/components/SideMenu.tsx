@@ -123,9 +123,11 @@ const ABOUT_ITEMS: MenuItem[] = [
 type Props = {
   viewerLoggedIn: boolean;
   isWriter: boolean;
+  /** 未読メッセージ件数（メッセージ項目横のバッジ用） */
+  unreadChatCount?: number;
 };
 
-export function SideMenu({ viewerLoggedIn, isWriter }: Props) {
+export function SideMenu({ viewerLoggedIn, isWriter, unreadChatCount = 0 }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname() ?? '/';
 
@@ -175,12 +177,12 @@ export function SideMenu({ viewerLoggedIn, isWriter }: Props) {
         />
       ) : null}
 
-      {/* ドロワー本体 */}
+      {/* ドロワー本体 — 右からスライドイン */}
       <aside
         aria-hidden={!open}
         className={
-          'fixed inset-y-0 left-0 z-[70] flex w-[300px] max-w-[85vw] flex-col bg-card shadow-xl transition-transform duration-200 ease-out ' +
-          (open ? 'translate-x-0' : '-translate-x-full')
+          'fixed inset-y-0 right-0 z-[70] flex w-[320px] max-w-[88vw] flex-col bg-card shadow-xl transition-transform duration-200 ease-out ' +
+          (open ? 'translate-x-0' : 'translate-x-full')
         }
       >
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
@@ -222,7 +224,12 @@ export function SideMenu({ viewerLoggedIn, isWriter }: Props) {
           {viewerLoggedIn && isWriter ? (
             <Section title="クリエイター">
               {WRITER_ITEMS.map((it) => (
-                <NavLink key={it.href} item={it} pathname={pathname} />
+                <NavLink
+                  key={it.href}
+                  item={it}
+                  pathname={pathname}
+                  badge={it.href === '/chat' ? unreadChatCount : 0}
+                />
               ))}
             </Section>
           ) : viewerLoggedIn ? (
@@ -306,7 +313,15 @@ function Section({
   );
 }
 
-function NavLink({ item, pathname }: { item: MenuItem; pathname: string }) {
+function NavLink({
+  item,
+  pathname,
+  badge = 0,
+}: {
+  item: MenuItem;
+  pathname: string;
+  badge?: number;
+}) {
   const Icon = item.icon;
   const active = isActive(pathname, item);
   return (
@@ -327,7 +342,12 @@ function NavLink({ item, pathname }: { item: MenuItem; pathname: string }) {
             (active ? 'text-primary-300' : 'text-foreground/55')
           }
         />
-        <span>{item.label}</span>
+        <span className="flex-1">{item.label}</span>
+        {badge > 0 ? (
+          <span className="inline-flex min-w-[18px] items-center justify-center rounded-full bg-accent-500 px-1.5 text-[10px] font-bold leading-none text-white">
+            {badge > 99 ? '99+' : badge}
+          </span>
+        ) : null}
       </Link>
     </li>
   );

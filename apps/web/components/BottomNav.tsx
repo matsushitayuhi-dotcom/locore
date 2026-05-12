@@ -69,7 +69,7 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => /^\/chat\/[^/]+$/.test(p),
 ];
 
-export function BottomNav() {
+export function BottomNav({ unreadChatCount = 0 }: { unreadChatCount?: number } = {}) {
   const pathname = usePathname() ?? '/';
   if (HIDE_ON_ROUTES.some((fn) => fn(pathname))) return null;
 
@@ -83,24 +83,32 @@ export function BottomNav() {
         {TABS.map((t) => {
           const isActive = t.match(pathname);
           const Icon = t.icon;
+          const badge = t.href === '/chat' ? unreadChatCount : 0;
           return (
             <li key={t.href} className="flex-1">
               <Link
                 href={t.href}
                 aria-current={isActive ? 'page' : undefined}
                 className={
-                  'flex h-14 flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast ' +
+                  'relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast ' +
                   (isActive
                     ? 'text-primary-500'
                     : 'text-foreground/55 hover:text-foreground active:text-primary-300')
                 }
               >
-                <Icon
-                  className="size-[22px]"
-                  strokeWidth={isActive ? 2.4 : 1.8}
-                  fill={isActive ? 'currentColor' : 'none'}
-                  fillOpacity={isActive ? 0.15 : 0}
-                />
+                <div className="relative">
+                  <Icon
+                    className="size-[22px]"
+                    strokeWidth={isActive ? 2.4 : 1.8}
+                    fill={isActive ? 'currentColor' : 'none'}
+                    fillOpacity={isActive ? 0.15 : 0}
+                  />
+                  {badge > 0 ? (
+                    <span className="absolute -right-2 -top-1 inline-flex min-w-[16px] items-center justify-center rounded-full bg-accent-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-background">
+                      {badge > 99 ? '99+' : badge}
+                    </span>
+                  ) : null}
+                </div>
                 <span
                   className={
                     'text-[10px] font-medium tracking-tight ' +

@@ -52,7 +52,11 @@ export default async function LoginPage({
             role="alert"
             className="mb-4 rounded-md border border-danger-500/40 bg-danger-50 px-3 py-2 text-[12px] text-danger-500"
           >
-            外部認証に失敗しました。再度お試しください。
+            {oauthError.startsWith('verify_')
+              ? 'メール確認リンクの有効期限が切れたか、既に使用済みです。サインアップ画面からもう一度メールを送信してください。'
+              : oauthError.startsWith('oauth_')
+                ? '外部認証に失敗しました。時間をおいて再度お試しください。'
+                : '認証に失敗しました。再度お試しください。'}
           </p>
         ) : null}
 
