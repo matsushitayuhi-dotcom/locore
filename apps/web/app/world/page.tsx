@@ -46,11 +46,11 @@ export default async function WorldPage() {
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
           >
-            世界のどこを旅しますか？
+            旅したい国を、ぜんぶ。
           </h1>
-          <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-foreground/70">
-            今すぐ旅できるのは <strong className="text-primary-300">{activeCount}</strong> カ国。
-            それ以外の国は順次オープンしていきます。
+          <p className="mt-2 max-w-2xl text-[14px] leading-[1.9] text-foreground/70">
+            いま読める国は <strong className="text-primary-300">{activeCount}</strong> カ国。
+            残りの国も、現地に書ける人を見つけた順に開けていきます。気長に育てていく予定です。
           </p>
         </div>
       </section>

@@ -64,9 +64,11 @@ export default async function RegionHomePage({ params }: Props) {
           >
             {region.countryNameJa}・{region.nameJa}
           </h1>
-          <p className="mt-3 text-[14px] leading-relaxed text-foreground/70">
-            この地域はまだ準備中です。クリエイターを募集しているので、現地在住で
-            書いてみたい方はぜひ Founders 枠にご応募ください。
+          <p className="mt-3 text-[14px] leading-[1.9] text-foreground/70">
+            この街で書ける人を、いま探しています。
+            <br />
+            {region.nameJa} に 1 年以上住んでいて、文章で街のことを伝えたい方は、
+            Founders 枠から声をかけてください。
           </p>
           <Link
             href="/founders"
@@ -127,8 +129,8 @@ export default async function RegionHomePage({ params }: Props) {
         <section>
           <SectionHeader
             kicker="新着ニュース"
-            title={`${region.nameJa}・今日明日に起きていること`}
-            subtitle="マルシェ・展覧会・地元イベント。AI が毎朝公開情報からまとめます。"
+            title={`${region.nameJa} の、今日と明日`}
+            subtitle="マルシェ、突然始まった工事、見ておいて損のない展覧会。書き手と編集チームが現地時間に合わせて毎朝更新します。"
             href="/board"
           />
           <BoardWidget posts={boardPosts} />
@@ -138,8 +140,8 @@ export default async function RegionHomePage({ params }: Props) {
         <section id="spot-guide">
           <SectionHeader
             kicker="スポット紹介"
-            title="1 地点を深く知る"
-            subtitle="現地民が「ここはハマりますよ」と教える単独スポット。"
+            title="一軒の店、一本の坂道。"
+            subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。"
             href={moreSpot}
           />
           <ArticleScrollSection
@@ -153,8 +155,8 @@ export default async function RegionHomePage({ params }: Props) {
         <section id="itinerary">
           <SectionHeader
             kicker="旅程プラン"
-            title="半日 / 1 日のルート"
-            subtitle="現地民がデザインしたルート。所要時間と移動手段つき。"
+            title="現地民の半日、1 日の歩き方"
+            subtitle="移動時間、混みやすい時間帯、ちょっとした注意点まで添えた、そのまま辿れるルート。"
             href={moreItinerary}
           />
           <ArticleScrollSection
@@ -176,13 +178,15 @@ export default async function RegionHomePage({ params }: Props) {
                 Founders 枠（先着 50 人）
               </p>
               <h2 className="mt-3 text-[22px] font-bold leading-[1.25] tracking-tight text-foreground sm:text-[26px]">
-                Locore を一緒に育てるクリエイター、
+                最初の 50 人を、
                 <br className="hidden md:block" />
-                いま探してます。
+                ぼくらは長く覚えていたい。
               </h2>
-              <p className="mt-3 text-[14px] leading-[1.85] text-foreground/75">
-                取り分の優遇、永久バッジ、編集チームへのフィードバック権。
-                フォロワー数ではなく、街への深さを最優先で選びます。
+              <p className="mt-3 text-[14px] leading-[1.9] text-foreground/75">
+                Locore は、読み手と書き手の信頼でできている小さなメディアです。
+                立ち上げから一緒に走ってくれる Founders には、
+                収益分配の優遇、永久バッジ、サービスの方向性に対する発言権をお渡しします。
+                判断基準は、フォロワー数ではなく、その街への愛着の深さです。
               </p>
             </div>
             <div className="flex justify-end">

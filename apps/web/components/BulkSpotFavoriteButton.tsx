@@ -149,12 +149,12 @@ export function BulkSpotFavoriteButton({
           </div>
 
           <p className="mb-2 rounded-sm bg-primary-500/10 px-2 py-1.5 text-[11px] leading-snug text-primary-300">
-            この記事の <strong>{total}</strong> 個のスポットを選んだフォルダに追加します。
+            この記事の <strong>{total}</strong> 箇所をまとめて保存します。
             {alreadyCount > 0 ? (
               <>
                 <br />
-                <span className="text-foreground/60">
-                  うち {alreadyCount} 件は既に登録済み（{remaining} 件が追加対象）
+                <span className="text-foreground/65">
+                  すでに保存済み {alreadyCount} 件 ／ 今回追加 {remaining} 件
                 </span>
               </>
             ) : null}

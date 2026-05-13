@@ -161,9 +161,9 @@ export default async function LibraryPage({ searchParams }: SearchProps) {
               <Bookmark className="h-3 w-3" />
               Library
             </p>
-            <h1 className="text-[28px] font-bold tracking-tight">保存ライブラリ</h1>
-            <p className="mt-2 text-[13px] text-foreground/60">
-              気になった記事・旅程・スポットをまとめて見返せます。フォルダで自由に整理できます。
+            <h1 className="text-[28px] font-bold tracking-tight">あとで読む / 行く</h1>
+            <p className="mt-2 text-[13px] text-foreground/65">
+              気になった記事・旅程・スポットを、自分の旅の前夜に見返せるようにしておく場所。フォルダで自由に整理してください。
             </p>
           </div>
           <Link href="/">

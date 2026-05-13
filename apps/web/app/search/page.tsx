@@ -34,10 +34,10 @@ export default async function SearchPage({ searchParams }: Props) {
 
       <header className="mt-4 mb-6">
         <h1 className="text-[24px] font-bold tracking-tight text-foreground sm:text-[28px]">
-          記事検索
+          書いてある言葉から、辿る
         </h1>
         <p className="mt-1 text-[13px] text-foreground/65">
-          タイトル or 本文を選んで検索できます。
+          店名・地区名・気分を表す言葉、なんでもどうぞ。タイトルだけか本文も含めるか、切り替えられます。
         </p>
       </header>
 
@@ -52,15 +52,15 @@ export default async function SearchPage({ searchParams }: Props) {
           </p>
         ) : (
           <p className="rounded-lg bg-primary-500/10 px-4 py-3 text-[13px] text-foreground/70">
-            検索キーワードを入力してください。
+            検索したい言葉を入力してみてください。
           </p>
         )}
 
         {rawQ && results.length === 0 ? (
           <div className="rounded-md border border-dashed border-border bg-card px-6 py-12 text-center text-[13px] text-foreground/55">
-            該当する記事が見つかりませんでした。
+            その言葉ではまだ書かれていません。
             <br />
-            別のキーワードや、検索対象（タイトル / 本文）を切り替えてお試しください。
+            キーワードを少し変えるか、検索対象を「本文」に切り替えてみてください。
           </div>
         ) : null}
 

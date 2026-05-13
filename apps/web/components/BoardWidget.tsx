@@ -11,8 +11,8 @@ import type { BoardPostListItem } from '@/lib/board/db';
 export function BoardWidget({ posts }: { posts: BoardPostListItem[] }) {
   if (posts.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-5 text-center text-[12px] text-foreground/50">
-        まだ投稿がありません
+      <div className="rounded-lg border border-border bg-card p-5 text-center text-[12px] text-foreground/55">
+        今朝はまだ更新がありません
       </div>
     );
   }

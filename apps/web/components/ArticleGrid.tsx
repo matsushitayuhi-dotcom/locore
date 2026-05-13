@@ -97,7 +97,9 @@ export function ArticleGrid({
   if (articles.length === 0) {
     return (
       <div className="rounded-md border border-dashed border-border bg-card px-6 py-12 text-center text-sm text-foreground/60">
-        条件に合う記事がまだありません。
+        条件に合う記事はまだ書かれていません。
+        <br />
+        絞り込みを少し緩めてみてください。
       </div>
     );
   }

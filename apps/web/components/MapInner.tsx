@@ -610,9 +610,9 @@ function MapBody({
 
               {!groupHasUnlock ? (
                 <p className="mt-3 rounded-md bg-primary-500/10 px-2 py-1.5 text-[10px] leading-relaxed text-foreground/70">
-                  地図上の amber ヘキサは <strong>このエリアに記事がある</strong> ことだけ伝えます。記事を購入すると、正確な位置・店舗名・住所・営業時間が
-                  <strong className="ml-0.5 text-primary-300">アンロック</strong>
-                  されます。
+                  地図のヘキサは「この区画のどこかに記事がある」とだけ伝えます。
+                  購入後に、店名・住所・正確な位置・営業時間が
+                  <strong className="text-primary-300">開きます</strong>。
                 </p>
               ) : null}
             </div>

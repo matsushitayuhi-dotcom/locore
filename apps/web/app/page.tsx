@@ -54,7 +54,7 @@ export default async function HomePage() {
         <div className="relative mx-auto max-w-screen-xl px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-14">
           <p className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300 shadow-sm ring-1 ring-border">
             <Sparkles className="h-3 w-3 text-primary-500" />
-            現地民の "本物" だけ
+            その街に、暮らしている人から
           </p>
           <h1
             className="mt-4 text-[30px] font-bold leading-[1.08] tracking-tight text-foreground sm:text-[44px]"
@@ -62,20 +62,21 @@ export default async function HomePage() {
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
           >
-            世界のどこを、
-            <br className="sm:hidden" />
-            <span className="relative inline-block">
-              <span className="relative z-10 text-primary-300">深く</span>
+            旅は、
+            <span className="relative inline-block whitespace-nowrap">
+              <span className="relative z-10 text-primary-300">誰の言葉</span>
               <span
                 aria-hidden
                 className="absolute inset-x-0 bottom-1 z-0 h-2.5 rounded-full bg-primary-500/15"
               />
             </span>
-            旅しますか？
+            で
+            <br className="sm:hidden" />
+            読むかで変わる。
           </h1>
-          <p className="mt-4 max-w-2xl text-[14px] leading-[1.85] text-foreground/75 sm:text-[15px]">
-            在外邦人クリエイターが、現地でしか書けない街の輪郭を届けます。
-            まずは流れる国カードから気になる場所を、または下の記事から旅のヒントを。
+          <p className="mt-4 max-w-2xl text-[14px] leading-[1.9] text-foreground/75 sm:text-[15px]">
+            Locore は、世界の街に暮らす日本人の書き手が、自分の毎日のなかで取材し、編集して届ける小さな旅行誌です。
+            SNS では流れていってしまう「現地のこと」を、後から読み返せる短い物語の形にしました。
           </p>
         </div>
       </section>
@@ -84,9 +85,9 @@ export default async function HomePage() {
         {/* 2. 国カルーセル */}
         <section>
           <SectionHeader
-            kicker="国から探す"
-            title="どこから始めますか？"
-            subtitle="タップでその国の地域一覧へ。準備中の国は順次オープンします。"
+            kicker="行き先から探す"
+            title="どこの暮らしを覗きますか？"
+            subtitle="今はフランスの 14 地域で書き手がいます。台北・ハノイ・リスボンと、信頼できる現地ライターから順に街を開いていきます。"
           />
           <CountryCarousel countries={countries} />
         </section>
@@ -94,9 +95,9 @@ export default async function HomePage() {
         {/* 3. スポット記事 */}
         <section id="spot-guide">
           <SectionHeader
-            kicker="新着スポット"
-            title="1 地点を深く知る"
-            subtitle="現地民が「ここはハマりますよ」と教える単独スポット。国・地域タグつき。"
+            kicker="スポット紹介"
+            title="一軒の店、一本の坂道。"
+            subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。地図と入り方つき。"
             href="/articles?type=spot_guide"
           />
           <ArticleScrollSection
@@ -109,9 +110,9 @@ export default async function HomePage() {
         {/* 4. 旅程記事 */}
         <section id="itinerary">
           <SectionHeader
-            kicker="新着旅程"
-            title="半日 / 1 日のルート"
-            subtitle="現地民がデザインしたルート。所要時間と移動手段つき。"
+            kicker="旅程プラン"
+            title="現地民の半日、1 日の歩き方"
+            subtitle="移動時間、混みやすい時間帯、ちょっとした注意点まで添えた、そのまま辿れるルート。"
             href="/articles?type=itinerary"
           />
           <ArticleScrollSection
@@ -126,8 +127,8 @@ export default async function HomePage() {
           <section id="expat-info">
             <SectionHeader
               kicker="駐在者情報"
-              title="現地で暮らすための実用情報"
-              subtitle="日用品・行政手続き・医療など、現地で困った時の知恵袋。"
+              title="暮らしの実務、ぜんぶ"
+              subtitle="蚊取り線香はどこで売っている、こどもの予防接種、年に一度の納税。観光ガイドには載らない、住んでみて初めて困ることの答え。"
               href="/articles?type=expat_info"
             />
             <ArticleScrollSection

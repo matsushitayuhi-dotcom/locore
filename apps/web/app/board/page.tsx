@@ -35,19 +35,19 @@ export default async function BoardIndexPage() {
             fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
           }}
         >
-          パリ、今日明日に起きていること
+          パリの、今日と明日。
         </h1>
-        <p className="mt-2 text-[14px] leading-relaxed text-foreground/70">
-          マルシェ、デモ、ストライキ、展覧会、地元イベント。
-          AI と編集部が毎日まとめて掲載します。
+        <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
+          マルシェ、デモ、突然始まった工事、見ておいて損のない展覧会。
+          現地時間の朝に合わせて、書き手と編集チームが更新します。
         </p>
       </header>
 
       {posts.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/50">
-          まだ投稿がありません。
+        <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">
+          今朝はまだ何も書かれていません。
           <br />
-          AI が毎朝自動収集を行うので、明日以降に再度ご確認ください。
+          毎朝、現地時間の 7 時前後に更新します。
         </div>
       ) : (
         <ul className="space-y-3">

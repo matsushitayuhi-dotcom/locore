@@ -95,7 +95,7 @@ export default async function CountryPage({ params }: Props) {
           <section>
             <SectionHeader
               kicker="公開中の地域"
-              title="クリエイターが現地から書いています"
+              title="この街には、書き手がいます"
               count={activeRegions.length}
             />
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
@@ -123,11 +123,11 @@ export default async function CountryPage({ params }: Props) {
                 fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
               }}
             >
-              {country.nameJa}はもうすぐ公開
+              {country.nameJa}は、もうすぐ
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-foreground/70">
-              現地在住のクリエイターを探しています。
-              書いてみたい方は Founders 枠に応募してください。
+            <p className="mx-auto mt-3 max-w-md text-[14px] leading-[1.9] text-foreground/70">
+              この国に住んでいて、街のことを書いてみたい方を探しています。
+              ペースを焦らず、書き手が育ったタイミングで地域ごとに開けていきます。
             </p>
             <Link
               href="/founders"
@@ -144,7 +144,7 @@ export default async function CountryPage({ params }: Props) {
           <section>
             <SectionHeader
               kicker="準備中の地域"
-              title="クリエイター募集中"
+              title="この街で書ける人を、探しています"
               count={lockedRegions.length}
             />
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

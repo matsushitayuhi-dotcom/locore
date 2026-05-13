@@ -66,7 +66,7 @@ export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
           <div>
             <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
               <Sparkles className="h-3 w-3" />
-              今すぐ旅できる
+              いま読める
             </p>
             <h2
               className="mt-2 text-[24px] font-bold leading-tight tracking-tight sm:text-[28px]"
@@ -74,10 +74,10 @@ export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
                 fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
               }}
             >
-              現地に住むクリエイターが、案内します
+              この国には、書き手がいます
             </h2>
             <p className="mt-1 text-[13px] text-foreground/65">
-              タップして、その国の地域一覧へ。
+              タップで、その国の地域一覧へ。地域を選ぶと、現地ライターの記事が並びます。
             </p>
           </div>
         </header>
@@ -95,7 +95,7 @@ export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
         )}
       </section>
 
-      {/* 2. 「もうすぐ会える街」 — 大陸ごと */}
+      {/* 2. 「これから開く街」 — 大陸ごと */}
       {continents.map(([continent, list]) => (
         <section key={continent}>
           <header className="mb-3 flex items-baseline justify-between">

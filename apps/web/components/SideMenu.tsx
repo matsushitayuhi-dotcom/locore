@@ -54,7 +54,7 @@ const VIEW_ITEMS: MenuItem[] = [
   },
   { href: '/map', label: 'マップ', icon: MapIcon, matchPrefix: '/map' },
   { href: '/board', label: '掲示板', icon: Megaphone, matchPrefix: '/board' },
-  { href: '/library', label: 'お気に入り', icon: Bookmark, matchPrefix: '/library' },
+  { href: '/library', label: 'あとで読む / 行く', icon: Bookmark, matchPrefix: '/library' },
   {
     href: '/purchases',
     label: '購入記事',

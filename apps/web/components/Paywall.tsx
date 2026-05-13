@@ -110,10 +110,11 @@ export function Paywall({
           className="text-[18px] font-semibold tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          続きを読むには購入が必要です
+          ここから先は、書き手のサポート
         </p>
-        <p className="mt-2 text-[13px] text-foreground/60">
-          スポットの正式名・住所・営業時間まで、すべて解放されます。
+        <p className="mt-2 text-[13px] text-foreground/65">
+          購入すると本文の続き、スポット名、住所、地図の正確な位置がすべて開きます。
+          支払いの 70% は書き手にお渡しします。
         </p>
         <div className="mt-4 flex flex-col items-center gap-2">
           <PriceTag amount={article.priceJpy} size="lg" suffix=" / 1記事" />
@@ -123,10 +124,10 @@ export function Paywall({
             onClick={() => setOpen(true)}
             className="mt-2 min-w-[260px]"
           >
-            ¥{article.priceJpy.toLocaleString('ja-JP')} で続きを読む
+            ¥{article.priceJpy.toLocaleString('ja-JP')} で読み進める
           </Button>
-          <p className="mt-1 text-[11px] text-foreground/40">
-            ※ プロト版のため決済は発生しません（localStorage 保存）
+          <p className="mt-1 text-[11px] text-foreground/45">
+            ※ プロト版のため、実際の決済は発生しません
           </p>
         </div>
       </div>
