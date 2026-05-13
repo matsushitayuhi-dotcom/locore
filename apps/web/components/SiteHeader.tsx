@@ -20,11 +20,11 @@ import { SideMenu } from './SideMenu';
  */
 
 const NAV = [
-  { href: '/', label: '世界' },
-  { href: '/region/paris', label: 'パリ' },
+  { href: '/', label: 'ホーム' },
+  { href: '/world', label: '場所' },
   { href: '/map', label: 'マップ' },
   { href: '/board', label: '掲示板' },
-  { href: '/library', label: 'お気に入り' },
+  { href: '/library', label: 'あとで読む / 行く' },
 ];
 
 export async function SiteHeader() {
