@@ -1,189 +1,192 @@
-import Link from 'next/link';
-import { Sparkles, ArrowRight } from 'lucide-react';
-import { CountryCarousel } from '../components/CountryCarousel';
-import { ArticleScrollSection } from '../components/ArticleScrollSection';
-import { listCountriesForPicker } from '@/lib/geo/countries';
-import { getPublishedDbArticles } from '@/lib/articles/published';
-import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
+import { redirect } from 'next/navigation';
+import Image from 'next/image';
+import { ArrowRight, Compass, Briefcase, MapPin } from 'lucide-react';
+import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
+import { chooseViewerMode } from '@/lib/mode/actions';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Locore — 世界の "本物" を、現地民が案内する',
+  title: 'Locore — その街を、誰と歩きますか',
   description:
-    'Locore は在外邦人クリエイターが現地で書く、観光ガイドにはない街の物語。国・地域から、スポット記事と旅程プランを選んで深く旅できます。',
+    'Locore は、世界の街に暮らす日本人の書き手が綴る、小さな旅行誌と暮らしの掲示板。あなたは旅行者ですか、それともそこに暮らす人ですか。',
 };
 
 /**
- * ルート / — トップページ。
+ * 入口スプラッシュページ。
  *
- * 構成:
- *   1. Hero band（コピー）
- *   2. 国カルーセル（active + 準備中、全 28 ヶ国を横スクロール）
- *   3. 「すべての国の」最新スポット記事 10 件（横スクロール、続きを見る → /articles?type=spot_guide）
- *   4. 「すべての国の」最新旅程プラン 10 件（同上 → /articles?type=itinerary）
- *
- * 記事カードにはサーバ側で「国・地域」タグが入っている（area = "フランス・パリ＆近郊"）。
- * 国→地域→記事 のドリルダウンは /country/[code] → /region/[slug] へ。
+ * - 初回訪問: 旅行者 / 駐在員 の 2 つの大きなカードを並べる
+ * - 既に選択済み: cookie の値を読んで /explore か /expat に即リダイレクト
+ * - SideMenu のモード切替からいつでも変更可能
  */
-export default async function HomePage() {
-  const [countries, articles] = await Promise.all([
-    listCountriesForPicker(),
-    getPublishedDbArticles(60),
-  ]);
-  const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
-
-  const spotArticles = articles.filter((a) => a.articleType === 'spot_guide');
-  const itineraryArticles = articles.filter(
-    (a) => a.articleType === 'itinerary',
-  );
-  const expatArticles = articles.filter((a) => a.articleType === 'expat_info');
+export default function SplashPage() {
+  const existing = getViewerMode();
+  if (existing) {
+    redirect(homePathFor(existing));
+  }
 
   return (
-    <main className="bg-background">
-      {/* Hero band */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-primary-50 via-card to-card">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-32 -top-24 h-96 w-96 rounded-full bg-primary-200/40 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-20 right-0 h-80 w-80 rounded-full bg-accent-300/20 blur-3xl"
-        />
-        <div className="relative mx-auto max-w-screen-xl px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-14">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300 shadow-sm ring-1 ring-border">
-            <Sparkles className="h-3 w-3 text-primary-500" />
-            その街に、暮らしている人から
-          </p>
-          <h1
-            className="mt-4 text-[30px] font-bold leading-[1.08] tracking-tight text-foreground sm:text-[44px]"
+    // layout の SiteHeader / Footer / BottomNav の上に被せて、
+    // スプラッシュではナビゲーション系を一切見せない。
+    <main className="fixed inset-0 z-50 overflow-y-auto bg-gradient-to-br from-primary-50 via-card to-card">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-32 -top-24 h-[480px] w-[480px] rounded-full bg-primary-200/40 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -bottom-32 right-0 h-[420px] w-[420px] rounded-full bg-accent-300/20 blur-3xl"
+      />
+
+      <div className="relative mx-auto flex min-h-[100dvh] max-w-screen-xl flex-col px-4 py-8 sm:px-6 sm:py-12">
+        <header className="mx-auto max-w-2xl text-center">
+          <p
+            className="text-[40px] font-bold tracking-tight sm:text-[56px]"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
           >
-            旅は、
-            <span className="relative inline-block whitespace-nowrap">
-              <span className="relative z-10 text-primary-300">誰の言葉</span>
-              <span
-                aria-hidden
-                className="absolute inset-x-0 bottom-1 z-0 h-2.5 rounded-full bg-primary-500/15"
-              />
+            <span className="bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent">
+              Locore
             </span>
-            で
-            <br className="sm:hidden" />
-            読むかで変わる。
-          </h1>
-          <p className="mt-4 max-w-2xl text-[14px] leading-[1.9] text-foreground/75 sm:text-[15px]">
-            Locore は、世界の街に暮らす日本人の書き手が、自分の毎日のなかで取材し、編集して届ける小さな旅行誌です。
-            SNS では流れていってしまう「現地のこと」を、後から読み返せる短い物語の形にしました。
+            <span className="ml-2 align-middle rounded-full bg-primary-500 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-950">
+              β
+            </span>
           </p>
+          <p
+            className="mt-6 text-[22px] font-bold leading-[1.4] tracking-tight text-foreground sm:text-[28px]"
+            style={{
+              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+            }}
+          >
+            その街を、
+            <br className="sm:hidden" />
+            <span className="text-primary-300">誰と</span>
+            歩きますか。
+          </p>
+          <p className="mt-4 text-[13px] leading-[1.9] text-foreground/65 sm:text-[14px]">
+            Locore は、世界の街に暮らす日本人の書き手が綴る、
+            小さな旅行誌と暮らしの掲示板です。
+          </p>
+        </header>
+
+        <div className="mt-12 grid flex-1 gap-4 sm:mt-16 sm:grid-cols-2 sm:gap-6">
+          <ChoiceCard
+            mode="traveler"
+            label="Traveler"
+            title="旅する人として"
+            subtitle="現地に住む書き手の記事と、半日 / 1 日の歩き方ルート。観光地ではない街の輪郭。"
+            tags={['スポット紹介', '旅程プラン', '掲示板']}
+            imageUrl="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&auto=format&fit=crop&q=80"
+            imageAlt="パリ・エッフェル塔の朝"
+            accentClass="from-primary-500/60 via-primary-500/20"
+            CtaIcon={Compass}
+          />
+          <ChoiceCard
+            mode="resident"
+            label="Resident"
+            title="そこに暮らす人として"
+            subtitle="行政の締切、邦人コミュニティ、求人、アパート、子育て情報。「住んでみて初めて困ること」のまとめ。"
+            tags={['行政・締切', '求人・アパート', 'コミュニティ', '記事執筆']}
+            imageUrl="https://images.unsplash.com/photo-1524396309943-e03f5249f002?w=1200&auto=format&fit=crop&q=80"
+            imageAlt="パリの路地、朝のパン屋"
+            accentClass="from-blue-500/60 via-blue-500/20"
+            CtaIcon={Briefcase}
+          />
         </div>
-      </section>
 
-      <div className="mx-auto max-w-screen-xl space-y-12 px-4 py-10 sm:space-y-14 sm:px-6 sm:py-14">
-        {/* 2. 国カルーセル */}
-        <section>
-          <SectionHeader
-            kicker="行き先から探す"
-            title="どこの暮らしを覗きますか？"
-            subtitle="今はフランスの 14 地域で書き手がいます。台北・ハノイ・リスボンと、信頼できる現地ライターから順に街を開いていきます。"
-          />
-          <CountryCarousel countries={countries} />
-        </section>
-
-        {/* 3. スポット記事 */}
-        <section id="spot-guide">
-          <SectionHeader
-            kicker="スポット紹介"
-            title="一軒の店、一本の坂道。"
-            subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。地図と入り方つき。"
-            href="/articles?type=spot_guide"
-          />
-          <ArticleScrollSection
-            articles={spotArticles}
-            moreHref="/articles?type=spot_guide"
-            socialCounts={socialCounts}
-          />
-        </section>
-
-        {/* 4. 旅程記事 */}
-        <section id="itinerary">
-          <SectionHeader
-            kicker="旅程プラン"
-            title="現地民の半日、1 日の歩き方"
-            subtitle="移動時間、混みやすい時間帯、ちょっとした注意点まで添えた、そのまま辿れるルート。"
-            href="/articles?type=itinerary"
-          />
-          <ArticleScrollSection
-            articles={itineraryArticles}
-            moreHref="/articles?type=itinerary"
-            socialCounts={socialCounts}
-          />
-        </section>
-
-        {/* 5. 駐在者情報 */}
-        {expatArticles.length > 0 ? (
-          <section id="expat-info">
-            <SectionHeader
-              kicker="駐在者情報"
-              title="暮らしの実務、ぜんぶ"
-              subtitle="蚊取り線香はどこで売っている、こどもの予防接種、年に一度の納税。観光ガイドには載らない、住んでみて初めて困ることの答え。"
-              href="/articles?type=expat_info"
-            />
-            <ArticleScrollSection
-              articles={expatArticles}
-              moreHref="/articles?type=expat_info"
-              socialCounts={socialCounts}
-            />
-          </section>
-        ) : null}
+        <footer className="mt-10 text-center text-[11px] text-foreground/45 sm:mt-12">
+          <span className="inline-flex items-center gap-1">
+            <MapPin className="h-3 w-3" />
+            選択は後からメニューでいつでも切り替えできます
+          </span>
+        </footer>
       </div>
     </main>
   );
 }
 
-function SectionHeader({
-  kicker,
+function ChoiceCard({
+  mode,
+  label,
   title,
   subtitle,
-  href,
+  tags,
+  imageUrl,
+  imageAlt,
+  accentClass,
+  CtaIcon,
 }: {
-  kicker: string;
+  mode: 'traveler' | 'resident';
+  label: string;
   title: string;
-  subtitle?: string;
-  href?: string;
+  subtitle: string;
+  tags: string[];
+  imageUrl: string;
+  imageAlt: string;
+  accentClass: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  CtaIcon: any;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-          {kicker}
-        </p>
-        <h2
-          className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
-        >
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="mt-1 text-[12px] text-foreground/75 sm:text-[13px]">
+    <form action={chooseViewerMode} className="flex">
+      <input type="hidden" name="mode" value={mode} />
+      <button
+        type="submit"
+        className="group relative flex w-full flex-col overflow-hidden rounded-2xl bg-card text-left shadow-sm ring-1 ring-border transition hover:shadow-xl hover:ring-primary-300 focus-visible:ring-2 focus-visible:ring-primary-500"
+      >
+        <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted sm:aspect-[4/5]">
+          <Image
+            src={imageUrl}
+            alt={imageAlt}
+            fill
+            sizes="(min-width: 640px) 50vw, 100vw"
+            priority
+            className="object-cover transition duration-700 group-hover:scale-[1.04]"
+            unoptimized
+          />
+          <div
+            aria-hidden
+            className={`absolute inset-0 bg-gradient-to-t to-transparent ${accentClass}`}
+          />
+        </div>
+
+        <div className="relative flex flex-1 flex-col gap-3 p-6 sm:p-8">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary-300">
+            {label}
+          </p>
+          <h2
+            className="text-[24px] font-bold leading-tight tracking-tight text-foreground sm:text-[30px]"
+            style={{
+              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+            }}
+          >
+            {title}
+          </h2>
+          <p className="text-[13px] leading-[1.85] text-foreground/70 sm:text-[14px]">
             {subtitle}
           </p>
-        ) : null}
-      </div>
-      {href ? (
-        <Link
-          href={href}
-          className="hidden whitespace-nowrap rounded-full bg-card px-4 py-1.5 text-[13px] font-semibold text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:inline-flex"
-        >
-          すべて見る
-          <ArrowRight className="ml-1 inline h-3 w-3" />
-        </Link>
-      ) : null}
-    </div>
+
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {tags.map((t) => (
+              <li
+                key={t}
+                className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium text-primary-300"
+              >
+                {t}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-auto pt-4">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[13px] font-bold text-neutral-950 transition group-hover:bg-primary-300">
+              <CtaIcon className="h-4 w-4" />
+              ここから始める
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </div>
+        </div>
+      </button>
+    </form>
   );
 }

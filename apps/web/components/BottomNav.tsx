@@ -24,10 +24,15 @@ type Tab = {
 
 const TABS: Tab[] = [
   {
-    href: '/',
+    href: '/explore',
     label: 'ホーム',
     icon: Compass,
-    match: (p) => p === '/' || p.startsWith('/region/') || p.startsWith('/country/'),
+    match: (p) =>
+      p === '/' ||
+      p.startsWith('/explore') ||
+      p.startsWith('/expat') ||
+      p.startsWith('/region/') ||
+      p.startsWith('/country/'),
   },
   {
     href: '/map',
@@ -67,6 +72,8 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => /^\/writer\/articles\/[^/]+\/edit$/.test(p),
   // チャットの個別スレッド画面はフルスクリーン UX
   (p) => /^\/chat\/[^/]+$/.test(p),
+  // スプラッシュ画面はナビゲーション系を全部消す（最大限スタイリッシュに）
+  (p) => p === '/',
 ];
 
 export function BottomNav({ unreadChatCount = 0 }: { unreadChatCount?: number } = {}) {

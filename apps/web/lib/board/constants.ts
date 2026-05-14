@@ -5,6 +5,7 @@
 
 export const BOARD_CATEGORIES = [
   'event',
+  'transit',
   'admin',
   'food_season',
   'community',
@@ -16,6 +17,7 @@ export type BoardCategory = (typeof BOARD_CATEGORIES)[number];
 
 export const BOARD_CATEGORY_LABEL: Record<BoardCategory, string> = {
   event: 'イベント',
+  transit: '交通情報',
   admin: '行政・締切',
   food_season: '食・季節',
   community: 'コミュニティ',
@@ -26,6 +28,7 @@ export const BOARD_CATEGORY_LABEL: Record<BoardCategory, string> = {
 /** カテゴリの短い説明（タブのホバー、admin フォームのヒント等で使う） */
 export const BOARD_CATEGORY_HINT: Record<BoardCategory, string> = {
   event: 'マルシェ、展示、フェス、ソルドなど期間限定の催し',
+  transit: 'ストライキ、運休、迂回ルート、Pass Navigo の値上げなど',
   admin: '確定申告、滞在許可更新、CAF など行政の締切',
   food_season: '白アスパラ解禁、ジビエ、ボージョレーなど旬の食材',
   community: '在仏邦人会、日本酒会、邦人クリエイター展など',

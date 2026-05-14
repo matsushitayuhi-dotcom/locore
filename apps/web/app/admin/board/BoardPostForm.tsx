@@ -253,6 +253,11 @@ function placeholderFor(category: BoardCategory): {
         title: '例: 今週末、République 広場でクリエイターズマルシェ',
         body: 'いつ・どこで・何が起きるか。\n旅行者と駐在員のどちらにも刺さるなら「両方向け」、現地民の催しなら「駐在員向け」。',
       };
+    case 'transit':
+      return {
+        title: '例: 5/16 木曜、メトロ 14 号線が終日運休',
+        body: 'いつ、どの路線・空港・バスが止まる/混むか。\n代替ルートや徒歩での目安時間も添えると親切。',
+      };
     case 'admin':
       return {
         title: '例: 確定申告の電子申告は 5/26 まで',

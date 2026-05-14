@@ -89,6 +89,7 @@ export function BoardWidget({ posts }: { posts: BoardPostListItem[] }) {
 /** カテゴリの小さなチップ。色はカテゴリごとに変える */
 const CHIP_COLOR: Record<string, string> = {
   event: 'bg-primary-500/10 text-primary-300',
+  transit: 'bg-slate-500/10 text-slate-600',
   admin: 'bg-blue-500/10 text-blue-600',
   food_season: 'bg-amber-500/10 text-amber-700',
   community: 'bg-purple-500/10 text-purple-600',

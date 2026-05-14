@@ -2,42 +2,37 @@ import Link from 'next/link';
 import { Button } from '@locore/ui';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { getMyUnreadChatSummary } from '@/lib/chat/unread';
+import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
+import { listCountriesForPicker } from '@/lib/geo/countries';
 import { UserMenu } from './auth/UserMenu';
 import { SideMenu } from './SideMenu';
+import { PlaceMenu } from './PlaceMenu';
 
 /**
  * トップバー。
  *
- * 配置:
- *   - 左端: ロゴ
- *   - 中央 (md+): 見る専門ナビ（世界 / パリ / マップ / 掲示板 / お気に入り）
- *   - 右端 (順番):
- *       1. Founders 入口 (md+)
- *       2. UserMenu (ログイン中) or ログインボタン (未ログイン)
- *       3. ハンバーガー（SideMenu。右からスライドイン）
+ * - 左: ロゴ
+ * - 中央 (md+): ホーム / 場所(dropdown) / マップ / 掲示板 / あとで読む
+ * - 右: Founders / UserMenu / ハンバーガー
  *
- * モバイルで横詰めにならないよう、ボタン類は密度を下げる方向で。
+ * モード（旅行者 / 駐在員）に応じて「ホーム」リンクの行き先を切替。
  */
-
-const NAV = [
-  { href: '/', label: 'ホーム' },
-  { href: '/world', label: '場所' },
-  { href: '/map', label: 'マップ' },
-  { href: '/board', label: '掲示板' },
-  { href: '/library', label: 'あとで読む / 行く' },
-];
-
 export async function SiteHeader() {
-  const user = await getCurrentUser();
+  const [user, mode, countries] = await Promise.all([
+    getCurrentUser(),
+    Promise.resolve(getViewerMode()),
+    listCountriesForPicker(),
+  ]);
   const isWriter = user?.role === 'resident_writer' || user?.role === 'editor';
   const unread = user ? await getMyUnreadChatSummary() : { count: 0, threadCount: 0 };
+  // 未選択ならとりあえず traveler ホームを指すが、/ に着地してすぐ splash に戻る挙動
+  const homeHref = mode ? homePathFor(mode) : '/';
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-3 px-4 sm:gap-5 sm:px-6">
-        {/* 左: ロゴ */}
         <Link
-          href="/"
+          href={homeHref}
           className="group inline-flex shrink-0 items-baseline font-semibold tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
@@ -49,20 +44,34 @@ export async function SiteHeader() {
           </span>
         </Link>
 
-        {/* 中央: ナビ (md+) */}
         <nav className="hidden flex-1 items-center justify-center gap-1 text-sm md:flex">
-          {NAV.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
-            >
-              {n.label}
-            </Link>
-          ))}
+          <Link
+            href={homeHref}
+            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
+          >
+            ホーム
+          </Link>
+          <PlaceMenu countries={countries} />
+          <Link
+            href="/map"
+            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
+          >
+            マップ
+          </Link>
+          <Link
+            href="/board"
+            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
+          >
+            掲示板
+          </Link>
+          <Link
+            href="/library"
+            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
+          >
+            あとで読む
+          </Link>
         </nav>
 
-        {/* 右: アクション群 — モバイルでは ハンバーガー + UserMenu/ログイン だけに絞る */}
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <Link
             href="/founders"
@@ -86,11 +95,11 @@ export async function SiteHeader() {
             </Button>
           )}
 
-          {/* ハンバーガー — 右端 */}
           <SideMenu
             viewerLoggedIn={!!user}
             isWriter={isWriter}
             unreadChatCount={unread.count}
+            currentMode={mode}
           />
         </div>
       </div>

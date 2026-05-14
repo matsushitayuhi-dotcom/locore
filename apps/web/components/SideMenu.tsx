@@ -44,14 +44,10 @@ type MenuItem = {
   matchPrefix?: string;
 };
 
-const VIEW_ITEMS: MenuItem[] = [
-  { href: '/', label: 'ホーム', icon: Compass, matchPrefix: '/$' },
-  {
-    href: '/world',
-    label: '場所から選ぶ',
-    icon: MapIcon,
-    matchPrefix: '/world',
-  },
+// 旅行者向け（traveler） — 暮らし系の項目（求人・アパート等）を出さない
+const TRAVELER_VIEW_ITEMS: MenuItem[] = [
+  { href: '/explore', label: 'ホーム', icon: Compass, matchPrefix: '/explore' },
+  { href: '/world', label: '場所から選ぶ', icon: MapIcon, matchPrefix: '/world' },
   { href: '/map', label: 'マップ', icon: MapIcon, matchPrefix: '/map' },
   { href: '/board', label: '掲示板', icon: Megaphone, matchPrefix: '/board' },
   {
@@ -67,6 +63,31 @@ const VIEW_ITEMS: MenuItem[] = [
     matchPrefix: '/purchases',
   },
   { href: '/trips', label: '旅程', icon: Heart, matchPrefix: '/trips' },
+];
+
+// 駐在員向け（resident） — 暮らし実務系を上位に
+const RESIDENT_VIEW_ITEMS: MenuItem[] = [
+  { href: '/expat', label: 'ホーム', icon: Compass, matchPrefix: '/expat' },
+  {
+    href: '/board?audience=resident',
+    label: '掲示板（駐在員向け）',
+    icon: Megaphone,
+    matchPrefix: '/board',
+  },
+  { href: '/world', label: '場所から選ぶ', icon: MapIcon, matchPrefix: '/world' },
+  { href: '/map', label: 'マップ', icon: MapIcon, matchPrefix: '/map' },
+  {
+    href: '/library',
+    label: 'あとで読む / 行く',
+    icon: Bookmark,
+    matchPrefix: '/library',
+  },
+  {
+    href: '/purchases',
+    label: '購入記事',
+    icon: ShoppingBag,
+    matchPrefix: '/purchases',
+  },
 ];
 
 const WRITER_ITEMS: MenuItem[] = [
@@ -131,9 +152,16 @@ type Props = {
   isWriter: boolean;
   /** 未読メッセージ件数（メッセージ項目横のバッジ用） */
   unreadChatCount?: number;
+  /** 現在のモード（splash 未選択なら null） */
+  currentMode?: 'traveler' | 'resident' | null;
 };
 
-export function SideMenu({ viewerLoggedIn, isWriter, unreadChatCount = 0 }: Props) {
+export function SideMenu({
+  viewerLoggedIn,
+  isWriter,
+  unreadChatCount = 0,
+  currentMode = null,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname() ?? '/';
@@ -194,6 +222,7 @@ export function SideMenu({ viewerLoggedIn, isWriter, unreadChatCount = 0 }: Prop
             isWriter={isWriter}
             unreadChatCount={unreadChatCount}
             pathname={pathname}
+            currentMode={currentMode}
           />,
           document.body,
         )}
@@ -211,6 +240,7 @@ function DrawerPanel({
   isWriter,
   unreadChatCount,
   pathname,
+  currentMode,
 }: {
   open: boolean;
   onClose: () => void;
@@ -218,6 +248,7 @@ function DrawerPanel({
   isWriter: boolean;
   unreadChatCount: number;
   pathname: string;
+  currentMode: 'traveler' | 'resident' | null;
 }) {
   return (
     <>
@@ -269,8 +300,41 @@ function DrawerPanel({
           aria-label="サイトナビゲーション"
           className="flex-1 overflow-y-auto px-2 py-3"
         >
+          {/* モード切替（駐在員 / 旅行者） — どちらでも開ける */}
+          <Section title={currentMode === 'resident' ? '駐在員モード' : '旅行者モード'}>
+            <li className="px-1">
+              <div className="flex gap-1.5">
+                <Link
+                  href="/explore"
+                  className={
+                    'flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-bold ' +
+                    (currentMode === 'traveler' || !currentMode
+                      ? 'bg-primary-500 text-neutral-950'
+                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
+                  }
+                >
+                  旅行者
+                </Link>
+                <Link
+                  href="/expat"
+                  className={
+                    'flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-bold ' +
+                    (currentMode === 'resident'
+                      ? 'bg-primary-500 text-neutral-950'
+                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
+                  }
+                >
+                  駐在員
+                </Link>
+              </div>
+            </li>
+          </Section>
+
           <Section title="見る">
-            {VIEW_ITEMS.map((it) => (
+            {(currentMode === 'resident'
+              ? RESIDENT_VIEW_ITEMS
+              : TRAVELER_VIEW_ITEMS
+            ).map((it) => (
               <NavLink key={it.href} item={it} pathname={pathname} />
             ))}
           </Section>
