@@ -1,16 +1,14 @@
 ﻿import Link from 'next/link';
+import { Logo } from './Logo';
 
 export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-border bg-surface-muted/40">
       <div className="mx-auto grid max-w-screen-xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">
         <div>
-          <p
-            className="text-[20px] font-semibold tracking-tight text-foreground"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
-          >
-            Locore
-          </p>
+          <Link href="/" aria-label="Locore ホームへ">
+            <Logo variant="wordmark" height={26} />
+          </Link>
           <p className="mt-3 text-[13px] leading-relaxed text-foreground/60">
             在外邦人がつくる、もう一段深い旅。<br />
             Quiet Premium / Editorial First / Map as Stage.

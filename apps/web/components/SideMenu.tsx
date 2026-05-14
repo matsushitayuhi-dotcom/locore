@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
+import { Logo } from './Logo';
 import {
   Menu,
   X,
@@ -275,16 +276,12 @@ function DrawerPanel({
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <Link
             href="/"
-            className="inline-flex items-baseline font-semibold tracking-tight"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
+            className="inline-flex items-center gap-1.5"
             onClick={onClose}
+            aria-label="Locore ホームへ"
           >
-            <span className="text-[22px] bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent">
-              Locore
-            </span>
-            <span className="ml-1 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950">
+            <Logo variant="wordmark" height={26} />
+            <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950">
               β
             </span>
           </Link>

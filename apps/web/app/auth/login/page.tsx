@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { GoogleButton } from '@/components/auth/GoogleButton';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { Logo } from '@/components/Logo';
 
 export const metadata = {
   title: 'ログイン',
@@ -32,15 +33,16 @@ export default async function LoginPage({
   return (
     <main className="bg-background">
       <section className="mx-auto max-w-md px-4 py-12 sm:px-6 sm:py-16">
-        <header className="mb-8 text-center">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-foreground/50">
+        <header className="mb-8 flex flex-col items-center text-center">
+          <Logo variant="stacked" height={64} />
+          <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-foreground/50">
             Welcome back
           </p>
           <h1
-            className="mt-2 text-[28px] font-semibold tracking-tight"
+            className="mt-2 text-[22px] font-semibold tracking-tight"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            Locore にログイン
+            ログイン
           </h1>
           <p className="mt-2 text-[13px] text-foreground/60">
             メールアドレス、または Google アカウントでログインできます。

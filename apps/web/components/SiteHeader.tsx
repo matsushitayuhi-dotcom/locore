@@ -8,6 +8,7 @@ import { UserMenu } from './auth/UserMenu';
 import { SideMenu } from './SideMenu';
 import { PlaceMenu } from './PlaceMenu';
 import { ModeToggle } from './ModeToggle';
+import { Logo } from './Logo';
 
 /**
  * トップバー。
@@ -35,13 +36,11 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-3 px-4 sm:gap-5 sm:px-6">
         <Link
           href={homeHref}
-          className="group inline-flex shrink-0 items-baseline font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
+          className="group inline-flex shrink-0 items-center gap-1.5"
+          aria-label="Locore ホームへ"
         >
-          <span className="text-[22px] sm:text-[24px] bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent transition group-hover:from-primary-200 group-hover:to-primary-300">
-            Locore
-          </span>
-          <span className="ml-1 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950">
+          <Logo variant="wordmark" height={28} />
+          <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950">
             β
           </span>
         </Link>

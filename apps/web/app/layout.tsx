@@ -58,12 +58,47 @@ export const metadata: Metadata = {
   description:
     'Locore は現地で生活するクリエイターが綴る、観光ガイドにはない深い街の物語。映え目当てではなく、その土地の本当の輪郭を持ち帰るための、有料・短尺の旅行誌。',
   applicationName: 'Locore',
+  manifest: '/manifest.webmanifest',
+  // ファビコン / アプリアイコン。public/ に同名ファイルがあれば自動配信される
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    shortcut: '/favicon.ico',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Locore',
+    title: 'Locore — 在外邦人がつくる、もう一段深い旅',
+    description:
+      '現地に住むクリエイターが書く、観光ガイドにはない街の物語。短尺の有料旅行誌。',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Locore',
+      },
+    ],
+    locale: 'ja_JP',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Locore',
+    description:
+      '現地に住むクリエイターが書く、観光ガイドにはない街の物語。',
+    images: ['/og-image.png'],
+  },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#FAFAF7',
+  // Editorial Light のクリーム背景。スマホでアドレスバー色が揃う
+  themeColor: '#FAF5EB',
   colorScheme: 'light',
 };
 
