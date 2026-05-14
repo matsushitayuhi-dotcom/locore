@@ -13,8 +13,9 @@ import { hasAiEventPostForToday } from '@/lib/board/db';
  *   3. Claude に web_search を渡してパリの当日イベントを 3〜5 件 JSON で返させる
  *   4. board_posts に source='ai_event', auto_collected=true で挿入
  *
- * 起動経路: Vercel Cron（vercel.json で schedule "0 5 * * *" = UTC 5:00 = JST 14:00、
- *           パリ朝 7:00 にあたる、当日分が出揃った時間帯）
+ * 起動経路: Vercel Cron（vercel.json で schedule "0 5 * * 1" = 毎週月曜 UTC 5:00、
+ *           Vercel Hobby 無料プランは週 1 回までなのでこの頻度に。
+ *           日次更新が欲しくなったら cron-job.org など外部から GET で叩く想定）
  *
  * 必要環境変数:
  *   - CRON_SECRET           : Vercel Cron 検証用ランダム文字列

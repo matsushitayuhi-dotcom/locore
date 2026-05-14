@@ -68,36 +68,71 @@ Vercel ダッシュボード → 該当プロジェクト → **Settings → Env
 すでにデプロイされている本番に反映させるには、対応する deployment を Redeploy するか、
 新しい commit を push してください。
 
-## ステップ 5: Vercel Cron を有効化
+## ステップ 5: Cron を有効化（無料プラン構成）
 
-`apps/web/vercel.json` にすでに以下が入っています:
+`apps/web/vercel.json` に以下が入っています:
 
 ```json
 {
   "crons": [
-    { "path": "/api/cron/ai-paris-events", "schedule": "0 5 * * *" }
+    { "path": "/api/cron/ai-paris-events", "schedule": "0 5 * * 1" }
   ]
 }
 ```
 
-これを有効にするには **Vercel Pro プラン以上** が必要です（Hobby は週 1 回まで）。
-プロト段階で Hobby のままなら、次のどちらかでしのげます:
+これは **毎週月曜 05:00 UTC（日本時間 月曜 14:00）** に動く設定で、
+**Vercel Hobby プラン（無料）でも動きます**。
 
-### 案 A: 週 1 に頻度を落とす（無料）
+> Vercel の無料プランでは cron は週 1 回まで。日次更新が欲しくなったら、
+> 後述の「毎日に変えたくなったら」を参照。
 
-`vercel.json` の schedule を `"0 5 * * 1"`（毎週月曜）に変更。
+### Vercel ダッシュボードでの確認
 
-### 案 B: 外部 cron から叩く（無料、毎日 OK）
+1. プロジェクト → **Settings → Cron Jobs**
+2. `/api/cron/ai-paris-events`（schedule: `0 5 * * 1`）が一覧に出ているはず
+3. もし出ていない場合は、`vercel.json` を含む最新コミットを Production に Redeploy
 
-[cron-job.org](https://cron-job.org) などの無料サービスに登録し、
-毎日 05:00 UTC に `https://locore.app/api/cron/ai-paris-events` を **GET** リクエスト。
-Header に:
+### Vercel が cron を実行するとき何が起きるか
+
+Vercel は自動で:
 
 ```
-Authorization: Bearer <CRON_SECRET と同じ値>
+GET https://locore.app/api/cron/ai-paris-events
+Authorization: Bearer <あなたが設定した CRON_SECRET>
 ```
 
-を設定すれば、Vercel Cron と同じ挙動になります（route.ts 側で GET にも対応済み）。
+を投げます。`Authorization` ヘッダは **Vercel が `CRON_SECRET` 環境変数を読んで自動付与**
+してくれるので、追加設定は不要です。
+
+### 毎日に変えたくなったら（オプション、無料のまま）
+
+無料のまま毎日にしたい場合は **外部 cron サービスを使う**のが楽です。
+
+代表的なもの:
+
+| サービス                               | 無料枠           | 設定難易度 |
+| -------------------------------------- | ---------------- | ---------- |
+| [cron-job.org](https://cron-job.org)   | 無制限           | ★★★★★      |
+| [EasyCron](https://www.easycron.com)   | 月 6,000 回まで  | ★★★★       |
+| [GitHub Actions](https://github.com)   | 月 2,000 分まで  | ★★         |
+
+**cron-job.org の手順:**
+
+1. [cron-job.org](https://cron-job.org) で Sign up
+2. **Create cronjob**
+3. 設定:
+   - **Title**: `Locore Paris events`
+   - **URL**: `https://locore.app/api/cron/ai-paris-events`
+   - **Schedule**: Every day at 05:00 (UTC)
+   - **Advanced → Request method**: `GET`
+   - **Advanced → Request headers**:
+     ```
+     Authorization: Bearer <Vercel に登録した CRON_SECRET と同じ値>
+     ```
+4. **Create**
+
+これで毎朝勝手に動きます。Vercel 側の cron は週 1 のまま残しておいて OK
+（重複しても route.ts の「当日既に投稿があれば skip」ガードが効きます）。
 
 ## ステップ 6: 動作確認
 
@@ -132,15 +167,21 @@ curl -X POST http://localhost:3000/api/cron/ai-paris-events \
 
 ## コスト見積もり
 
-毎朝 1 回の cron 1 回あたり:
+cron 1 回あたり:
 
 - Claude `sonnet-4-5` リクエスト: ~3,000 input tokens + 4,000 output tokens 程度
   = **約 $0.06**
 - `web_search` ツール 3〜5 回呼び出し = **約 $0.03〜$0.05**
 
-→ **1 回あたり $0.10 前後 × 30 日 ≒ 月 $3**
+→ **1 回あたり $0.10 前後**
 
-5 ヶ国に拡張しても月 $15 程度で収まります。
+| 頻度                        | 月あたり                |
+| --------------------------- | ----------------------- |
+| 週 1 回（Vercel 無料の今）  | **約 $0.40**            |
+| 毎日（cron-job.org 併用）   | **約 $3.00**            |
+| 5 ヶ国 × 毎日（将来構想）   | **約 $15.00**           |
+
+最初のチャージ $5 でも数ヶ月持つはずです。
 
 ## 監視・運用
 
