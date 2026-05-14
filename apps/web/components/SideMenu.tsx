@@ -44,37 +44,41 @@ type MenuItem = {
   matchPrefix?: string;
 };
 
-// 旅行者向け（traveler） — 暮らし系の項目（求人・アパート等）を出さない
-const TRAVELER_VIEW_ITEMS: MenuItem[] = [
-  { href: '/explore', label: 'ホーム', icon: Compass, matchPrefix: '/explore' },
-  { href: '/world', label: '場所から選ぶ', icon: MapIcon, matchPrefix: '/world' },
-  { href: '/map', label: 'マップ', icon: MapIcon, matchPrefix: '/map' },
-  { href: '/board', label: '掲示板', icon: Megaphone, matchPrefix: '/board' },
+// グローバルナビ（ホーム / 場所 / マップ / 新着ニュース）は SiteHeader 側で扱う。
+// SideMenu には「ログインしたユーザーに紐づく」項目だけを置く。
+
+// 旅行者モードのユーザー固有項目
+const TRAVELER_USER_ITEMS: MenuItem[] = [
   {
     href: '/library',
-    label: 'あとで読む / 行く',
+    label: 'お気に入り',
+    icon: Bookmark,
+    matchPrefix: '/library',
+  },
+  { href: '/trips', label: '旅程', icon: Heart, matchPrefix: '/trips' },
+  {
+    href: '/purchases',
+    label: '購入した記事',
+    icon: ShoppingBag,
+    matchPrefix: '/purchases',
+  },
+];
+
+// 駐在員モードのユーザー固有項目（コミュニティ掲示板 = 投稿系も含む）
+const RESIDENT_USER_ITEMS: MenuItem[] = [
+  {
+    href: '/library',
+    label: 'お気に入り',
     icon: Bookmark,
     matchPrefix: '/library',
   },
   {
     href: '/purchases',
-    label: '購入記事',
+    label: '購入した記事',
     icon: ShoppingBag,
     matchPrefix: '/purchases',
   },
-  { href: '/trips', label: '旅程', icon: Heart, matchPrefix: '/trips' },
-];
-
-// 駐在員向け（resident） — 暮らし実務系を上位に
-const RESIDENT_VIEW_ITEMS: MenuItem[] = [
-  { href: '/expat', label: 'ホーム', icon: Compass, matchPrefix: '/expat' },
-  {
-    href: '/board?audience=resident',
-    label: '掲示板（駐在員向け）',
-    icon: Megaphone,
-    matchPrefix: '/board',
-  },
-  // コミュニティ系
+  // 駐在員コミュニティ系
   { href: '/jobs', label: '求人', icon: ShoppingBag, matchPrefix: '/jobs' },
   { href: '/apartments', label: 'アパート', icon: MapIcon, matchPrefix: '/apartments' },
   {
@@ -86,21 +90,6 @@ const RESIDENT_VIEW_ITEMS: MenuItem[] = [
   { href: '/groups', label: 'メンバー募集', icon: MessageCircle, matchPrefix: '/groups' },
   { href: '/lessons', label: '教えます・習います', icon: PenSquare, matchPrefix: '/lessons' },
   { href: '/help', label: '助け合い', icon: Heart, matchPrefix: '/help' },
-  // 共通
-  { href: '/world', label: '場所から選ぶ', icon: MapIcon, matchPrefix: '/world' },
-  { href: '/map', label: 'マップ', icon: MapIcon, matchPrefix: '/map' },
-  {
-    href: '/library',
-    label: 'あとで読む / 行く',
-    icon: Bookmark,
-    matchPrefix: '/library',
-  },
-  {
-    href: '/purchases',
-    label: '購入記事',
-    icon: ShoppingBag,
-    matchPrefix: '/purchases',
-  },
 ];
 
 const WRITER_ITEMS: MenuItem[] = [
@@ -313,42 +302,16 @@ function DrawerPanel({
           aria-label="サイトナビゲーション"
           className="flex-1 overflow-y-auto px-2 py-3"
         >
-          {/* モード切替（駐在員 / 旅行者） — どちらでも開ける */}
-          <Section title={currentMode === 'resident' ? '駐在員モード' : '旅行者モード'}>
-            <li className="px-1">
-              <div className="flex gap-1.5">
-                <Link
-                  href="/explore"
-                  className={
-                    'flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-bold ' +
-                    (currentMode === 'traveler' || !currentMode
-                      ? 'bg-primary-500 text-neutral-950'
-                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-                  }
-                >
-                  旅行者
-                </Link>
-                <Link
-                  href="/expat"
-                  className={
-                    'flex-1 rounded-md px-2 py-1.5 text-center text-[11px] font-bold ' +
-                    (currentMode === 'resident'
-                      ? 'bg-primary-500 text-neutral-950'
-                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-                  }
-                >
-                  駐在員
-                </Link>
-              </div>
-            </li>
-          </Section>
-
-          <Section title="見る">
+          <Section title={currentMode === 'resident' ? '駐在員のあなたへ' : 'あなたの本棚'}>
             {(currentMode === 'resident'
-              ? RESIDENT_VIEW_ITEMS
-              : TRAVELER_VIEW_ITEMS
+              ? RESIDENT_USER_ITEMS
+              : TRAVELER_USER_ITEMS
             ).map((it) => (
-              <NavLink key={it.href} item={it} pathname={pathname} />
+              <NavLink
+                key={it.href}
+                item={it}
+                pathname={pathname}
+              />
             ))}
           </Section>
 

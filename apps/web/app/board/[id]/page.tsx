@@ -10,7 +10,7 @@ type Props = { params: { id: string } };
 
 export async function generateMetadata({ params }: Props) {
   const post = await getBoardPost(params.id);
-  if (!post) return { title: '掲示板' };
+  if (!post) return { title: '新着ニュース' };
   return {
     title: post.title,
     description:
@@ -31,7 +31,7 @@ export default async function BoardDetailPage({ params }: Props) {
         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
-        掲示板に戻る
+        新着ニュースに戻る
       </Link>
 
       <header className="mt-4">

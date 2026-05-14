@@ -25,7 +25,7 @@ export function BoardWidget({ posts }: { posts: BoardPostListItem[] }) {
       <header className="flex items-center justify-between border-b border-border bg-primary-500/10 px-4 py-2.5">
         <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-          パリ掲示板
+          新着ニュース
         </p>
         <Link
           href="/board"

@@ -12,9 +12,9 @@ import {
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'パリ掲示板',
+  title: 'パリ・新着ニュース',
   description:
-    'パリの暮らしと滞在に役立つ情報を、編集チームと AI が日々まとめます。イベント・行政・季節食材・コミュニティ・子育て・天候警報など。',
+    'パリの暮らしと滞在に役立つ新着情報を、編集チームと AI が日々まとめます。イベント・交通・行政・季節食材・コミュニティ・子育て・天候警報など。',
 };
 
 type Audience = BoardAudience | 'all';
@@ -85,7 +85,7 @@ export default async function BoardIndexPage({ searchParams }: Props) {
       <header className="mt-4 mb-6">
         <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-          掲示板
+          新着ニュース
         </p>
         <h1
           className="mt-2 text-[30px] font-bold leading-tight tracking-tight"

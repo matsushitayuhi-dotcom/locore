@@ -25,11 +25,9 @@ const ARTICLE_TYPE_OPTIONS: {
   },
 ];
 
-const TIER_PRICE_CAPS: Record<'S' | 'A' | 'B', number> = {
-  S: 5000,
-  A: 3000,
-  B: 1000,
-};
+// クリエイターランクによる価格上限は廃止（2026-05 方針変更）。
+// ランクの差は手数料率で扱う（writer_profiles.tier × commission_rate)。
+// 全価格帯を全クリエイターが選べる。
 
 /**
  * 記事のメタ情報（種別 / 価格 / 所要時間 / 都市 / タグ）。
@@ -50,9 +48,9 @@ type Props = {
   tier: 'S' | 'A' | 'B';
 };
 
-export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
-  const cap = TIER_PRICE_CAPS[tier];
-  const allowedPrices = PRICE_OPTIONS.filter((p) => p <= cap);
+export function BasicInfoSection({ value, onChange, cities, tier: _tier }: Props) {
+  // tier は将来「手数料率の表示」に使う想定。今は無視。
+  const allowedPrices = PRICE_OPTIONS;
 
   const set = <K extends keyof BasicInfoValue>(k: K, v: BasicInfoValue[K]) => {
     onChange({ ...value, [k]: v });
@@ -120,7 +118,7 @@ export function BasicInfoSection({ value, onChange, cities, tier }: Props) {
             ))}
           </select>
           <p className="mt-1 text-[11px] text-foreground/50">
-            あなたの Tier ({tier}) の上限：¥{cap.toLocaleString('ja-JP')}
+            価格は自由に設定できます。Tier の差は手数料率で扱います。
           </p>
         </div>
 

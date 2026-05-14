@@ -30,16 +30,11 @@ export const metadata = {
  * 実装する予定で、ここでは Coming Soon カードを並べて存在を予告する。
  */
 export default async function ExpatHomePage() {
-  // 駐在員に効くカテゴリだけ取得
-  const [adminPosts, communityPosts, expatArticles] = await Promise.all([
+  // 駐在員向けの新着ニュース: 旅行者ホームと同じ BoardWidget 構造で
+  // 全カテゴリ（イベント含む）を resident + both で取得する
+  const [residentNews, expatArticles] = await Promise.all([
     listBoardPosts({
-      limit: 5,
-      categories: ['admin', 'transit', 'health_weather'],
-      audiences: ['resident'],
-    }),
-    listBoardPosts({
-      limit: 5,
-      categories: ['community', 'family_edu', 'food_season'],
+      limit: 10,
       audiences: ['resident'],
     }),
     getPublishedDbArticles(20).then((arr) =>
@@ -102,26 +97,15 @@ export default async function ExpatHomePage() {
           />
         </section>
 
-        {/* 2. 行政・交通・健康警報 */}
+        {/* 2. 新着ニュース — 旅行者ホームと同じ構造。カテゴリ別の絞り込みは /board のタブで */}
         <section>
           <SectionHeader
-            kicker="今、知っておきたい"
-            title="行政・交通・警報"
-            subtitle="締切が近い手続き、運休、緊急の天候警報など。"
-            href="/board?category=admin&audience=resident"
+            kicker="新着ニュース"
+            title="パリの、今日と明日"
+            subtitle="行政の締切、交通、邦人コミュニティ、旬の食材、子育て、緊急の警報まで。タブで絞り込めます。"
+            href="/board?audience=resident"
           />
-          <BoardWidget posts={adminPosts} />
-        </section>
-
-        {/* 3. コミュニティ・子育て・食 */}
-        <section>
-          <SectionHeader
-            kicker="現地で暮らす"
-            title="コミュニティ・子育て・季節食材"
-            subtitle="邦人会、補習校イベント、旬の食材。"
-            href="/board?category=community&audience=resident"
-          />
-          <BoardWidget posts={communityPosts} />
+          <BoardWidget posts={residentNews} />
         </section>
 
         {/* 4. 駐在者向け記事 */}
@@ -188,7 +172,42 @@ export default async function ExpatHomePage() {
           </ul>
         </section>
 
-        {/* 6. 旅行者ホームへ */}
+        {/* 6. Founders 枠（駐在員ページ専用） */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500/15 via-card to-card p-6 shadow-sm ring-1 ring-border sm:p-10">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl"
+          />
+          <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
+            <div>
+              <p className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-950">
+                Founders 枠（先着 50 人）
+              </p>
+              <h2 className="mt-3 text-[22px] font-bold leading-[1.25] tracking-tight text-foreground sm:text-[26px]">
+                最初の 50 人を、
+                <br className="hidden md:block" />
+                ぼくらは長く覚えていたい。
+              </h2>
+              <p className="mt-3 text-[14px] leading-[1.9] text-foreground/75">
+                Locore は、読み手と書き手の信頼でできている小さなメディアです。
+                立ち上げから一緒に走ってくれる Founders には、
+                認証バッジ、手数料優遇、サービスの方向性に対する発言権をお渡しします。
+                判断基準は、フォロワー数ではなく、その街への愛着の深さです。
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <Link
+                href="/founders"
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300"
+              >
+                応募ページを見る
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. 旅行者ホームへ */}
         <section className="rounded-2xl bg-card px-6 py-8 text-center ring-1 ring-border">
           <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-foreground/55">
             For travelers

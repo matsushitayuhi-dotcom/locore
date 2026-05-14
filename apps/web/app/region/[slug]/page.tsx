@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Button } from '@locore/ui';
 import { ArrowRight, ArrowLeft, Lock } from 'lucide-react';
 import { SearchBox } from '@/components/SearchBox';
 import { BoardWidget } from '@/components/BoardWidget';
@@ -166,39 +165,7 @@ export default async function RegionHomePage({ params }: Props) {
           />
         </section>
 
-        {/* Founders */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500/15 via-card to-card p-6 shadow-sm ring-1 ring-border sm:p-10">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl"
-          />
-          <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
-            <div>
-              <p className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-950">
-                Founders 枠（先着 50 人）
-              </p>
-              <h2 className="mt-3 text-[22px] font-bold leading-[1.25] tracking-tight text-foreground sm:text-[26px]">
-                最初の 50 人を、
-                <br className="hidden md:block" />
-                ぼくらは長く覚えていたい。
-              </h2>
-              <p className="mt-3 text-[14px] leading-[1.9] text-foreground/75">
-                Locore は、読み手と書き手の信頼でできている小さなメディアです。
-                立ち上げから一緒に走ってくれる Founders には、
-                収益分配の優遇、永久バッジ、サービスの方向性に対する発言権をお渡しします。
-                判断基準は、フォロワー数ではなく、その街への愛着の深さです。
-              </p>
-            </div>
-            <div className="flex justify-end">
-              <Link href="/founders">
-                <Button size="lg" variant="primary">
-                  応募ページを見る
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* Founders は駐在員ページ (/expat) のみで表示する方針 — region home からは削除 */}
       </div>
     </main>
   );

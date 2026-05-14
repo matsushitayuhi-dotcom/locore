@@ -7,15 +7,18 @@ import { listCountriesForPicker } from '@/lib/geo/countries';
 import { UserMenu } from './auth/UserMenu';
 import { SideMenu } from './SideMenu';
 import { PlaceMenu } from './PlaceMenu';
+import { ModeToggle } from './ModeToggle';
 
 /**
  * トップバー。
  *
- * - 左: ロゴ
- * - 中央 (md+): ホーム / 場所(dropdown) / マップ / 掲示板 / あとで読む
- * - 右: Founders / UserMenu / ハンバーガー
+ * モード（旅行者 / 駐在員）共通で、コンテンツ系のナビをここに集約:
+ *   ホーム / 場所 / マップ / 新着ニュース
  *
- * モード（旅行者 / 駐在員）に応じて「ホーム」リンクの行き先を切替。
+ * ユーザー固有のメニュー（お気に入り / 旅程 / 購入記事 / クリエイター系 /
+ * アカウント設定）は SideMenu に移し、重複を排除した。
+ *
+ * Founders 枠ボタンも撤去（駐在員ホーム /expat 内のバナーに統合）。
  */
 export async function SiteHeader() {
   const [user, mode, countries] = await Promise.all([
@@ -25,7 +28,6 @@ export async function SiteHeader() {
   ]);
   const isWriter = user?.role === 'resident_writer' || user?.role === 'editor';
   const unread = user ? await getMyUnreadChatSummary() : { count: 0, threadCount: 0 };
-  // 未選択ならとりあえず traveler ホームを指すが、/ に着地してすぐ splash に戻る挙動
   const homeHref = mode ? homePathFor(mode) : '/';
 
   return (
@@ -44,6 +46,9 @@ export async function SiteHeader() {
           </span>
         </Link>
 
+        {/* モード切替 — モバイルでも常時見える位置に */}
+        <ModeToggle currentMode={mode} />
+
         <nav className="hidden flex-1 items-center justify-center gap-1 text-sm md:flex">
           <Link
             href={homeHref}
@@ -51,7 +56,7 @@ export async function SiteHeader() {
           >
             ホーム
           </Link>
-          <PlaceMenu countries={countries} />
+          <PlaceMenu countries={countries} mode={mode ?? 'traveler'} />
           <Link
             href="/map"
             className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
@@ -62,24 +67,11 @@ export async function SiteHeader() {
             href="/board"
             className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
           >
-            掲示板
-          </Link>
-          <Link
-            href="/library"
-            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
-          >
-            あとで読む
+            新着ニュース
           </Link>
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-          <Link
-            href="/founders"
-            className="hidden items-center gap-1 rounded-full bg-primary-500/10 px-3 py-1.5 text-xs font-semibold text-primary-300 ring-1 ring-primary-500/30 transition hover:bg-primary-500/20 hover:ring-primary-500/50 md:inline-flex"
-          >
-            Founders 枠 →
-          </Link>
-
           {user ? (
             <UserMenu
               user={{

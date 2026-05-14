@@ -2,29 +2,67 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, ChevronDown, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, Lock } from 'lucide-react';
 import type { CountryListItem } from '@/lib/geo/countries';
 
 /**
  * グローバルヘッダーの「場所」ドロップダウン。
  *
- * - active 国だけクリック可能。クリックで /country/<code> へドリルダウン
- * - 準備中の国はグレーアウト表示で、サインアップを促す情報は出さない（軽め）
- * - 末尾に「すべての国を見る → /world」リンク
- * - 親 SiteHeader から countries を SSR で渡してもらう
+ * モード別に挙動を変える:
+ *   - traveler:  国の一覧 → クリックで地域パネルに drill-down → 地域選択で /region/{slug}
+ *   - resident:  国のみ表示 → クリックで /country/{code} に直行（地域単位は管理しない方針）
+ *
+ * 各国の region 一覧は暫定でハードコード。現時点ではフランスのみ active なので問題なし。
+ * 国が増えてきたら lib/geo に動的取得 API を追加して置き換える。
  */
-export function PlaceMenu({ countries }: { countries: CountryListItem[] }) {
+
+type RegionLink = { slug: string; nameJa: string };
+
+const REGIONS_BY_COUNTRY: Record<string, RegionLink[]> = {
+  fr: [
+    { slug: 'paris', nameJa: 'パリ＆近郊' },
+    { slug: 'lyon', nameJa: 'リヨン' },
+    { slug: 'marseille', nameJa: 'マルセイユ' },
+    { slug: 'nice-cote-azur', nameJa: 'ニース・コートダジュール' },
+    { slug: 'bordeaux', nameJa: 'ボルドー' },
+    { slug: 'strasbourg', nameJa: 'ストラスブール・アルザス' },
+    { slug: 'provence', nameJa: 'プロヴァンス' },
+    { slug: 'loire-valley', nameJa: 'ロワール渓谷' },
+    { slug: 'normandy', nameJa: 'ノルマンディー' },
+    { slug: 'brittany', nameJa: 'ブルターニュ' },
+    { slug: 'french-alps', nameJa: 'フレンチアルプス・アヌシー' },
+    { slug: 'toulouse', nameJa: 'トゥールーズ' },
+    { slug: 'champagne', nameJa: 'シャンパーニュ・ランス' },
+    { slug: 'dordogne', nameJa: 'ドルドーニュ' },
+    { slug: 'fr-other', nameJa: 'フランスその他' },
+  ],
+};
+
+export function PlaceMenu({
+  countries,
+  mode = 'traveler',
+}: {
+  countries: CountryListItem[];
+  mode?: 'traveler' | 'resident';
+}) {
   const [open, setOpen] = useState(false);
+  const [drilledCode, setDrilledCode] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
       if (!ref.current) return;
-      if (!ref.current.contains(e.target as Node)) setOpen(false);
+      if (!ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setDrilledCode(null);
+      }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        if (drilledCode) setDrilledCode(null);
+        else setOpen(false);
+      }
     };
     document.addEventListener('mousedown', onDoc);
     window.addEventListener('keydown', onKey);
@@ -32,16 +70,24 @@ export function PlaceMenu({ countries }: { countries: CountryListItem[] }) {
       document.removeEventListener('mousedown', onDoc);
       window.removeEventListener('keydown', onKey);
     };
-  }, [open]);
+  }, [open, drilledCode]);
 
   const active = countries.filter((c) => c.status === 'active');
   const coming = countries.filter((c) => c.status === 'coming_soon');
+
+  const drilledCountry = drilledCode
+    ? countries.find((c) => c.code === drilledCode)
+    : null;
+  const drilledRegions = drilledCode ? REGIONS_BY_COUNTRY[drilledCode] ?? [] : [];
 
   return (
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => !v);
+          setDrilledCode(null);
+        }}
         aria-expanded={open}
         aria-haspopup="menu"
         className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
@@ -57,65 +103,163 @@ export function PlaceMenu({ countries }: { countries: CountryListItem[] }) {
           role="menu"
           className="absolute left-0 top-full z-40 mt-2 w-[320px] overflow-hidden rounded-xl bg-card shadow-xl ring-1 ring-border"
         >
-          {/* Active 国 */}
-          {active.length > 0 ? (
-            <div className="border-b border-border px-4 py-3">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/55">
-                いま読める
-              </p>
-              <ul className="space-y-0.5">
-                {active.map((c) => (
-                  <li key={c.code}>
-                    <Link
-                      href={`/country/${c.code}`}
-                      onClick={() => setOpen(false)}
-                      className="flex items-center justify-between rounded-md px-2.5 py-2 text-[13px] text-foreground hover:bg-primary-500/10"
-                    >
-                      <span className="flex items-baseline gap-2">
-                        <span className="font-semibold">{c.nameJa}</span>
-                        <span className="text-[10px] text-foreground/45">
-                          {c.activeRegionCount} 地域
-                        </span>
-                      </span>
-                      <ArrowRight className="h-3 w-3 text-foreground/40" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          {!drilledCountry ? (
+            <>
+              {active.length > 0 ? (
+                <div className="border-b border-border px-4 py-3">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/55">
+                    いま読める
+                  </p>
+                  <ul className="space-y-0.5">
+                    {active.map((c) => (
+                      <li key={c.code}>
+                        <CountryRow
+                          country={c}
+                          mode={mode}
+                          onDrill={
+                            mode === 'traveler' &&
+                            REGIONS_BY_COUNTRY[c.code]?.length
+                              ? () => setDrilledCode(c.code)
+                              : undefined
+                          }
+                          onNavigate={() => setOpen(false)}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
-          {/* Coming Soon 国（プレビュー、最大 6 件） */}
-          {coming.length > 0 ? (
-            <div className="px-4 py-3">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45">
-                これから開く
-              </p>
-              <ul className="space-y-0.5">
-                {coming.slice(0, 6).map((c) => (
-                  <li
-                    key={c.code}
-                    className="flex items-center justify-between rounded-md px-2.5 py-1.5 text-[12px] text-foreground/55"
-                  >
-                    <span>{c.nameJa}</span>
-                    <Lock className="h-3 w-3 text-foreground/35" />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+              {coming.length > 0 ? (
+                <div className="px-4 py-3">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45">
+                    これから開く
+                  </p>
+                  <ul className="space-y-0.5">
+                    {coming.slice(0, 6).map((c) => (
+                      <li
+                        key={c.code}
+                        className="flex items-center justify-between rounded-md px-2.5 py-1.5 text-[12px] text-foreground/55"
+                      >
+                        <span>{c.nameJa}</span>
+                        <Lock className="h-3 w-3 text-foreground/35" />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
 
-          {/* すべて見る */}
-          <Link
-            href="/world"
-            onClick={() => setOpen(false)}
-            className="flex items-center justify-between border-t border-border bg-primary-500/10 px-4 py-3 text-[12px] font-bold text-primary-300 transition hover:bg-primary-500/15"
-          >
-            すべての国・地域を見る
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
+              <Link
+                href="/world"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between border-t border-border bg-primary-500/10 px-4 py-3 text-[12px] font-bold text-primary-300 transition hover:bg-primary-500/15"
+              >
+                すべての国・地域を見る
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between border-b border-border px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => setDrilledCode(null)}
+                  className="inline-flex items-center gap-1 text-[12px] font-medium text-foreground/60 hover:text-foreground"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" />
+                  国を選び直す
+                </button>
+                <span className="text-[11px] font-bold tracking-tight text-foreground">
+                  {drilledCountry.nameJa}
+                </span>
+              </div>
+
+              {drilledRegions.length > 0 ? (
+                <div className="px-3 py-3">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/55">
+                    地域を選ぶ
+                  </p>
+                  <ul className="max-h-[320px] space-y-0.5 overflow-y-auto">
+                    {drilledRegions.map((r) => (
+                      <li key={r.slug}>
+                        <Link
+                          href={`/region/${r.slug}`}
+                          onClick={() => {
+                            setOpen(false);
+                            setDrilledCode(null);
+                          }}
+                          className="flex items-center justify-between rounded-md px-2.5 py-2 text-[13px] text-foreground hover:bg-primary-500/10"
+                        >
+                          <span className="font-semibold">{r.nameJa}</span>
+                          <ArrowRight className="h-3 w-3 text-foreground/40" />
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="px-4 py-6 text-center text-[12px] text-foreground/55">
+                  この国にはまだ地域が登録されていません
+                </div>
+              )}
+
+              <Link
+                href={`/country/${drilledCountry.code}`}
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between border-t border-border bg-primary-500/10 px-4 py-3 text-[12px] font-bold text-primary-300 transition hover:bg-primary-500/15"
+              >
+                {drilledCountry.nameJa} の全体を見る
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </>
+          )}
         </div>
       ) : null}
     </div>
+  );
+}
+
+function CountryRow({
+  country,
+  mode,
+  onDrill,
+  onNavigate,
+}: {
+  country: CountryListItem;
+  mode: 'traveler' | 'resident';
+  onDrill?: () => void;
+  onNavigate: () => void;
+}) {
+  if (mode === 'traveler' && onDrill) {
+    return (
+      <button
+        type="button"
+        onClick={onDrill}
+        className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] text-foreground hover:bg-primary-500/10"
+      >
+        <span className="flex items-baseline gap-2">
+          <span className="font-semibold">{country.nameJa}</span>
+          <span className="text-[10px] text-foreground/45">
+            {country.activeRegionCount} 地域
+          </span>
+        </span>
+        <ArrowRight className="h-3 w-3 text-foreground/40" />
+      </button>
+    );
+  }
+  return (
+    <Link
+      href={`/country/${country.code}`}
+      onClick={onNavigate}
+      className="flex items-center justify-between rounded-md px-2.5 py-2 text-[13px] text-foreground hover:bg-primary-500/10"
+    >
+      <span className="flex items-baseline gap-2">
+        <span className="font-semibold">{country.nameJa}</span>
+        <span className="text-[10px] text-foreground/45">
+          {country.activeRegionCount} 地域
+        </span>
+      </span>
+      <ArrowRight className="h-3 w-3 text-foreground/40" />
+    </Link>
   );
 }
