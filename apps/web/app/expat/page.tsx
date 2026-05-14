@@ -141,43 +141,49 @@ export default async function ExpatHomePage() {
           </section>
         ) : null}
 
-        {/* 5. 求人 / アパート / 売買 — Coming Soon プレースホルダ */}
+        {/* 5. コミュニティ掲示板（求人 / アパート / 売買 / 募集 / レッスン / 助け合い） */}
         <section>
           <SectionHeader
-            kicker="Coming Soon"
-            title="駐在員向けの掲示板、まもなく"
-            subtitle="MixB / ジモティーの良いところを引き継ぎながら、Locore の編集トーンで運用します。"
+            kicker="コミュニティ掲示板"
+            title="住人どうしで、直接つながる"
+            subtitle="Locore は仲介のみ。やり取りはメッセージ機能経由。連絡先の本文埋め込みは抑止しています。"
           />
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <ComingCard
+            <CommunityLinkCard
+              href="/jobs"
               icon={Briefcase}
               title="求人"
-              description="日系企業・現地企業の求人、副業案件、家庭教師、ベビーシッターまで。"
+              description="日系・現地企業の求人、副業、家庭教師、ベビーシッター。"
             />
-            <ComingCard
+            <CommunityLinkCard
+              href="/apartments"
               icon={HomeIcon}
               title="アパート"
-              description="日本人歓迎の物件、サブレ、家具付き短期、引越し時の譲渡情報。"
+              description="日本人歓迎の物件、シェア、家具付き短期、サブレ、引越し譲渡。"
             />
-            <ComingCard
+            <CommunityLinkCard
+              href="/marketplace"
               icon={Megaphone}
               title="売ります・買います"
               description="帰任セール、家具家電、車、子供用品。物を介して住人が繋がる場所。"
             />
-            <ComingCard
+            <CommunityLinkCard
+              href="/groups"
               icon={MessageCircle}
               title="メンバー募集"
-              description="ママ友会、テニス・ランニング仲間、勉強会、日本語/フランス語の言語交換。"
+              description="ママ友会、テニス・ランニング仲間、勉強会、言語交換。"
             />
-            <ComingCard
+            <CommunityLinkCard
+              href="/lessons"
               icon={Sparkles}
               title="教えます・習います"
               description="子供向け日本語、フランス語家庭教師、料理、楽器。短時間から。"
             />
-            <ComingCard
+            <CommunityLinkCard
+              href="/help"
               icon={MessageCircle}
               title="助け合い"
-              description="空港送迎、書類のフランス語翻訳、こどもの一時預かりなど小さな相互扶助。"
+              description="空港送迎、書類の翻訳、こどもの一時預かりなど小さな相互扶助。"
             />
           </ul>
         </section>
@@ -242,32 +248,35 @@ function QuickAction({
   );
 }
 
-function ComingCard({
+function CommunityLinkCard({
+  href,
   icon: Icon,
   title,
   description,
 }: {
+  href: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: any;
   title: string;
   description: string;
 }) {
   return (
-    <li className="flex gap-3 rounded-xl bg-card p-4 opacity-80 ring-1 ring-border">
-      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground/5 text-foreground/45">
-        <Icon className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-baseline gap-2">
+    <li>
+      <Link
+        href={href}
+        className="group flex h-full gap-3 rounded-xl bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+      >
+        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950">
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
           <p className="text-[13px] font-bold text-foreground">{title}</p>
-          <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55">
-            準備中
-          </span>
+          <p className="mt-1 text-[11px] leading-relaxed text-foreground/65">
+            {description}
+          </p>
         </div>
-        <p className="mt-1 text-[11px] leading-relaxed text-foreground/65">
-          {description}
-        </p>
-      </div>
+        <ArrowRight className="mt-2 h-3.5 w-3.5 shrink-0 text-foreground/30 group-hover:text-primary-300" />
+      </Link>
     </li>
   );
 }

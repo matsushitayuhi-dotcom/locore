@@ -74,6 +74,19 @@ const RESIDENT_VIEW_ITEMS: MenuItem[] = [
     icon: Megaphone,
     matchPrefix: '/board',
   },
+  // コミュニティ系
+  { href: '/jobs', label: '求人', icon: ShoppingBag, matchPrefix: '/jobs' },
+  { href: '/apartments', label: 'アパート', icon: MapIcon, matchPrefix: '/apartments' },
+  {
+    href: '/marketplace',
+    label: '売ります・買います',
+    icon: ShoppingBag,
+    matchPrefix: '/marketplace',
+  },
+  { href: '/groups', label: 'メンバー募集', icon: MessageCircle, matchPrefix: '/groups' },
+  { href: '/lessons', label: '教えます・習います', icon: PenSquare, matchPrefix: '/lessons' },
+  { href: '/help', label: '助け合い', icon: Heart, matchPrefix: '/help' },
+  // 共通
   { href: '/world', label: '場所から選ぶ', icon: MapIcon, matchPrefix: '/world' },
   { href: '/map', label: 'マップ', icon: MapIcon, matchPrefix: '/map' },
   {

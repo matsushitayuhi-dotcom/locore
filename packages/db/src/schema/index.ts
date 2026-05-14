@@ -35,6 +35,7 @@ export * from './trip_collaborators';
 // UGC
 export * from './light_diaries';
 export * from './board_posts';
+export * from './community_posts';
 
 // Library / Bookmarks
 export * from './bookmarks';
