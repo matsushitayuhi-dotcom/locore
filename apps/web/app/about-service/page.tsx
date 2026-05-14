@@ -27,22 +27,14 @@ export default function AboutServicePage() {
       </Link>
 
       <header className="mt-4">
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-          About Locore
-        </p>
         <h1
-          className="mt-3 text-[34px] font-bold leading-tight tracking-tight text-foreground sm:text-[40px]"
+          className="text-[22px] font-semibold tracking-tight text-foreground sm:text-[26px]"
           style={{
             fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
           }}
         >
-          現地に住む人だけが書ける旅行誌を、ひとつずつ。
+          Locore について
         </h1>
-        <p className="mt-3 max-w-prose text-[14px] leading-[1.9] text-foreground/70">
-          Locore は、世界の街に暮らす日本人の書き手が、自分の毎日のなかで取材した「街の輪郭」を、
-          短い物語と地図にして届けるメディアです。
-        </p>
       </header>
 
       <section className="prose-locore mt-12 space-y-12">

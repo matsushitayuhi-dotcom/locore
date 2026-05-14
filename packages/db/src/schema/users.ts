@@ -1,4 +1,14 @@
-import { pgTable, uuid, text, timestamp, pgEnum, index, jsonb, boolean } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  uuid,
+  text,
+  timestamp,
+  pgEnum,
+  index,
+  jsonb,
+  boolean,
+  integer,
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { writerProfiles } from './writer_profiles';
 import { articles } from './articles';
@@ -74,6 +84,32 @@ export const users = pgTable(
       .$type<NotificationPreferences>()
       .notNull()
       .default(DEFAULT_NOTIFICATION_PREFERENCES),
+    /**
+     * 駐在員コミュニティ向けプロフィール拡張（manual/0038_resident_profile_fields.sql）。
+     * /residents の検索 + /writers/[id] の公開プロフィールに表示する。
+     */
+    homeCountry: text('home_country'),
+    homeRegion: text('home_region'),
+    residencyCountry: text('residency_country'),
+    residencyCity: text('residency_city'),
+    arrivalYear: integer('arrival_year'),
+    /** 'single' | 'couple' | 'family_kids' | 'empty_nest' （未設定は NULL） */
+    familyStage: text('family_stage'),
+    occupation: text('occupation'),
+    languages: jsonb('languages')
+      .$type<Array<{ code: string; level: string }>>()
+      .notNull()
+      .default([]),
+    interests: jsonb('interests')
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    lookingFor: jsonb('looking_for')
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    openToMeetups: boolean('open_to_meetups').notNull().default(false),
+
     /**
      * サンプルデータ識別用フラグ。
      * 投入時 true、`DELETE FROM ... WHERE is_sample = true` で一括クリーンアップ可能。

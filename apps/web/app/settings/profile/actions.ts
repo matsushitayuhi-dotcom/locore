@@ -82,6 +82,100 @@ export async function updateProfile(input: unknown): Promise<UpdateProfileResult
 }
 
 // =============================================================================
+// 駐在員プロフィール（出身地・在住・興味・探していること etc.）
+// manual/0038_resident_profile_fields.sql で追加されたカラムを更新する。
+// =============================================================================
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .optional()
+    .or(z.literal('').transform(() => undefined));
+
+const RESIDENT_FAMILY_STAGES = [
+  'single',
+  'couple',
+  'family_kids',
+  'empty_nest',
+] as const;
+const RESIDENT_LANGUAGE_LEVELS = [
+  'native',
+  'business',
+  'conversation',
+  'basic',
+] as const;
+
+const languageSchema = z.object({
+  code: z.string().trim().min(2).max(8),
+  level: z.enum(RESIDENT_LANGUAGE_LEVELS),
+});
+
+const updateResidentProfileSchema = z.object({
+  homeCountry: optionalText(2),
+  homeRegion: optionalText(80),
+  residencyCountry: optionalText(2),
+  residencyCity: optionalText(80),
+  arrivalYear: z
+    .number()
+    .int()
+    .min(1950)
+    .max(new Date().getFullYear() + 1)
+    .optional()
+    .or(z.literal(0).transform(() => undefined))
+    .or(z.null().transform(() => undefined)),
+  familyStage: z
+    .enum(RESIDENT_FAMILY_STAGES)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+  occupation: optionalText(80),
+  languages: z.array(languageSchema).max(8).default([]),
+  interests: z.array(z.string().trim().min(1).max(30)).max(20).default([]),
+  lookingFor: z.array(z.string().trim().min(1).max(30)).max(10).default([]),
+  openToMeetups: z.boolean().default(false),
+});
+
+export async function updateResidentProfile(
+  input: unknown,
+): Promise<UpdateProfileResult> {
+  const parsed = updateResidentProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: '入力内容に誤りがあります',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  const data = parsed.data;
+  const user = await requireUser();
+  const db = getDb();
+
+  await db
+    .update(schema.users)
+    .set({
+      homeCountry: data.homeCountry ?? null,
+      homeRegion: data.homeRegion ?? null,
+      residencyCountry: data.residencyCountry ?? null,
+      residencyCity: data.residencyCity ?? null,
+      arrivalYear: data.arrivalYear ?? null,
+      familyStage: data.familyStage ?? null,
+      occupation: data.occupation ?? null,
+      languages: data.languages,
+      interests: data.interests,
+      lookingFor: data.lookingFor,
+      openToMeetups: data.openToMeetups,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.users.id, user.id));
+
+  revalidatePath('/settings/profile');
+  revalidatePath(`/writers/${user.id}`);
+  revalidatePath('/residents');
+  return { ok: true };
+}
+
+// =============================================================================
 // SNS リンク（同プラットフォーム複数 OK / id 単位 CRUD）
 // =============================================================================
 

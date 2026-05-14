@@ -1,122 +1,214 @@
 import Link from 'next/link';
 import {
   ArrowRight,
-  PenSquare,
   Briefcase,
   Home as HomeIcon,
   Megaphone,
-  MessageCircle,
-  Sparkles,
+  Users,
+  GraduationCap,
+  HandHelping,
+  Search,
 } from 'lucide-react';
 import { listBoardPosts } from '@/lib/board/db';
 import { BoardWidget } from '@/components/BoardWidget';
 import { ArticleScrollSection } from '@/components/ArticleScrollSection';
+import { CommunityCard } from '@/components/community/CommunityCard';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
+import { listCommunityPosts } from '@/lib/community/db';
+import {
+  KIND_BASE_PATH,
+  KIND_LABEL,
+  type CommunityKind,
+} from '@/lib/community/constants';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Locore for Residents — 暮らしの実務、ぜんぶ',
+  title: 'Locore for Residents',
   description:
-    '駐在員と、駐在員と繋がりたい人のためのホーム。行政の締切、求人、アパート、邦人コミュニティ、駐在生活の知恵。',
+    '駐在員と、駐在員と繋がりたい人のためのホーム。コミュニティ掲示板（求人 / アパート / 売買 / メンバー募集 / レッスン / 助け合い）と新着ニュース。',
 };
 
 /**
  * 駐在員向けホーム (/expat)。
  *
- * 旅行者ホームと違って、暮らしの実務系（行政・コミュ・子育て・交通）を
- * 優先的に並べる。求人 / アパート / 売買 / メンバー募集 は Phase 2 で
- * 実装する予定で、ここでは Coming Soon カードを並べて存在を予告する。
+ * 構成:
+ *   1. コミュニティカテゴリ（6 つ）を最上部のタイル列で
+ *   2. カテゴリごとの新着投稿 4 件を Airbnb 風のカードグリッドで
+ *   3. 新着ニュース掲示板（BoardWidget）
+ *   4. 駐在者向け記事（横スクロール）
+ *   5. Founders 枠
+ *
+ * 「記事を書く」「掲示板に投稿」「メッセージ」のクイックアクションは
+ * サイドメニューと重複するのでこのページには出さない。
+ * エディトリアル系のタグライン（"暮らしの実務、ぜんぶ。"）も削除。
  */
 export default async function ExpatHomePage() {
-  // 駐在員向けの新着ニュース: 旅行者ホームと同じ BoardWidget 構造で
-  // 全カテゴリ（イベント含む）を resident + both で取得する
-  const [residentNews, expatArticles] = await Promise.all([
-    listBoardPosts({
-      limit: 10,
-      audiences: ['resident'],
-    }),
+  const KINDS: { kind: CommunityKind; icon: typeof Briefcase }[] = [
+    { kind: 'job', icon: Briefcase },
+    { kind: 'apartment', icon: HomeIcon },
+    { kind: 'marketplace', icon: Megaphone },
+    { kind: 'group', icon: Users },
+    { kind: 'lesson', icon: GraduationCap },
+    { kind: 'mutual_aid', icon: HandHelping },
+  ];
+
+  const [
+    residentNews,
+    expatArticles,
+    jobPosts,
+    apartmentPosts,
+    marketplacePosts,
+    groupPosts,
+    lessonPosts,
+    mutualAidPosts,
+  ] = await Promise.all([
+    listBoardPosts({ limit: 8, audiences: ['resident'] }),
     getPublishedDbArticles(20).then((arr) =>
       arr.filter((a) => a.articleType === 'expat_info'),
     ),
+    listCommunityPosts({ kind: 'job', limit: 4 }),
+    listCommunityPosts({ kind: 'apartment', limit: 4 }),
+    listCommunityPosts({ kind: 'marketplace', limit: 4 }),
+    listCommunityPosts({ kind: 'group', limit: 4 }),
+    listCommunityPosts({ kind: 'lesson', limit: 4 }),
+    listCommunityPosts({ kind: 'mutual_aid', limit: 4 }),
   ]);
+
   const socialCounts = await getArticleSocialCounts(
     expatArticles.map((a) => a.id),
   );
 
+  const postsByKind: Record<CommunityKind, typeof jobPosts> = {
+    job: jobPosts,
+    apartment: apartmentPosts,
+    marketplace: marketplacePosts,
+    group: groupPosts,
+    lesson: lessonPosts,
+    mutual_aid: mutualAidPosts,
+  };
+
   return (
     <main className="bg-background">
-      {/* Hero band — 旅行者ホームより落ち着いた、実務寄りトーン */}
-      <section className="relative overflow-hidden border-b border-border bg-gradient-to-br from-blue-50 via-card to-card">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-32 -top-24 h-96 w-96 rounded-full bg-blue-200/40 blur-3xl"
-        />
-        <div className="relative mx-auto max-w-screen-xl px-4 pb-8 pt-8 sm:px-6 sm:pb-12 sm:pt-14">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-card px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-blue-700 shadow-sm ring-1 ring-border">
-            <Sparkles className="h-3 w-3 text-blue-600" />
-            for residents
-          </p>
-          <h1
-            className="mt-4 text-[28px] font-bold leading-[1.1] tracking-tight text-foreground sm:text-[40px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
-          >
-            暮らしの実務、ぜんぶ。
-          </h1>
-          <p className="mt-3 max-w-2xl text-[14px] leading-[1.9] text-foreground/75">
-            行政の締切、子育て、邦人コミュニティ、求人、アパート探し。
-            「住んでみて初めて困ること」を、現地で暮らす書き手と、ここに集まる住人で
-            少しずつ埋めていく場所です。
-          </p>
-        </div>
-      </section>
-
-      <div className="mx-auto max-w-screen-xl space-y-12 px-4 py-10 sm:space-y-14 sm:px-6 sm:py-14">
-        {/* 1. クリエイター / コミュニティ参加への入口 */}
-        <section className="grid gap-3 sm:grid-cols-3">
-          <QuickAction
-            href="/writer/articles/new"
-            icon={PenSquare}
-            title="記事を書く"
-            description="現地で暮らす書き手として、街のことを記事に"
-          />
-          <QuickAction
-            href="/admin/board"
-            icon={Megaphone}
-            title="掲示板に投稿"
-            description="行政・コミュニティ・季節食材 ほか"
-          />
-          <QuickAction
-            href="/chat"
-            icon={MessageCircle}
-            title="メッセージ"
-            description="他の住人や書き手とつながる"
-          />
+      <div className="mx-auto max-w-screen-xl space-y-10 px-4 py-8 sm:space-y-14 sm:px-6 sm:py-12">
+        {/* 1. コミュニティ掲示板カテゴリ — 最上部 */}
+        <section aria-labelledby="board-nav-title">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+                コミュニティ掲示板
+              </p>
+              <h2
+                id="board-nav-title"
+                className="mt-1 text-[20px] font-semibold tracking-tight sm:text-[24px]"
+                style={{
+                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+                }}
+              >
+                住人どうしで、直接つながる
+              </h2>
+            </div>
+            <Link
+              href="/residents"
+              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+            >
+              <Search className="h-3 w-3" />
+              住人を探す
+            </Link>
+          </div>
+          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3">
+            {KINDS.map(({ kind, icon: Icon }) => (
+              <li key={kind}>
+                <Link
+                  href={KIND_BASE_PATH[kind]}
+                  className="group flex flex-col items-center gap-1.5 rounded-xl bg-card px-2 py-3 text-center ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:gap-2 sm:py-4"
+                >
+                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950 sm:h-11 sm:w-11">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </span>
+                  <p className="text-[11px] font-bold text-foreground sm:text-[12px]">
+                    {KIND_LABEL[kind]}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
 
-        {/* 2. 新着ニュース — 旅行者ホームと同じ構造。カテゴリ別の絞り込みは /board のタブで */}
+        {/* 2. カテゴリ別の新着 — Airbnb 風カード */}
+        {KINDS.map(({ kind }) => {
+          const posts = postsByKind[kind];
+          if (posts.length === 0) return null;
+          return (
+            <section key={kind} aria-labelledby={`new-${kind}-title`}>
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <h2
+                  id={`new-${kind}-title`}
+                  className="text-[18px] font-semibold tracking-tight sm:text-[20px]"
+                >
+                  {KIND_LABEL[kind]}
+                  <span className="ml-2 text-[12px] font-normal text-foreground/55 tabular">
+                    新着 {posts.length} 件
+                  </span>
+                </h2>
+                <Link
+                  href={KIND_BASE_PATH[kind]}
+                  className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
+                >
+                  すべて見る
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {posts.map((p) => (
+                  <li key={p.id} className="contents">
+                    <CommunityCard post={p} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
+
+        {/* 3. 新着ニュース掲示板 */}
         <section>
-          <SectionHeader
-            kicker="新着ニュース"
-            title="パリの、今日と明日"
-            subtitle="行政の締切、交通、邦人コミュニティ、旬の食材、子育て、緊急の警報まで。タブで絞り込めます。"
-            href="/board?audience=resident"
-          />
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+                新着ニュース
+              </p>
+              <h2 className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]">
+                今日と明日の暮らし情報
+              </h2>
+            </div>
+            <Link
+              href="/board?audience=resident"
+              className="text-[12px] font-semibold text-primary-300 hover:underline"
+            >
+              すべて見る →
+            </Link>
+          </div>
           <BoardWidget posts={residentNews} />
         </section>
 
         {/* 4. 駐在者向け記事 */}
         {expatArticles.length > 0 ? (
           <section>
-            <SectionHeader
-              kicker="駐在者情報"
-              title="長文で読み返す、暮らしのリファレンス"
-              subtitle="蚊取り線香はどこで売っている、こどもの予防接種、年に一度の納税。"
-              href="/articles?type=expat_info"
-            />
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-[18px] font-semibold tracking-tight sm:text-[20px]">
+                駐在者情報
+                <span className="ml-2 text-[12px] font-normal text-foreground/55">
+                  長文の暮らしリファレンス
+                </span>
+              </h2>
+              <Link
+                href="/articles?type=expat_info"
+                className="text-[12px] font-semibold text-primary-300 hover:underline"
+              >
+                すべて見る →
+              </Link>
+            </div>
             <ArticleScrollSection
               articles={expatArticles}
               moreHref="/articles?type=expat_info"
@@ -125,54 +217,7 @@ export default async function ExpatHomePage() {
           </section>
         ) : null}
 
-        {/* 5. コミュニティ掲示板（求人 / アパート / 売買 / 募集 / レッスン / 助け合い） */}
-        <section>
-          <SectionHeader
-            kicker="コミュニティ掲示板"
-            title="住人どうしで、直接つながる"
-            subtitle="住人どうしのやり取りに使える掲示の場です。連絡は Locore メッセージ機能経由でどうぞ。"
-          />
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <CommunityLinkCard
-              href="/jobs"
-              icon={Briefcase}
-              title="求人"
-              description="日系・現地企業の求人、副業、家庭教師、ベビーシッター。"
-            />
-            <CommunityLinkCard
-              href="/apartments"
-              icon={HomeIcon}
-              title="アパート"
-              description="日本人歓迎の物件、シェア、家具付き短期、サブレ、引越し譲渡。"
-            />
-            <CommunityLinkCard
-              href="/marketplace"
-              icon={Megaphone}
-              title="売ります・買います"
-              description="帰任セール、家具家電、車、子供用品。物を介して住人が繋がる場所。"
-            />
-            <CommunityLinkCard
-              href="/groups"
-              icon={MessageCircle}
-              title="メンバー募集"
-              description="ママ友会、テニス・ランニング仲間、勉強会、言語交換。"
-            />
-            <CommunityLinkCard
-              href="/lessons"
-              icon={Sparkles}
-              title="教えます・習います"
-              description="子供向け日本語、フランス語家庭教師、料理、楽器。短時間から。"
-            />
-            <CommunityLinkCard
-              href="/help"
-              icon={MessageCircle}
-              title="助け合い"
-              description="空港送迎、書類の翻訳、こどもの一時預かりなど小さな相互扶助。"
-            />
-          </ul>
-        </section>
-
-        {/* 6. Founders 枠（駐在員ページ専用） */}
+        {/* 5. Founders 枠 */}
         <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500/15 via-card to-card p-6 shadow-sm ring-1 ring-border sm:p-10">
           <div
             aria-hidden
@@ -183,22 +228,17 @@ export default async function ExpatHomePage() {
               <p className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-950">
                 Founders 枠（先着 50 人）
               </p>
-              <h2 className="mt-3 text-[22px] font-bold leading-[1.25] tracking-tight text-foreground sm:text-[26px]">
-                最初の 50 人を、
-                <br className="hidden md:block" />
-                ぼくらは長く覚えていたい。
+              <h2 className="mt-3 text-[20px] font-semibold leading-[1.3] tracking-tight text-foreground sm:text-[24px]">
+                最初の 50 人を、長く覚えていたい。
               </h2>
-              <p className="mt-3 text-[14px] leading-[1.9] text-foreground/75">
-                Locore は、読み手と書き手の信頼でできている小さなメディアです。
-                立ち上げから一緒に走ってくれる Founders には、
-                認証バッジ、手数料優遇、サービスの方向性に対する発言権をお渡しします。
-                判断基準は、フォロワー数ではなく、その街への愛着の深さです。
+              <p className="mt-2 text-[13px] leading-[1.8] text-foreground/70">
+                立ち上げから一緒に走ってくれる Founders には、認証バッジ・手数料優遇・サービス方針への発言権をお渡しします。
               </p>
             </div>
             <div className="flex justify-end">
               <Link
                 href="/founders"
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300"
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
               >
                 応募ページを見る
                 <ArrowRight className="ml-1 h-4 w-4" />
@@ -206,141 +246,7 @@ export default async function ExpatHomePage() {
             </div>
           </div>
         </section>
-
-        {/* 7. 旅行者ホームへ */}
-        <section className="rounded-2xl bg-card px-6 py-8 text-center ring-1 ring-border">
-          <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-            For travelers
-          </p>
-          <h2
-            className="mt-2 text-[20px] font-bold tracking-tight"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
-          >
-            旅行者として、もう一度パリを歩いてみる
-          </h2>
-          <p className="mx-auto mt-2 max-w-md text-[13px] text-foreground/65">
-            自分の街を、旅行者の視点で見直したくなったときに。
-          </p>
-          <Link
-            href="/explore"
-            className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
-          >
-            旅行者ホームを見る
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </section>
       </div>
     </main>
-  );
-}
-
-function QuickAction({
-  href,
-  icon: Icon,
-  title,
-  description,
-}: {
-  href: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="group flex items-start gap-3 rounded-xl bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
-    >
-      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950">
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-bold text-foreground">{title}</p>
-        <p className="mt-0.5 line-clamp-2 text-[11px] text-foreground/65">
-          {description}
-        </p>
-      </div>
-      <ArrowRight className="mt-2 h-3.5 w-3.5 shrink-0 text-foreground/30 group-hover:text-primary-300" />
-    </Link>
-  );
-}
-
-function CommunityLinkCard({
-  href,
-  icon: Icon,
-  title,
-  description,
-}: {
-  href: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any;
-  title: string;
-  description: string;
-}) {
-  return (
-    <li>
-      <Link
-        href={href}
-        className="group flex h-full gap-3 rounded-xl bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
-      >
-        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950">
-          <Icon className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-bold text-foreground">{title}</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-foreground/65">
-            {description}
-          </p>
-        </div>
-        <ArrowRight className="mt-2 h-3.5 w-3.5 shrink-0 text-foreground/30 group-hover:text-primary-300" />
-      </Link>
-    </li>
-  );
-}
-
-function SectionHeader({
-  kicker,
-  title,
-  subtitle,
-  href,
-}: {
-  kicker: string;
-  title: string;
-  subtitle?: string;
-  href?: string;
-}) {
-  return (
-    <div className="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-          {kicker}
-        </p>
-        <h2
-          className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
-        >
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="mt-1 text-[12px] text-foreground/75 sm:text-[13px]">
-            {subtitle}
-          </p>
-        ) : null}
-      </div>
-      {href ? (
-        <Link
-          href={href}
-          className="hidden whitespace-nowrap rounded-full bg-card px-4 py-1.5 text-[13px] font-semibold text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:inline-flex"
-        >
-          すべて見る
-          <ArrowRight className="ml-1 inline h-3 w-3" />
-        </Link>
-      ) : null}
-    </div>
   );
 }
