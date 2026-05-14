@@ -134,7 +134,7 @@ VALUES
     '11111111-1111-1111-1111-111111111101',
     'S', 'current_resident', 'FR', 5,
     now() - interval '60 days', 10,
-    true, now() - interval '90 days', 'approved'::founding_status,
+    true, now() - interval '90 days', 'active'::founding_status,
     'パリ 11 区在住 5 年。食まわりのストーリーが得意。',
     true
   ),
@@ -142,7 +142,7 @@ VALUES
     '11111111-1111-1111-1111-111111111102',
     'S', 'current_resident', 'FR', 8,
     now() - interval '100 days', 10,
-    true, now() - interval '95 days', 'approved'::founding_status,
+    true, now() - interval '95 days', 'active'::founding_status,
     'パリでワインバーを経営。仏ワインと日本酒の融合担当。',
     true
   ),
