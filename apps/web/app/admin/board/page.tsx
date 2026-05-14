@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db/client';
 import { requireEditor } from '@/lib/auth/require-user';
 import { Sparkles, MapPin, ArrowLeft, ArrowRight, Plus } from 'lucide-react';
 import { BoardPostForm } from './BoardPostForm';
+import { AiTestPanel } from './AiTestPanel';
 
 export const metadata = { title: '掲示板管理' };
 export const dynamic = 'force-dynamic';
@@ -85,6 +86,10 @@ export default async function AdminBoardPage() {
         </div>
         <BoardPostForm />
       </section>
+
+      <div className="mt-8">
+        <AiTestPanel />
+      </div>
 
       <section className="mt-10">
         <h2 className="mb-3 text-[15px] font-bold tracking-tight">
