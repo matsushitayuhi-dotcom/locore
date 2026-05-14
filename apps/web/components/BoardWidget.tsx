@@ -1,6 +1,10 @@
 import Link from 'next/link';
 import { Sparkles, MapPin, ArrowRight } from 'lucide-react';
 import type { BoardPostListItem } from '@/lib/board/db';
+import {
+  BOARD_CATEGORY_LABEL,
+  type BoardCategory,
+} from '@/lib/board/constants';
 
 /**
  * 掲示板ウィジェット（タイトル 10 件 / ホームとヘッダー領域で使用）。
@@ -50,7 +54,13 @@ export function BoardWidget({ posts }: { posts: BoardPostListItem[] }) {
                 <p className="line-clamp-1 text-[13px] font-semibold leading-snug text-foreground">
                   {p.title}
                 </p>
-                <p className="mt-0.5 flex items-center gap-2 text-[10px] text-foreground/55">
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/55">
+                  <CategoryChip category={p.category as BoardCategory} />
+                  {p.audience === 'traveler' ? (
+                    <span className="rounded-sm bg-accent-500/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-accent-500">
+                      旅行者向け
+                    </span>
+                  ) : null}
                   {p.eventDate ? (
                     <span className="tabular font-semibold text-primary-300">
                       {formatEventDate(p.eventDate)}
@@ -73,6 +83,29 @@ export function BoardWidget({ posts }: { posts: BoardPostListItem[] }) {
         ))}
       </ul>
     </div>
+  );
+}
+
+/** カテゴリの小さなチップ。色はカテゴリごとに変える */
+const CHIP_COLOR: Record<string, string> = {
+  event: 'bg-primary-500/10 text-primary-300',
+  admin: 'bg-blue-500/10 text-blue-600',
+  food_season: 'bg-amber-500/10 text-amber-700',
+  community: 'bg-purple-500/10 text-purple-600',
+  family_edu: 'bg-emerald-500/10 text-emerald-600',
+  health_weather: 'bg-danger-500/10 text-danger-500',
+};
+
+function CategoryChip({ category }: { category: BoardCategory | string }) {
+  const label =
+    BOARD_CATEGORY_LABEL[category as BoardCategory] ?? String(category);
+  const color = CHIP_COLOR[category] ?? 'bg-foreground/10 text-foreground/65';
+  return (
+    <span
+      className={`rounded-sm px-1.5 py-px text-[9px] font-bold uppercase tracking-wider ${color}`}
+    >
+      {label}
+    </span>
   );
 }
 

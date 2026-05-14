@@ -1,7 +1,8 @@
 import 'server-only';
-import { eq, desc, and, gte } from 'drizzle-orm';
+import { eq, desc, and, gte, inArray, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
+import type { BoardCategory, BoardAudience } from './constants';
 
 /**
  * 掲示板（board_posts）のサーバ専用クエリ。
@@ -11,6 +12,8 @@ export type BoardPostListItem = {
   id: string;
   title: string;
   source: 'manual' | 'ai_event' | 'ai_news' | string;
+  category: BoardCategory | string;
+  audience: BoardAudience | string;
   eventDate: string | null;
   eventLocation: string | null;
   autoCollected: boolean;
@@ -24,18 +27,52 @@ export type BoardPostDetail = BoardPostListItem & {
   cityId: string | null;
 };
 
+export type ListBoardPostsOpts = {
+  /** 取得件数。デフォルト 10 */
+  limit?: number;
+  /** カテゴリ絞り込み（複数指定可）。未指定なら全カテゴリ */
+  categories?: BoardCategory[];
+  /** 対象絞り込み。'both' を含む条件で OR 検索したい場合はアプリ側で組む */
+  audiences?: BoardAudience[];
+};
+
 /**
- * 公開済み投稿を新しい順に取得。デフォルト 10 件。
- * ヘッダー / ホームの「掲示板10件」表示で使う。
+ * 公開済み投稿を新しい順に取得。
+ *
+ * - categories 指定: その中のカテゴリだけ返す
+ * - audiences 指定: 'both' は両方の audience フィルタに常にマッチする扱い
+ *   （例: audiences=['traveler'] → 'traveler' と 'both' を返す）
  */
-export async function listBoardPosts(limit = 10): Promise<BoardPostListItem[]> {
+export async function listBoardPosts(
+  opts: ListBoardPostsOpts | number = {},
+): Promise<BoardPostListItem[]> {
+  // 旧シグネチャ互換: listBoardPosts(10) で呼ばれているケースを救う
+  const options: ListBoardPostsOpts =
+    typeof opts === 'number' ? { limit: opts } : opts;
+  const limit = options.limit ?? 10;
+
   try {
     const db = getDb();
+
+    const filters = [eq(schema.boardPosts.status, 'published')];
+    if (options.categories && options.categories.length > 0) {
+      filters.push(inArray(schema.boardPosts.category, options.categories));
+    }
+    if (options.audiences && options.audiences.length > 0) {
+      // 'both' は常にマッチさせるため、audiences + 'both' を OR で含める
+      const audSet = new Set<string>([...options.audiences, 'both']);
+      filters.push(
+        inArray(schema.boardPosts.audience, Array.from(audSet)),
+      );
+    }
+
     const rows = await db
       .select({
         id: schema.boardPosts.id,
         title: schema.boardPosts.title,
         source: schema.boardPosts.source,
+        category: schema.boardPosts.category,
+        audience: schema.boardPosts.audience,
         eventDate: schema.boardPosts.eventDate,
         eventLocation: schema.boardPosts.eventLocation,
         autoCollected: schema.boardPosts.autoCollected,
@@ -43,13 +80,15 @@ export async function listBoardPosts(limit = 10): Promise<BoardPostListItem[]> {
         authorId: schema.boardPosts.authorId,
       })
       .from(schema.boardPosts)
-      .where(eq(schema.boardPosts.status, 'published'))
+      .where(and(...filters))
       .orderBy(desc(schema.boardPosts.publishedAt))
       .limit(limit);
     return rows.map((r) => ({
       id: r.id,
       title: r.title,
       source: r.source,
+      category: r.category,
+      audience: r.audience,
       eventDate: r.eventDate ?? null,
       eventLocation: r.eventLocation,
       autoCollected: r.autoCollected,
@@ -73,6 +112,8 @@ export async function getBoardPost(id: string): Promise<BoardPostDetail | null> 
         title: schema.boardPosts.title,
         body: schema.boardPosts.body,
         source: schema.boardPosts.source,
+        category: schema.boardPosts.category,
+        audience: schema.boardPosts.audience,
         eventDate: schema.boardPosts.eventDate,
         eventLocation: schema.boardPosts.eventLocation,
         autoCollected: schema.boardPosts.autoCollected,
@@ -96,6 +137,8 @@ export async function getBoardPost(id: string): Promise<BoardPostDetail | null> 
       title: r.title,
       body: r.body,
       source: r.source,
+      category: r.category,
+      audience: r.audience,
       eventDate: r.eventDate ?? null,
       eventLocation: r.eventLocation,
       autoCollected: r.autoCollected,
@@ -110,8 +153,8 @@ export async function getBoardPost(id: string): Promise<BoardPostDetail | null> 
 }
 
 /**
- * 同じ日に AI 投稿が既にあるかチェック（cron の重複防止用）。
- * source が ai_event の publishedAt がその日に入っているなら true。
+ * 同じ日に AI イベント投稿が既にあるかチェック（cron の重複防止用）。
+ * source='ai_event' AND category='event' AND publishedAt が当日。
  */
 export async function hasAiEventPostForToday(): Promise<boolean> {
   try {

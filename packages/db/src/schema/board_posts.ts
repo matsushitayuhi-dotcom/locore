@@ -32,6 +32,16 @@ export const boardPosts = pgTable(
     /** 投稿者。AI 投稿は NULL（system 扱い）*/
     authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
     source: text('source').notNull().default('manual'),
+    /**
+     * カテゴリ。manual/0032_board_categories_audience.sql。
+     * 'event' | 'admin' | 'food_season' | 'community' | 'family_edu' | 'health_weather'
+     */
+    category: text('category').notNull().default('event'),
+    /**
+     * 対象読者。'both' | 'traveler' | 'resident'。
+     * 旅行者向けタグは event カテゴリにだけ付与される想定。
+     */
+    audience: text('audience').notNull().default('both'),
     eventDate: date('event_date'),
     eventLocation: text('event_location'),
     sourceUrls: jsonb('source_urls').$type<Array<{ name: string; url: string }>>(),
@@ -47,6 +57,8 @@ export const boardPosts = pgTable(
     statusIdx: index('board_posts_status_idx').on(table.status),
     publishedAtIdx: index('board_posts_published_at_idx').on(table.publishedAt),
     eventDateIdx: index('board_posts_event_date_idx').on(table.eventDate),
+    categoryIdx: index('board_posts_category_idx').on(table.category),
+    audienceIdx: index('board_posts_audience_idx').on(table.audience),
   }),
 );
 

@@ -1,18 +1,75 @@
 import Link from 'next/link';
 import { Sparkles, MapPin, ArrowLeft } from 'lucide-react';
 import { listBoardPosts } from '@/lib/board/db';
+import {
+  BOARD_CATEGORIES,
+  BOARD_CATEGORY_LABEL,
+  BOARD_CATEGORY_HINT,
+  type BoardCategory,
+  type BoardAudience,
+} from '@/lib/board/constants';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'パリ掲示板',
   description:
-    'パリで今日明日に起きていること — マルシェ、デモ、展覧会、地元イベント。AI と編集部が日々まとめます。',
+    'パリの暮らしと滞在に役立つ情報を、編集チームと AI が日々まとめます。イベント・行政・季節食材・コミュニティ・子育て・天候警報など。',
 };
 
-export default async function BoardIndexPage() {
-  // 一覧ページは多めに取る（最新 50）
-  const posts = await listBoardPosts(50);
+type Audience = BoardAudience | 'all';
+
+type Props = {
+  searchParams?: { category?: string; audience?: string };
+};
+
+const AUDIENCE_TABS: { id: Audience; label: string }[] = [
+  { id: 'all', label: 'すべて' },
+  { id: 'traveler', label: '旅行者向け' },
+  { id: 'resident', label: '駐在員向け' },
+];
+
+const CHIP_COLOR: Record<string, string> = {
+  event: 'bg-primary-500/10 text-primary-300',
+  admin: 'bg-blue-500/10 text-blue-600',
+  food_season: 'bg-amber-500/10 text-amber-700',
+  community: 'bg-purple-500/10 text-purple-600',
+  family_edu: 'bg-emerald-500/10 text-emerald-600',
+  health_weather: 'bg-danger-500/10 text-danger-500',
+};
+
+export default async function BoardIndexPage({ searchParams }: Props) {
+  const activeCat =
+    (searchParams?.category as BoardCategory | undefined) &&
+    BOARD_CATEGORIES.includes(searchParams?.category as BoardCategory)
+      ? (searchParams!.category as BoardCategory)
+      : undefined;
+
+  const activeAud: Audience =
+    searchParams?.audience === 'traveler'
+      ? 'traveler'
+      : searchParams?.audience === 'resident'
+        ? 'resident'
+        : 'all';
+
+  const posts = await listBoardPosts({
+    limit: 60,
+    categories: activeCat ? [activeCat] : undefined,
+    audiences: activeAud === 'all' ? undefined : [activeAud],
+  });
+
+  const buildHref = (
+    nextCat?: BoardCategory,
+    nextAud?: Audience,
+  ): string => {
+    const params = new URLSearchParams();
+    const c = nextCat ?? activeCat;
+    const a = nextAud ?? activeAud;
+    if (c) params.set('category', c);
+    if (a && a !== 'all') params.set('audience', a);
+    const qs = params.toString();
+    return qs ? `/board?${qs}` : '/board';
+  };
 
   return (
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
@@ -24,7 +81,7 @@ export default async function BoardIndexPage() {
         ホームに戻る
       </Link>
 
-      <header className="mt-4 mb-8">
+      <header className="mt-4 mb-6">
         <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
           掲示板
@@ -38,63 +95,148 @@ export default async function BoardIndexPage() {
           パリの、今日と明日。
         </h1>
         <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
-          マルシェ、デモ、突然始まった工事、見ておいて損のない展覧会。
-          現地時間の朝に合わせて、書き手と編集チームが更新します。
+          イベント、行政の締切、旬の食材、邦人コミュニティ、子育て、緊急時の天候警報。
+          書き手と編集チームが日々更新します。
         </p>
       </header>
 
+      {/* 対象切替（旅行者 / 駐在員 / すべて） */}
+      <div
+        role="tablist"
+        aria-label="対象読者で絞り込み"
+        className="mb-3 flex flex-wrap items-center gap-1.5"
+      >
+        {AUDIENCE_TABS.map((t) => {
+          const on = t.id === activeAud;
+          return (
+            <Link
+              key={t.id}
+              href={buildHref(undefined, t.id)}
+              role="tab"
+              aria-selected={on}
+              className={
+                'inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-medium transition ' +
+                (on
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'border-border bg-background text-foreground/70 hover:border-foreground/30')
+              }
+            >
+              {t.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* カテゴリタブ */}
+      <div
+        role="tablist"
+        aria-label="カテゴリで絞り込み"
+        className="mb-6 flex flex-wrap items-center gap-1.5"
+      >
+        <Link
+          href={buildHref(undefined, undefined).replace(/[?&]category=[^&]*/, '')}
+          role="tab"
+          aria-selected={!activeCat}
+          className={
+            'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
+            (!activeCat
+              ? 'bg-primary-500 text-neutral-950'
+              : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
+          }
+        >
+          すべて
+        </Link>
+        {BOARD_CATEGORIES.map((cat) => {
+          const on = cat === activeCat;
+          return (
+            <Link
+              key={cat}
+              href={buildHref(cat, undefined)}
+              role="tab"
+              aria-selected={on}
+              title={BOARD_CATEGORY_HINT[cat]}
+              className={
+                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
+                (on
+                  ? 'bg-primary-500 text-neutral-950'
+                  : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
+              }
+            >
+              {BOARD_CATEGORY_LABEL[cat]}
+            </Link>
+          );
+        })}
+      </div>
+
       {posts.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">
-          今朝はまだ何も書かれていません。
-          <br />
-          毎朝、現地時間の 7 時前後に更新します。
+          {activeCat
+            ? `「${BOARD_CATEGORY_LABEL[activeCat]}」の投稿はまだありません`
+            : '今はまだ投稿がありません。毎朝、現地時間の 7 時前後に更新します。'}
         </div>
       ) : (
         <ul className="space-y-3">
-          {posts.map((p) => (
-            <li key={p.id}>
-              <Link
-                href={`/board/${p.id}`}
-                className="block rounded-lg bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
-              >
-                <div className="flex items-start gap-3">
-                  <span className="mt-1 shrink-0">
-                    {p.autoCollected ? (
-                      <Sparkles className="h-4 w-4 text-accent-500" />
-                    ) : (
-                      <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary-500" />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="text-[15px] font-bold leading-snug text-foreground">
-                      {p.title}
-                    </h2>
-                    <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground/60">
-                      {p.eventDate ? (
-                        <span className="rounded-full bg-primary-500/10 px-2 py-0.5 tabular font-semibold text-primary-300">
-                          開催 {formatEventDate(p.eventDate)}
-                        </span>
-                      ) : null}
-                      {p.eventLocation ? (
-                        <span className="inline-flex items-center gap-0.5">
-                          <MapPin className="h-3 w-3" />
-                          {p.eventLocation}
-                        </span>
-                      ) : null}
-                      <span className="text-foreground/40">
-                        {formatPublishedAt(p.publishedAt)}
-                      </span>
+          {posts.map((p) => {
+            const cat = p.category as BoardCategory;
+            const chipColor =
+              CHIP_COLOR[cat] ?? 'bg-foreground/10 text-foreground/65';
+            return (
+              <li key={p.id}>
+                <Link
+                  href={`/board/${p.id}`}
+                  className="block rounded-lg bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="mt-1 shrink-0">
                       {p.autoCollected ? (
-                        <span className="ml-auto rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
-                          AI 自動
+                        <Sparkles className="h-4 w-4 text-accent-500" />
+                      ) : (
+                        <span className="inline-block h-2.5 w-2.5 rounded-full bg-primary-500" />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                        <span
+                          className={`rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${chipColor}`}
+                        >
+                          {BOARD_CATEGORY_LABEL[cat] ?? cat}
                         </span>
-                      ) : null}
-                    </p>
+                        {p.audience === 'traveler' ? (
+                          <span className="rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
+                            旅行者向け
+                          </span>
+                        ) : null}
+                      </div>
+                      <h2 className="text-[15px] font-bold leading-snug text-foreground">
+                        {p.title}
+                      </h2>
+                      <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground/60">
+                        {p.eventDate ? (
+                          <span className="rounded-full bg-primary-500/10 px-2 py-0.5 tabular font-semibold text-primary-300">
+                            開催 {formatEventDate(p.eventDate)}
+                          </span>
+                        ) : null}
+                        {p.eventLocation ? (
+                          <span className="inline-flex items-center gap-0.5">
+                            <MapPin className="h-3 w-3" />
+                            {p.eventLocation}
+                          </span>
+                        ) : null}
+                        <span className="text-foreground/40">
+                          {formatPublishedAt(p.publishedAt)}
+                        </span>
+                        {p.autoCollected ? (
+                          <span className="ml-auto rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
+                            AI 自動
+                          </span>
+                        ) : null}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </li>
-          ))}
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       )}
     </main>
