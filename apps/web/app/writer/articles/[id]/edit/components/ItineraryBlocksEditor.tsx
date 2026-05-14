@@ -149,31 +149,50 @@ export function ItineraryBlocksEditor({
           const isLast = idx === blocks.length - 1;
           return (
             <li key={b.id} className="space-y-2">
-              {/* 1 ブロック */}
-              <div className="grid gap-2 rounded-md bg-card p-3 ring-1 ring-border sm:grid-cols-[80px_80px_1fr_auto]">
-                <div>
-                  <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
-                    開始
-                  </label>
-                  <Input
-                    type="time"
-                    value={b.startTime}
-                    onChange={(e) => update(idx, 'startTime', e.target.value)}
-                  />
+              {/* 1 ブロック — スマホでは時刻 2 つを 1 行に並べ、場所は 2 行目に */}
+              <div className="rounded-md bg-card p-3 ring-1 ring-border">
+                <div className="flex items-start justify-between gap-2">
+                  {/* 時刻 2 つ — モバイルでも横並び（小さく） */}
+                  <div className="flex flex-1 gap-2">
+                    <div className="min-w-0 flex-1">
+                      <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+                        開始
+                      </label>
+                      <input
+                        type="time"
+                        value={b.startTime}
+                        onChange={(e) =>
+                          update(idx, 'startTime', e.target.value)
+                        }
+                        className="h-9 w-full min-w-0 rounded-sm border border-border bg-background px-2 text-[13px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+                        終了
+                      </label>
+                      <input
+                        type="time"
+                        value={b.endTime ?? ''}
+                        onChange={(e) =>
+                          update(idx, 'endTime', e.target.value || undefined)
+                        }
+                        className="h-9 w-full min-w-0 rounded-sm border border-border bg-background px-2 text-[13px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="このブロックを削除"
+                    onClick={() => remove(idx)}
+                    className="mt-4 shrink-0 rounded-sm p-1.5 text-foreground/50 transition hover:bg-muted hover:text-danger-500"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <div>
-                  <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
-                    終了
-                  </label>
-                  <Input
-                    type="time"
-                    value={b.endTime ?? ''}
-                    onChange={(e) =>
-                      update(idx, 'endTime', e.target.value || undefined)
-                    }
-                  />
-                </div>
-                <div>
+
+                {/* 場所 — 時刻の下に独立行で */}
+                <div className="mt-2">
                   <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
                     場所
                   </label>
@@ -181,9 +200,6 @@ export function ItineraryBlocksEditor({
                     <select
                       value={b.spotId ?? ''}
                       onChange={(e) => {
-                        // 2 回 update() を呼ぶと 2 回目が古い blocks 配列に基づいて
-                        // 上書きしてしまうので、spotId と freeName は同時に 1 度の
-                        // onChange でまとめて反映させる。
                         const v = e.target.value;
                         onChange(
                           blocks.map((bb, i) =>
@@ -197,7 +213,7 @@ export function ItineraryBlocksEditor({
                           ),
                         );
                       }}
-                      className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+                      className="h-9 w-full rounded-sm border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
                     >
                       <option value="">— スポット未選択（自由記述）—</option>
                       {spots.map((s) => (
@@ -207,31 +223,21 @@ export function ItineraryBlocksEditor({
                       ))}
                     </select>
                   ) : (
-                    <p className="rounded-sm bg-primary-500/10 px-2 py-2 text-[11px] text-primary-300">
-                      下のスポット欄でスポットを追加すると、ここから選べるようになります。
+                    <p className="rounded-sm bg-primary-500/10 px-2 py-1.5 text-[11px] text-primary-300">
+                      下のスポット欄でスポットを追加すると、ここから選べます。
                     </p>
                   )}
                   {!b.spotId ? (
-                    <Input
+                    <input
                       type="text"
                       value={b.freeName ?? ''}
                       onChange={(e) =>
                         update(idx, 'freeName', e.target.value || undefined)
                       }
                       placeholder="スポット名（フリー入力）"
-                      className="mt-2"
+                      className="mt-2 h-9 w-full rounded-sm border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
                     />
                   ) : null}
-                </div>
-                <div className="flex items-end justify-end">
-                  <button
-                    type="button"
-                    aria-label="このブロックを削除"
-                    onClick={() => remove(idx)}
-                    className="rounded-sm p-2 text-foreground/50 transition hover:bg-muted hover:text-danger-500"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
 
                 {/* 補足：メモ */}

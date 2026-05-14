@@ -116,7 +116,7 @@ export function PhotoUploader({
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
         multiple
         hidden
         onChange={onFilesChange}
@@ -192,7 +192,7 @@ export function PhotoUploader({
         ) : (
           <>
             <Upload className="h-4 w-4" />
-            写真を選ぶ（残り {maxPhotos - photos.length} 枚、JPEG/PNG/WebP/GIF 8MB まで）
+            写真を選ぶ（残り {maxPhotos - photos.length} 枚、JPEG/PNG/HEIC など 20MB まで）
           </>
         )}
       </button>

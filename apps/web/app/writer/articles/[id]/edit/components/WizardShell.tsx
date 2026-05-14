@@ -6,12 +6,14 @@ import { toast } from 'sonner';
 import { Button } from '@locore/ui';
 import { ArrowLeft, ArrowRight, Camera, FileText, Send } from 'lucide-react';
 import { ModerationBanner } from '@/components/writer/ModerationBanner';
+import { useRouter } from 'next/navigation';
 import {
   autoSaveArticle,
   saveDraftArticle,
+  publishArticle,
 } from '@/app/writer/articles/[id]/edit/actions';
 import { runMockModeration } from '@/lib/moderation/mock';
-import { BasicInfoSection, type BasicInfoValue } from './BasicInfoSection';
+import type { BasicInfoValue } from './BasicInfoSection';
 import { CoverImageSection } from './CoverImageSection';
 import { TitleBodySection } from './TitleBodySection';
 import {
@@ -105,6 +107,7 @@ export function WizardShell({
     'idle',
   );
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const router = useRouter();
 
   const tags = useMemo(
     () =>
@@ -313,7 +316,6 @@ export function WizardShell({
           basic={basic}
           onChangeBasic={setBasic}
           cities={cities}
-          tier={tier}
         />
       ) : null}
 
@@ -348,48 +350,76 @@ export function WizardShell({
         />
       ) : null}
 
-      {/* ナビゲーションフッタ */}
+      {/* ナビゲーションフッタ — z-50 でグローバルナビ系より前面に */}
       <nav
         aria-label="ウィザードナビゲーション"
-        className="sticky bottom-4 z-20 flex items-center justify-between rounded-2xl bg-card/95 p-3 shadow-xl ring-1 ring-border backdrop-blur"
+        className="sticky bottom-2 z-50 flex items-center justify-between gap-2 rounded-2xl bg-card/95 p-2 shadow-xl ring-1 ring-border backdrop-blur sm:bottom-4 sm:p-3"
+        style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
       >
         <Button
           type="button"
           variant="outline"
+          size="sm"
           onClick={goPrev}
           disabled={step === 1}
         >
-          <ArrowLeft className="mr-1 h-4 w-4" />
-          戻る
+          <ArrowLeft className="h-4 w-4 sm:mr-1" />
+          <span className="hidden sm:inline">戻る</span>
         </Button>
 
-        <p className="text-[11px] text-foreground/55">
-          ステップ {visibleStepIndex} / {totalSteps}
+        <p className="text-[10px] text-foreground/55 sm:text-[11px]">
+          {visibleStepIndex} / {totalSteps}
         </p>
 
         {step === 4 ? (
           <Button
             type="button"
             variant="primary"
-            onClick={() => {
+            size="sm"
+            onClick={async () => {
               if (missing.length > 0) {
                 toast.error(`未入力: ${missing.join(' / ')}`);
                 return;
               }
-              // TODO: 実際の publish action へ。今は保存だけ。
-              handleSaveDraft();
-              toast.info(
-                '公開アクションは別 PR で追加します。今は下書き保存にとどめています。',
-              );
+              // 最終保存してから publish
+              setSaveState('saving');
+              const saveRes = await saveDraftArticle({
+                id: article.id,
+                title,
+                body,
+                bodyPaid,
+                bodyStyle,
+                itineraryBlocks: isItinerary ? itineraryBlocks : null,
+                photoEntries: bodyStyle === 'photo_journal' ? photoEntries : [],
+                priceJpy: basic.priceJpy,
+                durationType: basic.durationType || undefined,
+                articleType: basic.articleType,
+                tags,
+                coverImageUrl: coverImageUrl || '',
+                cityId: basic.cityId,
+              });
+              if (!saveRes.ok) {
+                toast.error(saveRes.error ?? '保存に失敗しました');
+                setSaveState('error');
+                return;
+              }
+              const pubRes = await publishArticle(article.id);
+              if (pubRes.ok) {
+                toast.success('公開しました');
+                router.push(`/articles/${article.id}`);
+              } else {
+                toast.error(pubRes.error);
+                setSaveState('error');
+              }
             }}
           >
             <Send className="mr-1 h-4 w-4" />
             投稿する
           </Button>
         ) : (
-          <Button type="button" variant="primary" onClick={goNext}>
-            次へ
-            <ArrowRight className="ml-1 h-4 w-4" />
+          <Button type="button" variant="primary" size="sm" onClick={goNext}>
+            <span className="hidden sm:inline">次へ</span>
+            <ArrowRight className="h-4 w-4 sm:ml-1" />
           </Button>
         )}
       </nav>
@@ -506,6 +536,15 @@ function StepProgress({ current, total }: { current: number; total: number }) {
 // =============================================================================
 // Step 1: タイトル + 本文（タブ切替）+ メタ情報
 // =============================================================================
+const ARTICLE_TYPE_OPTIONS: {
+  value: 'spot_guide' | 'itinerary' | 'expat_info';
+  label: string;
+}[] = [
+  { value: 'spot_guide', label: 'スポット紹介' },
+  { value: 'itinerary', label: '旅程プラン' },
+  { value: 'expat_info', label: '駐在者情報' },
+];
+
 function Step1TitleBody({
   title,
   onChangeTitle,
@@ -520,7 +559,6 @@ function Step1TitleBody({
   basic,
   onChangeBasic,
   cities,
-  tier,
 }: {
   title: string;
   onChangeTitle: (v: string) => void;
@@ -535,46 +573,86 @@ function Step1TitleBody({
   basic: BasicInfoValue;
   onChangeBasic: (v: BasicInfoValue) => void;
   cities: { id: string; nameJa: string }[];
-  tier: 'S' | 'A' | 'B';
 }) {
   return (
-    <div className="space-y-6">
-      {/* タイトル + エディタタブ + 本文 */}
-      <section className="space-y-4 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* タイトル → 記事タイプ → 本文スタイルタブ → 本文 を 1 つのカードに統合 */}
+      <section className="space-y-4 rounded-md bg-card p-4 ring-1 ring-border sm:space-y-5 sm:p-6">
+        {/* タイトル（このページの 1 行目） */}
         <div>
           <label
             htmlFor="wz-title"
-            className="mb-1 block text-[12px] font-bold uppercase tracking-[0.14em] text-foreground/55"
+            className="mb-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55"
           >
             タイトル <span className="text-danger-500">*</span>
           </label>
           <input
             id="wz-title"
             type="text"
-            value={title}
-            onChange={(e) => onChangeTitle(e.target.value)}
+            value={title === '新しい記事' ? '' : title}
+            onChange={(e) => onChangeTitle(e.target.value || '新しい記事')}
             maxLength={200}
             placeholder="記事のタイトル"
-            className="h-11 w-full rounded-md border border-border bg-background px-3 text-[16px] font-bold focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+            className="h-11 w-full rounded-md border border-border bg-background px-3 text-[15px] font-bold focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none sm:text-[16px]"
           />
         </div>
 
-        {/* エディタタブ */}
-        <div role="tablist" aria-label="エディタの種類" className="flex gap-1">
-          <TabButton
-            active={bodyStyle === 'photo_journal'}
-            onClick={() => onChangeBodyStyle('photo_journal')}
-            icon={Camera}
-            label="インスタスタイル"
-            sub="写真 + 場所 + キャプション（推奨）"
-          />
-          <TabButton
-            active={bodyStyle === 'classic'}
-            onClick={() => onChangeBodyStyle('classic')}
-            icon={FileText}
-            label="クラシック"
-            sub="従来のブログ風テキスト本文"
-          />
+        {/* 記事タイプ — タイトルの直後 */}
+        <div>
+          <p className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55">
+            記事の種類 <span className="text-danger-500">*</span>
+          </p>
+          <div role="radiogroup" className="flex flex-wrap gap-1.5">
+            {ARTICLE_TYPE_OPTIONS.map((opt) => {
+              const on = basic.articleType === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  onClick={() =>
+                    onChangeBasic({ ...basic, articleType: opt.value })
+                  }
+                  className={
+                    'rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
+                    (on
+                      ? 'bg-primary-500 text-neutral-950'
+                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
+                  }
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 本文スタイルタブ */}
+        <div>
+          <p className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55">
+            本文のスタイル
+          </p>
+          <div
+            role="tablist"
+            aria-label="本文スタイル"
+            className="flex flex-col gap-1.5 sm:flex-row"
+          >
+            <TabButton
+              active={bodyStyle === 'photo_journal'}
+              onClick={() => onChangeBodyStyle('photo_journal')}
+              icon={Camera}
+              label="インスタスタイル"
+              sub="写真 + 場所 + キャプション"
+            />
+            <TabButton
+              active={bodyStyle === 'classic'}
+              onClick={() => onChangeBodyStyle('classic')}
+              icon={FileText}
+              label="クラシック"
+              sub="従来のブログ風テキスト"
+            />
+          </div>
         </div>
 
         {/* 選んだエディタを描画 */}
@@ -595,14 +673,136 @@ function Step1TitleBody({
         )}
       </section>
 
-      {/* メタ情報 */}
-      <BasicInfoSection
-        value={basic}
-        onChange={onChangeBasic}
-        cities={cities}
-        tier={tier}
-      />
+      {/* 価格・所要時間・都市・タグ */}
+      <BasicMetaSection value={basic} onChange={onChangeBasic} cities={cities} />
     </div>
+  );
+}
+
+/**
+ * 価格 / 所要時間 / 都市 / タグの簡易セクション。
+ * 価格は数値自由入力（円）。記事タイプは Step 1 上部に移したのでここでは扱わない。
+ * モバイルでオーバーフローしないよう grid は sm 以上だけ。
+ */
+function BasicMetaSection({
+  value,
+  onChange,
+  cities,
+}: {
+  value: BasicInfoValue;
+  onChange: (next: BasicInfoValue) => void;
+  cities: { id: string; nameJa: string }[];
+}) {
+  return (
+    <section className="space-y-4 rounded-md bg-card p-4 ring-1 ring-border sm:p-6">
+      <h3 className="text-[14px] font-semibold tracking-tight">
+        価格・タグ・都市
+      </h3>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor="wz-price"
+            className="mb-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55"
+          >
+            価格（円）<span className="text-danger-500">*</span>
+          </label>
+          <div className="flex items-stretch gap-1.5">
+            <input
+              id="wz-price"
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={99999}
+              step={50}
+              value={value.priceJpy}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  priceJpy: Math.max(
+                    0,
+                    Math.floor(Number(e.target.value) || 0),
+                  ),
+                })
+              }
+              className="h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 text-[15px] font-bold tabular focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+            />
+            <span className="inline-flex h-11 items-center rounded-md bg-muted px-3 text-[12px] font-semibold text-foreground/65">
+              円
+            </span>
+          </div>
+          <p className="mt-1 text-[10px] text-foreground/55">
+            自由に設定できます。手数料はクリエイターランクに応じます。
+          </p>
+        </div>
+
+        <div>
+          <label
+            htmlFor="wz-duration"
+            className="mb-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55"
+          >
+            所要時間
+          </label>
+          <select
+            id="wz-duration"
+            value={value.durationType}
+            onChange={(e) =>
+              onChange({
+                ...value,
+                durationType: e.target.value as BasicInfoValue['durationType'],
+              })
+            }
+            className="h-11 w-full rounded-md border border-border bg-background px-3 text-[14px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+          >
+            <option value="">未指定</option>
+            <option value="few_hours">数時間</option>
+            <option value="half_day">半日</option>
+            <option value="full_day">終日</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="wz-city"
+            className="mb-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55"
+          >
+            都市
+          </label>
+          <select
+            id="wz-city"
+            value={value.cityId}
+            onChange={(e) => onChange({ ...value, cityId: e.target.value })}
+            className="h-11 w-full rounded-md border border-border bg-background px-3 text-[14px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+          >
+            {cities.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nameJa}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="wz-tags"
+            className="mb-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55"
+          >
+            タグ（カンマ区切り）
+          </label>
+          <input
+            id="wz-tags"
+            type="text"
+            value={value.tagsText}
+            onChange={(e) =>
+              onChange({ ...value, tagsText: e.target.value })
+            }
+            placeholder="例: 朝食, カフェ, マレ"
+            className="h-11 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+          />
+        </div>
+      </div>
+    </section>
   );
 }
 

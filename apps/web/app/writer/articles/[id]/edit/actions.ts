@@ -287,6 +287,8 @@ export async function publishArticle(articleId: string): Promise<ActionResult<{
     .select({
       title: schema.articles.title,
       body: schema.articles.body,
+      bodyStyle: schema.articles.bodyStyle,
+      photoEntries: schema.articles.photoEntries,
       tags: schema.articles.tags,
     })
     .from(schema.articles)
@@ -295,11 +297,26 @@ export async function publishArticle(articleId: string): Promise<ActionResult<{
   if (rows.length === 0) return { ok: false, error: '記事が見つかりません' };
   const a = rows[0]!;
 
-  if (!a.title.trim() || a.body.trim().length < 100) {
-    return {
-      ok: false,
-      error: '本文は 100 文字以上必要です。タイトルと本文を確認してください。',
-    };
+  if (!a.title.trim()) {
+    return { ok: false, error: 'タイトルを入力してください' };
+  }
+
+  // 本文要件: クラシックは 100 字以上、フォト日記は写真 1 枚以上
+  if (a.bodyStyle === 'photo_journal') {
+    const photos = Array.isArray(a.photoEntries) ? a.photoEntries : [];
+    if (photos.length < 1) {
+      return {
+        ok: false,
+        error: 'フォト日記には写真を 1 枚以上アップロードしてください',
+      };
+    }
+  } else {
+    if (a.body.trim().length < 100) {
+      return {
+        ok: false,
+        error: '本文は 100 文字以上必要です',
+      };
+    }
   }
 
   const moderation = runMockModeration({

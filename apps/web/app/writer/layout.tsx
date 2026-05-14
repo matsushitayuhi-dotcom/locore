@@ -11,7 +11,10 @@ import { requireUser } from '@/lib/auth/require-user';
  */
 export const dynamic = 'force-dynamic';
 
-const NAV_ITEMS = [{ href: '/writer/articles', label: '記事' }] as const;
+const NAV_ITEMS = [
+  { href: '/writer/articles', label: '記事' },
+  { href: '/writer/sales', label: '売上' },
+] as const;
 
 export default async function WriterLayout({ children }: { children: ReactNode }) {
   const user = await requireUser('/writer/articles');

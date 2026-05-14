@@ -17,10 +17,16 @@ const ALLOWED_TYPES = new Set([
   'image/png',
   'image/webp',
   'image/gif',
+  // iPhone のデフォルト形式。Safari は input[type=file] からのアップロード時に
+  // JPEG に自動変換することが多いが、他ブラウザや一部アプリではそのまま
+  // image/heic / image/heif で送ってくる。受け入れて保存する。
+  'image/heic',
+  'image/heif',
 ]);
 
-const MAX_BYTES_ARTICLE = 8 * 1024 * 1024; // 8MB
-const MAX_BYTES_AVATAR = 4 * 1024 * 1024; // 4MB（アバターは小さく）
+// iPhone の写真は 10〜12MB が普通なので、上限を 20MB に引き上げる。
+const MAX_BYTES_ARTICLE = 20 * 1024 * 1024; // 20MB
+const MAX_BYTES_AVATAR = 6 * 1024 * 1024; // 6MB（アバターは小さく）
 
 export type UploadImageResult =
   | { ok: true; url: string; path: string }
@@ -36,6 +42,10 @@ function extFromType(type: string): string {
       return 'webp';
     case 'image/gif':
       return 'gif';
+    case 'image/heic':
+      return 'heic';
+    case 'image/heif':
+      return 'heif';
     default:
       return 'bin';
   }

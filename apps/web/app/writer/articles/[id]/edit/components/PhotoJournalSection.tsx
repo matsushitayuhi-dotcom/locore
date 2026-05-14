@@ -130,7 +130,7 @@ export function PhotoJournalSection({ value, onChange }: PhotoJournalSectionProp
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
         multiple
         hidden
         onChange={onFilesChange}

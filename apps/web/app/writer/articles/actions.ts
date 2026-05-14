@@ -13,10 +13,17 @@ import { requireUser } from '@/lib/auth/require-user';
  * 価格・本文・都市は仮値で埋め、編集画面でクリエイターが変更する。
  */
 const createSchema = z.object({
-  title: z.string().trim().min(1, 'タイトルを入力してください').max(200),
+  // タイトルは任意。空なら「新しい記事」で開始してウィザードで埋める。
+  title: z.string().trim().max(200).optional(),
 });
 
-export async function createArticleDraft(input: unknown): Promise<never> {
+/**
+ * 新規下書きを作って即座に編集画面 (/edit = ウィザード) に飛ばす。
+ *
+ * 2026-05 以降は「タイトルだけ入れるページ」を廃止して、
+ * このアクションをタイトル無しで叩いてもよくした。
+ */
+export async function createArticleDraft(input: unknown = {}): Promise<never> {
   const parsed = createSchema.parse(input);
   const user = await requireUser();
   if (user.role !== 'resident_writer' && user.role !== 'editor') {
@@ -40,7 +47,7 @@ export async function createArticleDraft(input: unknown): Promise<never> {
     .values({
       writerId: user.id,
       cityId: cityRows[0]!.id,
-      title: parsed.title,
+      title: parsed.title?.trim() || '新しい記事',
       body: '',
       priceJpy: 800,
       status: 'draft',
