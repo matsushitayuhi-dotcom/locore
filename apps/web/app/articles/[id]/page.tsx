@@ -334,12 +334,28 @@ export default async function ArticleDetailPage({
           ) : null}
 
           {unlocked ? (
-            <SpotsCardList
-              spots={spots}
-              folders={folders}
-              bookmarkedSpotIds={bookmarkedSpotIds}
-              viewerLoggedIn={viewerLoggedIn}
-            />
+            <>
+              {/* 有料パートの本文。bodyPaid が空の無料記事のときは何も出さない */}
+              {hasPaid && after.trim().length > 0 ? (
+                <article className="prose-locore">
+                  {after.split(/\n\n+/).map((para, i) =>
+                    para.startsWith('## ') ? (
+                      <h2 key={i}>{para.replace(/^## /, '')}</h2>
+                    ) : (
+                      <p key={i} className="whitespace-pre-line">
+                        {para}
+                      </p>
+                    ),
+                  )}
+                </article>
+              ) : null}
+              <SpotsCardList
+                spots={spots}
+                folders={folders}
+                bookmarkedSpotIds={bookmarkedSpotIds}
+                viewerLoggedIn={viewerLoggedIn}
+              />
+            </>
           ) : (
             <Paywall
               article={article}

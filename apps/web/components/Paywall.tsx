@@ -73,29 +73,13 @@ export function Paywall({
   }
 
   if (purchased) {
+    // 購入完了直後の楽観表示。router.refresh() が走るとページ側で
+    // `unlocked=true` 経由で本文 + SpotsCardList が再レンダリングされる。
+    // ここでは「解放されました」というフィードバックだけ出し、本文は
+    // ページ側に任せる（二重描画を避けるため）。
     return (
-      <div className="space-y-8">
-        <div className="rounded-md bg-primary-500/10 px-4 py-3 text-[13px] text-primary-300 ring-1 ring-border">
-          <span className="font-bold">購入済み</span> — 全文とスポットが解放されています。
-        </div>
-        <article className="prose-locore">
-          {bodyAfter.split(/\n\n+/).map((para, i) =>
-            para.startsWith('## ') ? (
-              <h2 key={i}>{para.replace(/^## /, '')}</h2>
-            ) : (
-              <p key={i} className="whitespace-pre-line">
-                {para}
-              </p>
-            ),
-          )}
-        </article>
-
-        <SpotsCardList
-          spots={spots}
-          folders={folders}
-          bookmarkedSpotIds={bookmarkedSpotIds}
-          viewerLoggedIn={viewerLoggedIn}
-        />
+      <div className="rounded-md bg-primary-500/10 px-4 py-3 text-[13px] text-primary-300 ring-1 ring-border">
+        <span className="font-bold">購入済み</span> — 全文とスポットを再読込しています…
       </div>
     );
   }
