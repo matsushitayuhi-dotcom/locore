@@ -16,6 +16,14 @@ import {
   type FamilyStage,
   type LanguageLevel,
 } from '@/lib/resident/constants';
+import {
+  JP_PREFECTURES,
+  RESIDENCE_COUNTRIES,
+  RESIDENCE_CITIES_BY_COUNTRY,
+  RESIDENCE_YEAR_OPTIONS,
+  arrivalYearFromBucket,
+  type ResidenceYearBucket,
+} from '@/lib/resident/masters';
 
 /**
  * 駐在員プロフィールの編集フォーム。
@@ -28,7 +36,6 @@ type Lang = { code: string; level: LanguageLevel };
 
 type Props = {
   initial: {
-    homeCountry: string;
     homeRegion: string;
     residencyCountry: string;
     residencyCity: string;
@@ -42,15 +49,27 @@ type Props = {
   };
 };
 
+/** users.arrival_year（西暦）→ "1-2" 等のバケット */
+function bucketFromArrivalYear(arrivalYear: number | null): ResidenceYearBucket | '' {
+  if (arrivalYear === null || !Number.isFinite(arrivalYear)) return '';
+  const years = Math.max(0, new Date().getFullYear() - arrivalYear);
+  if (years < 1) return '<1';
+  if (years <= 2) return '1-2';
+  if (years <= 5) return '3-5';
+  if (years <= 10) return '6-10';
+  if (years <= 15) return '11-15';
+  if (years <= 20) return '16-20';
+  return '20+';
+}
+
 export function ResidentProfileForm({ initial }: Props) {
-  const [homeCountry, setHomeCountry] = useState(initial.homeCountry || 'JP');
   const [homeRegion, setHomeRegion] = useState(initial.homeRegion);
   const [residencyCountry, setResidencyCountry] = useState(
     initial.residencyCountry,
   );
   const [residencyCity, setResidencyCity] = useState(initial.residencyCity);
-  const [arrivalYear, setArrivalYear] = useState<number | ''>(
-    initial.arrivalYear ?? '',
+  const [yearBucket, setYearBucket] = useState<ResidenceYearBucket | ''>(
+    bucketFromArrivalYear(initial.arrivalYear),
   );
   const [familyStage, setFamilyStage] = useState<FamilyStage | ''>(
     initial.familyStage,
@@ -104,11 +123,13 @@ export function ResidentProfileForm({ initial }: Props) {
     e.preventDefault();
     startTransition(async () => {
       const res = await updateResidentProfile({
-        homeCountry: homeCountry || undefined,
+        // homeCountry はもう聞かない（駐在員は実質日本固定）。後方互換のため undefined を送る
+        homeCountry: undefined,
         homeRegion: homeRegion || undefined,
         residencyCountry: residencyCountry || undefined,
         residencyCity: residencyCity || undefined,
-        arrivalYear: arrivalYear === '' ? undefined : Number(arrivalYear),
+        // バケット → 西暦に変換して保存
+        arrivalYear: yearBucket === '' ? undefined : arrivalYearFromBucket(yearBucket),
         familyStage: familyStage || undefined,
         occupation: occupation || undefined,
         languages,
@@ -124,8 +145,6 @@ export function ResidentProfileForm({ initial }: Props) {
     });
   };
 
-  const thisYear = new Date().getFullYear();
-
   return (
     <form
       onSubmit={onSubmit}
@@ -140,78 +159,93 @@ export function ResidentProfileForm({ initial }: Props) {
         </p>
       </header>
 
-      {/* 出身地 / 在住地 */}
+      {/* 出身地 / 在住地（すべてドロップダウン） */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            出身地（県・都市）
+            出身（都道府県）
           </label>
-          <Input
+          <select
             value={homeRegion}
             onChange={(e) => setHomeRegion(e.target.value)}
-            placeholder="例: 東京都 / 大阪 / 福岡県"
-            maxLength={80}
-          />
+            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+          >
+            <option value="">— 選択しない —</option>
+            {JP_PREFECTURES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            出身国（ISO 2 文字）
+            在住国
           </label>
-          <Input
-            value={homeCountry}
-            onChange={(e) => setHomeCountry(e.target.value.toUpperCase())}
-            placeholder="JP"
-            maxLength={2}
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            在住国（ISO 2 文字）
-          </label>
-          <Input
+          <select
             value={residencyCountry}
-            onChange={(e) =>
-              setResidencyCountry(e.target.value.toUpperCase())
-            }
-            placeholder="FR / US / DE"
-            maxLength={2}
-          />
+            onChange={(e) => {
+              setResidencyCountry(e.target.value);
+              // 国が変わったら都市はリセット（その国に存在しない可能性が高いため）
+              setResidencyCity('');
+            }}
+            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+          >
+            <option value="">— 選択しない —</option>
+            {RESIDENCE_COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">
             在住都市
           </label>
-          <Input
+          <select
             value={residencyCity}
             onChange={(e) => setResidencyCity(e.target.value)}
-            placeholder="例: パリ / ベルリン / ハノイ"
-            maxLength={80}
-          />
+            disabled={!residencyCountry}
+            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">
+              {residencyCountry ? '— 選択しない —' : '先に在住国を選択'}
+            </option>
+            {(RESIDENCE_CITIES_BY_COUNTRY[residencyCountry] ?? []).map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            在住開始年
+            在住年数
           </label>
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={1950}
-            max={thisYear + 1}
-            value={arrivalYear}
+          <select
+            value={yearBucket}
             onChange={(e) =>
-              setArrivalYear(e.target.value === '' ? '' : Number(e.target.value))
+              setYearBucket(e.target.value as ResidenceYearBucket | '')
             }
-            placeholder={`${thisYear - 3}`}
-          />
+            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+          >
+            <option value="">— 選択しない —</option>
+            {RESIDENCE_YEAR_OPTIONS.map((y) => (
+              <option key={y.value} value={y.value}>
+                {y.label}
+              </option>
+            ))}
+          </select>
         </div>
-        <div>
+        <div className="sm:col-span-2">
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">
             家族構成
           </label>
           <select
             value={familyStage}
             onChange={(e) => setFamilyStage(e.target.value as FamilyStage | '')}
-            className="h-10 w-full rounded-sm border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
           >
             <option value="">— 選択しない —</option>
             {FAMILY_STAGES.map((s) => (

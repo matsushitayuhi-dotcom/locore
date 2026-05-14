@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
+import { ContactEmailField } from '@/components/community/ContactEmailField';
 import {
   MARKETPLACE_CONDITIONS,
   MARKETPLACE_CONDITION_LABEL,
@@ -34,6 +35,7 @@ export function PostForm() {
   const [deliveryAvailable, setDeliveryAvailable] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
   const [body, setBody] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +74,7 @@ export function PostForm() {
         priceCurrency: currency,
         priceUnit: negotiable ? 'negotiable' : amountNum !== null ? 'fixed' : 'negotiable',
         photos,
+        contactEmail: contactEmail.trim() || undefined,
         metadata: {
           side,
           category,
@@ -309,6 +312,8 @@ export function PostForm() {
           {body.length} / 8000
         </p>
       </div>
+
+      <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
         <button

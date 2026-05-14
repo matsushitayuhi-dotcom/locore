@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { MessageCircle, X } from 'lucide-react';
+import { MessageCircle, Mail, X } from 'lucide-react';
 import { applyToCommunityPost } from '@/lib/community/actions';
 
 /**
@@ -16,16 +16,22 @@ import { applyToCommunityPost } from '@/lib/community/actions';
  */
 export function ApplyButton({
   postId,
+  postTitle,
   applyLabel = '応募する',
   viewerLoggedIn,
   isOwnPost,
   closed,
+  contactEmail,
 }: {
   postId: string;
+  /** mailto: の件名に使う投稿タイトル */
+  postTitle?: string;
   applyLabel?: string;
   viewerLoggedIn: boolean;
   isOwnPost: boolean;
   closed: boolean;
+  /** 投稿者が公開しているメールアドレス。あれば「メールで問い合わせる」ボタンを出す */
+  contactEmail?: string | null;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -79,16 +85,36 @@ export function ApplyButton({
     });
   };
 
+  // mailto: の本文と件名を組み立てる。改行はエンコード必須
+  const mailtoHref = contactEmail
+    ? `mailto:${contactEmail}?subject=${encodeURIComponent(
+        `[Locore] ${postTitle ?? 'お問い合わせ'}`,
+      )}&body=${encodeURIComponent(
+        `はじめまして。\nLocore で投稿を拝見してご連絡しています。\n\n（用件をご記入ください）`,
+      )}`
+    : null;
+
   return (
     <>
-      <button
-        type="button"
-        onClick={onTrigger}
-        className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
-      >
-        <MessageCircle className="h-4 w-4" />
-        {applyLabel}
-      </button>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={onTrigger}
+          className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
+        >
+          <MessageCircle className="h-4 w-4" />
+          {applyLabel}
+        </button>
+        {mailtoHref ? (
+          <a
+            href={mailtoHref}
+            className="inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+          >
+            <Mail className="h-4 w-4" />
+            メールで問い合わせる
+          </a>
+        ) : null}
+      </div>
 
       {open ? (
         <div

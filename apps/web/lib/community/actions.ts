@@ -59,6 +59,14 @@ const createBaseSchema = z.object({
   priceUnit: z.enum(PRICE_UNITS).optional().nullable(),
   photos: z.array(z.string().url()).max(12).optional(),
   contactMethod: z.enum(['locore_message']).optional(),
+  /** 任意。投稿者が公開してよいメールアドレス。応募側が mailto: で連絡可能 */
+  contactEmail: z
+    .string()
+    .trim()
+    .email()
+    .max(254)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 
@@ -119,6 +127,7 @@ export async function createCommunityPost(
       priceUnit: parsed.data.priceUnit ?? null,
       photos: parsed.data.photos ?? [],
       contactMethod: parsed.data.contactMethod ?? 'locore_message',
+      contactEmail: parsed.data.contactEmail ?? null,
       metadata: metaParsed.data,
       status: 'active',
       expiresAt,

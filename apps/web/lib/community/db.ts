@@ -24,6 +24,8 @@ export type CommunityPostListItem = {
   viewCount: number;
   createdAt: string;
   updatedAt: string;
+  /** 投稿者が公開しているメールアドレス。応募側は mailto: でも連絡可能 */
+  contactEmail: string | null;
 };
 
 export type ListOpts = {
@@ -72,6 +74,7 @@ export async function listCommunityPosts(
         expiresAt: schema.communityPosts.expiresAt,
         closedAt: schema.communityPosts.closedAt,
         viewCount: schema.communityPosts.viewCount,
+        contactEmail: schema.communityPosts.contactEmail,
         createdAt: schema.communityPosts.createdAt,
         updatedAt: schema.communityPosts.updatedAt,
       })
@@ -100,6 +103,7 @@ export async function listCommunityPosts(
         expiresAt: r.expiresAt ? r.expiresAt.toISOString() : null,
         closedAt: r.closedAt ? r.closedAt.toISOString() : null,
         viewCount: r.viewCount,
+        contactEmail: r.contactEmail ?? null,
         createdAt: r.createdAt.toISOString(),
         updatedAt: r.updatedAt.toISOString(),
       }),
@@ -134,6 +138,7 @@ export async function getCommunityPost(
         expiresAt: schema.communityPosts.expiresAt,
         closedAt: schema.communityPosts.closedAt,
         viewCount: schema.communityPosts.viewCount,
+        contactEmail: schema.communityPosts.contactEmail,
         createdAt: schema.communityPosts.createdAt,
         updatedAt: schema.communityPosts.updatedAt,
       })
@@ -163,6 +168,7 @@ export async function getCommunityPost(
       expiresAt: r.expiresAt ? r.expiresAt.toISOString() : null,
       closedAt: r.closedAt ? r.closedAt.toISOString() : null,
       viewCount: r.viewCount,
+      contactEmail: r.contactEmail ?? null,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
     };

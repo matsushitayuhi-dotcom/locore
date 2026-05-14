@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
+import { ContactEmailField } from '@/components/community/ContactEmailField';
 
 type RequestType = 'offer' | 'need';
 type Urgency = 'now' | 'this_week' | 'flexible';
@@ -57,6 +58,7 @@ export function PostForm() {
   const [compensation, setCompensation] = useState<Compensation>('small_thanks');
   const [locationText, setLocationText] = useState('');
   const [body, setBody] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +83,7 @@ export function PostForm() {
         priceCurrency: 'EUR',
         priceUnit: null,
         photos: [],
+        contactEmail: contactEmail.trim() || undefined,
         metadata: {
           request_type: requestType,
           urgency,
@@ -273,6 +276,8 @@ export function PostForm() {
           {body.length} / 8000
         </p>
       </div>
+
+      <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
         <button

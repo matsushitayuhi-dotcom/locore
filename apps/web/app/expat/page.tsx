@@ -136,7 +136,7 @@ export default async function ExpatHomePage() {
           </ul>
         </section>
 
-        {/* 2. カテゴリ別の新着 — Airbnb 風カード */}
+        {/* 2. カテゴリ別の新着 — 横スクロールのカルーセル */}
         {KINDS.map(({ kind }) => {
           const posts = postsByKind[kind];
           if (posts.length === 0) return null;
@@ -160,12 +160,30 @@ export default async function ExpatHomePage() {
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {/* 横スクロール: 各カードは固定幅、snap で左端揃え。
+                  スマホは 1.6 枚、PC は 4.2 枚見えるイメージ */}
+              <ul
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                style={{ scrollSnapStop: 'always' }}
+              >
                 {posts.map((p) => (
-                  <li key={p.id} className="contents">
+                  <li
+                    key={p.id}
+                    className="w-[62%] shrink-0 snap-start sm:w-[32%] lg:w-[23%]"
+                  >
                     <CommunityCard post={p} />
                   </li>
                 ))}
+                {/* カテゴリ TOP への末尾カード */}
+                <li className="flex w-[62%] shrink-0 snap-start items-center justify-center rounded-xl bg-card text-center ring-1 ring-dashed ring-border sm:w-[32%] lg:w-[23%]">
+                  <Link
+                    href={KIND_BASE_PATH[kind]}
+                    className="block p-6 text-[12px] font-semibold text-primary-300 hover:underline"
+                  >
+                    {KIND_LABEL[kind]} を<br />
+                    すべて見る →
+                  </Link>
+                </li>
               </ul>
             </section>
           );

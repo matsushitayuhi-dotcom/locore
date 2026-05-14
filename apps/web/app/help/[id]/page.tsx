@@ -305,10 +305,12 @@ export default async function HelpDetailPage({ params }: Props) {
             <div className="border-t border-border pt-4">
               <ApplyButton
                 postId={post.id}
+                postTitle={post.title}
                 applyLabel={applyLabel}
                 viewerLoggedIn={Boolean(me)}
                 isOwnPost={isOwn}
                 closed={closed}
+                contactEmail={post.contactEmail}
               />
             </div>
 

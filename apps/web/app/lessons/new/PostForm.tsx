@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
+import { ContactEmailField } from '@/components/community/ContactEmailField';
 
 type Side = 'teach' | 'learn';
 type Format = 'in_person' | 'online' | 'both';
@@ -71,6 +72,7 @@ export function PostForm() {
   const [currency, setCurrency] = useState<'EUR' | 'JPY'>('EUR');
   const [priceUnit, setPriceUnit] = useState<PriceUnit>('per_session');
   const [body, setBody] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +110,7 @@ export function PostForm() {
         priceCurrency: currency,
         priceUnit: priceUnit,
         photos: [],
+        contactEmail: contactEmail.trim() || undefined,
         metadata: {
           side,
           category,
@@ -364,6 +367,8 @@ export function PostForm() {
           {body.length} / 8000
         </p>
       </div>
+
+      <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
         <button

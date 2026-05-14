@@ -50,20 +50,6 @@ export default async function ExplorePage() {
           <CountryCarousel countries={countries} />
         </section>
 
-        <section id="spot-guide">
-          <SectionHeader
-            kicker="スポット紹介"
-            title="一軒の店、一本の坂道。"
-            subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。地図と入り方つき。"
-            href="/articles?type=spot_guide"
-          />
-          <ArticleScrollSection
-            articles={spotArticles}
-            moreHref="/articles?type=spot_guide"
-            socialCounts={socialCounts}
-          />
-        </section>
-
         <section id="itinerary">
           <SectionHeader
             kicker="旅程プラン"
@@ -74,6 +60,20 @@ export default async function ExplorePage() {
           <ArticleScrollSection
             articles={itineraryArticles}
             moreHref="/articles?type=itinerary"
+            socialCounts={socialCounts}
+          />
+        </section>
+
+        <section id="spot-guide">
+          <SectionHeader
+            kicker="スポット紹介"
+            title="一軒の店、一本の坂道。"
+            subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。地図と入り方つき。"
+            href="/articles?type=spot_guide"
+          />
+          <ArticleScrollSection
+            articles={spotArticles}
+            moreHref="/articles?type=spot_guide"
             socialCounts={socialCounts}
           />
         </section>

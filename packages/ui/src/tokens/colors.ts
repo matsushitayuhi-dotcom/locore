@@ -59,13 +59,14 @@ export const semantic = {
 } as const;
 
 /**
- * Local score gradient — emerald の濃淡だけで 3 段に分ける。
- * 70-100 = 深い emerald, 30-69 = 中間, 0-29 = 淡い mint
+ * Local score gradient — Editorial Light の terra-cotta 系で 3 段に分ける。
+ * 70-100 = 深い terra-cotta, 30-69 = 中間 amber, 0-29 = 淡いベージュ
+ * (以前は emerald = 緑だったが、ブランドカラー統一のため変更)
  */
 export const local = {
-  high: "#0D7A5C",
-  mid:  "#54C79A",
-  low:  "#C6ECD9",
+  high: "#B5453A", // terra-cotta deep
+  mid:  "#E58D3B", // warm amber
+  low:  "#F4E0CB", // soft beige
 } as const;
 
 export const colors = {

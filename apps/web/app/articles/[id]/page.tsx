@@ -30,7 +30,6 @@ import {
   getArticleSocialCounts,
   listMyLikedArticleIds,
 } from '@/lib/articleLikes/actions';
-import { Bookmark } from '@locore/ui/icons';
 import { getMyBookmarkedIdSet } from '@/lib/bookmarks/actions';
 import { getMyReviewForArticle } from '@/lib/reviews/actions';
 import { ReviewForm } from '@/components/ReviewForm';
@@ -256,6 +255,7 @@ export default async function ArticleDetailPage({
             articleId={article.id}
             size="md"
             initialSaved={alreadySavedByMe}
+            initialCount={counts.bookmarkCount}
           />
           <LikeButton
             articleId={article.id}
@@ -263,13 +263,6 @@ export default async function ArticleDetailPage({
             initialCount={counts.likeCount}
             viewerLoggedIn={viewerLoggedIn}
           />
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-[13px] font-semibold text-foreground/70 ring-1 ring-border">
-            <Bookmark className="h-4 w-4" />
-            <span className="tabular">
-              {counts.bookmarkCount.toLocaleString('ja-JP')}
-            </span>
-            <span className="text-[11px] text-foreground/50">保存</span>
-          </span>
         </div>
       </header>
 

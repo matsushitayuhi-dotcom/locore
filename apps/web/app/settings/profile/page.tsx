@@ -66,7 +66,6 @@ export default async function ProfileSettingsPage() {
 
       <ResidentProfileForm
         initial={{
-          homeCountry: me?.homeCountry ?? '',
           homeRegion: me?.homeRegion ?? '',
           residencyCountry: me?.residencyCountry ?? '',
           residencyCity: me?.residencyCity ?? '',

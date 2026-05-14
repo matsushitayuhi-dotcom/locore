@@ -274,10 +274,12 @@ export default async function ApartmentDetailPage({ params }: Props) {
               <div className="mt-4">
                 <ApplyButton
                   postId={post.id}
+                  postTitle={post.title}
                   applyLabel="問い合わせる"
                   viewerLoggedIn={!!me}
                   isOwnPost={isOwner}
                   closed={closed}
+                  contactEmail={post.contactEmail}
                 />
               </div>
 

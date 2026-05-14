@@ -4,33 +4,46 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';
-import { CalendarPlus, Check } from '@locore/ui/icons';
+import { Bookmark, BookmarkCheck } from 'lucide-react';
 import { addBookmark, removeBookmark } from '@/lib/bookmarks/actions';
 
 /**
- * 「旅程に追加 / 保存」ボタン。
+ * 記事の保存（ブックマーク）ボタン。
  *
- * 以前は localStorage の TripAdds に追加するだけで、サーバ側に何も保存されず
- * 「押しても保存されない」バグになっていた。bookmarks テーブルに addBookmark し、
- * /library/itineraries タブから見返せる本物の保存に切り替えた。
+ * 以前は「旅程を保存」というラベルで旅程記事だけを対象にしていたが、
+ * 記事を保存する操作はブックマーク 1 種に統一。記事種別を問わず使う。
+ *
+ * - 押下で bookmarks テーブルに記録（addBookmark / removeBookmark）
+ * - 楽観的 UI でレスポンスを待たずトグル
+ * - 保存済みは塗り潰しブックマークアイコンに変化、未保存はアウトライン
+ * - 親から initialSaved / initialCount を渡しておくと SSR で正しい初期状態
+ *
+ * NOTE: コンポーネント名は後方互換のため AddToTripButton のまま。
+ *       実体は記事ブックマークボタンとして機能する。
  */
 export function AddToTripButton({
   articleId,
   size = 'md',
   initialSaved = false,
+  initialCount,
 }: {
   articleId: string;
   size?: 'sm' | 'md' | 'lg';
-  /** サーバから「既にブックマーク済みか」を渡すと初期状態に反映 */
   initialSaved?: boolean;
+  /** 親から渡せばこのボタン内に保存数も表示する */
+  initialCount?: number;
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(initialSaved);
+  const [count, setCount] = useState(initialCount ?? 0);
   const [isPending, startTransition] = useTransition();
 
   const onClick = () => {
     const wasOn = saved;
-    setSaved(!wasOn); // 楽観的 UI
+    setSaved(!wasOn);
+    if (initialCount !== undefined) {
+      setCount((c) => Math.max(0, c + (wasOn ? -1 : 1)));
+    }
 
     startTransition(async () => {
       try {
@@ -41,11 +54,11 @@ export function AddToTripButton({
           if (wasOn) {
             toast('保存ライブラリから外しました');
           } else {
-            toast.success('旅程を保存しました', {
-              description: '「保存ライブラリ → 旅程」から見返せます',
+            toast.success('記事を保存しました', {
+              description: '「保存ライブラリ」から見返せます',
               action: {
                 label: 'ライブラリを開く',
-                onClick: () => router.push('/library?tab=itineraries'),
+                onClick: () => router.push('/library'),
               },
             });
           }
@@ -54,6 +67,9 @@ export function AddToTripButton({
 
         // 失敗：ロールバック
         setSaved(wasOn);
+        if (initialCount !== undefined) {
+          setCount((c) => Math.max(0, c + (wasOn ? 1 : -1)));
+        }
         if (res.reason === 'unauthenticated') {
           toast('ログインすると保存できます', {
             action: {
@@ -68,6 +84,9 @@ export function AddToTripButton({
         }
       } catch (err) {
         setSaved(wasOn);
+        if (initialCount !== undefined) {
+          setCount((c) => Math.max(0, c + (wasOn ? 1 : -1)));
+        }
         toast.error('保存に失敗しました', {
           description: err instanceof Error ? err.message : '不明なエラー',
         });
@@ -82,18 +101,19 @@ export function AddToTripButton({
       onClick={onClick}
       disabled={isPending}
       aria-pressed={saved}
+      aria-label={saved ? '保存済み（クリックで外す）' : '保存する'}
     >
       {saved ? (
-        <>
-          <Check className="mr-1.5 h-4 w-4" />
-          保存済み
-        </>
+        <BookmarkCheck className="mr-1.5 h-4 w-4" />
       ) : (
-        <>
-          <CalendarPlus className="mr-1.5 h-4 w-4" />
-          旅程を保存
-        </>
+        <Bookmark className="mr-1.5 h-4 w-4" />
       )}
+      <span>{saved ? '保存済み' : '保存'}</span>
+      {initialCount !== undefined ? (
+        <span className="ml-1.5 tabular text-[12px] opacity-75">
+          {count.toLocaleString('ja-JP')}
+        </span>
+      ) : null}
     </Button>
   );
 }

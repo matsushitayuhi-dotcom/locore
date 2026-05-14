@@ -303,9 +303,11 @@ export default async function JobDetailPage({ params }: Props) {
             <div className="border-t border-border pt-4">
               <ApplyButton
                 postId={post.id}
+                postTitle={post.title}
                 viewerLoggedIn={Boolean(me)}
                 isOwnPost={isOwn}
                 closed={closed}
+                contactEmail={post.contactEmail}
               />
             </div>
 

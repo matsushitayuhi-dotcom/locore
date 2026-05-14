@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { AlertTriangle } from 'lucide-react';
 import { createCommunityPost } from '@/lib/community/actions';
+import { ContactEmailField } from '@/components/community/ContactEmailField';
 import {
   JOB_EMPLOYMENT_TYPES,
   JOB_EMPLOYMENT_TYPE_LABEL,
@@ -56,6 +57,7 @@ export function JobPostForm() {
   const [experienceRequired, setExperienceRequired] = useState(false);
   const [body, setBody] = useState('');
   const [notes, setNotes] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
 
   const toggleLang = (l: Lang) => {
     setLangs((prev) =>
@@ -107,6 +109,7 @@ export function JobPostForm() {
         priceCurrency: currency,
         priceUnit,
         photos: [],
+        contactEmail: contactEmail.trim() || undefined,
         metadata: {
           employment_type: employmentType,
           category,
@@ -412,6 +415,8 @@ export function JobPostForm() {
           {notes.length} / 500
         </p>
       </div>
+
+      <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
         <button

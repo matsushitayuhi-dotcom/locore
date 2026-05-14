@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
 import { createCommunityPost } from '@/lib/community/actions';
+import { ContactEmailField } from '@/components/community/ContactEmailField';
 import {
   APARTMENT_LISTING_TYPES,
   APARTMENT_LISTING_TYPE_LABEL,
@@ -43,6 +44,7 @@ export function ApartmentForm() {
   const [body, setBody] = useState('');
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [contactEmail, setContactEmail] = useState('');
 
   const numOrNull = (v: string): number | null => {
     if (!v.trim()) return null;
@@ -113,6 +115,7 @@ export function ApartmentForm() {
         priceCurrency: 'EUR',
         priceUnit: 'monthly',
         photos,
+        contactEmail: contactEmail.trim() || undefined,
         metadata,
       });
       if (res.ok && res.data) {
@@ -419,6 +422,8 @@ export function ApartmentForm() {
         </label>
         <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={12} />
       </div>
+
+      <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       {/* 送信 */}
       <div className="flex items-center justify-end gap-2 border-t border-border pt-5">

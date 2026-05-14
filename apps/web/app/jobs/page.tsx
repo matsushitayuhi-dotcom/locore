@@ -250,11 +250,110 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         <CommunityDisclaimer kind="job" />
       </div>
 
-      {/* 主要フィルタピル — 雇用形態 */}
+      {/* SUUMO 風のドロップダウンフィルタ。プル選択 → 適用ボタンで GET */}
+      <form
+        action="/jobs"
+        method="GET"
+        className="mb-5 flex flex-wrap items-end gap-2 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
+      >
+        <FilterSelect
+          name="type"
+          label="雇用形態"
+          defaultValue={activeTypes[0] ?? ''}
+          options={[
+            { value: '', label: 'すべて' },
+            ...JOB_EMPLOYMENT_TYPES.map((t) => ({
+              value: t,
+              label: JOB_EMPLOYMENT_TYPE_LABEL[t],
+            })),
+          ]}
+        />
+        <FilterSelect
+          name="cat"
+          label="職種"
+          defaultValue={activeCat ?? ''}
+          options={[
+            { value: '', label: 'すべて' },
+            ...JOB_CATEGORIES.map((c) => ({
+              value: c,
+              label: JOB_CATEGORY_LABEL[c],
+            })),
+          ]}
+        />
+        <FilterSelect
+          name="lang"
+          label="言語要件"
+          defaultValue={activeLangs[0] ?? ''}
+          options={[
+            { value: '', label: '問わず' },
+            ...ALL_LANGS.map((l) => ({ value: l, label: LANG_LABEL[l] })),
+          ]}
+        />
+        <FilterSelect
+          name="remote"
+          label="リモート"
+          defaultValue={remoteOnly ? '1' : ''}
+          options={[
+            { value: '', label: '問わず' },
+            { value: '1', label: 'リモート OK' },
+          ]}
+        />
+        <FilterSelect
+          name="sort"
+          label="並び順"
+          defaultValue={sort}
+          options={[
+            { value: 'new', label: '新着順' },
+            { value: 'salary', label: '給与高い順' },
+          ]}
+        />
+        <div className="flex flex-1 items-end gap-2">
+          <div className="flex-1 min-w-0">
+            <label
+              htmlFor="min"
+              className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+            >
+              年収下限（€）
+            </label>
+            <input
+              id="min"
+              type="number"
+              name="min"
+              min={0}
+              step={1000}
+              defaultValue={minSalary ?? ''}
+              placeholder="35000"
+              className="h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-[12px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            className="h-9 shrink-0 rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+          >
+            適用
+          </button>
+          {(activeTypes.length > 0 ||
+            activeCat ||
+            activeLangs.length > 0 ||
+            remoteOnly ||
+            minSalary ||
+            sort !== 'new') ? (
+            <Link
+              href="/jobs"
+              className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
+            >
+              リセット
+            </Link>
+          ) : null}
+        </div>
+      </form>
+
+      {/* 旧 UI のピルやチェックは削除（プルダウンに統一）。
+          以下のブロックは後方互換のため残してあるが showFilters=1 のときだけ展開する */}
       <div
         role="tablist"
         aria-label="雇用形態で絞り込み"
-        className="mb-2 flex flex-wrap items-center gap-1.5"
+        className="mb-2 hidden flex-wrap items-center gap-1.5"
       >
         <Link
           href={buildHref({ type: null })}
@@ -473,6 +572,41 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         </ul>
       )}
     </main>
+  );
+}
+
+function FilterSelect({
+  name,
+  label,
+  defaultValue,
+  options,
+}: {
+  name: string;
+  label: string;
+  defaultValue: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="min-w-[120px] flex-1 sm:flex-none">
+      <label
+        htmlFor={`f-${name}`}
+        className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+      >
+        {label}
+      </label>
+      <select
+        id={`f-${name}`}
+        name={name}
+        defaultValue={defaultValue}
+        className="h-9 w-full rounded-md border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 

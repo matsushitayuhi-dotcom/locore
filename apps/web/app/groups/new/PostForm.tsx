@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
+import { ContactEmailField } from '@/components/community/ContactEmailField';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
 
 type GroupCategory =
@@ -62,6 +63,7 @@ export function PostForm() {
   const [locationText, setLocationText] = useState('');
   const [feeAmount, setFeeAmount] = useState('');
   const [body, setBody] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +98,7 @@ export function PostForm() {
         priceCurrency: 'EUR',
         priceUnit: feeNum !== null ? 'monthly' : null,
         photos: [],
+        contactEmail: contactEmail.trim() || undefined,
         metadata: {
           category,
           meeting_frequency: frequency,
@@ -284,6 +287,8 @@ export function PostForm() {
           {body.length} / 8000
         </p>
       </div>
+
+      <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
         <button

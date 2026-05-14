@@ -60,6 +60,11 @@ export const communityPosts = pgTable(
       .default([]),
 
     contactMethod: text('contact_method').notNull().default('locore_message'),
+    /**
+     * 任意。投稿者が公開してよいメールアドレス。応募者が mailto: で
+     * 直接連絡できるようにする。manual/0040_community_contact_email.sql
+     */
+    contactEmail: text('contact_email'),
 
     /** kind 固有のメタ。アプリ側で型付けする */
     metadata: jsonb('metadata').notNull().default({}),

@@ -299,7 +299,7 @@ function ResidentCard({
         </Avatar>
         <div className="min-w-0 flex-1">
           <Link
-            href={`/writers/${resident.id}`}
+            href={`/residents/${resident.id}`}
             className="line-clamp-1 text-[14px] font-semibold text-foreground hover:text-primary-300"
           >
             {resident.displayName}
