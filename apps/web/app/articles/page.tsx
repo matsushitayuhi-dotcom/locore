@@ -36,11 +36,6 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
       subtitle:
         '半日・1 日かけて辿る、現地民がデザインしたルート。所要時間つき。',
     },
-    photo_journal: {
-      title: 'フォト日記',
-      subtitle:
-        '写真と短いキャプションで街を歩く、インスタ風の没入記事。縦にスクロールしてどうぞ。',
-    },
     expat_info: {
       title: '駐在者情報',
       subtitle:

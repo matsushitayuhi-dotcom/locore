@@ -91,12 +91,8 @@ export default async function RegionHomePage({ params }: Props) {
   const itineraryArticles = articles.filter(
     (a) => a.articleType === 'itinerary',
   );
-  const photoJournalArticles = articles.filter(
-    (a) => a.articleType === 'photo_journal',
-  );
 
   const moreSpot = `/articles?type=spot_guide&region=${region.slug}`;
-  const morePhotoJournal = `/articles?type=photo_journal&region=${region.slug}`;
   const moreItinerary = `/articles?type=itinerary&region=${region.slug}`;
 
   return (
@@ -168,23 +164,6 @@ export default async function RegionHomePage({ params }: Props) {
             socialCounts={socialCounts}
           />
         </section>
-
-        {/* 5. フォト日記 — インスタ風の没入型 */}
-        {photoJournalArticles.length > 0 ? (
-          <section id="photo-journal">
-            <SectionHeader
-              kicker="フォト日記"
-              title="写真と短い言葉で街を歩く"
-              subtitle="縦スクロールで 1 枚ずつ全画面表示。"
-              href={morePhotoJournal}
-            />
-            <ArticleScrollSection
-              articles={photoJournalArticles}
-              moreHref={morePhotoJournal}
-              socialCounts={socialCounts}
-            />
-          </section>
-        ) : null}
 
         {/* Founders は駐在員ページ (/expat) のみで表示する方針 — region home からは削除 */}
       </div>

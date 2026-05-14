@@ -97,8 +97,10 @@ const updateArticleSchema = z.object({
     .optional(),
   durationType: z.enum(['half_day', 'full_day', 'few_hours', 'other']).optional(),
   articleType: z
-    .enum(['spot_guide', 'itinerary', 'expat_info', 'photo_journal'])
+    .enum(['spot_guide', 'itinerary', 'expat_info'])
     .optional(),
+  /** 本文スタイル。'photo_journal' (default) or 'classic' */
+  bodyStyle: z.enum(['photo_journal', 'classic']).optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   coverImageUrl: z
     .string()
@@ -145,6 +147,7 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
   if (data.articleType !== undefined) patch.articleType = data.articleType;
+  if (data.bodyStyle !== undefined) patch.bodyStyle = data.bodyStyle;
   if (data.tags !== undefined) patch.tags = data.tags;
   if (data.coverImageUrl !== undefined) patch.coverImageUrl = data.coverImageUrl ?? null;
   if (data.cityId !== undefined) patch.cityId = data.cityId;
@@ -205,6 +208,7 @@ export async function autoSaveArticle(input: unknown): Promise<
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
   if (data.articleType !== undefined) patch.articleType = data.articleType;
+  if (data.bodyStyle !== undefined) patch.bodyStyle = data.bodyStyle;
   if (data.tags !== undefined) patch.tags = data.tags;
   if (data.coverImageUrl !== undefined) patch.coverImageUrl = data.coverImageUrl ?? null;
   if (data.cityId !== undefined) patch.cityId = data.cityId;
@@ -259,6 +263,7 @@ export async function saveDraftArticle(input: unknown): Promise<
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
   if (data.articleType !== undefined) patch.articleType = data.articleType;
+  if (data.bodyStyle !== undefined) patch.bodyStyle = data.bodyStyle;
   if (data.tags !== undefined) patch.tags = data.tags;
   if (data.coverImageUrl !== undefined) patch.coverImageUrl = data.coverImageUrl ?? null;
   if (data.cityId !== undefined) patch.cityId = data.cityId;

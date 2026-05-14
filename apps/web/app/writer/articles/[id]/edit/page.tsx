@@ -5,7 +5,7 @@ import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { type SpotRow } from '@/components/writer/SpotList';
 import { type VideoRow } from '@/components/writer/VideoEmbedEditor';
-import { EditorShell } from './components/EditorShell';
+import { WizardShell } from './components/WizardShell';
 
 export const metadata = {
   title: '記事を編集',
@@ -156,7 +156,7 @@ export default async function EditArticlePage({
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   return (
-    <EditorShell
+    <WizardShell
       article={{
         id: article.id,
         title: article.title,
@@ -166,7 +166,15 @@ export default async function EditArticlePage({
         photoEntries: article.photoEntries ?? [],
         priceJpy: article.priceJpy,
         durationType: article.durationType,
-        articleType: article.articleType,
+        // photo_journal は body_style に移ったので article_type からは外す
+        articleType:
+          (article.articleType as string) === 'photo_journal'
+            ? 'spot_guide'
+            : (article.articleType as 'spot_guide' | 'itinerary' | 'expat_info'),
+        bodyStyle:
+          (article as { bodyStyle?: string }).bodyStyle === 'classic'
+            ? 'classic'
+            : 'photo_journal',
         tags: article.tags ?? [],
         cityId: article.cityId,
         coverImageUrl: article.coverImageUrl,

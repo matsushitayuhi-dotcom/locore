@@ -296,8 +296,8 @@ export default async function ArticleDetailPage({
             />
           ) : null}
 
-          {/* フォト日記記事のときだけ縦スクロール没入ビュー（購入後のみ全部見せる） */}
-          {article.articleType === 'photo_journal' &&
+          {/* フォト日記スタイルのときだけ縦スクロール没入ビュー（購入後のみ全部見せる） */}
+          {article.bodyStyle === 'photo_journal' &&
           article.photoEntries &&
           article.photoEntries.length > 0 ? (
             unlocked ? (

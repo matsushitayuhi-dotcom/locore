@@ -99,9 +99,14 @@ export interface Article {
   tags: string[];
   durationType: DurationType;
   /**
-   * 記事の種別。`spot_guide`（場所紹介）または `itinerary`（旅程プラン）。
+   * 記事の種別。`spot_guide`（場所紹介）/ `itinerary`（旅程プラン）/ `expat_info`。
    */
   articleType: ArticleType;
+  /**
+   * 本文スタイル。'photo_journal' (default) or 'classic'。
+   * articleType と独立。新規記事のデフォルトは photo_journal。
+   */
+  bodyStyle?: 'photo_journal' | 'classic';
   createdAt: string;
   publishedAt: string;
   localScoreAverage: number;

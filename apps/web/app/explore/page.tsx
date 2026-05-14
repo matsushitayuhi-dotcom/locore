@@ -37,9 +37,6 @@ export default async function ExplorePage() {
   const itineraryArticles = articles.filter(
     (a) => a.articleType === 'itinerary',
   );
-  const photoJournalArticles = articles.filter(
-    (a) => a.articleType === 'photo_journal',
-  );
 
   return (
     <main className="bg-background">
@@ -119,23 +116,6 @@ export default async function ExplorePage() {
             socialCounts={socialCounts}
           />
         </section>
-
-        {/* フォト日記 — インスタ風の没入記事 */}
-        {photoJournalArticles.length > 0 ? (
-          <section id="photo-journal">
-            <SectionHeader
-              kicker="フォト日記"
-              title="写真と短い言葉で街を歩く"
-              subtitle="縦スクロールで 1 枚ずつ全画面表示。インスタを読むみたいに没入できます。"
-              href="/articles?type=photo_journal"
-            />
-            <ArticleScrollSection
-              articles={photoJournalArticles}
-              moreHref="/articles?type=photo_journal"
-              socialCounts={socialCounts}
-            />
-          </section>
-        ) : null}
 
         {/* 駐在員ホームへの導線（軽め） */}
         <section className="rounded-2xl bg-primary-500/10 px-6 py-8 text-center ring-1 ring-border">

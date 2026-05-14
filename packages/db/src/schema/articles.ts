@@ -132,6 +132,12 @@ export const articles = pgTable(
      */
     articleType: articleTypeEnum('article_type').notNull().default('spot_guide'),
     /**
+     * 本文スタイル。'photo_journal' (default) or 'classic'。
+     * articleType と直交する概念で、どのカテゴリでも 2 つの本文表現を選べる。
+     * manual/0037_body_style.sql。
+     */
+    bodyStyle: text('body_style').notNull().default('photo_journal'),
+    /**
      * 旅程プラン用の構造化ブロック配列（articleType='itinerary' のとき使う）。
      * { startTime, endTime, spotId|freeName, transportToNext, travelMinutesAfter, notes }[]
      * マイグレーション: `manual/0018_itinerary_blocks.sql`
