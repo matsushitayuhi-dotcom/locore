@@ -92,6 +92,74 @@ export async function getFollowCounts(userId: string): Promise<FollowCounts> {
   }
 }
 
+/**
+ * フォロワー一覧（userId をフォローしている人たち）。
+ * 自分自身のリストを取得する用途を想定（RLS で他人のリストは見えない）。
+ */
+export type FollowEntry = {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  residencyCity: string | null;
+  residencyCountry: string | null;
+  followedAt: string;
+};
+
+export async function listFollowers(userId: string): Promise<FollowEntry[]> {
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: schema.users.id,
+        displayName: schema.users.displayName,
+        avatarUrl: schema.users.avatarUrl,
+        bio: schema.users.bio,
+        residencyCity: schema.users.residencyCity,
+        residencyCountry: schema.users.residencyCountry,
+        followedAt: schema.userFollows.createdAt,
+      })
+      .from(schema.userFollows)
+      .innerJoin(schema.users, eq(schema.users.id, schema.userFollows.followerId))
+      .where(eq(schema.userFollows.followeeId, userId))
+      .orderBy(sql`${schema.userFollows.createdAt} desc`)
+      .limit(200);
+    return rows.map((r) => ({
+      ...r,
+      followedAt: r.followedAt.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function listFollowing(userId: string): Promise<FollowEntry[]> {
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: schema.users.id,
+        displayName: schema.users.displayName,
+        avatarUrl: schema.users.avatarUrl,
+        bio: schema.users.bio,
+        residencyCity: schema.users.residencyCity,
+        residencyCountry: schema.users.residencyCountry,
+        followedAt: schema.userFollows.createdAt,
+      })
+      .from(schema.userFollows)
+      .innerJoin(schema.users, eq(schema.users.id, schema.userFollows.followeeId))
+      .where(eq(schema.userFollows.followerId, userId))
+      .orderBy(sql`${schema.userFollows.createdAt} desc`)
+      .limit(200);
+    return rows.map((r) => ({
+      ...r,
+      followedAt: r.followedAt.toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /** 現在のユーザーが target をフォロー中か */
 export async function isFollowing(targetUserId: string): Promise<boolean> {
   const me = await getCurrentUser();

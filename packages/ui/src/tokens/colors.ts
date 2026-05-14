@@ -59,14 +59,16 @@ export const semantic = {
 } as const;
 
 /**
- * Local score gradient — Editorial Light の terra-cotta 系で 3 段に分ける。
- * 70-100 = 深い terra-cotta, 30-69 = 中間 amber, 0-29 = 淡いベージュ
- * (以前は emerald = 緑だったが、ブランドカラー統一のため変更)
+ * Local score gradient — Editorial Light の落ち着いたアース系で 3 段に分ける。
+ * 70-100 = 深い asphalt brown, 30-69 = 中間 warm taupe, 0-29 = 淡いベージュ
+ *
+ * 以前は emerald 緑だった → terra-cotta(#B5453A) は赤すぎた、
+ * という履歴を経て、彩度を抑えた茶系に落ち着かせた。
  */
 export const local = {
-  high: "#B5453A", // terra-cotta deep
-  mid:  "#E58D3B", // warm amber
-  low:  "#F4E0CB", // soft beige
+  high: "#7A4A33", // 深いブラウン（炒り立てコーヒー寄り）
+  mid:  "#B58563", // ウォーム・トープ（落ち着いたキャメル）
+  low:  "#E8D9C2", // ソフトベージュ
 } as const;
 
 export const colors = {

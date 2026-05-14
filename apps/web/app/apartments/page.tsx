@@ -216,8 +216,107 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
         <CommunityDisclaimer kind="apartment" />
       </div>
 
-      {/* フィルタ ---------------------------------------------------------- */}
-      <section className="mt-6 space-y-3 rounded-xl bg-card p-4 ring-1 ring-border">
+      {/* フィルタ（プルダウン式 / SUUMO 風）--------------------------------- */}
+      <form
+        action="/apartments"
+        method="GET"
+        className="mt-6 flex flex-wrap items-end gap-2 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
+      >
+        <FilterSelect
+          name="type"
+          label="形態"
+          defaultValue={selectedTypes[0] ?? ''}
+          options={[
+            { value: '', label: 'すべて' },
+            ...APARTMENT_LISTING_TYPES.map((t) => ({
+              value: t,
+              label: APARTMENT_LISTING_TYPE_LABEL[t],
+            })),
+          ]}
+        />
+        <FilterSelect
+          name="rent"
+          label="家賃帯"
+          defaultValue={rentBucket ?? ''}
+          options={[
+            { value: '', label: '指定なし' },
+            ...RENT_BUCKETS.map((b) => ({ value: b.id, label: b.label })),
+          ]}
+        />
+        <FilterSelect
+          name="bedrooms"
+          label="寝室"
+          defaultValue={bedroomFilter ?? ''}
+          options={[
+            { value: '', label: '指定なし' },
+            ...BEDROOM_OPTIONS.map((b) => ({ value: b.id, label: b.label })),
+          ]}
+        />
+        <FilterSelect
+          name="furnished"
+          label="家具"
+          defaultValue={furnishedOnly ? '1' : ''}
+          options={[
+            { value: '', label: '指定なし' },
+            { value: '1', label: '家具付きのみ' },
+          ]}
+        />
+        <FilterSelect
+          name="pets"
+          label="ペット"
+          defaultValue={petsOnly ? '1' : ''}
+          options={[
+            { value: '', label: '指定なし' },
+            { value: '1', label: 'ペット可' },
+          ]}
+        />
+        <FilterSelect
+          name="sort"
+          label="並び順"
+          defaultValue={sort}
+          options={SORT_OPTIONS.map((s) => ({ value: s.id, label: s.label }))}
+        />
+        <div className="flex flex-1 items-end gap-2">
+          <div className="min-w-[80px] flex-1">
+            <label
+              htmlFor="arr"
+              className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+            >
+              区
+            </label>
+            <input
+              id="arr"
+              name="arr"
+              defaultValue={arrFilter}
+              placeholder="11e"
+              className="h-9 w-full rounded-md border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            className="h-9 shrink-0 rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+          >
+            適用
+          </button>
+          {(selectedTypes.length > 0 ||
+            rentBucket ||
+            bedroomFilter ||
+            arrFilter ||
+            furnishedOnly ||
+            petsOnly ||
+            sort !== 'recent') ? (
+            <Link
+              href="/apartments"
+              className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
+            >
+              リセット
+            </Link>
+          ) : null}
+        </div>
+      </form>
+
+      {/* 旧 UI の section（ピル並びのフィルタ）は廃止 */}
+      <section className="mt-6 hidden space-y-3 rounded-xl bg-card p-4 ring-1 ring-border">
         {/* 形態 */}
         <div>
           <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
@@ -554,6 +653,41 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
 // =============================================================================
 // 日付フォーマッタ
 // =============================================================================
+
+function FilterSelect({
+  name,
+  label,
+  defaultValue,
+  options,
+}: {
+  name: string;
+  label: string;
+  defaultValue: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="min-w-[110px] flex-1 sm:flex-none">
+      <label
+        htmlFor={`f-${name}`}
+        className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+      >
+        {label}
+      </label>
+      <select
+        id={`f-${name}`}
+        name={name}
+        defaultValue={defaultValue}
+        className="h-9 w-full rounded-md border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
 
 function formatAvailableFrom(d: string): string {
   const date = new Date(d.length === 10 ? d + 'T00:00:00Z' : d);

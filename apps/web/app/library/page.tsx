@@ -31,7 +31,7 @@ const durationMap: Record<string, '1h' | '半日' | '1日' | '数時間'> = {
 type SearchProps = { searchParams?: { tab?: string } };
 
 export default async function LibraryPage({ searchParams }: SearchProps) {
-  await requireUser('/library');
+  const me = await requireUser('/library');
   const tab = (searchParams?.tab ?? 'articles') as
     | 'articles'
     | 'itineraries'
@@ -123,8 +123,7 @@ export default async function LibraryPage({ searchParams }: SearchProps) {
   const guides = articles.filter((a) => a.articleType !== 'itinerary');
   const allArticleIds = new Set(articles.map((a) => a.id));
 
-  // スポット
-  const me = await requireUser();
+  // スポット（me は冒頭で取得済み）
   const db = getDb();
   const [foldersRows, bookmarkRows] = await Promise.all([
     db
@@ -166,11 +165,31 @@ export default async function LibraryPage({ searchParams }: SearchProps) {
               気になった記事・旅程・スポットを、自分の旅の前夜に見返せるようにしておく場所。フォルダで自由に整理してください。
             </p>
           </div>
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              フィードに戻る
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/residents/${me.id}`}
+              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+            >
+              プロフィール
+            </Link>
+            <Link
+              href={`/residents/${me.id}/followers`}
+              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+            >
+              フォロワー
+            </Link>
+            <Link
+              href={`/residents/${me.id}/following`}
+              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+            >
+              フォロー中
+            </Link>
+            <Link href="/">
+              <Button variant="outline" size="sm">
+                フィードに戻る
+              </Button>
+            </Link>
+          </div>
         </header>
 
         <LibraryTabs

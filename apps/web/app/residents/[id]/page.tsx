@@ -9,6 +9,7 @@ import {
   MessageCircle,
   ArrowLeft,
   Home as HomeIcon,
+  Users,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import { schema } from '@locore/db';
@@ -25,6 +26,8 @@ import {
   RESIDENCE_COUNTRY_BY_CODE,
   residenceYearsLabel,
 } from '@/lib/resident/masters';
+import { getFollowCounts, isFollowing } from '@/lib/follow/actions';
+import { FollowButton } from '@/components/profile/FollowButton';
 
 /**
  * /residents/[id] — 住人の公開プロフィール（マッチングアプリ風）。
@@ -88,6 +91,11 @@ export default async function ResidentDetailPage({ params }: Params) {
 
   const me = await getCurrentUser();
   const isMe = me?.id === r.id;
+
+  const [followCounts, viewerFollows] = await Promise.all([
+    getFollowCounts(r.id),
+    me && !isMe ? isFollowing(r.id) : Promise.resolve(false),
+  ]);
 
   const countryLabel = r.residencyCountry
     ? RESIDENCE_COUNTRY_BY_CODE[r.residencyCountry] ?? r.residencyCountry
@@ -193,9 +201,37 @@ export default async function ResidentDetailPage({ params }: Params) {
               </p>
             ) : null}
 
+            {/* フォロー数 / フォロー中数（クリックで一覧） */}
+            <div className="mt-5 flex items-center gap-5 text-[12px]">
+              <Link
+                href={`/residents/${r.id}/followers`}
+                className="inline-flex items-baseline gap-1 hover:underline"
+              >
+                <span className="text-[16px] font-semibold tabular text-foreground">
+                  {followCounts.followers.toLocaleString('ja-JP')}
+                </span>
+                <span className="text-foreground/60">フォロワー</span>
+              </Link>
+              <Link
+                href={`/residents/${r.id}/following`}
+                className="inline-flex items-baseline gap-1 hover:underline"
+              >
+                <span className="text-[16px] font-semibold tabular text-foreground">
+                  {followCounts.following.toLocaleString('ja-JP')}
+                </span>
+                <span className="text-foreground/60">フォロー中</span>
+              </Link>
+            </div>
+
             {/* CTA */}
             {!isMe ? (
-              <div className="mt-6 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
+                <FollowButton
+                  targetUserId={r.id}
+                  initialFollowing={viewerFollows}
+                  initialFollowerCount={followCounts.followers}
+                  viewerLoggedIn={!!me}
+                />
                 <Link
                   href={`/chat?to=${r.id}`}
                   className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
@@ -215,7 +251,7 @@ export default async function ResidentDetailPage({ params }: Params) {
             ) : (
               <Link
                 href="/settings/profile"
-                className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-[12px] font-medium text-foreground ring-1 ring-border hover:bg-muted"
+                className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-[12px] font-medium text-foreground ring-1 ring-border hover:bg-muted"
               >
                 プロフィールを編集
               </Link>
