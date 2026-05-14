@@ -340,12 +340,12 @@ VALUES (
     {
       "id":"tmp-s3","startTime":"12:00","endTime":"13:30",
       "freeName":"Rue Montorgueil",
-      "notes":"L\'Escargot Montorgueil か Compagnie Generale でランチ。塩バターサブレを必ず買う",
+      "notes":"L''Escargot Montorgueil か Compagnie Generale でランチ。塩バターサブレを必ず買う",
       "transportToNext":"walk","transportNote":"Rue Etienne Marcel 東へ","travelMinutesAfter":15
     },
     {
       "id":"tmp-s4","startTime":"14:00","endTime":"15:30",
-      "freeName":"L\'As du Fallafel (Rue des Rosiers)",
+      "freeName":"L''As du Fallafel (Rue des Rosiers)",
       "notes":"€11 のファラフェル。午後 2 時が行列の谷"
     }
   ]'::jsonb,
@@ -354,7 +354,7 @@ VALUES (
     {"imageUrl":"https://picsum.photos/seed/locore-itin-sakura-2/960/1200","caption":"サモトラケのニケへ最短ルートで。観光客が増える前に。","locationName":"Musée du Louvre 地下","position":1},
     {"imageUrl":"https://picsum.photos/seed/locore-itin-sakura-3/960/1200","caption":"Palais Royal、Buren の縞模様の柱。地元のパリジャンも普通に通る抜け道。","locationName":"Palais Royal","position":2},
     {"imageUrl":"https://picsum.photos/seed/locore-itin-sakura-4/960/1200","caption":"Rue Montorgueil の市場通り。塩バターサブレ €4.50 を片手にぶらぶら。","locationName":"Rue Montorgueil","position":3},
-    {"imageUrl":"https://picsum.photos/seed/locore-itin-sakura-5/960/1200","caption":"L\'As du Fallafel €11。並んだ甲斐ある。15 分で食べ終わる。","locationName":"Rue des Rosiers","position":4},
+    {"imageUrl":"https://picsum.photos/seed/locore-itin-sakura-5/960/1200","caption":"L''As du Fallafel €11。並んだ甲斐ある。15 分で食べ終わる。","locationName":"Rue des Rosiers","position":4},
     {"imageUrl":"https://picsum.photos/seed/locore-itin-sakura-6/960/1200","caption":"マレの石畳。午後の柔らかい光がパリらしい。これで時差ボケの 1 日は終了。","locationName":"Le Marais","position":5}
   ]'::jsonb,
   true
