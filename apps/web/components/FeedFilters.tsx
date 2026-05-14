@@ -43,12 +43,17 @@ const TYPE_TABS: { id: TypeFilter; label: string }[] = [
   { id: 'all', label: 'すべて' },
   { id: 'spot_guide', label: 'スポット紹介' },
   { id: 'itinerary', label: '旅程プラン' },
+  { id: 'photo_journal', label: 'フォト日記' },
   { id: 'expat_info', label: '駐在者情報' },
 ];
 
 function isTypeFilter(v: string | null | undefined): v is TypeFilter {
   return (
-    v === 'all' || v === 'spot_guide' || v === 'itinerary' || v === 'expat_info'
+    v === 'all' ||
+    v === 'spot_guide' ||
+    v === 'itinerary' ||
+    v === 'expat_info' ||
+    v === 'photo_journal'
   );
 }
 

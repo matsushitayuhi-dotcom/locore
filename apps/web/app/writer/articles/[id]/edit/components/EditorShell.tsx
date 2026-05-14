@@ -17,6 +17,8 @@ import {
   ItineraryBlocksEditor,
   type ItineraryBlock,
 } from './ItineraryBlocksEditor';
+import { PhotoJournalSection } from './PhotoJournalSection';
+import type { PhotoEntry } from '@/lib/mock/types';
 import { SpotsSection } from './SpotsSection';
 import { VideosSection } from './VideosSection';
 import { PreviewPane } from './PreviewPane';
@@ -38,9 +40,10 @@ type ArticleInitial = {
   body: string;
   bodyPaid: string | null;
   itineraryBlocks: ItineraryBlock[] | null;
+  photoEntries: import('@/lib/mock/types').PhotoEntry[] | null;
   priceJpy: number;
   durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | null;
-  articleType: 'spot_guide' | 'itinerary' | 'expat_info';
+  articleType: 'spot_guide' | 'itinerary' | 'expat_info' | 'photo_journal';
   tags: string[];
   cityId: string;
   coverImageUrl: string | null;
@@ -77,6 +80,9 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
   const [coverImageUrl, setCoverImageUrl] = useState(article.coverImageUrl ?? '');
   const [itineraryBlocks, setItineraryBlocks] = useState<ItineraryBlock[]>(
     article.itineraryBlocks ?? [],
+  );
+  const [photoEntries, setPhotoEntries] = useState<PhotoEntry[]>(
+    article.photoEntries ?? [],
   );
 
   // SpotsSection は内部状態を持つので参照だけ受け渡し（旅程ブロックの選択肢に使う）
@@ -152,6 +158,8 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
         bodyPaid,
         itineraryBlocks:
           basic.articleType === 'itinerary' ? itineraryBlocks : null,
+        photoEntries:
+          basic.articleType === 'photo_journal' ? photoEntries : [],
         priceJpy: basic.priceJpy,
         durationType: basic.durationType || undefined,
         articleType: basic.articleType,
@@ -169,7 +177,16 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
     }, 3000);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title, basic, body, bodyPaid, coverImageUrl, tags, itineraryBlocks]);
+  }, [
+    title,
+    basic,
+    body,
+    bodyPaid,
+    coverImageUrl,
+    tags,
+    itineraryBlocks,
+    photoEntries,
+  ]);
 
   // 「保存済み」表示の経過時間を 10 秒ごとに再描画
   const [, setTick] = useState(0);
@@ -194,6 +211,8 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
         bodyPaid,
         itineraryBlocks:
           basic.articleType === 'itinerary' ? itineraryBlocks : null,
+        photoEntries:
+          basic.articleType === 'photo_journal' ? photoEntries : [],
         priceJpy: basic.priceJpy,
         durationType: basic.durationType || undefined,
         articleType: basic.articleType,
@@ -291,6 +310,14 @@ export function EditorShell({ article, spots, videos, cities, tier, googleMapsAp
               onChange={setItineraryBlocks}
               spots={spotsForDropdown}
               googleMapsApiKey={googleMapsApiKey}
+            />
+          ) : null}
+
+          {/* フォト日記のときだけ：写真 + キャプション + 場所のエントリ */}
+          {basic.articleType === 'photo_journal' ? (
+            <PhotoJournalSection
+              value={photoEntries}
+              onChange={setPhotoEntries}
             />
           ) : null}
 

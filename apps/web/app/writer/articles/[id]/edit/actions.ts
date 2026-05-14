@@ -13,11 +13,8 @@ import { runMockModeration } from '@/lib/moderation/mock';
 const PRICE_OPTIONS = [300, 500, 800, 1000, 1500, 2000, 3000, 5000] as const;
 type PriceOption = (typeof PRICE_OPTIONS)[number];
 
-const TIER_PRICE_CAPS: Record<'S' | 'A' | 'B', number> = {
-  S: 5000, // 上限なし扱い（PRD §6.4.3）。ここでは select 上限と一致させる
-  A: 3000,
-  B: 1000,
-};
+// クリエイターランクによる価格上限は 2026-05 に撤廃。
+// 現在は手数料率の差として扱う（writer_profiles.commission_rate_pct）。
 
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T }
@@ -41,16 +38,6 @@ async function assertOwnership(articleId: string) {
     throw new Error('権限がありません');
   }
   return { user, article, db };
-}
-
-async function getWriterTier(userId: string): Promise<'S' | 'A' | 'B'> {
-  const db = getDb();
-  const rows = await db
-    .select({ tier: schema.writerProfiles.tier })
-    .from(schema.writerProfiles)
-    .where(eq(schema.writerProfiles.userId, userId))
-    .limit(1);
-  return (rows[0]?.tier ?? 'B') as 'S' | 'A' | 'B';
 }
 
 // ---------- 記事本体 ----------
@@ -80,6 +67,16 @@ const itineraryBlockSchema = z.object({
     .optional(),
 });
 
+const photoEntrySchema = z.object({
+  imageUrl: z.string().url(),
+  caption: z.string().max(500).default(''),
+  locationName: z.string().max(200).nullable().optional(),
+  spotId: z.string().uuid().nullable().optional(),
+  lat: z.number().min(-90).max(90).nullable().optional(),
+  lng: z.number().min(-180).max(180).nullable().optional(),
+  position: z.number().int().min(0).max(20),
+});
+
 const updateArticleSchema = z.object({
   id: z.string().uuid(),
   title: z.string().trim().min(1).max(200).optional(),
@@ -89,6 +86,8 @@ const updateArticleSchema = z.object({
   bodyPaid: z.string().max(40000).optional().nullable(),
   /** 旅程プラン記事の構造化ブロック（articleType='itinerary' 用） */
   itineraryBlocks: z.array(itineraryBlockSchema).max(60).optional().nullable(),
+  /** 写真ジャーナル記事のエントリ（articleType='photo_journal' 用） */
+  photoEntries: z.array(photoEntrySchema).max(10).optional(),
   priceJpy: z
     .number()
     .int()
@@ -97,7 +96,9 @@ const updateArticleSchema = z.object({
     })
     .optional(),
   durationType: z.enum(['half_day', 'full_day', 'few_hours', 'other']).optional(),
-  articleType: z.enum(['spot_guide', 'itinerary', 'expat_info']).optional(),
+  articleType: z
+    .enum(['spot_guide', 'itinerary', 'expat_info', 'photo_journal'])
+    .optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
   coverImageUrl: z
     .string()
@@ -120,18 +121,8 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
   const data = parsed.data;
   const { user, db } = await assertOwnership(data.id);
 
-  // Tier 上限チェック
-  if (data.priceJpy != null) {
-    const tier = await getWriterTier(user.id);
-    const cap = TIER_PRICE_CAPS[tier];
-    if (data.priceJpy > cap) {
-      return {
-        ok: false,
-        error: `あなたの Tier (${tier}) では ¥${cap.toLocaleString('ja-JP')} までの価格設定が可能です`,
-        fieldErrors: { priceJpy: [`上限 ¥${cap.toLocaleString('ja-JP')}`] },
-      };
-    }
-  }
+  // 価格上限は 2026-05 に撤廃済み。Tier の差は手数料率で扱う。
+  void user;
 
   const patch: Partial<typeof schema.articles.$inferInsert> = {
     updatedAt: new Date(),
@@ -147,6 +138,9 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
       data.itineraryBlocks && data.itineraryBlocks.length > 0
         ? data.itineraryBlocks
         : null;
+  }
+  if (data.photoEntries !== undefined) {
+    patch.photoEntries = data.photoEntries ?? [];
   }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
@@ -186,14 +180,8 @@ export async function autoSaveArticle(input: unknown): Promise<
   const { user, db } = await assertOwnership(data.id);
 
   if (data.priceJpy != null) {
-    const tier = await getWriterTier(user.id);
-    const cap = TIER_PRICE_CAPS[tier];
-    if (data.priceJpy > cap) {
-      return {
-        ok: false,
-        error: `Tier (${tier}) の上限 ¥${cap.toLocaleString('ja-JP')} を超えています`,
-      };
-    }
+    // 価格上限は 2026-05 に撤廃済み。全 Tier で PRICE_OPTIONS 全部選択可。
+    void user;
   }
 
   const patch: Partial<typeof schema.articles.$inferInsert> = {
@@ -210,6 +198,9 @@ export async function autoSaveArticle(input: unknown): Promise<
       data.itineraryBlocks && data.itineraryBlocks.length > 0
         ? data.itineraryBlocks
         : null;
+  }
+  if (data.photoEntries !== undefined) {
+    patch.photoEntries = data.photoEntries ?? [];
   }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;
@@ -243,14 +234,8 @@ export async function saveDraftArticle(input: unknown): Promise<
   const { user, db } = await assertOwnership(data.id);
 
   if (data.priceJpy != null) {
-    const tier = await getWriterTier(user.id);
-    const cap = TIER_PRICE_CAPS[tier];
-    if (data.priceJpy > cap) {
-      return {
-        ok: false,
-        error: `Tier (${tier}) の上限 ¥${cap.toLocaleString('ja-JP')} を超えています`,
-      };
-    }
+    // 価格上限は 2026-05 に撤廃済み。全 Tier で PRICE_OPTIONS 全部選択可。
+    void user;
   }
 
   const patch: Partial<typeof schema.articles.$inferInsert> = {
@@ -267,6 +252,9 @@ export async function saveDraftArticle(input: unknown): Promise<
       data.itineraryBlocks && data.itineraryBlocks.length > 0
         ? data.itineraryBlocks
         : null;
+  }
+  if (data.photoEntries !== undefined) {
+    patch.photoEntries = data.photoEntries ?? [];
   }
   if (data.priceJpy !== undefined) patch.priceJpy = data.priceJpy as PriceOption;
   if (data.durationType !== undefined) patch.durationType = data.durationType;

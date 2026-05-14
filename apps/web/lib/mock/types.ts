@@ -6,11 +6,27 @@ export type DurationType = '1h' | '半日' | '1日' | '数時間';
 
 /**
  * 記事の種別タグ。
- * - spot_guide : 個別の店・場所を紹介する記事
- * - itinerary  : 時間軸ありのコース・モデルプラン
- * - expat_info : 駐在者・在外邦人向けの生活雑学（殺虫剤どこで買う？医療手続き等）
+ * - spot_guide    : 個別の店・場所を紹介する記事
+ * - itinerary     : 時間軸ありのコース・モデルプラン
+ * - expat_info    : 駐在者・在外邦人向けの生活雑学（殺虫剤どこで買う？医療手続き等）
+ * - photo_journal : 写真 + キャプション + 場所のインスタ風ビジュアル記事（縦スクロール）
  */
-export type ArticleType = 'spot_guide' | 'itinerary' | 'expat_info';
+export type ArticleType =
+  | 'spot_guide'
+  | 'itinerary'
+  | 'expat_info'
+  | 'photo_journal';
+
+/** photo_journal の 1 エントリ */
+export type PhotoEntry = {
+  imageUrl: string;
+  caption: string;
+  locationName?: string | null;
+  spotId?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  position: number;
+};
 
 export interface Writer {
   id: string;
@@ -65,6 +81,8 @@ export interface Article {
   bodyPaid?: string | null;
   /** 旅程プラン記事の構造化ブロック（articleType==='itinerary' のときに使う） */
   itineraryBlocks?: ArticleItineraryBlock[] | null;
+  /** フォト日記の写真エントリ（articleType==='photo_journal' のときに使う） */
+  photoEntries?: PhotoEntry[] | null;
   /**
    * クリエイターのサマリ情報（DB 連携で記事と一緒に JOIN して詰められる）。
    * mock や旧データでは undefined のまま → ArticleGrid 側で「匿名」表示。

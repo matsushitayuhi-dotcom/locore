@@ -12,12 +12,17 @@ export type DurationType = "1h" | "half-day" | "1day" | "multi-day" | string;
  * - `spot_guide`: 個別の店・場所を紹介する記事
  * - `itinerary` : 時間軸ありのコース・モデルプラン
  */
-export type ArticleType = "spot_guide" | "itinerary" | "expat_info";
+export type ArticleType =
+  | "spot_guide"
+  | "itinerary"
+  | "expat_info"
+  | "photo_journal";
 
 const ARTICLE_TYPE_LABEL: Record<ArticleType, string> = {
   spot_guide: "スポット",
   itinerary: "旅程",
   expat_info: "駐在者情報",
+  photo_journal: "フォト日記",
 };
 
 export interface ArticleCardAuthor {

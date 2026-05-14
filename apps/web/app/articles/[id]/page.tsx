@@ -18,6 +18,7 @@ import { Paywall } from '../../../components/Paywall';
 import { AddToTripButton } from '../../../components/AddToTripButton';
 import { ArticleGrid } from '../../../components/ArticleGrid';
 import { ItineraryTimeline } from '../../../components/ItineraryTimeline';
+import { PhotoJournalView } from '../../../components/PhotoJournalView';
 import { SpotsCardList } from '../../../components/SpotsCardList';
 import { ArticleSpotsMap } from '../../../components/ArticleSpotsMap';
 import { LikeButton } from '../../../components/article/LikeButton';
@@ -293,6 +294,43 @@ export default async function ArticleDetailPage({
               spots={spots}
               defaultUnlocked={unlocked}
             />
+          ) : null}
+
+          {/* フォト日記記事のときだけ縦スクロール没入ビュー（購入後のみ全部見せる） */}
+          {article.articleType === 'photo_journal' &&
+          article.photoEntries &&
+          article.photoEntries.length > 0 ? (
+            unlocked ? (
+              <PhotoJournalView
+                entries={article.photoEntries}
+                title={article.title}
+              />
+            ) : (
+              <section className="relative overflow-hidden rounded-2xl bg-neutral-950 text-white">
+                <div className="aspect-[4/5] w-full sm:aspect-[3/4]">
+                  {article.photoEntries[0] ? (
+                    // 最初の 1 枚だけプレビュー
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={article.photoEntries[0].imageUrl}
+                      alt=""
+                      className="h-full w-full object-cover opacity-60"
+                    />
+                  ) : null}
+                </div>
+                <div className="px-6 py-6 text-center">
+                  <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-primary-300">
+                    フォト日記
+                  </p>
+                  <p className="mt-2 text-[16px] font-bold leading-snug">
+                    残り <span className="tabular">{article.photoEntries.length - 1}</span> 枚 + キャプションは購入後に
+                  </p>
+                  <p className="mt-1 text-[12px] text-white/60">
+                    縦スクロールで 1 枚ずつ全画面表示されます
+                  </p>
+                </div>
+              </section>
+            )
           ) : null}
 
           {unlocked ? (

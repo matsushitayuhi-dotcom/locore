@@ -26,6 +26,30 @@ import { articleTypeEnum } from './enums';
  * - `freeName` はまだ spot を作っていない場合のフォールバック
  * - `transportToNext` は「このブロックから次のブロックへの移動手段」
  */
+/**
+ * 写真ジャーナル形式記事の 1 エントリ（articles.photo_entries JSONB の中身）。
+ *
+ * - articleType='photo_journal' のときに最大 10 件保存
+ * - 読み手側は縦スクロール (scroll-snap) で 1 枚ずつ全画面表示
+ * - `spotId` を入れると spots テーブルと紐付く（地図上に出せる）
+ * - `locationName` は自由記述のフォールバック
+ */
+export type PhotoEntry = {
+  /** Supabase Storage の公開 URL */
+  imageUrl: string;
+  /** キャプション。Markdown は使わず、改行可のプレーンテキスト推奨 */
+  caption: string;
+  /** 場所名（自由記述）。"マレ地区 Du Pain et des Idées" など */
+  locationName?: string | null;
+  /** spots テーブルと紐付く場合 */
+  spotId?: string | null;
+  /** spot 紐付け無しのときの代替座標 */
+  lat?: number | null;
+  lng?: number | null;
+  /** 並び順 0-9 */
+  position: number;
+};
+
 export type ItineraryBlock = {
   /** クライアント側の一意識別子（保存後は固定） */
   id: string;
@@ -113,6 +137,14 @@ export const articles = pgTable(
      * マイグレーション: `manual/0018_itinerary_blocks.sql`
      */
     itineraryBlocks: jsonb('itinerary_blocks').$type<ItineraryBlock[]>(),
+    /**
+     * 写真ジャーナル形式（articleType='photo_journal'）のエントリ配列。最大 10。
+     * マイグレーション: `manual/0036_photo_journal_articles.sql`
+     */
+    photoEntries: jsonb('photo_entries')
+      .$type<PhotoEntry[]>()
+      .notNull()
+      .default([]),
     warned: boolean('warned').notNull().default(false),
     moderationScore: integer('moderation_score'),
     publishedAt: timestamp('published_at', { withTimezone: true }),

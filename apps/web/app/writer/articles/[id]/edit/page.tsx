@@ -163,6 +163,7 @@ export default async function EditArticlePage({
         body: article.body,
         bodyPaid: article.bodyPaid,
         itineraryBlocks: article.itineraryBlocks ?? null,
+        photoEntries: article.photoEntries ?? [],
         priceJpy: article.priceJpy,
         durationType: article.durationType,
         articleType: article.articleType,

@@ -33,7 +33,7 @@ export async function getPublishedDbArticles(
     priceJpy: number;
     tags: string[];
     durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | null;
-    articleType: 'spot_guide' | 'itinerary' | 'expat_info';
+    articleType: 'spot_guide' | 'itinerary' | 'expat_info' | 'photo_journal';
     createdAt: Date;
     publishedAt: Date | null;
     writerName: string | null;
@@ -168,6 +168,7 @@ export async function getDbArticleBundle(id: string): Promise<{
         body: schema.articles.body,
         bodyPaid: schema.articles.bodyPaid,
         itineraryBlocks: schema.articles.itineraryBlocks,
+        photoEntries: schema.articles.photoEntries,
         coverImageUrl: schema.articles.coverImageUrl,
         writerId: schema.articles.writerId,
         cityId: schema.articles.cityId,
@@ -442,6 +443,7 @@ export async function getDbArticleBundle(id: string): Promise<{
       body: a.body ?? '',
       bodyPaid: a.bodyPaid ?? null,
       itineraryBlocks: (a.itineraryBlocks as Article['itineraryBlocks']) ?? null,
+      photoEntries: (a.photoEntries as Article['photoEntries']) ?? null,
       coverImageUrl: a.coverImageUrl ?? `https://picsum.photos/seed/${a.id}/960/640`,
       writerId: a.writerId,
       writerName: writer?.name,
