@@ -34,12 +34,13 @@ export function SlideSection({ chapter, title, oneLiner, pageNumber }: Props) {
           <p
             style={{
               fontFamily: DECK.font.serif,
-              fontSize: '220px',
+              fontSize: '260px',
               lineHeight: 0.9,
               letterSpacing: DECK.tracking.tight,
               fontWeight: 600,
               color: DECK.color.terracotta,
               fontVariantNumeric: 'tabular-nums',
+              margin: 0,
             }}
           >
             {String(chapter).padStart(2, '0')}

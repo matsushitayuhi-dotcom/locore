@@ -50,15 +50,17 @@ export function SlideStat({ kicker, value, unit, label, caption, pageNumber }: P
             color: DECK.color.terracotta,
             margin: 0,
             fontVariantNumeric: 'tabular-nums',
+            display: 'inline-flex',
+            alignItems: 'baseline',
+            gap: 20,
           }}
         >
-          {value}
+          <span>{value}</span>
           {unit ? (
             <span
               style={{
                 fontSize: DECK.fontSize.h2,
                 fontFamily: DECK.font.sans,
-                marginLeft: 16,
                 color: DECK.color.coffee,
                 fontWeight: 500,
               }}

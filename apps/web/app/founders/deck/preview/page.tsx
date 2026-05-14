@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { Printer } from 'lucide-react';
 import { DECK } from '@/lib/deck/tokens';
 import { SlideCover } from '@/components/deck/slides/Cover';
 import { SlideSection } from '@/components/deck/slides/Section';
@@ -28,23 +30,32 @@ export default function DeckPreviewPage() {
   return (
     <main className="bg-background">
       <div className="mx-auto max-w-screen-xl px-4 py-10 sm:px-6 sm:py-14">
-        <header className="mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-            Founders Deck · Preview
-          </p>
-          <h1
-            className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[36px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
+        <header className="mb-10 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+              Founders Deck · Preview
+            </p>
+            <h1
+              className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[36px]"
+              style={{
+                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+              }}
+            >
+              ブランドキット + スライドマスター
+            </h1>
+            <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-foreground/65 sm:text-[14px]">
+              A4 縦（210×297mm）で組んだ Founders 50 募集用のスライド見本。
+              そのまま PDF として書き出して配布できます。8 種類のレイアウトを混ぜて
+              編集します。
+            </p>
+          </div>
+          <Link
+            href="/founders/deck/print"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
           >
-            ブランドキット + スライドマスター
-          </h1>
-          <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-foreground/65 sm:text-[14px]">
-            モバイルファースト（9:16 縦長）で組んだ Founders 50 募集用のスライド見本。
-            各カードはそのままインスタストーリーや LINE で共有できるアスペクト比です。
-            8 種類のレイアウトを混ぜて、ピッチを編集していきます。
-          </p>
+            <Printer className="h-3.5 w-3.5" />
+            PDF 出力ページへ
+          </Link>
         </header>
 
         {/* ============================================================ */}
