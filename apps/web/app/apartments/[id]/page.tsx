@@ -304,8 +304,8 @@ export default async function ApartmentDetailPage({ params }: Props) {
 
             {/* 注意（小さく） */}
             <p className="mt-3 text-[10px] leading-relaxed text-foreground/45">
-              Locore は仲介のみを行います。賃貸借契約・敷金・退去のトラブルは
-              当事者間で解決してください。
+              Locore は掲載の場を提供しているだけで、賃貸借契約には関与しません。
+              当事者間で書面を交わしてください。
             </p>
           </div>
         </aside>

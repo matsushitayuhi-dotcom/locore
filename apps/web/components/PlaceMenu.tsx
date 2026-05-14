@@ -150,11 +150,11 @@ export function PlaceMenu({
               ) : null}
 
               <Link
-                href="/world"
+                href={mode === 'resident' ? '/expat' : '/world'}
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-between border-t border-border bg-primary-500/10 px-4 py-3 text-[12px] font-bold text-primary-300 transition hover:bg-primary-500/15"
               >
-                すべての国・地域を見る
+                {mode === 'resident' ? '駐在員ホームへ' : 'すべての国・地域を見る'}
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </>
@@ -247,17 +247,22 @@ function CountryRow({
       </button>
     );
   }
+  // resident モード: 駐在員ホーム /expat に直行（地域には行かない）。
+  // 将来、国別駐在員ホームが増えたら /expat?country={code} or /expat/{code} に拡張。
+  const href = mode === 'resident' ? '/expat' : `/country/${country.code}`;
   return (
     <Link
-      href={`/country/${country.code}`}
+      href={href}
       onClick={onNavigate}
       className="flex items-center justify-between rounded-md px-2.5 py-2 text-[13px] text-foreground hover:bg-primary-500/10"
     >
       <span className="flex items-baseline gap-2">
         <span className="font-semibold">{country.nameJa}</span>
-        <span className="text-[10px] text-foreground/45">
-          {country.activeRegionCount} 地域
-        </span>
+        {mode === 'resident' ? null : (
+          <span className="text-[10px] text-foreground/45">
+            {country.activeRegionCount} 地域
+          </span>
+        )}
       </span>
       <ArrowRight className="h-3 w-3 text-foreground/40" />
     </Link>

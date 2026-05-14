@@ -13,6 +13,7 @@ import {
   type MarketplaceCategory,
 } from '@/lib/community/constants';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
+import { PhotoUploader } from '@/components/community/PhotoUploader';
 
 type Side = 'sell' | 'buy';
 
@@ -31,15 +32,8 @@ export function PostForm() {
   const [negotiable, setNegotiable] = useState(false);
   const [pickupRequired, setPickupRequired] = useState(false);
   const [deliveryAvailable, setDeliveryAvailable] = useState(false);
-  const [photosText, setPhotosText] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [body, setBody] = useState('');
-
-  const parsePhotos = (): string[] =>
-    photosText
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .slice(0, 8);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +47,7 @@ export function PostForm() {
       toast.error('本文は 20 文字以上にしてください');
       return;
     }
-    const photos = parsePhotos();
+    // photos は PhotoUploader が Supabase Storage 経由でアップロード済の URL を持つ
     for (const url of photos) {
       try {
         new URL(url);
@@ -282,20 +276,11 @@ export function PostForm() {
 
       {/* 写真 */}
       <div>
-        <label htmlFor="photos" className="block text-[12px] font-bold text-foreground">
-          写真 URL（1 行に 1 枚、最大 8 枚）
-        </label>
-        <p className="mt-0.5 text-[11px] text-foreground/55">
+        <label className="block text-[12px] font-bold text-foreground">写真</label>
+        <p className="mb-2 mt-0.5 text-[11px] text-foreground/55">
           実物の状態がわかる写真を 1〜数枚（汚れや傷も正直に）
         </p>
-        <textarea
-          id="photos"
-          value={photosText}
-          onChange={(e) => setPhotosText(e.target.value)}
-          rows={3}
-          className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2 text-[12px] leading-relaxed focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
-          placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"
-        />
+        <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={8} />
       </div>
 
       <ContactLeakWarning />

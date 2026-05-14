@@ -130,7 +130,7 @@ export default async function ExpatHomePage() {
           <SectionHeader
             kicker="コミュニティ掲示板"
             title="住人どうしで、直接つながる"
-            subtitle="Locore は仲介のみ。やり取りはメッセージ機能経由。連絡先の本文埋め込みは抑止しています。"
+            subtitle="住人どうしのやり取りに使える掲示の場です。連絡は Locore メッセージ機能経由でどうぞ。"
           />
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <CommunityLinkCard

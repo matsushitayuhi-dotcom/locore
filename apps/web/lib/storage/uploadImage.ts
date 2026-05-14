@@ -42,7 +42,7 @@ function extFromType(type: string): string {
 }
 
 async function uploadToBucket(
-  bucket: 'article-images' | 'profile-avatars',
+  bucket: 'article-images' | 'profile-avatars' | 'community-images',
   file: File,
   maxBytes: number,
 ): Promise<UploadImageResult> {
@@ -117,4 +117,19 @@ export async function uploadAvatar(formData: FormData): Promise<UploadImageResul
     return { ok: false, error: 'ファイルが指定されていません' };
   }
   return uploadToBucket('profile-avatars', file, MAX_BYTES_AVATAR);
+}
+
+/**
+ * コミュニティ投稿（アパート / 売買 / etc.）用の写真アップロード。
+ * 8MB まで、JPEG / PNG / WebP / GIF。
+ * バケット: 'community-images'（Supabase で別途作成して RLS を開く必要あり）。
+ */
+export async function uploadCommunityImage(
+  formData: FormData,
+): Promise<UploadImageResult> {
+  const file = formData.get('file');
+  if (!(file instanceof File)) {
+    return { ok: false, error: 'ファイルが指定されていません' };
+  }
+  return uploadToBucket('community-images', file, MAX_BYTES_ARTICLE);
 }

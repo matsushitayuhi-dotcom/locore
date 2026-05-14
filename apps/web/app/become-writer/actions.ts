@@ -9,7 +9,19 @@ import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 
 const becomeWriterSchema = z.object({
-  residencyCountry: z.string().trim().min(1, '居住国を入力してください').max(80),
+  /**
+   * 居住状況:
+   *   current_resident: 現地に住んでいる（後から認証申請可能）
+   *   past_resident   : 過去に住んでいた（思い出として書ける）
+   *   traveler        : 旅行者として書く（観光客視点）
+   */
+  residencyStatus: z.enum(['current_resident', 'past_resident', 'traveler']),
+  /** 関わっている国（例 'fr' or 'France'）。旅行者でも訪れた国を任意で */
+  residencyCountry: z.string().trim().min(1, '対象の国を入力してください').max(80),
+  /**
+   * 居住年数。current_resident のみ意味を持つ。past_resident でも参考値として
+   * 入れられる。traveler は 0 で OK。
+   */
   residencyYears: z.coerce.number().int().min(0).max(80),
   agreeTerms: z
     .union([z.literal('on'), z.literal('true'), z.boolean()])
@@ -54,13 +66,17 @@ export async function becomeWriter(formData: FormData): Promise<void> {
     .where(eq(schema.users.id, user.id));
 
   // writer_profiles を Tier B で INSERT（重複は無視）
+  // residency_status を保存。commission は B の既定 (25%) のまま、後で
+  // cron が販売実績で再評価する。
   await db
     .insert(schema.writerProfiles)
     .values({
       userId: user.id,
       tier: 'B',
+      residencyStatus: parsed.data.residencyStatus,
       residencyCountry: parsed.data.residencyCountry,
       residencyYears: parsed.data.residencyYears,
+      commissionRatePct: 25,
     })
     .onConflictDoNothing({ target: schema.writerProfiles.userId });
 
@@ -72,6 +88,7 @@ export async function becomeWriter(formData: FormData): Promise<void> {
     targetId: user.id,
     metadata: {
       tier: 'B',
+      residencyStatus: parsed.data.residencyStatus,
       residencyCountry: parsed.data.residencyCountry,
       residencyYears: parsed.data.residencyYears,
     },

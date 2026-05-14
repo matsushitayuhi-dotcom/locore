@@ -37,8 +37,8 @@ export default async function NewApartmentPage() {
           物件を掲載する
         </h1>
         <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
-          写真と要点を丁寧に。Locore は仲介のみを行います。賃貸借契約は必ず正規の書面で
-          締結してください。
+          写真と要点を丁寧に。Locore は掲載の場を提供しているだけで、
+          賃貸借契約には関与しません。契約は必ず正規の書面で締結してください。
         </p>
       </header>
 

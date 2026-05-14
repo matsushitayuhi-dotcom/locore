@@ -11,6 +11,7 @@ import {
   type ApartmentListingType,
 } from '@/lib/community/constants';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
+import { PhotoUploader } from '@/components/community/PhotoUploader';
 
 /**
  * 物件投稿フォーム（貸す側目線）。
@@ -41,21 +42,13 @@ export function ApartmentForm() {
   const [availableUntil, setAvailableUntil] = useState('');
   const [body, setBody] = useState('');
   const [notes, setNotes] = useState('');
-  const [photosText, setPhotosText] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
 
   const numOrNull = (v: string): number | null => {
     if (!v.trim()) return null;
     const n = Number(v);
     if (!isFinite(n) || n < 0) return null;
     return Math.floor(n);
-  };
-
-  const parsePhotos = (): string[] => {
-    return photosText
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0)
-      .slice(0, 12);
   };
 
   const submit = (e: React.FormEvent) => {
@@ -71,8 +64,8 @@ export function ApartmentForm() {
       return;
     }
 
-    const photos = parsePhotos();
-    // ざっくり URL 形式のチェック（厳密にはサーバ側で zod 検証）
+    // photos は PhotoUploader が Supabase Storage 経由でアップロード済の URL を持つ
+    // URL 妥当性チェック（念のため）
     for (const url of photos) {
       try {
         new URL(url);
@@ -421,23 +414,10 @@ export function ApartmentForm() {
 
       {/* 写真 */}
       <div>
-        <label
-          htmlFor="photos"
-          className="mb-1 block text-[12px] font-bold text-foreground/75"
-        >
-          写真 URL（改行区切り、最大 12 枚）
+        <label className="mb-2 block text-[12px] font-bold text-foreground/75">
+          物件の写真
         </label>
-        <textarea
-          id="photos"
-          value={photosText}
-          onChange={(e) => setPhotosText(e.target.value)}
-          rows={4}
-          placeholder={'https://example.com/photo1.jpg\nhttps://example.com/photo2.jpg'}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-[12px] font-mono leading-relaxed focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
-        />
-        <p className="mt-1 text-[10px] text-foreground/45">
-          1 枚目がカード写真になります。最初は明るく広く見える写真を選んでください。
-        </p>
+        <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={12} />
       </div>
 
       {/* 送信 */}
