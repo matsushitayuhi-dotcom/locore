@@ -65,7 +65,7 @@ export function FolderBar({
   };
 
   return (
-    <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-2">
+    <div className="mt-4 flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-2">
       <Chip
         active={selected === null}
         onClick={() => onSelect(null)}

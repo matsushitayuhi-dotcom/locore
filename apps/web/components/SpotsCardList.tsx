@@ -127,7 +127,7 @@ export function SpotsCardList({
                 <div className="space-y-3 border-t border-border bg-primary-500/10 px-4 py-3">
                   {/* 写真ギャラリー（最大 5 枚 / 横スクロール） */}
                   {s.photoUrls && s.photoUrls.length > 1 ? (
-                    <div className="flex gap-2 overflow-x-auto">
+                    <div className="flex gap-2 overflow-x-auto overscroll-x-contain">
                       {s.photoUrls.map((url, idx) => (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img

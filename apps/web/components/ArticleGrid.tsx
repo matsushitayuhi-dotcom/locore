@@ -190,7 +190,7 @@ export function ArticleGrid({
       <div
         className={
           // モバイル横スクロール
-          'flex snap-x snap-mandatory gap-3 overflow-x-auto -mx-4 px-4 pb-2 scrollbar-thin ' +
+          'flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain -mx-4 px-4 pb-2 scrollbar-thin ' +
           // sm+ で grid に切り替え
           'sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 ' +
           'md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'

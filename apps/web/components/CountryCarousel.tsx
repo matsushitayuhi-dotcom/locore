@@ -35,7 +35,7 @@ export function CountryCarousel({ countries }: { countries: CountryListItem[] })
   return (
     <div className="-mx-4 sm:-mx-6">
       <div
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 scrollbar-thin sm:px-6"
+        className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2 scrollbar-thin sm:px-6"
         // iOS / Android のスムースで惰性のあるパンを有効化
         style={{ WebkitOverflowScrolling: 'touch' }}
       >

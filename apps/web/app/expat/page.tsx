@@ -163,7 +163,7 @@ export default async function ExpatHomePage() {
               {/* 横スクロール: 各カードは固定幅、snap で左端揃え。
                   スマホは 1.6 枚、PC は 4.2 枚見えるイメージ */}
               <ul
-                className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
                 style={{ scrollSnapStop: 'always' }}
               >
                 {posts.map((p) => (

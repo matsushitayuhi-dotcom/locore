@@ -116,6 +116,8 @@
     color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* iOS Safari の bounce が親に伝播してページがガタガタするのを抑止 */
+    overscroll-behavior-x: none;
   }
 
   body {
@@ -124,6 +126,10 @@
     font-family: var(--font-sans-jp);
     font-feature-settings: 'palt' 1;
     letter-spacing: 0.005em;
+    /* どこかでうっかり 1-2px ハミ出しても横スクロールを発生させないセーフティネット */
+    overflow-x: hidden;
+    /* タッチ操作の横方向 over-scroll も封じる (iOS Safari) */
+    overscroll-behavior-x: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
