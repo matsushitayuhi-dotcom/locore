@@ -96,7 +96,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
         </Link>
         {partner ? (
           <Link
-            href={`/writers/${partner.id}`}
+            href={`/residents/${partner.id}`}
             className="flex items-center gap-2"
           >
             <Avatar size="sm">

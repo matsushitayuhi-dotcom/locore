@@ -178,7 +178,7 @@ export default async function ArticleDetailPage({
         {/* Writer block */}
         {writer ? (
           <Link
-            href={`/writers/${writer.id}`}
+            href={`/residents/${writer.id}`}
             className="mt-6 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 transition hover:bg-muted"
           >
             <Avatar size="md">

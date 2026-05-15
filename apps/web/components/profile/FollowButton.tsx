@@ -38,7 +38,7 @@ export function FollowButton({
   const onClick = () => {
     if (!viewerLoggedIn) {
       router.push(
-        `/auth/login?redirectTo=${encodeURIComponent(`/writers/${targetUserId}`)}`,
+        `/auth/login?redirectTo=${encodeURIComponent(`/residents/${targetUserId}`)}`,
       );
       return;
     }

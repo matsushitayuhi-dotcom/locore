@@ -415,12 +415,11 @@ export default async function ResidentDetailPage({ params }: Params) {
                 {r.displayName}
               </h1>
               {isWriter ? (
-                <Link
-                  href={`/writers/${r.id}`}
-                  className="rounded-full bg-accent-300/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/75 hover:bg-accent-300/50"
+                <span
+                  className="rounded-full bg-accent-300/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/75"
                 >
                   Writer
-                </Link>
+                </span>
               ) : null}
             </div>
 
@@ -491,14 +490,6 @@ export default async function ResidentDetailPage({ params }: Params) {
                     <MessageCircle className="h-4 w-4" />
                     メッセージを送る
                   </Link>
-                  {isWriter ? (
-                    <Link
-                      href={`/writers/${r.id}`}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-[13px] font-medium text-foreground ring-1 ring-border transition hover:bg-muted"
-                    >
-                      執筆ページを見る
-                    </Link>
-                  ) : null}
                 </>
               ) : null}
             </div>
@@ -518,7 +509,6 @@ export default async function ResidentDetailPage({ params }: Params) {
             label="記事"
             value={`${articleCount}`}
             hint="公開中"
-            href={isWriter ? `/writers/${r.id}` : undefined}
           />
           <StatTile
             label="フォロワー"
@@ -709,12 +699,9 @@ export default async function ResidentDetailPage({ params }: Params) {
               ))}
             </ul>
             {articleCount > articles.length ? (
-              <Link
-                href={`/writers/${r.id}`}
-                className="mt-3 inline-block text-[12px] font-semibold text-primary-300 hover:underline"
-              >
-                すべての記事を見る ({articleCount} 件) →
-              </Link>
+              <p className="mt-3 text-[12px] text-foreground/55">
+                ほかに {articleCount - articles.length} 本の公開記事があります。
+              </p>
             ) : null}
           </Section>
         ) : null}

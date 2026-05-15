@@ -51,7 +51,7 @@ export function UserServicesList({
     }
     if (!viewerUserId) {
       router.push(
-        `/auth/login?redirectTo=${encodeURIComponent(`/writers/${ownerUserId}`)}`,
+        `/auth/login?redirectTo=${encodeURIComponent(`/residents/${ownerUserId}`)}`,
       );
       return;
     }
