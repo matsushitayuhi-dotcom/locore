@@ -1,9 +1,21 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Sparkles, Loader2, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
-import { testAiParisEvents, type AiTestResult } from './actions';
+import {
+  Sparkles,
+  Loader2,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Send,
+} from 'lucide-react';
+import {
+  testAiParisEvents,
+  runAiParisEventsNow,
+  type AiTestResult,
+} from './actions';
 
 /**
  * /admin/board の「Claude / Anthropic API 動作確認」セクション。
@@ -14,7 +26,9 @@ import { testAiParisEvents, type AiTestResult } from './actions';
  * - 取り扱いコスト: 1 回あたり概ね $0.10 程度（web_search 含む）
  */
 export function AiTestPanel() {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isRealRunning, startRealRun] = useTransition();
   const [result, setResult] = useState<AiTestResult | null>(null);
   const [showRaw, setShowRaw] = useState(false);
 
@@ -40,6 +54,35 @@ export function AiTestPanel() {
     });
   };
 
+  const onRealRun = () => {
+    if (
+      !confirm(
+        'Claude を呼んで取得結果を board_posts に保存します（実際にニュースが /board や /expat に出ます）。実行しますか？',
+      )
+    ) {
+      return;
+    }
+    setResult(null);
+    setShowRaw(false);
+    startRealRun(async () => {
+      try {
+        const res = await runAiParisEventsNow();
+        if (res.ok) {
+          toast.success(
+            `${res.inserted} 件を掲示板に投稿しました（${(res.durationMs / 1000).toFixed(1)} 秒）`,
+            { description: '/board と /expat にすぐ反映されます' },
+          );
+          router.refresh();
+        } else {
+          toast.error(res.error);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '不明なエラー';
+        toast.error(`実行失敗: ${msg}`);
+      }
+    });
+  };
+
   return (
     <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
       <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
@@ -52,28 +95,49 @@ export function AiTestPanel() {
             パリのイベント取得テスト
           </h2>
           <p className="mt-1 text-[12px] text-foreground/60">
-            DB に書き込まずに Claude (claude-sonnet-4-5) + web_search を実行して、
-            パリの今週イベントを取得します。1 回 ≒ $0.10 程度。
+            Claude (claude-sonnet-4-5) + web_search でパリの今週イベントを取得。
+            「テスト実行」は DB に書き込まない、「本番実行」は board_posts に投稿。
+            1 回 ≒ $0.10 程度。
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onRun}
-          disabled={isPending}
-          className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-60"
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              実行中…（最大 60 秒）
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-3.5 w-3.5" />
-              テスト実行
-            </>
-          )}
-        </button>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={onRun}
+            disabled={isPending || isRealRunning}
+            className="inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-[12px] font-semibold text-foreground ring-1 ring-border transition hover:bg-muted disabled:opacity-60"
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                実行中…
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3.5 w-3.5" />
+                テスト実行
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onRealRun}
+            disabled={isPending || isRealRunning}
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-60"
+          >
+            {isRealRunning ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                投稿中…
+              </>
+            ) : (
+              <>
+                <Send className="h-3.5 w-3.5" />
+                本番実行 (投稿)
+              </>
+            )}
+          </button>
+        </div>
       </header>
 
       {result === null && !isPending ? (
