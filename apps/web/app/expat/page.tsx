@@ -136,7 +136,28 @@ export default async function ExpatHomePage() {
           </ul>
         </section>
 
-        {/* 2. カテゴリ別の新着 — 横スクロールのカルーセル */}
+        {/* 2. 新着ニュース掲示板 (カテゴリタイルの直下) */}
+        <section>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+                新着ニュース
+              </p>
+              <h2 className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]">
+                今日と明日の暮らし情報
+              </h2>
+            </div>
+            <Link
+              href="/board?audience=resident"
+              className="text-[12px] font-semibold text-primary-300 hover:underline"
+            >
+              すべて見る →
+            </Link>
+          </div>
+          <BoardWidget posts={residentNews} />
+        </section>
+
+        {/* 3. カテゴリ別の新着 — 横スクロールのカルーセル */}
         {KINDS.map(({ kind }) => {
           const posts = postsByKind[kind];
           if (posts.length === 0) return null;
@@ -188,27 +209,6 @@ export default async function ExpatHomePage() {
             </section>
           );
         })}
-
-        {/* 3. 新着ニュース掲示板 */}
-        <section>
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                新着ニュース
-              </p>
-              <h2 className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]">
-                今日と明日の暮らし情報
-              </h2>
-            </div>
-            <Link
-              href="/board?audience=resident"
-              className="text-[12px] font-semibold text-primary-300 hover:underline"
-            >
-              すべて見る →
-            </Link>
-          </div>
-          <BoardWidget posts={residentNews} />
-        </section>
 
         {/* 4. 駐在者向け記事 */}
         {expatArticles.length > 0 ? (

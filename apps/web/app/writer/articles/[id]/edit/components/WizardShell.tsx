@@ -119,6 +119,12 @@ export function WizardShell({
   );
 
   const isItinerary = basic.articleType === 'itinerary';
+  /**
+   * 駐在者向け実務情報 (expat_info) は地図上のスポットを必須にしない。
+   * 「殺虫剤はここで買えました」「ビザ申請の流れ」のような文章主体の
+   * 記事ではスポット登録があっても無くても良いというポリシー。
+   */
+  const isExpatInfo = basic.articleType === 'expat_info';
   const totalSteps: 3 | 4 = isItinerary ? 4 : 3;
   // itinerary 以外のときは step=3 を飛ばして step=4 を「Step 3 = 公開」として扱う
   const visibleStepIndex = step >= 3 && !isItinerary ? step - 1 : step;
@@ -232,7 +238,9 @@ export function WizardShell({
     missing.push('本文 100 字以上');
   if (bodyStyle === 'photo_journal' && !photoEntriesValid)
     missing.push('写真 1 枚以上');
-  if (spotsForDropdown.length === 0) missing.push('スポット 1 件以上');
+  // expat_info はスポット任意。それ以外（spot_guide / itinerary）は最低 1 件必要
+  if (!isExpatInfo && spotsForDropdown.length === 0)
+    missing.push('スポット 1 件以上');
   if (!coverImageUrl.trim()) missing.push('カバー画像');
   if (isItinerary && itineraryBlocks.length < 2) missing.push('旅程ブロック 2 件以上');
 
@@ -253,8 +261,8 @@ export function WizardShell({
         return;
       }
     }
-    // step 2 → 3: スポットチェック
-    if (step === 2 && spotsForDropdown.length === 0) {
+    // step 2 → 3: スポットチェック (expat_info は任意なのでスキップ)
+    if (step === 2 && !isExpatInfo && spotsForDropdown.length === 0) {
       toast.error('スポットを 1 件以上登録してください');
       return;
     }
@@ -326,6 +334,7 @@ export function WizardShell({
           googleMapsApiKey={googleMapsApiKey}
           onChange={setSpotsForDropdown}
           photoEntries={bodyStyle === 'photo_journal' ? photoEntries : []}
+          isOptional={isExpatInfo}
         />
       ) : null}
 
@@ -865,12 +874,15 @@ function Step2Spots({
   googleMapsApiKey,
   onChange,
   photoEntries,
+  isOptional = false,
 }: {
   articleId: string;
   initial: SpotRow[];
   googleMapsApiKey?: string;
   onChange: (next: SpotRow[]) => void;
   photoEntries: PhotoEntry[];
+  /** expat_info 記事のときに true。「任意」表示に切り替える */
+  isOptional?: boolean;
 }) {
   const hinted = photoEntries
     .map((e) => e.locationName)
@@ -889,10 +901,14 @@ function Step2Spots({
             fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
           }}
         >
-          紹介しているスポットを確認する
+          {isOptional
+            ? 'スポットを追加する (任意)'
+            : '紹介しているスポットを確認する'}
         </h2>
         <p className="text-[12px] text-foreground/65">
-          前のステップで写真に付けた場所名はカードとして並びます。追加・並び替えもここからどうぞ。
+          {isOptional
+            ? '駐在者情報の記事ではスポットの登録は任意です。「ここで買えた」など具体的な店舗を紹介したい場合のみ追加してください。'
+            : '前のステップで写真に付けた場所名はカードとして並びます。追加・並び替えもここからどうぞ。'}
         </p>
       </header>
 
