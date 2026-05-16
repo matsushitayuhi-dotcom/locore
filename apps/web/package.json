@@ -17,6 +17,7 @@
     "@locore/db": "workspace:*",
     "@locore/shared": "workspace:*",
     "@anthropic-ai/sdk": "^0.32.1",
+    "resend": "^4.0.0",
     "@locore/ui": "workspace:*",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.105.3",

@@ -196,6 +196,18 @@ export default async function AdminDashboardPage() {
                 </span>
               ) : null}
             </Link>
+            <Link
+              href="/admin/verifications"
+              className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-[12px] font-medium text-foreground ring-1 ring-border transition hover:bg-muted"
+            >
+              居住確認
+            </Link>
+            <Link
+              href="/admin/board"
+              className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-2 text-[12px] font-medium text-foreground ring-1 ring-border transition hover:bg-muted"
+            >
+              掲示板
+            </Link>
             <a
               href="https://supabase.com/dashboard"
               target="_blank"

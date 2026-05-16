@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, index, jsonb } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { residencyVerificationStatusEnum, residencyDocumentTypeEnum } from './enums';
@@ -6,8 +6,12 @@ import { residencyVerificationStatusEnum, residencyDocumentTypeEnum } from './en
 /**
  * residency_verifications — 居住認証の申請・結果。
  *
- * 書類 URL は暗号化済みストレージ参照（document_url_enc）を保持。
- * 30 日後 expire（再申請を促す）。
+ * manual/0041 で拡張: 複数ファイル対応 (document_paths jsonb)、自己申告
+ * の country/city/user_note、編集者用 reviewer_note/rejected_reason、
+ * GDPR 配慮の files_deleted_at を追加。
+ *
+ * 旧フィールド document_url_enc は当面残すが NULL 可能。新規申請では
+ * document_paths を使う。
  */
 export const residencyVerifications = pgTable(
   'residency_verifications',
@@ -17,7 +21,29 @@ export const residencyVerifications = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     documentType: residencyDocumentTypeEnum('document_type').notNull(),
-    documentUrlEnc: text('document_url_enc').notNull(),
+    /** @deprecated 新規は document_paths を使う。旧データ閲覧用に保持 */
+    documentUrlEnc: text('document_url_enc'),
+    /**
+     * Supabase Storage パスの配列。例:
+     *   ["b3f.../utility-bill.pdf", "b3f.../residence-card.jpg"]
+     * 1〜3 ファイル想定。各パスは bucket='verification-docs' 配下。
+     */
+    documentPaths: jsonb('document_paths')
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    /** 自己申告: 在住国 (ISO 2 文字) */
+    country: text('country'),
+    /** 自己申告: 都市 */
+    city: text('city'),
+    /** 提出者の補足メモ */
+    userNote: text('user_note'),
+    /** 編集者の内部メモ (ユーザーには見せない) */
+    reviewerNote: text('reviewer_note'),
+    /** 却下時にユーザーへ通知する理由 */
+    rejectedReason: text('rejected_reason'),
+    /** GDPR: 30 日後 cron で物理削除した時刻。NULL ならファイルは生きている */
+    filesDeletedAt: timestamp('files_deleted_at', { withTimezone: true }),
     status: residencyVerificationStatusEnum('status').notNull().default('pending'),
     submittedAt: timestamp('submitted_at', { withTimezone: true }).notNull().defaultNow(),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),

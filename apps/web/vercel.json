@@ -9,6 +9,10 @@
     {
       "path": "/api/cron/ai-paris-events",
       "schedule": "0 5 * * 1"
+    },
+    {
+      "path": "/api/cron/cleanup-verification-files",
+      "schedule": "0 4 * * 1"
     }
   ]
 }
