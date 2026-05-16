@@ -351,7 +351,6 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
       >
         <div className="relative aspect-[4/3] w-full bg-muted">
           {hero ? (
-            // eslint-disable-next-line jsx-a11y/alt-text
             <Image
               src={hero}
               alt={post.title}

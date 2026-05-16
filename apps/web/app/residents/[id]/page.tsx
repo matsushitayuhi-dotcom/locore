@@ -37,7 +37,6 @@ import { getFollowCounts, isFollowing } from '@/lib/follow/actions';
 import { FollowButton } from '@/components/profile/FollowButton';
 import { CommunityCard } from '@/components/community/CommunityCard';
 import {
-  KIND_LABEL,
   type CommunityKind,
   type CommunityStatus,
 } from '@/lib/community/constants';

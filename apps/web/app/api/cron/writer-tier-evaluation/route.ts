@@ -57,7 +57,7 @@ async function runCron(req: Request) {
   `);
 
   let updated = 0;
-  let createdMissing = 0;
+  const createdMissing = 0;
 
   // 既存 writer_profiles を全件取って Map に
   const profiles = await db
@@ -83,7 +83,8 @@ async function runCron(req: Request) {
       lifetimeSalesCount: r.sales,
       last30DaysRevenueJpy: r.revenue_30d,
     });
-    const { tier, commissionPct } = effectiveTier({
+    // tier はコメント通り DB に保存しないので分割代入しない
+    const { commissionPct } = effectiveTier({
       foundingMember: profile.foundingMember,
       baseTier,
     });
@@ -110,7 +111,7 @@ async function runCron(req: Request) {
     if (rows.some((r) => (r as { writer_id: string }).writer_id === p.userId)) {
       continue;
     }
-    const baseTier: 'B' = 'B';
+    const baseTier = 'B' as const;
     const { commissionPct } = effectiveTier({
       foundingMember: p.foundingMember,
       baseTier,
