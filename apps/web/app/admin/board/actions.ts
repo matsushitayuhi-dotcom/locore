@@ -2,6 +2,7 @@
 
 import 'server-only';
 import { revalidatePath } from 'next/cache';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireEditor } from '@/lib/auth/require-user';
@@ -64,11 +65,19 @@ export type AiRealRunResult =
   | {
       ok: true;
       inserted: number;
+      skipped: number;
       ids: string[];
       events: NonNullable<RunAiResult['events']>;
       durationMs: number;
     }
   | { ok: false; error: string };
+
+/**
+ * 簡易重複判定キー: 日付 + タイトル先頭 40 字（雑だけど効くケースが多い）。
+ */
+function dedupKey(date: string | null, title: string): string {
+  return `${date ?? 'null'}::${title.trim().slice(0, 40)}`;
+}
 
 /**
  * 編集者用 — Claude を呼んで board_posts に **実際に書き込む** 本番実行。
@@ -98,6 +107,7 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
     return {
       ok: true,
       inserted: 0,
+      skipped: 0,
       ids: [],
       events: [],
       durationMs: Date.now() - start,
@@ -106,13 +116,60 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
 
   try {
     const db = getDb();
+
+    // --- 重複検出 -------------------------------------------------------
+    // Claude 取得結果の日付範囲を求めて、その期間の既存 board_posts を取得。
+    // 同じ event_date + title プレフィクスがあれば skip する。
+    const dates = events
+      .map((e) => e.event_date)
+      .filter((d): d is string => !!d)
+      .sort();
+    const dedupExisting = new Set<string>();
+    if (dates.length > 0) {
+      const min = dates[0]!;
+      const max = dates[dates.length - 1]!;
+      const existing = await db
+        .select({
+          title: schema.boardPosts.title,
+          eventDate: schema.boardPosts.eventDate,
+        })
+        .from(schema.boardPosts)
+        .where(
+          and(
+            eq(schema.boardPosts.source, 'ai_event'),
+            gte(schema.boardPosts.eventDate, min),
+            lte(schema.boardPosts.eventDate, max),
+          ),
+        );
+      for (const row of existing) {
+        dedupExisting.add(dedupKey(row.eventDate ?? null, row.title));
+      }
+    }
+
+    const toInsert = events.filter(
+      (e) => !dedupExisting.has(dedupKey(e.event_date, e.title)),
+    );
+    const skipped = events.length - toInsert.length;
+
+    if (toInsert.length === 0) {
+      return {
+        ok: true,
+        inserted: 0,
+        skipped,
+        ids: [],
+        events,
+        durationMs: Date.now() - start,
+      };
+    }
+
     const inserted = await db
       .insert(schema.boardPosts)
       .values(
-        events.map((e) => ({
+        toInsert.map((e) => ({
           title: e.title,
           body: e.body,
-          category: 'event' as const,
+          // Claude が振り分けた category をそのまま採用 (event/transit/admin/食材等)
+          category: e.category,
           audience: 'both' as const,
           eventDate: e.event_date,
           eventLocation: e.event_location,
@@ -130,11 +187,13 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
     revalidatePath('/board');
     revalidatePath('/expat');
     revalidatePath('/explore');
+    revalidatePath('/calendar');
     revalidatePath('/admin/board');
 
     return {
       ok: true,
       inserted: inserted.length,
+      skipped,
       ids: inserted.map((r) => r.id),
       events,
       durationMs: Date.now() - start,

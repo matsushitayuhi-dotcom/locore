@@ -68,9 +68,11 @@ export function AiTestPanel() {
       try {
         const res = await runAiParisEventsNow();
         if (res.ok) {
+          const parts = [`${res.inserted} 件投稿`];
+          if (res.skipped > 0) parts.push(`${res.skipped} 件は重複でスキップ`);
           toast.success(
-            `${res.inserted} 件を掲示板に投稿しました（${(res.durationMs / 1000).toFixed(1)} 秒）`,
-            { description: '/board と /expat にすぐ反映されます' },
+            `${parts.join('、')}（${(res.durationMs / 1000).toFixed(1)} 秒）`,
+            { description: '/board / /expat / /calendar にすぐ反映されます' },
           );
           router.refresh();
         } else {
