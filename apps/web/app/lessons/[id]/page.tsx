@@ -271,9 +271,18 @@ export default async function LessonDetailPage({ params }: Props) {
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
                 {meta.side === 'teach' ? '講師' : '生徒希望者'}
               </p>
-              <p className="mt-0.5 text-[13px] font-bold text-foreground">
-                {post.authorName ?? 'Locore メンバー'}
-              </p>
+              {post.authorId ? (
+                <Link
+                  href={`/residents/${post.authorId}`}
+                  className="mt-0.5 inline-block text-[13px] font-bold text-foreground underline-offset-2 hover:text-primary-300 hover:underline"
+                >
+                  {post.authorName ?? 'Locore メンバー'}
+                </Link>
+              ) : (
+                <p className="mt-0.5 text-[13px] font-bold text-foreground">
+                  {post.authorName ?? 'Locore メンバー'}
+                </p>
+              )}
             </div>
           </section>
         </article>

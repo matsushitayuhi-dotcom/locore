@@ -220,30 +220,61 @@ export default async function ApartmentDetailPage({ params }: Props) {
           </section>
 
           {/* 投稿者 */}
-          <section className="mt-8 flex items-center gap-3 rounded-xl border border-border bg-card p-4">
-            {post.authorAvatarUrl ? (
-              <Image
-                src={post.authorAvatarUrl}
-                alt={post.authorName ?? 'avatar'}
-                width={44}
-                height={44}
-                className="rounded-full bg-muted object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-500/10 text-[14px] font-bold text-primary-300">
-                {(post.authorName ?? 'L').slice(0, 1).toUpperCase()}
+          {post.authorId ? (
+            <Link
+              href={`/residents/${post.authorId}`}
+              className="mt-8 flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition hover:bg-muted hover:ring-1 hover:ring-primary-300"
+            >
+              {post.authorAvatarUrl ? (
+                <Image
+                  src={post.authorAvatarUrl}
+                  alt={post.authorName ?? 'avatar'}
+                  width={44}
+                  height={44}
+                  className="rounded-full bg-muted object-cover"
+                  unoptimized
+                />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-500/10 text-[14px] font-bold text-primary-300">
+                  {(post.authorName ?? 'L').slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-foreground/55">
+                  掲載者
+                </p>
+                <p className="text-[14px] font-bold text-foreground">
+                  {post.authorName ?? '匿名ユーザー'}
+                </p>
               </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-foreground/55">
-                掲載者
-              </p>
-              <p className="text-[14px] font-bold text-foreground">
-                {post.authorName ?? '匿名ユーザー'}
-              </p>
-            </div>
-          </section>
+              <span className="text-[11px] text-foreground/40">プロフィール →</span>
+            </Link>
+          ) : (
+            <section className="mt-8 flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+              {post.authorAvatarUrl ? (
+                <Image
+                  src={post.authorAvatarUrl}
+                  alt={post.authorName ?? 'avatar'}
+                  width={44}
+                  height={44}
+                  className="rounded-full bg-muted object-cover"
+                  unoptimized
+                />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-500/10 text-[14px] font-bold text-primary-300">
+                  {(post.authorName ?? 'L').slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-[0.16em] text-foreground/55">
+                  掲載者
+                </p>
+                <p className="text-[14px] font-bold text-foreground">
+                  {post.authorName ?? '匿名ユーザー'}
+                </p>
+              </div>
+            </section>
+          )}
         </article>
 
         {/* 右カラム（sticky CTA）-------------------------------------- */}
