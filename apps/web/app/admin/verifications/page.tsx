@@ -30,23 +30,45 @@ export default async function AdminVerificationsPage() {
   }
 
   const db = getDb();
-  const rows = await db
-    .select({
-      id: schema.residencyVerifications.id,
-      userId: schema.residencyVerifications.userId,
-      status: schema.residencyVerifications.status,
-      submittedAt: schema.residencyVerifications.submittedAt,
-      reviewedAt: schema.residencyVerifications.reviewedAt,
-      documentType: schema.residencyVerifications.documentType,
-      country: schema.residencyVerifications.country,
-      city: schema.residencyVerifications.city,
-      userName: schema.users.displayName,
-      userEmail: schema.users.email,
-    })
-    .from(schema.residencyVerifications)
-    .leftJoin(schema.users, eq(schema.users.id, schema.residencyVerifications.userId))
-    .orderBy(desc(schema.residencyVerifications.submittedAt))
-    .limit(100);
+  let rows: Array<{
+    id: string;
+    userId: string;
+    status: 'pending' | 'approved' | 'rejected';
+    submittedAt: Date;
+    reviewedAt: Date | null;
+    documentType: string;
+    country: string | null;
+    city: string | null;
+    userName: string | null;
+    userEmail: string | null;
+  }> = [];
+  let migrationMissing = false;
+  try {
+    rows = await db
+      .select({
+        id: schema.residencyVerifications.id,
+        userId: schema.residencyVerifications.userId,
+        status: schema.residencyVerifications.status,
+        submittedAt: schema.residencyVerifications.submittedAt,
+        reviewedAt: schema.residencyVerifications.reviewedAt,
+        documentType: schema.residencyVerifications.documentType,
+        country: schema.residencyVerifications.country,
+        city: schema.residencyVerifications.city,
+        userName: schema.users.displayName,
+        userEmail: schema.users.email,
+      })
+      .from(schema.residencyVerifications)
+      .leftJoin(schema.users, eq(schema.users.id, schema.residencyVerifications.userId))
+      .orderBy(desc(schema.residencyVerifications.submittedAt))
+      .limit(100);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      migrationMissing = true;
+    } else {
+      throw err;
+    }
+  }
 
   const pendingCount = rows.filter((r) => r.status === 'pending').length;
 
@@ -88,7 +110,21 @@ export default async function AdminVerificationsPage() {
         </div>
       </header>
 
-      {rows.length === 0 ? (
+      {migrationMissing ? (
+        <section className="mt-10 rounded-xl border-2 border-dashed border-danger-500/40 bg-danger-500/5 p-6 text-[13px]">
+          <p className="font-bold text-danger-500">
+            ⚠ DB スキーマが最新ではありません
+          </p>
+          <p className="mt-2 text-foreground/75">
+            居住確認テーブルに必要なカラムがありません。Supabase の SQL Editor で
+            以下のマイグレーションを順に流してください:
+          </p>
+          <ul className="mt-2 list-disc pl-6 font-mono text-[12px]">
+            <li>packages/db/migrations/manual/0041_residency_verification_enhancements.sql</li>
+            <li>packages/db/migrations/manual/0042_verification_identity_fields.sql</li>
+          </ul>
+        </section>
+      ) : rows.length === 0 ? (
         <section className="mt-10 rounded-xl border border-dashed border-border bg-card p-10 text-center text-[13px] text-foreground/55">
           まだ申請はありません。
         </section>

@@ -183,21 +183,35 @@ export async function getMyLatestVerification(): Promise<
 > {
   const user = await requireUser();
   const db = getDb();
-  const rows = await db
-    .select({
-      id: schema.residencyVerifications.id,
-      status: schema.residencyVerifications.status,
-      submittedAt: schema.residencyVerifications.submittedAt,
-      reviewedAt: schema.residencyVerifications.reviewedAt,
-      rejectedReason: schema.residencyVerifications.rejectedReason,
-      country: schema.residencyVerifications.country,
-      city: schema.residencyVerifications.city,
-      documentType: schema.residencyVerifications.documentType,
-      filesDeletedAt: schema.residencyVerifications.filesDeletedAt,
-    })
-    .from(schema.residencyVerifications)
-    .where(eq(schema.residencyVerifications.userId, user.id))
-    .orderBy(desc(schema.residencyVerifications.submittedAt))
-    .limit(1);
-  return rows[0] ?? null;
+  try {
+    const rows = await db
+      .select({
+        id: schema.residencyVerifications.id,
+        status: schema.residencyVerifications.status,
+        submittedAt: schema.residencyVerifications.submittedAt,
+        reviewedAt: schema.residencyVerifications.reviewedAt,
+        rejectedReason: schema.residencyVerifications.rejectedReason,
+        country: schema.residencyVerifications.country,
+        city: schema.residencyVerifications.city,
+        documentType: schema.residencyVerifications.documentType,
+        filesDeletedAt: schema.residencyVerifications.filesDeletedAt,
+      })
+      .from(schema.residencyVerifications)
+      .where(eq(schema.residencyVerifications.userId, user.id))
+      .orderBy(desc(schema.residencyVerifications.submittedAt))
+      .limit(1);
+    return rows[0] ?? null;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // migration 0041 / 0042 が未適用だと "column does not exist" で落ちる
+    if (/does not exist/i.test(msg)) {
+      console.error(
+        '[verification] DB スキーマが未マイグレート: ' +
+          'packages/db/migrations/manual/0041 と 0042 を Supabase に流してください。',
+      );
+      return null;
+    }
+    console.error('[verification] getMyLatestVerification failed:', msg);
+    return null;
+  }
 }
