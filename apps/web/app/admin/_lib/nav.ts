@@ -21,6 +21,7 @@ import {
   Mail,
   Settings,
   MessageSquare,
+  Link2,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -142,6 +143,13 @@ export const ADMIN_NAV: AdminNavSection[] = [
   {
     label: 'System',
     items: [
+      {
+        label: '外部サービス',
+        href: '/admin/system/services',
+        icon: Link2,
+        status: 'ready',
+        description: 'Supabase / Vercel / Resend など、よく使う管理画面リンク集',
+      },
       {
         label: 'AI 実行履歴',
         href: '/admin/system/ai-logs',

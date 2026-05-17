@@ -521,27 +521,71 @@ export default async function AdminOverviewPage() {
         </div>
       </section>
 
-      {/* 5. クイックリンク */}
-      <section className="mb-8 rounded-xl bg-card p-5 ring-1 ring-border">
-        <h2 className="mb-3 text-[12px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-          クイックリンク
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          <QuickLink href="/admin/board">掲示板に投稿</QuickLink>
-          <QuickLink href="/admin/verifications">本人確認をレビュー</QuickLink>
-          <QuickLink href={`/admin/reports?status=open`}>通報対応</QuickLink>
-          <QuickLink href="/calendar">イベントカレンダー</QuickLink>
-          <QuickLink
-            href="https://supabase.com/dashboard"
-            external
-          >
-            Supabase Studio
-          </QuickLink>
+      {/* 5. クイックリンク (admin 内 + 外部) */}
+      <section className="mb-8 grid gap-3 lg:grid-cols-2">
+        <div className="rounded-xl bg-card p-5 ring-1 ring-border">
+          <h2 className="mb-3 text-[12px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+            Locore 内
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <QuickLink href="/admin/board">掲示板に投稿</QuickLink>
+            <QuickLink href="/admin/verifications">
+              本人確認をレビュー
+            </QuickLink>
+            <QuickLink href={`/admin/reports?status=open`}>通報対応</QuickLink>
+            <QuickLink href="/admin/users">ユーザー管理</QuickLink>
+            <QuickLink href="/calendar">イベントカレンダー</QuickLink>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-foreground/55">
+            <span>
+              掲示板 (7日新着):{' '}
+              <strong className="tabular text-foreground">{last7Board}</strong>
+            </span>
+            <span>
+              未対応通報:{' '}
+              <strong className="tabular text-foreground">{openReports}</strong>
+            </span>
+            <span>
+              未処理本人確認:{' '}
+              <strong className="tabular text-foreground">{openVerifs}</strong>
+            </span>
+          </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-3 text-[11px] text-foreground/55">
-          <span>掲示板 (7日新着): <strong className="tabular text-foreground">{last7Board}</strong></span>
-          <span>未対応通報: <strong className="tabular text-foreground">{openReports}</strong></span>
-          <span>未処理本人確認: <strong className="tabular text-foreground">{openVerifs}</strong></span>
+
+        <div className="rounded-xl bg-card p-5 ring-1 ring-border">
+          <h2 className="mb-3 flex items-baseline justify-between text-[12px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+            <span>外部サービス</span>
+            <Link
+              href="/admin/system/services"
+              className="text-[10px] font-normal normal-case tracking-normal text-primary-300 hover:underline"
+            >
+              すべて見る →
+            </Link>
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <QuickLink href="https://supabase.com/dashboard" external>
+              Supabase
+            </QuickLink>
+            <QuickLink href="https://vercel.com/dashboard" external>
+              Vercel
+            </QuickLink>
+            <QuickLink href="https://resend.com/dashboard" external>
+              Resend
+            </QuickLink>
+            <QuickLink href="https://console.anthropic.com/" external>
+              Anthropic
+            </QuickLink>
+            <QuickLink
+              href="https://github.com/matsushitayuhi-dotcom/locore"
+              external
+            >
+              GitHub
+            </QuickLink>
+          </div>
+          <p className="mt-3 text-[11px] text-foreground/55">
+            各サービスの管理画面・API キー・DNS・ログに 1 クリックで。env
+            設定状況は「すべて見る」から確認できます。
+          </p>
         </div>
       </section>
     </div>
