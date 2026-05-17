@@ -33,25 +33,43 @@ export async function signIn(input: unknown): Promise<SignInResult | void> {
   });
 
   if (error) {
-    // Supabase のエラーメッセージは英語かつ詳細すぎるため一般化
-    if (
-      error.message.toLowerCase().includes('invalid') ||
-      error.message.toLowerCase().includes('credentials')
-    ) {
+    // サーバーログには常に Supabase の生エラーを出す (Vercel Functions logs で確認できる)
+    console.error(
+      '[auth/signIn] supabase error:',
+      JSON.stringify({
+        message: error.message,
+        status: error.status,
+        name: error.name,
+        code: (error as { code?: string }).code,
+      }),
+    );
+
+    const msg = error.message?.toLowerCase() ?? '';
+
+    if (msg.includes('invalid') || msg.includes('credentials')) {
       return {
         ok: false,
         error: 'メールアドレスまたはパスワードが正しくありません',
       };
     }
-    if (error.message.toLowerCase().includes('email not confirmed')) {
+    if (msg.includes('email not confirmed')) {
       return {
         ok: false,
-        error: 'メールアドレスがまだ確認されていません。メール内のリンクをクリックしてください。',
+        error:
+          'メールアドレスがまだ確認されていません。メール内のリンクをクリックしてください。',
       };
     }
+    if (msg.includes('rate limit') || msg.includes('too many')) {
+      return {
+        ok: false,
+        error: 'ログイン試行が多すぎます。数分待ってから再度お試しください。',
+      };
+    }
+    // それ以外: 開発用に Supabase の元メッセージをそのまま出す (本番でも
+    // 「○○: ...」形式なので機微情報は含まれない)
     return {
       ok: false,
-      error: 'ログインに失敗しました。時間をおいて再度お試しください。',
+      error: `ログインに失敗しました: ${error.message}`,
     };
   }
 
