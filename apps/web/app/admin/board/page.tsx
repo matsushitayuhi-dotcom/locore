@@ -2,10 +2,10 @@ import { desc } from 'drizzle-orm';
 import Link from 'next/link';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { requireEditor } from '@/lib/auth/require-user';
-import { Sparkles, MapPin, ArrowLeft, ArrowRight, Plus } from 'lucide-react';
+import { Sparkles, MapPin, ArrowRight, Plus } from 'lucide-react';
 import { BoardPostForm } from './BoardPostForm';
 import { AiTestPanel } from './AiTestPanel';
+import { AdminPageHeader } from '../_components/AdminPageHeader';
 
 export const metadata = { title: '掲示板管理' };
 export const dynamic = 'force-dynamic';
@@ -22,17 +22,7 @@ export const dynamic = 'force-dynamic';
  * 全体把握用にも使う。
  */
 export default async function AdminBoardPage() {
-  const editor = await requireEditor();
-  if (!editor) {
-    return (
-      <main className="mx-auto max-w-screen-md px-4 py-12">
-        <p className="text-[14px] text-foreground/70">
-          このページは編集チームメンバー限定です。
-        </p>
-      </main>
-    );
-  }
-
+  // 認証は /admin/layout.tsx で済んでいる
   const db = getDb();
   const posts = await db
     .select({
@@ -51,33 +41,11 @@ export default async function AdminBoardPage() {
     .limit(50);
 
   return (
-    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
-      <Link
-        href="/admin/dashboard"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        運営ダッシュボードに戻る
-      </Link>
-
-      <header className="mt-4">
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-          掲示板管理
-        </p>
-        <h1
-          className="mt-2 text-[28px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
-        >
-          掲示板への投稿
-        </h1>
-        <p className="mt-1 text-[13px] text-foreground/65">
-          ここから新規投稿を作成すると、ホームと /board に即時反映されます。
-          AI が自動で取り込んだ投稿（紫の Sparkles）も同じ一覧に並びます。
-        </p>
-      </header>
+    <div>
+      <AdminPageHeader
+        title="掲示板への投稿"
+        description="ここから新規投稿を作成すると、ホームと /board に即時反映されます。AI が自動で取り込んだ投稿（紫の Sparkles）も同じ一覧に並びます。"
+      />
 
       <section className="mt-8 rounded-xl bg-card p-5 ring-1 ring-border sm:p-6">
         <div className="mb-4 flex items-center gap-2 text-[13px] font-semibold text-primary-300">
@@ -164,7 +132,7 @@ export default async function AdminBoardPage() {
           </li>
         </ul>
       </footer>
-    </main>
+    </div>
   );
 }
 

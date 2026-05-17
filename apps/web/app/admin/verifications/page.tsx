@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { desc, eq } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { requireEditor } from '@/lib/auth/require-user';
-import { ShieldCheck, Clock, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, ShieldCheck } from 'lucide-react';
 import { TestEmailButton } from './TestEmailButton';
+import { AdminPageHeader } from '../_components/AdminPageHeader';
 
 /**
  * /admin/verifications — 居住確認の申請一覧 (editor 専用)。
@@ -18,17 +18,7 @@ export const metadata = { title: '居住確認の管理 — Locore' };
 export const dynamic = 'force-dynamic';
 
 export default async function AdminVerificationsPage() {
-  const editor = await requireEditor();
-  if (!editor) {
-    return (
-      <main className="mx-auto max-w-screen-md px-4 py-12">
-        <p className="text-[14px] text-foreground/70">
-          このページは編集チームメンバー限定です。
-        </p>
-      </main>
-    );
-  }
-
+  // 認証は /admin/layout.tsx で済んでいる
   const db = getDb();
   let rows: Array<{
     id: string;
@@ -73,42 +63,25 @@ export default async function AdminVerificationsPage() {
   const pendingCount = rows.filter((r) => r.status === 'pending').length;
 
   return (
-    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
-      <Link
-        href="/admin/dashboard"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        運営ダッシュボードに戻る
-      </Link>
-
-      <header className="mt-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-            <ShieldCheck className="h-3 w-3" />
-            居住確認の管理
-          </p>
-          <h1
-            className="mt-2 text-[28px] font-bold tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
-          >
-            申請レビュー
-          </h1>
-          <p className="mt-1 text-[13px] text-foreground/65">
-            提出された書類を確認して承認 / 却下します。承認すると writer_profiles に
-            居住確認バッジが付与されます。
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          {pendingCount > 0 ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-3 py-1.5 text-[12px] font-bold text-amber-700">
+    <div>
+      <AdminPageHeader
+        title="本人確認の申請レビュー"
+        description="提出された書類を確認して承認 / 却下します。承認すると writer_profiles に居住確認バッジが付与されます。"
+        kicker={
+          pendingCount > 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-bold text-amber-700">
               <Clock className="h-3 w-3" />
               未処理 {pendingCount} 件
             </span>
-          ) : null}
-          <TestEmailButton />
-        </div>
-      </header>
+          ) : (
+            <p className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+              <ShieldCheck className="h-3 w-3" />
+              本人確認
+            </p>
+          )
+        }
+        actions={<TestEmailButton />}
+      />
 
       {migrationMissing ? (
         <section className="mt-10 rounded-xl border-2 border-dashed border-danger-500/40 bg-danger-500/5 p-6 text-[13px]">
@@ -161,7 +134,7 @@ export default async function AdminVerificationsPage() {
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }
 
