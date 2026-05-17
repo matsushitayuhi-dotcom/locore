@@ -46,6 +46,11 @@ export type SubmittedNotificationInput = {
   userId: string;
   country: string | null;
   city: string | null;
+  legalNameRoman: string | null;
+  legalNameNative: string | null;
+  addressLine: string | null;
+  postalCode: string | null;
+  phoneNumber: string | null;
   documentType: string;
   fileCount: number;
   userNote?: string | null;
@@ -66,11 +71,11 @@ export function tplSubmittedNotification(
 
     <table cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#F3E9D2;border-radius:12px;font-size:13px;">
       <tr>
-        <td style="padding:10px 14px;color:#5C6470;width:120px;">申請者</td>
+        <td style="padding:10px 14px;color:#5C6470;width:130px;">申請者アカウント</td>
         <td style="padding:10px 14px;font-weight:600;">${escape(input.userDisplayName)}</td>
       </tr>
       <tr>
-        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">メール</td>
+        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">アカウントメール</td>
         <td style="padding:10px 14px;border-top:1px solid #E8D9C2;">${escape(input.userEmail)}</td>
       </tr>
       <tr>
@@ -78,10 +83,32 @@ export function tplSubmittedNotification(
         <td style="padding:10px 14px;font-family:monospace;font-size:11px;border-top:1px solid #E8D9C2;">${escape(input.userId)}</td>
       </tr>
       <tr>
+        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">氏名 (英語)</td>
+        <td style="padding:10px 14px;font-weight:600;border-top:1px solid #E8D9C2;">${escape(input.legalNameRoman ?? '—')}</td>
+      </tr>
+      ${
+        input.legalNameNative
+          ? `<tr>
+              <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">氏名 (日本語/母語)</td>
+              <td style="padding:10px 14px;border-top:1px solid #E8D9C2;">${escape(input.legalNameNative)}</td>
+            </tr>`
+          : ''
+      }
+      <tr>
         <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">在住申告</td>
         <td style="padding:10px 14px;border-top:1px solid #E8D9C2;">
           ${escape(input.city ?? '')}${input.city && input.country ? ' / ' : ''}${escape(input.country ?? '—')}
         </td>
+      </tr>
+      <tr>
+        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">住所</td>
+        <td style="padding:10px 14px;border-top:1px solid #E8D9C2;">
+          ${escape(input.postalCode ?? '')}${input.postalCode ? '<br>' : ''}${escape(input.addressLine ?? '—')}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">電話番号</td>
+        <td style="padding:10px 14px;font-family:monospace;border-top:1px solid #E8D9C2;">${escape(input.phoneNumber ?? '—')}</td>
       </tr>
       <tr>
         <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">書類タイプ</td>

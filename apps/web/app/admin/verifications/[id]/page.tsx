@@ -52,6 +52,11 @@ export default async function AdminVerificationDetailPage({
       documentPaths: schema.residencyVerifications.documentPaths,
       country: schema.residencyVerifications.country,
       city: schema.residencyVerifications.city,
+      legalNameRoman: schema.residencyVerifications.legalNameRoman,
+      legalNameNative: schema.residencyVerifications.legalNameNative,
+      addressLine: schema.residencyVerifications.addressLine,
+      postalCode: schema.residencyVerifications.postalCode,
+      phoneNumber: schema.residencyVerifications.phoneNumber,
       userNote: schema.residencyVerifications.userNote,
       reviewerNote: schema.residencyVerifications.reviewerNote,
       rejectedReason: schema.residencyVerifications.rejectedReason,
@@ -99,8 +104,9 @@ export default async function AdminVerificationDetailPage({
 
       {/* 申請メタ情報 */}
       <section className="mt-6 rounded-xl bg-card p-5 ring-1 ring-border sm:p-6">
+        <h2 className="mb-3 text-[14px] font-bold">アカウント情報</h2>
         <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
-          <Meta icon={User} label="申請者">
+          <Meta icon={User} label="アカウント">
             {r.userName ?? '匿名'} <span className="text-foreground/55">({r.userEmail ?? '—'})</span>
             <br />
             <Link
@@ -109,9 +115,6 @@ export default async function AdminVerificationDetailPage({
             >
               プロフィールを見る →
             </Link>
-          </Meta>
-          <Meta icon={MapPin} label="在住申告">
-            {r.city ?? ''}{r.city && r.country ? ' / ' : ''}{r.country ?? '—'}
           </Meta>
           <Meta icon={FileText} label="書類タイプ">
             {DOC_LABEL[r.documentType] ?? r.documentType}
@@ -124,6 +127,40 @@ export default async function AdminVerificationDetailPage({
               {r.reviewedAt.toLocaleString('ja-JP')}
             </Meta>
           ) : null}
+        </dl>
+
+        <h2 className="mt-6 mb-3 text-[14px] font-bold">
+          本人申告情報
+          <span className="ml-2 text-[10px] font-normal text-foreground/55">
+            (書類と照合してください)
+          </span>
+        </h2>
+        <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
+          <Meta icon={User} label="氏名 (英語)">
+            <span className="font-mono">{r.legalNameRoman ?? '—'}</span>
+          </Meta>
+          {r.legalNameNative ? (
+            <Meta icon={User} label="氏名 (日本語/母語)">
+              {r.legalNameNative}
+            </Meta>
+          ) : null}
+          <Meta icon={MapPin} label="住所">
+            {r.postalCode ? <span className="font-mono">{r.postalCode}</span> : null}
+            {r.postalCode && r.addressLine ? <br /> : null}
+            {r.addressLine ?? '—'}
+            <br />
+            <span className="text-foreground/55">
+              {r.city ?? ''}{r.city && r.country ? ' / ' : ''}{r.country ?? ''}
+            </span>
+          </Meta>
+          <Meta icon={User} label="電話番号">
+            <a
+              href={`tel:${r.phoneNumber ?? ''}`}
+              className="font-mono text-primary-300 hover:underline"
+            >
+              {r.phoneNumber ?? '—'}
+            </a>
+          </Meta>
         </dl>
 
         {r.userNote ? (

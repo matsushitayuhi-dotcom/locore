@@ -43,6 +43,11 @@ export function VerificationForm() {
   const [docType, setDocType] = useState<DocType>('utility_bill');
   const [country, setCountry] = useState<string>('FR');
   const [city, setCity] = useState<string>('パリ');
+  const [legalNameRoman, setLegalNameRoman] = useState<string>('');
+  const [legalNameNative, setLegalNameNative] = useState<string>('');
+  const [addressLine, setAddressLine] = useState<string>('');
+  const [postalCode, setPostalCode] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [userNote, setUserNote] = useState<string>('');
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [agreed, setAgreed] = useState(false);
@@ -107,6 +112,11 @@ export function VerificationForm() {
           documentPaths: files.map((f) => f.path),
           country,
           city,
+          legalNameRoman: legalNameRoman.trim(),
+          legalNameNative: legalNameNative.trim() || undefined,
+          addressLine: addressLine.trim(),
+          postalCode: postalCode.trim(),
+          phoneNumber: phoneNumber.trim(),
           userNote: userNote.trim() || undefined,
         });
         if (res.ok) {
@@ -160,6 +170,81 @@ export function VerificationForm() {
             maxLength={80}
           />
         </div>
+      </div>
+
+      {/* 氏名 */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+            氏名 (英語表記) <span className="text-danger-500">*</span>
+          </label>
+          <Input
+            value={legalNameRoman}
+            onChange={(e) => setLegalNameRoman(e.target.value)}
+            placeholder="TANAKA Miyuki"
+            maxLength={140}
+            required
+          />
+          <p className="mt-1 text-[11px] text-foreground/55">
+            パスポート・在留カードと同じ表記でお願いします (姓・名)
+          </p>
+        </div>
+        <div>
+          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+            氏名 (日本語) <span className="text-foreground/45">(任意)</span>
+          </label>
+          <Input
+            value={legalNameNative}
+            onChange={(e) => setLegalNameNative(e.target.value)}
+            placeholder="田中 みゆき"
+            maxLength={140}
+          />
+          <p className="mt-1 text-[11px] text-foreground/55">
+            漢字・かななどでの表記
+          </p>
+        </div>
+      </div>
+
+      {/* 住所 + 電話 */}
+      <div>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+          住所 <span className="text-danger-500">*</span>
+        </label>
+        <div className="grid gap-2 sm:grid-cols-[160px_1fr]">
+          <Input
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            placeholder="75011"
+            maxLength={20}
+            required
+          />
+          <Input
+            value={addressLine}
+            onChange={(e) => setAddressLine(e.target.value)}
+            placeholder="12 Rue de Charonne, Paris"
+            maxLength={300}
+            required
+          />
+        </div>
+        <p className="mt-1 text-[11px] text-foreground/55">
+          郵便番号 / 番地・通り名・市区町村。提出書類に書かれているものと一致させてください。
+        </p>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+          電話番号 <span className="text-danger-500">*</span>
+        </label>
+        <Input
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          placeholder="+33 6 12 34 56 78"
+          maxLength={30}
+          required
+        />
+        <p className="mt-1 text-[11px] text-foreground/55">
+          国コードから記入してください (例: 日本 +81 / フランス +33)
+        </p>
       </div>
 
       {/* 書類タイプ */}
@@ -283,7 +368,16 @@ export function VerificationForm() {
         <Button
           type="submit"
           variant="primary"
-          disabled={isSubmitting || isUploading || files.length === 0 || !agreed}
+          disabled={
+            isSubmitting ||
+            isUploading ||
+            files.length === 0 ||
+            !agreed ||
+            !legalNameRoman.trim() ||
+            !addressLine.trim() ||
+            !postalCode.trim() ||
+            !phoneNumber.trim()
+          }
         >
           {isSubmitting ? '送信中…' : '申請を送信する'}
         </Button>

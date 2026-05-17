@@ -58,18 +58,22 @@ function htmlToText(html: string): string {
 
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
+  const to = Array.isArray(input.to) ? input.to.join(',') : input.to;
+
   if (!apiKey) {
     // 開発環境では落とさず、ログだけ出して飛ばす
-    console.log(
-      `[email] RESEND_API_KEY 未設定のため送信スキップ:\n  to=${
-        Array.isArray(input.to) ? input.to.join(',') : input.to
-      }\n  subject=${input.subject}`,
+    console.warn(
+      `[email] RESEND_API_KEY 未設定のため送信スキップ:\n  to=${to}\n  subject=${input.subject}\n  → Vercel 環境変数に RESEND_API_KEY を設定してください`,
     );
     return { ok: true, id: null, skipped: true, reason: 'RESEND_API_KEY not set' };
   }
 
   const from = input.from ?? process.env.LOCORE_FROM_EMAIL ?? FROM_DEFAULT;
   const text = input.text ?? htmlToText(input.html);
+
+  console.log(
+    `[email] sending: from="${from}" to="${to}" subject="${input.subject}"`,
+  );
 
   try {
     const resend = new Resend(apiKey);
@@ -82,9 +86,25 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
       replyTo: input.replyTo,
     });
     if (error) {
-      console.error('[email] Resend error:', error);
-      return { ok: false, error: error.message ?? 'Resend rejected the request' };
+      // Resend のエラー詳細を全部ログに出す
+      console.error('[email] Resend error:', JSON.stringify(error));
+      // よくある原因のヒントを返す
+      const msg = error.message ?? String(error);
+      if (/domain.*not.*verified|verify.*domain/i.test(msg)) {
+        return {
+          ok: false,
+          error: `Resend: 送信元ドメイン "${from}" が未認証です。Resend Dashboard で DNS 認証を済ませるか、LOCORE_FROM_EMAIL を "onboarding@resend.dev" にしてテストしてください (元: ${msg})`,
+        };
+      }
+      if (/testing.*allowed|only send testing|your own email/i.test(msg)) {
+        return {
+          ok: false,
+          error: `Resend: ドメイン未認証の状態では、自分自身の Resend 登録メール宛にしか送れません。Dashboard で locore.app の DNS 認証を済ませてください (元: ${msg})`,
+        };
+      }
+      return { ok: false, error: msg };
     }
+    console.log(`[email] sent OK: id=${data?.id}`);
     return { ok: true, id: data?.id ?? null };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

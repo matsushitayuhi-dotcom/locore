@@ -4,6 +4,7 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireEditor } from '@/lib/auth/require-user';
 import { ShieldCheck, Clock, CheckCircle2, XCircle, ArrowLeft } from 'lucide-react';
+import { TestEmailButton } from './TestEmailButton';
 
 /**
  * /admin/verifications — 居住確認の申請一覧 (editor 専用)。
@@ -76,12 +77,15 @@ export default async function AdminVerificationsPage() {
             居住確認バッジが付与されます。
           </p>
         </div>
-        {pendingCount > 0 ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-3 py-1.5 text-[12px] font-bold text-amber-700">
-            <Clock className="h-3 w-3" />
-            未処理 {pendingCount} 件
-          </span>
-        ) : null}
+        <div className="flex flex-col items-end gap-2">
+          {pendingCount > 0 ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-3 py-1.5 text-[12px] font-bold text-amber-700">
+              <Clock className="h-3 w-3" />
+              未処理 {pendingCount} 件
+            </span>
+          ) : null}
+          <TestEmailButton />
+        </div>
       </header>
 
       {rows.length === 0 ? (

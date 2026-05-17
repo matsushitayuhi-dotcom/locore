@@ -36,6 +36,16 @@ export const residencyVerifications = pgTable(
     country: text('country'),
     /** 自己申告: 都市 */
     city: text('city'),
+    /** 英語表記の氏名 (パスポート等の Roman 表記)。原則必須 (manual/0042) */
+    legalNameRoman: text('legal_name_roman'),
+    /** 日本語 / 母語表記の氏名 (任意)。漢字・かな・現地語など */
+    legalNameNative: text('legal_name_native'),
+    /** 在住地の住所 (番地・通り名・市区町村まで) */
+    addressLine: text('address_line'),
+    /** 郵便番号 (国によりフォーマット異なる) */
+    postalCode: text('postal_code'),
+    /** 電話番号 (E.164 形式推奨、例: +33612345678) */
+    phoneNumber: text('phone_number'),
     /** 提出者の補足メモ */
     userNote: text('user_note'),
     /** 編集者の内部メモ (ユーザーには見せない) */

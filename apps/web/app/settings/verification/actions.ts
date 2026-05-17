@@ -40,6 +40,39 @@ const inputSchema = z.object({
     .max(2)
     .transform((v) => v.toUpperCase()),
   city: z.string().trim().min(1).max(80),
+  /** 英語表記の氏名 (必須) — パスポート等の Roman 表記 */
+  legalNameRoman: z
+    .string()
+    .trim()
+    .min(2, '英語表記の氏名を入力してください')
+    .max(140)
+    // 英字・スペース・ハイフン・ピリオド・アポストロフィのみ許容
+    .regex(/^[A-Za-z\s.\-']+$/, '英語表記は半角アルファベットで入力してください'),
+  /** 日本語/母語表記の氏名 (任意) */
+  legalNameNative: z
+    .string()
+    .trim()
+    .max(140)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
+  /** 住所 (番地・通り名・市区町村まで) */
+  addressLine: z
+    .string()
+    .trim()
+    .min(5, '住所を入力してください')
+    .max(300),
+  postalCode: z
+    .string()
+    .trim()
+    .min(2, '郵便番号を入力してください')
+    .max(20),
+  /** 電話番号 (E.164 推奨だが緩めに許容) */
+  phoneNumber: z
+    .string()
+    .trim()
+    .min(6, '電話番号を入力してください')
+    .max(30)
+    .regex(/^[+0-9()\-.\s]+$/, '電話番号の形式が正しくありません'),
   userNote: z
     .string()
     .trim()
@@ -85,6 +118,11 @@ export async function createResidencyVerification(
       documentPaths: data.documentPaths,
       country: data.country,
       city: data.city,
+      legalNameRoman: data.legalNameRoman,
+      legalNameNative: data.legalNameNative ?? null,
+      addressLine: data.addressLine,
+      postalCode: data.postalCode,
+      phoneNumber: data.phoneNumber,
       userNote: data.userNote ?? null,
       status: 'pending',
       submittedAt: new Date(),
@@ -104,6 +142,11 @@ export async function createResidencyVerification(
     userId: user.id,
     country: data.country,
     city: data.city,
+    legalNameRoman: data.legalNameRoman,
+    legalNameNative: data.legalNameNative ?? null,
+    addressLine: data.addressLine,
+    postalCode: data.postalCode,
+    phoneNumber: data.phoneNumber,
     documentType: data.documentType,
     fileCount: data.documentPaths.length,
     userNote: data.userNote,

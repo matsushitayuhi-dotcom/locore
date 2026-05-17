@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireEditor } from '@/lib/auth/require-user';
-import { sendEmail } from '@/lib/email/send';
+import { sendEmail, SUPPORT_EMAIL } from '@/lib/email/send';
 import { tplApproved, tplRejected } from '@/lib/email/templates';
 
 /**
@@ -48,6 +48,44 @@ const rejectSchema = z.object({
 export type ReviewActionResult =
   | { ok: true }
   | { ok: false; error: string };
+
+// =============================================================================
+// テストメール送信 (Resend セットアップの動作確認用)
+// =============================================================================
+
+export type TestEmailResult =
+  | { ok: true; id: string | null; to: string; skipped?: false }
+  | { ok: true; id: null; to: string; skipped: true; reason: string }
+  | { ok: false; error: string };
+
+export async function sendTestEmail(): Promise<TestEmailResult> {
+  const editor = await requireEditor();
+  if (!editor) return { ok: false, error: '編集者ロールが必要です' };
+
+  const to = SUPPORT_EMAIL;
+  const html = `
+    <h2 style="font-family:sans-serif;">Locore メール送信テスト</h2>
+    <p style="font-family:sans-serif;font-size:14px;line-height:1.7;">
+      これは Resend → ${to} 宛のテスト送信です。<br>
+      届いていれば、本人確認の自動通知も正常に動きます。
+    </p>
+    <p style="font-family:sans-serif;font-size:12px;color:#666;">
+      実行者: ${editor.displayName ?? editor.email}<br>
+      時刻: ${new Date().toISOString()}
+    </p>
+  `;
+  const res = await sendEmail({
+    to,
+    subject: '[Locore] メール送信テスト',
+    html,
+  });
+
+  if (!res.ok) return { ok: false, error: res.error };
+  if (res.skipped) {
+    return { ok: true, id: null, to, skipped: true, reason: res.reason };
+  }
+  return { ok: true, id: res.id, to };
+}
 
 async function loadVerificationWithUser(id: string) {
   const db = getDb();
