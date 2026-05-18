@@ -21,22 +21,22 @@ export function AdminSidebar() {
 
   return (
     <>
-      {/* モバイル: 上部に hamburger */}
-      <div className="sticky top-[3.5rem] z-20 flex items-center justify-between border-b border-border bg-card/95 px-4 py-2 backdrop-blur lg:hidden">
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="inline-flex items-center gap-2 rounded-md px-2 py-1 text-[13px] font-semibold hover:bg-muted"
-          aria-label="管理メニューを開く"
-        >
-          <Menu className="h-4 w-4" />
-          管理メニュー
-        </button>
-        <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-          <ShieldCheck className="h-3 w-3" />
-          Admin
-        </span>
-      </div>
+      {/*
+        モバイル: 右下に浮く mini-FAB だけ。
+        以前は sticky top に「管理メニュー」+「Admin」表記の帯が出ていたが、
+        SiteHeader 直下にもう 1 段帯ができてスマホで縦スペースを圧迫していた
+        (UAT 指摘「左側の管理メニューとadminの表記が邪魔」)。
+        FAB なら本文を一切食わない。
+      */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="管理メニューを開く"
+        className="fixed bottom-20 right-4 z-30 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12px] font-bold text-background shadow-lg ring-1 ring-border lg:hidden"
+      >
+        <Menu className="h-4 w-4" />
+        Admin
+      </button>
 
       {/* デスクトップ: 固定サイドバー */}
       <aside

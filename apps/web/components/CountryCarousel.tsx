@@ -110,17 +110,16 @@ function CountryTile({ country }: { country: CountryListItem }) {
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
         {/*
-          画像の下半分だけにふんわりした dark gradient を被せる。
-          黒い帯やフロストガラスはやらない (写真がもったりしてダサくなる)。
-          文字は白 + 軽めの text-shadow だけで読めるようにする。
+          画像下半分にしっかり dark gradient。上半分は写真生のまま。
+          白文字を本当に白く見せるため、下端は black/85 まで濃く落とす。
         */}
         <div
           aria-hidden
           className={
             'absolute inset-0 ' +
             (active
-              ? 'bg-gradient-to-t from-black/55 via-black/15 to-transparent'
-              : 'bg-gradient-to-t from-black/50 via-black/20 to-black/5')
+              ? 'bg-gradient-to-t from-black/85 via-black/45 to-transparent'
+              : 'bg-gradient-to-t from-black/80 via-black/40 to-transparent')
           }
         />
         {!active ? (
@@ -131,10 +130,7 @@ function CountryTile({ country }: { country: CountryListItem }) {
         ) : null}
         <div
           className="absolute inset-x-0 bottom-0 px-3 py-3 text-white"
-          style={{
-            textShadow:
-              '0 0 6px rgba(0,0,0,0.85), 0 1px 2px rgba(0,0,0,1), 0 0 16px rgba(0,0,0,0.55)',
-          }}
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
         >
           <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/90">
             {country.nameEn}

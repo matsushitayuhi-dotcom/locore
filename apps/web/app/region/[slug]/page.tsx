@@ -135,17 +135,14 @@ export default async function RegionHomePage({ params }: Props) {
               alt={region.nameJa}
               className="absolute inset-0 h-full w-full object-cover"
             />
-            {/* 写真の下端だけにふんわり dark gradient + 軽い text-shadow */}
+            {/* 下半分にしっかり暗い gradient + 軽い shadow */}
             <div
               aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
+              className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
             />
             <div
               className="relative z-10 mx-auto flex h-full max-w-screen-xl flex-col justify-end px-4 pb-5 sm:px-6 sm:pb-7"
-              style={{
-                textShadow:
-                  '0 0 10px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,1), 0 0 24px rgba(0,0,0,0.55)',
-              }}
+              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
             >
               <nav className="text-[11px] text-white/85">
                 <Link href="/" className="hover:underline">

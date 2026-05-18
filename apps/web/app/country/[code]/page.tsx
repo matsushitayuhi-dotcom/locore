@@ -76,21 +76,14 @@ export default async function CountryPage({ params }: Props) {
             className="object-cover"
             unoptimized
           />
-          {/*
-            軽めの dark gradient を画像下半分にだけ。Tailwind の preset CSS var
-            ではなく Tailwind 標準の black-* を使う (opacity modifier の
-            互換性を確実にするため)。
-          */}
+          {/* 下半分にしっかり暗い gradient で白文字を白く見せる */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
           />
           <div
             className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10"
-            style={{
-              textShadow:
-                '0 0 10px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,1), 0 0 24px rgba(0,0,0,0.55)',
-            }}
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
           >
             <Link
               href="/"
@@ -262,21 +255,19 @@ function RegionCard({
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
         {/*
-          ふんわりした dark gradient + 強めの text-shadow stack で、
-          黒帯を載せずに白文字を確実に読ませる。
-          shadow を 3 段重ねる:
-          - 0 0 6px の halo (背景明暗を問わず文字輪郭をくっきり)
-          - 0 1px 2px のシャープな drop shadow
-          - 0 0 16px の柔らかい広域 glow
-          これで「もったり」させず文字だけくっきり浮く。
+          画像下部にだけ、しっかり暗い gradient を「下半分」に被せる。
+          - 下端 90% / 中 50% / 上 0% で、白文字を確実に白として見せる
+          - 「写真にうっすらシャドー」ではなく「下半分が暗い領域、上半分が
+            ほぼ生写真」という magazine cover 的な構成
+          text-shadow は補強の 1 段だけ (輪郭を太らせない、文字は白いまま)
         */}
         <div
           aria-hidden
           className={
             'absolute inset-0 ' +
             (locked
-              ? 'bg-gradient-to-t from-black/55 via-black/20 to-black/5'
-              : 'bg-gradient-to-t from-black/60 via-black/20 to-transparent')
+              ? 'bg-gradient-to-t from-black/80 via-black/40 to-transparent'
+              : 'bg-gradient-to-t from-black/85 via-black/45 to-transparent')
           }
         />
         {locked ? (
@@ -287,10 +278,7 @@ function RegionCard({
         ) : null}
         <div
           className="absolute inset-x-0 bottom-0 px-3 py-3 text-white"
-          style={{
-            textShadow:
-              '0 0 6px rgba(0,0,0,0.85), 0 1px 2px rgba(0,0,0,1), 0 0 16px rgba(0,0,0,0.55)',
-          }}
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
         >
           <h3
             className="truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
