@@ -138,15 +138,9 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
           className="object-cover transition duration-500 group-hover:scale-[1.04]"
           unoptimized
         />
-        {/* 下半分にしっかり暗い gradient で白文字を白く見せる */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
-        />
-        <div
-          className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
-        >
+        {/* 写真全体にフラット tint + 加工なしの白文字 */}
+        <div aria-hidden className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
             {country.nameEn}
           </p>
@@ -209,15 +203,9 @@ function ComingSoonCard({ country }: { country: CountryListItem }) {
           <Lock className="h-2.5 w-2.5" />
           準備中
         </span>
-        {/* Coming Soon カードも同様にしっかり暗い gradient */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
-        />
-        <div
-          className="absolute inset-x-0 bottom-0 p-3 text-white/95"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
-        >
+        {/* Coming Soon カードも同様にフラット tint */}
+        <div aria-hidden className="absolute inset-0 bg-black/55" />
+        <div className="absolute inset-x-0 bottom-0 p-3 text-white/95">
           <h3
             className="truncate text-[14px] font-bold leading-tight tracking-tight"
             style={{

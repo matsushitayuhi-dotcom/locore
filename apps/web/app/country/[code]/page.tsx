@@ -76,15 +76,9 @@ export default async function CountryPage({ params }: Props) {
             className="object-cover"
             unoptimized
           />
-          {/* 下半分にしっかり暗い gradient で白文字を白く見せる */}
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
-          />
-          <div
-            className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
-          >
+          {/* 写真全体にフラット tint + 加工なしの白文字 */}
+          <div aria-hidden className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10">
             <Link
               href="/"
               className="mb-3 inline-flex items-center gap-1 rounded-full bg-card/90 px-3 py-1 text-[11px] font-medium text-foreground/75 backdrop-blur hover:bg-card"
@@ -254,21 +248,11 @@ function RegionCard({
         {locked ? (
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
-        {/*
-          画像下部にだけ、しっかり暗い gradient を「下半分」に被せる。
-          - 下端 90% / 中 50% / 上 0% で、白文字を確実に白として見せる
-          - 「写真にうっすらシャドー」ではなく「下半分が暗い領域、上半分が
-            ほぼ生写真」という magazine cover 的な構成
-          text-shadow は補強の 1 段だけ (輪郭を太らせない、文字は白いまま)
-        */}
+        {/* 写真全体にフラットな暗 tint を被せる (gradient 無し、上下分割無し)。
+            その上に何の加工も無い白文字を置く。 */}
         <div
           aria-hidden
-          className={
-            'absolute inset-0 ' +
-            (locked
-              ? 'bg-gradient-to-t from-black/80 via-black/40 to-transparent'
-              : 'bg-gradient-to-t from-black/85 via-black/45 to-transparent')
-          }
+          className={'absolute inset-0 ' + (locked ? 'bg-black/55' : 'bg-black/45')}
         />
         {locked ? (
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
@@ -276,10 +260,7 @@ function RegionCard({
             準備中
           </span>
         ) : null}
-        <div
-          className="absolute inset-x-0 bottom-0 px-3 py-3 text-white"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
-        >
+        <div className="absolute inset-x-0 bottom-0 px-3 py-3 text-white">
           <h3
             className="truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
             style={{
