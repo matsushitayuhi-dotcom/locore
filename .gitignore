@@ -2,6 +2,12 @@
 node_modules/
 .pnpm-store/
 
+# 原画像 (リサイズ前)。リサイズ後は apps/web/public/regions/ に置く
+/*.jpg
+/*.jpeg
+/*.JPG
+/*.JPEG
+
 # Build outputs
 dist/
 build/

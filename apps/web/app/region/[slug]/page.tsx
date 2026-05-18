@@ -108,27 +108,74 @@ export default async function RegionHomePage({ params }: Props) {
 
   return (
     <main className="bg-background">
+      {/*
+        Hero band。region.heroImageUrl (cities.hero_image_url) を背景に、
+        パンくず + 地域名を白文字で配置。下端に向けたグラデと text-shadow で
+        明るい画像でも可読性を確保。
+      */}
+      {region.heroImageUrl ? (
+        <section className="relative overflow-hidden border-b border-border">
+          <div className="relative h-[200px] w-full bg-muted sm:h-[280px]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={region.heroImageUrl}
+              alt={region.nameJa}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-neutral-900/90 via-neutral-900/40 to-neutral-900/10"
+            />
+            <div
+              className="relative z-10 mx-auto flex h-full max-w-screen-xl flex-col justify-end px-4 pb-5 sm:px-6 sm:pb-7"
+              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}
+            >
+              <nav className="text-[11px] text-white/85">
+                <Link href="/" className="hover:underline">
+                  世界
+                </Link>
+                <span className="mx-1.5 text-white/45">›</span>
+                <span className="text-white/85">{region.countryNameJa}</span>
+                <span className="mx-1.5 text-white/45">›</span>
+                <span className="font-semibold text-white">{region.nameJa}</span>
+              </nav>
+              <h1
+                className="mt-2 text-[28px] font-bold leading-tight tracking-tight text-white sm:text-[36px]"
+                style={{
+                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+                  textShadow: '0 2px 16px rgba(0,0,0,0.65)',
+                }}
+              >
+                {region.nameJa}
+              </h1>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <div className="mx-auto max-w-screen-xl space-y-10 px-4 pt-6 pb-10 sm:space-y-12 sm:px-6 sm:pt-8">
-        {/* ヘッダー: 国 → 地域 のパンくず + 地域タイトル */}
-        <header>
-          <nav className="text-[11px] text-foreground/55">
-            <Link href="/" className="hover:underline">
-              世界
-            </Link>
-            <span className="mx-1.5 text-foreground/30">›</span>
-            <span className="text-foreground/75">{region.countryNameJa}</span>
-            <span className="mx-1.5 text-foreground/30">›</span>
-            <span className="font-semibold text-foreground">{region.nameJa}</span>
-          </nav>
-          <h1
-            className="mt-2 text-[28px] font-bold leading-tight tracking-tight sm:text-[36px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
-          >
-            {region.nameJa}
-          </h1>
-        </header>
+        {/* hero 画像がない場合 (legacy 地域 等) はテキストのみのヘッダーを出す */}
+        {!region.heroImageUrl ? (
+          <header>
+            <nav className="text-[11px] text-foreground/55">
+              <Link href="/" className="hover:underline">
+                世界
+              </Link>
+              <span className="mx-1.5 text-foreground/30">›</span>
+              <span className="text-foreground/75">{region.countryNameJa}</span>
+              <span className="mx-1.5 text-foreground/30">›</span>
+              <span className="font-semibold text-foreground">{region.nameJa}</span>
+            </nav>
+            <h1
+              className="mt-2 text-[28px] font-bold leading-tight tracking-tight sm:text-[36px]"
+              style={{
+                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+              }}
+            >
+              {region.nameJa}
+            </h1>
+          </header>
+        ) : null}
 
         {/* 1. 検索 */}
         <section aria-label="記事検索">

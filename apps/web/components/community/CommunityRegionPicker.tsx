@@ -21,10 +21,15 @@ import { getRegionsWithContent } from '@/lib/geo/region-content';
  */
 const CANDIDATE_REGIONS: Array<{ slug: string; label: string }> = [
   { slug: 'paris', label: 'パリ＆近郊' },
-  { slug: 'bordeaux', label: 'ボルドー' },
-  { slug: 'nice-cote-azur', label: 'ニース' },
   { slug: 'lyon', label: 'リヨン' },
   { slug: 'marseille', label: 'マルセイユ' },
+  { slug: 'bordeaux', label: 'ボルドー' },
+  { slug: 'toulouse', label: 'トゥールーズ' },
+  { slug: 'strasbourg', label: 'ストラスブール' },
+  { slug: 'lille', label: 'リール' },
+  { slug: 'montpellier', label: 'モンペリエ' },
+  { slug: 'nantes', label: 'ナント' },
+  { slug: 'rennes', label: 'レンヌ' },
 ];
 
 export type CommunityRegionPickerProps = {

@@ -57,14 +57,23 @@ export default async function CountryPage({ params }: Props) {
             className="object-cover"
             unoptimized
           />
+          {/*
+            ヘッダー画像上のテキスト可読性のため、グラデーションを下端まで
+            濃く落とし、テキストには text-shadow を付ける (明るい画像でも
+            読めるように)。
+          */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-neutral-900/85 via-neutral-900/40 to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-neutral-900/90 via-neutral-900/55 to-neutral-900/15"
           />
-          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10">
+          <div
+            className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10"
+            style={{ textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}
+          >
             <Link
               href="/"
               className="mb-3 inline-flex items-center gap-1 rounded-full bg-card/90 px-3 py-1 text-[11px] font-medium text-foreground/75 backdrop-blur hover:bg-card"
+              style={{ textShadow: 'none' }}
             >
               <ArrowLeft className="h-3 w-3" />
               世界ピッカーに戻る
@@ -81,7 +90,7 @@ export default async function CountryPage({ params }: Props) {
               {country.nameJa}
             </h1>
             {country.shortDescription ? (
-              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/85 sm:text-[14px]">
+              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-white/90 sm:text-[14px]">
                 {country.shortDescription}
               </p>
             ) : null}
@@ -235,8 +244,8 @@ function RegionCard({
           className={
             'absolute inset-0 ' +
             (locked
-              ? 'bg-gradient-to-t from-neutral-700/80 via-neutral-700/30 to-transparent'
-              : 'bg-gradient-to-t from-neutral-900/80 via-neutral-900/25 to-transparent')
+              ? 'bg-gradient-to-t from-neutral-700/90 via-neutral-700/50 to-neutral-700/0'
+              : 'bg-gradient-to-t from-neutral-900/95 via-neutral-900/55 to-neutral-900/0')
           }
         />
         {locked ? (
@@ -245,17 +254,21 @@ function RegionCard({
             準備中
           </span>
         ) : null}
-        <div className="absolute inset-x-0 bottom-0 p-3 text-white">
+        <div
+          className="absolute inset-x-0 bottom-0 p-3 text-white"
+          style={{ textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}
+        >
           <h3
             className="text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+              textShadow: '0 1px 8px rgba(0,0,0,0.7)',
             }}
           >
             {region.nameJa}
           </h3>
           {!locked ? (
-            <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white/90">
+            <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white/95">
               <MapPin className="h-2.5 w-2.5" />
               {isOther ? 'その他のエリア' : '記事を見る'}
               <ArrowRight className="h-2.5 w-2.5" />
