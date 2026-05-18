@@ -22,6 +22,8 @@ type Search = {
   status?: string;
   type?: string;
   page?: string;
+  /** `1` を指定するとサンプル記事 (is_sample=true) も表示する */
+  samples?: string;
 };
 
 const STATUSES = [
@@ -74,8 +76,13 @@ export default async function AdminArticlesPage({
   const type = (searchParams?.type ?? '').trim() as TypeValue | '';
   const page = Math.max(1, parseInt(searchParams?.page ?? '1', 10) || 1);
   const offset = (page - 1) * PAGE_SIZE;
+  // デフォルトはサンプル記事を除外。?samples=1 で含める
+  const includeSamples = searchParams?.samples === '1';
 
   const filters = [isNull(schema.articles.deletedAt)];
+  if (!includeSamples) {
+    filters.push(eq(schema.articles.isSample, false));
+  }
   if (q) {
     filters.push(
       or(
@@ -119,7 +126,14 @@ export default async function AdminArticlesPage({
     db
       .select({ status: schema.articles.status, c: count() })
       .from(schema.articles)
-      .where(isNull(schema.articles.deletedAt))
+      .where(
+        includeSamples
+          ? isNull(schema.articles.deletedAt)
+          : and(
+              isNull(schema.articles.deletedAt),
+              eq(schema.articles.isSample, false),
+            ),
+      )
       .groupBy(schema.articles.status),
   ]);
 
@@ -135,6 +149,7 @@ export default async function AdminArticlesPage({
     if (next.q) params.set('q', next.q);
     if (next.status) params.set('status', next.status);
     if (next.type) params.set('type', next.type);
+    if (next.samples === '1') params.set('samples', '1');
     return `/admin/articles${params.toString() ? `?${params.toString()}` : ''}`;
   };
 
@@ -183,10 +198,32 @@ export default async function AdminArticlesPage({
         ))}
       </div>
 
+      {/* サンプル表示トグル */}
+      <div className="mb-3 flex items-center gap-2 text-[11px]">
+        <Link
+          href={buildHref({ samples: includeSamples ? undefined : '1' })}
+          className={
+            'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 ring-1 transition ' +
+            (includeSamples
+              ? 'bg-amber-500/15 text-amber-700 ring-amber-500/30'
+              : 'bg-card text-foreground/55 ring-border hover:bg-muted')
+          }
+        >
+          <span className="text-[10px]">{includeSamples ? '☑' : '☐'}</span>
+          サンプル記事も表示
+        </Link>
+        {includeSamples ? (
+          <span className="text-[10px] text-amber-700">
+            シード由来のサンプル記事を含めて表示中
+          </span>
+        ) : null}
+      </div>
+
       {/* 検索 */}
       <form action="/admin/articles" method="GET" className="mb-4">
         {status ? <input type="hidden" name="status" value={status} /> : null}
         {type ? <input type="hidden" name="type" value={type} /> : null}
+        {includeSamples ? <input type="hidden" name="samples" value="1" /> : null}
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
           <input

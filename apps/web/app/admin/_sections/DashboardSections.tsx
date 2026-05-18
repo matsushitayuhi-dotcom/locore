@@ -134,15 +134,21 @@ export async function BusinessKpis() {
   const prev30 = daysAgo(60);
 
   // ユーザー集計を 1 クエリに統合 (filter aggregation)
+  // サンプルユーザー (is_sample=true) は本番運用の数字に混ぜたくないので除外
   // db.execute は drizzle-orm-postgres-js では配列風だが型が緩いので any 経由
   const userAggRaw = await safeQuery(
     () =>
       db.execute(sql`
         SELECT
-          count(*) FILTER (WHERE deleted_at IS NULL) AS total,
-          count(*) FILTER (WHERE deleted_at IS NULL AND created_at >= ${last30}) AS last30,
+          count(*) FILTER (WHERE deleted_at IS NULL AND is_sample = false) AS total,
           count(*) FILTER (
             WHERE deleted_at IS NULL
+              AND is_sample = false
+              AND created_at >= ${last30}
+          ) AS last30,
+          count(*) FILTER (
+            WHERE deleted_at IS NULL
+              AND is_sample = false
               AND created_at >= ${prev30}
               AND created_at < ${last30}
           ) AS prev30
@@ -153,15 +159,20 @@ export async function BusinessKpis() {
   );
   const ua = pickRow<{ total: number | string; last30: number | string; prev30: number | string }>(userAggRaw) ?? { total: 0, last30: 0, prev30: 0 };
 
-  // 記事集計を 1 クエリに
+  // 記事集計を 1 クエリに (サンプル記事除外)
   const articleAggRaw = await safeQuery(
     () =>
       db.execute(sql`
         SELECT
-          count(*) FILTER (WHERE status = 'published' AND deleted_at IS NULL) AS published_total,
           count(*) FILTER (
             WHERE status = 'published'
               AND deleted_at IS NULL
+              AND is_sample = false
+          ) AS published_total,
+          count(*) FILTER (
+            WHERE status = 'published'
+              AND deleted_at IS NULL
+              AND is_sample = false
               AND published_at >= ${last30}
           ) AS published_last30
         FROM articles
@@ -171,21 +182,30 @@ export async function BusinessKpis() {
   );
   const aa = pickRow<{ published_total: number | string; published_last30: number | string }>(articleAggRaw) ?? { published_total: 0, published_last30: 0 };
 
-  // 売上集計を 1 クエリに
+  // 売上集計を 1 クエリに (サンプル購入除外)
   const revAggRaw = await safeQuery(
     () =>
       db.execute(sql`
         SELECT
-          coalesce(sum(amount_jpy) FILTER (WHERE status = 'completed'), 0)::int AS total_amount,
-          count(*) FILTER (WHERE status = 'completed') AS total_count,
           coalesce(sum(amount_jpy) FILTER (
-            WHERE status = 'completed' AND purchased_at >= ${last30}
+            WHERE status = 'completed' AND is_sample = false
+          ), 0)::int AS total_amount,
+          count(*) FILTER (
+            WHERE status = 'completed' AND is_sample = false
+          ) AS total_count,
+          coalesce(sum(amount_jpy) FILTER (
+            WHERE status = 'completed'
+              AND is_sample = false
+              AND purchased_at >= ${last30}
           ), 0)::int AS last30_amount,
           count(*) FILTER (
-            WHERE status = 'completed' AND purchased_at >= ${last30}
+            WHERE status = 'completed'
+              AND is_sample = false
+              AND purchased_at >= ${last30}
           ) AS last30_count,
           coalesce(sum(amount_jpy) FILTER (
             WHERE status = 'completed'
+              AND is_sample = false
               AND purchased_at >= ${prev30}
               AND purchased_at < ${last30}
           ), 0)::int AS prev30_amount

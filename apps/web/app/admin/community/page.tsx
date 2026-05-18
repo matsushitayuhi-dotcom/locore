@@ -31,6 +31,8 @@ type Search = {
   kind?: string;
   status?: string;
   page?: string;
+  /** `1` を指定するとサンプル投稿 (is_sample=true) も表示する */
+  samples?: string;
 };
 
 const PAGE_SIZE = 40;
@@ -61,8 +63,13 @@ export default async function AdminCommunityPage({
   const status = (searchParams?.status ?? '').trim() as CommunityStatus | '';
   const page = Math.max(1, parseInt(searchParams?.page ?? '1', 10) || 1);
   const offset = (page - 1) * PAGE_SIZE;
+  // デフォルトはサンプル投稿を除外。?samples=1 で含める
+  const includeSamples = searchParams?.samples === '1';
 
   const filters: any[] = [];
+  if (!includeSamples) {
+    filters.push(eq(schema.communityPosts.isSample, false));
+  }
   if (q) {
     filters.push(
       or(
@@ -138,16 +145,29 @@ export default async function AdminCommunityPage({
         db
           .select({ kind: schema.communityPosts.kind, c: count() })
           .from(schema.communityPosts)
-          .where(eq(schema.communityPosts.status, 'active'))
+          .where(
+            includeSamples
+              ? eq(schema.communityPosts.status, 'active')
+              : and(
+                  eq(schema.communityPosts.status, 'active'),
+                  eq(schema.communityPosts.isSample, false),
+                ),
+          )
           .groupBy(schema.communityPosts.kind),
       [] as Array<{ kind: string; c: number }>,
     ),
     safe(
       () =>
-        db
-          .select({ status: schema.communityPosts.status, c: count() })
-          .from(schema.communityPosts)
-          .groupBy(schema.communityPosts.status),
+        includeSamples
+          ? db
+              .select({ status: schema.communityPosts.status, c: count() })
+              .from(schema.communityPosts)
+              .groupBy(schema.communityPosts.status)
+          : db
+              .select({ status: schema.communityPosts.status, c: count() })
+              .from(schema.communityPosts)
+              .where(eq(schema.communityPosts.isSample, false))
+              .groupBy(schema.communityPosts.status),
       [] as Array<{ status: string; c: number }>,
     ),
   ]);
@@ -165,6 +185,7 @@ export default async function AdminCommunityPage({
     if (next.q) params.set('q', next.q);
     if (next.kind) params.set('kind', next.kind);
     if (next.status) params.set('status', next.status);
+    if (next.samples === '1') params.set('samples', '1');
     return `/admin/community${params.toString() ? `?${params.toString()}` : ''}`;
   };
 
@@ -218,10 +239,32 @@ export default async function AdminCommunityPage({
         ))}
       </div>
 
+      {/* サンプル表示トグル */}
+      <div className="mb-3 flex items-center gap-2 text-[11px]">
+        <Link
+          href={buildHref({ samples: includeSamples ? undefined : '1' })}
+          className={
+            'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 ring-1 transition ' +
+            (includeSamples
+              ? 'bg-amber-500/15 text-amber-700 ring-amber-500/30'
+              : 'bg-card text-foreground/55 ring-border hover:bg-muted')
+          }
+        >
+          <span className="text-[10px]">{includeSamples ? '☑' : '☐'}</span>
+          サンプル投稿も表示
+        </Link>
+        {includeSamples ? (
+          <span className="text-[10px] text-amber-700">
+            シード由来のサンプル投稿を含めて表示中
+          </span>
+        ) : null}
+      </div>
+
       {/* 検索 */}
       <form action="/admin/community" method="GET" className="mb-4">
         {kind ? <input type="hidden" name="kind" value={kind} /> : null}
         {status ? <input type="hidden" name="status" value={status} /> : null}
+        {includeSamples ? <input type="hidden" name="samples" value="1" /> : null}
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
           <input

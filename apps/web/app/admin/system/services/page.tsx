@@ -25,6 +25,32 @@ import { AdminPageHeader } from '../../_components/AdminPageHeader';
  *
  * env チェックはサーバーサイドで実施。サニタイズはしないが、API キー
  * 本体は表示しない (true/false / 末尾 4 文字のみ)。
+ *
+ * --------------------------------------------------------------------------
+ * 拡張ガイド (新しい外部サービスを追加するとき):
+ *
+ * 1. 下の SECTIONS に、対象セクション (`インフラ` / `通信` / `決済` /
+ *    `AI` / `開発` など) の `services: [...]` に `Service` オブジェクトを追加。
+ *      - `name`         : 表示名
+ *      - `icon`         : lucide-react から適当なアイコンを import
+ *      - `description`  : 1 行で「何をするサービスか」(日本語)
+ *      - `links`        : ダッシュボード本体 + よく使うサブページ
+ *      - `envVars`      : 関係する env のキー名と必須かどうか
+ *      - `notes`        : 注意点・運用メモ (任意)
+ *
+ * 2. env チェックは `process.env[key]` で自動で動く。新規の env を増やす
+ *    なら `apps/web/.env.example` と Vercel Project Settings も忘れず更新。
+ *
+ * 3. アイコンは無理に全サービスを個別アイコンにしなくて良い。
+ *    汎用なら `Wrench` / `Globe` / `Cloud` を使い回して OK。
+ *
+ * 4. 並び順は「日々触る頻度の高いものを上」が方針。
+ *    Supabase / Vercel / Resend は常時上位。
+ *
+ * 5. クイックリンクから外したい場合は `/admin/page.tsx` の
+ *    `QuickLinksSection` 側も合わせて編集する (ここは「全部見える場所」、
+ *    クイックリンクは「ダッシュボードからのショートカット」という棲み分け)。
+ * --------------------------------------------------------------------------
  */
 
 export const metadata = { title: '外部サービス — Admin' };

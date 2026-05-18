@@ -28,6 +28,8 @@ type Search = {
   q?: string;
   role?: string;
   page?: string;
+  /** `1` を指定するとサンプルユーザー (is_sample=true) も表示する */
+  samples?: string;
 };
 
 const ROLES = ['reader', 'resident_writer', 'editor', 'light_diarist'] as const;
@@ -52,8 +54,13 @@ export default async function AdminUsersPage({
   const roleFilter = (searchParams?.role ?? '').trim() as RoleValue | '';
   const page = Math.max(1, parseInt(searchParams?.page ?? '1', 10) || 1);
   const offset = (page - 1) * PAGE_SIZE;
+  // デフォルトはサンプル除外。?samples=1 を付けたときだけサンプルも含める
+  const includeSamples = searchParams?.samples === '1';
 
   const filters = [isNull(schema.users.deletedAt)];
+  if (!includeSamples) {
+    filters.push(eq(schema.users.isSample, false));
+  }
   if (q) {
     filters.push(
       or(
@@ -91,7 +98,11 @@ export default async function AdminUsersPage({
     db
       .select({ role: schema.users.role, c: count() })
       .from(schema.users)
-      .where(isNull(schema.users.deletedAt))
+      .where(
+        includeSamples
+          ? isNull(schema.users.deletedAt)
+          : and(isNull(schema.users.deletedAt), eq(schema.users.isSample, false)),
+      )
       .groupBy(schema.users.role),
   ]);
 
@@ -113,12 +124,12 @@ export default async function AdminUsersPage({
       />
 
       {/* ロール別サマリチップ */}
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-3 flex flex-wrap gap-2">
         <RoleChip
           label="すべて"
           active={!roleFilter}
           count={Object.values(roleCounts).reduce((a, b) => a + b, 0)}
-          href={`/admin/users${q ? `?q=${encodeURIComponent(q)}` : ''}`}
+          href={buildChipHref({ role: undefined, q, includeSamples })}
         />
         {ROLES.map((r) => (
           <RoleChip
@@ -126,9 +137,34 @@ export default async function AdminUsersPage({
             label={ROLE_LABEL[r]}
             active={roleFilter === r}
             count={roleCounts[r] ?? 0}
-            href={`/admin/users?role=${r}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+            href={buildChipHref({ role: r, q, includeSamples })}
           />
         ))}
+      </div>
+
+      {/* サンプル表示トグル */}
+      <div className="mb-4 flex items-center gap-2 text-[11px]">
+        <Link
+          href={buildChipHref({
+            role: roleFilter || undefined,
+            q,
+            includeSamples: !includeSamples,
+          })}
+          className={
+            'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 ring-1 transition ' +
+            (includeSamples
+              ? 'bg-amber-500/15 text-amber-700 ring-amber-500/30'
+              : 'bg-card text-foreground/55 ring-border hover:bg-muted')
+          }
+        >
+          <span className="text-[10px]">{includeSamples ? '☑' : '☐'}</span>
+          サンプルデータも表示
+        </Link>
+        {includeSamples ? (
+          <span className="text-[10px] text-amber-700">
+            シード由来のテストアカウントを含めて表示中
+          </span>
+        ) : null}
       </div>
 
       {/* 検索フォーム */}
@@ -136,6 +172,7 @@ export default async function AdminUsersPage({
         {roleFilter ? (
           <input type="hidden" name="role" value={roleFilter} />
         ) : null}
+        {includeSamples ? <input type="hidden" name="samples" value="1" /> : null}
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
           <input
@@ -275,8 +312,26 @@ function buildPageHref(s: Search | undefined, page: number): string {
   const params = new URLSearchParams();
   if (s?.q) params.set('q', s.q);
   if (s?.role) params.set('role', s.role);
+  if (s?.samples === '1') params.set('samples', '1');
   params.set('page', String(page));
   return `/admin/users?${params.toString()}`;
+}
+
+function buildChipHref({
+  role,
+  q,
+  includeSamples,
+}: {
+  role?: string;
+  q?: string;
+  includeSamples: boolean;
+}): string {
+  const params = new URLSearchParams();
+  if (role) params.set('role', role);
+  if (q) params.set('q', q);
+  if (includeSamples) params.set('samples', '1');
+  const qs = params.toString();
+  return `/admin/users${qs ? `?${qs}` : ''}`;
 }
 
 function RoleChip({
