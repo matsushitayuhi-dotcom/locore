@@ -79,7 +79,17 @@ export default async function AdminCommunityPage({
   }
   const whereClause = filters.length > 0 ? and(...filters) : undefined;
 
+  const safe = async <T,>(fn: () => Promise<T>, fallback: T): Promise<T> => {
+    try {
+      return await fn();
+    } catch (err) {
+      console.error('[admin/community] query failed:', err);
+      return fallback;
+    }
+  };
+
   const [rows, totalRows, kindCountRows, statusCountRows] = await Promise.all([
+    safe(() =>
     db
       .select({
         id: schema.communityPosts.id,
@@ -100,20 +110,46 @@ export default async function AdminCommunityPage({
       .orderBy(desc(schema.communityPosts.createdAt))
       .limit(PAGE_SIZE)
       .offset(offset),
-    db
-      .select({ c: count() })
-      .from(schema.communityPosts)
-      .leftJoin(schema.users, eq(schema.users.id, schema.communityPosts.authorId))
-      .where(whereClause),
-    db
-      .select({ kind: schema.communityPosts.kind, c: count() })
-      .from(schema.communityPosts)
-      .where(eq(schema.communityPosts.status, 'active'))
-      .groupBy(schema.communityPosts.kind),
-    db
-      .select({ status: schema.communityPosts.status, c: count() })
-      .from(schema.communityPosts)
-      .groupBy(schema.communityPosts.status),
+      [] as Array<{
+        id: string;
+        kind: string;
+        title: string;
+        status: string;
+        locationText: string | null;
+        priceAmount: number | null;
+        priceCurrency: string | null;
+        viewCount: number;
+        createdAt: Date;
+        authorId: string;
+        authorName: string | null;
+      }>,
+    ),
+    safe(
+      () =>
+        db
+          .select({ c: count() })
+          .from(schema.communityPosts)
+          .leftJoin(schema.users, eq(schema.users.id, schema.communityPosts.authorId))
+          .where(whereClause),
+      [{ c: 0 }],
+    ),
+    safe(
+      () =>
+        db
+          .select({ kind: schema.communityPosts.kind, c: count() })
+          .from(schema.communityPosts)
+          .where(eq(schema.communityPosts.status, 'active'))
+          .groupBy(schema.communityPosts.kind),
+      [] as Array<{ kind: string; c: number }>,
+    ),
+    safe(
+      () =>
+        db
+          .select({ status: schema.communityPosts.status, c: count() })
+          .from(schema.communityPosts)
+          .groupBy(schema.communityPosts.status),
+      [] as Array<{ status: string; c: number }>,
+    ),
   ]);
 
   const total = totalRows[0]?.c ?? 0;
