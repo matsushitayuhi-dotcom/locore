@@ -122,14 +122,14 @@ export default async function RegionHomePage({ params }: Props) {
               alt={region.nameJa}
               className="absolute inset-0 h-full w-full object-cover"
             />
-            {/* Tailwind 標準の black-* で確実に半透明黒を載せる */}
+            {/* 写真の下端だけにふんわり dark gradient + 軽い text-shadow */}
             <div
               aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10"
+              className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"
             />
             <div
               className="relative z-10 mx-auto flex h-full max-w-screen-xl flex-col justify-end px-4 pb-5 sm:px-6 sm:pb-7"
-              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.85)' }}
+              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.65)' }}
             >
               <nav className="text-[11px] text-white/85">
                 <Link href="/" className="hover:underline">

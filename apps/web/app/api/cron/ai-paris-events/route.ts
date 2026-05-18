@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { hasAiEventPostForToday } from '@/lib/board/db';
-import { fetchAiParisEvents } from '@/lib/ai/parisEvents';
+import { getRecentBoardEvents } from '@/lib/board/recent-events';
+import { dedupAgainstRecent, fetchAiParisEvents } from '@/lib/ai/parisEvents';
 
 /**
  * AI による「パリで今日／今週開催のイベント」自動収集 cron。
@@ -55,12 +56,25 @@ async function runCron(req: Request) {
     });
   }
 
-  // 3. Claude 呼び出し（共有ロジック）
-  const result = await fetchAiParisEvents();
+  // 3. 既出イベントを取得 → Claude に「重複避け」セクションとして渡す
+  const recent = await getRecentBoardEvents(30);
+
+  // 4. Claude 呼び出し（共有ロジック）
+  const result = await fetchAiParisEvents(recent);
   if (!result.ok) {
     return NextResponse.json(
       { ok: false, error: result.error ?? 'anthropic-call-failed' },
       { status: 502 },
+    );
+  }
+
+  // 5. サーバ側の最終フィルタ。AI の semantic 判定をすり抜けた重複を弾く。
+  const aiEvents = result.events ?? [];
+  const { kept, dropped } = dedupAgainstRecent(aiEvents, recent);
+  if (dropped.length > 0) {
+    console.info(
+      `[ai-paris-events] 重複で ${dropped.length} 件 skip しました:`,
+      dropped.map((d) => ({ title: d.candidate.title, reason: d.reason })),
     );
   }
 
@@ -73,19 +87,27 @@ async function runCron(req: Request) {
       rawParsedCount: result.rawParsedCount,
       validCount: result.validCount,
       events: result.events,
+      dedup: {
+        kept: kept.length,
+        dropped: dropped.length,
+        droppedDetails: dropped.map((d) => ({
+          title: d.candidate.title,
+          reason: d.reason,
+        })),
+      },
       rawText: result.rawText,
       usage: result.usage,
       stopReason: result.stopReason,
     });
   }
 
-  // 4. DB 挿入
-  const valid = result.events ?? [];
-  if (valid.length === 0) {
+  // 6. DB 挿入
+  if (kept.length === 0) {
     return NextResponse.json({
       ok: true,
       inserted: 0,
-      reason: 'no-events-parsed',
+      duplicatesSkipped: dropped.length,
+      reason: aiEvents.length === 0 ? 'no-events-parsed' : 'all-duplicates',
     });
   }
 
@@ -93,7 +115,7 @@ async function runCron(req: Request) {
   const inserted = await db
     .insert(schema.boardPosts)
     .values(
-      valid.map((e) => ({
+      kept.map((e) => ({
         title: e.title,
         body: e.body,
         category: 'event' as const,
@@ -113,6 +135,7 @@ async function runCron(req: Request) {
   return NextResponse.json({
     ok: true,
     inserted: inserted.length,
+    duplicatesSkipped: dropped.length,
     ids: inserted.map((r) => r.id),
   });
 }

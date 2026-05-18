@@ -58,19 +58,17 @@ export default async function CountryPage({ params }: Props) {
             unoptimized
           />
           {/*
-            ヘッダー画像上のテキスト可読性のため、グラデーションを下端まで
-            濃く落とし、テキストには text-shadow を付ける (明るい画像でも
-            読めるように)。Tailwind の preset CSS var との相性で
-            bg-neutral-900/XX が透明になるケースがあるため、
-            グラデは Tailwind 標準の black-* を使う。
+            軽めの dark gradient を画像下半分にだけ。Tailwind の preset CSS var
+            ではなく Tailwind 標準の black-* を使う (opacity modifier の
+            互換性を確実にするため)。
           */}
           <div
             aria-hidden
-            className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/10"
+            className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"
           />
           <div
             className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10"
-            style={{ textShadow: '0 2px 12px rgba(0,0,0,0.85)' }}
+            style={{ textShadow: '0 1px 4px rgba(0,0,0,0.65)' }}
           >
             <Link
               href="/"
@@ -241,14 +239,18 @@ function RegionCard({
         {locked ? (
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
-        {/* ふんわり vignette。下の黒い帯で可読性は担保するのでここは控えめ。 */}
+        {/*
+          ふんわりした dark gradient を写真の下半分にだけ被せる。
+          黒帯やフロストガラスはやらず、写真の見栄えを最優先。
+          文字は白 + 軽い text-shadow だけで読める設計。
+        */}
         <div
           aria-hidden
           className={
             'absolute inset-0 ' +
             (locked
-              ? 'bg-black/15'
-              : 'bg-gradient-to-t from-black/20 via-transparent to-transparent')
+              ? 'bg-gradient-to-t from-black/50 via-black/20 to-black/5'
+              : 'bg-gradient-to-t from-black/55 via-black/15 to-transparent')
           }
         />
         {locked ? (
@@ -257,20 +259,9 @@ function RegionCard({
             準備中
           </span>
         ) : null}
-        {/*
-          画像下端のラベル帯。
-          - 背景は inline style で rgba 指定 (Tailwind の bg-neutral-900/55 は
-            preset の CSS var 経由だと opacity modifier が効かないことがあるため
-            inline で確実に半透明黒を出す)
-          - text-shadow を強めに当てて、万一背景が透けても読める保険
-          - backdrop-blur で背景画像をぼかす (補強)
-        */}
         <div
-          className="absolute inset-x-0 bottom-0 px-3 py-2.5 text-white backdrop-blur-sm sm:py-3"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.62)',
-            textShadow: '0 1px 4px rgba(0,0,0,0.85)',
-          }}
+          className="absolute inset-x-0 bottom-0 px-3 py-3 text-white"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
         >
           <h3
             className="truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"

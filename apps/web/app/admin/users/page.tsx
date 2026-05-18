@@ -185,14 +185,14 @@ export default async function AdminUsersPage({
         </div>
       </form>
 
-      {/* 一覧 */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      {/* 一覧。テーブルが viewport を超えた場合はラッパ内で横スクロールできる */}
+      <div className="overflow-x-auto rounded-xl border border-border bg-card">
         {rows.length === 0 ? (
           <p className="px-5 py-10 text-center text-[13px] text-foreground/55">
             該当ユーザーが見つかりません。
           </p>
         ) : (
-          <table className="w-full text-[13px]">
+          <table className="w-full min-w-[640px] text-[13px]">
             <thead className="border-b border-border bg-background/40 text-[10px] font-bold uppercase tracking-wider text-foreground/55">
               <tr>
                 <th className="px-3 py-2 text-left">ユーザー</th>

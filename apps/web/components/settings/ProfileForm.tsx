@@ -136,8 +136,14 @@ export function ProfileForm({ initial }: Props) {
           />
         </div>
         {avatarUrl ? (
-          <div className="mt-3 flex items-center gap-2 text-[11px] text-foreground/50">
-            <span className="truncate">{avatarUrl}</span>
+          // 旧実装は avatarUrl をテキスト表示していたが、Supabase の署名 URL
+          // は数百文字あるためスマホで横スクロールが発生していた (UAT 指摘)。
+          // URL は出さず、アップロード済みの状態と「画像を外す」だけを表示する。
+          <div className="mt-3 flex items-center justify-between gap-2 text-[11px] text-foreground/55">
+            <span className="inline-flex items-center gap-1 text-success-500">
+              <span aria-hidden>✓</span>
+              アップロード済み
+            </span>
             <button
               type="button"
               onClick={() => setAvatarUrl('')}

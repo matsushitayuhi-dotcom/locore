@@ -27,9 +27,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="bg-background">
-      <div className="mx-auto flex max-w-screen-2xl lg:gap-0">
+      <div className="mx-auto flex max-w-screen-2xl overflow-x-hidden lg:gap-0">
         <AdminSidebar />
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        {/*
+          スマホで子要素 (テーブル / 長い URL / UUID 等) が viewport を超えても
+          ページ全体が横スクロールしないように overflow-x-hidden を上 (div) で
+          安全網的に設定。テーブル等で横スクロールが必要なものは個別に
+          overflow-x-auto をラッパに付ける方針。
+        */}
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
           {children}
         </main>
       </div>

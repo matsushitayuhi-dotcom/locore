@@ -1,5 +1,6 @@
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
+import type { RecentBoardEvent } from '@/lib/board/recent-events';
 
 /**
  * パリ・イベント自動収集の Claude 呼び出しを 1 ファイルに集約。
@@ -185,8 +186,14 @@ Locore の編集トーンは「小さな旅行誌」。SNS まとめサイトの
 /**
  * Claude にパリの当週イベントを問い合わせ、JSON で取り出す。
  * DB 書き込みは含まないので呼び出し側で挿入する。
+ *
+ * `recentEvents` を渡すと、プロンプトに「既出リスト」セクションを差し込み、
+ * AI に semantic な重複（同じ催し物の別日付、同じメトロ停止の続報など）を
+ * 自前で除外させる。空配列なら既出セクションは出力しない。
  */
-export async function fetchAiParisEvents(): Promise<RunAiResult> {
+export async function fetchAiParisEvents(
+  recentEvents: RecentBoardEvent[] = [],
+): Promise<RunAiResult> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return { ok: false, error: 'ANTHROPIC_API_KEY not set' };
@@ -209,11 +216,14 @@ export async function fetchAiParisEvents(): Promise<RunAiResult> {
     weekday: 'long',
   }).format(now);
 
+  // 既出イベントを Claude に見せて semantic な重複を弾かせる
+  const recentSection = buildRecentSection(recentEvents);
+
   const userPrompt = `# 今日の情報
 
 - パリ現地日付: ${today}（${weekdayJa}）
 - 取材対象期間: ${today} 〜 ${inSevenDays}（7 日先まで）
-
+${recentSection}
 # 依頼
 
 上記の期間中にパリで以下の 2 種類だけを調べてください:
@@ -355,4 +365,130 @@ function sanitize(e: AiEvent): AiEvent | null {
     category,
     source_urls: sourceUrls,
   };
+}
+
+/**
+ * 既出イベントリストをプロンプトに差し込むためのセクション文字列を組む。
+ * recent が空のときは空文字を返す。
+ */
+function buildRecentSection(recent: RecentBoardEvent[]): string {
+  if (!recent || recent.length === 0) return '';
+  const lines = recent
+    .slice(0, 80)
+    .map((r) => {
+      const date = r.eventDate ?? '日付不明';
+      const loc = r.eventLocation ?? '場所不明';
+      // タイトルだけは原文を尊重しつつ、改行混入を除去
+      const title = r.title.replace(/\s+/g, ' ').trim();
+      return `- ${title} / ${date} / ${loc}`;
+    })
+    .join('\n');
+  return `
+# 既出（重複避け）
+
+過去 30 日に既にこの掲示板に出している内容を下に列挙します。
+**これらと実質的に同じイベントは、新しい候補から完全に除外してください**。
+判定基準は「人間が見て『あ、これ前にも見たな』と感じるもの全て」です。
+具体例:
+- 同じ催し物の別日付（例: 同じ美術館の同じ無料開放キャンペーン）
+- 同じ事案の続報（例: 同じメトロ路線・同じ期間の運休、ストの延長）
+- 表現や切り口が違うだけの同じイベント
+
+既出リスト（タイトル / 日付 / 場所）:
+${lines}
+`;
+}
+
+/**
+ * タイトル正規化:
+ *  - NFKC で全角→半角・互換正規化
+ *  - 小文字化
+ *  - 主な句読点・記号類を空白へ
+ *  - 連続空白を 1 つに圧縮し trim
+ *
+ * Editorial Light トーンを崩さないため、原文タイトル自体には触らず
+ * 重複判定の比較キーとしてだけ使う。
+ */
+export function normalizeTitle(s: string): string {
+  return s
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[、。,.!?！？「」『』【】\[\](){}〜~・:：;；/／\\|｜＿_\-–—"'`]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * AI が返してきた候補を、既出イベントと突き合わせて重複だけ落とす。
+ *
+ * 3 段階のチェック:
+ *  1. 正規化タイトル完全一致
+ *  2. タイトル先頭 18 文字一致（末尾の枝葉を許容。10 字未満は対象外）
+ *  3. 同じ event_date ± 24h かつ event_location が同一
+ *
+ * AI 側のセマンティック判定をすり抜けたものを念のため拾う「二重防御」レイヤ。
+ *
+ * 将来課題:
+ *   - 重複と判定された候補で、既存レコードの body / event_date_end /
+ *     source_urls だけを UPDATE する運用（停止区間拡大・期間延長などの続報）。
+ *   - 別イベントとして残すべきか上書きかの判定が難しいので MVP では skip のみ。
+ */
+export function dedupAgainstRecent(
+  candidates: AiEvent[],
+  recent: RecentBoardEvent[],
+): {
+  kept: AiEvent[];
+  dropped: Array<{ candidate: AiEvent; reason: string }>;
+} {
+  const kept: AiEvent[] = [];
+  const dropped: Array<{ candidate: AiEvent; reason: string }> = [];
+
+  const recentTitleSet = new Set(recent.map((r) => normalizeTitle(r.title)));
+  const recentTitlePrefixes = new Set(
+    recent
+      .map((r) => normalizeTitle(r.title).slice(0, 18))
+      .filter((s) => s.length >= 10),
+  );
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  for (const c of candidates) {
+    const ct = normalizeTitle(c.title);
+
+    // 1. 正規化タイトル完全一致
+    if (ct && recentTitleSet.has(ct)) {
+      dropped.push({ candidate: c, reason: 'title-exact' });
+      continue;
+    }
+
+    // 2. タイトル先頭 18 文字一致
+    const prefix = ct.slice(0, 18);
+    if (prefix.length >= 10 && recentTitlePrefixes.has(prefix)) {
+      dropped.push({ candidate: c, reason: 'title-prefix' });
+      continue;
+    }
+
+    // 3. 同日 ± 24h + 同じ場所
+    const cDateMs = c.event_date ? Date.parse(c.event_date) : NaN;
+    const cLoc = normalizeTitle(c.event_location ?? '');
+    const sameDayAndPlace =
+      !Number.isNaN(cDateMs) &&
+      cLoc.length > 0 &&
+      recent.some((r) => {
+        if (!r.eventDate || !r.eventLocation) return false;
+        const rDateMs = Date.parse(r.eventDate);
+        if (Number.isNaN(rDateMs)) return false;
+        if (Math.abs(cDateMs - rDateMs) > DAY_MS) return false;
+        const rLoc = normalizeTitle(r.eventLocation);
+        return rLoc.length > 0 && rLoc === cLoc;
+      });
+    if (sameDayAndPlace) {
+      dropped.push({ candidate: c, reason: 'same-date-location' });
+      continue;
+    }
+
+    kept.push(c);
+  }
+
+  return { kept, dropped };
 }

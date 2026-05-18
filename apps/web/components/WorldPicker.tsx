@@ -138,18 +138,14 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
           className="object-cover transition duration-500 group-hover:scale-[1.04]"
           unoptimized
         />
-        {/* ふんわり vignette。可読性は下の黒帯で確保 */}
+        {/* 下半分にだけふんわり dark gradient + 軽い text-shadow */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-transparent"
         />
-        {/* タイトル帯: rgba inline + backdrop-blur + text-shadow の三重防護 */}
         <div
-          className="absolute inset-x-0 bottom-0 p-4 text-white backdrop-blur-sm sm:p-5"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.62)',
-            textShadow: '0 1px 6px rgba(0,0,0,0.85)',
-          }}
+          className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5"
+          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.65)' }}
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
             {country.nameEn}
@@ -213,12 +209,14 @@ function ComingSoonCard({ country }: { country: CountryListItem }) {
           <Lock className="h-2.5 w-2.5" />
           準備中
         </span>
+        {/* Coming Soon カード用に下半分だけふんわり gradient */}
         <div
-          className="absolute inset-x-0 bottom-0 p-3 text-white/95 backdrop-blur-sm"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.62)',
-            textShadow: '0 1px 4px rgba(0,0,0,0.85)',
-          }}
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-transparent"
+        />
+        <div
+          className="absolute inset-x-0 bottom-0 p-3 text-white/95"
+          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
         >
           <h3
             className="truncate text-[14px] font-bold leading-tight tracking-tight"
