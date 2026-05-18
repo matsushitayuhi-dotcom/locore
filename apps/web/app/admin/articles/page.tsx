@@ -4,6 +4,7 @@ import { Search, Newspaper, ExternalLink, Edit } from 'lucide-react';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { AdminPageHeader } from '../_components/AdminPageHeader';
+import { ArticleAdminActions } from './ArticleAdminActions';
 
 /**
  * /admin/articles — 全ライターの記事を横断管理する画面。
@@ -288,7 +289,12 @@ export default async function AdminArticlesPage({
                     {(a.publishedAt ?? a.createdAt).toLocaleDateString('ja-JP')}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-1">
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-1 gap-y-1">
+                  <ArticleAdminActions
+                    articleId={a.id}
+                    articleTitle={a.title}
+                    status={a.status as StatusValue}
+                  />
                   <Link
                     href={`/articles/${a.id}`}
                     target="_blank"
