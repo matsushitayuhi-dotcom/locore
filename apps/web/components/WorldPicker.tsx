@@ -138,13 +138,13 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
           className="object-cover transition duration-500 group-hover:scale-[1.04]"
           unoptimized
         />
-        {/* グラデーション overlay */}
+        {/* ふんわり vignette。可読性はフロストガラスの帯で確保 */}
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-neutral-900/85 via-neutral-900/35 to-transparent"
+          className="absolute inset-0 bg-gradient-to-t from-neutral-900/25 via-transparent to-transparent"
         />
-        {/* タイトル群 */}
-        <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+        {/* タイトル群: backdrop-blur + 半透明黒で全画像で確実に読める */}
+        <div className="absolute inset-x-0 bottom-0 bg-neutral-900/55 p-4 text-white backdrop-blur-md sm:p-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
             {country.nameEn}
           </p>
@@ -202,18 +202,14 @@ function ComingSoonCard({ country }: { country: CountryListItem }) {
           aria-hidden
           className="absolute inset-0 bg-neutral-100/45"
         />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-neutral-700/80 via-neutral-700/30 to-transparent"
-        />
         {/* Lock バッジ */}
         <span className="absolute right-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
           <Lock className="h-2.5 w-2.5" />
           準備中
         </span>
-        <div className="absolute inset-x-0 bottom-0 p-3 text-white/85">
+        <div className="absolute inset-x-0 bottom-0 bg-neutral-700/55 p-3 text-white/95 backdrop-blur-md">
           <h3
-            className="text-[14px] font-bold leading-tight tracking-tight"
+            className="truncate text-[14px] font-bold leading-tight tracking-tight"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}

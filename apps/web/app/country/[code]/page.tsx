@@ -239,13 +239,18 @@ function RegionCard({
         {locked ? (
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
+        {/*
+          ふんわりした薄い vignette (画像が直接 top corner の Lock バッジに
+          食い込まないように)。文字の可読性は下のフロストガラスバンドで
+          担保するので、ここは画像の見栄え優先で控えめにする。
+        */}
         <div
           aria-hidden
           className={
             'absolute inset-0 ' +
             (locked
-              ? 'bg-gradient-to-t from-neutral-700/90 via-neutral-700/50 to-neutral-700/0'
-              : 'bg-gradient-to-t from-neutral-900/95 via-neutral-900/55 to-neutral-900/0')
+              ? 'bg-neutral-700/15'
+              : 'bg-gradient-to-t from-neutral-900/25 via-transparent to-transparent')
           }
         />
         {locked ? (
@@ -254,21 +259,22 @@ function RegionCard({
             準備中
           </span>
         ) : null}
-        <div
-          className="absolute inset-x-0 bottom-0 p-3 text-white"
-          style={{ textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}
-        >
+        {/*
+          フロストガラス風のラベル帯。backdrop-blur で背景の画像を強制的に
+          ぼかし、半透明黒オーバーレイで明度を確保。これで明るい画像でも
+          暗い画像でも一定の可読性が出る。
+        */}
+        <div className="absolute inset-x-0 bottom-0 bg-neutral-900/55 px-3 py-2.5 text-white backdrop-blur-md sm:py-3">
           <h3
-            className="text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
+            className="truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              textShadow: '0 1px 8px rgba(0,0,0,0.7)',
             }}
           >
             {region.nameJa}
           </h3>
           {!locked ? (
-            <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-semibold text-white/95">
+            <div className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-white/95">
               <MapPin className="h-2.5 w-2.5" />
               {isOther ? 'その他のエリア' : '記事を見る'}
               <ArrowRight className="h-2.5 w-2.5" />

@@ -110,18 +110,16 @@ function CountryTile({ country }: { country: CountryListItem }) {
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
         {/*
-          可読性のため 2 段グラデを重ねる:
-          1) 下半分にしっかり黒を載せる (テキスト直下 80%、中段 50% にぼかし)
-          2) ロックの場合は別色のグラデで雰囲気を変える
-          さらにテキスト側で text-shadow を効かせて、明るい画像でも読める保険にする。
+          画像本体は素直に見せ、テキストはフロストガラスのラベル帯で囲って
+          確実に読めるようにする。グラデーションは控えめな vignette のみ。
         */}
         <div
           aria-hidden
           className={
             'absolute inset-0 ' +
             (active
-              ? 'bg-gradient-to-t from-neutral-900/95 via-neutral-900/55 to-neutral-900/0'
-              : 'bg-gradient-to-t from-neutral-700/95 via-neutral-700/55 to-neutral-700/0')
+              ? 'bg-gradient-to-t from-neutral-900/20 via-transparent to-transparent'
+              : 'bg-neutral-700/20')
           }
         />
         {!active ? (
@@ -130,18 +128,14 @@ function CountryTile({ country }: { country: CountryListItem }) {
             準備中
           </span>
         ) : null}
-        <div
-          className="absolute inset-x-0 bottom-0 p-3 text-white"
-          style={{ textShadow: '0 1px 6px rgba(0,0,0,0.6)' }}
-        >
+        <div className="absolute inset-x-0 bottom-0 bg-neutral-900/55 px-3 py-2.5 text-white backdrop-blur-md">
           <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/85">
             {country.nameEn}
           </p>
           <h3
-            className="mt-0.5 text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
+            className="mt-0.5 truncate text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              textShadow: '0 1px 8px rgba(0,0,0,0.7)',
             }}
           >
             {country.nameJa}
