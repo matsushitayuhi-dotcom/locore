@@ -10,7 +10,9 @@ import {
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
+import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
+import { resolveCommunityRegion } from '@/lib/community/region-filter';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +74,7 @@ type Props = {
     type?: string;
     urg?: string;
     cat?: string;
+    region?: string;
   };
 };
 
@@ -113,7 +116,13 @@ export default async function HelpIndexPage({ searchParams }: Props) {
       ? (searchParams.cat as Category)
       : undefined;
 
-  const rawPosts = await listCommunityPosts({ kind: 'mutual_aid', limit: 80 });
+  const regionFilter = await resolveCommunityRegion(searchParams?.region);
+
+  const rawPosts = await listCommunityPosts({
+    kind: 'mutual_aid',
+    limit: 80,
+    cityId: regionFilter.cityId,
+  });
 
   const filtered = rawPosts.filter((p) => {
     const meta = p.metadata as {
@@ -132,6 +141,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
     if (activeType) params.set('type', activeType);
     if (activeUrg) params.set('urg', activeUrg);
     if (activeCat) params.set('cat', activeCat);
+    if (regionFilter.active) params.set('region', regionFilter.slug);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -152,6 +162,18 @@ export default async function HelpIndexPage({ searchParams }: Props) {
 
       <div className="mt-4">
         <CommunityNav active="mutual_aid" />
+      </div>
+
+      <div className="mt-3">
+        <CommunityRegionPicker
+          basePath="/help"
+          activeSlug={regionFilter.slug}
+          preserveQuery={{
+            type: activeType,
+            urg: activeUrg,
+            cat: activeCat,
+          }}
+        />
       </div>
 
       <header className="mt-6 mb-5 flex items-start justify-between gap-3">

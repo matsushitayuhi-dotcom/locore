@@ -10,7 +10,9 @@ import {
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
+import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
+import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
   JOB_EMPLOYMENT_TYPES,
   JOB_EMPLOYMENT_TYPE_LABEL,
@@ -48,6 +50,7 @@ type Props = {
     min?: string;
     sort?: string;
     filters?: string;
+    region?: string;
   };
 };
 
@@ -135,8 +138,13 @@ export default async function JobsIndexPage({ searchParams }: Props) {
   })();
   const sort: Sort = searchParams?.sort === 'salary' ? 'salary' : 'new';
   const showFilters = searchParams?.filters === '1';
+  const regionFilter = await resolveCommunityRegion(searchParams?.region);
 
-  const rawPosts = await listCommunityPosts({ kind: 'job', limit: 80 });
+  const rawPosts = await listCommunityPosts({
+    kind: 'job',
+    limit: 80,
+    cityId: regionFilter.cityId,
+  });
 
   // フィルタリング
   const filtered = rawPosts.filter((p) => {
@@ -184,6 +192,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     if (minSalary) params.set('min', String(minSalary));
     if (sort !== 'new') params.set('sort', sort);
     if (showFilters) params.set('filters', '1');
+    if (regionFilter.active) params.set('region', regionFilter.slug);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -220,6 +229,22 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         <CommunityNav active="job" />
       </div>
 
+      <div className="mt-3">
+        <CommunityRegionPicker
+          basePath="/jobs"
+          activeSlug={regionFilter.slug}
+          preserveQuery={{
+            type: activeTypes.length > 0 ? activeTypes.join(',') : undefined,
+            cat: activeCat,
+            lang: activeLangs.length > 0 ? activeLangs.join(',') : undefined,
+            remote: remoteOnly ? '1' : undefined,
+            min: minSalary ? String(minSalary) : undefined,
+            sort: sort !== 'new' ? sort : undefined,
+            filters: showFilters ? '1' : undefined,
+          }}
+        />
+      </div>
+
       <header className="mt-6 mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
@@ -230,7 +255,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            パリで、はたらく。
+            {regionFilter.active ? `${regionFilter.nameJa}で、はたらく。` : 'パリで、はたらく。'}
           </h1>
           <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
             日系企業のオフィスから、飲食、翻訳、教育、IT まで。
@@ -256,6 +281,9 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         method="GET"
         className="mb-5 flex flex-wrap items-end gap-2 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
       >
+        {regionFilter.active ? (
+          <input type="hidden" name="region" value={regionFilter.slug} />
+        ) : null}
         <FilterSelect
           name="type"
           label="雇用形態"
@@ -339,7 +367,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             minSalary ||
             sort !== 'new') ? (
             <Link
-              href="/jobs"
+              href={regionFilter.active ? `/jobs?region=${regionFilter.slug}` : '/jobs'}
               className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
             >
               リセット
@@ -509,6 +537,9 @@ export default async function JobsIndexPage({ searchParams }: Props) {
 
             <form action="/jobs" method="GET" className="flex items-center gap-1.5">
               {/* 既存 params を hidden で持ち回す */}
+              {regionFilter.active ? (
+                <input type="hidden" name="region" value={regionFilter.slug} />
+              ) : null}
               {activeTypes.length > 0 ? (
                 <input type="hidden" name="type" value={activeTypes.join(',')} />
               ) : null}

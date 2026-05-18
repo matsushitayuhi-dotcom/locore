@@ -67,9 +67,12 @@ export default async function ResidentsPage({
   const meetupsOnly = searchParams?.meetups === '1';
   const tag = (searchParams?.tag ?? '').trim();
 
+  // 注: is_sample=true のサンプルユーザーもこのリストには表示する。
+  // 本番ユーザーと混ざるが、UAT 中は意図的にこの挙動。サンプル一括削除は
+  //   DELETE FROM users WHERE is_sample = true;
+  // で行う想定 (0044 のヘッダー参照)。
   const filters = [
     isNull(schema.users.deletedAt),
-    eq(schema.users.isSample, false),
     ne(schema.users.displayName, ''),
   ];
   if (q) {

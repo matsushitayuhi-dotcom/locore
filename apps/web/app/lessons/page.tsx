@@ -11,7 +11,9 @@ import {
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
+import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
+import { resolveCommunityRegion } from '@/lib/community/region-filter';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,6 +69,7 @@ type Props = {
     cat?: string;
     fmt?: string;
     trial?: string;
+    region?: string;
   };
 };
 
@@ -121,8 +124,13 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
     return undefined;
   })();
   const trialOnly = searchParams?.trial === '1';
+  const regionFilter = await resolveCommunityRegion(searchParams?.region);
 
-  const rawPosts = await listCommunityPosts({ kind: 'lesson', limit: 80 });
+  const rawPosts = await listCommunityPosts({
+    kind: 'lesson',
+    limit: 80,
+    cityId: regionFilter.cityId,
+  });
 
   const filtered = rawPosts.filter((p) => {
     const meta = p.metadata as {
@@ -144,6 +152,7 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
     if (activeCat) params.set('cat', activeCat);
     if (activeFormat) params.set('fmt', activeFormat);
     if (trialOnly) params.set('trial', '1');
+    if (regionFilter.active) params.set('region', regionFilter.slug);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -164,6 +173,19 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
 
       <div className="mt-4">
         <CommunityNav active="lesson" />
+      </div>
+
+      <div className="mt-3">
+        <CommunityRegionPicker
+          basePath="/lessons"
+          activeSlug={regionFilter.slug}
+          preserveQuery={{
+            side: activeSide,
+            cat: activeCat,
+            fmt: activeFormat,
+            trial: trialOnly ? '1' : undefined,
+          }}
+        />
       </div>
 
       <header className="mt-6 mb-5 flex items-start justify-between gap-3">

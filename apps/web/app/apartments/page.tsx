@@ -20,6 +20,8 @@ import {
 } from '@/lib/community/constants';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
+import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
+import { resolveCommunityRegion } from '@/lib/community/region-filter';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +74,7 @@ type Props = {
     furnished?: string;
     pets?: string;
     sort?: string;
+    region?: string;
   };
 };
 
@@ -100,11 +103,16 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
   const petsOnly = searchParams?.pets === '1';
   const sort: SortId =
     (SORT_OPTIONS.find((s) => s.id === searchParams?.sort)?.id as SortId) ?? 'recent';
+  const regionFilter = await resolveCommunityRegion(searchParams?.region);
 
   // -------------------------------------------------------------------------
   // データ取得（active のみ）
   // -------------------------------------------------------------------------
-  const allPosts = await listCommunityPosts({ kind: 'apartment', limit: 120 });
+  const allPosts = await listCommunityPosts({
+    kind: 'apartment',
+    limit: 120,
+    cityId: regionFilter.cityId,
+  });
 
   // -------------------------------------------------------------------------
   // クライアントサイド相当のフィルタ（メタが JSONB なので SQL でやらず JS で簡潔に）
@@ -165,6 +173,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     if (furnishedOnly) sp.set('furnished', '1');
     if (petsOnly) sp.set('pets', '1');
     if (sort !== 'recent') sp.set('sort', sort);
+    if (regionFilter.active) sp.set('region', regionFilter.slug);
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || v === null || v === '') sp.delete(k);
       else sp.set(k, v);
@@ -184,6 +193,22 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
       <CommunityNav active="apartment" />
 
+      <div className="mt-3">
+        <CommunityRegionPicker
+          basePath="/apartments"
+          activeSlug={regionFilter.slug}
+          preserveQuery={{
+            type: selectedTypes.length > 0 ? selectedTypes.join(',') : undefined,
+            rent: rentBucket,
+            bedrooms: bedroomFilter,
+            arr: arrFilter || undefined,
+            furnished: furnishedOnly ? '1' : undefined,
+            pets: petsOnly ? '1' : undefined,
+            sort: sort !== 'recent' ? sort : undefined,
+          }}
+        />
+      </div>
+
       {/* ヘッダ */}
       <header className="mt-6 flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -195,7 +220,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            パリで暮らす、次のひと部屋。
+            {regionFilter.active ? `${regionFilter.nameJa}で暮らす、次のひと部屋。` : 'パリで暮らす、次のひと部屋。'}
           </h1>
           <p className="mt-2 max-w-prose text-[14px] leading-[1.9] text-foreground/70">
             駐在員と長期滞在者のための物件掲示板。長期賃貸 / 短期 / シェア /
@@ -222,6 +247,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
         method="GET"
         className="mt-6 flex flex-wrap items-end gap-2 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
       >
+        {regionFilter.active ? (
+          <input type="hidden" name="region" value={regionFilter.slug} />
+        ) : null}
         <FilterSelect
           name="type"
           label="形態"
@@ -306,7 +334,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             petsOnly ||
             sort !== 'recent') ? (
             <Link
-              href="/apartments"
+              href={regionFilter.active ? `/apartments?region=${regionFilter.slug}` : '/apartments'}
               className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
             >
               リセット
@@ -430,6 +458,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             className="flex items-center gap-1"
           >
             {/* 既存フィルタを hidden で保持 */}
+            {regionFilter.active ? (
+              <input type="hidden" name="region" value={regionFilter.slug} />
+            ) : null}
             {selectedTypes.length > 0 ? (
               <input type="hidden" name="type" value={selectedTypes.join(',')} />
             ) : null}

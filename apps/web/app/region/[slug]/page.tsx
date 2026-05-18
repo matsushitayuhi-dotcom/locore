@@ -81,9 +81,14 @@ export default async function RegionHomePage({ params }: Props) {
     );
   }
 
+  // 掲示板は現在 Paris のみで運用 (記事と異なり地域フィルタを仕込んでない)。
+  // それ以外の region では Coming Soon プレースホルダで意図を示す。
+  // ボルドー / ニース等で掲示板を本格運用するときに hasBoard を拡張する。
+  const hasBoard = region.slug === 'paris';
+
   const [articles, boardPosts] = await Promise.all([
     getPublishedDbArticles(60, region.slug),
-    listBoardPosts(10),
+    hasBoard ? listBoardPosts(10) : Promise.resolve([]),
   ]);
   const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
 
@@ -130,9 +135,26 @@ export default async function RegionHomePage({ params }: Props) {
             kicker="新着ニュース"
             title={`${region.nameJa} の、今日と明日`}
             subtitle="マルシェ、突然始まった工事、見ておいて損のない展覧会。書き手と編集チームが現地時間に合わせて毎朝更新します。"
-            href="/board"
+            href={hasBoard ? '/board' : undefined}
           />
-          <BoardWidget posts={boardPosts} />
+          {hasBoard ? (
+            <BoardWidget posts={boardPosts} />
+          ) : (
+            <div className="rounded-2xl border border-dashed border-border bg-card/60 p-8 text-center sm:p-10">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+                <Lock className="h-3 w-3" />
+                Coming Soon
+              </p>
+              <p className="mt-3 text-[13px] leading-[1.85] text-foreground/70">
+                {region.nameJa} の新着ニュースは準備中です。
+                <br className="hidden sm:inline" />
+                編集チームと現地の書き手が揃い次第、ここに毎朝の情報を載せていきます。
+              </p>
+              <p className="mt-2 text-[11px] text-foreground/45">
+                記事とスポット紹介は下にすでに公開されています。
+              </p>
+            </div>
+          )}
         </section>
 
         {/* 3. スポット紹介 */}
