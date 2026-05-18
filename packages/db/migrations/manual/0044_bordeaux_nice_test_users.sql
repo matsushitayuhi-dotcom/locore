@@ -185,7 +185,24 @@ VALUES (
     {"imageUrl":"https://picsum.photos/seed/locore-bdx-cafe-5/960/1200","caption":"Cave La Conserverie の地下カーヴ。€15 以下の当たり率が異常に高い棚。","locationName":"Cave La Conserverie","position":4}
   ]'::jsonb,
   true
-);
+)
+ON CONFLICT (id) DO UPDATE SET
+  writer_id        = EXCLUDED.writer_id,
+  city_id          = EXCLUDED.city_id,
+  title            = EXCLUDED.title,
+  body             = EXCLUDED.body,
+  body_paid        = EXCLUDED.body_paid,
+  body_style       = EXCLUDED.body_style,
+  article_type     = EXCLUDED.article_type,
+  cover_image_url  = EXCLUDED.cover_image_url,
+  price_jpy        = EXCLUDED.price_jpy,
+  status           = EXCLUDED.status,
+  published_at     = EXCLUDED.published_at,
+  duration_type    = EXCLUDED.duration_type,
+  tags             = EXCLUDED.tags,
+  itinerary_blocks = EXCLUDED.itinerary_blocks,
+  photo_entries    = EXCLUDED.photo_entries,
+  updated_at       = now();
 
 -- ─── ② 拓実さんの itinerary「ニースからボルドー、週末 2 日でワイン産地」───
 INSERT INTO articles (
@@ -280,7 +297,24 @@ VALUES (
     {"imageUrl":"https://picsum.photos/seed/locore-bdx-itin-5/960/1200","caption":"Saint-Émilion 旧市街、L''Envers du Décor のランチ。lamproie はクセが強いが旨い。","locationName":"L''Envers du Décor","position":4}
   ]'::jsonb,
   true
-);
+)
+ON CONFLICT (id) DO UPDATE SET
+  writer_id        = EXCLUDED.writer_id,
+  city_id          = EXCLUDED.city_id,
+  title            = EXCLUDED.title,
+  body             = EXCLUDED.body,
+  body_paid        = EXCLUDED.body_paid,
+  body_style       = EXCLUDED.body_style,
+  article_type     = EXCLUDED.article_type,
+  cover_image_url  = EXCLUDED.cover_image_url,
+  price_jpy        = EXCLUDED.price_jpy,
+  status           = EXCLUDED.status,
+  published_at     = EXCLUDED.published_at,
+  duration_type    = EXCLUDED.duration_type,
+  tags             = EXCLUDED.tags,
+  itinerary_blocks = EXCLUDED.itinerary_blocks,
+  photo_entries    = EXCLUDED.photo_entries,
+  updated_at       = now();
 
 
 -- =========================================================================
