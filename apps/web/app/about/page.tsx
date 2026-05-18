@@ -33,7 +33,7 @@ export default function AboutPage() {
           >
             観光ガイドの 1 行先にある、
             <br className="hidden sm:block" />
-            街の本当の輪郭を持ち帰る。
+            街の本当の輪郭を持ち帰る
           </h1>
           <p className="mt-6 text-[16px] leading-[1.9] text-foreground/70">
             Locore（ロコレ）は、在外邦人のクリエイターが現地で書く、有料・短尺の旅行誌です。

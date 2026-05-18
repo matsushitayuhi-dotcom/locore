@@ -20,7 +20,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: '教えます・習います — Locore',
   description:
-    'パリの駐在員コミュニティのレッスン掲示板。日本語、フランス語、料理、楽器、勉強の家庭教師など。',
+    'フランス在住の駐在員コミュニティのレッスン掲示板。日本語、フランス語、料理、楽器、勉強の家庭教師など。',
 };
 
 type Side = 'teach' | 'learn';
@@ -188,8 +188,8 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
         />
       </div>
 
-      <header className="mt-6 mb-5 flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <header className="mt-6 mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 sm:flex-1">
           <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
             <GraduationCap className="h-3 w-3" />
             教えます・習います
@@ -198,7 +198,7 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            手しごとと、ことばを、わかちあう。
+            {regionFilter.active ? regionFilter.nameJa : 'フランス'}でまなぶ
           </h1>
           <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
             子供向け日本語、フランス語家庭教師、料理、楽器。
@@ -207,7 +207,7 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
         </div>
         <Link
           href="/lessons/new"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
         >
           <Plus className="h-3.5 w-3.5" />
           投稿する

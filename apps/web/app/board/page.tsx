@@ -93,7 +93,7 @@ export default async function BoardIndexPage({ searchParams }: Props) {
             fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
           }}
         >
-          パリの、今日と明日。
+          今日と明日
         </h1>
         <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
           イベント、行政の締切、旬の食材、邦人コミュニティ、子育て、緊急時の天候警報。

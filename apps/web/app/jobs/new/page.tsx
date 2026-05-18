@@ -33,7 +33,7 @@ export default async function NewJobPage() {
           className="mt-2 text-[26px] font-bold leading-tight tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          働き手と、ていねいに出会う。
+          働き手とていねいに出会う
         </h1>
         <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
           職務内容と条件は具体的に。雇用主としての責任を理解した上で投稿してください。

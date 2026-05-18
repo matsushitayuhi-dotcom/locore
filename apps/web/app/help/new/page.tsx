@@ -32,7 +32,7 @@ export default async function NewHelpPage() {
           className="mt-2 text-[26px] font-bold leading-tight tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          助かる、助ける。
+          助かる、助ける
         </h1>
         <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
           内容と日程を具体的に。返信は Locore メッセージで届きます。

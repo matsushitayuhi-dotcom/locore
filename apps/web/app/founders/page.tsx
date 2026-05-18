@@ -47,9 +47,9 @@ export default function FoundersPage() {
             className="mt-3 text-[36px] font-semibold leading-[1.15] tracking-tight sm:text-[52px]"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            先着50人。
+            先着50人
             <br className="hidden sm:block" />
-            Locore を、街と一緒に育てる人に。
+            Locore を街と一緒に育てる人へ
           </h1>
           <p className="mt-5 max-w-2xl text-[16px] leading-[1.95] text-foreground/70">
             フォロワー数ではなく、「どれだけその街を歩いたか」「どれだけ自分の言葉で書けるか」を最優先に選びます。

@@ -32,7 +32,7 @@ export default async function NewLessonPage() {
           className="mt-2 text-[26px] font-bold leading-tight tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          知っていることを、おすそわけ。
+          知っていることをおすそわけ
         </h1>
         <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
           内容、料金、対象レベルを具体的に。連絡は Locore メッセージで届きます。

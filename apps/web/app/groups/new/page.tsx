@@ -32,7 +32,7 @@ export default async function NewGroupPage() {
           className="mt-2 text-[26px] font-bold leading-tight tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          仲間を、ゆっくり集める。
+          仲間をゆっくり集める
         </h1>
         <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
           活動内容、頻度、規模を具体的に。参加希望者からの連絡は Locore メッセージで届きます。

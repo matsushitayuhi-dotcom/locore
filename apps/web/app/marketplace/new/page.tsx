@@ -32,7 +32,7 @@ export default async function NewMarketplacePage() {
           className="mt-2 text-[26px] font-bold leading-tight tracking-tight"
           style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
-          次の人に、ていねいに渡す。
+          次の人にていねいに渡す
         </h1>
         <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
           商品の状態と価格を具体的に。問い合わせは Locore メッセージで届きます。

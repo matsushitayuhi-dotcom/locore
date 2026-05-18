@@ -210,8 +210,8 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
       </div>
 
       {/* ヘッダ */}
-      <header className="mt-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
+      <header className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0 sm:flex-1">
           <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
             <HomeIcon className="h-3 w-3" />
             アパート
@@ -220,7 +220,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
             style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
-            {regionFilter.active ? `${regionFilter.nameJa}で暮らす、次のひと部屋。` : 'パリで暮らす、次のひと部屋。'}
+            {regionFilter.active ? regionFilter.nameJa : 'フランス'}で暮らす
           </h1>
           <p className="mt-2 max-w-prose text-[14px] leading-[1.9] text-foreground/70">
             駐在員と長期滞在者のための物件掲示板。長期賃貸 / 短期 / シェア /
@@ -230,7 +230,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
 
         <Link
           href="/apartments/new"
-          className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-4 py-2 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
         >
           <Plus className="h-4 w-4" />
           物件を出す
