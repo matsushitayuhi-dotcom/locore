@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import {
   MapPin,
   Briefcase,
@@ -35,6 +35,7 @@ import {
 } from '@/lib/resident/masters';
 import { getFollowCounts, isFollowing } from '@/lib/follow/actions';
 import { FollowButton } from '@/components/profile/FollowButton';
+import { UserServicesList } from '@/components/profile/UserServicesList';
 import { CommunityCard } from '@/components/community/CommunityCard';
 import {
   type CommunityKind,
@@ -297,6 +298,47 @@ async function loadSnsLinks(userId: string) {
   }
 }
 
+/**
+ * ユーザーが出品している有償サービス (相談・ガイド・翻訳など) を取得。
+ * isActive=true のものだけ、position 昇順で返す。
+ */
+async function loadUserServices(userId: string) {
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({
+        id: schema.userServices.id,
+        title: schema.userServices.title,
+        description: schema.userServices.description,
+        category: schema.userServices.category,
+        priceJpy: schema.userServices.priceJpy,
+        priceUnit: schema.userServices.priceUnit,
+        contactMethod: schema.userServices.contactMethod,
+        externalUrl: schema.userServices.externalUrl,
+      })
+      .from(schema.userServices)
+      .where(
+        and(
+          eq(schema.userServices.userId, userId),
+          eq(schema.userServices.isActive, true),
+        ),
+      )
+      .orderBy(asc(schema.userServices.position));
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      category: r.category,
+      priceJpy: r.priceJpy,
+      priceUnit: r.priceUnit,
+      contactMethod: (r.contactMethod ?? 'chat') as 'chat' | 'external_url',
+      externalUrl: r.externalUrl,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ============================================================================
 // メタデータ
 // ============================================================================
@@ -330,6 +372,7 @@ export default async function ResidentDetailPage({ params }: Params) {
     articleCount,
     communityPosts,
     snsLinks,
+    userServices,
   ] = await Promise.all([
     getFollowCounts(r.id),
     me && !isMe ? isFollowing(r.id) : Promise.resolve(false),
@@ -337,6 +380,7 @@ export default async function ResidentDetailPage({ params }: Params) {
     countUserArticles(r.id),
     loadUserCommunityPosts(r.id),
     loadSnsLinks(r.id),
+    loadUserServices(r.id),
   ]);
 
   const countryLabel = r.residencyCountry
@@ -633,6 +677,45 @@ export default async function ResidentDetailPage({ params }: Params) {
               })}
             </ul>
           </Section>
+        ) : null}
+
+        {/* ============================================================== */}
+        {/* 6.5 提供サービス (相談・ガイド・撮影 等)                          */}
+        {/* ============================================================== */}
+        {userServices.length > 0 || isMe ? (
+          <section className="mt-5 rounded-2xl bg-card p-5 ring-1 ring-border sm:p-6">
+            <div className="mb-3 flex items-baseline justify-between gap-2">
+              <h2 className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-[0.18em] text-primary-300">
+                <Briefcase className="h-3.5 w-3.5" />
+                提供サービス
+              </h2>
+              {isMe ? (
+                <Link
+                  href="/settings/services"
+                  className="text-[11px] font-semibold text-primary-300 hover:underline"
+                >
+                  {userServices.length === 0 ? '+ サービスを追加' : '編集'}
+                </Link>
+              ) : null}
+            </div>
+            {userServices.length === 0 ? (
+              isMe ? (
+                <p className="rounded-md border border-dashed border-border bg-muted px-3 py-3 text-[12px] text-foreground/65">
+                  相談・ガイド・撮影など、有償サービスを 1 つ追加すると、
+                  読み手が「メッセージ」ではなく
+                  「<strong>このサービスをお願いしたい</strong>」と直接動けます。
+                  Locore はこの提供サービスから手数料を取りません。
+                </p>
+              ) : null
+            ) : (
+              <UserServicesList
+                ownerUserId={r.id}
+                ownerName={r.displayName}
+                services={userServices}
+                viewerUserId={me?.id ?? null}
+              />
+            )}
+          </section>
         ) : null}
 
         {/* ============================================================== */}
