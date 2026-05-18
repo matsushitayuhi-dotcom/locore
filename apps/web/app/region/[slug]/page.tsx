@@ -136,7 +136,7 @@ export default async function RegionHomePage({ params }: Props) {
               className="absolute inset-0 h-full w-full object-cover"
             />
             {/* 写真全体にフラット tint + 加工なしの白文字 */}
-            <div aria-hidden className="absolute inset-0 bg-black/40" />
+            <div aria-hidden className="absolute inset-0 bg-black/30" />
             <div className="relative z-10 mx-auto flex h-full max-w-screen-xl flex-col justify-end px-4 pb-5 sm:px-6 sm:pb-7">
               <nav className="text-[11px] text-white/85">
                 <Link href="/" className="hover:underline">
@@ -148,10 +148,9 @@ export default async function RegionHomePage({ params }: Props) {
                 <span className="font-semibold text-white">{region.nameJa}</span>
               </nav>
               <h1
-                className="mt-2 text-[28px] font-bold leading-tight tracking-tight text-white sm:text-[36px]"
+                className="!text-white mt-2 text-[28px] font-bold leading-tight tracking-tight sm:text-[36px]"
                 style={{
                   fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  textShadow: '0 2px 16px rgba(0,0,0,0.65)',
                 }}
               >
                 {region.nameJa}

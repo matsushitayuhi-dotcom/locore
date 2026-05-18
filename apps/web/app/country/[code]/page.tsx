@@ -77,7 +77,7 @@ export default async function CountryPage({ params }: Props) {
             unoptimized
           />
           {/* 写真全体にフラット tint + 加工なしの白文字 */}
-          <div aria-hidden className="absolute inset-0 bg-black/40" />
+          <div aria-hidden className="absolute inset-0 bg-black/30" />
           <div className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10">
             <Link
               href="/"
@@ -91,7 +91,7 @@ export default async function CountryPage({ params }: Props) {
               {country.nameEn}
             </p>
             <h1
-              className="mt-1 text-[36px] font-bold leading-tight tracking-tight text-white sm:text-[48px]"
+              className="!text-white mt-1 text-[36px] font-bold leading-tight tracking-tight sm:text-[48px]"
               style={{
                 fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
               }}
@@ -248,11 +248,14 @@ function RegionCard({
         {locked ? (
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
-        {/* 写真全体にフラットな暗 tint を被せる (gradient 無し、上下分割無し)。
-            その上に何の加工も無い白文字を置く。 */}
+        {/* 写真全体にフラットな薄暗 tint。gradient 無し、上下分割無し。
+            重要: h3 等の見出しは globals.css で color: neutral-900 が
+            直接指定されているため、親の text-white は継承で勝てない。
+            h3 自体に !text-white (Tailwind important modifier) を当てて
+            上書きする。 */}
         <div
           aria-hidden
-          className={'absolute inset-0 ' + (locked ? 'bg-black/55' : 'bg-black/45')}
+          className={'absolute inset-0 ' + (locked ? 'bg-black/45' : 'bg-black/30')}
         />
         {locked ? (
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
@@ -262,7 +265,7 @@ function RegionCard({
         ) : null}
         <div className="absolute inset-x-0 bottom-0 px-3 py-3 text-white">
           <h3
-            className="truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
+            className="!text-white truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}

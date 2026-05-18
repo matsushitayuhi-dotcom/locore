@@ -139,13 +139,13 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
           unoptimized
         />
         {/* 写真全体にフラット tint + 加工なしの白文字 */}
-        <div aria-hidden className="absolute inset-0 bg-black/45" />
+        <div aria-hidden className="absolute inset-0 bg-black/30" />
         <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
             {country.nameEn}
           </p>
           <h3
-            className="mt-1 text-[26px] font-bold leading-tight tracking-tight"
+            className="!text-white mt-1 text-[26px] font-bold leading-tight tracking-tight"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
@@ -204,10 +204,10 @@ function ComingSoonCard({ country }: { country: CountryListItem }) {
           準備中
         </span>
         {/* Coming Soon カードも同様にフラット tint */}
-        <div aria-hidden className="absolute inset-0 bg-black/55" />
+        <div aria-hidden className="absolute inset-0 bg-black/45" />
         <div className="absolute inset-x-0 bottom-0 p-3 text-white/95">
           <h3
-            className="truncate text-[14px] font-bold leading-tight tracking-tight"
+            className="!text-white truncate text-[14px] font-bold leading-tight tracking-tight"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}

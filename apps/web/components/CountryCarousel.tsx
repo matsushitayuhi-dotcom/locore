@@ -109,10 +109,12 @@ function CountryTile({ country }: { country: CountryListItem }) {
         {!active ? (
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
-        {/* 写真全体にフラットな暗 tint。gradient も text-shadow もなし。 */}
+        {/* 写真全体にフラットな薄暗 tint。h3 等は globals.css で
+            color:neutral-900 が直接効くため、見出しに !text-white を付けて
+            上書きする。 */}
         <div
           aria-hidden
-          className={'absolute inset-0 ' + (active ? 'bg-black/45' : 'bg-black/55')}
+          className={'absolute inset-0 ' + (active ? 'bg-black/30' : 'bg-black/45')}
         />
         {!active ? (
           <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
@@ -125,7 +127,7 @@ function CountryTile({ country }: { country: CountryListItem }) {
             {country.nameEn}
           </p>
           <h3
-            className="mt-0.5 truncate text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
+            className="!text-white mt-0.5 truncate text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
             style={{
               fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
             }}
