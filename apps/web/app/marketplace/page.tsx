@@ -26,7 +26,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: '売ります・買います — Locore',
   description:
-    '在パリ駐在員コミュニティのフリマ。帰任セール、家具家電、子供用品、自転車など。',
+    'フランス在住の駐在員コミュニティのフリマ。帰任セール、家具家電、子供用品、自転車など。',
 };
 
 type Side = 'sell' | 'buy';
@@ -158,7 +158,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
           </h1>
           <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
             帰任セール、引越し時の譲渡、家具家電、子供用品。
-            パリの駐在員同士で気軽にやり取りできる小さなフリマ。
+            フランス在住の駐在員同士で気軽にやり取りできる小さなフリマ。
           </p>
         </div>
         <Link

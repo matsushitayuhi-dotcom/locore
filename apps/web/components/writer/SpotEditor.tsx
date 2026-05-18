@@ -168,18 +168,18 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
     });
   };
 
-  // パリ範囲チェック（ラフ警告のみ）
+  // フランス本土範囲チェック（ラフ警告のみ。海外領土・国外の誤入力を弾く目安）
   const lat = typeof v.lat === 'number' ? v.lat : Number(v.lat);
   const lng = typeof v.lng === 'number' ? v.lng : Number(v.lng);
-  const inParis =
+  const inFrance =
     Number.isFinite(lat) &&
     Number.isFinite(lng) &&
-    lat >= 48.7 &&
-    lat <= 48.95 &&
-    lng >= 2.2 &&
-    lng <= 2.5;
+    lat >= 41 &&
+    lat <= 51 &&
+    lng >= -5 &&
+    lng <= 10;
   const showParisWarn =
-    typeof v.lat === 'number' && typeof v.lng === 'number' && !inParis;
+    typeof v.lat === 'number' && typeof v.lng === 'number' && !inFrance;
 
   const handlePick = (p: PickedPlace) => {
     setV((prev) => ({
@@ -383,7 +383,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
       </p>
       {showParisWarn ? (
         <p className="text-[11px] text-warning-700">
-          パリ市内（48.7〜48.95, 2.2〜2.5）の範囲外です。座標を確認してください。
+          想定範囲（フランス本土）の外です。座標を確認してください。
         </p>
       ) : null}
 

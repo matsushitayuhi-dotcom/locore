@@ -377,7 +377,14 @@ export async function unpublishArticle(articleId: string): Promise<ActionResult>
 
 // ---------- スポット ----------
 
-const PARIS_BOUNDS = { lat: [48.7, 48.95] as const, lng: [2.2, 2.5] as const };
+/**
+ * 想定居住エリアの座標バウンド (フランス本土)。
+ *
+ * 現状フラグ算出のみで rejection には使っていない (`void inFrance` 参照)。
+ * クライアント側 SpotEditor のバウンドと一致させること
+ * (`apps/web/components/writer/SpotEditor.tsx`)。
+ */
+const FRANCE_BOUNDS = { lat: [41, 51] as const, lng: [-5, 10] as const };
 
 const upsertSpotSchema = z.object({
   id: z.string().uuid().optional(),
@@ -421,13 +428,13 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
   const { db } = await assertOwnership(data.articleId);
 
   // パリ範囲外は警告だがブロックしない（範囲チェックはラフ運用）
-  const inParis =
-    data.location.lat >= PARIS_BOUNDS.lat[0] &&
-    data.location.lat <= PARIS_BOUNDS.lat[1] &&
-    data.location.lng >= PARIS_BOUNDS.lng[0] &&
-    data.location.lng <= PARIS_BOUNDS.lng[1];
-  // inParis フラグは UI で使う想定（現状ログのみ）
-  void inParis;
+  const inFrance =
+    data.location.lat >= FRANCE_BOUNDS.lat[0] &&
+    data.location.lat <= FRANCE_BOUNDS.lat[1] &&
+    data.location.lng >= FRANCE_BOUNDS.lng[0] &&
+    data.location.lng <= FRANCE_BOUNDS.lng[1];
+  // inFrance フラグは UI で使う想定（現状ログのみ）
+  void inFrance;
 
   // 共通の Place 詳細フィールド
   const placeDetails = {

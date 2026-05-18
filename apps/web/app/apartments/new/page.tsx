@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: '物件を出す — Locore アパート掲示板',
   description:
-    'パリの物件を掲載。長期賃貸 / 短期 / シェア / サブレ。連絡は Locore メッセージ経由で受け取れます。',
+    'フランスの物件を掲載。長期賃貸 / 短期 / シェア / サブレ。連絡は Locore メッセージ経由で受け取れます。',
 };
 
 export default async function NewApartmentPage() {

@@ -45,7 +45,7 @@ export default async function ExplorePage() {
           <SectionHeader
             kicker="行き先から探す"
             title="どこの暮らしを覗きますか？"
-            subtitle="今はフランスの 14 地域で書き手がいます。台北・ハノイ・リスボンと、信頼できる現地ライターから順に街を開いていきます。"
+            subtitle="今はフランスの主要都市で書き手がいます。台北・ハノイ・リスボンと、信頼できる現地ライターから順に街を開いていきます。"
           />
           <CountryCarousel countries={countries} />
         </section>

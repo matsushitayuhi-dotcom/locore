@@ -166,9 +166,6 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
       {/* Filter bar */}
       <div className="mb-6 rounded-lg border border-border bg-card px-4 py-3 shadow-xs">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="rounded-full border border-border bg-background px-3 py-1 text-[12px] font-medium text-foreground/80">
-            都市：パリ
-          </span>
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
