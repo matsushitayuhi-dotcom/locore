@@ -1,17 +1,14 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { CountryCarousel } from '@/components/CountryCarousel';
-import { ArticleScrollSection } from '@/components/ArticleScrollSection';
 import { listCountriesForPicker } from '@/lib/geo/countries';
-import { getPublishedDbArticles } from '@/lib/articles/published';
-import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Locore — その街に、暮らしている人から',
   description:
-    '現地に住む日本人の書き手が、自分の毎日で取材した街の物語。国・地域から、スポット紹介と旅程プランを選んで深く旅できます。',
+    '現地に住む日本人の書き手が、自分の毎日で取材した街の物語。国・地域から街を選んで深く旅できます。',
 };
 
 /**
@@ -20,23 +17,18 @@ export const metadata = {
  * 構成:
  *   1. Hero band（編集トーンのコピー）
  *   2. 国カルーセル（active 先頭、最大 10 件、続きは /world）
- *   3. 新着スポット記事 10 件（横スクロール、続き → /articles?type=spot_guide）
- *   4. 新着旅程プラン 10 件（同上 → /articles?type=itinerary）
+ *
+ * 【一時停止中】2026-05 時点では書き手 / 記事の蓄積がまだ少ないため、
+ * 「新着スポット記事」「新着旅程プラン」の横スクロールカルーセルは
+ * 非表示にしている。記事は /region/[slug] 経由で見られる状態。
+ * 蓄積が増えたら、コメントアウトしてある ArticleScrollSection を
+ * 元に戻す予定。
  *
  * 駐在員ホームと違って、ここには「行政」「コミュニティ」「求人」「アパート」など
  * 暮らし実務系のセクションは出さない。
  */
 export default async function ExplorePage() {
-  const [countries, articles] = await Promise.all([
-    listCountriesForPicker(),
-    getPublishedDbArticles(60),
-  ]);
-  const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
-
-  const spotArticles = articles.filter((a) => a.articleType === 'spot_guide');
-  const itineraryArticles = articles.filter(
-    (a) => a.articleType === 'itinerary',
-  );
+  const countries = await listCountriesForPicker();
 
   return (
     <main className="bg-background">
@@ -50,33 +42,45 @@ export default async function ExplorePage() {
           <CountryCarousel countries={countries} />
         </section>
 
-        <section id="itinerary">
-          <SectionHeader
-            kicker="旅程プラン"
-            title="現地民の半日、1 日の歩き方"
-            subtitle="移動時間、混みやすい時間帯、ちょっとした注意点まで添えた、そのまま辿れるルート。"
-            href="/articles?type=itinerary"
-          />
-          <ArticleScrollSection
-            articles={itineraryArticles}
-            moreHref="/articles?type=itinerary"
-            socialCounts={socialCounts}
-          />
-        </section>
+        {/*
+          【一時非表示】記事の横スクロールカルーセル (itinerary / spot_guide)。
+          書き手の数 / 記事数がもう少し溜まってから戻す。
 
-        <section id="spot-guide">
-          <SectionHeader
-            kicker="スポット紹介"
-            title="一軒の店、一本の坂道。"
-            subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。地図と入り方つき。"
-            href="/articles?type=spot_guide"
-          />
-          <ArticleScrollSection
-            articles={spotArticles}
-            moreHref="/articles?type=spot_guide"
-            socialCounts={socialCounts}
-          />
-        </section>
+          <section id="itinerary">
+            <SectionHeader
+              kicker="旅程プラン"
+              title="現地民の半日、1 日の歩き方"
+              subtitle="移動時間、混みやすい時間帯、ちょっとした注意点まで添えた、そのまま辿れるルート。"
+              href="/articles?type=itinerary"
+            />
+            <ArticleScrollSection
+              articles={itineraryArticles}
+              moreHref="/articles?type=itinerary"
+              socialCounts={socialCounts}
+            />
+          </section>
+
+          <section id="spot-guide">
+            <SectionHeader
+              kicker="スポット紹介"
+              title="一軒の店、一本の坂道。"
+              subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。地図と入り方つき。"
+              href="/articles?type=spot_guide"
+            />
+            <ArticleScrollSection
+              articles={spotArticles}
+              moreHref="/articles?type=spot_guide"
+              socialCounts={socialCounts}
+            />
+          </section>
+
+          復活手順:
+            1. 上の import に `ArticleScrollSection`、`getPublishedDbArticles`、
+               `getArticleSocialCounts` を戻す
+            2. ExplorePage 内で articles / socialCounts / spotArticles /
+               itineraryArticles を Promise.all で取得
+            3. このコメントブロックを <section> 形式に戻す
+        */}
 
         {/* 駐在員ホームへの導線（軽め） */}
         <section className="rounded-2xl bg-primary-500/10 px-6 py-8 text-center ring-1 ring-border">

@@ -41,10 +41,20 @@ const REGIONS_BY_COUNTRY: Record<string, RegionLink[]> = {
 export function PlaceMenu({
   countries,
   mode = 'traveler',
+  availableRegionSlugs,
 }: {
   countries: CountryListItem[];
   mode?: 'traveler' | 'resident';
+  /**
+   * コンテンツ (記事 / コミュニティ投稿) が紐付いている region slug の配列。
+   * これに含まれない region は drill-down 一覧から除外する。
+   * undefined ならフィルタしない (後方互換)。
+   */
+  availableRegionSlugs?: string[];
 }) {
+  // 配列 → Set で高速 lookup
+  const availableSet =
+    availableRegionSlugs != null ? new Set(availableRegionSlugs) : null;
   const [open, setOpen] = useState(false);
   const [drilledCode, setDrilledCode] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -78,7 +88,12 @@ export function PlaceMenu({
   const drilledCountry = drilledCode
     ? countries.find((c) => c.code === drilledCode)
     : null;
-  const drilledRegions = drilledCode ? REGIONS_BY_COUNTRY[drilledCode] ?? [] : [];
+  const allDrilledRegions = drilledCode ? REGIONS_BY_COUNTRY[drilledCode] ?? [] : [];
+  // コンテンツのある region だけ表示。availableSet が無いときは
+  // 全件出す (後方互換)
+  const drilledRegions = availableSet
+    ? allDrilledRegions.filter((r) => availableSet.has(r.slug))
+    : allDrilledRegions;
 
   return (
     <div ref={ref} className="relative">
@@ -118,7 +133,10 @@ export function PlaceMenu({
                           mode={mode}
                           onDrill={
                             mode === 'traveler' &&
-                            REGIONS_BY_COUNTRY[c.code]?.length
+                            // コンテンツのある region が 1 つでもあれば drill 可
+                            (REGIONS_BY_COUNTRY[c.code] ?? []).some(
+                              (r) => !availableSet || availableSet.has(r.slug),
+                            )
                               ? () => setDrilledCode(c.code)
                               : undefined
                           }

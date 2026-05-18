@@ -8,6 +8,7 @@ import { getPublishedDbArticles } from '@/lib/articles/published';
 import { listBoardPosts } from '@/lib/board/db';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getRegionBySlug } from '@/lib/geo/countries';
+import { getRegionsWithContent } from '@/lib/geo/region-content';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,8 +39,13 @@ export default async function RegionHomePage({ params }: Props) {
   const region = await getRegionBySlug(params.slug);
   if (!region) notFound();
 
-  // 非アクティブ地域は Coming Soon
-  if (!region.isActive) {
+  // 非アクティブ地域、または記事 / コミュニティ投稿が一切ない地域は
+  // Coming Soon 画面に飛ばす。「空っぽの地域ホーム」を見せると
+  // 「Locore、この街では何もない」と勘違いされるため。
+  const slugsWithContent = await getRegionsWithContent();
+  const hasContent = slugsWithContent.has(region.slug);
+
+  if (!region.isActive || !hasContent) {
     return (
       <main className="mx-auto max-w-screen-md px-4 py-12 sm:px-6 sm:py-16">
         <Link

@@ -4,6 +4,7 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { getMyUnreadChatSummary } from '@/lib/chat/unread';
 import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
 import { listCountriesForPicker } from '@/lib/geo/countries';
+import { getRegionsWithContent } from '@/lib/geo/region-content';
 import { UserMenu } from './auth/UserMenu';
 import { SideMenu } from './SideMenu';
 import { PlaceMenu } from './PlaceMenu';
@@ -22,14 +23,19 @@ import { Logo } from './Logo';
  * Founders 枠ボタンも撤去（駐在員ホーム /expat 内のバナーに統合）。
  */
 export async function SiteHeader() {
-  const [user, mode, countries] = await Promise.all([
+  const [user, mode, countries, regionsWithContent] = await Promise.all([
     getCurrentUser(),
     Promise.resolve(getViewerMode()),
     listCountriesForPicker(),
+    getRegionsWithContent(),
   ]);
   const isWriter = user?.role === 'resident_writer' || user?.role === 'editor';
   const unread = user ? await getMyUnreadChatSummary() : { count: 0, threadCount: 0 };
   const homeHref = mode ? homePathFor(mode) : '/';
+  // PlaceMenu のドロップダウンで「Coming Soon の地域」を出さないため、
+  // コンテンツ存在 slug 集合を Array で渡す (Client Component なので Set
+  // 直接渡しは serialize できない)
+  const availableRegionSlugs = Array.from(regionsWithContent);
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
@@ -55,7 +61,11 @@ export async function SiteHeader() {
           >
             ホーム
           </Link>
-          <PlaceMenu countries={countries} mode={mode ?? 'traveler'} />
+          <PlaceMenu
+            countries={countries}
+            mode={mode ?? 'traveler'}
+            availableRegionSlugs={availableRegionSlugs}
+          />
           <Link
             href="/map"
             className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"

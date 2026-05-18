@@ -1,19 +1,25 @@
 import Link from 'next/link';
 import { MapPin } from 'lucide-react';
+import { getRegionsWithContent } from '@/lib/geo/region-content';
 
 /**
  * コミュニティ系ページ（/jobs, /apartments など）の都市フィルタチップ列。
  *
  * - URL クエリ ?region=<slug> を採用（CommunityRegionFilter と一致）
  * - 既存の active なフィルタクエリは preserveQuery で hydrate して保持
- * - 「全都市」「パリ＆近郊」「ボルドー」など。
+ * - 「全都市」「パリ＆近郊」「ボルドー」など
+ * - **コンテンツのある都市のみ表示**: 記事 or コミュニティ投稿が紐付いて
+ *   いる cities だけチップ化する。空っぽの都市はチップから消える
+ *   (Server Component で `getRegionsWithContent` を呼ぶ)
+ * - 既に絞り込み中の都市は、たとえコンテンツが消えても active chip として
+ *   見え続ける (ユーザーが解除できるように)
  *
- * NOTE: 現状はフランス主要都市を固定リストで持つ（DB 全件取得を避けるため）。
- * 新しい都市を追加した際はここを更新する。
- * 中長期的には cities テーブルから動的に取得する関数 (e.g. getActiveRegions)
- * を `lib/geo/countries.ts` に追加して差し替える想定。
+ * NOTE: 候補となる都市リストは下記の固定リストから生成し、その中で
+ * コンテンツのあるものだけ表示する。新しい都市を追加した際はここに
+ * 追記する。中長期的には cities テーブルから動的取得する関数を
+ * `lib/geo/countries.ts` に追加して差し替える想定。
  */
-const REGIONS: Array<{ slug: string; label: string }> = [
+const CANDIDATE_REGIONS: Array<{ slug: string; label: string }> = [
   { slug: 'paris', label: 'パリ＆近郊' },
   { slug: 'bordeaux', label: 'ボルドー' },
   { slug: 'nice-cote-azur', label: 'ニース' },
@@ -51,11 +57,25 @@ function buildHref(
   return qs ? `${basePath}?${qs}` : basePath;
 }
 
-export function CommunityRegionPicker({
+export async function CommunityRegionPicker({
   basePath,
   activeSlug,
   preserveQuery,
 }: CommunityRegionPickerProps) {
+  const slugsWithContent = await getRegionsWithContent();
+
+  // コンテンツのある候補だけ表示。ただし「現在 active な slug」は、たとえ
+  // コンテンツが空でも表示する (ユーザーが選択を解除できる導線として)
+  const visible = CANDIDATE_REGIONS.filter(
+    (r) => slugsWithContent.has(r.slug) || r.slug === activeSlug,
+  );
+
+  // 全 5 候補が空 (= サイトに 1 件も投稿が無い) のときは、何も出さない
+  // よりは「全都市」だけ残す。エッジケース。
+  if (visible.length === 0 && !activeSlug) {
+    return null;
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
@@ -67,7 +87,7 @@ export function CommunityRegionPicker({
         label="全都市"
         active={!activeSlug}
       />
-      {REGIONS.map((r) => (
+      {visible.map((r) => (
         <RegionChip
           key={r.slug}
           href={buildHref(basePath, r.slug, preserveQuery)}
