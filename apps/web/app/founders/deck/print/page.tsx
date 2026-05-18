@@ -217,7 +217,7 @@ export default function DeckPrintPage() {
             }}
             right={{
               label: 'Locore',
-              title: '居住確認済みの書き手だけ',
+              title: '本人確認済みの書き手だけ',
               bullets: [
                 '対象都市に 1 年以上住む書き手のみ',
                 '編集チームが事実確認',

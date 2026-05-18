@@ -11,17 +11,22 @@ import { sendEmail, SUPPORT_EMAIL } from '@/lib/email/send';
 import { tplApproved, tplRejected } from '@/lib/email/templates';
 
 /**
- * 居住確認の承認 / 却下 Server Actions (editor 専用)。
+ * 本人確認 (旧: 居住確認) の承認 / 却下 Server Actions (editor 専用)。
  *
  * 承認時:
  *   - residency_verifications.status = 'approved' + reviewedAt/By
- *   - writer_profiles.residency_verified_at = now()
- *   - writer_profiles の residency_country/years は触らない (本人申告を尊重)
+ *   - writer_profiles が存在するなら residency_verified_at = now() を更新
+ *     (フィールド名は歴史的経緯。意味は「本人確認済み日時」)
+ *   - residencyStatus は触らない (本人申告を尊重)
  *   - ユーザーに承認メール
  *
  * 却下時:
  *   - status = 'rejected' + rejectedReason + reviewedAt/By
  *   - ユーザーに却下理由メール + 再申請の導線
+ *
+ * 注: reader / light_diarist 等 writer_profiles を持たないユーザーでも
+ *     residency_verifications.status='approved' があれば本人確認済みとして
+ *     扱う。プロフィール側はこちらを正とする (loadResidentVerified を参照)。
  */
 
 const approveSchema = z.object({
@@ -138,12 +143,13 @@ export async function approveVerification(
     })
     .where(eq(schema.residencyVerifications.id, parsed.data.id));
 
-  // writer_profiles 側を更新 (存在する場合のみ)
+  // writer_profiles を持つユーザー (resident_writer) の場合は本人確認済み
+  // タイムスタンプを更新。residencyStatus は本人申告を尊重して触らない。
+  // 持たないユーザー (reader / light_diarist) はこの UPDATE が 0 行更新で no-op
   await db
     .update(schema.writerProfiles)
     .set({
       residencyVerifiedAt: now,
-      residencyStatus: 'current_resident',
       updatedAt: now,
     })
     .where(eq(schema.writerProfiles.userId, verif.userId));

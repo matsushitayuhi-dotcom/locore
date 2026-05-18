@@ -1,7 +1,7 @@
 import 'server-only';
 
 /**
- * 居住確認フローで使うメール本文テンプレ。
+ * 本人確認 (旧: 居住確認) フローで使うメール本文テンプレ。
  *
  * React Email は導入していないので、シンプルな HTML 文字列で
  * 組み立てる。デザインは「ですます調 + 段落単位 + 安全な link」のみ。
@@ -60,10 +60,10 @@ export type SubmittedNotificationInput = {
 export function tplSubmittedNotification(
   input: SubmittedNotificationInput,
 ): { subject: string; html: string } {
-  const subject = `[Locore] 居住確認の新規申請 — ${input.userDisplayName} さん`;
+  const subject = `[Locore] 本人確認の新規申請 — ${input.userDisplayName} さん`;
   const html = envelope(`
     <h2 style="font-size:20px;font-weight:600;margin:0 0 12px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;">
-      居住確認の申請が届きました
+      本人確認の申請が届きました
     </h2>
     <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
       編集チームによるレビューをお願いします。
@@ -95,20 +95,24 @@ export function tplSubmittedNotification(
           : ''
       }
       <tr>
-        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">在住申告</td>
+        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">居住地 (任意)</td>
         <td style="padding:10px 14px;border-top:1px solid #E8D9C2;">
-          ${escape(input.city ?? '')}${input.city && input.country ? ' / ' : ''}${escape(input.country ?? '—')}
+          ${input.city || input.country
+            ? `${escape(input.city ?? '')}${input.city && input.country ? ' / ' : ''}${escape(input.country ?? '')}`
+            : '<span style="color:#9098A1;">未記入</span>'}
         </td>
       </tr>
       <tr>
-        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">住所</td>
+        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">住所 (任意)</td>
         <td style="padding:10px 14px;border-top:1px solid #E8D9C2;">
-          ${escape(input.postalCode ?? '')}${input.postalCode ? '<br>' : ''}${escape(input.addressLine ?? '—')}
+          ${input.postalCode || input.addressLine
+            ? `${escape(input.postalCode ?? '')}${input.postalCode ? '<br>' : ''}${escape(input.addressLine ?? '')}`
+            : '<span style="color:#9098A1;">未記入</span>'}
         </td>
       </tr>
       <tr>
-        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">電話番号</td>
-        <td style="padding:10px 14px;font-family:monospace;border-top:1px solid #E8D9C2;">${escape(input.phoneNumber ?? '—')}</td>
+        <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">電話番号 (任意)</td>
+        <td style="padding:10px 14px;font-family:monospace;border-top:1px solid #E8D9C2;">${input.phoneNumber ? escape(input.phoneNumber) : '<span style="color:#9098A1;">未記入</span>'}</td>
       </tr>
       <tr>
         <td style="padding:10px 14px;color:#5C6470;border-top:1px solid #E8D9C2;">書類タイプ</td>
@@ -154,18 +158,19 @@ export function tplApproved(input: ApprovedNotificationInput): {
   html: string;
 } {
   return {
-    subject: `[Locore] 居住確認が承認されました`,
+    subject: `[Locore] 本人確認が承認されました`,
     html: envelope(`
       <h2 style="font-size:20px;font-weight:600;margin:0 0 12px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;">
-        居住確認が承認されました
+        本人確認が承認されました
       </h2>
       <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
         ${escape(input.userDisplayName)} さん、お待たせいたしました。
-        ご提出いただいた書類を編集チームが確認し、居住確認を完了いたしました。
+        ご提出いただいた書類を編集チームが確認し、本人確認を完了いたしました。
       </p>
       <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
-        プロフィールには「居住確認済み」バッジが付与されます。
-        Founders 申請や記事執筆など、現地在住者向けの機能がすべてご利用いただけます。
+        プロフィールに <strong style="color:#0F9F6E;">✓ 本人確認済み</strong>
+        の緑バッジが表示されます。投稿者としての信頼度が高まり、
+        記事執筆や Founders 申請など各機能をご利用いただけます。
       </p>
 
       <div style="margin:24px 0;">
@@ -195,14 +200,14 @@ export function tplRejected(input: RejectedNotificationInput): {
   html: string;
 } {
   return {
-    subject: `[Locore] 居住確認について — 再申請のお願い`,
+    subject: `[Locore] 本人確認について — 再申請のお願い`,
     html: envelope(`
       <h2 style="font-size:20px;font-weight:600;margin:0 0 12px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;">
         ご提出書類の確認が完了しませんでした
       </h2>
       <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
         ${escape(input.userDisplayName)} さん、
-        いただいた書類だけでは居住状況を確定することができませんでした。
+        いただいた書類だけでは本人確認を完了することができませんでした。
         お手数ですが、内容をご確認のうえ再度ご提出いただけますでしょうか。
       </p>
 

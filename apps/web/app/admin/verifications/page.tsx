@@ -7,14 +7,28 @@ import { TestEmailButton } from './TestEmailButton';
 import { AdminPageHeader } from '../_components/AdminPageHeader';
 
 /**
- * /admin/verifications — 居住確認の申請一覧 (editor 専用)。
+ * /admin/verifications — 本人確認の申請一覧 (editor 専用)。
  *
  * - 全申請を新しい順
  * - status バッジで一目で状態を確認
  * - 詳細 (/admin/verifications/[id]) へリンク
+ *
+ * 内部実装: テーブル `residency_verifications` を引き続き使う (歴史的経緯)。
+ * UI 表示は全て「本人確認」化済み。
  */
 
-export const metadata = { title: '居住確認の管理 — Locore' };
+export const metadata = { title: '本人確認の管理 — Locore' };
+
+const DOC_LABEL: Record<string, string> = {
+  passport: 'パスポート',
+  my_number_card: 'マイナンバーカード',
+  driver_license: '運転免許証',
+  residence_card: '在留カード',
+  visa: 'VISA',
+  utility_bill: '公的支払い情報',
+  tax_certificate: '住民税・所得税の証明',
+  other: 'その他',
+};
 export const dynamic = 'force-dynamic';
 
 export default async function AdminVerificationsPage() {
@@ -66,7 +80,7 @@ export default async function AdminVerificationsPage() {
     <div>
       <AdminPageHeader
         title="本人確認の申請レビュー"
-        description="提出された書類を確認して承認 / 却下します。承認すると writer_profiles に居住確認バッジが付与されます。"
+        description="提出された身分証を確認して承認 / 却下します。承認するとユーザーのプロフィールに緑の「本人確認済み」チェックマークが表示されます。"
         kicker={
           pendingCount > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-3 py-1 text-[11px] font-bold text-amber-700">
@@ -89,12 +103,13 @@ export default async function AdminVerificationsPage() {
             ⚠ DB スキーマが最新ではありません
           </p>
           <p className="mt-2 text-foreground/75">
-            居住確認テーブルに必要なカラムがありません。Supabase の SQL Editor で
+            本人確認テーブルに必要なカラムがありません。Supabase の SQL Editor で
             以下のマイグレーションを順に流してください:
           </p>
           <ul className="mt-2 list-disc pl-6 font-mono text-[12px]">
             <li>packages/db/migrations/manual/0041_residency_verification_enhancements.sql</li>
             <li>packages/db/migrations/manual/0042_verification_identity_fields.sql</li>
+            <li>packages/db/migrations/manual/0043_identity_document_types.sql</li>
           </ul>
         </section>
       ) : rows.length === 0 ? (
@@ -118,7 +133,11 @@ export default async function AdminVerificationsPage() {
                     </span>
                   </p>
                   <p className="mt-0.5 text-[11px] text-foreground/55">
-                    {r.documentType} ・ {r.city ?? ''} {r.country ?? ''} ・ 申請:{' '}
+                    {DOC_LABEL[r.documentType] ?? r.documentType}
+                    {r.city || r.country
+                      ? ` ・ ${[r.city, r.country].filter(Boolean).join(' ')}`
+                      : ''}
+                    {' ・ 申請: '}
                     {r.submittedAt.toLocaleString('ja-JP', {
                       year: 'numeric',
                       month: '2-digit',

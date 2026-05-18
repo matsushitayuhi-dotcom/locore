@@ -14,14 +14,19 @@ import { ReviewForm } from './ReviewForm';
  * - 提出された書類すべての signed URL を発行 (7 日間有効)
  * - 承認 / 却下フォームを表示
  * - すでに処理済みの場合は履歴のみ表示
+ *
+ * UI 表示は「本人確認」化済み。内部テーブルは residency_verifications。
  */
 
 export const dynamic = 'force-dynamic';
 
 const DOC_LABEL: Record<string, string> = {
-  visa: 'ビザ',
-  residence_card: '在留カード / Titre de séjour',
-  utility_bill: '光熱費請求書',
+  passport: 'パスポート',
+  my_number_card: 'マイナンバーカード (顔写真面)',
+  driver_license: '運転免許証',
+  residence_card: '在留カード / 永住者証明書',
+  visa: 'VISA (滞在許可)',
+  utility_bill: '公的支払い情報',
   tax_certificate: '住民税・所得税の証明',
   other: 'その他',
 };
@@ -92,7 +97,7 @@ export default async function AdminVerificationDetailPage({
 
       <header className="mt-4">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-          居住確認レビュー
+          本人確認レビュー
         </p>
         <h1
           className="mt-2 text-[24px] font-bold tracking-tight"
@@ -132,35 +137,45 @@ export default async function AdminVerificationDetailPage({
         <h2 className="mt-6 mb-3 text-[14px] font-bold">
           本人申告情報
           <span className="ml-2 text-[10px] font-normal text-foreground/55">
-            (書類と照合してください)
+            (書類と照合してください。任意項目は空欄の場合あり)
           </span>
         </h2>
         <dl className="grid gap-3 text-[13px] sm:grid-cols-2">
-          <Meta icon={User} label="氏名 (英語)">
-            <span className="font-mono">{r.legalNameRoman ?? '—'}</span>
-          </Meta>
           {r.legalNameNative ? (
-            <Meta icon={User} label="氏名 (日本語/母語)">
+            <Meta icon={User} label="氏名 (日本語)">
               {r.legalNameNative}
             </Meta>
           ) : null}
-          <Meta icon={MapPin} label="住所">
-            {r.postalCode ? <span className="font-mono">{r.postalCode}</span> : null}
-            {r.postalCode && r.addressLine ? <br /> : null}
-            {r.addressLine ?? '—'}
-            <br />
-            <span className="text-foreground/55">
-              {r.city ?? ''}{r.city && r.country ? ' / ' : ''}{r.country ?? ''}
-            </span>
-          </Meta>
-          <Meta icon={User} label="電話番号">
-            <a
-              href={`tel:${r.phoneNumber ?? ''}`}
-              className="font-mono text-primary-300 hover:underline"
-            >
-              {r.phoneNumber ?? '—'}
-            </a>
-          </Meta>
+          {r.legalNameRoman ? (
+            <Meta icon={User} label="氏名 (英語)">
+              <span className="font-mono">{r.legalNameRoman}</span>
+            </Meta>
+          ) : null}
+          {r.addressLine || r.postalCode || r.city || r.country ? (
+            <Meta icon={MapPin} label="住所・居住地 (任意)">
+              {r.postalCode ? <span className="font-mono">{r.postalCode}</span> : null}
+              {r.postalCode && r.addressLine ? <br /> : null}
+              {r.addressLine ?? ''}
+              {(r.city || r.country) && (r.addressLine || r.postalCode) ? <br /> : null}
+              {r.city || r.country ? (
+                <span className="text-foreground/55">
+                  {r.city ?? ''}
+                  {r.city && r.country ? ' / ' : ''}
+                  {r.country ?? ''}
+                </span>
+              ) : null}
+            </Meta>
+          ) : null}
+          {r.phoneNumber ? (
+            <Meta icon={User} label="電話番号 (任意)">
+              <a
+                href={`tel:${r.phoneNumber}`}
+                className="font-mono text-primary-300 hover:underline"
+              >
+                {r.phoneNumber}
+              </a>
+            </Meta>
+          ) : null}
         </dl>
 
         {r.userNote ? (

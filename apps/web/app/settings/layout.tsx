@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 const NAV_ITEMS = [
   { href: '/settings/profile', label: 'プロフィール' },
   { href: '/settings/services', label: '提供サービス' },
-  { href: '/settings/verification', label: '居住確認' },
+  { href: '/settings/verification', label: '本人確認' },
   { href: '/settings/notifications', label: '通知' },
   { href: '/settings/account', label: 'アカウント' },
 ] as const;

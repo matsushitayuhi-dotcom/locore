@@ -11,16 +11,21 @@ import { sendEmail, SUPPORT_EMAIL } from '@/lib/email/send';
 import { tplSubmittedNotification } from '@/lib/email/templates';
 
 /**
- * 居住確認の申請 Server Action。
+ * 本人確認 (旧: 居住確認) の申請 Server Action。
  *
  * 流れ:
  *   1. requireUser
  *   2. (UI 側で) Storage に書類アップロード → パス配列を受け取る
  *   3. residency_verifications に status='pending' で 1 行 INSERT
+ *      (テーブル名は歴史的経緯でそのまま。意味は本人確認に拡張)
  *   4. support@locore.app に通知メール (失敗しても DB は残る)
  *
  * 重複対策: 同一ユーザーで pending が既にある場合はそれを上書き
  *   (前回の申請がレビュー待ちなのに新規申請されたら、最新を尊重する)。
+ *
+ * 必須: 書類タイプ + ファイル + 氏名 (英語 or 日本語のどちらか)
+ * 任意: 居住国 / 都市 / 住所 / 電話 (本人確認には不要だが、書類照合の補助 +
+ *       プロフィール表示用に使う)
  */
 
 const DOC_TYPES = [
@@ -29,57 +34,61 @@ const DOC_TYPES = [
   'utility_bill',
   'tax_certificate',
   'other',
+  // manual/0043 で追加
+  'passport',
+  'my_number_card',
+  'driver_license',
 ] as const;
 
-const inputSchema = z.object({
-  documentType: z.enum(DOC_TYPES),
-  documentPaths: z.array(z.string().min(1)).min(1).max(3),
-  country: z
+const optionalTrimmed = (max: number) =>
+  z
     .string()
     .trim()
-    .max(2)
-    .transform((v) => v.toUpperCase()),
-  city: z.string().trim().min(1).max(80),
-  /** 英語表記の氏名 (必須) — パスポート等の Roman 表記 */
-  legalNameRoman: z
-    .string()
-    .trim()
-    .min(2, '英語表記の氏名を入力してください')
-    .max(140)
-    // 英字・スペース・ハイフン・ピリオド・アポストロフィのみ許容
-    .regex(/^[A-Za-z\s.\-']+$/, '英語表記は半角アルファベットで入力してください'),
-  /** 日本語/母語表記の氏名 (任意) */
-  legalNameNative: z
-    .string()
-    .trim()
-    .max(140)
+    .max(max)
     .optional()
-    .or(z.literal('').transform(() => undefined)),
-  /** 住所 (番地・通り名・市区町村まで) */
-  addressLine: z
-    .string()
-    .trim()
-    .min(5, '住所を入力してください')
-    .max(300),
-  postalCode: z
-    .string()
-    .trim()
-    .min(2, '郵便番号を入力してください')
-    .max(20),
-  /** 電話番号 (E.164 推奨だが緩めに許容) */
-  phoneNumber: z
-    .string()
-    .trim()
-    .min(6, '電話番号を入力してください')
-    .max(30)
-    .regex(/^[+0-9()\-.\s]+$/, '電話番号の形式が正しくありません'),
-  userNote: z
-    .string()
-    .trim()
-    .max(500)
-    .optional()
-    .or(z.literal('').transform(() => undefined)),
-});
+    .or(z.literal('').transform(() => undefined));
+
+const inputSchema = z
+  .object({
+    documentType: z.enum(DOC_TYPES),
+    documentPaths: z.array(z.string().min(1)).min(1).max(3),
+    /** 居住国 (任意。ISO 2 文字、空も許容) */
+    country: z
+      .string()
+      .trim()
+      .max(2)
+      .transform((v) => (v ? v.toUpperCase() : undefined))
+      .optional()
+      .or(z.literal('').transform(() => undefined)),
+    /** 居住都市 (任意) */
+    city: optionalTrimmed(80),
+    /** 英語表記の氏名 (任意。英字・スペース・記号のみ) */
+    legalNameRoman: z
+      .string()
+      .trim()
+      .max(140)
+      .regex(/^[A-Za-z\s.\-']*$/, '英語表記は半角アルファベットで入力してください')
+      .optional()
+      .or(z.literal('').transform(() => undefined)),
+    /** 日本語/母語表記の氏名 (任意) */
+    legalNameNative: optionalTrimmed(140),
+    /** 住所 (任意) */
+    addressLine: optionalTrimmed(300),
+    postalCode: optionalTrimmed(20),
+    /** 電話番号 (任意。E.164 推奨だが緩めに許容) */
+    phoneNumber: z
+      .string()
+      .trim()
+      .max(30)
+      .regex(/^[+0-9()\-.\s]*$/, '電話番号の形式が正しくありません')
+      .optional()
+      .or(z.literal('').transform(() => undefined)),
+    userNote: optionalTrimmed(500),
+  })
+  .refine(
+    (data) => (data.legalNameRoman ?? '').length > 0 || (data.legalNameNative ?? '').length > 0,
+    { message: '氏名 (英語または日本語) を入力してください', path: ['legalNameRoman'] },
+  );
 
 export type CreateResidencyVerificationResult =
   | { ok: true; id: string }
@@ -116,13 +125,13 @@ export async function createResidencyVerification(
       userId: user.id,
       documentType: data.documentType,
       documentPaths: data.documentPaths,
-      country: data.country,
-      city: data.city,
-      legalNameRoman: data.legalNameRoman,
+      country: data.country ?? null,
+      city: data.city ?? null,
+      legalNameRoman: data.legalNameRoman ?? null,
       legalNameNative: data.legalNameNative ?? null,
-      addressLine: data.addressLine,
-      postalCode: data.postalCode,
-      phoneNumber: data.phoneNumber,
+      addressLine: data.addressLine ?? null,
+      postalCode: data.postalCode ?? null,
+      phoneNumber: data.phoneNumber ?? null,
       userNote: data.userNote ?? null,
       status: 'pending',
       submittedAt: new Date(),
@@ -140,13 +149,13 @@ export async function createResidencyVerification(
     userDisplayName: user.displayName ?? user.email ?? '匿名',
     userEmail: user.email ?? '',
     userId: user.id,
-    country: data.country,
-    city: data.city,
-    legalNameRoman: data.legalNameRoman,
+    country: data.country ?? null,
+    city: data.city ?? null,
+    legalNameRoman: data.legalNameRoman ?? null,
     legalNameNative: data.legalNameNative ?? null,
-    addressLine: data.addressLine,
-    postalCode: data.postalCode,
-    phoneNumber: data.phoneNumber,
+    addressLine: data.addressLine ?? null,
+    postalCode: data.postalCode ?? null,
+    phoneNumber: data.phoneNumber ?? null,
     documentType: data.documentType,
     fileCount: data.documentPaths.length,
     userNote: data.userNote,

@@ -15,12 +15,31 @@ export const residencyVerificationStatusEnum = pgEnum('residency_verification_st
   'rejected',
 ]);
 
+/**
+ * 本人確認 (旧: 居住確認) で受理する書類タイプ。
+ *
+ * 命名: テーブル / enum は歴史的経緯で residency_* のまま残しているが、
+ * 値の意味は「本人確認」に拡張されている。UI 表示は全て「本人確認」化。
+ *
+ * - `passport` / `my_number_card` / `driver_license`: 顔写真付き身分証
+ *   (日本ユーザーの主軸)。 manual/0043 で追加
+ * - `residence_card`: 在留カード / 永住者証明書 / Titre de séjour
+ *   (海外在住者 + 日本在住の外国人向け)
+ * - `visa`: VISA / 滞在許可 (駐在者向け)
+ * - `utility_bill`: 公的支払い情報 (光熱費・水道・通信など、駐在者の現地居住の補強)
+ * - `tax_certificate`: 住民税・所得税の証明
+ * - `other`: 上記以外 (賃貸契約など)
+ */
 export const residencyDocumentTypeEnum = pgEnum('residency_document_type', [
   'visa',
   'residence_card',
   'utility_bill',
   'tax_certificate',
   'other',
+  // manual/0043 で追加
+  'passport',
+  'my_number_card',
+  'driver_license',
 ]);
 
 export const snsPlatformEnum = pgEnum('sns_platform', [

@@ -235,7 +235,7 @@ export default function DeckPreviewPage() {
                 }}
                 right={{
                   label: 'Locore',
-                  title: '居住確認済みの書き手だけ',
+                  title: '本人確認済みの書き手だけ',
                   bullets: [
                     '対象都市に 1 年以上住む書き手のみ',
                     '編集チームが事実確認',
@@ -251,7 +251,7 @@ export default function DeckPreviewPage() {
                 title="あなたの街を、書きませんか。"
                 ctaText="応募する"
                 ctaUrl="locore.app/founders"
-                hint="先着 50 人で締切。居住確認の書類提出と、Locore 編集チームとの 30 分面談があります。"
+                hint="先着 50 人で締切。本人確認の書類提出と、Locore 編集チームとの 30 分面談があります。"
                 pageNumber={20}
               />
             </DeckSlide>

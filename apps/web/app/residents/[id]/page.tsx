@@ -17,6 +17,7 @@ import {
   Youtube,
   Pencil,
   Plus,
+  BadgeCheck,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import { schema } from '@locore/db';
@@ -299,6 +300,31 @@ async function loadSnsLinks(userId: string) {
 }
 
 /**
+ * ユーザーの本人確認状態を取得。
+ *
+ * 真実のソースは residency_verifications テーブル (歴史的経緯でこの名前)。
+ * 最新の申請の status='approved' なら本人確認済みとして扱う。
+ *
+ * writer_profiles.residency_verified_at は resident_writer 向けキャッシュで、
+ * reader / light_diarist などには存在しないため、こちらは使わない。
+ */
+async function loadVerifiedStatus(userId: string): Promise<boolean> {
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({ status: schema.residencyVerifications.status })
+      .from(schema.residencyVerifications)
+      .where(eq(schema.residencyVerifications.userId, userId))
+      .orderBy(desc(schema.residencyVerifications.submittedAt))
+      .limit(1);
+    return rows[0]?.status === 'approved';
+  } catch {
+    // テーブル / カラム未マイグレーション環境では false を返す (落とさない)
+    return false;
+  }
+}
+
+/**
  * ユーザーが出品している有償サービス (相談・ガイド・翻訳など) を取得。
  * isActive=true のものだけ、position 昇順で返す。
  */
@@ -373,6 +399,7 @@ export default async function ResidentDetailPage({ params }: Params) {
     communityPosts,
     snsLinks,
     userServices,
+    isVerified,
   ] = await Promise.all([
     getFollowCounts(r.id),
     me && !isMe ? isFollowing(r.id) : Promise.resolve(false),
@@ -381,6 +408,7 @@ export default async function ResidentDetailPage({ params }: Params) {
     loadUserCommunityPosts(r.id),
     loadSnsLinks(r.id),
     loadUserServices(r.id),
+    loadVerifiedStatus(r.id),
   ]);
 
   const countryLabel = r.residencyCountry
@@ -448,7 +476,7 @@ export default async function ResidentDetailPage({ params }: Params) {
           </div>
 
           <div className="px-6 pb-6 pt-16 sm:px-8 sm:pb-8">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h1
                 className="text-[24px] font-semibold tracking-tight sm:text-[28px]"
                 style={{
@@ -457,6 +485,16 @@ export default async function ResidentDetailPage({ params }: Params) {
               >
                 {r.displayName}
               </h1>
+              {isVerified ? (
+                <span
+                  title="本人確認済み"
+                  aria-label="本人確認済み"
+                  className="inline-flex items-center gap-1 rounded-full bg-success-500/10 px-2 py-0.5 text-[10px] font-bold text-success-500 ring-1 ring-success-500/30"
+                >
+                  <BadgeCheck className="h-3.5 w-3.5" fill="currentColor" stroke="white" strokeWidth={2} />
+                  <span className="sm:inline">本人確認済み</span>
+                </span>
+              ) : null}
               {isWriter ? (
                 <span
                   className="rounded-full bg-accent-300/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/75"

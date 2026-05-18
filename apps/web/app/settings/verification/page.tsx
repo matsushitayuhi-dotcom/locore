@@ -4,21 +4,24 @@ import { VerificationForm } from './VerificationForm';
 import { ShieldCheck, Clock, CheckCircle2, XCircle } from 'lucide-react';
 
 /**
- * /settings/verification — 居住確認の申請ページ。
+ * /settings/verification — 本人確認 (旧: 居住確認) の申請ページ。
  *
  * - 未申請  → フォーム表示
  * - 申請中  → ステータス + 何を送ったか表示 (再申請ボタン)
- * - 承認済 → "✓ 承認済み" バッジ + 必要なら再申請
+ * - 承認済 → "✓ 本人確認済み" バッジ + 必要なら再申請
  * - 却下   → 理由表示 + 再申請ボタン
  */
 
-export const metadata = { title: '居住確認 — 設定' };
+export const metadata = { title: '本人確認 — 設定' };
 export const dynamic = 'force-dynamic';
 
 const DOC_LABEL: Record<string, string> = {
-  visa: 'ビザ',
-  residence_card: '在留カード / Titre de séjour',
-  utility_bill: '光熱費請求書',
+  passport: 'パスポート',
+  my_number_card: 'マイナンバーカード (顔写真面)',
+  driver_license: '運転免許証',
+  residence_card: '在留カード / 永住者証明書',
+  visa: 'VISA (滞在許可)',
+  utility_bill: '公的支払い情報',
   tax_certificate: '住民税・所得税の証明',
   other: 'その他',
 };
@@ -32,16 +35,17 @@ export default async function VerificationPage() {
       <header>
         <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
           <ShieldCheck className="h-3 w-3" />
-          居住確認
+          本人確認
         </p>
         <h2 className="mt-1 text-[20px] font-semibold tracking-tight">
-          現地居住の証明
+          身分証で本人確認を行う
         </h2>
         <p className="mt-1 text-[12px] leading-relaxed text-foreground/65">
-          Founders 申請や記事執筆など、現地在住者向け機能を使うために
-          書類で居住確認を行います。書類は Locore の private ストレージに
-          安全に保管され、編集チームの目視レビュー後、<strong>30 日以内に
-          物理削除</strong> されます (GDPR 配慮)。
+          投稿者の信頼度を担保するための本人確認です。承認後、プロフィールに
+          <strong className="mx-0.5 text-success-500">✓ 本人確認済み</strong>
+          の緑バッジが表示されます。書類は Locore の private ストレージに
+          安全に保管され、編集チームの目視レビュー後{' '}
+          <strong>30 日以内に物理削除</strong> されます (GDPR 配慮)。
         </p>
       </header>
 
@@ -120,8 +124,10 @@ function StatusCard({
               : ''}
           </p>
           <p className="mt-1 text-[11px] text-foreground/55">
-            提出内容: {DOC_LABEL[latest.documentType] ?? latest.documentType} ・
-            {latest.city}, {latest.country}
+            提出内容: {DOC_LABEL[latest.documentType] ?? latest.documentType}
+            {latest.city || latest.country
+              ? ` ・ ${[latest.city, latest.country].filter(Boolean).join(', ')}`
+              : ''}
             {latest.filesDeletedAt ? ' ・ 書類は既に削除済み' : ''}
           </p>
           {latest.status === 'rejected' && latest.rejectedReason ? (
