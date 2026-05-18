@@ -122,13 +122,14 @@ export default async function RegionHomePage({ params }: Props) {
               alt={region.nameJa}
               className="absolute inset-0 h-full w-full object-cover"
             />
+            {/* Tailwind 標準の black-* で確実に半透明黒を載せる */}
             <div
               aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-neutral-900/90 via-neutral-900/40 to-neutral-900/10"
+              className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/10"
             />
             <div
               className="relative z-10 mx-auto flex h-full max-w-screen-xl flex-col justify-end px-4 pb-5 sm:px-6 sm:pb-7"
-              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.55)' }}
+              style={{ textShadow: '0 2px 12px rgba(0,0,0,0.85)' }}
             >
               <nav className="text-[11px] text-white/85">
                 <Link href="/" className="hover:underline">

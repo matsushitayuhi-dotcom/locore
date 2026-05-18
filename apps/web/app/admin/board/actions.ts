@@ -3,6 +3,7 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { and, eq, gte, lte } from 'drizzle-orm';
+import { z } from 'zod';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireEditor } from '@/lib/auth/require-user';
@@ -202,4 +203,150 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
     const msg = err instanceof Error ? err.message : String(err);
     return { ok: false, error: `DB 挿入に失敗: ${msg}` };
   }
+}
+
+// ============================================================================
+// 掲示板投稿: 公開 / 非公開 / 削除 (editor 操作)
+// ============================================================================
+
+/**
+ * board_posts には deletedAt カラムが無いため、status (text) で論理状態を表現:
+ *   - 公開 (publish):   status='published'
+ *   - 非公開 (unpublish): status='archived'
+ *   - 削除 (delete):    status='deleted'  (sentinel 値: lib/board/db.ts は
+ *                       'published' しか拾わないので一覧から自動で消える)
+ *
+ * 物理削除はしない: AI 自動収集で再投入されたり、後から URL が共有されたり
+ * するケースを潰すため。復活は Supabase Studio で status を戻す。
+ */
+
+const boardIdSchema = z.object({ id: z.string().uuid() });
+
+export type BoardPostActionResult =
+  | { ok: true; message?: string }
+  | { ok: false; error: string };
+
+function revalidateBoardSurfaces() {
+  revalidatePath('/admin/board');
+  revalidatePath('/admin');
+  revalidatePath('/board');
+  revalidatePath('/expat');
+  revalidatePath('/explore');
+  revalidatePath('/calendar');
+  // 個別詳細ページや region home は force-dynamic なので明示 revalidate は不要
+}
+
+async function loadBoardPost(id: string) {
+  const db = getDb();
+  const rows = await db
+    .select({
+      id: schema.boardPosts.id,
+      status: schema.boardPosts.status,
+      publishedAt: schema.boardPosts.publishedAt,
+    })
+    .from(schema.boardPosts)
+    .where(eq(schema.boardPosts.id, id))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function publishBoardPost(
+  input: unknown,
+): Promise<BoardPostActionResult> {
+  const editor = await requireEditor();
+  if (!editor) return { ok: false, error: '編集者ロールが必要です' };
+
+  const parsed = boardIdSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: '不正な投稿 ID です' };
+
+  const post = await loadBoardPost(parsed.data.id);
+  if (!post) return { ok: false, error: '投稿が見つかりません' };
+  if (post.status === 'deleted') {
+    return { ok: false, error: '削除済みの投稿は公開できません' };
+  }
+  if (post.status === 'published') {
+    return { ok: true, message: 'すでに公開済みです' };
+  }
+
+  const db = getDb();
+  const now = new Date();
+  try {
+    await db
+      .update(schema.boardPosts)
+      .set({
+        status: 'published',
+        publishedAt: post.publishedAt ?? now,
+        updatedAt: now,
+      })
+      .where(eq(schema.boardPosts.id, parsed.data.id));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: `公開失敗: ${msg}` };
+  }
+
+  revalidateBoardSurfaces();
+  return { ok: true, message: '投稿を公開しました' };
+}
+
+export async function unpublishBoardPost(
+  input: unknown,
+): Promise<BoardPostActionResult> {
+  const editor = await requireEditor();
+  if (!editor) return { ok: false, error: '編集者ロールが必要です' };
+
+  const parsed = boardIdSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: '不正な投稿 ID です' };
+
+  const post = await loadBoardPost(parsed.data.id);
+  if (!post) return { ok: false, error: '投稿が見つかりません' };
+  if (post.status === 'deleted') {
+    return { ok: false, error: '削除済みの投稿です' };
+  }
+  if (post.status === 'archived') {
+    return { ok: true, message: 'すでに非公開です' };
+  }
+
+  const db = getDb();
+  try {
+    await db
+      .update(schema.boardPosts)
+      .set({ status: 'archived', updatedAt: new Date() })
+      .where(eq(schema.boardPosts.id, parsed.data.id));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: `非公開化失敗: ${msg}` };
+  }
+
+  revalidateBoardSurfaces();
+  return { ok: true, message: '投稿を非公開にしました' };
+}
+
+export async function softDeleteBoardPost(
+  input: unknown,
+): Promise<BoardPostActionResult> {
+  const editor = await requireEditor();
+  if (!editor) return { ok: false, error: '編集者ロールが必要です' };
+
+  const parsed = boardIdSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: '不正な投稿 ID です' };
+
+  const post = await loadBoardPost(parsed.data.id);
+  if (!post) return { ok: false, error: '投稿が見つかりません' };
+  if (post.status === 'deleted') {
+    return { ok: true, message: 'すでに削除済みです' };
+  }
+
+  const db = getDb();
+  try {
+    await db
+      .update(schema.boardPosts)
+      .set({ status: 'deleted', updatedAt: new Date() })
+      .where(eq(schema.boardPosts.id, parsed.data.id));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: `削除失敗: ${msg}` };
+  }
+
+  revalidateBoardSurfaces();
+  return { ok: true, message: '投稿を削除しました' };
 }

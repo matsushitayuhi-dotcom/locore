@@ -5,6 +5,7 @@ import { getDb } from '@/lib/db/client';
 import { Sparkles, MapPin, ArrowRight, Plus } from 'lucide-react';
 import { BoardPostForm } from './BoardPostForm';
 import { AiTestPanel } from './AiTestPanel';
+import { BoardAdminActions } from './BoardAdminActions';
 import { AdminPageHeader } from '../_components/AdminPageHeader';
 
 export const metadata = { title: '掲示板管理' };
@@ -74,42 +75,54 @@ export default async function AdminBoardPage() {
         ) : (
           <ul className="space-y-2">
             {posts.map((p) => (
-              <li key={p.id}>
+              <li
+                key={p.id}
+                className="flex items-start gap-3 rounded-lg bg-card p-3 ring-1 ring-border transition hover:bg-primary-500/10"
+              >
+                <span className="mt-1 shrink-0">
+                  {p.autoCollected ? (
+                    <Sparkles className="h-4 w-4 text-accent-500" />
+                  ) : (
+                    <span className="inline-block h-2 w-2 rounded-full bg-primary-500" />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/board/${p.id}`}
+                    className="line-clamp-1 text-[14px] font-semibold text-foreground hover:text-primary-300 hover:underline"
+                  >
+                    {p.title}
+                  </Link>
+                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-foreground/55">
+                    <StatusBadge status={p.status} />
+                    <SourceBadge source={p.source} />
+                    {p.eventDate ? (
+                      <span className="tabular text-primary-300">
+                        開催 {String(p.eventDate)}
+                      </span>
+                    ) : null}
+                    {p.eventLocation ? (
+                      <span className="inline-flex items-center gap-0.5">
+                        <MapPin className="h-2.5 w-2.5" />
+                        {p.eventLocation}
+                      </span>
+                    ) : null}
+                    <span className="ml-auto text-foreground/40">
+                      {(p.publishedAt ?? p.createdAt).toISOString().slice(0, 16).replace('T', ' ')}
+                    </span>
+                  </p>
+                </div>
+                <BoardAdminActions
+                  postId={p.id}
+                  postTitle={p.title}
+                  status={p.status}
+                />
                 <Link
                   href={`/board/${p.id}`}
-                  className="flex items-start gap-3 rounded-lg bg-card p-3 ring-1 ring-border transition hover:bg-primary-500/10"
+                  className="mt-1 shrink-0 rounded-md p-1 text-foreground/30 hover:bg-muted hover:text-foreground"
+                  aria-label="詳細を見る"
                 >
-                  <span className="mt-1 shrink-0">
-                    {p.autoCollected ? (
-                      <Sparkles className="h-4 w-4 text-accent-500" />
-                    ) : (
-                      <span className="inline-block h-2 w-2 rounded-full bg-primary-500" />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-1 text-[14px] font-semibold text-foreground">
-                      {p.title}
-                    </p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-foreground/55">
-                      <StatusBadge status={p.status} />
-                      <SourceBadge source={p.source} />
-                      {p.eventDate ? (
-                        <span className="tabular text-primary-300">
-                          開催 {String(p.eventDate)}
-                        </span>
-                      ) : null}
-                      {p.eventLocation ? (
-                        <span className="inline-flex items-center gap-0.5">
-                          <MapPin className="h-2.5 w-2.5" />
-                          {p.eventLocation}
-                        </span>
-                      ) : null}
-                      <span className="ml-auto text-foreground/40">
-                        {(p.publishedAt ?? p.createdAt).toISOString().slice(0, 16).replace('T', ' ')}
-                      </span>
-                    </p>
-                  </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-foreground/30" />
+                  <ArrowRight className="h-4 w-4" />
                 </Link>
               </li>
             ))}
@@ -124,8 +137,8 @@ export default async function AdminBoardPage() {
             AI 自動投稿は <code>/api/cron/ai-paris-events</code> から毎日 05:00 UTC に挿入されます
           </li>
           <li>
-            投稿の編集 / 削除は Supabase Studio から直接行うのが速いです
-            （RLS は author 自身のみ更新可なので、AI 投稿の編集は service role 経由になります）
+            各行の操作: 公開 (status=published) / 非公開 (status=archived) / 削除 (status=deleted)。
+            削除済みの復活は Supabase Studio で status を published に戻してください
           </li>
           <li>
             severity の高い「ストライキ / デモ / 災害」も今後はこの掲示板に統合する想定
@@ -142,7 +155,9 @@ function StatusBadge({ status }: { status: string }) {
       ? 'bg-success-500/10 text-success-500'
       : status === 'archived'
         ? 'bg-foreground/10 text-foreground/55'
-        : 'bg-primary-500/10 text-primary-300';
+        : status === 'deleted'
+          ? 'bg-danger-500/10 text-danger-500'
+          : 'bg-primary-500/10 text-primary-300';
   return (
     <span className={`rounded-sm px-1.5 py-0.5 font-bold uppercase tracking-wider ${color}`}>
       {status}

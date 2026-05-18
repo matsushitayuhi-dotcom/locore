@@ -4,6 +4,7 @@ import { Search, MessageSquare, ExternalLink } from 'lucide-react';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { AdminPageHeader } from '../_components/AdminPageHeader';
+import { CommunityAdminActions } from './CommunityAdminActions';
 import {
   KIND_BASE_PATH,
   KIND_LABEL,
@@ -338,14 +339,21 @@ export default async function AdminCommunityPage({
                     {p.createdAt.toLocaleDateString('ja-JP')}
                   </p>
                 </div>
-                <Link
-                  href={`${KIND_BASE_PATH[p.kind as CommunityKind]}/${p.id}`}
-                  target="_blank"
-                  className="shrink-0 rounded-md p-1.5 text-foreground/55 hover:bg-muted hover:text-foreground"
-                  aria-label="投稿を見る"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </Link>
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-x-1 gap-y-1">
+                  <CommunityAdminActions
+                    postId={p.id}
+                    postTitle={p.title}
+                    status={p.status as CommunityStatus}
+                  />
+                  <Link
+                    href={`${KIND_BASE_PATH[p.kind as CommunityKind]}/${p.id}`}
+                    target="_blank"
+                    className="rounded-md p-1.5 text-foreground/55 hover:bg-muted hover:text-foreground"
+                    aria-label="投稿を見る"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </li>
             );
           })}
@@ -383,7 +391,8 @@ export default async function AdminCommunityPage({
       ) : null}
 
       <p className="mt-6 text-[10px] text-foreground/45">
-        ※ 投稿の削除・非表示は Supabase Studio から（community_posts.status = 'closed' / 'expired' に更新）
+        ※ 各行の操作: 公開 (status=active) / 非公開 (status=closed) / 削除 (status=expired)。
+        削除済み投稿の復活は Supabase Studio から status を active に戻してください。
       </p>
     </div>
   );
