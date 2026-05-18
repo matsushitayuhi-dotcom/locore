@@ -131,7 +131,10 @@ function CountryTile({ country }: { country: CountryListItem }) {
         ) : null}
         <div
           className="absolute inset-x-0 bottom-0 px-3 py-3 text-white"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
+          style={{
+            textShadow:
+              '0 0 6px rgba(0,0,0,0.85), 0 1px 2px rgba(0,0,0,1), 0 0 16px rgba(0,0,0,0.55)',
+          }}
         >
           <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/90">
             {country.nameEn}

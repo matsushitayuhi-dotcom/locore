@@ -145,7 +145,10 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
         />
         <div
           className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5"
-          style={{ textShadow: '0 1px 4px rgba(0,0,0,0.65)' }}
+          style={{
+            textShadow:
+              '0 0 8px rgba(0,0,0,0.85), 0 1px 2px rgba(0,0,0,1), 0 0 24px rgba(0,0,0,0.55)',
+          }}
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
             {country.nameEn}
@@ -216,7 +219,10 @@ function ComingSoonCard({ country }: { country: CountryListItem }) {
         />
         <div
           className="absolute inset-x-0 bottom-0 p-3 text-white/95"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
+          style={{
+            textShadow:
+              '0 0 6px rgba(0,0,0,0.85), 0 1px 2px rgba(0,0,0,1), 0 0 16px rgba(0,0,0,0.55)',
+          }}
         >
           <h3
             className="truncate text-[14px] font-bold leading-tight tracking-tight"

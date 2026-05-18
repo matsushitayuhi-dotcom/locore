@@ -28,15 +28,34 @@ export async function generateMetadata({ params }: Props) {
  * Coming Soon の国でもこのページに着地可能（locked カードでも一覧が見られる）。
  * 地域がまだ 1 つもない国は「準備中」メッセージのみ。
  */
+/**
+ * UI から完全に隠す region slug の集合。
+ *
+ * 「DB には残すが見せない」運用。地理的に他リージョンと被ったり、
+ * 写真や記事が他で十分カバーされる地域はここに入れる。
+ * 削除ではなく非表示なので、後で復活したくなれば 1 行外すだけ。
+ *
+ * - nice-cote-azur: Provence と被るのと、独立した記事が少ないため
+ * - french-alps:    通年運用が想定外、特集として別途扱う想定
+ */
+const HIDDEN_REGION_SLUGS = new Set<string>([
+  'nice-cote-azur',
+  'french-alps',
+]);
+
 export default async function CountryPage({ params }: Props) {
   const country = await getCountryByCode(params.code);
   if (!country) notFound();
 
-  const activeRegions = country.regions.filter(
+  const visibleRegions = country.regions.filter(
+    (r) => !HIDDEN_REGION_SLUGS.has(r.slug),
+  );
+
+  const activeRegions = visibleRegions.filter(
     (r) => r.isActive && r.kind !== 'other',
   );
-  const otherRegion = country.regions.find((r) => r.kind === 'other');
-  const lockedRegions = country.regions.filter(
+  const otherRegion = visibleRegions.find((r) => r.kind === 'other');
+  const lockedRegions = visibleRegions.filter(
     (r) => !r.isActive && r.kind !== 'other',
   );
 
@@ -68,7 +87,10 @@ export default async function CountryPage({ params }: Props) {
           />
           <div
             className="absolute inset-x-0 bottom-0 mx-auto max-w-screen-xl px-4 pb-6 sm:px-6 sm:pb-10"
-            style={{ textShadow: '0 1px 4px rgba(0,0,0,0.65)' }}
+            style={{
+              textShadow:
+                '0 0 10px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,1), 0 0 24px rgba(0,0,0,0.55)',
+            }}
           >
             <Link
               href="/"
@@ -240,17 +262,21 @@ function RegionCard({
           <div aria-hidden className="absolute inset-0 bg-neutral-100/45" />
         ) : null}
         {/*
-          ふんわりした dark gradient を写真の下半分にだけ被せる。
-          黒帯やフロストガラスはやらず、写真の見栄えを最優先。
-          文字は白 + 軽い text-shadow だけで読める設計。
+          ふんわりした dark gradient + 強めの text-shadow stack で、
+          黒帯を載せずに白文字を確実に読ませる。
+          shadow を 3 段重ねる:
+          - 0 0 6px の halo (背景明暗を問わず文字輪郭をくっきり)
+          - 0 1px 2px のシャープな drop shadow
+          - 0 0 16px の柔らかい広域 glow
+          これで「もったり」させず文字だけくっきり浮く。
         */}
         <div
           aria-hidden
           className={
             'absolute inset-0 ' +
             (locked
-              ? 'bg-gradient-to-t from-black/50 via-black/20 to-black/5'
-              : 'bg-gradient-to-t from-black/55 via-black/15 to-transparent')
+              ? 'bg-gradient-to-t from-black/55 via-black/20 to-black/5'
+              : 'bg-gradient-to-t from-black/60 via-black/20 to-transparent')
           }
         />
         {locked ? (
@@ -261,7 +287,10 @@ function RegionCard({
         ) : null}
         <div
           className="absolute inset-x-0 bottom-0 px-3 py-3 text-white"
-          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.65)' }}
+          style={{
+            textShadow:
+              '0 0 6px rgba(0,0,0,0.85), 0 1px 2px rgba(0,0,0,1), 0 0 16px rgba(0,0,0,0.55)',
+          }}
         >
           <h3
             className="truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"

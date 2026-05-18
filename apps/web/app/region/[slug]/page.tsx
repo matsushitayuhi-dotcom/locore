@@ -10,6 +10,16 @@ import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getRegionBySlug } from '@/lib/geo/countries';
 import { getRegionsWithContent } from '@/lib/geo/region-content';
 
+/**
+ * UI から完全に隠す region slug。/country/[code] と同じ集合を共有したい
+ * ところだが、export 制約と循環依存を避けるためにこちらでも複製。
+ * 2 箇所しか無いので運用上は問題ない。
+ */
+const HIDDEN_REGION_SLUGS = new Set<string>([
+  'nice-cote-azur',
+  'french-alps',
+]);
+
 export const dynamic = 'force-dynamic';
 
 type Props = { params: { slug: string } };
@@ -36,6 +46,9 @@ export async function generateMetadata({ params }: Props) {
  * 記事一覧は出さない。
  */
 export default async function RegionHomePage({ params }: Props) {
+  // 完全非表示の region は 404 として扱う (Coming Soon すら出さない)
+  if (HIDDEN_REGION_SLUGS.has(params.slug)) notFound();
+
   const region = await getRegionBySlug(params.slug);
   if (!region) notFound();
 
@@ -129,7 +142,10 @@ export default async function RegionHomePage({ params }: Props) {
             />
             <div
               className="relative z-10 mx-auto flex h-full max-w-screen-xl flex-col justify-end px-4 pb-5 sm:px-6 sm:pb-7"
-              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.65)' }}
+              style={{
+                textShadow:
+                  '0 0 10px rgba(0,0,0,0.85), 0 1px 3px rgba(0,0,0,1), 0 0 24px rgba(0,0,0,0.55)',
+              }}
             >
               <nav className="text-[11px] text-white/85">
                 <Link href="/" className="hover:underline">
