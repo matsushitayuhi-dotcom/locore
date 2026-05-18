@@ -9,6 +9,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
+import { cities } from './cities';
 
 /**
  * user_services — ユーザーが自分の "強み" で出品するサービス。
@@ -38,6 +39,13 @@ export const userServices = pgTable(
     /** 'chat' / 'external_url' */
     contactMethod: text('contact_method').notNull().default('chat'),
     externalUrl: text('external_url'),
+    /** どの都市 / 地域で提供しているか。NULL = 指定なし（0046 で追加） */
+    cityId: uuid('city_id').references(() => cities.id, {
+      onDelete: 'set null',
+    }),
+    /** 'traveler' | 'resident' | 'both' | null（0046 で追加）。
+     *  NULL は「旧データ」扱い。/explore /expat 両方にフォールバックで載せる。 */
+    audience: text('audience'),
     isActive: boolean('is_active').notNull().default(true),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -50,6 +58,8 @@ export const userServices = pgTable(
   (table) => ({
     userIdx: index('user_services_user_idx').on(table.userId),
     activeIdx: index('user_services_active_idx').on(table.isActive),
+    cityIdx: index('user_services_city_idx').on(table.cityId),
+    audienceIdx: index('user_services_audience_idx').on(table.audience),
   }),
 );
 
@@ -57,6 +67,10 @@ export const userServicesRelations = relations(userServices, ({ one }) => ({
   user: one(users, {
     fields: [userServices.userId],
     references: [users.id],
+  }),
+  city: one(cities, {
+    fields: [userServices.cityId],
+    references: [cities.id],
   }),
 }));
 

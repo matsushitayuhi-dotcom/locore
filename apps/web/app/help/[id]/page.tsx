@@ -16,6 +16,8 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { ApplyButton } from '@/components/community/ApplyButton';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
+import type { CommunityAudience } from '@/lib/community/constants';
 import { OwnerActions } from './OwnerActions';
 
 export const dynamic = 'force-dynamic';
@@ -98,6 +100,7 @@ export default async function HelpDetailPage({ params }: Props) {
     urgency?: Urgency;
     compensation?: Compensation;
     category?: Category;
+    audience?: CommunityAudience;
   };
 
   const bodyHtml = markdownToHtml(post.body);
@@ -173,6 +176,7 @@ export default async function HelpDetailPage({ params }: Props) {
                   {URGENCY_LABEL[meta.urgency]}
                 </span>
               ) : null}
+              <AudienceBadge audience={meta.audience} size="md" />
             </div>
 
             <h1

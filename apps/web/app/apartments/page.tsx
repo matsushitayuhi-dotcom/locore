@@ -15,12 +15,16 @@ import { listCommunityPosts } from '@/lib/community/db';
 import {
   APARTMENT_LISTING_TYPES,
   APARTMENT_LISTING_TYPE_LABEL,
+  COMMUNITY_AUDIENCES,
   type ApartmentListingType,
   type ApartmentMetadata,
+  type CommunityAudience,
 } from '@/lib/community/constants';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
+import { AudienceChips } from '@/components/community/AudienceChips';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 
 export const dynamic = 'force-dynamic';
@@ -75,6 +79,7 @@ type Props = {
     pets?: string;
     sort?: string;
     region?: string;
+    audience?: string;
   };
 };
 
@@ -104,6 +109,11 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
   const sort: SortId =
     (SORT_OPTIONS.find((s) => s.id === searchParams?.sort)?.id as SortId) ?? 'recent';
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
+  const activeAudience: CommunityAudience | undefined =
+    searchParams?.audience &&
+    (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
+      ? (searchParams.audience as CommunityAudience)
+      : undefined;
 
   // -------------------------------------------------------------------------
   // データ取得（active のみ）
@@ -143,6 +153,13 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     if (furnishedOnly && !meta.furnished) return false;
     if (petsOnly && !meta.pets_ok) return false;
 
+    if (activeAudience) {
+      // audience が無い投稿は both 扱い (フィルタを通す)
+      if (meta.audience && meta.audience !== 'both' && meta.audience !== activeAudience) {
+        return false;
+      }
+    }
+
     return true;
   });
 
@@ -174,6 +191,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     if (petsOnly) sp.set('pets', '1');
     if (sort !== 'recent') sp.set('sort', sort);
     if (regionFilter.active) sp.set('region', regionFilter.slug);
+    if (activeAudience) sp.set('audience', activeAudience);
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || v === null || v === '') sp.delete(k);
       else sp.set(k, v);
@@ -205,7 +223,15 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             furnished: furnishedOnly ? '1' : undefined,
             pets: petsOnly ? '1' : undefined,
             sort: sort !== 'recent' ? sort : undefined,
+            audience: activeAudience,
           }}
+        />
+      </div>
+
+      <div className="mt-3">
+        <AudienceChips
+          active={activeAudience}
+          buildHref={(a) => buildHref({ audience: a ?? undefined })}
         />
       </div>
 
@@ -249,6 +275,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
       >
         {regionFilter.active ? (
           <input type="hidden" name="region" value={regionFilter.slug} />
+        ) : null}
+        {activeAudience ? (
+          <input type="hidden" name="audience" value={activeAudience} />
         ) : null}
         <FilterSelect
           name="type"
@@ -334,7 +363,15 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             petsOnly ||
             sort !== 'recent') ? (
             <Link
-              href={regionFilter.active ? `/apartments?region=${regionFilter.slug}` : '/apartments'}
+              href={buildHref({
+                type: undefined,
+                rent: undefined,
+                bedrooms: undefined,
+                arr: undefined,
+                furnished: undefined,
+                pets: undefined,
+                sort: undefined,
+              })}
               className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
             >
               リセット
@@ -591,16 +628,19 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       </div>
                     )}
 
-                    {lt ? (
-                      <span
-                        className={
-                          'absolute top-2 left-2 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
-                          (LISTING_TYPE_BADGE[lt] ?? 'bg-foreground/10 text-foreground/65')
-                        }
-                      >
-                        {APARTMENT_LISTING_TYPE_LABEL[lt]}
-                      </span>
-                    ) : null}
+                    <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+                      {lt ? (
+                        <span
+                          className={
+                            'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                            (LISTING_TYPE_BADGE[lt] ?? 'bg-foreground/10 text-foreground/65')
+                          }
+                        >
+                          {APARTMENT_LISTING_TYPE_LABEL[lt]}
+                        </span>
+                      ) : null}
+                      <AudienceBadge audience={meta.audience} />
+                    </div>
                   </div>
 
                   {/* 本文 */}

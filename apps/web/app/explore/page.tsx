@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { CountryCarousel } from '@/components/CountryCarousel';
 import { listCountriesForPicker } from '@/lib/geo/countries';
+import { getFeaturedServices } from '@/lib/services/featured';
+import { ServiceCarousel } from '@/components/services/ServiceCarousel';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +30,10 @@ export const metadata = {
  * 暮らし実務系のセクションは出さない。
  */
 export default async function ExplorePage() {
-  const countries = await listCountriesForPicker();
+  const [countries, travelerServices] = await Promise.all([
+    listCountriesForPicker(),
+    getFeaturedServices({ audience: 'traveler', limit: 12 }),
+  ]);
 
   return (
     <main className="bg-background">
@@ -41,6 +46,18 @@ export default async function ExplorePage() {
           />
           <CountryCarousel countries={countries} />
         </section>
+
+        {/* 提供サービス — 旅行者向け。空のときはセクションごと出さない。 */}
+        {travelerServices.length > 0 ? (
+          <section>
+            <SectionHeader
+              kicker="提供サービス"
+              title="現地の人に頼みたいこと"
+              subtitle="街に詳しい住人が、ガイド・通訳・撮影などのサービスを直接提供しています。"
+            />
+            <ServiceCarousel services={travelerServices} />
+          </section>
+        ) : null}
 
         {/*
           【一時非表示】記事の横スクロールカルーセル (itinerary / spot_guide)。

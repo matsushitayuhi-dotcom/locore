@@ -12,6 +12,8 @@ import {
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
+import { AudienceChips } from '@/components/community/AudienceChips';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -19,8 +21,10 @@ import {
   MARKETPLACE_CONDITION_LABEL,
   MARKETPLACE_CATEGORIES,
   MARKETPLACE_CATEGORY_LABEL,
+  COMMUNITY_AUDIENCES,
   type MarketplaceCondition,
   type MarketplaceCategory,
+  type CommunityAudience,
 } from '@/lib/community/constants';
 
 export const dynamic = 'force-dynamic';
@@ -57,6 +61,7 @@ type Props = {
     cond?: string;
     price?: string;
     region?: string;
+    audience?: string;
   };
 };
 
@@ -101,6 +106,11 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
       : undefined;
   const activePrice = PRICE_BUCKETS.find((b) => b.id === searchParams?.price);
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
+  const activeAudience: CommunityAudience | undefined =
+    searchParams?.audience &&
+    (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
+      ? (searchParams.audience as CommunityAudience)
+      : undefined;
 
   const rawPosts = await listCommunityPosts({
     kind: 'marketplace',
@@ -113,6 +123,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
       side?: Side;
       category?: MarketplaceCategory;
       condition?: MarketplaceCondition;
+      audience?: CommunityAudience;
     };
     if (activeSide && meta.side !== activeSide) return false;
     if (activeCat && meta.category !== activeCat) return false;
@@ -120,6 +131,11 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
     if (activePrice) {
       const amount = p.priceAmount ?? -1;
       if (amount < activePrice.min || amount > activePrice.max) return false;
+    }
+    if (activeAudience) {
+      if (meta.audience && meta.audience !== 'both' && meta.audience !== activeAudience) {
+        return false;
+      }
     }
     return true;
   });
@@ -131,6 +147,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
     if (activeCond) params.set('cond', activeCond);
     if (activePrice) params.set('price', activePrice.id);
     if (regionFilter.active) params.set('region', regionFilter.slug);
+    if (activeAudience) params.set('audience', activeAudience);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -162,7 +179,15 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
             cat: activeCat,
             cond: activeCond,
             price: activePrice?.id,
+            audience: activeAudience,
           }}
+        />
+      </div>
+
+      <div className="mt-3">
+        <AudienceChips
+          active={activeAudience}
+          buildHref={(a) => buildHref({ audience: a ?? null })}
         />
       </div>
 
@@ -361,6 +386,7 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
     side?: Side;
     category?: MarketplaceCategory;
     condition?: MarketplaceCondition;
+    audience?: CommunityAudience;
   };
   const price = formatPrice(post);
   const hero = post.photos[0];
@@ -412,6 +438,7 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
                 {MARKETPLACE_CONDITION_LABEL[meta.condition]}
               </span>
             ) : null}
+            <AudienceBadge audience={meta.audience} />
           </div>
 
           <h2

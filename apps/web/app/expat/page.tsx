@@ -16,6 +16,8 @@ import { CommunityCard } from '@/components/community/CommunityCard';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { listCommunityPosts } from '@/lib/community/db';
+import { getFeaturedServices } from '@/lib/services/featured';
+import { ServiceCarousel } from '@/components/services/ServiceCarousel';
 import {
   KIND_BASE_PATH,
   KIND_LABEL,
@@ -63,8 +65,9 @@ export default async function ExpatHomePage() {
     groupPosts,
     lessonPosts,
     mutualAidPosts,
+    residentServices,
   ] = await Promise.all([
-    listBoardPosts({ limit: 8, audiences: ['resident'] }),
+    listBoardPosts({ limit: 5, audiences: ['resident'] }),
     getPublishedDbArticles(20).then((arr) =>
       arr.filter((a) => a.articleType === 'expat_info'),
     ),
@@ -74,6 +77,7 @@ export default async function ExpatHomePage() {
     listCommunityPosts({ kind: 'group', limit: 4 }),
     listCommunityPosts({ kind: 'lesson', limit: 4 }),
     listCommunityPosts({ kind: 'mutual_aid', limit: 4 }),
+    getFeaturedServices({ audience: 'resident', limit: 12 }),
   ]);
 
   const socialCounts = await getArticleSocialCounts(
@@ -156,6 +160,26 @@ export default async function ExpatHomePage() {
           </div>
           <BoardWidget posts={residentNews} />
         </section>
+
+        {/* 2.5 提供サービス — 駐在員向け。空のときはセクションごと出さない。 */}
+        {residentServices.length > 0 ? (
+          <section aria-labelledby="resident-services-title">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+                  提供サービス
+                </p>
+                <h2
+                  id="resident-services-title"
+                  className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]"
+                >
+                  暮らしを助けてくれる住人
+                </h2>
+              </div>
+            </div>
+            <ServiceCarousel services={residentServices} />
+          </section>
+        ) : null}
 
         {/* 3. カテゴリ別の新着 — 横スクロールのカルーセル */}
         {KINDS.map(({ kind }) => {

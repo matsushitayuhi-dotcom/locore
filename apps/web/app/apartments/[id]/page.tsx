@@ -25,6 +25,7 @@ import {
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { ApplyButton } from '@/components/community/ApplyButton';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { PhotoGallery } from './PhotoGallery';
 import { OwnerControls } from './OwnerControls';
 
@@ -111,6 +112,7 @@ export default async function ApartmentDetailPage({ params }: Props) {
                 {APARTMENT_LISTING_TYPE_LABEL[lt]}
               </span>
             ) : null}
+            <AudienceBadge audience={meta.audience} size="md" />
             <span className="inline-flex items-center gap-1 text-[11px] text-foreground/45">
               <Eye className="h-3 w-3" />
               {post.viewCount.toLocaleString()} 閲覧

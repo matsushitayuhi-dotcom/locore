@@ -16,11 +16,13 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { ApplyButton } from '@/components/community/ApplyButton';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import {
   JOB_EMPLOYMENT_TYPE_LABEL,
   JOB_CATEGORY_LABEL,
   type JobEmploymentType,
   type JobCategory,
+  type CommunityAudience,
 } from '@/lib/community/constants';
 import { OwnerActions } from './OwnerActions';
 
@@ -108,6 +110,7 @@ export default async function JobDetailPage({ params }: Props) {
     hours_per_week?: number;
     experience_required?: boolean;
     notes?: string;
+    audience?: CommunityAudience;
   };
 
   const bodyHtml = markdownToHtml(post.body);
@@ -166,6 +169,7 @@ export default async function JobDetailPage({ params }: Props) {
                   経験者優遇
                 </span>
               ) : null}
+              <AudienceBadge audience={meta.audience} size="md" />
             </div>
 
             <h1

@@ -189,39 +189,11 @@ export default async function RegionHomePage({ params }: Props) {
           <SearchBox />
         </section>
 
-        {/* 2. 新着ニュース */}
-        <section>
-          <SectionHeader
-            kicker="新着ニュース"
-            title={`${region.nameJa} の、今日と明日`}
-            subtitle="マルシェ、突然始まった工事、見ておいて損のない展覧会。書き手と編集チームが現地時間に合わせて毎朝更新します。"
-            href={hasBoard ? '/board' : undefined}
-          />
-          {hasBoard ? (
-            <BoardWidget posts={boardPosts} />
-          ) : (
-            <div className="rounded-2xl border border-dashed border-border bg-card/60 p-8 text-center sm:p-10">
-              <p className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-                <Lock className="h-3 w-3" />
-                Coming Soon
-              </p>
-              <p className="mt-3 text-[13px] leading-[1.85] text-foreground/70">
-                {region.nameJa} の新着ニュースは準備中です。
-                <br className="hidden sm:inline" />
-                編集チームと現地の書き手が揃い次第、ここに毎朝の情報を載せていきます。
-              </p>
-              <p className="mt-2 text-[11px] text-foreground/45">
-                記事とスポット紹介は下にすでに公開されています。
-              </p>
-            </div>
-          )}
-        </section>
-
-        {/* 3. スポット紹介 */}
+        {/* 2. スポット紹介 */}
         <section id="spot-guide">
           <SectionHeader
             kicker="スポット紹介"
-            title="一軒の店、一本の坂道。"
+            title="一軒の店、一本の坂道"
             subtitle="観光地ではなく、書き手が時間をかけて何度も通った場所だけを取り上げます。"
             href={moreSpot}
           />
@@ -232,7 +204,7 @@ export default async function RegionHomePage({ params }: Props) {
           />
         </section>
 
-        {/* 4. 旅程プラン */}
+        {/* 3. 旅程プラン */}
         <section id="itinerary">
           <SectionHeader
             kicker="旅程プラン"
@@ -245,6 +217,37 @@ export default async function RegionHomePage({ params }: Props) {
             moreHref={moreItinerary}
             socialCounts={socialCounts}
           />
+        </section>
+
+        {/* 4. 新着ニュース (traveler 系画面では一番下) — UAT 指摘で
+             縦幅タイトのコンパクト widget に + 説明文撤去 + 上位 5 件 */}
+        <section>
+          <header className="mb-3 flex items-baseline justify-between">
+            <h2 className="text-[16px] font-semibold tracking-tight">
+              新着ニュース
+            </h2>
+            {hasBoard ? (
+              <Link
+                href="/board"
+                className="text-[11px] text-primary-300 hover:underline"
+              >
+                すべて見る →
+              </Link>
+            ) : null}
+          </header>
+          {hasBoard ? (
+            <BoardWidget posts={boardPosts} limit={5} />
+          ) : (
+            <div className="rounded-lg border border-dashed border-border bg-card/60 p-4 text-center">
+              <p className="inline-flex items-center gap-1.5 rounded-full bg-foreground/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+                <Lock className="h-3 w-3" />
+                Coming Soon
+              </p>
+              <p className="mt-2 text-[12px] text-foreground/65">
+                {region.nameJa} の新着ニュースは準備中です。
+              </p>
+            </div>
+          )}
         </section>
 
         {/* Founders は駐在員ページ (/expat) のみで表示する方針 — region home からは削除 */}

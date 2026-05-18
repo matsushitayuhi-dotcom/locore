@@ -12,8 +12,14 @@ import {
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
+import { AudienceChips } from '@/components/community/AudienceChips';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
+import {
+  COMMUNITY_AUDIENCES,
+  type CommunityAudience,
+} from '@/lib/community/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -70,6 +76,7 @@ type Props = {
     fmt?: string;
     trial?: string;
     region?: string;
+    audience?: string;
   };
 };
 
@@ -125,6 +132,11 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
   })();
   const trialOnly = searchParams?.trial === '1';
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
+  const activeAudience: CommunityAudience | undefined =
+    searchParams?.audience &&
+    (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
+      ? (searchParams.audience as CommunityAudience)
+      : undefined;
 
   const rawPosts = await listCommunityPosts({
     kind: 'lesson',
@@ -138,11 +150,17 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
       category?: LessonCategory;
       format?: Format;
       trial_available?: boolean;
+      audience?: CommunityAudience;
     };
     if (activeSide && meta.side !== activeSide) return false;
     if (activeCat && meta.category !== activeCat) return false;
     if (activeFormat && meta.format !== activeFormat) return false;
     if (trialOnly && !meta.trial_available) return false;
+    if (activeAudience) {
+      if (meta.audience && meta.audience !== 'both' && meta.audience !== activeAudience) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -153,6 +171,7 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
     if (activeFormat) params.set('fmt', activeFormat);
     if (trialOnly) params.set('trial', '1');
     if (regionFilter.active) params.set('region', regionFilter.slug);
+    if (activeAudience) params.set('audience', activeAudience);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -184,7 +203,15 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
             cat: activeCat,
             fmt: activeFormat,
             trial: trialOnly ? '1' : undefined,
+            audience: activeAudience,
           }}
+        />
+      </div>
+
+      <div className="mt-3">
+        <AudienceChips
+          active={activeAudience}
+          buildHref={(a) => buildHref({ audience: a ?? null })}
         />
       </div>
 
@@ -364,6 +391,7 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
     category?: LessonCategory;
     format?: Format;
     trial_available?: boolean;
+    audience?: CommunityAudience;
   };
   const price = formatLessonPrice(post);
 
@@ -405,6 +433,7 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
               体験あり
             </span>
           ) : null}
+          <AudienceBadge audience={meta.audience} />
         </div>
 
         <h2

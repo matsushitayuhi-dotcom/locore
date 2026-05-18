@@ -57,6 +57,28 @@ export const STATUS_LABEL: Record<CommunityStatus, string> = {
 };
 
 // =============================================================================
+// 対象者 (audience) — 旅行者向け / 駐在員向け / 両方
+// =============================================================================
+
+export const COMMUNITY_AUDIENCES = ['traveler', 'resident', 'both'] as const;
+export type CommunityAudience = (typeof COMMUNITY_AUDIENCES)[number];
+
+export const AUDIENCE_LABEL: Record<CommunityAudience, string> = {
+  traveler: '旅行者向け',
+  resident: '駐在員向け',
+  both: '両方',
+};
+
+export const AUDIENCE_SHORT_LABEL: Record<CommunityAudience, string> = {
+  traveler: '短期',
+  resident: '長期',
+  both: '両方',
+};
+
+/** audience の zod スキーマ (metadata に共通で含まれる) */
+export const audienceSchema = z.enum(COMMUNITY_AUDIENCES).optional();
+
+// =============================================================================
 // 金額の単位
 // =============================================================================
 
@@ -139,6 +161,8 @@ export const jobMetadataSchema = z.object({
   experience_required: z.boolean().optional(),
   /** 視覚障害者対応 / 在留資格サポートあり 等の追加メモ */
   notes: z.string().max(500).optional(),
+  /** 対象者 (旅行者 / 駐在員 / 両方) */
+  audience: audienceSchema,
 });
 export type JobMetadata = z.infer<typeof jobMetadataSchema>;
 
@@ -178,6 +202,8 @@ export const apartmentMetadataSchema = z.object({
   smoking_ok: z.boolean().optional(),
   /** 物件の特徴・周辺環境メモ */
   notes: z.string().max(500).optional(),
+  /** 対象者 (旅行者 / 駐在員 / 両方) */
+  audience: audienceSchema,
 });
 export type ApartmentMetadata = z.infer<typeof apartmentMetadataSchema>;
 
@@ -234,6 +260,8 @@ export const marketplaceMetadataSchema = z.object({
   delivery_available: z.boolean().optional(),
   /** 売る or 買う */
   side: z.enum(['sell', 'buy']).optional(),
+  /** 対象者 (旅行者 / 駐在員 / 両方) */
+  audience: audienceSchema,
 });
 export type MarketplaceMetadata = z.infer<typeof marketplaceMetadataSchema>;
 
@@ -251,6 +279,8 @@ export const groupMetadataSchema = z.object({
   category: z
     .enum(['sport', 'study', 'hobby', 'parenting', 'language', 'other'])
     .optional(),
+  /** 対象者 (旅行者 / 駐在員 / 両方) */
+  audience: audienceSchema,
 });
 export type GroupMetadata = z.infer<typeof groupMetadataSchema>;
 
@@ -267,6 +297,8 @@ export const lessonMetadataSchema = z.object({
   category: z
     .enum(['language', 'music', 'cooking', 'art', 'sport', 'study_aid', 'other'])
     .optional(),
+  /** 対象者 (旅行者 / 駐在員 / 両方) */
+  audience: audienceSchema,
 });
 export type LessonMetadata = z.infer<typeof lessonMetadataSchema>;
 
@@ -289,6 +321,8 @@ export const mutualAidMetadataSchema = z.object({
       'other',
     ])
     .optional(),
+  /** 対象者 (旅行者 / 駐在員 / 両方) */
+  audience: audienceSchema,
 });
 export type MutualAidMetadata = z.infer<typeof mutualAidMetadataSchema>;
 

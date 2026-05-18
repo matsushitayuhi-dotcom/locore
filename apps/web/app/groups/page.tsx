@@ -10,8 +10,14 @@ import {
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
+import { AudienceChips } from '@/components/community/AudienceChips';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
+import {
+  COMMUNITY_AUDIENCES,
+  type CommunityAudience,
+} from '@/lib/community/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +72,7 @@ type Props = {
     cat?: string;
     freq?: string;
     region?: string;
+    audience?: string;
   };
 };
 
@@ -89,6 +96,11 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
     searchParams?.freq && (FREQUENCIES as string[]).includes(searchParams.freq)
       ? (searchParams.freq as Frequency)
       : undefined;
+  const activeAudience: CommunityAudience | undefined =
+    searchParams?.audience &&
+    (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
+      ? (searchParams.audience as CommunityAudience)
+      : undefined;
 
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
 
@@ -102,9 +114,15 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
     const meta = p.metadata as {
       category?: GroupCategory;
       meeting_frequency?: Frequency;
+      audience?: CommunityAudience;
     };
     if (activeCat && meta.category !== activeCat) return false;
     if (activeFreq && meta.meeting_frequency !== activeFreq) return false;
+    if (activeAudience) {
+      if (meta.audience && meta.audience !== 'both' && meta.audience !== activeAudience) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -113,6 +131,7 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
     if (activeCat) params.set('cat', activeCat);
     if (activeFreq) params.set('freq', activeFreq);
     if (regionFilter.active) params.set('region', regionFilter.slug);
+    if (activeAudience) params.set('audience', activeAudience);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -142,7 +161,15 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
           preserveQuery={{
             cat: activeCat,
             freq: activeFreq,
+            audience: activeAudience,
           }}
+        />
+      </div>
+
+      <div className="mt-3">
+        <AudienceChips
+          active={activeAudience}
+          buildHref={(a) => buildHref({ audience: a ?? null })}
         />
       </div>
 
@@ -274,6 +301,7 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
     group_size?: number;
     age_range?: string;
     skill_level?: string;
+    audience?: CommunityAudience;
   };
 
   return (
@@ -294,6 +322,7 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
               {FREQUENCY_LABEL[meta.meeting_frequency]}
             </span>
           ) : null}
+          <AudienceBadge audience={meta.audience} />
         </div>
 
         <h2

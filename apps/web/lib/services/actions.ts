@@ -16,6 +16,7 @@ const SERVICE_CATEGORIES = [
   'other',
 ] as const;
 const CONTACT_METHODS = ['chat', 'external_url'] as const;
+const AUDIENCES = ['traveler', 'resident', 'both'] as const;
 
 const upsertSchema = z
   .object({
@@ -45,6 +46,10 @@ const upsertSchema = z
       .or(z.literal('').transform(() => undefined)),
     isActive: z.boolean().default(true),
     position: z.number().int().min(0).default(0),
+    /** cities.id (uuid)。null / undefined = 指定なし */
+    cityId: z.string().uuid().optional().nullable(),
+    /** 誰向けか。未指定 = NULL (= 旧データ扱い、両ホームに出る) */
+    audience: z.enum(AUDIENCES).optional().nullable(),
   })
   .refine(
     (v) => v.contactMethod !== 'external_url' || !!v.externalUrl,
@@ -98,6 +103,8 @@ export async function upsertUserService(
         priceUnit: data.priceUnit ?? null,
         contactMethod: data.contactMethod,
         externalUrl: data.externalUrl ?? null,
+        cityId: data.cityId ?? null,
+        audience: data.audience ?? null,
         isActive: data.isActive,
         position: data.position,
         updatedAt: new Date(),
@@ -105,6 +112,9 @@ export async function upsertUserService(
       .where(eq(schema.userServices.id, data.id));
     revalidatePath('/settings/services');
     revalidatePath(`/writers/${user.id}`);
+    revalidatePath(`/residents/${user.id}`);
+    revalidatePath('/explore');
+    revalidatePath('/expat');
     return { ok: true, data: { id: data.id } };
   }
 
@@ -127,6 +137,8 @@ export async function upsertUserService(
       priceUnit: data.priceUnit ?? null,
       contactMethod: data.contactMethod,
       externalUrl: data.externalUrl ?? null,
+      cityId: data.cityId ?? null,
+      audience: data.audience ?? null,
       isActive: data.isActive,
       position: nextPos,
     })
@@ -134,6 +146,9 @@ export async function upsertUserService(
 
   revalidatePath('/settings/services');
   revalidatePath(`/writers/${user.id}`);
+  revalidatePath(`/residents/${user.id}`);
+  revalidatePath('/explore');
+  revalidatePath('/expat');
   return { ok: true, data: { id: inserted[0]!.id } };
 }
 
@@ -158,5 +173,8 @@ export async function deleteUserService(
 
   revalidatePath('/settings/services');
   revalidatePath(`/writers/${user.id}`);
+  revalidatePath(`/residents/${user.id}`);
+  revalidatePath('/explore');
+  revalidatePath('/expat');
   return { ok: true };
 }

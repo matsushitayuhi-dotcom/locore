@@ -11,6 +11,8 @@ import {
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
+import { AudienceChips } from '@/components/community/AudienceChips';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -19,8 +21,10 @@ import {
   JOB_CATEGORIES,
   JOB_CATEGORY_LABEL,
   PRICE_UNIT_LABEL,
+  COMMUNITY_AUDIENCES,
   type JobEmploymentType,
   type JobCategory,
+  type CommunityAudience,
 } from '@/lib/community/constants';
 
 export const dynamic = 'force-dynamic';
@@ -51,6 +55,7 @@ type Props = {
     sort?: string;
     filters?: string;
     region?: string;
+    audience?: string;
   };
 };
 
@@ -139,6 +144,11 @@ export default async function JobsIndexPage({ searchParams }: Props) {
   const sort: Sort = searchParams?.sort === 'salary' ? 'salary' : 'new';
   const showFilters = searchParams?.filters === '1';
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
+  const activeAudience: CommunityAudience | undefined =
+    searchParams?.audience &&
+    (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
+      ? (searchParams.audience as CommunityAudience)
+      : undefined;
 
   const rawPosts = await listCommunityPosts({
     kind: 'job',
@@ -153,6 +163,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
       category?: JobCategory;
       language_requirements?: Lang[];
       remote_ok?: boolean;
+      audience?: CommunityAudience;
     };
     if (activeTypes.length > 0) {
       if (!meta.employment_type || !activeTypes.includes(meta.employment_type)) {
@@ -168,6 +179,11 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     if (minSalary) {
       const annual = annualizedSalary(p);
       if (annual === null || annual < minSalary) return false;
+    }
+    if (activeAudience) {
+      if (meta.audience && meta.audience !== 'both' && meta.audience !== activeAudience) {
+        return false;
+      }
     }
     return true;
   });
@@ -193,6 +209,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     if (sort !== 'new') params.set('sort', sort);
     if (showFilters) params.set('filters', '1');
     if (regionFilter.active) params.set('region', regionFilter.slug);
+    if (activeAudience) params.set('audience', activeAudience);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -241,7 +258,15 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             min: minSalary ? String(minSalary) : undefined,
             sort: sort !== 'new' ? sort : undefined,
             filters: showFilters ? '1' : undefined,
+            audience: activeAudience,
           }}
+        />
+      </div>
+
+      <div className="mt-3">
+        <AudienceChips
+          active={activeAudience}
+          buildHref={(a) => buildHref({ audience: a ?? null })}
         />
       </div>
 
@@ -283,6 +308,9 @@ export default async function JobsIndexPage({ searchParams }: Props) {
       >
         {regionFilter.active ? (
           <input type="hidden" name="region" value={regionFilter.slug} />
+        ) : null}
+        {activeAudience ? (
+          <input type="hidden" name="audience" value={activeAudience} />
         ) : null}
         <FilterSelect
           name="type"
@@ -367,7 +395,14 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             minSalary ||
             sort !== 'new') ? (
             <Link
-              href={regionFilter.active ? `/jobs?region=${regionFilter.slug}` : '/jobs'}
+              href={buildHref({
+                type: null,
+                cat: null,
+                lang: null,
+                remote: null,
+                min: null,
+                sort: null,
+              })}
               className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
             >
               リセット
@@ -540,6 +575,9 @@ export default async function JobsIndexPage({ searchParams }: Props) {
               {regionFilter.active ? (
                 <input type="hidden" name="region" value={regionFilter.slug} />
               ) : null}
+              {activeAudience ? (
+                <input type="hidden" name="audience" value={activeAudience} />
+              ) : null}
               {activeTypes.length > 0 ? (
                 <input type="hidden" name="type" value={activeTypes.join(',')} />
               ) : null}
@@ -647,6 +685,7 @@ function JobCard({ post }: { post: CommunityPostListItem }) {
     category?: JobCategory;
     language_requirements?: Lang[];
     remote_ok?: boolean;
+    audience?: CommunityAudience;
   };
   const salary = formatSalary(post);
   const expDays = daysUntil(post.expiresAt);
@@ -675,6 +714,7 @@ function JobCard({ post }: { post: CommunityPostListItem }) {
               Remote OK
             </span>
           ) : null}
+          <AudienceBadge audience={meta.audience} />
         </div>
 
         <h2

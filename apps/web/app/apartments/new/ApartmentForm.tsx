@@ -6,10 +6,12 @@ import { toast } from 'sonner';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactEmailField } from '@/components/community/ContactEmailField';
+import { AudienceField } from '@/components/community/AudienceField';
 import {
   APARTMENT_LISTING_TYPES,
   APARTMENT_LISTING_TYPE_LABEL,
   type ApartmentListingType,
+  type CommunityAudience,
 } from '@/lib/community/constants';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
 import { PhotoUploader } from '@/components/community/PhotoUploader';
@@ -26,6 +28,7 @@ export function ApartmentForm() {
   const [isPending, startTransition] = useTransition();
 
   // --- 状態 ---
+  const [audience, setAudience] = useState<CommunityAudience>('traveler');
   const [listingType, setListingType] = useState<ApartmentListingType>('long_term');
   const [title, setTitle] = useState('');
   const [arrondissement, setArrondissement] = useState('');
@@ -81,6 +84,7 @@ export function ApartmentForm() {
 
     const metadata: Record<string, unknown> = {
       listing_type: listingType,
+      audience,
     };
     if (rent != null) metadata.rent_monthly = rent;
     const charges = numOrNull(chargesMonthly);
@@ -171,6 +175,13 @@ export function ApartmentForm() {
           </div>
         </div>
       </aside>
+
+      {/* 対象者 */}
+      <AudienceField
+        value={audience}
+        onChange={setAudience}
+        helpText="短期民泊・サブレ なら 旅行者向け / 長期賃貸 なら 駐在員向け を選択"
+      />
 
       {/* 形態 */}
       <fieldset>

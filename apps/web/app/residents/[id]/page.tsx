@@ -330,6 +330,8 @@ async function loadVerifiedStatus(userId: string): Promise<boolean> {
  */
 async function loadUserServices(userId: string) {
   const db = getDb();
+  // 0046 マイグレーション前後の両方で動くように、まず city/audience 付きで試し
+  // 失敗したら最小カラムでフォールバック。
   try {
     const rows = await db
       .select({
@@ -341,8 +343,14 @@ async function loadUserServices(userId: string) {
         priceUnit: schema.userServices.priceUnit,
         contactMethod: schema.userServices.contactMethod,
         externalUrl: schema.userServices.externalUrl,
+        audience: schema.userServices.audience,
+        cityNameJa: schema.cities.nameJa,
       })
       .from(schema.userServices)
+      .leftJoin(
+        schema.cities,
+        eq(schema.cities.id, schema.userServices.cityId),
+      )
       .where(
         and(
           eq(schema.userServices.userId, userId),
@@ -359,9 +367,51 @@ async function loadUserServices(userId: string) {
       priceUnit: r.priceUnit,
       contactMethod: (r.contactMethod ?? 'chat') as 'chat' | 'external_url',
       externalUrl: r.externalUrl,
+      cityNameJa: r.cityNameJa ?? null,
+      audience:
+        (r.audience as 'traveler' | 'resident' | 'both' | null) ?? null,
     }));
-  } catch {
-    return [];
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/does not exist/i.test(msg)) {
+      console.warn('[residents/[id]] loadUserServices failed:', msg);
+      return [];
+    }
+    try {
+      const rows = await db
+        .select({
+          id: schema.userServices.id,
+          title: schema.userServices.title,
+          description: schema.userServices.description,
+          category: schema.userServices.category,
+          priceJpy: schema.userServices.priceJpy,
+          priceUnit: schema.userServices.priceUnit,
+          contactMethod: schema.userServices.contactMethod,
+          externalUrl: schema.userServices.externalUrl,
+        })
+        .from(schema.userServices)
+        .where(
+          and(
+            eq(schema.userServices.userId, userId),
+            eq(schema.userServices.isActive, true),
+          ),
+        )
+        .orderBy(asc(schema.userServices.position));
+      return rows.map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        category: r.category,
+        priceJpy: r.priceJpy,
+        priceUnit: r.priceUnit,
+        contactMethod: (r.contactMethod ?? 'chat') as 'chat' | 'external_url',
+        externalUrl: r.externalUrl,
+        cityNameJa: null as string | null,
+        audience: null as 'traveler' | 'resident' | 'both' | null,
+      }));
+    } catch {
+      return [];
+    }
   }
 }
 

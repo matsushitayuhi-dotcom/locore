@@ -25,6 +25,20 @@ const CATEGORIES: { value: string; label: string }[] = [
 
 const PRICE_UNITS = ['1時間あたり', '1日', '1件', '応相談'] as const;
 
+const AUDIENCE_OPTIONS: { value: '' | 'traveler' | 'resident' | 'both'; label: string }[] = [
+  { value: '', label: '指定なし（両方に表示）' },
+  { value: 'traveler', label: '旅行者向け' },
+  { value: 'resident', label: '駐在員向け' },
+  { value: 'both', label: '両方向け' },
+];
+
+type CityOption = {
+  id: string;
+  slug: string;
+  nameJa: string;
+  countryNameJa: string | null;
+};
+
 type Service = {
   id?: string;
   title: string;
@@ -35,6 +49,10 @@ type Service = {
   contactMethod: 'chat' | 'external_url';
   externalUrl: string;
   isActive: boolean;
+  /** cities.id (uuid)。'' = 指定なし */
+  cityId: string;
+  /** '' = 指定なし */
+  audience: '' | 'traveler' | 'resident' | 'both';
 };
 
 const empty = (): Service => ({
@@ -46,13 +64,16 @@ const empty = (): Service => ({
   contactMethod: 'chat',
   externalUrl: '',
   isActive: true,
+  cityId: '',
+  audience: '',
 });
 
 type Props = {
   initial: Service[];
+  cityOptions: CityOption[];
 };
 
-export function ServicesEditor({ initial }: Props) {
+export function ServicesEditor({ initial, cityOptions }: Props) {
   const [rows, setRows] = useState<Service[]>(initial);
   const [drafting, setDrafting] = useState(false);
   const [draft, setDraft] = useState<Service>(empty());
@@ -87,6 +108,8 @@ export function ServicesEditor({ initial }: Props) {
         externalUrl: r.externalUrl.trim() || undefined,
         isActive: r.isActive,
         position: idx,
+        cityId: r.cityId || null,
+        audience: r.audience || null,
       });
       if (res.ok && res.data) {
         toast.success('サービスを保存しました');
@@ -133,6 +156,8 @@ export function ServicesEditor({ initial }: Props) {
         externalUrl: draft.externalUrl.trim() || undefined,
         isActive: draft.isActive,
         position: rows.length,
+        cityId: draft.cityId || null,
+        audience: draft.audience || null,
       });
       if (res.ok && res.data) {
         toast.success('サービスを追加しました');
@@ -275,6 +300,46 @@ export function ServicesEditor({ initial }: Props) {
               </div>
             ) : null}
 
+            {/* 提供エリア + 対象オーディエンス */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-[11px] font-medium text-foreground/70">
+                  提供エリア
+                </label>
+                <select
+                  value={r.cityId}
+                  onChange={(e) => update(idx, 'cityId', e.target.value)}
+                  className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+                >
+                  <option value="">指定なし</option>
+                  {cityOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.countryNameJa ? `${c.countryNameJa}・` : ''}
+                      {c.nameJa}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-[11px] font-medium text-foreground/70">
+                  対象
+                </label>
+                <select
+                  value={r.audience}
+                  onChange={(e) =>
+                    update(idx, 'audience', e.target.value as Service['audience'])
+                  }
+                  className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+                >
+                  {AUDIENCE_OPTIONS.map((a) => (
+                    <option key={a.value} value={a.value}>
+                      {a.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <label className="inline-flex items-center gap-2 text-[12px] text-foreground/70">
                 <input
@@ -363,6 +428,37 @@ export function ServicesEditor({ initial }: Props) {
               {PRICE_UNITS.map((u) => (
                 <option key={u} value={u}>
                   {u}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <select
+              value={draft.cityId}
+              onChange={(e) => setDraft({ ...draft, cityId: e.target.value })}
+              className="h-10 rounded-sm border border-border bg-card px-3 text-body-md"
+            >
+              <option value="">提供エリア（指定なし）</option>
+              {cityOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.countryNameJa ? `${c.countryNameJa}・` : ''}
+                  {c.nameJa}
+                </option>
+              ))}
+            </select>
+            <select
+              value={draft.audience}
+              onChange={(e) =>
+                setDraft({
+                  ...draft,
+                  audience: e.target.value as Service['audience'],
+                })
+              }
+              className="h-10 rounded-sm border border-border bg-card px-3 text-body-md"
+            >
+              {AUDIENCE_OPTIONS.map((a) => (
+                <option key={a.value} value={a.value}>
+                  {a.label}
                 </option>
               ))}
             </select>

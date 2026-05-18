@@ -11,8 +11,14 @@ import {
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
+import { AudienceChips } from '@/components/community/AudienceChips';
+import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
+import {
+  COMMUNITY_AUDIENCES,
+  type CommunityAudience,
+} from '@/lib/community/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +81,7 @@ type Props = {
     urg?: string;
     cat?: string;
     region?: string;
+    audience?: string;
   };
 };
 
@@ -115,6 +122,11 @@ export default async function HelpIndexPage({ searchParams }: Props) {
     searchParams?.cat && (CATEGORIES as string[]).includes(searchParams.cat)
       ? (searchParams.cat as Category)
       : undefined;
+  const activeAudience: CommunityAudience | undefined =
+    searchParams?.audience &&
+    (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
+      ? (searchParams.audience as CommunityAudience)
+      : undefined;
 
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
 
@@ -129,10 +141,16 @@ export default async function HelpIndexPage({ searchParams }: Props) {
       request_type?: RequestType;
       urgency?: Urgency;
       category?: Category;
+      audience?: CommunityAudience;
     };
     if (activeType && meta.request_type !== activeType) return false;
     if (activeUrg && meta.urgency !== activeUrg) return false;
     if (activeCat && meta.category !== activeCat) return false;
+    if (activeAudience) {
+      if (meta.audience && meta.audience !== 'both' && meta.audience !== activeAudience) {
+        return false;
+      }
+    }
     return true;
   });
 
@@ -142,6 +160,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
     if (activeUrg) params.set('urg', activeUrg);
     if (activeCat) params.set('cat', activeCat);
     if (regionFilter.active) params.set('region', regionFilter.slug);
+    if (activeAudience) params.set('audience', activeAudience);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -172,7 +191,15 @@ export default async function HelpIndexPage({ searchParams }: Props) {
             type: activeType,
             urg: activeUrg,
             cat: activeCat,
+            audience: activeAudience,
           }}
+        />
+      </div>
+
+      <div className="mt-3">
+        <AudienceChips
+          active={activeAudience}
+          buildHref={(a) => buildHref({ audience: a ?? null })}
         />
       </div>
 
@@ -338,6 +365,7 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
     urgency?: Urgency;
     category?: Category;
     compensation?: Compensation;
+    audience?: CommunityAudience;
   };
   const expDays = daysUntil(post.expiresAt);
   const isUrgent = meta.urgency === 'now';
@@ -386,6 +414,7 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
               {CATEGORY_LABEL[meta.category]}
             </span>
           ) : null}
+          <AudienceBadge audience={meta.audience} />
         </div>
 
         <h2

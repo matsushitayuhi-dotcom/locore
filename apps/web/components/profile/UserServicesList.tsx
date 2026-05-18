@@ -24,6 +24,16 @@ export type PublicService = {
   priceUnit: string | null;
   contactMethod: 'chat' | 'external_url';
   externalUrl: string | null;
+  /** 提供エリア名（cities.name_ja）。未設定なら null */
+  cityNameJa?: string | null;
+  /** 'traveler' | 'resident' | 'both' | null */
+  audience?: 'traveler' | 'resident' | 'both' | null;
+};
+
+const AUDIENCE_LABEL: Record<'traveler' | 'resident' | 'both', string> = {
+  traveler: '旅行者向け',
+  resident: '駐在員向け',
+  both: '旅行者・駐在員',
 };
 
 type Props = {
@@ -121,6 +131,20 @@ export function UserServicesList({
               <p className="mt-2 line-clamp-3 whitespace-pre-line text-[12px] leading-relaxed text-foreground/70">
                 {s.description}
               </p>
+            ) : null}
+            {s.cityNameJa || s.audience ? (
+              <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-foreground/55">
+                {s.cityNameJa ? (
+                  <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+                    📍 {s.cityNameJa}
+                  </span>
+                ) : null}
+                {s.audience ? (
+                  <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+                    {AUDIENCE_LABEL[s.audience]}
+                  </span>
+                ) : null}
+              </div>
             ) : null}
             <div className="mt-4 flex justify-end">
               <Button

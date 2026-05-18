@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
 import { ContactEmailField } from '@/components/community/ContactEmailField';
+import { AudienceField } from '@/components/community/AudienceField';
+import type { CommunityAudience } from '@/lib/community/constants';
 
 type Side = 'teach' | 'learn';
 type Format = 'in_person' | 'online' | 'both';
@@ -61,6 +63,7 @@ export function PostForm() {
   const [isPending, startTransition] = useTransition();
 
   const [side, setSide] = useState<Side>('teach');
+  const [audience, setAudience] = useState<CommunityAudience>('resident');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<LessonCategory>('language');
   const [format, setFormat] = useState<Format>('in_person');
@@ -118,6 +121,7 @@ export function PostForm() {
           level,
           trial_available: trialAvailable,
           max_students: maxStudentsNum ?? undefined,
+          audience,
         },
       });
       if (res.ok && res.data) {
@@ -160,6 +164,8 @@ export function PostForm() {
           ))}
         </div>
       </fieldset>
+
+      <AudienceField value={audience} onChange={setAudience} />
 
       <div>
         <label htmlFor="title" className="block text-[12px] font-bold text-foreground">

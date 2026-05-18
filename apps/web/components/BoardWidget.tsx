@@ -1,83 +1,70 @@
 import Link from 'next/link';
-import { Sparkles, MapPin, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight } from 'lucide-react';
 import type { BoardPostListItem } from '@/lib/board/db';
-import {
-  BOARD_CATEGORY_LABEL,
-  type BoardCategory,
-} from '@/lib/board/constants';
 
 /**
- * 掲示板ウィジェット（タイトル 10 件 / ホームとヘッダー領域で使用）。
+ * 掲示板ウィジェット (コンパクト版)。
  *
- * - AI 自動投稿は紫の Sparkles アイコンで区別
- * - 各タイトルをクリックすると /board/[id] に遷移
+ * UAT 指摘で説明・カテゴリ・場所などのメタ行を撤去、タイトルのみの
+ * 一覧に。上位 5 件まで表示し、行高を詰めて縦幅をタイトに。
+ * - AI 自動投稿: 紫 Sparkles、それ以外: terra ドット
+ * - 各行クリックで /board/[id] へ
+ * - イベント日付があれば右端に M/D を小さく表示 (情報密度の妥協点)
  */
-export function BoardWidget({ posts }: { posts: BoardPostListItem[] }) {
-  if (posts.length === 0) {
+const DEFAULT_LIMIT = 5;
+
+export function BoardWidget({
+  posts,
+  limit = DEFAULT_LIMIT,
+}: {
+  posts: BoardPostListItem[];
+  limit?: number;
+}) {
+  const visible = posts.slice(0, limit);
+  if (visible.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-5 text-center text-[12px] text-foreground/55">
+      <div className="rounded-lg border border-border bg-card p-3 text-center text-[11px] text-foreground/55">
         今朝はまだ更新がありません
       </div>
     );
   }
   return (
     <div className="overflow-hidden rounded-lg bg-card ring-1 ring-border">
-      <header className="flex items-center justify-between border-b border-border bg-primary-500/10 px-4 py-2.5">
-        <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
+      <header className="flex items-center justify-between border-b border-border bg-primary-500/10 px-3 py-1.5">
+        <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary-300">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
           新着ニュース
         </p>
         <Link
           href="/board"
-          className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary-300 hover:underline"
+          className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary-300 hover:underline"
         >
           すべて見る
           <ArrowRight className="h-3 w-3" />
         </Link>
       </header>
       <ul className="divide-y divide-border">
-        {posts.map((p) => (
+        {visible.map((p) => (
           <li key={p.id}>
             <Link
               href={`/board/${p.id}`}
-              className="flex items-start gap-2.5 px-4 py-2.5 transition hover:bg-primary-500/10"
+              className="flex items-center gap-2 px-3 py-1.5 transition hover:bg-primary-500/10"
             >
-              {/* AI 投稿は紫の sparkle、manual は terra ドット */}
-              <span className="mt-1 shrink-0">
+              <span className="shrink-0">
                 {p.autoCollected ? (
-                  <Sparkles className="h-3.5 w-3.5 text-accent-500" />
+                  <Sparkles className="h-3 w-3 text-accent-500" />
                 ) : (
-                  <span className="inline-block h-2 w-2 rounded-full bg-primary-500" />
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary-500" />
                 )}
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-1 text-[13px] font-semibold leading-snug text-foreground">
-                  {p.title}
-                </p>
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/55">
-                  <CategoryChip category={p.category as BoardCategory} />
-                  {p.audience === 'traveler' ? (
-                    <span className="rounded-sm bg-accent-500/10 px-1.5 py-px text-[9px] font-bold uppercase tracking-wider text-accent-500">
-                      旅行者向け
-                    </span>
-                  ) : null}
-                  {p.eventDate ? (
-                    <span className="tabular font-semibold text-primary-300">
-                      {formatEventDate(p.eventDate)}
-                    </span>
-                  ) : (
-                    <span className="text-foreground/40">
-                      {formatPublishedAt(p.publishedAt)}
-                    </span>
-                  )}
-                  {p.eventLocation ? (
-                    <span className="inline-flex items-center gap-0.5 truncate">
-                      <MapPin className="h-2.5 w-2.5" />
-                      {p.eventLocation}
-                    </span>
-                  ) : null}
-                </p>
-              </div>
+              <p className="line-clamp-1 min-w-0 flex-1 text-[12px] font-medium leading-snug text-foreground">
+                {p.title}
+              </p>
+              {p.eventDate ? (
+                <span className="shrink-0 tabular text-[10px] font-semibold text-primary-300">
+                  {formatEventDate(p.eventDate)}
+                </span>
+              ) : null}
             </Link>
           </li>
         ))}
@@ -86,44 +73,8 @@ export function BoardWidget({ posts }: { posts: BoardPostListItem[] }) {
   );
 }
 
-/** カテゴリの小さなチップ。色はカテゴリごとに変える */
-const CHIP_COLOR: Record<string, string> = {
-  event: 'bg-primary-500/10 text-primary-300',
-  transit: 'bg-slate-500/10 text-slate-600',
-  admin: 'bg-blue-500/10 text-blue-600',
-  food_season: 'bg-amber-500/10 text-amber-700',
-  community: 'bg-purple-500/10 text-purple-600',
-  family_edu: 'bg-emerald-500/10 text-emerald-600',
-  health_weather: 'bg-danger-500/10 text-danger-500',
-};
-
-function CategoryChip({ category }: { category: BoardCategory | string }) {
-  const label =
-    BOARD_CATEGORY_LABEL[category as BoardCategory] ?? String(category);
-  const color = CHIP_COLOR[category] ?? 'bg-foreground/10 text-foreground/65';
-  return (
-    <span
-      className={`rounded-sm px-1.5 py-px text-[9px] font-bold uppercase tracking-wider ${color}`}
-    >
-      {label}
-    </span>
-  );
-}
-
 function formatEventDate(d: string) {
-  // YYYY-MM-DD or ISO
   const date = new Date(d.length === 10 ? d + 'T00:00:00Z' : d);
   if (isNaN(date.getTime())) return d;
   return `${date.getMonth() + 1}/${date.getDate()}`;
-}
-
-function formatPublishedAt(d: string) {
-  const date = new Date(d);
-  if (isNaN(date.getTime())) return '';
-  const diffMs = Date.now() - date.getTime();
-  const h = Math.floor(diffMs / (1000 * 60 * 60));
-  if (h < 1) return 'たった今';
-  if (h < 24) return `${h}時間前`;
-  const day = Math.floor(h / 24);
-  return `${day}日前`;
 }

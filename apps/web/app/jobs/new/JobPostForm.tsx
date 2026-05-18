@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AlertTriangle } from 'lucide-react';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactEmailField } from '@/components/community/ContactEmailField';
+import { AudienceField } from '@/components/community/AudienceField';
 import {
   JOB_EMPLOYMENT_TYPES,
   JOB_EMPLOYMENT_TYPE_LABEL,
@@ -14,6 +15,7 @@ import {
   JOB_CATEGORY_LABEL,
   type JobEmploymentType,
   type JobCategory,
+  type CommunityAudience,
 } from '@/lib/community/constants';
 
 type Lang = 'ja' | 'fr' | 'en';
@@ -44,6 +46,7 @@ export function JobPostForm() {
   const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState('');
+  const [audience, setAudience] = useState<CommunityAudience>('resident');
   const [employmentType, setEmploymentType] =
     useState<JobEmploymentType>('part_time');
   const [category, setCategory] = useState<JobCategory>('office');
@@ -119,6 +122,7 @@ export function JobPostForm() {
           hours_per_week: hpwNum,
           experience_required: experienceRequired,
           notes: parsed.data.notes,
+          audience,
         },
       });
 
@@ -156,6 +160,13 @@ export function JobPostForm() {
           {title.length} / 140
         </p>
       </div>
+
+      {/* 対象者 */}
+      <AudienceField
+        value={audience}
+        onChange={setAudience}
+        helpText="長期滞在の駐在員向け / 短期滞在の旅行者向け / 両方"
+      />
 
       {/* 雇用形態 */}
       <fieldset>

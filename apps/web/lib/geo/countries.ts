@@ -3,6 +3,56 @@ import { eq, asc } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 
+export type ActiveCityForPicker = {
+  id: string;
+  slug: string;
+  nameJa: string;
+  countryNameJa: string | null;
+};
+
+/**
+ * /settings/services 等の都市セレクタ用に、is_active=true の cities を全件取得。
+ * 並び順: 国 → 都市 position。
+ */
+export async function getActiveCitiesForPicker(): Promise<ActiveCityForPicker[]> {
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: schema.cities.id,
+        slug: schema.cities.slug,
+        nameJa: schema.cities.nameJa,
+        kind: schema.cities.kind,
+        position: schema.cities.position,
+        countryNameJa: schema.countries.nameJa,
+        countryPosition: schema.countries.position,
+      })
+      .from(schema.cities)
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
+      )
+      .where(eq(schema.cities.isActive, true))
+      .orderBy(
+        asc(schema.countries.position),
+        asc(schema.cities.position),
+      );
+
+    return rows
+      // 「その他」カテゴリ (kind='other') はサービス紐付けに不適なので除外
+      .filter((r) => r.kind !== 'other')
+      .map((r) => ({
+        id: r.id,
+        slug: r.slug,
+        nameJa: r.nameJa,
+        countryNameJa: r.countryNameJa,
+      }));
+  } catch (err) {
+    console.warn('[getActiveCitiesForPicker] failed:', err);
+    return [];
+  }
+}
+
 export type CountryListItem = {
   code: string;
   nameJa: string;
