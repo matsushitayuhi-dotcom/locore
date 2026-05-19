@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { CountryCarousel } from '@/components/CountryCarousel';
+import { CountryGridByContinent } from '@/components/CountryGridByContinent';
 import { listCountriesForPicker } from '@/lib/geo/countries';
-import { getFeaturedServices } from '@/lib/services/featured';
-import { ServiceCarousel } from '@/components/services/ServiceCarousel';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,23 +15,18 @@ export const metadata = {
  * 旅行者向けホーム (/explore)。
  *
  * 構成:
- *   1. Hero band（編集トーンのコピー）
- *   2. 国カルーセル（active 先頭、最大 10 件、続きは /world）
+ *   1. 行き先のセクション見出し
+ *   2. 国を大陸別にグルーピングしたタイルグリッド (CountryGridByContinent)
+ *   3. 駐在員ホームへの導線
  *
- * 【一時停止中】2026-05 時点では書き手 / 記事の蓄積がまだ少ないため、
- * 「新着スポット記事」「新着旅程プラン」の横スクロールカルーセルは
- * 非表示にしている。記事は /region/[slug] 経由で見られる状態。
- * 蓄積が増えたら、コメントアウトしてある ArticleScrollSection を
- * 元に戻す予定。
- *
- * 駐在員ホームと違って、ここには「行政」「コミュニティ」「求人」「アパート」など
- * 暮らし実務系のセクションは出さない。
+ * 過去の構成からの変更点:
+ *   - 国カルーセル (横スクロール) → 大陸別タイルグリッドに変更 (UAT 指摘)
+ *   - 「現地の人に頼みたいこと」サービスカルーセルは削除 (UAT 指摘、
+ *     蓄積がまだ少なく出さない方針)
+ *   - 記事カルーセル (itinerary / spot_guide) は引き続き非表示
  */
 export default async function ExplorePage() {
-  const [countries, travelerServices] = await Promise.all([
-    listCountriesForPicker(),
-    getFeaturedServices({ audience: 'traveler', limit: 12 }),
-  ]);
+  const countries = await listCountriesForPicker();
 
   return (
     <main className="bg-background">
@@ -44,20 +37,8 @@ export default async function ExplorePage() {
             title="どこの暮らしを覗きますか？"
             subtitle="今はフランスの主要都市で書き手がいます。台北・ハノイ・リスボンと、信頼できる現地ライターから順に街を開いていきます。"
           />
-          <CountryCarousel countries={countries} />
+          <CountryGridByContinent countries={countries} />
         </section>
-
-        {/* 提供サービス — 旅行者向け。空のときはセクションごと出さない。 */}
-        {travelerServices.length > 0 ? (
-          <section>
-            <SectionHeader
-              kicker="提供サービス"
-              title="現地の人に頼みたいこと"
-              subtitle="街に詳しい住人が、ガイド・通訳・撮影などのサービスを直接提供しています。"
-            />
-            <ServiceCarousel services={travelerServices} />
-          </section>
-        ) : null}
 
         {/*
           【一時非表示】記事の横スクロールカルーセル (itinerary / spot_guide)。
