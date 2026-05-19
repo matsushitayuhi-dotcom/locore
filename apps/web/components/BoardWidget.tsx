@@ -60,11 +60,17 @@ export function BoardWidget({
               <p className="line-clamp-1 min-w-0 flex-1 text-[12px] font-medium leading-snug text-foreground">
                 {p.title}
               </p>
-              {p.eventDate ? (
-                <span className="shrink-0 tabular text-[10px] font-semibold text-primary-300">
-                  {formatEventDate(p.eventDate)}
-                </span>
-              ) : null}
+              {(() => {
+                const range = formatEventRange(
+                  p.eventStartDate ?? p.eventDate,
+                  p.eventEndDate ?? p.eventDate,
+                );
+                return range ? (
+                  <span className="shrink-0 tabular text-[10px] font-semibold text-primary-300">
+                    {range}
+                  </span>
+                ) : null;
+              })()}
             </Link>
           </li>
         ))}
@@ -76,5 +82,17 @@ export function BoardWidget({
 function formatEventDate(d: string) {
   const date = new Date(d.length === 10 ? d + 'T00:00:00Z' : d);
   if (isNaN(date.getTime())) return d;
-  return `${date.getMonth() + 1}/${date.getDate()}`;
+  return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
+}
+
+/**
+ * start と end が同値なら「M/D」、違えば「M/D-M/D」。両方 NULL なら null。
+ */
+function formatEventRange(
+  start: string | null,
+  end: string | null,
+): string | null {
+  if (!start) return null;
+  if (!end || start === end) return formatEventDate(start);
+  return `${formatEventDate(start)}-${formatEventDate(end)}`;
 }

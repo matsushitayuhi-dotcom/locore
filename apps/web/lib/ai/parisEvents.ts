@@ -37,10 +37,19 @@ export type AiEventCategory =
 export type AiEvent = {
   title: string;
   body: string;
-  /** YYYY-MM-DD。複数日にまたがるイベントは「開始日」を入れる */
-  event_date: string | null;
-  /** YYYY-MM-DD。複数日にまたがる場合の終了日 (1 日のみなら null) */
+  /**
+   * @deprecated 旧 API。新規には event_start_date / event_end_date を使う。
+   * 互換のため Claude が event_date だけを返してきた場合は start=end として扱う。
+   */
+  event_date?: string | null;
+  /**
+   * @deprecated 旧 API (event_date_end)。新規には event_end_date を使う。
+   */
   event_date_end?: string | null;
+  /** YYYY-MM-DD。期間開始日。単日イベントは end と同値。 */
+  event_start_date: string | null;
+  /** YYYY-MM-DD。期間終了日。単日イベントは start と同値。 */
+  event_end_date: string | null;
   event_location: string | null;
   category: AiEventCategory;
   source_urls: Array<{ name: string; url: string }>;
@@ -163,8 +172,8 @@ Locore の編集トーンは「小さな旅行誌」。SNS まとめサイトの
       "title": "30 字以内の日本語タイトル (常体・体言止め可)",
       "body": "400 字程度の日本語本文 (350〜450 字目安)。必ずですます調。具体的な場所・日時・行き方・特徴・おすすめの訪問時間帯などを含む。transit の場合は影響範囲と代替手段にも触れる。Markdown 段落 1〜2 つ分。",
       "category": "event|transit",
-      "event_date": "YYYY-MM-DD",
-      "event_date_end": "YYYY-MM-DD or null",
+      "event_start_date": "YYYY-MM-DD (期間開始日。単日イベントなら event_end_date と同じ値)",
+      "event_end_date": "YYYY-MM-DD (期間終了日。単日イベントなら event_start_date と同じ値)",
       "event_location": "区名や会場名。例: マレ地区 / Place de la République / Musée d'Orsay",
       "source_urls": [
         { "name": "公式サイト名", "url": "https://..." }
@@ -173,9 +182,20 @@ Locore の編集トーンは「小さな旅行誌」。SNS まとめサイトの
   ]
 }
 
+# 期間イベントの扱い
+
+- マルシェの「5/22-5/26 (5 日間)」やメトロ運休の「6/12-6/14 (3 日間連続運休)」
+  のように複数日にまたがる場合は、event_start_date と event_end_date の両方を
+  異なる値で埋めること（例: start=2026-05-22, end=2026-05-26）
+- 単日イベント (1 日だけ開催) の場合は event_start_date と event_end_date を
+  必ず同じ値にすること（例: start=2026-05-22, end=2026-05-22）
+- 両方とも YYYY-MM-DD 形式、必須項目。どちらか一方が確定できないイベントは
+  出力に含めず、その項目自体を捨てる
+- 期間が 30 日を超える長期イベントは原則出さない (常設扱いになる)
+
 # 厳守ルール
 
-- 日付が確認できないイベントは event_date を null にせず、その項目自体を出さない
+- 日付 (event_start_date / event_end_date) が両方確認できないイベントは出さない
 - 創作禁止。検索結果に存在しないイベントを書いてはいけない
 - 0 件しか取れなかった場合は { "events": [] } を返す (無理に水増ししない)
 - category は必ず event か transit のどちらか。それ以外は出力しない
@@ -315,22 +335,43 @@ function extractJson(text: string): { events?: AiEvent[] } | null {
  */
 const ACCEPTED_CATEGORIES = ['event', 'transit'] as const;
 
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function pickIsoDate(v: unknown): string | null {
+  return typeof v === 'string' && ISO_DATE_RE.test(v) ? v : null;
+}
+
 function sanitize(e: AiEvent): AiEvent | null {
   if (!e || typeof e !== 'object') return null;
   const title = String(e.title ?? '').trim().slice(0, 140);
   const body = String(e.body ?? '').trim().slice(0, 4000);
   if (!title || !body) return null;
 
-  const eventDate =
-    typeof e.event_date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.event_date)
-      ? e.event_date
-      : null;
-  // event_date_end は任意
-  const eventDateEnd =
-    typeof e.event_date_end === 'string' &&
-    /^\d{4}-\d{2}-\d{2}$/.test(e.event_date_end)
-      ? e.event_date_end
-      : null;
+  // 新フィールドを優先しつつ、旧 event_date / event_date_end も受け付ける
+  const newStart = pickIsoDate(e.event_start_date);
+  const newEnd = pickIsoDate(e.event_end_date);
+  const legacyStart = pickIsoDate(e.event_date);
+  const legacyEnd = pickIsoDate(e.event_date_end);
+
+  // start を確定: 新 > 旧 event_date
+  const startDate = newStart ?? legacyStart;
+  // end を確定: 新 > 旧 event_date_end > (start で fallback)
+  let endDate = newEnd ?? legacyEnd ?? startDate;
+
+  // start が無いイベントは捨てる
+  if (!startDate) return null;
+  if (!endDate) endDate = startDate;
+  // end が start より前なら swap (Claude のミス保険)
+  let finalStart = startDate;
+  let finalEnd = endDate;
+  if (finalEnd < finalStart) {
+    finalStart = endDate;
+    finalEnd = startDate;
+  }
+
+  // 後方互換のため event_date には start を入れておく
+  const eventDate = finalStart;
+  const eventDateEnd = finalEnd;
   const eventLocation =
     typeof e.event_location === 'string' && e.event_location.trim()
       ? e.event_location.trim().slice(0, 140)
@@ -361,6 +402,8 @@ function sanitize(e: AiEvent): AiEvent | null {
     body,
     event_date: eventDate,
     event_date_end: eventDateEnd,
+    event_start_date: finalStart,
+    event_end_date: finalEnd,
     event_location: eventLocation,
     category,
     source_urls: sourceUrls,
@@ -376,7 +419,12 @@ function buildRecentSection(recent: RecentBoardEvent[]): string {
   const lines = recent
     .slice(0, 80)
     .map((r) => {
-      const date = r.eventDate ?? '日付不明';
+      const start = r.eventStartDate ?? r.eventDate;
+      const end = r.eventEndDate ?? r.eventDate;
+      const date =
+        start && end && start !== end
+          ? `${start}〜${end}`
+          : (start ?? end ?? '日付不明');
       const loc = r.eventLocation ?? '場所不明';
       // タイトルだけは原文を尊重しつつ、改行混入を除去
       const title = r.title.replace(/\s+/g, ' ').trim();
@@ -468,15 +516,19 @@ export function dedupAgainstRecent(
       continue;
     }
 
-    // 3. 同日 ± 24h + 同じ場所
-    const cDateMs = c.event_date ? Date.parse(c.event_date) : NaN;
+    // 3. 同じ開始日 ± 24h + 同じ場所
+    //    期間イベントも start_date で比較する。期間延長などの続報は
+    //    別レコードとして残し、UPDATE 運用は将来課題に置く。
+    const cStart = c.event_start_date ?? c.event_date ?? null;
+    const cDateMs = cStart ? Date.parse(cStart) : NaN;
     const cLoc = normalizeTitle(c.event_location ?? '');
     const sameDayAndPlace =
       !Number.isNaN(cDateMs) &&
       cLoc.length > 0 &&
       recent.some((r) => {
-        if (!r.eventDate || !r.eventLocation) return false;
-        const rDateMs = Date.parse(r.eventDate);
+        const rStart = r.eventStartDate ?? r.eventDate ?? null;
+        if (!rStart || !r.eventLocation) return false;
+        const rDateMs = Date.parse(rStart);
         if (Number.isNaN(rDateMs)) return false;
         if (Math.abs(cDateMs - rDateMs) > DAY_MS) return false;
         const rLoc = normalizeTitle(r.eventLocation);

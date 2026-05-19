@@ -112,15 +112,22 @@ async function runCron(req: Request) {
   }
 
   const db = getDb();
-  const inserted = await db
-    .insert(schema.boardPosts)
-    .values(
-      kept.map((e) => ({
+  // sanitize() で start/end は必ず両方埋まる契約。念のため落ちないようガード。
+  const insertValues = kept
+    .map((e) => {
+      const start = e.event_start_date ?? e.event_date ?? null;
+      const end = e.event_end_date ?? start;
+      if (!start || !end) return null;
+      return {
         title: e.title,
         body: e.body,
         category: 'event' as const,
         audience: 'both' as const,
-        eventDate: e.event_date,
+        // 後方互換: eventDate にも start を入れる。新規参照側は
+        // eventStartDate / eventEndDate を見ること。
+        eventDate: start,
+        eventStartDate: start,
+        eventEndDate: end,
         eventLocation: e.event_location,
         sourceUrls: e.source_urls,
         source: 'ai_event' as const,
@@ -128,8 +135,22 @@ async function runCron(req: Request) {
         autoCollected: true,
         authorId: null,
         publishedAt: new Date(),
-      })),
-    )
+      };
+    })
+    .filter(<T>(v: T | null): v is T => v !== null);
+
+  if (insertValues.length === 0) {
+    return NextResponse.json({
+      ok: true,
+      inserted: 0,
+      duplicatesSkipped: dropped.length,
+      reason: 'no-events-with-valid-range',
+    });
+  }
+
+  const inserted = await db
+    .insert(schema.boardPosts)
+    .values(insertValues)
     .returning({ id: schema.boardPosts.id });
 
   return NextResponse.json({

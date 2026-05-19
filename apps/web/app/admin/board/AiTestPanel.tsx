@@ -197,7 +197,12 @@ export function AiTestPanel() {
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <p className="text-[13px] font-semibold">{e.title}</p>
                     <span className="text-[11px] tabular text-foreground/55">
-                      {e.event_date ?? '日付未定'}
+                      {(() => {
+                        const s = e.event_start_date ?? e.event_date ?? null;
+                        const en = e.event_end_date ?? e.event_date ?? null;
+                        if (!s) return '日付未定';
+                        return en && en !== s ? `${s} 〜 ${en}` : s;
+                      })()}
                     </span>
                   </div>
                   {e.event_location ? (

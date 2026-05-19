@@ -27,7 +27,13 @@ const createPostSchema = z.object({
   body: z.string().trim().min(1).max(8000),
   category: z.enum(BOARD_CATEGORIES).optional(),
   audience: z.enum(BOARD_AUDIENCES).optional(),
+  /**
+   * @deprecated 旧フィールド。新規 UI は eventStartDate / eventEndDate を使う。
+   * 互換のため受け付け、start と end が未指定なら両方にコピーする。
+   */
   eventDate: z.string().optional().nullable(),
+  eventStartDate: z.string().optional().nullable(),
+  eventEndDate: z.string().optional().nullable(),
   eventLocation: z.string().trim().max(140).optional().nullable(),
   cityId: z.string().uuid().nullable().optional(),
   sourceUrls: z
@@ -57,6 +63,22 @@ export async function createBoardPost(
     audience = 'resident';
   }
 
+  // start/end の優先順: 明示指定 > 旧 eventDate (start=end にコピー) > null
+  const explicitStart = parsed.data.eventStartDate ?? null;
+  const explicitEnd = parsed.data.eventEndDate ?? null;
+  const legacyDate = parsed.data.eventDate ?? null;
+  let startDate = explicitStart ?? legacyDate;
+  let endDate = explicitEnd ?? legacyDate;
+  // どちらか一方しか無ければ片側にコピー
+  if (startDate && !endDate) endDate = startDate;
+  if (endDate && !startDate) startDate = endDate;
+  // 逆転していたら swap
+  if (startDate && endDate && endDate < startDate) {
+    const tmp = startDate;
+    startDate = endDate;
+    endDate = tmp;
+  }
+
   const inserted = await db
     .insert(schema.boardPosts)
     .values({
@@ -65,7 +87,9 @@ export async function createBoardPost(
       body: parsed.data.body,
       category,
       audience,
-      eventDate: parsed.data.eventDate ?? null,
+      eventDate: startDate,
+      eventStartDate: startDate,
+      eventEndDate: endDate,
       eventLocation: parsed.data.eventLocation ?? null,
       cityId: parsed.data.cityId ?? null,
       sourceUrls: parsed.data.sourceUrls ?? null,

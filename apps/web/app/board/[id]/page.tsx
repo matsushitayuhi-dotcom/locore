@@ -60,19 +60,29 @@ export default async function BoardDetailPage({ params }: Props) {
           {post.title}
         </h1>
 
-        {post.eventDate || post.eventLocation ? (
+        {post.eventStartDate || post.eventDate || post.eventLocation ? (
           <dl className="mt-4 grid grid-cols-1 gap-2 rounded-lg bg-primary-500/10 p-3 text-[12px] sm:grid-cols-2">
-            {post.eventDate ? (
-              <div className="flex items-start gap-2">
-                <Calendar className="mt-0.5 h-3.5 w-3.5 text-primary-300" />
-                <div>
-                  <dt className="font-semibold text-foreground/60">開催日</dt>
-                  <dd className="mt-0.5 font-bold tabular text-primary-300">
-                    {formatEventDate(post.eventDate)}
-                  </dd>
+            {(() => {
+              const start = post.eventStartDate ?? post.eventDate;
+              const end = post.eventEndDate ?? post.eventDate;
+              if (!start) return null;
+              const isRange = !!end && start !== end;
+              return (
+                <div className="flex items-start gap-2">
+                  <Calendar className="mt-0.5 h-3.5 w-3.5 text-primary-300" />
+                  <div>
+                    <dt className="font-semibold text-foreground/60">
+                      {isRange ? '開催期間' : '開催日'}
+                    </dt>
+                    <dd className="mt-0.5 font-bold tabular text-primary-300">
+                      {isRange
+                        ? `${formatEventDate(start)} 〜 ${formatEventDate(end!)}`
+                        : formatEventDate(start)}
+                    </dd>
+                  </div>
                 </div>
-              </div>
-            ) : null}
+              );
+            })()}
             {post.eventLocation ? (
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-3.5 w-3.5 text-primary-300" />

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { and, eq, gte, lte, isNotNull, asc } from 'drizzle-orm';
+import { and, eq, gte, lte, asc, or, sql } from 'drizzle-orm';
 import { ChevronLeft, ChevronRight, MapPin, ExternalLink } from 'lucide-react';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -93,7 +93,10 @@ type CalEvent = {
   title: string;
   body: string;
   category: BoardCategory;
+  /** 後方互換用 (start と同値)。表示には start/end を使う。 */
   eventDate: string;
+  eventStartDate: string;
+  eventEndDate: string;
   eventLocation: string | null;
   sourceUrls: Array<{ name: string; url: string }>;
 };
@@ -106,6 +109,12 @@ async function loadMonthEvents(
   const { fromStr, toStr } = monthBounds(year, month);
   const db = getDb();
   try {
+    // 期間イベントは「表示月と少しでも重なれば」ヒットさせる:
+    //   start <= 月末 AND end >= 月初
+    // 旧データ (start/end が NULL) は eventDate を fallback として使う。
+    const effectiveStart = sql<string>`COALESCE(${schema.boardPosts.eventStartDate}, ${schema.boardPosts.eventDate})`;
+    const effectiveEnd = sql<string>`COALESCE(${schema.boardPosts.eventEndDate}, ${schema.boardPosts.eventDate})`;
+
     const rows = await db
       .select({
         id: schema.boardPosts.id,
@@ -113,6 +122,8 @@ async function loadMonthEvents(
         body: schema.boardPosts.body,
         category: schema.boardPosts.category,
         eventDate: schema.boardPosts.eventDate,
+        eventStartDate: schema.boardPosts.eventStartDate,
+        eventEndDate: schema.boardPosts.eventEndDate,
         eventLocation: schema.boardPosts.eventLocation,
         sourceUrls: schema.boardPosts.sourceUrls,
       })
@@ -120,24 +131,42 @@ async function loadMonthEvents(
       .where(
         and(
           eq(schema.boardPosts.status, 'published'),
-          isNotNull(schema.boardPosts.eventDate),
-          gte(schema.boardPosts.eventDate, fromStr),
-          lte(schema.boardPosts.eventDate, toStr),
+          // 月末以前に開始、かつ月初以降に終了 → 月と重なる
+          or(
+            sql`${effectiveStart} IS NOT NULL`,
+            sql`${effectiveEnd} IS NOT NULL`,
+          ),
+          sql`${effectiveStart} <= ${toStr}`,
+          sql`${effectiveEnd} >= ${fromStr}`,
         ),
       )
-      .orderBy(asc(schema.boardPosts.eventDate));
+      .orderBy(asc(effectiveStart));
 
     return rows
       .filter((r) => (cat.length === 0 ? true : cat.includes(r.category as BoardCategory)))
-      .map((r) => ({
-        id: r.id,
-        title: r.title,
-        body: r.body,
-        category: r.category as BoardCategory,
-        eventDate: String(r.eventDate),
-        eventLocation: r.eventLocation,
-        sourceUrls: (r.sourceUrls as { name: string; url: string }[] | null) ?? [],
-      }));
+      .map((r) => {
+        const start =
+          (r.eventStartDate as string | null) ??
+          (r.eventDate as string | null) ??
+          '';
+        const end =
+          (r.eventEndDate as string | null) ??
+          (r.eventDate as string | null) ??
+          start;
+        return {
+          id: r.id,
+          title: r.title,
+          body: r.body,
+          category: r.category as BoardCategory,
+          eventDate: start,
+          eventStartDate: start,
+          eventEndDate: end || start,
+          eventLocation: r.eventLocation,
+          sourceUrls: (r.sourceUrls as { name: string; url: string }[] | null) ?? [],
+        };
+      })
+      // start_date が確定できないレコードはカレンダーに出さない (壊れたデータ保険)
+      .filter((e) => !!e.eventStartDate);
   } catch (err) {
     console.error('[calendar] loadMonthEvents failed:', err);
     return [];
@@ -170,12 +199,28 @@ export default async function CalendarPage({
   const { year, month, cat, date: selectedDate } = parseSearch(searchParams);
   const events = await loadMonthEvents(year, month, cat);
 
-  // 日付別にバケット化
+  // 日付別にバケット化。期間イベントは start〜end の全日に登場させる。
   const byDay = new Map<string, CalEvent[]>();
+  const { fromStr: monthStart, toStr: monthEnd } = monthBounds(year, month);
   for (const e of events) {
-    const arr = byDay.get(e.eventDate) ?? [];
-    arr.push(e);
-    byDay.set(e.eventDate, arr);
+    const start = e.eventStartDate;
+    const end = e.eventEndDate || e.eventStartDate;
+    if (!start) continue;
+    // 月をはみ出す期間はカレンダー上は今月分のセルだけに入れる
+    const clampedStart = start < monthStart ? monthStart : start;
+    const clampedEnd = end > monthEnd ? monthEnd : end;
+    // 文字列日付を Date 経由でイテレートする。タイムゾーンを UTC で扱って
+    // 1 日ズレを防ぐ。
+    const startMs = Date.parse(clampedStart + 'T00:00:00Z');
+    const endMs = Date.parse(clampedEnd + 'T00:00:00Z');
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) continue;
+    for (let t = startMs; t <= endMs; t += 24 * 60 * 60 * 1000) {
+      const d = new Date(t);
+      const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+      const arr = byDay.get(key) ?? [];
+      arr.push(e);
+      byDay.set(key, arr);
+    }
   }
 
   const prev = shiftMonth(year, month, -1);
@@ -472,7 +517,7 @@ function EventCard({ event, compact }: { event: CalEvent; compact?: boolean }) {
             {BOARD_CATEGORY_LABEL[event.category]}
           </span>
           <span className="text-[11px] tabular text-foreground/55">
-            {formatDateLabel(event.eventDate)}
+            {formatDateRangeLabel(event.eventStartDate, event.eventEndDate)}
           </span>
         </div>
         <p className="mt-1 text-[14px] font-semibold leading-snug">
@@ -517,4 +562,12 @@ function formatDateLabel(dateStr: string): string {
   const d = new Date(parts[0]!, parts[1]! - 1, parts[2]!);
   const weekday = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
   return `${parts[1]}月${parts[2]}日 (${weekday})`;
+}
+
+/**
+ * start と end が同じなら単日表記、違えば「M/D(曜) 〜 M/D(曜)」。
+ */
+function formatDateRangeLabel(start: string, end: string | null | undefined): string {
+  if (!end || start === end) return formatDateLabel(start);
+  return `${formatDateLabel(start)} 〜 ${formatDateLabel(end)}`;
 }

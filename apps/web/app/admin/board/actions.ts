@@ -2,7 +2,7 @@
 
 import 'server-only';
 import { revalidatePath } from 'next/cache';
-import { and, eq, gte, lte } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -120,35 +120,42 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
 
     // --- 重複検出 -------------------------------------------------------
     // Claude 取得結果の日付範囲を求めて、その期間の既存 board_posts を取得。
-    // 同じ event_date + title プレフィクスがあれば skip する。
+    // 同じ event_start_date + title プレフィクスがあれば skip する。
     const dates = events
-      .map((e) => e.event_date)
+      .map((e) => e.event_start_date ?? e.event_date ?? null)
       .filter((d): d is string => !!d)
       .sort();
     const dedupExisting = new Set<string>();
     if (dates.length > 0) {
       const min = dates[0]!;
       const max = dates[dates.length - 1]!;
+      const effectiveStart = sql<string>`COALESCE(${schema.boardPosts.eventStartDate}, ${schema.boardPosts.eventDate})`;
       const existing = await db
         .select({
           title: schema.boardPosts.title,
           eventDate: schema.boardPosts.eventDate,
+          eventStartDate: schema.boardPosts.eventStartDate,
         })
         .from(schema.boardPosts)
         .where(
           and(
             eq(schema.boardPosts.source, 'ai_event'),
-            gte(schema.boardPosts.eventDate, min),
-            lte(schema.boardPosts.eventDate, max),
+            // start_date を優先。旧データ用に event_date でも見る。
+            sql`${effectiveStart} >= ${min}`,
+            sql`${effectiveStart} <= ${max}`,
           ),
         );
       for (const row of existing) {
-        dedupExisting.add(dedupKey(row.eventDate ?? null, row.title));
+        const key = row.eventStartDate ?? row.eventDate ?? null;
+        dedupExisting.add(dedupKey(key, row.title));
       }
     }
 
     const toInsert = events.filter(
-      (e) => !dedupExisting.has(dedupKey(e.event_date, e.title)),
+      (e) =>
+        !dedupExisting.has(
+          dedupKey(e.event_start_date ?? e.event_date ?? null, e.title),
+        ),
     );
     const skipped = events.length - toInsert.length;
 
@@ -163,16 +170,21 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
       };
     }
 
-    const inserted = await db
-      .insert(schema.boardPosts)
-      .values(
-        toInsert.map((e) => ({
+    const insertValues = toInsert
+      .map((e) => {
+        const start = e.event_start_date ?? e.event_date ?? null;
+        const end = e.event_end_date ?? start;
+        if (!start || !end) return null;
+        return {
           title: e.title,
           body: e.body,
           // Claude が振り分けた category をそのまま採用 (event/transit/admin/食材等)
           category: e.category,
           audience: 'both' as const,
-          eventDate: e.event_date,
+          // 後方互換のため event_date にも start を入れる
+          eventDate: start,
+          eventStartDate: start,
+          eventEndDate: end,
           eventLocation: e.event_location,
           sourceUrls: e.source_urls,
           source: 'ai_event' as const,
@@ -180,8 +192,24 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
           autoCollected: true,
           authorId: null,
           publishedAt: new Date(),
-        })),
-      )
+        };
+      })
+      .filter(<T>(v: T | null): v is T => v !== null);
+
+    if (insertValues.length === 0) {
+      return {
+        ok: true,
+        inserted: 0,
+        skipped: skipped + toInsert.length,
+        ids: [],
+        events,
+        durationMs: Date.now() - start,
+      };
+    }
+
+    const inserted = await db
+      .insert(schema.boardPosts)
+      .values(insertValues)
       .returning({ id: schema.boardPosts.id });
 
     // 掲示板を出している場所をすべて再生成

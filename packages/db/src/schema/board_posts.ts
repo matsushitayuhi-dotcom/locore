@@ -42,7 +42,16 @@ export const boardPosts = pgTable(
      * 旅行者向けタグは event カテゴリにだけ付与される想定。
      */
     audience: text('audience').notNull().default('both'),
+    /**
+     * @deprecated 後方互換のため残置。新規挿入では event_start_date /
+     * event_end_date を使うこと。manual/0047_board_posts_event_range.sql で
+     * 旧 event_date を start/end に複製済み。
+     */
     eventDate: date('event_date'),
+    /** 期間開始日 (single-day なら end と同値)。manual/0047 で追加。 */
+    eventStartDate: date('event_start_date'),
+    /** 期間終了日 (single-day なら start と同値)。manual/0047 で追加。 */
+    eventEndDate: date('event_end_date'),
     eventLocation: text('event_location'),
     sourceUrls: jsonb('source_urls').$type<Array<{ name: string; url: string }>>(),
     status: text('status').notNull().default('published'),
@@ -57,6 +66,10 @@ export const boardPosts = pgTable(
     statusIdx: index('board_posts_status_idx').on(table.status),
     publishedAtIdx: index('board_posts_published_at_idx').on(table.publishedAt),
     eventDateIdx: index('board_posts_event_date_idx').on(table.eventDate),
+    eventRangeIdx: index('board_posts_event_range_idx').on(
+      table.eventStartDate,
+      table.eventEndDate,
+    ),
     categoryIdx: index('board_posts_category_idx').on(table.category),
     audienceIdx: index('board_posts_audience_idx').on(table.audience),
   }),

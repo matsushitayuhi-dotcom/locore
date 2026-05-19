@@ -32,6 +32,8 @@ export default async function AdminBoardPage() {
       source: schema.boardPosts.source,
       status: schema.boardPosts.status,
       eventDate: schema.boardPosts.eventDate,
+      eventStartDate: schema.boardPosts.eventStartDate,
+      eventEndDate: schema.boardPosts.eventEndDate,
       eventLocation: schema.boardPosts.eventLocation,
       autoCollected: schema.boardPosts.autoCollected,
       publishedAt: schema.boardPosts.publishedAt,
@@ -96,11 +98,18 @@ export default async function AdminBoardPage() {
                   <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-foreground/55">
                     <StatusBadge status={p.status} />
                     <SourceBadge source={p.source} />
-                    {p.eventDate ? (
-                      <span className="tabular text-primary-300">
-                        開催 {String(p.eventDate)}
-                      </span>
-                    ) : null}
+                    {(() => {
+                      const start = p.eventStartDate ?? p.eventDate ?? null;
+                      const end = p.eventEndDate ?? p.eventDate ?? null;
+                      if (!start) return null;
+                      const label =
+                        end && end !== start ? `${start} 〜 ${end}` : String(start);
+                      return (
+                        <span className="tabular text-primary-300">
+                          開催 {label}
+                        </span>
+                      );
+                    })()}
                     {p.eventLocation ? (
                       <span className="inline-flex items-center gap-0.5">
                         <MapPin className="h-2.5 w-2.5" />

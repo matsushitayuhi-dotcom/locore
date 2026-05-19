@@ -212,11 +212,17 @@ export default async function BoardIndexPage({ searchParams }: Props) {
                         {p.title}
                       </h2>
                       <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground/60">
-                        {p.eventDate ? (
-                          <span className="rounded-full bg-primary-500/10 px-2 py-0.5 tabular font-semibold text-primary-300">
-                            開催 {formatEventDate(p.eventDate)}
-                          </span>
-                        ) : null}
+                        {(() => {
+                          const range = formatEventRange(
+                            p.eventStartDate ?? p.eventDate,
+                            p.eventEndDate ?? p.eventDate,
+                          );
+                          return range ? (
+                            <span className="rounded-full bg-primary-500/10 px-2 py-0.5 tabular font-semibold text-primary-300">
+                              開催 {range}
+                            </span>
+                          ) : null;
+                        })()}
                         {p.eventLocation ? (
                           <span className="inline-flex items-center gap-0.5">
                             <MapPin className="h-3 w-3" />
@@ -247,7 +253,19 @@ export default async function BoardIndexPage({ searchParams }: Props) {
 function formatEventDate(d: string) {
   const date = new Date(d.length === 10 ? d + 'T00:00:00Z' : d);
   if (isNaN(date.getTime())) return d;
-  return `${date.getMonth() + 1}/${date.getDate()}`;
+  return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
+}
+
+/**
+ * 期間表示: 単日なら「M/D」、複数日なら「M/D-M/D」。
+ */
+function formatEventRange(
+  start: string | null,
+  end: string | null,
+): string | null {
+  if (!start) return null;
+  if (!end || start === end) return formatEventDate(start);
+  return `${formatEventDate(start)}-${formatEventDate(end)}`;
 }
 
 function formatPublishedAt(d: string) {

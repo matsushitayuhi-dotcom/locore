@@ -14,7 +14,15 @@ export type BoardPostListItem = {
   source: 'manual' | 'ai_event' | 'ai_news' | string;
   category: BoardCategory | string;
   audience: BoardAudience | string;
+  /**
+   * @deprecated 旧データ用フォールバック。表示には eventStartDate /
+   * eventEndDate を使う。新規挿入では start と同値が入る。
+   */
   eventDate: string | null;
+  /** 期間開始日 (single-day なら end と同値)。manual/0047 で追加。 */
+  eventStartDate: string | null;
+  /** 期間終了日 (single-day なら start と同値)。manual/0047 で追加。 */
+  eventEndDate: string | null;
   eventLocation: string | null;
   autoCollected: boolean;
   publishedAt: string;
@@ -74,6 +82,8 @@ export async function listBoardPosts(
         category: schema.boardPosts.category,
         audience: schema.boardPosts.audience,
         eventDate: schema.boardPosts.eventDate,
+        eventStartDate: schema.boardPosts.eventStartDate,
+        eventEndDate: schema.boardPosts.eventEndDate,
         eventLocation: schema.boardPosts.eventLocation,
         autoCollected: schema.boardPosts.autoCollected,
         publishedAt: schema.boardPosts.publishedAt,
@@ -83,18 +93,24 @@ export async function listBoardPosts(
       .where(and(...filters))
       .orderBy(desc(schema.boardPosts.publishedAt))
       .limit(limit);
-    return rows.map((r) => ({
-      id: r.id,
-      title: r.title,
-      source: r.source,
-      category: r.category,
-      audience: r.audience,
-      eventDate: r.eventDate ?? null,
-      eventLocation: r.eventLocation,
-      autoCollected: r.autoCollected,
-      publishedAt: (r.publishedAt ?? new Date()).toISOString(),
-      authorId: r.authorId,
-    }));
+    return rows.map((r) => {
+      const start = r.eventStartDate ?? r.eventDate ?? null;
+      const end = r.eventEndDate ?? r.eventDate ?? null;
+      return {
+        id: r.id,
+        title: r.title,
+        source: r.source,
+        category: r.category,
+        audience: r.audience,
+        eventDate: r.eventDate ?? start,
+        eventStartDate: start,
+        eventEndDate: end,
+        eventLocation: r.eventLocation,
+        autoCollected: r.autoCollected,
+        publishedAt: (r.publishedAt ?? new Date()).toISOString(),
+        authorId: r.authorId,
+      };
+    });
   } catch {
     return [];
   }
@@ -115,6 +131,8 @@ export async function getBoardPost(id: string): Promise<BoardPostDetail | null> 
         category: schema.boardPosts.category,
         audience: schema.boardPosts.audience,
         eventDate: schema.boardPosts.eventDate,
+        eventStartDate: schema.boardPosts.eventStartDate,
+        eventEndDate: schema.boardPosts.eventEndDate,
         eventLocation: schema.boardPosts.eventLocation,
         autoCollected: schema.boardPosts.autoCollected,
         publishedAt: schema.boardPosts.publishedAt,
@@ -132,6 +150,8 @@ export async function getBoardPost(id: string): Promise<BoardPostDetail | null> 
       .limit(1);
     const r = rows[0];
     if (!r) return null;
+    const start = r.eventStartDate ?? r.eventDate ?? null;
+    const end = r.eventEndDate ?? r.eventDate ?? null;
     return {
       id: r.id,
       title: r.title,
@@ -139,7 +159,9 @@ export async function getBoardPost(id: string): Promise<BoardPostDetail | null> 
       source: r.source,
       category: r.category,
       audience: r.audience,
-      eventDate: r.eventDate ?? null,
+      eventDate: r.eventDate ?? start,
+      eventStartDate: start,
+      eventEndDate: end,
       eventLocation: r.eventLocation,
       autoCollected: r.autoCollected,
       publishedAt: (r.publishedAt ?? new Date()).toISOString(),

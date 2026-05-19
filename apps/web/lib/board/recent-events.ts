@@ -14,7 +14,10 @@ import { getDb } from '@/lib/db/client';
  */
 export type RecentBoardEvent = {
   title: string;
+  /** 後方互換用。基本的には eventStartDate と同値。 */
   eventDate: string | null;
+  eventStartDate: string | null;
+  eventEndDate: string | null;
   eventLocation: string | null;
   status: string;
 };
@@ -40,6 +43,8 @@ export async function getRecentBoardEvents(
       .select({
         title: schema.boardPosts.title,
         eventDate: schema.boardPosts.eventDate,
+        eventStartDate: schema.boardPosts.eventStartDate,
+        eventEndDate: schema.boardPosts.eventEndDate,
         eventLocation: schema.boardPosts.eventLocation,
         status: schema.boardPosts.status,
       })
@@ -50,14 +55,23 @@ export async function getRecentBoardEvents(
           sql`${schema.boardPosts.status} = 'published'`,
         ),
       )
-      .orderBy(sql`${schema.boardPosts.eventDate} DESC NULLS LAST`)
+      .orderBy(
+        sql`COALESCE(${schema.boardPosts.eventStartDate}, ${schema.boardPosts.eventDate}) DESC NULLS LAST`,
+      )
       .limit(80);
-    return rows.map((r) => ({
-      title: r.title,
-      eventDate: r.eventDate ?? null,
-      eventLocation: r.eventLocation ?? null,
-      status: r.status,
-    }));
+    return rows.map((r) => {
+      // event_date は旧データ用フォールバック。新規は eventStartDate を優先。
+      const start = r.eventStartDate ?? r.eventDate ?? null;
+      const end = r.eventEndDate ?? r.eventDate ?? null;
+      return {
+        title: r.title,
+        eventDate: start,
+        eventStartDate: start,
+        eventEndDate: end,
+        eventLocation: r.eventLocation ?? null,
+        status: r.status,
+      };
+    });
   } catch (err) {
     console.warn('[getRecentBoardEvents] failed:', err);
     return [];
