@@ -435,13 +435,14 @@
  * --------------------------------------------------------------------------
  */
 .prose-locore--editorial {
-  font-size: 17px;
+  /* モバイル基準を 15px に。720px 以上で 17px に持ち上げて雑誌感を取り戻す。 */
+  font-size: 15px;
 }
 
 .prose-locore--editorial p {
-  font-size: 17px;
-  line-height: 1.95;
-  margin-bottom: 1.6em;
+  font-size: 15px;
+  line-height: 1.85;
+  margin-bottom: 1.4em;
   color: var(--color-neutral-800);
   letter-spacing: 0.005em;
 }
@@ -452,19 +453,20 @@
   > p:first-of-type,
 .prose-locore--editorial:not(.prose-locore--continuation)
   > :first-child:not(h1):not(h2):not(h3) + p {
-  font-size: 20px;
+  font-size: 17px;
   line-height: 1.7;
   color: var(--color-neutral-900);
-  margin-bottom: 1.4em;
+  margin-bottom: 1.3em;
 }
 
 /* Drop cap: 第 1 段落の 1 文字目だけ大きく落とす。
    日本語ファースト文字でも崩れにくいよう、line-height と margin で微調整。
-   有料パートには付けない (--continuation で無効化)。 */
+   有料パートには付けない (--continuation で無効化)。
+   モバイルは少しサイズを抑える (3.6em)。 */
 .prose-locore--editorial:not(.prose-locore--continuation)
   > p:first-of-type::first-letter {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 4.2em;
+  font-size: 3.6em;
   float: left;
   line-height: 0.85;
   margin: 0.08em 0.1em -0.08em 0;
@@ -474,20 +476,54 @@
 
 /* 見出し (やや抑えめの編集タイポ) */
 .prose-locore--editorial h2 {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  margin-top: 2.4em;
-  margin-bottom: 0.6em;
+  margin-top: 2.2em;
+  margin-bottom: 0.5em;
   letter-spacing: -0.015em;
   line-height: 1.3;
 }
 
 .prose-locore--editorial h3 {
-  font-size: 19px;
+  font-size: 17px;
   font-weight: 600;
-  margin-top: 1.8em;
-  margin-bottom: 0.5em;
+  margin-top: 1.6em;
+  margin-bottom: 0.4em;
   line-height: 1.35;
+}
+
+/* タブレット以上 (720px+) で雑誌寄りのスケールに戻す */
+@media (min-width: 720px) {
+  .prose-locore--editorial {
+    font-size: 17px;
+  }
+  .prose-locore--editorial p {
+    font-size: 17px;
+    line-height: 1.95;
+    margin-bottom: 1.6em;
+  }
+  .prose-locore--editorial:not(.prose-locore--continuation)
+    > p:first-of-type,
+  .prose-locore--editorial:not(.prose-locore--continuation)
+    > :first-child:not(h1):not(h2):not(h3) + p {
+    font-size: 20px;
+    line-height: 1.7;
+    margin-bottom: 1.4em;
+  }
+  .prose-locore--editorial:not(.prose-locore--continuation)
+    > p:first-of-type::first-letter {
+    font-size: 4.2em;
+  }
+  .prose-locore--editorial h2 {
+    font-size: 26px;
+    margin-top: 2.4em;
+    margin-bottom: 0.6em;
+  }
+  .prose-locore--editorial h3 {
+    font-size: 19px;
+    margin-top: 1.8em;
+    margin-bottom: 0.5em;
+  }
 }
 
 /* プルクオート (引用ブロック)。border-left をやめて、上下罫線 + 引用記号で目立たせる。

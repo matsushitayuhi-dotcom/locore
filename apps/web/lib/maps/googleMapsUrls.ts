@@ -61,9 +61,8 @@ export function buildSpotGoogleMapsUrl(opts: {
   );
 }
 
-/** Directions URL の 1 stop を Maps が解釈できる文字列にする */
-function stopToParam(stop: DirStop): string | null {
-  if (stop.placeId) return `place_id:${stop.placeId}`;
+/** 1 stop を `lat,lng` で表現する。座標が無いものは null */
+function stopToLatLng(stop: DirStop): string | null {
   if (
     typeof stop.lat === 'number' &&
     typeof stop.lng === 'number' &&
@@ -81,26 +80,48 @@ function stopToParam(stop: DirStop): string | null {
  *
  * stop 数が 0 / 1 のときは null を返す（ルートが描けないため）。
  *
- * waypoints は Google Maps の制約により最大 9 個まで（URL API の上限は不明だが
- * 実用上はこれで足りる）。
+ * URL 仕様 (Google Maps URLs):
+ *   - origin / destination / waypoints は **lat,lng のテキスト** で渡すのが最も確実。
+ *     `place_id:XXX` を埋め込むフォーマットは Maps が解釈に失敗するケースがあった
+ *     (2026-05 検証: 「ルートを開く」が無効リンク扱いになる) ので、座標を主軸にする。
+ *   - place_id は補助パラメータで重ねる:
+ *       * 出発: origin_place_id
+ *       * 到着: destination_place_id
+ *       * 経由: waypoint_place_ids = "id1|id2|..." (全 waypoint の place_id を順番通り、
+ *               欠けている場合は当該位置を空文字にしてプレースホルダにする)
+ *   - waypoints は実用上 9 個まで。
  */
 export function buildItineraryDirectionsUrl(
   stops: DirStop[],
   travelMode: DirTravelMode = 'walking',
 ): string | null {
-  const params = stops.map(stopToParam).filter((s): s is string => Boolean(s));
-  if (params.length < 2) return null;
-  const origin = params[0]!;
-  const destination = params[params.length - 1]!;
-  const waypoints = params.slice(1, -1);
+  const valid = stops.filter((s) => stopToLatLng(s) !== null);
+  if (valid.length < 2) return null;
+
+  const latlngs = valid.map((s) => stopToLatLng(s)!);
+  const origin = latlngs[0]!;
+  const destination = latlngs[latlngs.length - 1]!;
+  const waypoints = latlngs.slice(1, -1);
+
+  const originPlaceId = valid[0]?.placeId ?? null;
+  const destinationPlaceId = valid[valid.length - 1]?.placeId ?? null;
+  const waypointPlaceIds = valid
+    .slice(1, -1)
+    .map((s) => s.placeId ?? '');
 
   const usp = new URLSearchParams();
   usp.set('api', '1');
   usp.set('origin', origin);
+  if (originPlaceId) usp.set('origin_place_id', originPlaceId);
   usp.set('destination', destination);
+  if (destinationPlaceId) usp.set('destination_place_id', destinationPlaceId);
   if (waypoints.length > 0) {
     // URLSearchParams は "|" を %7C にエンコードするが Maps はどちらも解釈する
     usp.set('waypoints', waypoints.join('|'));
+    // 1 つでも place_id があれば waypoint_place_ids を付ける (空欄はスキップとして扱われる)
+    if (waypointPlaceIds.some((id) => id !== '')) {
+      usp.set('waypoint_place_ids', waypointPlaceIds.join('|'));
+    }
   }
   usp.set('travelmode', travelMode);
   return `https://www.google.com/maps/dir/?${usp.toString()}`;

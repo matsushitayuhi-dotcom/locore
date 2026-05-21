@@ -94,50 +94,120 @@ function makeNumberedPinSvg(color: string, label: number): string {
 }
 
 /**
- * 円形写真マーカー。Google Maps の `Marker.icon` は data URL しか受けないため、
- * 写真は `<image>` で SVG に埋め込み、`clipPath` で丸く切り抜く。
- * 白枠 + 内側ライトリングで地図上でも視認性を確保する。
+ * 円形写真マーカーを `<canvas>` で合成して PNG data URL を返す。
  *
- * `label` が与えられた場合は右下に小さな番号バッジを描く（旅程記事向け）。
+ * 設計メモ:
+ *  - 以前は SVG 内の `<image href="...">` で外部画像を読み込んでいたが、
+ *    SVG が `Marker.icon.url` の data URI として使われると **画像が
+ *    sandbox 扱いになり外部リソース (https://lh3.googleusercontent.com/...) が
+ *    読み込まれない** 既知の制約があった。結果として地図ピンが「白い丸」のままに
+ *    なってしまっていたため、ここでは canvas 経由でラスタライズする方式に切替。
+ *  - 画像は CORS を付けて読み込む。Google Places のフォト URL は CORS allow を
+ *    返すので `toDataURL()` で taint されず data URL 化できる。
+ *  - 読み込み失敗 / 5 秒タイムアウト時は null を返し、呼び出し側でフォールバック
+ *    （番号付き or プレーンピン）に切り替えてもらう。
  *
- * SIZE=52 で実物は 52x52、anchor は中央に設定する想定。
+ * SIZE=52、anchor は中央に設定する前提。
  */
-function makePhotoMarkerSvg(opts: {
+function makePhotoMarkerPng(opts: {
   photoUrl: string;
   borderColor: string;
   label?: number;
-}): string {
+}): Promise<string | null> {
   const { photoUrl, borderColor, label } = opts;
-  // photoUrl は & 等を含む可能性があるため XML エスケープ
-  const safeUrl = photoUrl
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-  const badge =
-    typeof label === 'number'
-      ? `<circle cx="42" cy="42" r="9" fill="${borderColor}" stroke="white" stroke-width="1.5"/>` +
-        `<text x="42" y="45.5" text-anchor="middle" ` +
-        `font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" fill="white">${label}</text>`
-      : '';
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 52 52">` +
-    `<defs>` +
-    `<clipPath id="c"><circle cx="26" cy="26" r="22"/></clipPath>` +
-    `<filter id="s" x="-20%" y="-20%" width="140%" height="140%">` +
-    `<feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-opacity="0.35"/>` +
-    `</filter>` +
-    `</defs>` +
-    // 影付きの白い土台（外枠）
-    `<circle cx="26" cy="26" r="24" fill="white" filter="url(#s)"/>` +
-    // 写真本体（円形クリップ）
-    `<image href="${safeUrl}" x="4" y="4" width="44" height="44" ` +
-    `preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>` +
-    // 上から薄いブランド色のリングを重ねて統一感を出す
-    `<circle cx="26" cy="26" r="22" fill="none" stroke="${borderColor}" stroke-width="2"/>` +
-    badge +
-    `</svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve(null);
+      return;
+    }
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    let settled = false;
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      resolve(null);
+    };
+    const timer = window.setTimeout(fail, 5000);
+    img.onerror = () => {
+      window.clearTimeout(timer);
+      fail();
+    };
+    img.onload = () => {
+      window.clearTimeout(timer);
+      if (settled) return;
+      try {
+        const canvas = document.createElement('canvas');
+        const SIZE = 52;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = SIZE * dpr;
+        canvas.height = SIZE * dpr;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          fail();
+          return;
+        }
+        ctx.scale(dpr, dpr);
+
+        // ドロップシャドウ付きの白い土台
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowBlur = 2.4;
+        ctx.shadowOffsetY = 1;
+        ctx.beginPath();
+        ctx.arc(26, 26, 24, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.restore();
+
+        // 円形クリップで写真を描画 (cover フィット)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(26, 26, 22, 0, Math.PI * 2);
+        ctx.clip();
+        const ar = img.width / img.height;
+        let drawW = 44;
+        let drawH = 44;
+        if (ar > 1) drawW = 44 * ar;
+        else if (ar < 1) drawH = 44 / ar;
+        const dx = 26 - drawW / 2;
+        const dy = 26 - drawH / 2;
+        ctx.drawImage(img, dx, dy, drawW, drawH);
+        ctx.restore();
+
+        // ブランド色リング
+        ctx.beginPath();
+        ctx.arc(26, 26, 22, 0, Math.PI * 2);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = borderColor;
+        ctx.stroke();
+
+        // 番号バッジ
+        if (typeof label === 'number') {
+          ctx.beginPath();
+          ctx.arc(42, 42, 9, 0, Math.PI * 2);
+          ctx.fillStyle = borderColor;
+          ctx.fill();
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 11px Arial, Helvetica, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(String(label), 42, 42.5);
+        }
+
+        const url = canvas.toDataURL('image/png');
+        settled = true;
+        resolve(url);
+      } catch {
+        // toDataURL が SecurityError (taint) を投げた場合など
+        fail();
+      }
+    };
+    img.src = photoUrl;
+  });
 }
 
 /** 移動手段アイコン（白丸 + Material Icons 風シルエット）*/
@@ -218,39 +288,52 @@ function MarkersLayer({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const G = (window as any).google?.maps;
     if (!G) return;
+
+    let cancelled = false;
+    // 各 point の最初のフォールバック (写真がまだ読めてない / 失敗時用) を即時に描画
     const markersAndListeners = points.map((p) => {
-      const hasPhoto = !!p.photoUrl;
-      let url: string;
-      let size: number;
-      if (hasPhoto) {
-        url = makePhotoMarkerSvg({
-          photoUrl: p.photoUrl!,
-          borderColor: PIN_COLOR,
-          label: numbered && typeof p.label === 'number' ? p.label : undefined,
-        });
-        size = 52;
-      } else if (numbered && typeof p.label === 'number') {
-        url = makeNumberedPinSvg(PIN_COLOR, p.label);
-        size = 32;
-      } else {
-        url = makePlainPinSvg(PIN_COLOR);
-        size = 28;
-      }
+      const numberedLabel =
+        numbered && typeof p.label === 'number' ? p.label : undefined;
+      const fallbackUrl =
+        typeof numberedLabel === 'number'
+          ? makeNumberedPinSvg(PIN_COLOR, numberedLabel)
+          : makePlainPinSvg(PIN_COLOR);
+      const fallbackSize = typeof numberedLabel === 'number' ? 32 : 28;
       const m = new G.Marker({
         position: { lat: p.spot.lat, lng: p.spot.lng },
         map,
-        title: numbered && p.label ? `${p.label}. ${p.spot.name}` : p.spot.name,
+        title:
+          numbered && p.label ? `${p.label}. ${p.spot.name}` : p.spot.name,
         icon: {
-          url,
-          scaledSize: new G.Size(size, size),
-          anchor: new G.Point(size / 2, size / 2),
+          url: fallbackUrl,
+          scaledSize: new G.Size(fallbackSize, fallbackSize),
+          anchor: new G.Point(fallbackSize / 2, fallbackSize / 2),
         },
-        zIndex: hasPhoto ? 3 : 2,
+        zIndex: 2,
       });
       const listener = m.addListener('click', () => onPointClick(p));
+
+      // 写真がある場合のみ非同期で canvas に合成して上書き
+      if (p.photoUrl) {
+        makePhotoMarkerPng({
+          photoUrl: p.photoUrl,
+          borderColor: PIN_COLOR,
+          label: numberedLabel,
+        }).then((url) => {
+          if (cancelled || !url) return;
+          m.setIcon({
+            url,
+            scaledSize: new G.Size(52, 52),
+            anchor: new G.Point(26, 26),
+          });
+          m.setZIndex(3);
+        });
+      }
+
       return { m, listener };
     });
     return () => {
+      cancelled = true;
       markersAndListeners.forEach(({ m, listener }) => {
         listener.remove?.();
         m.setMap(null);

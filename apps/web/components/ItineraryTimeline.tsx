@@ -13,7 +13,7 @@ import {
   ArrowDown,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { ArticleItineraryBlock, Spot } from '../lib/mock';
+import type { ArticleItineraryBlock, PhotoEntry, Spot } from '../lib/mock';
 import { Purchases } from '../lib/storage/local';
 
 type TransportKey =
@@ -61,6 +61,14 @@ type Props = {
   spots: Spot[];
   /** サーバ側で判定済みの購入状態（DB の purchases 由来）。未ログインなら false */
   defaultUnlocked: boolean;
+  /**
+   * 写真フォールバック。`spot.photoUrls[0]` (Google Places 由来) が
+   * 空の場合に、ライターがアップした写真エントリ (`spotId` 指定あり) を
+   * 使ってカード写真を埋める。
+   */
+  photoEntries?: PhotoEntry[] | null;
+  /** 写真がまったく無いときの最終フォールバック (記事のカバー画像) */
+  fallbackCoverImageUrl?: string | null;
 };
 
 /**
@@ -80,6 +88,8 @@ export function ItineraryTimeline({
   blocks,
   spots,
   defaultUnlocked,
+  photoEntries,
+  fallbackCoverImageUrl,
 }: Props) {
   const [unlocked, setUnlocked] = useState(defaultUnlocked);
   useEffect(() => {
@@ -88,6 +98,20 @@ export function ItineraryTimeline({
   }, [articleId, defaultUnlocked]);
 
   const spotsById = new Map(spots.map((s) => [s.id, s]));
+
+  // spotId → ライター由来の写真 URL マップ。
+  // photoEntries は spotId 指定がある順に走査して最初の 1 件を採用。
+  const writerPhotoBySpot = new Map<string, string>();
+  for (const e of photoEntries ?? []) {
+    if (!e.spotId) continue;
+    if (!writerPhotoBySpot.has(e.spotId) && e.imageUrl) {
+      writerPhotoBySpot.set(e.spotId, e.imageUrl);
+    }
+  }
+  // spotId に紐付かない写真エントリは、写真の無いカードの最終フォールバック用。
+  const orphanPhotos = (photoEntries ?? [])
+    .filter((e) => !e.spotId && e.imageUrl)
+    .map((e) => e.imageUrl);
 
   if (blocks.length === 0) return null;
 
@@ -110,7 +134,11 @@ export function ItineraryTimeline({
       </div>
 
       <ol className="relative">
-        {blocks.map((b, idx) => {
+        {/* IIFE で `let orphanIdx` を抱えて、spotId に紐付かない写真を
+            上から順にカードへ割り当てる。 */}
+        {(() => {
+          let orphanIdx = 0;
+          return blocks.map((b, idx) => {
           const isLast = idx === blocks.length - 1;
           const spot = b.spotId ? spotsById.get(b.spotId) : undefined;
           const isFreeBlock = !spot;
@@ -118,7 +146,24 @@ export function ItineraryTimeline({
             ? (spot?.name ?? b.freeName ?? 'スポット未設定')
             : '★★★★★★★';
           const address = spot?.address;
-          const photo = spot?.photoUrls?.[0];
+          // 写真フォールバック順:
+          //   1. spot.photoUrls[0] (Google Places autocomplete 由来)
+          //   2. photoEntries で spotId が一致する写真 (ライターアップ)
+          //   3. spotId に紐付かない photoEntries を idx 順に消費
+          //   4. それも無ければ最終手段で記事カバー画像
+          let photo: string | null = spot?.photoUrls?.[0] ?? null;
+          if (!photo && spot) {
+            photo = writerPhotoBySpot.get(spot.id) ?? null;
+          }
+          if (!photo && orphanPhotos[orphanIdx]) {
+            photo = orphanPhotos[orphanIdx] ?? null;
+            orphanIdx += 1;
+          }
+          // 最終フォールバックは最初のカードに限定。全カードに同じカバー画像が
+          // 並ぶと違和感が大きいので、2 枚目以降は「写真なし」プレースホルダのまま。
+          if (!photo && idx === 0 && fallbackCoverImageUrl) {
+            photo = fallbackCoverImageUrl;
+          }
 
           const transportKey = (b.transportToNext ?? null) as TransportKey | null;
           const TransportIcon = transportKey
@@ -264,7 +309,8 @@ export function ItineraryTimeline({
               ) : null}
             </li>
           );
-        })}
+          });
+        })()}
       </ol>
 
       {/* 末尾に控えめな解放 CTA */}

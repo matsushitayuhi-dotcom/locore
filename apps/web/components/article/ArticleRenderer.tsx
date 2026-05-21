@@ -172,6 +172,8 @@ export function ArticleRenderer({
               blocks={article.itineraryBlocks}
               spots={spots}
               defaultUnlocked={unlocked}
+              photoEntries={article.photoEntries ?? null}
+              fallbackCoverImageUrl={article.coverImageUrl}
             />
           ) : null}
 

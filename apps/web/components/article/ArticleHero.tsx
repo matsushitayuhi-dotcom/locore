@@ -154,7 +154,7 @@ export function ArticleHero({
           </span>
         </div>
 
-        <h1 className="article-hero-title mt-4 text-[34px] font-bold leading-[1.1] tracking-tight text-foreground sm:text-[48px] md:text-[56px]">
+        <h1 className="article-hero-title mt-4 text-[26px] font-bold leading-[1.15] tracking-tight text-foreground sm:text-[40px] md:text-[52px]">
           {article.title}
         </h1>
 
