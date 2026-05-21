@@ -3,7 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { CountryGridByContinent } from '@/components/CountryGridByContinent';
 import { listCountriesForPicker } from '@/lib/geo/countries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export const metadata = {
   title: 'Locore — その街に、暮らしている人から',

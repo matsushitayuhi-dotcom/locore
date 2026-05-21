@@ -10,7 +10,7 @@ export const metadata = {
   title: 'マップ — Locore',
 };
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export default async function MapPage() {
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;

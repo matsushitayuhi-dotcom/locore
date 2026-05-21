@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArrowLeft, PenSquare } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: 'サービス概要 — Locore',

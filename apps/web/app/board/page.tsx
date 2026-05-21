@@ -8,7 +8,7 @@ import {
   type BoardAudience,
 } from '@/lib/board/constants';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export const metadata = {
   title: 'パリ・新着ニュース',

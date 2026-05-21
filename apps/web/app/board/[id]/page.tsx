@@ -4,7 +4,7 @@ import { Sparkles, MapPin, Calendar, ArrowLeft, ExternalLink } from 'lucide-reac
 import { getBoardPost } from '@/lib/board/db';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 type Props = { params: { id: string } };
 

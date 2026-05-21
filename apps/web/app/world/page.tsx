@@ -3,7 +3,7 @@ import { ArrowLeft, Sparkles } from 'lucide-react';
 import { WorldPicker } from '@/components/WorldPicker';
 import { listCountriesForPicker } from '@/lib/geo/countries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: '世界の国一覧 — Locore',

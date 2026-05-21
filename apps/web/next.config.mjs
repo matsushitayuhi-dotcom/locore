@@ -13,6 +13,16 @@ const nextConfig = {
     '@locore/ui',
   ],
 
+  // 本番 build で console.* を除去 (error / warn は残す)。
+  // Vercel の Observability Events (= Runtime Logs 自動収集) を大幅削減し、
+  // 月課金 (Observability Events 3.68M で $4.41) を圧縮するため。
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? { exclude: ['error', 'warn'] }
+        : false,
+  },
+
   experimental: {
     typedRoutes: false,
   },

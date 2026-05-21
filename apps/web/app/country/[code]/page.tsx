@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Lock, MapPin, Sparkles } from 'lucide-react';
 import { getCountryByCode } from '@/lib/geo/countries';
 import type { RegionInfo } from '@/lib/geo/countries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 type Props = { params: { code: string } };
 

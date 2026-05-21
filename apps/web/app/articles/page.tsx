@@ -5,7 +5,7 @@ import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getRegionBySlug } from '@/lib/geo/countries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 type Props = {
   searchParams?: { type?: string; region?: string };

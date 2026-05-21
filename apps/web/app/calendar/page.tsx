@@ -24,7 +24,7 @@ import {
  */
 
 export const metadata = { title: 'イベントカレンダー — Locore' };
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 type Search = {
   y?: string;
