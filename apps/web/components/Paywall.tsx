@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button, PriceTag } from '@locore/ui';
@@ -118,12 +119,18 @@ export function Paywall({
 
       <SpotsCardList spots={spots} locked />
 
-      {open ? (
+      {open && typeof document !== 'undefined'
+        ? createPortal(
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-neutral-900/40 px-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-neutral-900/40 px-4"
           role="dialog"
           aria-modal="true"
           onClick={() => setOpen(false)}
+          style={{
+            // iOS のホームバーに被らないよう safe-area 分の余白
+            paddingBottom:
+              'max(env(safe-area-inset-bottom), 1rem)',
+          }}
         >
           <div
             className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-md"
@@ -165,8 +172,10 @@ export function Paywall({
               </Button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

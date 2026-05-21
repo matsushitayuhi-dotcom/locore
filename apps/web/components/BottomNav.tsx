@@ -22,9 +22,9 @@ type Tab = {
   match: (pathname: string) => boolean;
 };
 
-const TABS: Tab[] = [
+const makeTabs = (homeHref: '/explore' | '/expat'): Tab[] => [
   {
-    href: '/explore',
+    href: homeHref,
     label: 'ホーム',
     icon: Compass,
     match: (p) =>
@@ -76,9 +76,18 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => p === '/',
 ];
 
-export function BottomNav({ unreadChatCount = 0 }: { unreadChatCount?: number } = {}) {
+export function BottomNav({
+  unreadChatCount = 0,
+  homeHref = '/explore',
+}: {
+  unreadChatCount?: number;
+  /** 駐在員モードなら /expat、旅行者モード（未選択含む）なら /explore */
+  homeHref?: '/explore' | '/expat';
+} = {}) {
   const pathname = usePathname() ?? '/';
   if (HIDE_ON_ROUTES.some((fn) => fn(pathname))) return null;
+
+  const TABS = makeTabs(homeHref);
 
   return (
     <nav

@@ -3,6 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import { FeedFilters } from '@/components/FeedFilters';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
+import { getRegionBySlug } from '@/lib/geo/countries';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,26 +26,30 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
   const articles = await getPublishedDbArticles(200, regionSlug);
   const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
 
+  const region = regionSlug ? await getRegionBySlug(regionSlug) : null;
+  const regionLabel = region?.nameJa ?? 'フランス';
+
   const typeParam = searchParams?.type;
-  const titleByType: Record<string, { title: string; subtitle: string }> = {
-    spot_guide: {
-      title: 'スポット紹介',
-      subtitle: '1 地点を深掘りした記事。お気に入りスポットを増やすのに最適。',
-    },
-    itinerary: {
-      title: '旅程プラン',
-      subtitle:
-        '半日・1 日かけて辿る、現地民がデザインしたルート。所要時間つき。',
-    },
-    expat_info: {
-      title: '駐在者情報',
-      subtitle:
-        '日用品・行政手続き・医療など、現地で暮らす人のための実用情報。',
-    },
+  const subtitleByType: Record<string, string> = {
+    spot_guide: '1 地点を深掘りした記事。お気に入りスポットを増やすのに最適。',
+    itinerary: '半日・1 日かけて辿る、現地民がデザインしたルート。所要時間つき。',
+    expat_info: '日用品・行政手続き・医療など、現地で暮らす人のための実用情報。',
   };
-  const heading = typeParam && titleByType[typeParam]
-    ? titleByType[typeParam]
-    : { title: 'パリ・すべての記事', subtitle: 'タイプを切り替えて絞り込めます。' };
+  const titleSuffixByType: Record<string, string> = {
+    spot_guide: 'のスポット紹介',
+    itinerary: 'の旅程プラン',
+    expat_info: 'の駐在者情報',
+  };
+  const heading =
+    typeParam && titleSuffixByType[typeParam]
+      ? {
+          title: `${regionLabel}${titleSuffixByType[typeParam]}`,
+          subtitle: subtitleByType[typeParam],
+        }
+      : {
+          title: `${regionLabel}・すべての記事`,
+          subtitle: 'タイプを切り替えて絞り込めます。',
+        };
 
   return (
     <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10">

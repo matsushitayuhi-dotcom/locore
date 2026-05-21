@@ -5,7 +5,6 @@ import {
   Clock,
   Wifi,
   Plus,
-  ChevronDown,
   ArrowLeft,
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
@@ -218,19 +217,13 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     return qs ? `/jobs?${qs}` : '/jobs';
   };
 
-  const toggleType = (t: JobEmploymentType) => {
-    const next = activeTypes.includes(t)
-      ? activeTypes.filter((x) => x !== t)
-      : [...activeTypes, t];
-    return buildHref({ type: next.length > 0 ? next.join(',') : null });
-  };
-
-  const toggleLang = (l: Lang) => {
-    const next = activeLangs.includes(l)
-      ? activeLangs.filter((x) => x !== l)
-      : [...activeLangs, l];
-    return buildHref({ lang: next.length > 0 ? next.join(',') : null });
-  };
+  const hasActiveFilter =
+    activeTypes.length > 0 ||
+    Boolean(activeCat) ||
+    activeLangs.length > 0 ||
+    remoteOnly ||
+    Boolean(minSalary) ||
+    sort !== 'new';
 
   return (
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
@@ -300,11 +293,11 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         <CommunityDisclaimer kind="job" />
       </div>
 
-      {/* SUUMO 風のドロップダウンフィルタ。プル選択 → 適用ボタンで GET */}
+      {/* 統合フィルタ。プルダウン版に一本化。詳細フィルタは折りたたみで同じ <form> 内に */}
       <form
         action="/jobs"
         method="GET"
-        className="mb-5 flex flex-wrap items-end gap-2 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
+        className="mb-5 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
       >
         {regionFilter.active ? (
           <input type="hidden" name="region" value={regionFilter.slug} />
@@ -312,320 +305,129 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         {activeAudience ? (
           <input type="hidden" name="audience" value={activeAudience} />
         ) : null}
-        <FilterSelect
-          name="type"
-          label="雇用形態"
-          defaultValue={activeTypes[0] ?? ''}
-          options={[
-            { value: '', label: 'すべて' },
-            ...JOB_EMPLOYMENT_TYPES.map((t) => ({
-              value: t,
-              label: JOB_EMPLOYMENT_TYPE_LABEL[t],
-            })),
-          ]}
-        />
-        <FilterSelect
-          name="cat"
-          label="職種"
-          defaultValue={activeCat ?? ''}
-          options={[
-            { value: '', label: 'すべて' },
-            ...JOB_CATEGORIES.map((c) => ({
-              value: c,
-              label: JOB_CATEGORY_LABEL[c],
-            })),
-          ]}
-        />
-        <FilterSelect
-          name="lang"
-          label="言語要件"
-          defaultValue={activeLangs[0] ?? ''}
-          options={[
-            { value: '', label: '問わず' },
-            ...ALL_LANGS.map((l) => ({ value: l, label: LANG_LABEL[l] })),
-          ]}
-        />
-        <FilterSelect
-          name="remote"
-          label="リモート"
-          defaultValue={remoteOnly ? '1' : ''}
-          options={[
-            { value: '', label: '問わず' },
-            { value: '1', label: 'リモート OK' },
-          ]}
-        />
-        <FilterSelect
-          name="sort"
-          label="並び順"
-          defaultValue={sort}
-          options={[
-            { value: 'new', label: '新着順' },
-            { value: 'salary', label: '給与高い順' },
-          ]}
-        />
-        <div className="flex flex-1 items-end gap-2">
-          <div className="flex-1 min-w-0">
-            <label
-              htmlFor="min"
-              className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+        {/* 詳細フィルタが開かれていた or 詳細フィルタの値が入っているなら次回も展開 */}
+        {showFilters || activeLangs.length > 0 || remoteOnly || minSalary ? (
+          <input type="hidden" name="filters" value="1" />
+        ) : null}
+
+        <div className="flex flex-wrap items-end gap-2">
+          <FilterSelect
+            name="type"
+            label="雇用形態"
+            defaultValue={activeTypes[0] ?? ''}
+            options={[
+              { value: '', label: 'すべて' },
+              ...JOB_EMPLOYMENT_TYPES.map((t) => ({
+                value: t,
+                label: JOB_EMPLOYMENT_TYPE_LABEL[t],
+              })),
+            ]}
+          />
+          <FilterSelect
+            name="cat"
+            label="職種"
+            defaultValue={activeCat ?? ''}
+            options={[
+              { value: '', label: 'すべて' },
+              ...JOB_CATEGORIES.map((c) => ({
+                value: c,
+                label: JOB_CATEGORY_LABEL[c],
+              })),
+            ]}
+          />
+          <FilterSelect
+            name="sort"
+            label="並び順"
+            defaultValue={sort}
+            options={[
+              { value: 'new', label: '新着順' },
+              { value: 'salary', label: '給与高い順' },
+            ]}
+          />
+          <div className="flex flex-1 items-end gap-2">
+            <button
+              type="submit"
+              className="h-9 shrink-0 rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
             >
-              年収下限（€）
-            </label>
-            <input
-              id="min"
-              type="number"
-              name="min"
-              min={0}
-              step={1000}
-              defaultValue={minSalary ?? ''}
-              placeholder="35000"
-              className="h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-[12px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
-            />
+              適用
+            </button>
+            {hasActiveFilter ? (
+              <Link
+                href={buildHref({
+                  type: null,
+                  cat: null,
+                  lang: null,
+                  remote: null,
+                  min: null,
+                  sort: null,
+                  filters: null,
+                })}
+                className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
+              >
+                リセット
+              </Link>
+            ) : null}
           </div>
-          <button
-            type="submit"
-            className="h-9 shrink-0 rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+        </div>
+
+        {/* 詳細フィルタトグル */}
+        <div className="mt-3 border-t border-border pt-3">
+          <details
+            open={
+              showFilters || activeLangs.length > 0 || remoteOnly || Boolean(minSalary)
+            }
+            className="group"
           >
-            適用
-          </button>
-          {(activeTypes.length > 0 ||
-            activeCat ||
-            activeLangs.length > 0 ||
-            remoteOnly ||
-            minSalary ||
-            sort !== 'new') ? (
-            <Link
-              href={buildHref({
-                type: null,
-                cat: null,
-                lang: null,
-                remote: null,
-                min: null,
-                sort: null,
-              })}
-              className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
-            >
-              リセット
-            </Link>
-          ) : null}
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-[11px] font-medium text-foreground/70 hover:text-foreground">
+              <span className="inline-block transition-transform group-open:rotate-180">
+                ▾
+              </span>
+              詳細フィルタ
+            </summary>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <FilterSelect
+                name="lang"
+                label="言語要件"
+                defaultValue={activeLangs[0] ?? ''}
+                options={[
+                  { value: '', label: '問わず' },
+                  ...ALL_LANGS.map((l) => ({ value: l, label: LANG_LABEL[l] })),
+                ]}
+              />
+              <div className="min-w-0">
+                <label
+                  htmlFor="f-min"
+                  className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+                >
+                  年収下限（€）
+                </label>
+                <input
+                  id="f-min"
+                  type="number"
+                  name="min"
+                  min={0}
+                  step={1000}
+                  defaultValue={minSalary ?? ''}
+                  placeholder="35000"
+                  className="h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-[12px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
+                />
+              </div>
+              <label className="inline-flex items-center gap-2 text-[12px] text-foreground/80 sm:col-span-2">
+                <input
+                  type="checkbox"
+                  name="remote"
+                  value="1"
+                  defaultChecked={remoteOnly}
+                  className="h-4 w-4 rounded border-border"
+                />
+                <Wifi className="h-3.5 w-3.5" />
+                リモート OK のみ
+              </label>
+            </div>
+          </details>
         </div>
       </form>
-
-      {/* 旧 UI のピルやチェックは削除（プルダウンに統一）。
-          以下のブロックは後方互換のため残してあるが showFilters=1 のときだけ展開する */}
-      <div
-        role="tablist"
-        aria-label="雇用形態で絞り込み"
-        className="mb-2 hidden flex-wrap items-center gap-1.5"
-      >
-        <Link
-          href={buildHref({ type: null })}
-          role="tab"
-          aria-selected={activeTypes.length === 0}
-          className={
-            'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-            (activeTypes.length === 0
-              ? 'bg-primary-500 text-neutral-950'
-              : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-          }
-        >
-          すべての形態
-        </Link>
-        {JOB_EMPLOYMENT_TYPES.map((t) => {
-          const on = activeTypes.includes(t);
-          return (
-            <Link
-              key={t}
-              href={toggleType(t)}
-              role="tab"
-              aria-selected={on}
-              className={
-                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                (on
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-              }
-            >
-              {JOB_EMPLOYMENT_TYPE_LABEL[t]}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* 詳細フィルタ折りたたみ */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Link
-          href={buildHref({ filters: showFilters ? null : '1' })}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 text-[11px] font-medium text-foreground/70 hover:bg-muted"
-        >
-          <ChevronDown
-            className={
-              'h-3.5 w-3.5 transition-transform ' +
-              (showFilters ? 'rotate-180' : '')
-            }
-          />
-          詳細フィルタ
-        </Link>
-        <div className="ml-auto flex items-center gap-1.5 text-[11px] text-foreground/55">
-          <span>並び順:</span>
-          <Link
-            href={buildHref({ sort: null })}
-            className={
-              'rounded-full px-2.5 py-1 font-semibold transition ' +
-              (sort === 'new'
-                ? 'bg-foreground text-background'
-                : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-            }
-          >
-            新着
-          </Link>
-          <Link
-            href={buildHref({ sort: 'salary' })}
-            className={
-              'rounded-full px-2.5 py-1 font-semibold transition ' +
-              (sort === 'salary'
-                ? 'bg-foreground text-background'
-                : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-            }
-          >
-            給与高い順
-          </Link>
-        </div>
-      </div>
-
-      {showFilters ? (
-        <section
-          aria-label="詳細フィルタ"
-          className="mb-5 space-y-3 rounded-lg border border-border bg-card p-4 text-[12px]"
-        >
-          <div>
-            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-              職種カテゴリ
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              <Link
-                href={buildHref({ cat: null })}
-                className={
-                  'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                  (!activeCat
-                    ? 'bg-foreground text-background'
-                    : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-                }
-              >
-                すべて
-              </Link>
-              {JOB_CATEGORIES.map((c) => (
-                <Link
-                  key={c}
-                  href={buildHref({ cat: activeCat === c ? null : c })}
-                  className={
-                    'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                    (activeCat === c
-                      ? 'bg-foreground text-background'
-                      : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-                  }
-                >
-                  {JOB_CATEGORY_LABEL[c]}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-              言語要件（いずれかを含む）
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {ALL_LANGS.map((l) => {
-                const on = activeLangs.includes(l);
-                return (
-                  <Link
-                    key={l}
-                    href={toggleLang(l)}
-                    className={
-                      'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                      (on
-                        ? 'bg-foreground text-background'
-                        : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-                    }
-                  >
-                    {LANG_LABEL[l]}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href={buildHref({ remote: remoteOnly ? null : '1' })}
-              className={
-                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                (remoteOnly
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-              }
-            >
-              <Wifi className="h-3 w-3" />
-              リモート OK のみ
-            </Link>
-
-            <form action="/jobs" method="GET" className="flex items-center gap-1.5">
-              {/* 既存 params を hidden で持ち回す */}
-              {regionFilter.active ? (
-                <input type="hidden" name="region" value={regionFilter.slug} />
-              ) : null}
-              {activeAudience ? (
-                <input type="hidden" name="audience" value={activeAudience} />
-              ) : null}
-              {activeTypes.length > 0 ? (
-                <input type="hidden" name="type" value={activeTypes.join(',')} />
-              ) : null}
-              {activeCat ? (
-                <input type="hidden" name="cat" value={activeCat} />
-              ) : null}
-              {activeLangs.length > 0 ? (
-                <input type="hidden" name="lang" value={activeLangs.join(',')} />
-              ) : null}
-              {remoteOnly ? <input type="hidden" name="remote" value="1" /> : null}
-              {sort !== 'new' ? (
-                <input type="hidden" name="sort" value={sort} />
-              ) : null}
-              <input type="hidden" name="filters" value="1" />
-              <label
-                htmlFor="min"
-                className="text-[11px] font-semibold text-foreground/65"
-              >
-                年収下限 €
-              </label>
-              <input
-                id="min"
-                type="number"
-                name="min"
-                min={0}
-                step={1000}
-                defaultValue={minSalary ?? ''}
-                placeholder="35000"
-                className="w-24 rounded-md border border-border bg-background px-2 py-1 text-[12px] tabular focus:border-2 focus:border-primary-500 focus:px-[7px] focus:py-[3px] focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="rounded-md bg-primary-500 px-2.5 py-1 text-[11px] font-bold text-neutral-950 hover:bg-primary-300"
-              >
-                適用
-              </button>
-              {minSalary ? (
-                <Link
-                  href={buildHref({ min: null })}
-                  className="text-[11px] text-foreground/55 hover:underline"
-                >
-                  解除
-                </Link>
-              ) : null}
-            </form>
-          </div>
-        </section>
-      ) : null}
 
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">

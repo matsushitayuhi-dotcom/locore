@@ -14,6 +14,7 @@ import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
 import { BottomNav } from '../components/BottomNav';
 import { getMyUnreadChatSummary } from '@/lib/chat/unread';
+import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
 
 const notoSansJp = Noto_Sans_JP({
   subsets: ['latin'],
@@ -110,6 +111,9 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   const unread = await getMyUnreadChatSummary();
+  // モード別ホーム遷移先（駐在員 → /expat、旅行者・未選択 → /explore）
+  const viewerMode = getViewerMode();
+  const homeHref = homePathFor(viewerMode ?? 'traveler');
 
   const fontVars = [
     notoSansJp.variable,
@@ -129,7 +133,7 @@ export default async function RootLayout({
             {children}
           </div>
           <SiteFooter />
-          <BottomNav unreadChatCount={unread.count} />
+          <BottomNav unreadChatCount={unread.count} homeHref={homeHref} />
           <Toaster
             position="bottom-center"
             offset={80}

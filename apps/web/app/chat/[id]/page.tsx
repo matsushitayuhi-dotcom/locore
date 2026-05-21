@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ChevronLeft } from 'lucide-react';
 import { eq, and, asc, ne } from 'drizzle-orm';
 import {
   Avatar,
@@ -87,13 +88,21 @@ export default async function ChatThreadPage({ params }: PageProps) {
 
   return (
     <main className="flex h-[calc(100vh-56px)] flex-col">
+      {/*
+        モバイルではタップ領域が極小だった「←」アイコンを、
+        フル幅 sticky のテキスト付きボタン「メッセージ一覧へ」に拡張。
+        - min-height 44px（iOS ヒットターゲット最小推奨）
+        - スマホは sticky top-0 で常に押しやすく
+        - sm 以上は inline で従来通り
+      */}
+      <Link
+        href="/chat"
+        className="sticky top-0 z-10 inline-flex min-h-[44px] w-full items-center gap-1.5 border-b border-border bg-card px-4 py-2 text-[13px] font-medium text-primary-300 transition-colors hover:bg-muted sm:static sm:w-auto sm:border-b-0 sm:px-3"
+      >
+        <ChevronLeft className="h-4 w-4" aria-hidden />
+        <span>メッセージ一覧へ</span>
+      </Link>
       <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-        <Link
-          href="/chat"
-          className="text-[12px] text-primary-300 underline-offset-4 hover:underline"
-        >
-          ←
-        </Link>
         {partner ? (
           <Link
             href={`/residents/${partner.id}`}

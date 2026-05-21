@@ -1,22 +1,21 @@
-import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { requireUser } from '@/lib/auth/require-user';
+import { SettingsNav } from './SettingsNav';
 
 /**
  * Settings 共通レイアウト。
  *
- * 左側（モバイルでは上部）にプロフィール / 通知 / アカウント のタブナビ、
- * 右側（下）に各ページの内容を表示する。アクティブ判定は CSS の
- * `aria-current` ベースではなく、シンプルに各ページ側の見出しに任せる。
+ * 左側（モバイルでは上部）にナビ、右側（下）に各ページの内容を表示する。
+ * ナビ本体は `SettingsNav` (Client Component) に切り出し、active 判定と
+ * role 別出し分け（reader には writer 用タブを隠す）をクライアント側で実施。
  */
-const NAV_ITEMS = [
-  { href: '/settings/profile', label: 'プロフィール' },
-  { href: '/settings/services', label: '提供サービス' },
-  { href: '/settings/verification', label: '本人確認' },
-  { href: '/settings/notifications', label: '通知' },
-  { href: '/settings/account', label: 'アカウント' },
-] as const;
+export default async function SettingsLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const user = await requireUser('/settings');
 
-export default function SettingsLayout({ children }: { children: ReactNode }) {
   return (
     <main className="bg-background">
       <div className="mx-auto max-w-screen-lg px-4 py-10 sm:px-6 sm:py-14">
@@ -38,21 +37,7 @@ export default function SettingsLayout({ children }: { children: ReactNode }) {
         </header>
 
         <div className="grid gap-8 md:grid-cols-[200px_1fr]">
-          <nav aria-label="設定ナビゲーション" className="md:sticky md:top-24 md:h-fit">
-            <ul className="flex gap-1 overflow-x-auto md:flex-col md:gap-0.5">
-              {NAV_ITEMS.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block whitespace-nowrap rounded-sm px-3 py-2 text-[13px] text-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
+          <SettingsNav role={user.role} />
           <section>{children}</section>
         </div>
       </div>
