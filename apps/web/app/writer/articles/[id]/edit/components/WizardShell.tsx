@@ -35,10 +35,9 @@ import {
 } from './ItineraryBlocksEditor';
 import { PhotoJournalSection } from './PhotoJournalSection';
 import { SpotsSection } from './SpotsSection';
-import { VideosSection } from './VideosSection';
+import { TagsInput } from './TagsInput';
 import type { PhotoEntry } from '@/lib/mock/types';
 import type { SpotRow } from '@/components/writer/SpotList';
-import type { VideoRow } from '@/components/writer/VideoEmbedEditor';
 
 /**
  * 記事編集のステップ式ウィザード（Substack 風）。
@@ -89,26 +88,53 @@ type CityOption = { id: string; nameJa: string; nameEn: string | null };
 type Props = {
   article: ArticleInitial;
   spots: SpotRow[];
-  videos: VideoRow[];
+  /**
+   * #5 (2026-05): SNS 動画埋め込みセクションは撤去。本文中 `/video` で
+   * YouTube を埋め込む経路に統合した。プロパティは page.tsx 互換のため
+   * シグネチャに残すが、UI には描画しない。
+   */
+  videos?: unknown;
   cities: CityOption[];
   tier: 'S' | 'A' | 'B';
   googleMapsApiKey?: string;
 };
 
-type Step = 1 | 2 | 3 | 4;
+/**
+ * #4: Step 再設計（2026-05 改修版）。
+ *
+ *   0   : カテゴリ選択（新規記事かつ未着手のとき初期表示）
+ *   1   : スポット追加
+ *   1.5 : 旅程ブロック (articleType='itinerary' のみ)
+ *   2   : 写真追加 (省略可)
+ *   3   : 本文編集（タイトル + 本文 / フォト日記キャプション）
+ *   4   : 公開準備
+ *
+ * itinerary 以外は 1.5 を飛ばす。
+ * Step 0 は「真に新しい記事 (タイトル=='新しい記事' && コンテンツ未着手)」のときだけ
+ * 初期表示する。既に書き始めた記事の編集では Step 1 から始まる。
+ */
+type Step = 0 | 1 | 1.5 | 2 | 3 | 4;
 
 export function WizardShell({
   article,
   spots,
-  videos,
+  videos: _videos,
   cities,
   tier: _tier,
   googleMapsApiKey,
 }: Props) {
   // tier は将来の手数料率表示用。現状は未使用なので参照だけ
   void _tier;
+  // #5: videos は撤去済み。シグネチャ互換のため受け取るだけで未使用
+  void _videos;
 
-  const [step, setStep] = useState<Step>(1);
+  // 真に「これから書き始める」記事かどうか
+  const isPristine =
+    (article.title === '新しい記事' || article.title === '') &&
+    (article.body ?? '').trim() === '' &&
+    (article.photoEntries?.length ?? 0) === 0 &&
+    spots.length === 0;
+  const [step, setStep] = useState<Step>(isPristine ? 0 : 1);
 
   // 共通 state
   const [title, setTitle] = useState(article.title);
@@ -134,6 +160,54 @@ export function WizardShell({
     article.photoEntries ?? [],
   );
   const [spotsForDropdown, setSpotsForDropdown] = useState<SpotRow[]>(spots);
+
+  /**
+   * #4 改修: スポット追加時に「写真の場所」と「旅程ブロックの場所」を自動で
+   * 1 件目のスポットに紐付ける。ユーザーは後から上書き可能。
+   * - PhotoEntry.locationName が空のものに、最初のスポット名を入れる
+   * - ItineraryBlock.spotId が空のものに、対応するスポット id を順番に入れる
+   */
+  const seedSpotIntoPhotosAndItinerary = (next: SpotRow[]) => {
+    if (next.length === 0) return;
+    // 写真エントリ: 場所名が空のものに 1 件目のスポット名を入れる
+    const firstName = next[0]!.name;
+    setPhotoEntries((prev) => {
+      if (prev.length === 0) return prev;
+      let touched = false;
+      const out = prev.map((e) => {
+        if (!e.locationName || e.locationName.trim() === '') {
+          touched = true;
+          return { ...e, locationName: firstName };
+        }
+        return e;
+      });
+      return touched ? out : prev;
+    });
+    // 旅程ブロック: 空きスロットに順番にスポット id を充填
+    setItineraryBlocks((prev) => {
+      if (prev.length === 0) return prev;
+      let touched = false;
+      const taken = new Set(prev.map((b) => b.spotId).filter(Boolean));
+      const candidates = next.map((s) => s.id).filter((id) => !taken.has(id));
+      let ci = 0;
+      const out = prev.map((b) => {
+        if (b.spotId) return b;
+        const sid = candidates[ci++];
+        if (!sid) return b;
+        touched = true;
+        return { ...b, spotId: sid };
+      });
+      return touched ? out : prev;
+    });
+  };
+
+  const handleSpotsChange = (next: SpotRow[]) => {
+    // 新規スポットが増えたタイミングで auto-seed
+    if (next.length > spotsForDropdown.length) {
+      seedSpotIntoPhotosAndItinerary(next);
+    }
+    setSpotsForDropdown(next);
+  };
 
   // ----- 公開タイミング (#16) -----
   // 'now': 今すぐ公開 / 'scheduled': 予約公開
@@ -210,9 +284,22 @@ export function WizardShell({
    * 記事ではスポット登録があっても無くても良いというポリシー。
    */
   const isExpatInfo = basic.articleType === 'expat_info';
-  const totalSteps: 3 | 4 = isItinerary ? 4 : 3;
-  // itinerary 以外のときは step=3 を飛ばして step=4 を「Step 3 = 公開」として扱う
-  const visibleStepIndex = step >= 3 && !isItinerary ? step - 1 : step;
+
+  /**
+   * #4: ステップ順を articleType に応じて動的に算出する。
+   * Step 0 (カテゴリ選択) は前後ナビゲーション対象外（カテゴリを選ぶと自動で 1 へ）。
+   */
+  const stepSequence: Step[] = useMemo(
+    () =>
+      isItinerary
+        ? [1, 1.5 as const, 2, 3, 4]
+        : [1, 2, 3, 4],
+    [isItinerary],
+  );
+  const totalSteps = stepSequence.length;
+  const currentStepIdx = Math.max(0, stepSequence.indexOf(step));
+  // 表示用の連番 (1-based)。Step 0 のときは 0 を返して非表示扱いにする。
+  const visibleStepIndex = step === 0 ? 0 : currentStepIdx + 1;
 
   // ----- dirty 判定 -----
   const currentSnapshot = useMemo(
@@ -403,14 +490,16 @@ export function WizardShell({
       }, 50);
     };
 
+    // #4 新ステップ順: 1=スポット, 1.5=旅程, 2=写真, 3=本文, 4=公開
     if (item === 'タイトル') {
-      goStep(1, 'wz-title');
+      goStep(3, 'wz-title');
     } else if (item === '本文 100 字以上' || item === '写真 1 枚以上') {
-      goStep(1);
+      // 本文ボリュームは Step 3、写真は Step 2
+      goStep(item === '写真 1 枚以上' ? 2 : 3);
     } else if (item === 'スポット 1 件以上') {
-      goStep(2);
+      goStep(1);
     } else if (item === '旅程ブロック 2 件以上') {
-      goStep(3);
+      goStep(1.5);
     } else if (item === 'カバー画像') {
       goStep(4, 'wz-cover-anchor');
     } else {
@@ -419,28 +508,42 @@ export function WizardShell({
     }
   };
 
+  /**
+   * #2: 「次へ」で下書き保存 → 成功時のみ次のステップへ進む。
+   * 失敗時は toast でエラーを出してステップは移動しない。
+   */
   const goNext = () => {
-    // 2026-05 改修:
-    //   旧実装はステップ移動時に missing 項目を toast.error で警告していたが、
-    //   Step 4 の alert と二重表示になっていたため Toast 系は撤去。
-    //   未入力があってもステップ移動は許可し、Step 4 alert に集約する
-    //   （alert からはジャンプリンクで該当ステップへ戻れる）。
-    if (!maybeConfirmDirty()) return;
-
-    // itinerary 以外は step=3 を飛ばす
-    if (step === 2 && !isItinerary) {
-      setStep(4);
-    } else if (step < 4) {
-      setStep((step + 1) as Step);
+    // Step 0 (カテゴリ選択) は専用ハンドラから呼び出される想定。
+    // 念のためここでも 1 へ遷移できるようガードする。
+    if (step === 0) {
+      setStep(1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const idx = stepSequence.indexOf(step);
+    if (idx < 0 || idx >= stepSequence.length - 1) return;
+    const next = stepSequence[idx + 1]!;
+
+    // dirty が無いときは保存スキップ（無駄な書き込みを避ける）
+    if (!isDirty) {
+      setStep(next);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    // タイトル未入力時はサーバ側 validation で弾かれる前にローカルで親切に案内
+    // → ただし「次へ」自体は許可（タイトル無しでもスポット/写真は付けたい）
+    void handleSaveDraft(true).then((ok) => {
+      if (!ok) return; // toast はすでに出ている
+      setStep(next);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   };
   const goPrev = () => {
     if (!maybeConfirmDirty()) return;
-    if (step === 4 && !isItinerary) {
-      setStep(2);
-    } else if (step > 1) {
-      setStep((step - 1) as Step);
+    if (step === 0) return;
+    const idx = stepSequence.indexOf(step);
+    if (idx > 0) {
+      setStep(stepSequence[idx - 1]!);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -462,15 +565,63 @@ export function WizardShell({
         status={article.status}
       />
 
-      <StepProgress
-        current={visibleStepIndex}
-        total={totalSteps}
-        showItinerary={isItinerary}
-      />
+      {step !== 0 ? (
+        <StepProgress
+          current={visibleStepIndex}
+          total={totalSteps}
+          showItinerary={isItinerary}
+        />
+      ) : null}
 
-      {/* ステップ別本体 */}
+      {/* Step 0: カテゴリ選択（#4） */}
+      {step === 0 ? (
+        <Step0CategorySelect
+          value={basic.articleType}
+          onSelect={(t) => {
+            setBasic({ ...basic, articleType: t });
+            setStep(1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
+      ) : null}
+
+      {/* Step 1: スポット追加 */}
       {step === 1 ? (
-        <Step1TitleBody
+        <Step1Spots
+          articleId={article.id}
+          initial={spots}
+          googleMapsApiKey={googleMapsApiKey}
+          onChange={handleSpotsChange}
+          isOptional={isExpatInfo}
+        />
+      ) : null}
+
+      {/* Step 1.5: 旅程ブロック（itinerary のみ） */}
+      {step === 1.5 && isItinerary ? (
+        <StepItinerary
+          blocks={itineraryBlocks}
+          onChange={setItineraryBlocks}
+          spots={spotsForDropdown}
+          googleMapsApiKey={googleMapsApiKey}
+        />
+      ) : null}
+
+      {/* Step 2: 写真追加（省略可） */}
+      {step === 2 ? (
+        <Step2Photos
+          bodyStyle={bodyStyle}
+          photoEntries={photoEntries}
+          onChangePhotoEntries={setPhotoEntries}
+          onSkip={() => {
+            // 「あとで」: goNext と同じく下書き保存後に次のステップへ
+            goNext();
+          }}
+        />
+      ) : null}
+
+      {/* Step 3: タイトル + 本文 */}
+      {step === 3 ? (
+        <Step3TitleBody
           title={title}
           onChangeTitle={setTitle}
           bodyStyle={bodyStyle}
@@ -480,26 +631,6 @@ export function WizardShell({
           onChangeBodyPaid={setBodyPaid}
           photoEntries={photoEntries}
           onChangePhotoEntries={setPhotoEntries}
-        />
-      ) : null}
-
-      {step === 2 ? (
-        <Step2Spots
-          articleId={article.id}
-          initial={spots}
-          googleMapsApiKey={googleMapsApiKey}
-          onChange={setSpotsForDropdown}
-          photoEntries={bodyStyle === 'photo_journal' ? photoEntries : []}
-          isOptional={isExpatInfo}
-        />
-      ) : null}
-
-      {step === 3 && isItinerary ? (
-        <Step3Itinerary
-          blocks={itineraryBlocks}
-          onChange={setItineraryBlocks}
-          spots={spotsForDropdown}
-          googleMapsApiKey={googleMapsApiKey}
         />
       ) : null}
 
@@ -513,7 +644,6 @@ export function WizardShell({
           coverImageUrl={coverImageUrl}
           onChangeCover={setCoverImageUrl}
           articleId={article.id}
-          videos={videos}
           isPublished={article.status === 'published'}
           missing={missing}
           modScore={modScore}
@@ -540,44 +670,57 @@ export function WizardShell({
         />
       ) : null}
 
-      {/* ナビゲーションフッタ — z-50 でグローバルナビ系より前面に */}
-      <nav
-        aria-label="ウィザードナビゲーション"
-        className="sticky bottom-2 z-50 flex items-center justify-between gap-2 rounded-2xl bg-card/95 p-2 shadow-xl ring-1 ring-border backdrop-blur sm:bottom-4 sm:p-3"
-        style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={goPrev}
-          disabled={step === 1}
+      {/* ナビゲーションフッタ — Step 0 (カテゴリ選択画面) では非表示 */}
+      {step !== 0 ? (
+        <nav
+          aria-label="ウィザードナビゲーション"
+          className="sticky bottom-2 z-50 flex items-center justify-between gap-2 rounded-2xl bg-card/95 p-2 shadow-xl ring-1 ring-border backdrop-blur sm:bottom-4 sm:p-3"
+          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <ArrowLeft className="h-4 w-4 sm:mr-1" />
-          <span className="hidden sm:inline">戻る</span>
-        </Button>
-
-        <p className="text-[10px] text-foreground/55 sm:text-[11px]">
-          {visibleStepIndex} / {totalSteps}
-        </p>
-
-        {step === 4 ? (
-          <PublishButton
-            disabled={missing.length > 0 || isPublishing || isSavingDraft}
-            missing={missing}
-            onClick={() => setConfirmOpen(true)}
-            // #16: 予約公開モードのときはラベルを変える
-            label={
-              publishMode === 'scheduled' ? '公開を予約する' : '今すぐ公開'
-            }
-          />
-        ) : (
-          <Button type="button" variant="primary" size="sm" onClick={goNext}>
-            <span className="hidden sm:inline">次へ</span>
-            <ArrowRight className="h-4 w-4 sm:ml-1" />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={goPrev}
+            disabled={stepSequence.indexOf(step) === 0}
+          >
+            <ArrowLeft className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">戻る</span>
           </Button>
-        )}
-      </nav>
+
+          <p className="text-[10px] text-foreground/55 sm:text-[11px]">
+            {visibleStepIndex} / {totalSteps}
+            {isSavingDraft ? (
+              <span className="ml-2 text-primary-300">保存しています…</span>
+            ) : null}
+          </p>
+
+          {step === 4 ? (
+            <PublishButton
+              disabled={missing.length > 0 || isPublishing || isSavingDraft}
+              missing={missing}
+              onClick={() => setConfirmOpen(true)}
+              // #16: 予約公開モードのときはラベルを変える
+              label={
+                publishMode === 'scheduled' ? '公開を予約する' : '今すぐ公開'
+              }
+            />
+          ) : (
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={goNext}
+              disabled={isSavingDraft}
+            >
+              <span className="hidden sm:inline">
+                {isSavingDraft ? '保存中…' : '次へ'}
+              </span>
+              <ArrowRight className="h-4 w-4 sm:ml-1" />
+            </Button>
+          )}
+        </nav>
+      ) : null}
 
       {/* 公開確認モーダル */}
       {confirmOpen ? (
@@ -759,10 +902,19 @@ function formatRelative(d: Date): string {
 // =============================================================================
 // ステップインジケータ
 // =============================================================================
-const STEP_LABELS: { key: 'draft' | 'spots' | 'itinerary' | 'publish'; label: string }[] = [
-  { key: 'draft', label: '下書き' },
+/**
+ * #4: 新ステップ順 (2026-05 改修)
+ *  1   = スポット
+ *  1.5 = 旅程 (itinerary のみ)
+ *  2   = 写真
+ *  3   = 本文
+ *  4   = 公開準備
+ */
+const STEP_LABELS: { key: 'spots' | 'itinerary' | 'photos' | 'body' | 'publish'; label: string }[] = [
   { key: 'spots', label: 'スポット' },
   { key: 'itinerary', label: '旅程' },
+  { key: 'photos', label: '写真' },
+  { key: 'body', label: '本文' },
   { key: 'publish', label: '公開準備' },
 ];
 
@@ -815,10 +967,10 @@ function StepProgress({
 }
 
 // =============================================================================
-// Step 1: タイトル + 本文（タブ切替）
+// Step 3: タイトル + 本文 (新ステップ順 #4)
 // =============================================================================
 
-function Step1TitleBody({
+function Step3TitleBody({
   title,
   onChangeTitle,
   bodyStyle,
@@ -843,7 +995,7 @@ function Step1TitleBody({
     <div className="space-y-4 sm:space-y-6">
       <header className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-          ステップ 1
+          本文を書く
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
@@ -851,10 +1003,10 @@ function Step1TitleBody({
             fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
           }}
         >
-          書き始める
+          タイトルと本文
         </h2>
         <p className="text-[12px] text-foreground/65">
-          まずはタイトルと中身だけ。記事の種類や価格はあとで決められます。
+          スポット・写真を踏まえてタイトルと本文を仕上げます。「/」を打つとブロック挿入メニューが出ます。
         </p>
       </header>
 
@@ -949,34 +1101,27 @@ function TabButton({
 }
 
 // =============================================================================
-// Step 2: スポット一覧の確認
+// Step 1: スポット一覧の確認・追加（新ステップ順 #4）
 // =============================================================================
-function Step2Spots({
+function Step1Spots({
   articleId,
   initial,
   googleMapsApiKey,
   onChange,
-  photoEntries,
   isOptional = false,
 }: {
   articleId: string;
   initial: SpotRow[];
   googleMapsApiKey?: string;
   onChange: (next: SpotRow[]) => void;
-  photoEntries: PhotoEntry[];
   /** expat_info 記事のときに true。「任意」表示に切り替える */
   isOptional?: boolean;
 }) {
-  const hinted = photoEntries
-    .map((e) => e.locationName)
-    .filter((s): s is string => !!s)
-    .filter((s, i, arr) => arr.indexOf(s) === i);
-
   return (
     <div className="space-y-4">
       <header className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-          ステップ 2
+          ステップ 1
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
@@ -986,24 +1131,14 @@ function Step2Spots({
         >
           {isOptional
             ? 'スポットを追加する (任意)'
-            : '紹介しているスポットを確認する'}
+            : 'まず、紹介する場所を決める'}
         </h2>
         <p className="text-[12px] text-foreground/65">
           {isOptional
             ? '駐在者情報の記事ではスポットの登録は任意です。「ここで買えた」など具体的な店舗を紹介したい場合のみ追加してください。'
-            : '前のステップで写真に付けた場所名はカードとして並びます。追加・並び替えもここからどうぞ。'}
+            : '記事で紹介する場所をここで登録します。1 件目に追加したスポットは、写真・旅程ブロックの場所欄にも自動で入ります。'}
         </p>
       </header>
-
-      {hinted.length > 0 ? (
-        <aside className="rounded-md bg-primary-500/10 px-3 py-2 text-[11px] text-primary-300">
-          フォト日記の場所として入力済み:{' '}
-          <span className="font-bold">{hinted.join(' / ')}</span>
-          <span className="ml-2 text-foreground/55">
-            該当する Google Place を選んでスポット化してください
-          </span>
-        </aside>
-      ) : null}
 
       <SpotsSection
         articleId={articleId}
@@ -1016,9 +1151,9 @@ function Step2Spots({
 }
 
 // =============================================================================
-// Step 3: 旅程ブロック（itinerary のみ）
+// Step 1.5: 旅程ブロック（itinerary のみ・新ステップ順 #4）
 // =============================================================================
-function Step3Itinerary({
+function StepItinerary({
   blocks,
   onChange,
   spots,
@@ -1033,7 +1168,7 @@ function Step3Itinerary({
     <div className="space-y-4">
       <header className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-          ステップ 3
+          ステップ 1.5
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
@@ -1044,7 +1179,7 @@ function Step3Itinerary({
           旅程を組み立てる
         </h2>
         <p className="text-[12px] text-foreground/65">
-          スポットの順序、開始時刻、スポット間の移動手段と時間を入力します。
+          スポットの順序、開始時刻、スポット間の移動手段と時間を入力します。新しいブロックは <span className="font-semibold">前のブロックの 1 時間後</span> から始まります。
         </p>
       </header>
       <ItineraryBlocksEditor
@@ -1053,6 +1188,169 @@ function Step3Itinerary({
         spots={spots}
         googleMapsApiKey={googleMapsApiKey}
       />
+    </div>
+  );
+}
+
+// =============================================================================
+// Step 0: カテゴリ選択（#4 改修で追加）
+// =============================================================================
+function Step0CategorySelect({
+  value,
+  onSelect,
+}: {
+  value: 'spot_guide' | 'itinerary' | 'expat_info';
+  onSelect: (t: 'spot_guide' | 'itinerary' | 'expat_info') => void;
+}) {
+  // 「その他」= expat_info にマップ（DB schema 非変更）
+  const options: Array<{
+    type: 'spot_guide' | 'itinerary' | 'expat_info';
+    title: string;
+    desc: string;
+    recommended?: boolean;
+  }> = [
+    {
+      type: 'itinerary',
+      title: '旅程プラン',
+      desc: '半日 / 1 日の歩き方ルート。\nスポットを順番に巡る時間軸付きの記事。',
+      recommended: true,
+    },
+    {
+      type: 'spot_guide',
+      title: 'スポット紹介',
+      desc: '一軒の店、一本の坂道、一つのスポットを\nじっくり紹介する記事。',
+    },
+    {
+      type: 'expat_info',
+      title: 'その他',
+      desc: '駐在者向け情報・お知らせ・コラムなど、\n地図に紐付かないテキスト主体の記事。',
+    },
+  ];
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <header className="space-y-1">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+          カテゴリ選択
+        </p>
+        <h2
+          className="text-[22px] font-bold tracking-tight"
+          style={{
+            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+          }}
+        >
+          どんな記事を書きますか？
+        </h2>
+        <p className="text-[12px] text-foreground/65">
+          選んだカテゴリによって、このあとのウィザードの流れが変わります。あとから変更も可能です。
+        </p>
+      </header>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {options.map((opt) => {
+          const on = value === opt.type;
+          return (
+            <button
+              key={opt.type}
+              type="button"
+              onClick={() => onSelect(opt.type)}
+              className={
+                'group relative flex h-full flex-col items-start gap-2 rounded-lg border p-5 text-left transition hover:border-primary-500 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ' +
+                (on
+                  ? 'border-primary-500 bg-primary-500/10'
+                  : 'border-border bg-card')
+              }
+            >
+              {opt.recommended ? (
+                <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-warning-500 px-2 py-0.5 text-[10px] font-bold text-neutral-950 shadow-sm">
+                  <span aria-hidden>⭐</span>
+                  おすすめ
+                </span>
+              ) : null}
+              <span className="text-[16px] font-bold text-foreground">
+                {opt.title}
+              </span>
+              <span className="whitespace-pre-line text-[12px] leading-relaxed text-foreground/65">
+                {opt.desc}
+              </span>
+              <span className="mt-auto pt-2 text-[11px] font-semibold text-primary-300 underline-offset-4 group-hover:underline">
+                このカテゴリで始める →
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="rounded-md bg-muted px-3 py-2 text-[11px] text-foreground/55">
+        ヒント: 旅程プラン (⭐) はスポットの並び順 + 時間軸 + 移動手段がセットの記事で、読者の体験が組み立てやすく一番人気です。
+      </p>
+    </div>
+  );
+}
+
+// =============================================================================
+// Step 2: 写真追加（省略可・新ステップ #4）
+// =============================================================================
+function Step2Photos({
+  bodyStyle,
+  photoEntries,
+  onChangePhotoEntries,
+  onSkip,
+}: {
+  bodyStyle: 'photo_journal' | 'classic';
+  photoEntries: PhotoEntry[];
+  onChangePhotoEntries: (v: PhotoEntry[]) => void;
+  onSkip: () => void;
+}) {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      <header className="space-y-1">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+          ステップ 2
+        </p>
+        <h2
+          className="text-[22px] font-bold tracking-tight"
+          style={{
+            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+          }}
+        >
+          写真を追加する
+        </h2>
+        <p className="text-[12px] text-foreground/65">
+          写真は記事の魅力を決める要素ですが、あとからでも追加できます。
+          先に登録したスポット名が「場所」欄に自動で入っているはずです。
+        </p>
+      </header>
+
+      {bodyStyle === 'photo_journal' ? (
+        <PhotoJournalSection
+          value={photoEntries}
+          onChange={onChangePhotoEntries}
+        />
+      ) : (
+        // クラシック本文スタイルでは Step 3 本文中の `/image` で挿入する。
+        // ここでは案内のみ表示。
+        <section className="space-y-3 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
+          <h3 className="text-[14px] font-semibold tracking-tight">
+            クラシックスタイルの写真挿入
+          </h3>
+          <p className="text-[12px] text-foreground/65">
+            クラシック (テキスト主体) スタイルでは、Step 3 の本文中で
+            <kbd className="mx-1 rounded-sm border border-border bg-muted px-1 text-[10px]">/</kbd>
+            を打って表示される「画像」メニューから挿入できます。クリップボードからの貼り付け、ドラッグ&ドロップにも対応しています。
+          </p>
+          <p className="text-[12px] text-foreground/65">
+            このステップは「あとで」スキップして大丈夫です。
+          </p>
+        </section>
+      )}
+
+      <button
+        type="button"
+        onClick={onSkip}
+        className="text-[12px] text-foreground/55 underline-offset-4 hover:text-foreground/80 hover:underline"
+      >
+        あとで（このステップをスキップ）
+      </button>
     </div>
   );
 }
@@ -1078,7 +1376,6 @@ function Step4Publish({
   coverImageUrl,
   onChangeCover,
   articleId,
-  videos,
   isPublished,
   missing,
   modScore,
@@ -1107,7 +1404,6 @@ function Step4Publish({
   coverImageUrl: string;
   onChangeCover: (v: string) => void;
   articleId: string;
-  videos: VideoRow[];
   isPublished: boolean;
   missing: string[];
   modScore: { finalScore: number; action: string } | null;
@@ -1247,8 +1543,7 @@ function Step4Publish({
         />
       </div>
 
-      {/* 動画埋め込み */}
-      <VideosSection articleId={articleId} initial={videos} />
+      {/* #5: 動画埋め込みセクションは撤去。本文中で `/video` スラッシュコマンド経由で YouTube を埋め込めるようになった */}
 
       {modScore &&
       (modScore.action === 'warned' || modScore.action === 'held') ? (
@@ -1500,23 +1795,27 @@ function BasicMetaSection({
           </select>
         </div>
 
-        <div>
+        <div className="sm:col-span-2">
           <label
             htmlFor="wz-tags"
             className="mb-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55"
           >
-            タグ（カンマ区切り）
+            タグ
           </label>
-          <input
+          {/* #6: ピル型タグ入力。# / カンマ / 空白で確定、× で削除 */}
+          <TagsInput
             id="wz-tags"
-            type="text"
             value={value.tagsText}
-            onChange={(e) =>
-              onChange({ ...value, tagsText: e.target.value })
-            }
-            placeholder="例: 朝食, カフェ, マレ"
-            className="h-11 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+            onChange={(t) => onChange({ ...value, tagsText: t })}
+            placeholder="例: 朝食 マレ 路地裏（# / カンマ / 空白で確定）"
           />
+          <p className="mt-1 text-[10px] text-foreground/55">
+            <kbd className="rounded-sm border border-border bg-muted px-1 text-[9px]">#</kbd>
+            <kbd className="ml-0.5 rounded-sm border border-border bg-muted px-1 text-[9px]">,</kbd>
+            <kbd className="ml-0.5 rounded-sm border border-border bg-muted px-1 text-[9px]">空白</kbd>
+            <kbd className="ml-0.5 rounded-sm border border-border bg-muted px-1 text-[9px]">Enter</kbd>
+            のいずれかでタグ確定。backspace で末尾削除。
+          </p>
         </div>
       </div>
 

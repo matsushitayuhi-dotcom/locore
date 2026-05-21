@@ -50,18 +50,26 @@ type Props = {
   googleMapsApiKey?: string;
 };
 
+/** "HH:MM" の文字列に N 時間を足した "HH:MM" を返す（24 時を超えたら mod 24） */
+function addHours(hhmm: string, hours: number): string {
+  const m = hhmm.match(/^(\d{2}):(\d{2})$/);
+  if (!m) return hhmm;
+  const h = (parseInt(m[1]!, 10) + hours) % 24;
+  return `${String(h).padStart(2, '0')}:${m[2]!}`;
+}
+
 function newBlock(prev: ItineraryBlock | undefined): ItineraryBlock {
-  // 直前ブロックの 1 時間後をデフォルトに
-  const defaultStart = (() => {
-    if (!prev?.startTime) return '09:00';
-    const m = prev.startTime.match(/^(\d{2}):(\d{2})$/);
-    if (!m) return '09:00';
-    const h = (parseInt(m[1]!, 10) + 1) % 24;
-    return `${String(h).padStart(2, '0')}:${m[2]!}`;
+  // 直前ブロックの endTime（無ければ startTime+1h）を起点に。
+  // 新ブロックの startTime / endTime は 1 時間幅でデフォルト設定する。
+  const baseStart = (() => {
+    if (prev?.endTime && /^\d{2}:\d{2}$/.test(prev.endTime)) return prev.endTime;
+    if (prev?.startTime) return addHours(prev.startTime, 1);
+    return '09:00';
   })();
   return {
     id: 'tmp-' + Math.random().toString(36).slice(2),
-    startTime: defaultStart,
+    startTime: baseStart,
+    endTime: addHours(baseStart, 1),
   };
 }
 
@@ -117,11 +125,12 @@ export function ItineraryBlocksEditor({
           <button
             type="button"
             onClick={() => {
-              // スポットを順番に旅程ブロックへ流し込む
+              // スポットを順番に旅程ブロックへ流し込む。
+              // 9:00 から 1h 刻みで endTime も自動セット（#7 改修）
               const next = spots.map((s, i) => ({
                 id: 'tmp-' + Math.random().toString(36).slice(2),
-                startTime:
-                  String(9 + i).padStart(2, '0') + ':00', // 9:00 から 1h 刻みのデフォルト
+                startTime: String(9 + i).padStart(2, '0') + ':00',
+                endTime: String(10 + i).padStart(2, '0') + ':00',
                 spotId: s.id,
               }));
               onChange(next);

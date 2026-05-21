@@ -267,9 +267,13 @@ function CountryRow({
       </button>
     );
   }
-  // resident モード: 駐在員ホーム /expat に直行（地域には行かない）。
-  // 将来、国別駐在員ホームが増えたら /expat?country={code} or /expat/{code} に拡張。
-  const href = mode === 'resident' ? '/expat' : `/country/${country.code}`;
+  // resident / traveler どちらでも、国カードをクリックしたら国ページ
+  // (/country/<code>) に飛ぶ。 traveler は drill-down (上の分岐) で region に
+  // 進める。 resident は drill しない (= 国名までで止める) ので、国ページに
+  // 直行する流れになる。
+  // 駐在員向け国別ホーム (/expat/<code>) は別 UI 動線 (PlaceMenu 下部の
+  // 「駐在員ホームへ」リンクと、/expat の国選択画面) からたどってもらう。
+  const href = `/country/${country.code}`;
   return (
     <Link
       href={href}

@@ -8,7 +8,10 @@ export const metadata = {
  * /legal/privacy — プライバシーポリシー。
  *
  * 日本の個人情報保護法 + EU GDPR (現地居住者向け) を意識した記載。
- * Supabase / Stripe / Resend / Anthropic 等の第三者サービスを実態に合わせて列挙。
+ *
+ * β 公開版では、利用している第三者サービスの実名・具体的な保管期間などは
+ * 保守的に「カテゴリ表現」「必要な期間」に丸めている。詳細な提供事業者名は
+ * ご請求に応じて遅滞なく開示する運用とし、本格運用開始に合わせて随時改定する。
  */
 export default function PrivacyPage() {
   return (
@@ -18,6 +21,11 @@ export default function PrivacyPage() {
         version="v0.9 (β 公開版)"
         updated="2026 年 5 月 19 日"
       />
+
+      <Banner>
+        本ポリシーは β 公開版です。サービスの本格運用開始に合わせて随時改定します。
+        個別の事業者名・詳細な処理内容は、ご請求に応じて遅滞なく書面で開示します。
+      </Banner>
 
       <p className="text-[13px] leading-[1.9] text-foreground/75">
         Locore Inc.（以下「当社」）は、本サービス「Locore」を通じてお預かりする
@@ -30,7 +38,7 @@ export default function PrivacyPage() {
           <li>メールアドレス、表示名、プロフィール写真、自己紹介文</li>
           <li>居住国・居住都市・滞在年数・職業・家族構成 (任意)</li>
           <li>クリエイター申請時の居住確認書類 (本人確認書類、居住地証明書)</li>
-          <li>Stripe Connect 連携時の銀行口座情報 (Stripe 経由で当社は直接保存しません)</li>
+          <li>決済代行サービスを通じてご提供いただく決済関連情報 (カード番号等のセンシティブ情報は当社では直接保存しません)</li>
           <li>お問い合わせ・通報の内容</li>
         </ul>
 
@@ -38,7 +46,7 @@ export default function PrivacyPage() {
         <ul>
           <li>記事閲覧・購入・お気に入り登録などの履歴</li>
           <li>コミュニティ投稿の作成・閲覧履歴</li>
-          <li>IP アドレス、ブラウザ種別、デバイス種別 (Vercel Analytics 経由)</li>
+          <li>IP アドレス、ブラウザ種別、デバイス種別等のアクセスログ</li>
           <li>Cookie 識別子 (詳細は <a href="/legal/cookies" className="text-primary-300 hover:underline">Cookie ポリシー</a> 参照)</li>
         </ul>
       </Section>
@@ -61,12 +69,12 @@ export default function PrivacyPage() {
         </p>
         <ul>
           <li>
-            ファイルは Supabase Storage の暗号化バケットに保存され、運営チームの
-            内 editor 権限を持つ者のみがアクセスできます。
+            ファイルは暗号化された安全な領域に保存され、運営チームのうち
+            権限を持つ者のみがアクセスできます。
           </li>
           <li>
-            確認完了後、原則として <strong>30 日以内に自動削除</strong> されます (GDPR 配慮)。
-            cron ジョブ <code>/api/cron/cleanup-verification-files</code> で日次に削除。
+            確認完了後、原則として<strong>確認の目的の達成に必要な期間内で
+            速やかに削除</strong>されます (GDPR 配慮)。
           </li>
           <li>確認結果 (承認 / 却下) のみがユーザーレコードに残ります。</li>
           <li>第三者には提供しません。</li>
@@ -75,25 +83,32 @@ export default function PrivacyPage() {
 
       <Section n="4" title="第三者提供 (利用しているサービス)">
         <p>
-          本サービスの運営にあたり、以下の第三者サービスにユーザー情報を
-          提供することがあります。いずれも、各社のプライバシーポリシーに従って
-          適切に取り扱われます。
+          本サービスの運営にあたり、当社は信頼できる第三者サービスを利用しています。
+          具体的には、ホスティング・データベース・決済処理・メール配信・認証・
+          地図表示等のサービスです。すべての提供事業者は、業界標準のセキュリティと
+          プライバシー保護基準を満たしています。
+        </p>
+        <p className="mt-2">
+          いずれのサービスも、各社のプライバシーポリシーに従って適切に取り扱われます。
+          利用している事業者の個別の名称については、
+          <a href="/contact" className="text-primary-300 hover:underline">お問い合わせフォーム</a>
+          よりご請求があれば遅滞なく開示します。
         </p>
         <table className="my-4 w-full border-collapse text-[12px]">
           <thead>
             <tr className="border-b border-border">
-              <th className="py-2 text-left font-semibold">サービス名</th>
+              <th className="py-2 text-left font-semibold">サービス区分</th>
               <th className="py-2 text-left font-semibold">目的</th>
               <th className="py-2 text-left font-semibold">提供データ</th>
             </tr>
           </thead>
           <tbody className="text-foreground/75">
-            <Row name="Supabase" purpose="データベース・認証・ストレージ" data="登録情報全般" />
-            <Row name="Vercel" purpose="Web ホスティング・配信" data="リクエスト IP / User-Agent" />
-            <Row name="Stripe" purpose="決済処理・売上配分" data="メール / 決済情報 / 銀行口座" />
-            <Row name="Resend" purpose="トランザクションメール送信" data="メールアドレス / 送信内容" />
-            <Row name="Google" purpose="OAuth ログイン / Maps API" data="Google アカウント情報" />
-            <Row name="Anthropic" purpose="掲示板の自動投稿生成 (Claude API)" data="個人情報なし (記事内容のみ)" />
+            <Row name="ホスティング・配信" purpose="Web サイトの配信" data="リクエスト IP / User-Agent" />
+            <Row name="データベース・ストレージ・認証" purpose="アカウント管理・データ保存" data="登録情報全般" />
+            <Row name="決済処理" purpose="購入決済・売上配分" data="メール / 決済関連情報" />
+            <Row name="メール配信" purpose="トランザクションメール送信" data="メールアドレス / 送信内容" />
+            <Row name="外部 ID 連携" purpose="ソーシャルログイン" data="連携元アカウントの公開プロフィール" />
+            <Row name="AI コンテンツ生成" purpose="掲示板向けの公開情報の自動整形" data="個人情報を含まない公開情報のみ" />
           </tbody>
         </table>
       </Section>
@@ -112,7 +127,7 @@ export default function PrivacyPage() {
         </ul>
         <p>
           これらの請求は <a href="/contact" className="text-primary-300 hover:underline">お問い合わせフォーム</a>
-          からご連絡ください。原則として 30 日以内にご対応します。
+          からご連絡ください。法令に従い、合理的な期間内にご対応します。
         </p>
       </Section>
 
@@ -125,11 +140,15 @@ export default function PrivacyPage() {
       </Section>
 
       <Section n="7" title="保管期間">
+        <p>
+          取得した個人情報は、<strong>法令およびサービスの提供上必要な期間</strong>
+          に限り保管します。
+        </p>
         <ul>
-          <li>退会後の通常データ: 退会後 30 日以内に削除</li>
-          <li>居住確認書類: 確認完了後 30 日以内に自動削除</li>
-          <li>取引履歴 (税務上必要なもの): 7 年間保管</li>
-          <li>ログ (IP、操作履歴): 90 日間</li>
+          <li>退会後の通常データ: 利用目的を達成した後、合理的な期間内に削除</li>
+          <li>居住確認書類: 確認目的の達成後、速やかに削除</li>
+          <li>取引履歴: 関係法令で定められた期間にわたり保管</li>
+          <li>ログ等の運用情報: サービスの安定運用に必要な期間に限り保管</li>
         </ul>
       </Section>
 
@@ -188,6 +207,14 @@ function Hero({
         最終更新: {updated} ｜ バージョン: {version}
       </p>
     </header>
+  );
+}
+
+function Banner({ children }: { children: React.ReactNode }) {
+  return (
+    <aside className="my-6 rounded-md border border-warning-500/30 bg-warning-50/50 px-4 py-3 text-[12px] leading-relaxed text-foreground/75">
+      <strong className="text-warning-700">お知らせ:</strong> {children}
+    </aside>
   );
 }
 

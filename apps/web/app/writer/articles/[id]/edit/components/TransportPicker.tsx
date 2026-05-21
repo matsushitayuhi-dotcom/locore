@@ -368,11 +368,11 @@ export function TransportPicker({
               title={
                 !fromLatLng || !toLatLng
                   ? '起点・終点の両方にスポットを紐付けると自動取得できます'
-                  : 'Google から路線・出発駅・到着駅・時間を取得'
+                  : '路線・出発駅・到着駅・時間を自動取得'
               }
               className="ml-auto rounded-md bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-primary-500 disabled:opacity-40"
             >
-              {isFetching ? '取得中…' : 'Google で経路取得'}
+              {isFetching ? '取得中…' : '経路取得'}
             </button>
           </div>
           <div className="grid gap-2 sm:grid-cols-3">
@@ -461,11 +461,11 @@ export function TransportPicker({
               title={
                 !fromLatLng || !toLatLng
                   ? '起点・終点の両方にスポットを紐付けると自動取得できます'
-                  : 'Google から所要時間を取得'
+                  : '所要時間を自動取得'
               }
               className="rounded-md bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-primary-500 disabled:opacity-40"
             >
-              {isFetching ? '取得中…' : 'Google で時間取得'}
+              {isFetching ? '取得中…' : '時間取得'}
             </button>
           ) : null}
         </div>

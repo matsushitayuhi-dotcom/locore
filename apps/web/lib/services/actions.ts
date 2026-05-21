@@ -50,6 +50,15 @@ const upsertSchema = z
     cityId: z.string().uuid().optional().nullable(),
     /** 誰向けか。未指定 = NULL (= 旧データ扱い、両ホームに出る) */
     audience: z.enum(AUDIENCES).optional().nullable(),
+    /** カバー画像 URL。null / undefined = 画像なし */
+    coverImageUrl: z
+      .string()
+      .trim()
+      .url()
+      .max(2048)
+      .optional()
+      .nullable()
+      .or(z.literal('').transform(() => null)),
   })
   .refine(
     (v) => v.contactMethod !== 'external_url' || !!v.externalUrl,
@@ -105,6 +114,7 @@ export async function upsertUserService(
         externalUrl: data.externalUrl ?? null,
         cityId: data.cityId ?? null,
         audience: data.audience ?? null,
+        coverImageUrl: data.coverImageUrl ?? null,
         isActive: data.isActive,
         position: data.position,
         updatedAt: new Date(),
@@ -139,6 +149,7 @@ export async function upsertUserService(
       externalUrl: data.externalUrl ?? null,
       cityId: data.cityId ?? null,
       audience: data.audience ?? null,
+      coverImageUrl: data.coverImageUrl ?? null,
       isActive: data.isActive,
       position: nextPos,
     })

@@ -14,13 +14,16 @@ import { Logo } from './Logo';
 /**
  * トップバー。
  *
- * モード（旅行者 / 駐在員）共通で、コンテンツ系のナビをここに集約:
- *   ホーム / 場所 / マップ / 新着ニュース
+ * モード（旅行者 / 駐在員）でグローバルメニューを分岐する:
+ *
+ *   旅行者: ホーム / 場所 / 地図 / 検索
+ *   駐在員: ホーム / 場所 / 求人 / アパート / 売買 / サークル / 習い事 / 助け合い / 検索
+ *
+ * 「新着ニュース」は両モードともグローバルからは外している（駐在員ホーム内の
+ *  BoardWidget からは引き続き辿れる）。
  *
  * ユーザー固有のメニュー（お気に入り / 旅程 / 購入記事 / クリエイター系 /
- * アカウント設定）は SideMenu に移し、重複を排除した。
- *
- * Founders 枠ボタンも撤去（駐在員ホーム /expat 内のバナーに統合）。
+ * アカウント設定）は SideMenu に集約。
  */
 export async function SiteHeader() {
   const [user, mode, countries, regionsWithContent] = await Promise.all([
@@ -36,6 +39,8 @@ export async function SiteHeader() {
   // コンテンツ存在 slug 集合を Array で渡す (Client Component なので Set
   // 直接渡しは serialize できない)
   const availableRegionSlugs = Array.from(regionsWithContent);
+
+  const isResident = mode === 'resident';
 
   return (
     <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
@@ -55,29 +60,28 @@ export async function SiteHeader() {
         <ModeToggle currentMode={mode} />
 
         <nav className="hidden flex-1 items-center justify-center gap-1 text-sm md:flex">
-          <Link
-            href={homeHref}
-            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
-          >
-            ホーム
-          </Link>
+          <NavLink href={homeHref}>ホーム</NavLink>
           <PlaceMenu
             countries={countries}
             mode={mode ?? 'traveler'}
             availableRegionSlugs={availableRegionSlugs}
           />
-          <Link
-            href="/map"
-            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
-          >
-            マップ
-          </Link>
-          <Link
-            href="/board"
-            className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
-          >
-            新着ニュース
-          </Link>
+          {isResident ? (
+            <>
+              <NavLink href="/jobs">求人</NavLink>
+              <NavLink href="/apartments">アパート</NavLink>
+              <NavLink href="/marketplace">売買</NavLink>
+              <NavLink href="/groups">サークル</NavLink>
+              <NavLink href="/lessons">習い事</NavLink>
+              <NavLink href="/help">助け合い</NavLink>
+              <NavLink href="/search">検索</NavLink>
+            </>
+          ) : (
+            <>
+              <NavLink href="/map">地図から探す</NavLink>
+              <NavLink href="/search">検索</NavLink>
+            </>
+          )}
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
@@ -105,5 +109,22 @@ export async function SiteHeader() {
         </div>
       </div>
     </header>
+  );
+}
+
+function NavLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="rounded-full px-3 py-1.5 font-medium text-foreground/70 transition hover:bg-primary-500/10 hover:text-foreground"
+    >
+      {children}
+    </Link>
   );
 }

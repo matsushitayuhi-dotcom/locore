@@ -46,6 +46,8 @@ export const userServices = pgTable(
     /** 'traveler' | 'resident' | 'both' | null（0046 で追加）。
      *  NULL は「旧データ」扱い。/explore /expat 両方にフォールバックで載せる。 */
     audience: text('audience'),
+    /** カバー画像 URL (0050 で追加)。NULL = 未設定 (プレースホルダー表示) */
+    coverImageUrl: text('cover_image_url'),
     isActive: boolean('is_active').notNull().default(true),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true })

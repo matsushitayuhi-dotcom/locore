@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button, Input } from '@locore/ui';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, ImagePlus, X as XIcon } from 'lucide-react';
 import {
   upsertUserService,
   deleteUserService,
 } from '@/lib/services/actions';
+import { uploadImage } from '@/lib/storage/uploadImage';
 
 /**
  * 自分のサービス一覧 編集 UI。
@@ -53,6 +54,8 @@ type Service = {
   cityId: string;
   /** '' = 指定なし */
   audience: '' | 'traveler' | 'resident' | 'both';
+  /** カバー画像 URL ('' = 未設定) */
+  coverImageUrl: string;
 };
 
 const empty = (): Service => ({
@@ -66,6 +69,7 @@ const empty = (): Service => ({
   isActive: true,
   cityId: '',
   audience: '',
+  coverImageUrl: '',
 });
 
 type Props = {
@@ -110,6 +114,7 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
         position: idx,
         cityId: r.cityId || null,
         audience: r.audience || null,
+        coverImageUrl: r.coverImageUrl.trim() || null,
       });
       if (res.ok && res.data) {
         toast.success('サービスを保存しました');
@@ -158,6 +163,7 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
         position: rows.length,
         cityId: draft.cityId || null,
         audience: draft.audience || null,
+        coverImageUrl: draft.coverImageUrl.trim() || null,
       });
       if (res.ok && res.data) {
         toast.success('サービスを追加しました');
@@ -190,6 +196,10 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
             key={r.id ?? `draft-${idx}`}
             className="space-y-3 rounded-md bg-card p-4 ring-1 ring-border"
           >
+            <CoverImageField
+              value={r.coverImageUrl}
+              onChange={(url) => update(idx, 'coverImageUrl', url)}
+            />
             <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
               <div>
                 <label className="mb-1 block text-[11px] font-medium text-foreground/70">
@@ -381,6 +391,10 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
             新しいサービス
           </p>
+          <CoverImageField
+            value={draft.coverImageUrl}
+            onChange={(url) => setDraft({ ...draft, coverImageUrl: url })}
+          />
           <Input
             value={draft.title}
             onChange={(e) => setDraft({ ...draft, title: e.target.value })}
@@ -498,5 +512,115 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
         </Button>
       )}
     </section>
+  );
+}
+
+/**
+ * カバー画像のアップロード UI。
+ *
+ * - 既存の `uploadImage` (article-images バケット) を再利用してアップロード
+ *   → 新しい RLS / バケットを追加せずに済む
+ * - 設定済みのときはプレビューと「画像を外す」「差し替える」を出す
+ * - 未設定のときはドラッグ&ドロップ + クリック (ペーストは UAT 指摘により非対応)
+ */
+function CoverImageField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, startUpload] = useTransition();
+
+  const handleFiles = (files: FileList | File[] | null) => {
+    if (!files) return;
+    const arr = Array.from(files);
+    const file = arr[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('画像ファイルを選択してください');
+      return;
+    }
+    const fd = new FormData();
+    fd.append('file', file);
+    startUpload(async () => {
+      const res = await uploadImage(fd);
+      if (res.ok) {
+        onChange(res.url);
+        toast.success('カバー画像をアップロードしました。「保存」を押して反映してください');
+      } else {
+        toast.error(res.error);
+      }
+    });
+  };
+
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-medium text-foreground/70">
+        カバー画像
+      </label>
+      {value ? (
+        <div className="flex flex-wrap items-start gap-3">
+          <div className="relative h-24 w-40 overflow-hidden rounded-md ring-1 ring-border">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={value}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => inputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? 'アップロード中…' : '差し替える'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onChange('')}
+              disabled={isUploading}
+            >
+              <XIcon className="h-3.5 w-3.5" />
+              画像を外す
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div
+          tabIndex={0}
+          onClick={() => inputRef.current?.click()}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            handleFiles(e.dataTransfer.files);
+          }}
+          className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed border-border bg-card px-4 py-5 text-center text-[12px] outline-none transition hover:border-primary-300 hover:bg-primary-500/10 focus:border-primary-500"
+        >
+          <ImagePlus className="h-5 w-5 text-foreground/45" />
+          <p className="font-medium text-foreground/75">
+            {isUploading
+              ? 'アップロード中…'
+              : '画像をドラッグ & ドロップ、またはクリック'}
+          </p>
+          <p className="text-[11px] text-foreground/45">
+            JPEG / PNG / WebP / GIF・横長 (3:2 推奨)
+          </p>
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={(e) => handleFiles(e.target.files)}
+        className="hidden"
+      />
+    </div>
   );
 }

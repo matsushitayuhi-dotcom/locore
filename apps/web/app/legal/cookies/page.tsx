@@ -19,6 +19,11 @@ export default function CookiesPage() {
         updated="2026 年 5 月 19 日"
       />
 
+      <Banner>
+        本ポリシーは β 公開版です。サービスの本格運用開始に合わせて随時改定します。
+        利用している事業者の個別名称等の詳細は、ご請求に応じて遅滞なく開示します。
+      </Banner>
+
       <p className="text-[13px] leading-[1.9] text-foreground/75">
         Locore（以下「本サービス」）では、ユーザーの利便性向上とサービス品質の改善のため、
         Cookie および類似技術 (ローカルストレージ等) を利用します。本ポリシーは、その種類と
@@ -40,7 +45,7 @@ export default function CookiesPage() {
         </p>
         <ul>
           <li>
-            <strong>セッション Cookie</strong>: ログイン状態の維持 (Supabase Auth)
+            <strong>セッション Cookie</strong>: ログイン状態の維持
           </li>
           <li>
             <strong>CSRF トークン</strong>: 不正リクエストの防止
@@ -66,32 +71,30 @@ export default function CookiesPage() {
           個人を特定する情報は含みません。
         </p>
         <ul>
-          <li><strong>Vercel Analytics</strong>: ページビュー、参照元、デバイス種別</li>
+          <li>ページビュー、参照元、デバイス種別等の匿名統計情報</li>
         </ul>
 
         <h3>2.4 第三者 Cookie</h3>
         <p>
-          本サービスは以下の第三者サービスを利用しており、それぞれの Cookie が設定されます。
+          本サービスは以下のカテゴリの第三者サービスを利用しており、それぞれの Cookie が
+          設定される場合があります。各社のプライバシーポリシーに従って取り扱われます。
         </p>
         <ul>
           <li>
-            <strong>Stripe</strong>: 決済時の不正検知 (
-            <a href="https://stripe.com/cookies-policy/legal" target="_blank" rel="noopener noreferrer" className="text-primary-300 hover:underline">
-              Stripe Cookie Policy
-            </a>
-            )
+            <strong>決済代行サービス</strong>: 決済時の不正検知
           </li>
           <li>
-            <strong>Google Maps</strong>: 地図の表示 (
-            <a href="https://policies.google.com/technologies/cookies" target="_blank" rel="noopener noreferrer" className="text-primary-300 hover:underline">
-              Google Cookies
-            </a>
-            )
+            <strong>地図表示サービス</strong>: 地図の表示
           </li>
           <li>
-            <strong>Google OAuth</strong>: Google アカウントログイン
+            <strong>認証サービス</strong>: 外部アカウントでのログイン
           </li>
         </ul>
+        <p className="mt-2 text-[12px] text-foreground/65">
+          ※ 個別のサービス事業者名は、ご請求に応じて
+          <a href="/contact" className="text-primary-300 hover:underline">お問い合わせフォーム</a>
+          より遅滞なく開示します。
+        </p>
       </Section>
 
       <Section n="3" title="Cookie の管理・無効化">
@@ -128,9 +131,9 @@ export default function CookiesPage() {
 
       <Section n="4" title="保管期間">
         <ul>
-          <li><strong>セッション Cookie</strong>: ブラウザを閉じると削除</li>
-          <li><strong>持続的 Cookie</strong>: 最大 1 年間 (重要なものは 14 日間)</li>
-          <li><strong>第三者 Cookie</strong>: 各社のポリシーに従う</li>
+          <li><strong>セッション Cookie</strong>: ブラウザを閉じると削除されます</li>
+          <li><strong>持続的 Cookie</strong>: 各 Cookie の用途に必要な期間に限り保管されます</li>
+          <li><strong>第三者 Cookie</strong>: 各社のポリシーに従います</li>
         </ul>
       </Section>
 
@@ -178,6 +181,14 @@ function Hero({
         最終更新: {updated} ｜ バージョン: {version}
       </p>
     </header>
+  );
+}
+
+function Banner({ children }: { children: React.ReactNode }) {
+  return (
+    <aside className="my-6 rounded-md border border-warning-500/30 bg-warning-50/50 px-4 py-3 text-[12px] leading-relaxed text-foreground/75">
+      <strong className="text-warning-700">お知らせ:</strong> {children}
+    </aside>
   );
 }
 

@@ -19,6 +19,11 @@ export default function CommercialPage() {
         updated="2026 年 5 月 19 日"
       />
 
+      <Banner>
+        本表記は β 公開版です。会社情報・販売条件等の詳細は、本格運用開始に合わせて
+        随時改定します。個別の事項については、ご請求に応じて遅滞なく開示します。
+      </Banner>
+
       <p className="text-[13px] leading-[1.9] text-foreground/75">
         特定商取引に関する法律 第 11 条に基づき、Locore における有料コンテンツの
         販売、およびユーザーサービスの提供に関する事項を以下のとおり表示します。
@@ -43,10 +48,8 @@ export default function CommercialPage() {
         </Row>
         <Row label="ホームページ URL">https://www.locore.app</Row>
         <Row label="販売価格">
-          各記事・サービスのページに表示
+          各記事・サービスのページに明示します
           <Note>
-            有料記事は ¥500〜¥3,000 程度を想定。
-            ユーザーサービスは各クリエイターが設定。
             消費税および決済手数料込みの価格を表示します。
           </Note>
         </Row>
@@ -55,9 +58,9 @@ export default function CommercialPage() {
           代金の決済方法によっては、決済代行会社の手数料が別途必要となる場合があります。
         </Row>
         <Row label="支払方法">
-          クレジットカード決済 (Visa / Mastercard / American Express / JCB / Diners)
+          クレジットカード決済 (主要ブランドに対応)
           <Note>
-            ※ 決済は Stripe Inc. を通じて行われます。当社はカード番号を直接保持しません。
+            ※ 決済は当社が指定する決済代行サービスを通じて行われます。当社はカード番号を直接保持しません。
           </Note>
         </Row>
         <Row label="支払時期">商品購入の確定操作時に即時決済</Row>
@@ -83,7 +86,7 @@ export default function CommercialPage() {
             <li>その他、当社が合理的に判断する事由</li>
           </ul>
           <p className="mt-2 text-[12px] text-foreground/65">
-            ※ 申請は購入から <strong>14 日以内</strong>に限ります
+            ※ 申請は購入から当社が定める一定期間内に限ります。詳細は購入ページをご確認ください
           </p>
         </Row>
         <Row label="動作環境">
@@ -96,12 +99,12 @@ export default function CommercialPage() {
         </Row>
         <Row label="クリエイターへの売上配分">
           <p>
-            有料記事の売上は、Stripe 手数料を差し引いた金額の <strong>80%</strong> を
-            クリエイターに、<strong>20%</strong> を当社が運営手数料として受領します。
-            支払いは Stripe Connect を通じて月次で行います。
+            有料記事の売上は、決済代行サービスの手数料を差し引いた金額から、
+            当社所定の運営手数料を控除した残額をクリエイターが受領します。
+            支払いは決済代行サービスを通じて定期的に行います。
           </p>
           <p className="mt-2 text-[12px] text-foreground/65">
-            ※ Founders 50 枠は、立ち上げ期 1 年間の手数料を <strong>10%</strong> に優遇します
+            ※ 具体的な手数料率の詳細はクリエイター契約書類でご確認いただけます
           </p>
         </Row>
       </dl>
@@ -135,6 +138,14 @@ function Hero({
         最終更新: {updated} ｜ バージョン: {version}
       </p>
     </header>
+  );
+}
+
+function Banner({ children }: { children: React.ReactNode }) {
+  return (
+    <aside className="my-6 rounded-md border border-warning-500/30 bg-warning-50/50 px-4 py-3 text-[12px] leading-relaxed text-foreground/75">
+      <strong className="text-warning-700">お知らせ:</strong> {children}
+    </aside>
   );
 }
 

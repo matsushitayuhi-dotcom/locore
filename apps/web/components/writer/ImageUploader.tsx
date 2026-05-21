@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';
 import { uploadImage } from '@/lib/storage/uploadImage';
@@ -8,7 +8,11 @@ import { uploadImage } from '@/lib/storage/uploadImage';
 /**
  * 画像アップロード共通 UI。
  * - drag&drop / クリックで <input type="file"> を起動
- * - Server Action `uploadImage` を呼び、公開 URL を取得
+ *   (UAT 指摘でクリップボード貼り付けは廃止)
+ * - クライアント側で max 2000px / JPEG 80% に縮小してから Server Action へ
+ *   （カバー画像のフリーズや Vercel body limit (4.5MB) 超過対策）
+ * - 失敗時の原因別 toast / 進捗スピナー
+ * - HEIC / HEIF は明示的に対応外として弾く
  * - URL 直接入力にもフォールバック対応（Storage 未設定時の救済）
  *
  * 使い回し:
@@ -16,6 +20,86 @@ import { uploadImage } from '@/lib/storage/uploadImage';
  *   - 本文内画像（小サイズ）
  *   - スポット画像（任意）
  */
+
+// クライアント側リサイズの最大辺と JPEG 品質
+const MAX_DIMENSION = 2000;
+const JPEG_QUALITY = 0.82;
+// HEIC / HEIF は明示的に対応外
+const UNSUPPORTED_TYPES = new Set(['image/heic', 'image/heif']);
+const HEIC_EXT_RE = /\.(heic|heif)$/i;
+// クライアント側のハードリミット（uploadImage 側でも 20MB を超えると弾かれる）
+const CLIENT_MAX_BYTES = 20 * 1024 * 1024;
+
+/**
+ * 画像を canvas で max 2000px に縮小して JPEG 80% で再エンコード。
+ * 失敗した場合 (decode 不能 / canvas エラー) は元の File を返す。
+ */
+async function resizeImageIfNeeded(file: File): Promise<File> {
+  // GIF はアニメーションが失われるのでリサイズ対象外。
+  if (file.type === 'image/gif') return file;
+  if (typeof window === 'undefined') return file;
+  try {
+    const bitmap = await createBitmap(file);
+    if (!bitmap) return file;
+    const { width, height } = bitmap;
+    const longest = Math.max(width, height);
+    // 既に十分小さい かつ ファイル本体も 1MB 未満なら触らない
+    if (longest <= MAX_DIMENSION && file.size < 1024 * 1024) {
+      bitmap.close?.();
+      return file;
+    }
+    const scale = longest > MAX_DIMENSION ? MAX_DIMENSION / longest : 1;
+    const targetW = Math.round(width * scale);
+    const targetH = Math.round(height * scale);
+    const canvas = document.createElement('canvas');
+    canvas.width = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      bitmap.close?.();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, targetW, targetH);
+    bitmap.close?.();
+    const blob: Blob | null = await new Promise((resolve) =>
+      canvas.toBlob((b) => resolve(b), 'image/jpeg', JPEG_QUALITY),
+    );
+    if (!blob) return file;
+    const stem = file.name.replace(/\.[^.]+$/, '') || 'image';
+    return new File([blob], `${stem}.jpg`, { type: 'image/jpeg' });
+  } catch {
+    return file;
+  }
+}
+
+async function createBitmap(file: File): Promise<ImageBitmap | null> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      return await createImageBitmap(file);
+    } catch {
+      // 一部のブラウザ / 形式は createImageBitmap が落ちる。フォールバックする。
+    }
+  }
+  return new Promise((resolve) => {
+    try {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        // ImageBitmap 互換のダミーを返す（drawImage に渡せる）
+        URL.revokeObjectURL(url);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolve(img as any);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(null);
+      };
+      img.src = url;
+    } catch {
+      resolve(null);
+    }
+  });
+}
 
 type Props = {
   value: string;
@@ -39,67 +123,88 @@ export function ImageUploader({
   isPublished,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
   const [isPending, startTransition] = useTransition();
   const [dragOver, setDragOver] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [urlDraft, setUrlDraft] = useState(value);
+  // 簡易進捗フェーズ表示（リサイズ中 / 送信中）
+  const [phase, setPhase] = useState<'idle' | 'resizing' | 'uploading'>('idle');
 
   const handleFiles = (files: FileList | File[] | null) => {
     if (!files) return;
     const arr = Array.from(files);
     if (arr.length === 0) return;
     const file = arr[0]!;
-    if (!file.type.startsWith('image/')) {
+    // 1) HEIC / HEIF は明示的に対応外
+    if (
+      UNSUPPORTED_TYPES.has(file.type.toLowerCase()) ||
+      HEIC_EXT_RE.test(file.name)
+    ) {
+      toast.error(
+        '.heic / .heif ファイルは対応していません。.jpg / .png に変換してから再アップロードしてください。',
+      );
+      return;
+    }
+    // 2) 画像種別チェック
+    if (file.type && !file.type.startsWith('image/')) {
       toast.error('画像ファイルを選択してください');
       return;
     }
-    const fd = new FormData();
-    fd.append('file', file);
+    // 3) 上限超え（リサイズ前判定）
+    if (file.size > CLIENT_MAX_BYTES) {
+      toast.error(
+        `ファイルサイズが大きすぎます（${Math.round(
+          file.size / 1024 / 1024,
+        )}MB / 上限 20MB）。`,
+      );
+      return;
+    }
     startTransition(async () => {
-      const res = await uploadImage(fd);
-      if (res.ok) {
-        onChange(res.url);
-        setUrlDraft(res.url);
-        toast.success('画像をアップロードしました');
-      } else {
-        toast.error(res.error);
+      try {
+        setPhase('resizing');
+        // 4) クライアント側で max 2000px / JPEG 80% にリサイズ
+        const compressed = await resizeImageIfNeeded(file);
+        setPhase('uploading');
+        const fd = new FormData();
+        fd.append('file', compressed);
+        const res = await uploadImage(fd);
+        if (res.ok) {
+          onChange(res.url);
+          setUrlDraft(res.url);
+          const reduction =
+            file.size > 0
+              ? Math.max(0, Math.round((1 - compressed.size / file.size) * 100))
+              : 0;
+          toast.success(
+            reduction > 5
+              ? `画像をアップロードしました（${reduction}% 圧縮）`
+              : '画像をアップロードしました',
+          );
+        } else {
+          // サーバ側からのエラーメッセージを尊重しつつ、ヒントを足す
+          toast.error(res.error || 'アップロードに失敗しました');
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : '不明なエラー';
+        toast.error(`アップロード中に問題が発生しました: ${msg}`);
+      } finally {
+        setPhase('idle');
       }
     });
   };
+
+  const progressLabel =
+    phase === 'resizing'
+      ? '画像を圧縮中…'
+      : phase === 'uploading'
+        ? 'アップロード中…'
+        : null;
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     handleFiles(e.dataTransfer.files);
   };
-
-  /**
-   * クリップボードペースト対応：ドロップゾーンにフォーカスがある状態で⌘V/Ctrl+V を押すと
-   * クリップボードに画像が乗っていれば取り込む。
-   * ドロップゾーン全体に paste イベントを張ることで、URL 入力欄等を干渉させない。
-   */
-  useEffect(() => {
-    const el = dropZoneRef.current;
-    if (!el) return;
-    const onPaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      const files: File[] = [];
-      for (const item of Array.from(items)) {
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
-          const f = item.getAsFile();
-          if (f) files.push(f);
-        }
-      }
-      if (files.length === 0) return;
-      e.preventDefault();
-      handleFiles(files);
-    };
-    el.addEventListener('paste', onPaste);
-    return () => el.removeEventListener('paste', onPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const onRemove = () => {
     onChange('');
@@ -129,8 +234,21 @@ export function ImageUploader({
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
-              {isPending ? 'アップロード中…' : '差し替える'}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => inputRef.current?.click()}
+              disabled={isPending}
+            >
+              {isPending ? (
+                <span className="inline-flex items-center gap-2">
+                  <Spinner />
+                  {progressLabel ?? '処理中…'}
+                </span>
+              ) : (
+                '差し替える'
+              )}
             </Button>
             <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
               削除
@@ -147,7 +265,6 @@ export function ImageUploader({
         </div>
       ) : (
         <div
-          ref={dropZoneRef}
           onDragOver={(e) => {
             e.preventDefault();
             setDragOver(true);
@@ -157,7 +274,7 @@ export function ImageUploader({
           onClick={() => inputRef.current?.click()}
           role="button"
           tabIndex={0}
-          aria-label="画像をアップロード（クリック / ドラッグ&ドロップ / ⌘V）"
+          aria-label="画像をアップロード（クリック / ドラッグ&ドロップ）"
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
@@ -173,10 +290,21 @@ export function ImageUploader({
           style={{ aspectRatio: aspect }}
         >
           <p className="font-medium text-foreground/80">
-            {isPending ? 'アップロード中…' : '画像をドラッグ & ドロップ'}
+            {isPending ? (
+              <span className="inline-flex items-center gap-2">
+                <Spinner />
+                {progressLabel ?? '処理中…'}
+              </span>
+            ) : (
+              '画像をドラッグ & ドロップ、またはクリック'
+            )}
           </p>
-          <p className="text-foreground/50">クリックで選択 / ⌘V で貼り付け</p>
-          <p className="text-[11px] text-foreground/40">JPEG / PNG / WebP / GIF（最大 8MB）</p>
+          <p className="text-[11px] text-foreground/40">
+            JPEG / PNG / WebP / GIF（最大 20MB / 長辺 2000px に自動縮小）
+          </p>
+          <p className="text-[11px] text-foreground/40">
+            .heic / .heif は非対応。jpg / png に変換してください。
+          </p>
         </div>
       )}
 
@@ -218,5 +346,32 @@ export function ImageUploader({
         </p>
       ) : null}
     </div>
+  );
+}
+
+/** 小さなインライン円形スピナー（外部依存なし） */
+function Spinner() {
+  return (
+    <svg
+      className="h-3.5 w-3.5 animate-spin text-primary-500"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      />
+    </svg>
   );
 }

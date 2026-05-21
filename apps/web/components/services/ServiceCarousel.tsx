@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { MapPin, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import type { FeaturedService } from '@/lib/services/featured';
 
@@ -10,6 +10,16 @@ const CATEGORY_LABEL: Record<string, string> = {
   translation: '翻訳・通訳',
   attend: '同行・代行',
   other: 'その他',
+};
+
+/** カバー画像が無いカテゴリの背景色 (アクセントだけのプレースホルダー) */
+const CATEGORY_PLACEHOLDER_BG: Record<string, string> = {
+  tourism: 'bg-amber-500/15',
+  consulting: 'bg-blue-500/15',
+  study_abroad: 'bg-emerald-500/15',
+  translation: 'bg-purple-500/15',
+  attend: 'bg-primary-500/15',
+  other: 'bg-foreground/10',
 };
 
 /**
@@ -39,8 +49,32 @@ export function ServiceCarousel({ services }: Props) {
         >
           <Link
             href={`/residents/${s.ownerId}`}
-            className="flex h-full flex-col rounded-2xl bg-card p-4 ring-1 ring-border transition hover:ring-primary-300 sm:p-5"
+            className="flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border transition hover:ring-primary-300"
           >
+            <div
+              className={
+                'relative aspect-[3/2] w-full overflow-hidden ' +
+                (s.coverImageUrl
+                  ? 'bg-muted'
+                  : CATEGORY_PLACEHOLDER_BG[s.category ?? 'other'] ??
+                    'bg-foreground/10')
+              }
+            >
+              {s.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={s.coverImageUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-foreground/35">
+                  <ImageIcon className="h-8 w-8" aria-hidden />
+                </div>
+              )}
+            </div>
+            <div className="flex flex-1 flex-col p-4 sm:p-5">
             <div className="flex flex-wrap items-start gap-2">
               {s.category ? (
                 <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
@@ -92,6 +126,7 @@ export function ServiceCarousel({ services }: Props) {
                   {s.cityNameJa}
                 </span>
               ) : null}
+            </div>
             </div>
           </Link>
         </li>

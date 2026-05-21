@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button, Input, Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import { updateProfile } from '@/app/settings/profile/actions';
@@ -10,7 +10,8 @@ import { uploadAvatar } from '@/lib/storage/uploadImage';
  * プロフィール編集フォーム。
  *
  * - クリエイター / 読者の区別なし（"writer 用 bio" は廃止）
- * - アバター画像はファイル選択 / D&D / クリップボード貼り付けで Supabase Storage にアップロード
+ * - アバター画像はファイル選択 / D&D で Supabase Storage にアップロード
+ *   (UAT 指摘でクリップボード貼り付けは廃止)
  */
 
 type Props = {
@@ -28,7 +29,6 @@ export function ProfileForm({ initial }: Props) {
   const [isPending, startTransition] = useTransition();
   const [isUploading, startUpload] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
-  const dropRef = useRef<HTMLDivElement>(null);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,29 +68,6 @@ export function ProfileForm({ initial }: Props) {
     });
   };
 
-  // クリップボードペースト対応
-  useEffect(() => {
-    const el = dropRef.current;
-    if (!el) return;
-    const onPaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-      const files: File[] = [];
-      for (const item of Array.from(items)) {
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
-          const f = item.getAsFile();
-          if (f) files.push(f);
-        }
-      }
-      if (files.length === 0) return;
-      e.preventDefault();
-      handleFiles(files);
-    };
-    el.addEventListener('paste', onPaste);
-    return () => el.removeEventListener('paste', onPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <form
       onSubmit={onSubmit}
@@ -109,7 +86,6 @@ export function ProfileForm({ initial }: Props) {
             </AvatarFallback>
           </Avatar>
           <div
-            ref={dropRef}
             tabIndex={0}
             onClick={() => inputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
@@ -120,9 +96,8 @@ export function ProfileForm({ initial }: Props) {
             className="flex flex-1 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-primary-500/40 bg-primary-500/10 px-4 py-6 text-center text-[12px] outline-none transition hover:border-primary-300 hover:bg-primary-500/10 focus:border-primary-500"
           >
             <p className="font-medium text-primary-300">
-              {isUploading ? 'アップロード中…' : '画像をドラッグ & ドロップ'}
+              {isUploading ? 'アップロード中…' : '画像をドラッグ & ドロップ、またはクリック'}
             </p>
-            <p className="text-foreground/60">クリックで選択 / ⌘V で貼り付け</p>
             <p className="mt-1 text-[11px] text-foreground/40">
               JPEG / PNG / WebP / GIF・最大 4MB
             </p>

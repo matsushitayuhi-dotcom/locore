@@ -4,7 +4,6 @@ import { listBoardPosts } from '@/lib/board/db';
 import {
   BOARD_CATEGORIES,
   BOARD_CATEGORY_LABEL,
-  BOARD_CATEGORY_HINT,
   type BoardCategory,
   type BoardAudience,
 } from '@/lib/board/constants';
@@ -23,23 +22,25 @@ type Props = {
   searchParams?: { category?: string; audience?: string };
 };
 
-const AUDIENCE_TABS: { id: Audience; label: string }[] = [
-  { id: 'all', label: 'すべて' },
-  { id: 'traveler', label: '旅行者向け' },
-  { id: 'resident', label: '駐在員向け' },
-];
-
+/**
+ * カテゴリラベルの色 (BoardWidget と /board の各行で共通)。
+ * UAT 指摘で audience タブとカテゴリチップは UI から撤去し、各行の
+ * カテゴリラベルだけで判別できるようにした。URL クエリ
+ * (?category=, ?audience=) は後方互換のためサーバ側では受け取って
+ * フィルタするが、UI には表示しない。
+ */
 const CHIP_COLOR: Record<string, string> = {
-  event: 'bg-primary-500/10 text-primary-300',
-  transit: 'bg-slate-500/10 text-slate-600',
-  admin: 'bg-blue-500/10 text-blue-600',
-  food_season: 'bg-amber-500/10 text-amber-700',
-  community: 'bg-purple-500/10 text-purple-600',
-  family_edu: 'bg-emerald-500/10 text-emerald-600',
-  health_weather: 'bg-danger-500/10 text-danger-500',
+  event: 'bg-primary-500/15 text-primary-300',
+  transit: 'bg-slate-500/15 text-slate-600',
+  admin: 'bg-blue-500/15 text-blue-600',
+  food_season: 'bg-amber-500/15 text-amber-700',
+  community: 'bg-purple-500/15 text-purple-600',
+  family_edu: 'bg-emerald-500/15 text-emerald-600',
+  health_weather: 'bg-danger-500/15 text-danger-500',
 };
 
 export default async function BoardIndexPage({ searchParams }: Props) {
+  // URL クエリは引き続き受け取るが、UI ではタブ / チップを出さない方針。
   const activeCat =
     (searchParams?.category as BoardCategory | undefined) &&
     BOARD_CATEGORIES.includes(searchParams?.category as BoardCategory)
@@ -58,19 +59,6 @@ export default async function BoardIndexPage({ searchParams }: Props) {
     categories: activeCat ? [activeCat] : undefined,
     audiences: activeAud === 'all' ? undefined : [activeAud],
   });
-
-  const buildHref = (
-    nextCat?: BoardCategory,
-    nextAud?: Audience,
-  ): string => {
-    const params = new URLSearchParams();
-    const c = nextCat ?? activeCat;
-    const a = nextAud ?? activeAud;
-    if (c) params.set('category', c);
-    if (a && a !== 'all') params.set('audience', a);
-    const qs = params.toString();
-    return qs ? `/board?${qs}` : '/board';
-  };
 
   return (
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
@@ -101,93 +89,15 @@ export default async function BoardIndexPage({ searchParams }: Props) {
         </p>
       </header>
 
-      {/* 対象切替（旅行者 / 駐在員 / すべて） */}
-      <div
-        role="tablist"
-        aria-label="対象読者で絞り込み"
-        className="mb-3 flex flex-wrap items-center gap-1.5"
-      >
-        {AUDIENCE_TABS.map((t) => {
-          const on = t.id === activeAud;
-          return (
-            <Link
-              key={t.id}
-              href={buildHref(undefined, t.id)}
-              role="tab"
-              aria-selected={on}
-              className={
-                'inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-medium transition ' +
-                (on
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'border-border bg-background text-foreground/70 hover:border-foreground/30')
-              }
-            >
-              {t.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* カテゴリタブ */}
-      <div
-        role="tablist"
-        aria-label="カテゴリで絞り込み"
-        className="mb-6 flex flex-wrap items-center gap-1.5"
-      >
-        <Link
-          href={buildHref(undefined, undefined).replace(/[?&]category=[^&]*/, '')}
-          role="tab"
-          aria-selected={!activeCat}
-          className={
-            'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-            (!activeCat
-              ? 'bg-primary-500 text-neutral-950'
-              : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-          }
-        >
-          すべて
-        </Link>
-        {BOARD_CATEGORIES.map((cat) => {
-          const on = cat === activeCat;
-          return (
-            <Link
-              key={cat}
-              href={buildHref(cat, undefined)}
-              role="tab"
-              aria-selected={on}
-              title={BOARD_CATEGORY_HINT[cat]}
-              className={
-                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                (on
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-              }
-            >
-              {BOARD_CATEGORY_LABEL[cat]}
-            </Link>
-          );
-        })}
-      </div>
-
       {posts.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/65">
           <Inbox className="h-8 w-8 text-foreground/35" />
           <p className="text-[14px] font-medium text-foreground/75">
-            {activeCat
-              ? `「${BOARD_CATEGORY_LABEL[activeCat]}」の投稿はまだ見つかりませんでした`
-              : 'ぴったりの新着はまだ見つかりませんでした'}
+            新着情報はまだありません
           </p>
           <p className="text-[12px] text-foreground/55">
-            条件を変えてみてください。新着は毎朝、現地時間の 7 時前後に更新します。
+            新着は毎朝、現地時間の 7 時前後に更新します。
           </p>
-          {(activeCat || activeAud !== 'all') ? (
-            <Link
-              href="/board"
-              className="mt-1 rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
-            >
-              条件を変えてもう一度
-            </Link>
-          ) : null}
         </div>
       ) : (
         <ul className="space-y-3">
@@ -216,11 +126,6 @@ export default async function BoardIndexPage({ searchParams }: Props) {
                         >
                           {BOARD_CATEGORY_LABEL[cat] ?? cat}
                         </span>
-                        {p.audience === 'traveler' ? (
-                          <span className="rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
-                            旅行者向け
-                          </span>
-                        ) : null}
                       </div>
                       <h2 className="text-[15px] font-bold leading-snug text-foreground">
                         {p.title}

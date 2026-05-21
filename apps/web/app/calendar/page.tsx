@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { and, eq, gte, lte, asc, or, sql } from 'drizzle-orm';
+import { and, eq, gte, lte, asc, desc, or, sql } from 'drizzle-orm';
 import { ChevronLeft, ChevronRight, MapPin, ExternalLink } from 'lucide-react';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -140,7 +140,10 @@ async function loadMonthEvents(
           sql`${effectiveEnd} >= ${fromStr}`,
         ),
       )
-      .orderBy(asc(effectiveStart));
+      // UAT 指摘: 月内一覧 / 選択日詳細では「新しい開始日が上」になるように
+      // DESC で取得する。カレンダーグリッドはセルの日付順に従うので、
+      // この並び順はリスト表示にのみ影響する。
+      .orderBy(desc(effectiveStart));
 
     return rows
       .filter((r) => (cat.length === 0 ? true : cat.includes(r.category as BoardCategory)))

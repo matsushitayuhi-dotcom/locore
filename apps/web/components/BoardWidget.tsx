@@ -1,17 +1,34 @@
 import Link from 'next/link';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import type { BoardPostListItem } from '@/lib/board/db';
+import {
+  BOARD_CATEGORY_LABEL,
+  type BoardCategory,
+} from '@/lib/board/constants';
 
 /**
  * 掲示板ウィジェット (コンパクト版)。
  *
- * UAT 指摘で説明・カテゴリ・場所などのメタ行を撤去、タイトルのみの
+ * UAT 指摘で説明・場所などのメタ行を撤去、タイトル + 行頭カテゴリラベルの
  * 一覧に。上位 5 件まで表示し、行高を詰めて縦幅をタイトに。
  * - AI 自動投稿: 紫 Sparkles、それ以外: terra ドット
  * - 各行クリックで /board/[id] へ
  * - イベント日付があれば右端に M/D を小さく表示 (情報密度の妥協点)
+ * - タイトル左に【イベント】【交通】等のカテゴリラベルを表示し、
+ *   ユーザーが行ごとに情報種別を一目で判別できるようにする
  */
 const DEFAULT_LIMIT = 5;
+
+/** カテゴリラベルの色 (BoardWidget / /board 両方で使う) */
+const CATEGORY_LABEL_COLOR: Record<BoardCategory, string> = {
+  event: 'bg-primary-500/15 text-primary-300',
+  transit: 'bg-slate-500/15 text-slate-600',
+  admin: 'bg-blue-500/15 text-blue-600',
+  food_season: 'bg-amber-500/15 text-amber-700',
+  community: 'bg-purple-500/15 text-purple-600',
+  family_edu: 'bg-emerald-500/15 text-emerald-600',
+  health_weather: 'bg-danger-500/15 text-danger-500',
+};
 
 export function BoardWidget({
   posts,
@@ -44,7 +61,12 @@ export function BoardWidget({
         </Link>
       </header>
       <ul className="divide-y divide-border">
-        {visible.map((p) => (
+        {visible.map((p) => {
+          const cat = p.category as BoardCategory;
+          const catLabel = BOARD_CATEGORY_LABEL[cat];
+          const catColor =
+            CATEGORY_LABEL_COLOR[cat] ?? 'bg-foreground/10 text-foreground/65';
+          return (
           <li key={p.id}>
             <Link
               href={`/board/${p.id}`}
@@ -57,6 +79,14 @@ export function BoardWidget({
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary-500" />
                 )}
               </span>
+              {catLabel ? (
+                <span
+                  className={`shrink-0 rounded-sm px-1 py-0.5 text-[9px] font-bold uppercase tracking-wider ${catColor}`}
+                  aria-label={`カテゴリ: ${catLabel}`}
+                >
+                  {catLabel}
+                </span>
+              ) : null}
               <p className="line-clamp-1 min-w-0 flex-1 text-[12px] font-medium leading-snug text-foreground">
                 {p.title}
               </p>
@@ -73,7 +103,8 @@ export function BoardWidget({
               })()}
             </Link>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

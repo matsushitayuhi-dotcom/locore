@@ -8,8 +8,16 @@ import { Logo } from './Logo';
 import {
   Menu,
   X,
+  Home as HomeIcon,
   Compass,
   Map as MapIcon,
+  Search,
+  Briefcase,
+  Building2,
+  ShoppingCart,
+  Users,
+  GraduationCap,
+  HandHelping,
   Megaphone,
   Bookmark,
   ShoppingBag,
@@ -45,8 +53,40 @@ type MenuItem = {
   matchPrefix?: string;
 };
 
-// グローバルナビ（ホーム / 場所 / マップ / 新着ニュース）は SiteHeader 側で扱う。
-// SideMenu には「ログインしたユーザーに紐づく」項目だけを置く。
+// グローバルナビは SiteHeader 側でも出している（PC は中央 nav、モバイルは
+// ここの「ナビゲーション」セクション）。PC では SideMenu はサブ機能扱いだが、
+// モバイルでは唯一のナビ手段になるのでモード分岐込みで両方持つ。
+//
+// 旅行者: ホーム / 場所 (※ /world) / 地図 / 検索
+//   - 「場所」は SideMenu からは drill-down できないので、暫定で /world に飛ばす
+//     (全国一覧)。PC ヘッダの PlaceMenu で drill-down する想定。
+// 駐在員: ホーム / 場所 (※ /world) / 求人 / アパート / 売買 / サークル / 習い事 / 助け合い / 検索
+
+const TRAVELER_NAV_ITEMS: (mode: 'traveler' | 'resident' | null) => MenuItem[] = (
+  mode,
+) => [
+  {
+    href: mode === 'resident' ? '/expat' : '/explore',
+    label: 'ホーム',
+    icon: HomeIcon,
+    matchPrefix: mode === 'resident' ? '/expat' : '/explore',
+  },
+  { href: '/world', label: '場所で探す', icon: Compass, matchPrefix: '/world' },
+  { href: '/map', label: '地図から探す', icon: MapIcon, matchPrefix: '/map' },
+  { href: '/search', label: '検索', icon: Search, matchPrefix: '/search' },
+];
+
+const RESIDENT_NAV_ITEMS: MenuItem[] = [
+  { href: '/expat', label: 'ホーム', icon: HomeIcon, matchPrefix: '/expat' },
+  { href: '/world', label: '場所で探す', icon: Compass, matchPrefix: '/world' },
+  { href: '/jobs', label: '求人', icon: Briefcase, matchPrefix: '/jobs' },
+  { href: '/apartments', label: 'アパート', icon: Building2, matchPrefix: '/apartments' },
+  { href: '/marketplace', label: '売買', icon: ShoppingCart, matchPrefix: '/marketplace' },
+  { href: '/groups', label: 'サークル', icon: Users, matchPrefix: '/groups' },
+  { href: '/lessons', label: '習い事', icon: GraduationCap, matchPrefix: '/lessons' },
+  { href: '/help', label: '助け合い', icon: HandHelping, matchPrefix: '/help' },
+  { href: '/search', label: '検索', icon: Search, matchPrefix: '/search' },
+];
 
 // 旅行者モードのユーザー固有項目
 const TRAVELER_USER_ITEMS: MenuItem[] = [
@@ -65,7 +105,9 @@ const TRAVELER_USER_ITEMS: MenuItem[] = [
   },
 ];
 
-// 駐在員モードのユーザー固有項目（コミュニティ掲示板 = 投稿系も含む）
+// 駐在員モードのユーザー固有項目。
+// コミュニティ掲示板 (求人 / アパート / 売買 / サークル / 習い事 / 助け合い) は
+// 上部の「ナビゲーション」セクション (RESIDENT_NAV_ITEMS) に移したのでここには出さない。
 const RESIDENT_USER_ITEMS: MenuItem[] = [
   {
     href: '/library',
@@ -79,18 +121,6 @@ const RESIDENT_USER_ITEMS: MenuItem[] = [
     icon: ShoppingBag,
     matchPrefix: '/purchases',
   },
-  // 駐在員コミュニティ系
-  { href: '/jobs', label: '求人', icon: ShoppingBag, matchPrefix: '/jobs' },
-  { href: '/apartments', label: 'アパート', icon: MapIcon, matchPrefix: '/apartments' },
-  {
-    href: '/marketplace',
-    label: '売ります・買います',
-    icon: ShoppingBag,
-    matchPrefix: '/marketplace',
-  },
-  { href: '/groups', label: 'メンバー募集', icon: MessageCircle, matchPrefix: '/groups' },
-  { href: '/lessons', label: '教えます・習います', icon: PenSquare, matchPrefix: '/lessons' },
-  { href: '/help', label: '助け合い', icon: Heart, matchPrefix: '/help' },
 ];
 
 const WRITER_ITEMS: MenuItem[] = [
@@ -299,6 +329,17 @@ function DrawerPanel({
           aria-label="サイトナビゲーション"
           className="flex-1 overflow-y-auto px-2 py-3"
         >
+          {/* PC では SiteHeader 中央 nav と冗長だが、モバイルではここが唯一のナビ。
+              モードで内容を分岐 (新着ニュースは両モードとも撤去済み) */}
+          <Section title="ナビゲーション">
+            {(currentMode === 'resident'
+              ? RESIDENT_NAV_ITEMS
+              : TRAVELER_NAV_ITEMS(currentMode)
+            ).map((it) => (
+              <NavLink key={it.href} item={it} pathname={pathname} />
+            ))}
+          </Section>
+
           <Section title={currentMode === 'resident' ? '駐在員のあなたへ' : 'あなたの本棚'}>
             {(currentMode === 'resident'
               ? RESIDENT_USER_ITEMS

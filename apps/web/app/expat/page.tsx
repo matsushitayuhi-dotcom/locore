@@ -1,294 +1,206 @@
 import Link from 'next/link';
-import {
-  ArrowRight,
-  Briefcase,
-  Home as HomeIcon,
-  Megaphone,
-  Users,
-  GraduationCap,
-  HandHelping,
-  Search,
-} from 'lucide-react';
-import { listBoardPosts } from '@/lib/board/db';
-import { BoardWidget } from '@/components/BoardWidget';
-import { ArticleScrollSection } from '@/components/ArticleScrollSection';
-import { CommunityCard } from '@/components/community/CommunityCard';
-import { getPublishedDbArticles } from '@/lib/articles/published';
-import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
-import { listCommunityPosts } from '@/lib/community/db';
-import { getFeaturedServices } from '@/lib/services/featured';
-import { ServiceCarousel } from '@/components/services/ServiceCarousel';
-import {
-  KIND_BASE_PATH,
-  KIND_LABEL,
-  type CommunityKind,
-} from '@/lib/community/constants';
+import Image from 'next/image';
+import { ArrowRight, Lock } from 'lucide-react';
+import { listCountriesForPicker } from '@/lib/geo/countries';
+import type { CountryListItem } from '@/lib/geo/countries';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Locore for Residents',
+  title: 'Locore for Residents — 国を選ぶ',
   description:
-    '駐在員と、駐在員と繋がりたい人のためのホーム。コミュニティ掲示板（求人 / アパート / 売買 / メンバー募集 / レッスン / 助け合い）と新着ニュース。',
+    '駐在員と、駐在員と繋がりたい人のためのホーム。あなたが暮らしている国を選んでください。',
 };
 
 /**
- * 駐在員向けホーム (/expat)。
+ * 駐在員向けトップ (/expat) — 国選択画面。
  *
- * 構成:
- *   1. コミュニティカテゴリ（6 つ）を最上部のタイル列で
- *   2. カテゴリごとの新着投稿 4 件を Airbnb 風のカードグリッドで
- *   3. 新着ニュース掲示板（BoardWidget）
- *   4. 駐在者向け記事（横スクロール）
- *   5. Founders 枠
+ * /explore と同じ「国を大陸別グリッド」見せ方を踏襲しつつ、
+ * リンク先を /expat/<code> に向ける。
  *
- * 「記事を書く」「掲示板に投稿」「メッセージ」のクイックアクションは
- * サイドメニューと重複するのでこのページには出さない。
- * エディトリアル系のタグライン（"暮らしの実務、ぜんぶ。"）も削除。
+ * 現状 Locore で active な駐在員向け国は フランスのみ。
+ * 他の国は coming_soon としてグレーアウトで表示する。
+ *
+ * (将来的に viewer の cookie に「最後に見た国」を入れて、ここで自動 redirect も
+ *  検討余地あり。ただし cookie 越しの自動遷移は事故りやすいので今は実装しない。)
  */
 export default async function ExpatHomePage() {
-  const KINDS: { kind: CommunityKind; icon: typeof Briefcase }[] = [
-    { kind: 'job', icon: Briefcase },
-    { kind: 'apartment', icon: HomeIcon },
-    { kind: 'marketplace', icon: Megaphone },
-    { kind: 'group', icon: Users },
-    { kind: 'lesson', icon: GraduationCap },
-    { kind: 'mutual_aid', icon: HandHelping },
-  ];
+  const countries = await listCountriesForPicker();
 
-  const [
-    residentNews,
-    expatArticles,
-    jobPosts,
-    apartmentPosts,
-    marketplacePosts,
-    groupPosts,
-    lessonPosts,
-    mutualAidPosts,
-    residentServices,
-  ] = await Promise.all([
-    listBoardPosts({ limit: 5, audiences: ['resident'] }),
-    getPublishedDbArticles(20).then((arr) =>
-      arr.filter((a) => a.articleType === 'expat_info'),
-    ),
-    listCommunityPosts({ kind: 'job', limit: 4 }),
-    listCommunityPosts({ kind: 'apartment', limit: 4 }),
-    listCommunityPosts({ kind: 'marketplace', limit: 4 }),
-    listCommunityPosts({ kind: 'group', limit: 4 }),
-    listCommunityPosts({ kind: 'lesson', limit: 4 }),
-    listCommunityPosts({ kind: 'mutual_aid', limit: 4 }),
-    getFeaturedServices({ audience: 'resident', limit: 12 }),
-  ]);
-
-  const socialCounts = await getArticleSocialCounts(
-    expatArticles.map((a) => a.id),
+  // 駐在員ホームの active = フランスだけ、という現状を明示するために
+  // ここで再度 filter する。/explore と違って国の active = 駐在員コンテンツありの
+  // 国だけにしたいので、今は code === 'fr' のみを active 扱い、他は coming_soon にする。
+  const adjusted: CountryListItem[] = countries.map((c) =>
+    c.code === 'fr'
+      ? { ...c, status: 'active' as const }
+      : { ...c, status: 'coming_soon' as const },
   );
-
-  const postsByKind: Record<CommunityKind, typeof jobPosts> = {
-    job: jobPosts,
-    apartment: apartmentPosts,
-    marketplace: marketplacePosts,
-    group: groupPosts,
-    lesson: lessonPosts,
-    mutual_aid: mutualAidPosts,
-  };
 
   return (
     <main className="bg-background">
       <div className="mx-auto max-w-screen-xl space-y-10 px-4 py-8 sm:space-y-14 sm:px-6 sm:py-12">
-        {/* 1. コミュニティ掲示板カテゴリ — 最上部 */}
-        <section aria-labelledby="board-nav-title">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                コミュニティ掲示板
-              </p>
-              <h2
-                id="board-nav-title"
-                className="mt-1 text-[20px] font-semibold tracking-tight sm:text-[24px]"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
-              >
-                住人どうしで、直接つながる
-              </h2>
-            </div>
-            <Link
-              href="/residents"
-              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
-            >
-              <Search className="h-3 w-3" />
-              住人を探す
-            </Link>
-          </div>
-          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3">
-            {KINDS.map(({ kind, icon: Icon }) => (
-              <li key={kind}>
-                <Link
-                  href={KIND_BASE_PATH[kind]}
-                  className="group flex flex-col items-center gap-1.5 rounded-xl bg-card px-2 py-3 text-center ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:gap-2 sm:py-4"
-                >
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950 sm:h-11 sm:w-11">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </span>
-                  <p className="text-[11px] font-bold text-foreground sm:text-[12px]">
-                    {KIND_LABEL[kind]}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* 2. 新着ニュース掲示板 (カテゴリタイルの直下) */}
         <section>
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                新着ニュース
-              </p>
-              <h2 className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]">
-                今日と明日の暮らし情報
-              </h2>
-            </div>
-            <Link
-              href="/board?audience=resident"
-              className="text-[12px] font-semibold text-primary-300 hover:underline"
+          <div className="mb-4">
+            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
+              駐在員ホーム
+            </p>
+            <h1
+              className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
+              style={{
+                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+              }}
             >
-              すべて見る →
-            </Link>
+              どの国に住んでいますか？
+            </h1>
+            <p className="mt-1 max-w-2xl text-[12px] text-foreground/75 sm:text-[13px]">
+              暮らしている国を選ぶと、その国の掲示板（求人 / アパート / 売買 / メンバー募集 / 習い事 / 助け合い）と新着ニュースが見えます。今はフランスから始めています。
+            </p>
           </div>
-          <BoardWidget posts={residentNews} />
-        </section>
 
-        {/* 2.5 提供サービス — 駐在員向け。空のときはセクションごと出さない。 */}
-        {residentServices.length > 0 ? (
-          <section aria-labelledby="resident-services-title">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                  提供サービス
-                </p>
-                <h2
-                  id="resident-services-title"
-                  className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]"
-                >
-                  暮らしを助けてくれる住人
-                </h2>
-              </div>
-            </div>
-            <ServiceCarousel services={residentServices} />
-          </section>
-        ) : null}
-
-        {/* 3. カテゴリ別の新着 — 横スクロールのカルーセル */}
-        {KINDS.map(({ kind }) => {
-          const posts = postsByKind[kind];
-          if (posts.length === 0) return null;
-          return (
-            <section key={kind} aria-labelledby={`new-${kind}-title`}>
-              <div className="mb-3 flex items-baseline justify-between gap-3">
-                <h2
-                  id={`new-${kind}-title`}
-                  className="text-[18px] font-semibold tracking-tight sm:text-[20px]"
-                >
-                  {KIND_LABEL[kind]}
-                  <span className="ml-2 text-[12px] font-normal text-foreground/55 tabular">
-                    新着 {posts.length} 件
-                  </span>
-                </h2>
-                <Link
-                  href={KIND_BASE_PATH[kind]}
-                  className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
-                >
-                  すべて見る
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
-              </div>
-              {/* 横スクロール: 各カードは固定幅、snap で左端揃え。
-                  スマホは 1.6 枚、PC は 4.2 枚見えるイメージ */}
-              <ul
-                className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-                style={{ scrollSnapStop: 'always' }}
-              >
-                {posts.map((p) => (
-                  <li
-                    key={p.id}
-                    className="w-[62%] shrink-0 snap-start sm:w-[32%] lg:w-[23%]"
-                  >
-                    <CommunityCard post={p} />
-                  </li>
-                ))}
-                {/* カテゴリ TOP への末尾カード */}
-                <li className="flex w-[62%] shrink-0 snap-start items-center justify-center rounded-xl bg-card text-center ring-1 ring-dashed ring-border sm:w-[32%] lg:w-[23%]">
-                  <Link
-                    href={KIND_BASE_PATH[kind]}
-                    className="block p-6 text-[12px] font-semibold text-primary-300 hover:underline"
-                  >
-                    {KIND_LABEL[kind]} を<br />
-                    すべて見る →
-                  </Link>
-                </li>
-              </ul>
-            </section>
-          );
-        })}
-
-        {/* 4. 駐在者向け記事 */}
-        {expatArticles.length > 0 ? (
-          <section>
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <h2 className="text-[18px] font-semibold tracking-tight sm:text-[20px]">
-                駐在者情報
-                <span className="ml-2 text-[12px] font-normal text-foreground/55">
-                  長文の暮らしリファレンス
-                </span>
-              </h2>
-              <Link
-                href="/articles?type=expat_info"
-                className="text-[12px] font-semibold text-primary-300 hover:underline"
-              >
-                すべて見る →
-              </Link>
-            </div>
-            <ArticleScrollSection
-              articles={expatArticles}
-              moreHref="/articles?type=expat_info"
-              socialCounts={socialCounts}
-            />
-          </section>
-        ) : null}
-
-        {/* 5. Founders 枠 */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500/15 via-card to-card p-6 shadow-sm ring-1 ring-border sm:p-10">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl"
-          />
-          <div className="relative grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
-            <div>
-              <p className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-950">
-                Founders 枠（先着 50 人）
-              </p>
-              <h2 className="mt-3 text-[20px] font-semibold leading-[1.3] tracking-tight text-foreground sm:text-[24px]">
-                最初の 50 人を、長く覚えていたい。
-              </h2>
-              <p className="mt-2 text-[13px] leading-[1.8] text-foreground/70">
-                立ち上げから一緒に走ってくれる Founders には、認証バッジ・手数料優遇・サービス方針への発言権をお渡しします。
-              </p>
-            </div>
-            <div className="flex justify-end">
-              <Link
-                href="/founders"
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
-              >
-                応募ページを見る
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Link>
-            </div>
-          </div>
+          <ExpatCountryGrid countries={adjusted} />
         </section>
       </div>
     </main>
+  );
+}
+
+/**
+ * /explore で使っている CountryGridByContinent は遷移先が /country/<code> 固定で、
+ * 駐在員モードでは /expat/<code> に向けたいので、ここに小さい版を持つ。
+ * (見た目は /explore の見せ方を踏襲して、デザインの一貫性は保つ)
+ */
+
+const CONTINENT_LABEL: Record<string, string> = {
+  europe: 'ヨーロッパ',
+  asia: 'アジア',
+  americas: 'アメリカ',
+  oceania: 'オセアニア',
+  middle_east: '中東',
+  africa: 'アフリカ',
+};
+
+const CONTINENT_ORDER = [
+  'europe',
+  'asia',
+  'americas',
+  'oceania',
+  'middle_east',
+  'africa',
+];
+
+function fallbackImage(slug: string): string {
+  return `https://picsum.photos/seed/${slug}/600/800`;
+}
+
+function ExpatCountryGrid({ countries }: { countries: CountryListItem[] }) {
+  if (countries.length === 0) return null;
+
+  const byContinent: Record<string, CountryListItem[]> = {};
+  for (const c of countries) {
+    const key = c.continent ?? 'other';
+    (byContinent[key] ??= []).push(c);
+  }
+
+  const orderedKeys = [
+    ...CONTINENT_ORDER.filter((k) => byContinent[k]?.length),
+    ...Object.keys(byContinent).filter((k) => !CONTINENT_ORDER.includes(k)),
+  ];
+
+  return (
+    <div className="space-y-10 sm:space-y-12">
+      {orderedKeys.map((continent) => {
+        const list = byContinent[continent];
+        if (!list || list.length === 0) return null;
+        const active = list.filter((c) => c.status === 'active');
+        const coming = list.filter((c) => c.status !== 'active');
+        const ordered = [...active, ...coming];
+        return (
+          <section key={continent} aria-label={CONTINENT_LABEL[continent] ?? continent}>
+            <h3 className="mb-3 text-[12px] font-bold uppercase tracking-[0.18em] text-foreground/55 sm:text-[13px]">
+              {CONTINENT_LABEL[continent] ?? continent}
+            </h3>
+            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              {ordered.map((c) => (
+                <li key={c.code}>
+                  <ExpatCountryTile country={c} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function ExpatCountryTile({ country }: { country: CountryListItem }) {
+  const active = country.status === 'active';
+
+  const inner = (
+    <div
+      className={
+        'group relative block overflow-hidden rounded-xl ring-1 transition ' +
+        (active
+          ? 'ring-border hover:shadow-md hover:ring-primary-300'
+          : 'cursor-not-allowed ring-border opacity-70')
+      }
+    >
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted">
+        <Image
+          src={country.heroImageUrl ?? fallbackImage(country.code)}
+          alt={country.nameJa}
+          fill
+          sizes="(min-width: 1280px) 14vw, (min-width: 1024px) 18vw, (min-width: 768px) 23vw, (min-width: 640px) 30vw, 45vw"
+          className={
+            'object-cover transition duration-500 ' +
+            (active ? 'group-hover:scale-[1.04]' : 'grayscale')
+          }
+          unoptimized
+        />
+        <div
+          aria-hidden
+          className={'absolute inset-0 ' + (active ? 'bg-black/30' : 'bg-black/45')}
+        />
+        {!active ? (
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
+            <Lock className="h-2.5 w-2.5" />
+            準備中
+          </span>
+        ) : null}
+        <div className="absolute inset-x-0 bottom-0 px-3 py-3 text-white">
+          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/90">
+            {country.nameEn}
+          </p>
+          <h3
+            className="!text-white mt-0.5 truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
+            style={{
+              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+            }}
+          >
+            {country.nameJa}
+          </h3>
+          {active ? (
+            <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-white/85">
+              駐在員ホームへ
+              <ArrowRight className="h-3 w-3" />
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!active) {
+    return (
+      <div aria-disabled title="準備中" className="block">
+        {inner}
+      </div>
+    );
+  }
+  return (
+    <Link href={`/expat/${country.code}`} className="block">
+      {inner}
+    </Link>
   );
 }

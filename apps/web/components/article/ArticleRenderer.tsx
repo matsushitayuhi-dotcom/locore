@@ -14,7 +14,6 @@ import {
 import { ChevronRight, MapPin, Clock, Users } from '@locore/ui/icons';
 import { Paywall } from '../Paywall';
 import { AddToTripButton } from '../AddToTripButton';
-import { ArticleGrid } from '../ArticleGrid';
 import { ItineraryTimeline } from '../ItineraryTimeline';
 import { PhotoJournalView } from '../PhotoJournalView';
 import { SpotsCardList } from '../SpotsCardList';
@@ -314,8 +313,9 @@ export function ArticleRenderer({
         ) : null}
       </header>
 
-      {/* Body preview + paywall */}
-      <section className="mx-auto mt-10 grid max-w-screen-lg gap-10 px-4 pb-20 sm:px-6 lg:grid-cols-[1.4fr_1fr]">
+      {/* Body preview + paywall。PC でも 1 カラムにし、本文をフル幅で見せる。
+          関連記事サイドカラムは廃止し、本文の下のフッター手前にグリッドで表示する。*/}
+      <section className="mx-auto mt-10 max-w-3xl px-4 pb-20 sm:px-6">
         <div className="space-y-8">
           <article className="prose-locore">
             {preview.split(/\n\n+/).map((para, i) => (
@@ -496,56 +496,47 @@ export function ArticleRenderer({
             </div>
           </section>
         </div>
-
-        {/* Side rail */}
-        <aside className="space-y-6">
-          {related.length > 0 ? (
-            <div>
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-                関連記事
-              </p>
-              <div className="grid gap-3">
-                {related.map((a) => (
-                  <Link
-                    key={a.id}
-                    href={`/articles/${a.id}`}
-                    className="flex gap-3 rounded-md border border-border bg-card p-3 transition hover:bg-muted"
-                  >
-                    <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-sm bg-muted">
-                      <Image
-                        src={a.coverImageUrl}
-                        alt={a.title}
-                        fill
-                        sizes="96px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="line-clamp-2 text-[13px] font-medium leading-snug">
-                        {a.title}
-                      </p>
-                      <p className="mt-1 text-[11px] text-foreground/50 tabular">
-                        ¥{a.priceJpy.toLocaleString('ja-JP')} ・ {a.area}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </aside>
       </section>
 
-      {/* Bottom related grid */}
-      <section className="mx-auto max-w-screen-xl px-4 pb-20 sm:px-6">
-        <h3
-          className="mb-5 text-[20px] font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
-        >
-          同じクリエイター・同じ街の記事
-        </h3>
-        <ArticleGrid articles={related} />
-      </section>
+      {/* Bottom related grid。PC のサイドカラムから本文の下に移動。
+          スマホ 1 列 / SM 2 列 / LG 3 列 / XL 4 列で並べる。*/}
+      {related.length > 0 ? (
+        <section className="mx-auto max-w-screen-xl px-4 pb-20 sm:px-6">
+          <h3
+            className="mb-5 text-[20px] font-semibold tracking-tight"
+            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
+          >
+            関連記事
+          </h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {related.map((a) => (
+              <Link
+                key={a.id}
+                href={`/articles/${a.id}`}
+                className="group flex flex-col overflow-hidden rounded-md border border-border bg-card transition hover:bg-muted"
+              >
+                <div className="relative aspect-[3/2] w-full overflow-hidden bg-muted">
+                  <Image
+                    src={a.coverImageUrl}
+                    alt={a.title}
+                    fill
+                    sizes="(min-width: 1280px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+                    className="object-cover transition group-hover:scale-105"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col gap-1 p-3">
+                  <p className="line-clamp-2 text-[13px] font-medium leading-snug">
+                    {a.title}
+                  </p>
+                  <p className="mt-auto text-[11px] text-foreground/50 tabular">
+                    ¥{a.priceJpy.toLocaleString('ja-JP')} ・ {a.area}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

@@ -628,6 +628,34 @@ export default async function ResidentDetailPage({ params }: Params) {
         </section>
 
         {/* ============================================================== */}
+        {/* 1.5 フォロー サブナビ                                            */}
+        {/* ============================================================== */}
+        <nav
+          aria-label="フォロー関連のページへ"
+          className="mt-3 flex flex-wrap items-center gap-1.5 rounded-full bg-card p-1 ring-1 ring-border"
+        >
+          <Link
+            href={`/residents/${r.id}/followers`}
+            className="inline-flex items-baseline gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold text-foreground/80 transition hover:bg-primary-500/10 hover:text-primary-300"
+          >
+            フォロワー
+            <span className="text-[13px] tabular text-foreground">
+              {followCounts.followers.toLocaleString('ja-JP')}
+            </span>
+          </Link>
+          <span aria-hidden className="h-3 w-px bg-border" />
+          <Link
+            href={`/residents/${r.id}/following`}
+            className="inline-flex items-baseline gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold text-foreground/80 transition hover:bg-primary-500/10 hover:text-primary-300"
+          >
+            フォロー中
+            <span className="text-[13px] tabular text-foreground">
+              {followCounts.following.toLocaleString('ja-JP')}
+            </span>
+          </Link>
+        </nav>
+
+        {/* ============================================================== */}
         {/* 2. Stats bar                                                    */}
         {/* ============================================================== */}
         <section className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">

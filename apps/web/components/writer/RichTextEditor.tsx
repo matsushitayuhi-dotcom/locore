@@ -16,6 +16,14 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
 import Youtube from '@tiptap/extension-youtube';
+// #3: スラッシュメニュー大幅拡張 (2026-05 改修)
+import { TaskList } from '@tiptap/extension-task-list';
+import { TaskItem } from '@tiptap/extension-task-item';
+import { Highlight } from '@tiptap/extension-highlight';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
 import { toast } from 'sonner';
 import { uploadImage } from '@/lib/storage/uploadImage';
 
@@ -59,6 +67,14 @@ type Props = {
 // スラッシュコマンド定義
 // =============================================================================
 
+/**
+ * #3: Notion / Substack 風の拡張版スラッシュコマンド (2026-05)
+ *
+ * - category でグループ化 ( 基本 / メディア / ブロック )
+ * - shortcut にショートカット例（`/h1` のような表記）を表示
+ */
+type SlashCategory = '基本' | 'メディア' | 'ブロック';
+
 type SlashCommand = {
   /** 実装上のキー */
   id: string;
@@ -70,6 +86,10 @@ type SlashCommand = {
   keywords: string[];
   /** 実行アイコン文字 */
   icon: string;
+  /** カテゴリ */
+  category: SlashCategory;
+  /** スラッシュメニューに表示するショートカット例 (`/h1` 等) */
+  shortcut?: string;
   /** 実行アクション */
   run: (ctx: SlashCommandCtx) => void;
 };
@@ -84,10 +104,29 @@ type SlashCommandCtx = {
 
 function buildCommands(): SlashCommand[] {
   return [
+    // ----- 基本（見出し / 段落系） -----
+    {
+      id: 'h1',
+      label: '見出し H1',
+      hint: '一番大きい見出し',
+      shortcut: '/h1',
+      category: '基本',
+      keywords: ['heading', 'h1', '見出し', 'おおきい', 'みだし'],
+      icon: 'H1',
+      run: ({ editor, range }) =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .setNode('heading', { level: 1 })
+          .run(),
+    },
     {
       id: 'h2',
       label: '見出し H2',
       hint: 'セクション見出し',
+      shortcut: '/h2',
+      category: '基本',
       keywords: ['heading', 'h2', '見出し', 'みだし'],
       icon: 'H2',
       run: ({ editor, range }) =>
@@ -102,6 +141,8 @@ function buildCommands(): SlashCommand[] {
       id: 'h3',
       label: '見出し H3',
       hint: 'サブ見出し',
+      shortcut: '/h3',
+      category: '基本',
       keywords: ['heading', 'h3', '見出し', 'サブ', 'みだし'],
       icon: 'H3',
       run: ({ editor, range }) =>
@@ -116,24 +157,43 @@ function buildCommands(): SlashCommand[] {
       id: 'bold',
       label: '太字',
       hint: '選択中の文字を太字に',
+      shortcut: '⌘B',
+      category: '基本',
       keywords: ['bold', '太字', 'ふとじ', 'b'],
       icon: 'B',
       run: ({ editor, range }) =>
         editor.chain().focus().deleteRange(range).toggleBold().run(),
     },
     {
-      id: 'blockquote',
-      label: '引用',
-      hint: '引用ブロック',
-      keywords: ['quote', 'blockquote', '引用', 'いんよう'],
-      icon: '"',
+      id: 'highlight',
+      label: 'ハイライト',
+      hint: '蛍光ペンの装飾',
+      shortcut: '/mark',
+      category: '基本',
+      keywords: ['highlight', 'mark', 'ハイライト', '蛍光', '装飾'],
+      icon: '🖍',
       run: ({ editor, range }) =>
-        editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
+        editor.chain().focus().deleteRange(range).toggleHighlight().run(),
     },
+    {
+      id: 'inline-code',
+      label: 'インラインコード',
+      hint: '`code` のような等幅装飾',
+      shortcut: '/code',
+      category: '基本',
+      keywords: ['code', 'inline', 'インライン', 'コード', '等幅'],
+      icon: '<>',
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleCode().run(),
+    },
+
+    // ----- ブロック（リスト / 引用 / コードブロック / テーブル / コールアウト） -----
     {
       id: 'bullet',
       label: '箇条書きリスト',
       hint: '・点リスト',
+      shortcut: '/ul',
+      category: 'ブロック',
       keywords: ['bullet', 'list', 'ul', '箇条書き', 'リスト'],
       icon: '•',
       run: ({ editor, range }) =>
@@ -143,15 +203,133 @@ function buildCommands(): SlashCommand[] {
       id: 'ordered',
       label: '番号付きリスト',
       hint: '1. 2. 3. のリスト',
+      shortcut: '/ol',
+      category: 'ブロック',
       keywords: ['number', 'ordered', 'ol', '番号', 'リスト'],
       icon: '1.',
       run: ({ editor, range }) =>
         editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
     },
     {
+      id: 'task-list',
+      label: 'チェックリスト',
+      hint: '□ チェック付きのリスト',
+      shortcut: '/todo',
+      category: 'ブロック',
+      keywords: ['task', 'todo', 'check', 'checklist', 'チェック', 'タスク'],
+      icon: '☑',
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleTaskList().run(),
+    },
+    {
+      id: 'blockquote',
+      label: '引用',
+      hint: '引用ブロック',
+      shortcut: '/quote',
+      category: 'ブロック',
+      keywords: ['quote', 'blockquote', '引用', 'いんよう'],
+      icon: '“',
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
+    },
+    {
+      id: 'code-block',
+      label: 'コードブロック',
+      hint: '複数行の等幅コード',
+      shortcut: '/```',
+      category: 'ブロック',
+      keywords: ['code', 'block', 'codeblock', 'コードブロック', 'コード'],
+      icon: '{ }',
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
+    },
+    {
+      id: 'callout-note',
+      label: 'コールアウト (note)',
+      hint: '💡 補足ブロック',
+      shortcut: '/note',
+      category: 'ブロック',
+      keywords: ['callout', 'note', 'info', '補足', 'コールアウト'],
+      icon: '💡',
+      run: ({ editor, range }) =>
+        insertCallout(editor, range, 'note'),
+    },
+    {
+      id: 'callout-warning',
+      label: 'コールアウト (warning)',
+      hint: '⚠ 注意ブロック',
+      shortcut: '/warning',
+      category: 'ブロック',
+      keywords: ['callout', 'warning', 'warn', '注意', '警告'],
+      icon: '⚠',
+      run: ({ editor, range }) =>
+        insertCallout(editor, range, 'warning'),
+    },
+    {
+      id: 'callout-tip',
+      label: 'コールアウト (tip)',
+      hint: '✨ ヒントブロック',
+      shortcut: '/tip',
+      category: 'ブロック',
+      keywords: ['callout', 'tip', 'hint', 'ヒント', '小ネタ'],
+      icon: '✨',
+      run: ({ editor, range }) =>
+        insertCallout(editor, range, 'tip'),
+    },
+    {
+      id: 'table',
+      label: 'テーブル',
+      hint: '2 列 × 3 行の基本表',
+      shortcut: '/table',
+      category: 'ブロック',
+      keywords: ['table', 'grid', 'テーブル', '表', 'ひょう'],
+      icon: '⊞',
+      run: ({ editor, range }) =>
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertTable({ rows: 3, cols: 2, withHeaderRow: true })
+          .run(),
+    },
+    {
+      id: 'hr',
+      label: '区切り線',
+      hint: '水平線で区切る',
+      shortcut: '/hr',
+      category: 'ブロック',
+      keywords: ['hr', 'rule', 'divider', '区切り', '線'],
+      icon: '—',
+      run: ({ editor, range }) =>
+        editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
+    },
+    {
+      id: 'hr-stars',
+      label: '区切り (◆ 装飾)',
+      hint: '別スタイルの区切り (◆ ◆ ◆)',
+      shortcut: '/===',
+      category: 'ブロック',
+      keywords: ['divider', 'stars', '区切り', '装飾'],
+      icon: '◆',
+      run: ({ editor, range }) => {
+        editor
+          .chain()
+          .focus()
+          .deleteRange(range)
+          .insertContent(
+            '<p style="text-align:center;letter-spacing:0.5em;color:#888;margin:1.5em 0">◆ ◆ ◆</p>',
+          )
+          .run();
+      },
+    },
+
+    // ----- メディア -----
+    {
       id: 'image',
       label: '画像',
       hint: 'アップロードして挿入',
+      shortcut: '/image',
+      category: 'メディア',
       keywords: ['image', 'photo', 'picture', '画像', 'がぞう', '写真'],
       icon: '🖼',
       run: ({ editor, range, pickImage }) => {
@@ -163,6 +341,8 @@ function buildCommands(): SlashCommand[] {
       id: 'link',
       label: 'リンク',
       hint: 'URL を入力して挿入',
+      shortcut: '/link',
+      category: 'メディア',
       keywords: ['link', 'url', 'リンク', 'ﾘﾝｸ'],
       icon: '🔗',
       run: ({ editor, range }) => {
@@ -181,6 +361,8 @@ function buildCommands(): SlashCommand[] {
       id: 'video',
       label: '動画 (YouTube)',
       hint: 'YouTube URL を埋め込み',
+      shortcut: '/video',
+      category: 'メディア',
       keywords: ['video', 'youtube', '動画', 'どうが', 'ようつべ'],
       icon: '▶',
       run: ({ editor, range }) => {
@@ -191,15 +373,78 @@ function buildCommands(): SlashCommand[] {
       },
     },
     {
-      id: 'hr',
-      label: '区切り線',
-      hint: '水平線で区切る',
-      keywords: ['hr', 'rule', 'divider', '区切り', '線'],
-      icon: '—',
-      run: ({ editor, range }) =>
-        editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
+      id: 'emoji',
+      label: '絵文字',
+      hint: '`:smile:` 形式 / 直接貼り付け',
+      shortcut: '/emoji',
+      category: 'メディア',
+      keywords: ['emoji', '絵文字', 'えもじ', ':)', 'smile'],
+      icon: '😀',
+      run: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run();
+        const input = window.prompt(
+          '挿入する絵文字を入力（直接貼り付けるか `:smile:` 形式）',
+          '😀',
+        );
+        if (!input) return;
+        const emoji = resolveEmojiShortcode(input);
+        editor.chain().focus().insertContent(emoji).run();
+      },
     },
   ];
+}
+
+/**
+ * 簡易な絵文字ショートコード変換。
+ * `:smile:` → `😀` のような変換をサポート。未知のショートコードはそのまま返す。
+ */
+const EMOJI_SHORTCODES: Record<string, string> = {
+  smile: '😀',
+  joy: '😂',
+  heart: '❤️',
+  fire: '🔥',
+  star: '⭐',
+  check: '✅',
+  warning: '⚠️',
+  bulb: '💡',
+  sparkles: '✨',
+  rocket: '🚀',
+  '+1': '👍',
+  thumbsup: '👍',
+  '-1': '👎',
+  coffee: '☕',
+  tada: '🎉',
+  point_right: '👉',
+  pin: '📍',
+};
+function resolveEmojiShortcode(input: string): string {
+  const m = input.trim().match(/^:([a-z0-9_+-]+):$/i);
+  if (!m) return input;
+  const key = m[1]!.toLowerCase();
+  return EMOJI_SHORTCODES[key] ?? input;
+}
+
+/**
+ * コールアウト挿入。TipTap の標準 node には無いので、装飾済みの
+ * blockquote を HTML として直接挿入する。種類で絵文字 + 色を変える。
+ */
+function insertCallout(
+  editor: Editor,
+  range: { from: number; to: number },
+  type: 'note' | 'warning' | 'tip',
+) {
+  const config: Record<typeof type, { emoji: string; bg: string; border: string }> = {
+    note: { emoji: '💡', bg: '#eff6ff', border: '#3b82f6' },
+    warning: { emoji: '⚠️', bg: '#fefce8', border: '#eab308' },
+    tip: { emoji: '✨', bg: '#ecfdf5', border: '#10b981' },
+  };
+  const c = config[type];
+  // blockquote 要素として挿入することで、改行/編集が自然にできる。
+  const html =
+    `<blockquote data-callout="${type}" style="border-left:4px solid ${c.border};background:${c.bg};padding:0.75em 1em;border-radius:6px;margin:1em 0;">` +
+    `<p><span aria-hidden="true" style="margin-right:0.5em">${c.emoji}</span>${type === 'note' ? '補足' : type === 'warning' ? '注意' : 'ヒント'}: ここに本文を書く</p>` +
+    `</blockquote><p></p>`;
+  editor.chain().focus().deleteRange(range).insertContent(html).run();
 }
 
 function escapeAttr(s: string) {
@@ -341,50 +586,79 @@ function SlashMenu({
 
   if (!open || !editor) return null;
 
+  // #3: カテゴリでグループ化
+  const grouped: Array<{ category: SlashCategory; items: SlashCommand[] }> = [];
+  for (const cmd of items) {
+    let group = grouped.find((g) => g.category === cmd.category);
+    if (!group) {
+      group = { category: cmd.category, items: [] };
+      grouped.push(group);
+    }
+    group.items.push(cmd);
+  }
+  // フラットなインデックス → cmd 写像（active 移動と一致させる）
+  const flatItems = grouped.flatMap((g) => g.items);
+
   return (
     <div
       role="listbox"
       aria-label="ブロック挿入メニュー"
-      className="absolute z-30 max-h-72 w-64 overflow-y-auto rounded-md border border-border bg-card p-1 shadow-xl"
+      className="absolute z-30 max-h-80 w-72 overflow-y-auto rounded-md border border-border bg-card p-1 shadow-xl"
       style={{ top: pos.top, left: pos.left }}
       // クリックでフォーカスが外れないように
       onMouseDown={(e) => e.preventDefault()}
     >
-      {items.length === 0 ? (
+      {flatItems.length === 0 ? (
         <p className="px-3 py-2 text-[12px] text-foreground/55">
           一致するブロックがありません
         </p>
       ) : (
-        items.map((cmd, i) => (
-          <button
-            key={cmd.id}
-            type="button"
-            role="option"
-            aria-selected={i === active}
-            onMouseEnter={() => setActive(i)}
-            onClick={() => {
-              if (range) {
-                cmd.run({ editor, range, pickImage });
-                setOpen(false);
-              }
-            }}
-            className={
-              'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[12px] transition ' +
-              (i === active
-                ? 'bg-primary-500/15 text-primary-300'
-                : 'text-foreground/80 hover:bg-muted')
-            }
-          >
-            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-muted text-[11px] font-bold text-foreground/70">
-              {cmd.icon}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-medium">{cmd.label}</span>
-              <span className="block text-[10px] text-foreground/55">
-                {cmd.hint}
-              </span>
-            </span>
-          </button>
+        grouped.map((group) => (
+          <div key={group.category} className="mb-1 last:mb-0">
+            <p className="px-2 pb-0.5 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/40">
+              {group.category}
+            </p>
+            {group.items.map((cmd) => {
+              const flatIdx = flatItems.indexOf(cmd);
+              const isActive = flatIdx === active;
+              return (
+                <button
+                  key={cmd.id}
+                  type="button"
+                  role="option"
+                  aria-selected={isActive}
+                  onMouseEnter={() => setActive(flatIdx)}
+                  onClick={() => {
+                    if (range) {
+                      cmd.run({ editor, range, pickImage });
+                      setOpen(false);
+                    }
+                  }}
+                  className={
+                    'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[12px] transition ' +
+                    (isActive
+                      ? 'bg-primary-500/15 text-primary-300'
+                      : 'text-foreground/80 hover:bg-muted')
+                  }
+                >
+                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-muted text-[12px] font-bold text-foreground/70">
+                    {cmd.icon}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium">{cmd.label}</span>
+                    <span className="block truncate text-[10px] text-foreground/55">
+                      {cmd.hint}
+                    </span>
+                  </span>
+                  {cmd.shortcut ? (
+                    <kbd className="ml-1 rounded-sm border border-border bg-background px-1 text-[9px] font-bold text-foreground/55">
+                      {cmd.shortcut}
+                    </kbd>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
         ))
       )}
     </div>
@@ -589,6 +863,14 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
       TextStyle,
       Color,
       Youtube.configure({ controls: true, nocookie: true }),
+      // #3: スラッシュメニュー拡張で必要になった TipTap 拡張群
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      Highlight.configure({ multicolor: false }),
+      Table.configure({ resizable: false, HTMLAttributes: { class: 'rte-table' } }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Placeholder.configure({
         placeholder: placeholder ?? '本文を書きましょう…  /  でメニュー',
       }),
