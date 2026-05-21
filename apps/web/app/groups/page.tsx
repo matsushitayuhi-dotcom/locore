@@ -1,9 +1,6 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import {
-  ArrowLeft,
-  Plus,
-  Users,
   Clock,
   Repeat,
   UserCheck,
@@ -11,10 +8,11 @@ import {
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
-import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
-import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
-import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
+import { type CommunityView } from '@/components/community/ViewToggle';
+import { CompactFilterBar } from '@/components/community/CompactFilterBar';
+import { FilterSheet } from '@/components/community/FilterSheet';
+import { PostFab } from '@/components/community/PostFab';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -146,146 +144,88 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
     return qs ? `/groups?${qs}` : '/groups';
   };
 
-  return (
-    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        ホームに戻る
-      </Link>
+  const sheetFilterCount = (activeCat ? 1 : 0) + (activeFreq ? 1 : 0);
 
-      <div className="mt-4">
-        <CommunityNav active="group" />
-      </div>
+  return (
+    <main className="mx-auto max-w-screen-lg px-4 pb-12 pt-4 sm:px-6">
+      <CommunityNav active="group" />
 
       <div className="mt-3">
-        <CommunityRegionPicker
+        <CompactFilterBar
           basePath="/groups"
-          activeSlug={regionFilter.slug}
+          activeRegionSlug={regionFilter.slug}
+          activeRegionNameJa={regionFilter.nameJa}
           preserveQuery={{
             cat: activeCat,
             freq: activeFreq,
             audience: activeAudience,
             view: currentView !== 'card' ? currentView : undefined,
           }}
-        />
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <AudienceChips
-          active={activeAudience}
-          buildHref={(a) => buildHref({ audience: a ?? null })}
-        />
-        <ViewToggle
+          activeAudience={activeAudience}
+          buildAudienceHref={(a) => buildHref({ audience: a ?? null })}
           currentView={currentView}
-          buildHref={(v) => buildHref({ view: v === 'card' ? null : v })}
+          buildViewHref={(v) => buildHref({ view: v === 'card' ? null : v })}
+          sheetTrigger={
+            <FilterSheet activeCount={sheetFilterCount}>
+              <form action="/groups" method="GET" className="space-y-4">
+                {regionFilter.active ? (
+                  <input type="hidden" name="region" value={regionFilter.slug} />
+                ) : null}
+                {activeAudience ? (
+                  <input type="hidden" name="audience" value={activeAudience} />
+                ) : null}
+                {currentView !== 'card' ? (
+                  <input type="hidden" name="view" value={currentView} />
+                ) : null}
+
+                <FilterSelect
+                  name="cat"
+                  label="カテゴリ"
+                  defaultValue={activeCat ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    ...GROUP_CATEGORIES.map((c) => ({
+                      value: c,
+                      label: GROUP_CATEGORY_LABEL[c],
+                    })),
+                  ]}
+                />
+                <FilterSelect
+                  name="freq"
+                  label="頻度"
+                  defaultValue={activeFreq ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    ...FREQUENCIES.map((f) => ({
+                      value: f,
+                      label: FREQUENCY_LABEL[f],
+                    })),
+                  ]}
+                />
+
+                <div className="sticky bottom-0 -mx-4 mt-4 flex items-center gap-2 border-t border-border bg-background px-4 pb-1 pt-3">
+                  <Link
+                    href={buildHref({ cat: null, freq: null })}
+                    className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                  >
+                    リセット
+                  </Link>
+                  <button
+                    type="submit"
+                    className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                  >
+                    適用
+                  </button>
+                </div>
+              </form>
+            </FilterSheet>
+          }
         />
       </div>
 
-      <header className="mt-6 mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 sm:flex-1">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-            <Users className="h-3 w-3" />
-            イベント
-          </p>
-          <h1
-            className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-          >
-            {regionFilter.active ? regionFilter.nameJa : 'フランス'}でつながる
-          </h1>
-          <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
-            ママ友会、テニス・ランニング仲間、勉強会、言語交換。
-            気の合う住人と、ゆるく続けられる集まりを。
-          </p>
-        </div>
-        <Link
-          href="/groups/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          募集する
-        </Link>
-      </header>
-
-      <div className="mb-4">
-        <CommunityDisclaimer kind="group" />
-      </div>
-
-      {/* category */}
-      <div
-        role="tablist"
-        aria-label="カテゴリで絞り込み"
-        className="mb-2 flex flex-wrap items-center gap-1.5"
-      >
-        <Link
-          href={buildHref({ cat: null })}
-          role="tab"
-          aria-selected={!activeCat}
-          className={
-            'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-            (!activeCat
-              ? 'bg-primary-500 text-neutral-950'
-              : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-          }
-        >
-          すべて
-        </Link>
-        {GROUP_CATEGORIES.map((c) => {
-          const on = activeCat === c;
-          return (
-            <Link
-              key={c}
-              href={buildHref({ cat: on ? null : c })}
-              role="tab"
-              aria-selected={on}
-              className={
-                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                (on
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-              }
-            >
-              {GROUP_CATEGORY_LABEL[c]}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* frequency */}
-      <div className="mb-5">
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-          頻度
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          <Link
-            href={buildHref({ freq: null })}
-            className={
-              'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-              (!activeFreq
-                ? 'bg-foreground text-background'
-                : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-            }
-          >
-            すべて
-          </Link>
-          {FREQUENCIES.map((f) => (
-            <Link
-              key={f}
-              href={buildHref({ freq: activeFreq === f ? null : f })}
-              className={
-                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                (activeFreq === f
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-              }
-            >
-              {FREQUENCY_LABEL[f]}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <p className="mt-4 mb-3 text-[12px] text-foreground/55 tabular">
+        {filtered.length} 件
+      </p>
 
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">
@@ -306,7 +246,53 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       )}
+
+      <details className="mt-8 rounded-lg border border-border bg-card text-[12px] text-foreground/65">
+        <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-semibold text-foreground/55">
+          ⚠️ ご利用上の注意
+        </summary>
+        <div className="border-t border-border p-3">
+          <CommunityDisclaimer kind="group" />
+        </div>
+      </details>
+
+      <PostFab href="/groups/new" label="募集する" />
     </main>
+  );
+}
+
+function FilterSelect({
+  name,
+  label,
+  defaultValue,
+  options,
+}: {
+  name: string;
+  label: string;
+  defaultValue: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={`f-${name}`}
+        className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-foreground/55"
+      >
+        {label}
+      </label>
+      <select
+        id={`f-${name}`}
+        name={name}
+        defaultValue={defaultValue}
+        className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -400,7 +386,6 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
         href={`/groups/${post.id}`}
         className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
       >
-        {/* 写真エリア (4:3) */}
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
           {cover ? (
             <Image
@@ -435,13 +420,11 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
           </div>
         </div>
 
-        {/* 本文 */}
         <div className="p-3">
           <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
             {post.title}
           </h2>
 
-          {/* メタ 1 行 */}
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {meta.group_size ? (
               <li className="inline-flex items-center gap-0.5">
@@ -459,7 +442,6 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
             ) : null}
           </ul>
 
-          {/* audience バッジ + 投稿日 */}
           <div className="mt-2 flex items-center justify-between gap-1">
             <AudienceBadge audience={meta.audience} />
             <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">

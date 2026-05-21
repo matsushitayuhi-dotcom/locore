@@ -1,9 +1,6 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import {
-  ArrowLeft,
-  Plus,
-  GraduationCap,
   MapPin,
   Clock,
   Wifi,
@@ -13,10 +10,11 @@ import {
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
-import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
-import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
-import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
+import { type CommunityView } from '@/components/community/ViewToggle';
+import { CompactFilterBar } from '@/components/community/CompactFilterBar';
+import { FilterSheet } from '@/components/community/FilterSheet';
+import { PostFab } from '@/components/community/PostFab';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -186,24 +184,21 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
     return qs ? `/lessons?${qs}` : '/lessons';
   };
 
-  return (
-    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        ホームに戻る
-      </Link>
+  const sheetFilterCount =
+    (activeSide ? 1 : 0) +
+    (activeCat ? 1 : 0) +
+    (activeFormat ? 1 : 0) +
+    (trialOnly ? 1 : 0);
 
-      <div className="mt-4">
-        <CommunityNav active="lesson" />
-      </div>
+  return (
+    <main className="mx-auto max-w-screen-lg px-4 pb-12 pt-4 sm:px-6">
+      <CommunityNav active="lesson" />
 
       <div className="mt-3">
-        <CommunityRegionPicker
+        <CompactFilterBar
           basePath="/lessons"
-          activeSlug={regionFilter.slug}
+          activeRegionSlug={regionFilter.slug}
+          activeRegionNameJa={regionFilter.nameJa}
           preserveQuery={{
             side: activeSide,
             cat: activeCat,
@@ -212,171 +207,96 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
             audience: activeAudience,
             view: currentView !== 'card' ? currentView : undefined,
           }}
-        />
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <AudienceChips
-          active={activeAudience}
-          buildHref={(a) => buildHref({ audience: a ?? null })}
-        />
-        <ViewToggle
+          activeAudience={activeAudience}
+          buildAudienceHref={(a) => buildHref({ audience: a ?? null })}
           currentView={currentView}
-          buildHref={(v) => buildHref({ view: v === 'card' ? null : v })}
+          buildViewHref={(v) => buildHref({ view: v === 'card' ? null : v })}
+          sheetTrigger={
+            <FilterSheet activeCount={sheetFilterCount}>
+              <form action="/lessons" method="GET" className="space-y-4">
+                {regionFilter.active ? (
+                  <input type="hidden" name="region" value={regionFilter.slug} />
+                ) : null}
+                {activeAudience ? (
+                  <input type="hidden" name="audience" value={activeAudience} />
+                ) : null}
+                {currentView !== 'card' ? (
+                  <input type="hidden" name="view" value={currentView} />
+                ) : null}
+
+                <FilterSelect
+                  name="side"
+                  label="教える / 習う"
+                  defaultValue={activeSide ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    { value: 'teach', label: SIDE_LABEL.teach },
+                    { value: 'learn', label: SIDE_LABEL.learn },
+                  ]}
+                />
+                <FilterSelect
+                  name="cat"
+                  label="ジャンル"
+                  defaultValue={activeCat ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    ...LESSON_CATEGORIES.map((c) => ({
+                      value: c,
+                      label: LESSON_CATEGORY_LABEL[c],
+                    })),
+                  ]}
+                />
+                <FilterSelect
+                  name="fmt"
+                  label="形式"
+                  defaultValue={activeFormat ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    { value: 'in_person', label: FORMAT_LABEL.in_person },
+                    { value: 'online', label: FORMAT_LABEL.online },
+                    { value: 'both', label: FORMAT_LABEL.both },
+                  ]}
+                />
+                <label className="inline-flex items-center gap-2 text-[13px] text-foreground/80">
+                  <input
+                    type="checkbox"
+                    name="trial"
+                    value="1"
+                    defaultChecked={trialOnly}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  <Coffee className="h-3.5 w-3.5" />
+                  体験ありのみ
+                </label>
+
+                <div className="sticky bottom-0 -mx-4 mt-4 flex items-center gap-2 border-t border-border bg-background px-4 pb-1 pt-3">
+                  <Link
+                    href={buildHref({
+                      side: null,
+                      cat: null,
+                      fmt: null,
+                      trial: null,
+                    })}
+                    className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                  >
+                    リセット
+                  </Link>
+                  <button
+                    type="submit"
+                    className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                  >
+                    適用
+                  </button>
+                </div>
+              </form>
+            </FilterSheet>
+          }
         />
       </div>
 
-      <header className="mt-6 mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 sm:flex-1">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-            <GraduationCap className="h-3 w-3" />
-            教えます・習います
-          </p>
-          <h1
-            className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-          >
-            {regionFilter.active ? regionFilter.nameJa : 'フランス'}でまなぶ
-          </h1>
-          <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
-            子供向け日本語、フランス語家庭教師、料理、楽器。
-            短時間から、相手に合わせて柔軟に。
-          </p>
-        </div>
-        <Link
-          href="/lessons/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          投稿する
-        </Link>
-      </header>
-
-      <div className="mb-4">
-        <CommunityDisclaimer kind="lesson" />
-      </div>
-
-      {/* side */}
-      <div
-        role="tablist"
-        aria-label="教える / 習う で絞り込み"
-        className="mb-2 flex flex-wrap items-center gap-1.5"
-      >
-        <Link
-          href={buildHref({ side: null })}
-          role="tab"
-          aria-selected={!activeSide}
-          className={
-            'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-            (!activeSide
-              ? 'bg-primary-500 text-neutral-950'
-              : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-          }
-        >
-          すべて
-        </Link>
-        {(['teach', 'learn'] as Side[]).map((s) => {
-          const on = activeSide === s;
-          return (
-            <Link
-              key={s}
-              href={buildHref({ side: on ? null : s })}
-              role="tab"
-              aria-selected={on}
-              className={
-                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                (on
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-              }
-            >
-              {SIDE_LABEL[s]}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* category */}
-      <div className="mb-2">
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-          ジャンル
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          <Link
-            href={buildHref({ cat: null })}
-            className={
-              'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-              (!activeCat
-                ? 'bg-foreground text-background'
-                : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-            }
-          >
-            すべて
-          </Link>
-          {LESSON_CATEGORIES.map((c) => (
-            <Link
-              key={c}
-              href={buildHref({ cat: activeCat === c ? null : c })}
-              className={
-                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                (activeCat === c
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-              }
-            >
-              {LESSON_CATEGORY_LABEL[c]}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* format + trial */}
-      <div className="mb-5 flex flex-wrap items-end gap-3">
-        <div>
-          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-            形式
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={buildHref({ fmt: null })}
-              className={
-                'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                (!activeFormat
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-              }
-            >
-              すべて
-            </Link>
-            {(['in_person', 'online', 'both'] as Format[]).map((f) => (
-              <Link
-                key={f}
-                href={buildHref({ fmt: activeFormat === f ? null : f })}
-                className={
-                  'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                  (activeFormat === f
-                    ? 'bg-foreground text-background'
-                    : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-                }
-              >
-                {FORMAT_LABEL[f]}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <Link
-          href={buildHref({ trial: trialOnly ? null : '1' })}
-          className={
-            'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-            (trialOnly
-              ? 'bg-foreground text-background'
-              : 'bg-muted text-foreground/65 hover:bg-foreground/15')
-          }
-        >
-          <Coffee className="h-3 w-3" />
-          体験あり
-        </Link>
-      </div>
+      <p className="mt-4 mb-3 text-[12px] text-foreground/55 tabular">
+        {filtered.length} 件
+      </p>
 
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">
@@ -397,7 +317,53 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       )}
+
+      <details className="mt-8 rounded-lg border border-border bg-card text-[12px] text-foreground/65">
+        <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-semibold text-foreground/55">
+          ⚠️ ご利用上の注意
+        </summary>
+        <div className="border-t border-border p-3">
+          <CommunityDisclaimer kind="lesson" />
+        </div>
+      </details>
+
+      <PostFab href="/lessons/new" label="投稿する" />
     </main>
+  );
+}
+
+function FilterSelect({
+  name,
+  label,
+  defaultValue,
+  options,
+}: {
+  name: string;
+  label: string;
+  defaultValue: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div>
+      <label
+        htmlFor={`f-${name}`}
+        className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-foreground/55"
+      >
+        {label}
+      </label>
+      <select
+        id={`f-${name}`}
+        name={name}
+        defaultValue={defaultValue}
+        className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -506,7 +472,6 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
         href={`/lessons/${post.id}`}
         className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
       >
-        {/* 写真エリア (4:3) */}
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
           {cover ? (
             <Image
@@ -559,13 +524,11 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
           ) : null}
         </div>
 
-        {/* 本文 */}
         <div className="p-3">
           <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
             {post.title}
           </h2>
 
-          {/* メタ 1 行 */}
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {meta.format ? (
               <li className="inline-flex items-center gap-0.5">
@@ -587,7 +550,6 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
             ) : null}
           </ul>
 
-          {/* audience バッジ + 投稿日 */}
           <div className="mt-2 flex items-center justify-between gap-1">
             <AudienceBadge audience={meta.audience} />
             <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">

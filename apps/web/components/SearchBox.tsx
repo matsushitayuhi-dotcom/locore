@@ -83,7 +83,7 @@ export function SearchBox({
         <button
           type="submit"
           disabled={q.trim().length === 0}
-          className="rounded-xl bg-primary-500 px-4 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:bg-foreground/15 disabled:text-foreground/45"
+          className="min-h-[44px] rounded-xl bg-primary-500 px-4 text-[13px] font-bold text-neutral-950 transition active:scale-[0.97] hover:bg-primary-300 disabled:bg-foreground/15 disabled:text-foreground/45"
         >
           検索
         </button>
@@ -124,7 +124,7 @@ function ModePill({
   return (
     <label
       className={
-        'inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-0.5 font-medium transition ' +
+        'inline-flex min-h-[28px] cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 font-medium transition active:scale-[0.96] ' +
         (checked
           ? 'bg-primary-500/15 text-primary-300 ring-1 ring-primary-300/40'
           : 'text-foreground/55 hover:bg-primary-500/10')

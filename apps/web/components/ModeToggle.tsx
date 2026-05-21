@@ -47,7 +47,7 @@ export function ModeToggle({
         disabled={isPending}
         onClick={() => onSwitch('traveler')}
         className={
-          'inline-flex items-center gap-1 rounded-full font-semibold transition ' +
+          'inline-flex items-center gap-1 rounded-full font-semibold transition active:scale-[0.95] ' +
           padding +
           ' ' +
           fontClass +
@@ -67,7 +67,7 @@ export function ModeToggle({
         disabled={isPending}
         onClick={() => onSwitch('resident')}
         className={
-          'inline-flex items-center gap-1 rounded-full font-semibold transition ' +
+          'inline-flex items-center gap-1 rounded-full font-semibold transition active:scale-[0.95] ' +
           padding +
           ' ' +
           fontClass +

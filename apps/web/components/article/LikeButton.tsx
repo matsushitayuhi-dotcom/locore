@@ -58,15 +58,16 @@ export function LikeButton({
       onClick={onClick}
       disabled={isPending}
       aria-pressed={liked}
+      aria-label={liked ? `いいね済み（${count}）` : `いいね（${count}）`}
       className={
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold transition ' +
+        'inline-flex h-9 min-h-[36px] items-center gap-1 rounded-full px-3 text-[12px] font-semibold transition active:scale-[0.94] ' +
         (liked
           ? 'bg-primary-700 text-white shadow-sm'
           : 'bg-card text-primary-300 ring-1 ring-border hover:bg-primary-500/10')
       }
     >
       <Heart
-        className="h-4 w-4"
+        className="h-3.5 w-3.5"
         fill={liked ? 'currentColor' : 'none'}
         strokeWidth={2}
       />

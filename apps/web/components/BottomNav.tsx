@@ -84,8 +84,12 @@ export function BottomNav({
   return (
     <nav
       aria-label="モバイルナビゲーション"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 backdrop-blur-md md:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl md:hidden"
+      style={{
+        // iOS のホームバー (notch / home indicator) と被らないよう
+        // 安全領域の分だけ内側に押し込む。
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
     >
       <ul className="flex items-stretch justify-around px-1 pt-1">
         {TABS.map((t) => {
@@ -97,24 +101,40 @@ export function BottomNav({
                 href={t.href}
                 aria-current={isActive ? 'page' : undefined}
                 className={
-                  'relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast ' +
+                  // h-14 (56px) でタップ領域は iOS HIG 44px を余裕で超える。
+                  // active:scale で「押した感」、tap-highlight は globals.css で
+                  // グローバル消去済み。
+                  'group relative flex h-14 min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast active:scale-[0.94] ' +
                   (isActive
-                    ? 'text-primary-500'
-                    : 'text-foreground/55 hover:text-foreground active:text-primary-300')
+                    ? 'text-primary-700'
+                    : 'text-foreground/55 hover:text-foreground active:text-primary-500')
                 }
               >
+                {/* active タブ上部の小さな縦バー (アプリ風インジケータ) */}
+                <span
+                  aria-hidden
+                  className={
+                    'absolute left-1/2 top-0 h-0.5 w-7 -translate-x-1/2 rounded-full transition-all duration-200 ease-out ' +
+                    (isActive ? 'bg-primary-500 opacity-100' : 'bg-transparent opacity-0')
+                  }
+                />
                 <div className="relative">
                   <Icon
-                    className="size-[22px]"
+                    className={
+                      'size-[22px] transition-transform duration-200 ' +
+                      (isActive ? 'scale-110' : 'scale-100')
+                    }
                     strokeWidth={isActive ? 2.4 : 1.8}
                     fill={isActive ? 'currentColor' : 'none'}
-                    fillOpacity={isActive ? 0.15 : 0}
+                    fillOpacity={isActive ? 0.18 : 0}
                   />
                 </div>
                 <span
                   className={
-                    'text-[10px] font-medium tracking-tight ' +
-                    (isActive ? 'font-semibold' : '')
+                    // ラベルは常に同じ font-weight にしてアクティブ切替時の
+                    // レイアウトシフトを避ける。色変化だけで主張する。
+                    'text-[10px] font-semibold tracking-tight ' +
+                    (isActive ? '' : 'opacity-80')
                   }
                 >
                   {t.label}

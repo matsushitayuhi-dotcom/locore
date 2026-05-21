@@ -43,7 +43,9 @@ export async function SiteHeader() {
   const isResident = mode === 'resident';
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-border bg-background/85 backdrop-blur">
+    // sticky / safe-area-top は外側の HeaderShell (Client Component) が持つ。
+    // ここは見た目だけ。
+    <header className="w-full border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-3 px-4 sm:gap-5 sm:px-6">
         <Link
           href={homeHref}

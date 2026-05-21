@@ -236,7 +236,7 @@ export function SideMenu({
         aria-label="メニューを開く"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground/70 transition hover:bg-primary-500/10 hover:text-primary-300"
+        className="inline-flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full text-foreground/70 transition active:scale-[0.92] hover:bg-primary-500/10 hover:text-primary-300"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -296,12 +296,15 @@ function DrawerPanel({
       <aside
         aria-hidden={!open}
         // h-[100dvh] = モバイル Safari の動的ビューポートにも追従。
-        // safe-area-inset-bottom 分も内側で確保する。
+        // safe-area-inset-top/bottom 分も内側で確保する (ノッチ / ホームバー被り防止)。
         className={
           'fixed right-0 top-0 z-[1001] flex h-[100dvh] w-[320px] max-w-[88vw] flex-col bg-card shadow-xl transition-transform duration-200 ease-out ' +
           (open ? 'translate-x-0' : 'translate-x-full')
         }
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
       >
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <Link
@@ -319,7 +322,7 @@ function DrawerPanel({
             type="button"
             aria-label="メニューを閉じる"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-foreground/60 hover:bg-muted hover:text-foreground"
+            className="inline-flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full text-foreground/60 transition active:scale-[0.92] hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -462,7 +465,8 @@ function NavLink({
         href={item.href}
         aria-current={active ? 'page' : undefined}
         className={
-          'flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium transition ' +
+          // タップ領域 44px 確保 + アプリ風 active scale
+          'flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium transition active:scale-[0.98] ' +
           (active
             ? 'bg-primary-500/15 text-primary-300'
             : 'text-foreground/80 hover:bg-primary-500/10 hover:text-foreground')

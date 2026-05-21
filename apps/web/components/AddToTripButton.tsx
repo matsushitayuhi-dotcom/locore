@@ -26,12 +26,18 @@ export function AddToTripButton({
   size = 'md',
   initialSaved = false,
   initialCount,
+  compact = false,
 }: {
   articleId: string;
   size?: 'sm' | 'md' | 'lg';
   initialSaved?: boolean;
   /** 親から渡せばこのボタン内に保存数も表示する */
   initialCount?: number;
+  /**
+   * 記事詳細のヘッダーなどで使う小型ピル表示。LikeButton と並んだときに
+   * 高さ・余白が揃うようにする (h-7 / text-[12px])。アイコンのみ表示。
+   */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(initialSaved);
@@ -93,6 +99,33 @@ export function AddToTripButton({
       }
     });
   };
+
+  if (compact) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={isPending}
+        aria-pressed={saved}
+        aria-label={saved ? '保存済み（クリックで外す）' : '保存する'}
+        className={
+          'inline-flex h-7 items-center gap-1 rounded-full px-2.5 text-[12px] font-semibold transition ' +
+          (saved
+            ? 'bg-primary-700 text-white shadow-sm'
+            : 'bg-card text-primary-300 ring-1 ring-border hover:bg-primary-500/10')
+        }
+      >
+        {saved ? (
+          <BookmarkCheck className="h-3.5 w-3.5" />
+        ) : (
+          <Bookmark className="h-3.5 w-3.5" />
+        )}
+        {initialCount !== undefined ? (
+          <span className="tabular">{count.toLocaleString('ja-JP')}</span>
+        ) : null}
+      </button>
+    );
+  }
 
   return (
     <Button

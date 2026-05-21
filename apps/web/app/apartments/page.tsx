@@ -1,7 +1,6 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Plus,
   Bed,
   Maximize,
   MapPin,
@@ -9,7 +8,6 @@ import {
   Sofa,
   PawPrint,
   Camera,
-  Home as HomeIcon,
 } from 'lucide-react';
 import { listCommunityPosts } from '@/lib/community/db';
 import {
@@ -22,10 +20,11 @@ import {
 } from '@/lib/community/constants';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
-import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
-import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
-import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
+import { type CommunityView } from '@/components/community/ViewToggle';
+import { CompactFilterBar } from '@/components/community/CompactFilterBar';
+import { FilterSheet } from '@/components/community/FilterSheet';
+import { PostFab } from '@/components/community/PostFab';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 
 export const dynamic = 'force-dynamic';
@@ -85,7 +84,6 @@ type Props = {
   };
 };
 
-// 入力値を配列に正規化
 function toArray(v: string | string[] | undefined): string[] {
   if (!v) return [];
   if (Array.isArray(v)) return v;
@@ -93,9 +91,6 @@ function toArray(v: string | string[] | undefined): string[] {
 }
 
 export default async function ApartmentsIndexPage({ searchParams }: Props) {
-  // -------------------------------------------------------------------------
-  // クエリパース
-  // -------------------------------------------------------------------------
   const selectedTypes = toArray(searchParams?.type).filter((t): t is ApartmentListingType =>
     (APARTMENT_LISTING_TYPES as readonly string[]).includes(t),
   );
@@ -118,18 +113,12 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
       : undefined;
   const currentView: CommunityView = searchParams?.view === 'list' ? 'list' : 'card';
 
-  // -------------------------------------------------------------------------
-  // データ取得（active のみ）
-  // -------------------------------------------------------------------------
   const allPosts = await listCommunityPosts({
     kind: 'apartment',
     limit: 120,
     cityId: regionFilter.cityId,
   });
 
-  // -------------------------------------------------------------------------
-  // クライアントサイド相当のフィルタ（メタが JSONB なので SQL でやらず JS で簡潔に）
-  // -------------------------------------------------------------------------
   const filtered = allPosts.filter((p) => {
     const meta = (p.metadata as ApartmentMetadata) ?? {};
     const lt = meta.listing_type;
@@ -157,7 +146,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     if (petsOnly && !meta.pets_ok) return false;
 
     if (activeAudience) {
-      // audience が無い投稿は both 扱い (フィルタを通す)
       if (meta.audience && meta.audience !== 'both' && meta.audience !== activeAudience) {
         return false;
       }
@@ -177,13 +165,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     if (sort === 'bedroom') {
       return (mb.bedrooms ?? -1) - (ma.bedrooms ?? -1);
     }
-    // recent
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  // -------------------------------------------------------------------------
-  // URL ビルダ（フィルタの toggle）
-  // -------------------------------------------------------------------------
   const buildHref = (patch: Record<string, string | undefined | null>) => {
     const sp = new URLSearchParams();
     if (selectedTypes.length) sp.set('type', selectedTypes.join(','));
@@ -204,21 +188,27 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     return qs ? `/apartments?${qs}` : '/apartments';
   };
 
-  const toggleType = (t: ApartmentListingType) => {
-    const next = selectedTypes.includes(t)
-      ? selectedTypes.filter((x) => x !== t)
-      : [...selectedTypes, t];
-    return buildHref({ type: next.length ? next.join(',') : undefined });
-  };
+  // 「絞り込み」シート内のフィルタ数 (region / audience / view 以外)
+  const sheetFilterCount =
+    selectedTypes.length +
+    (rentBucket ? 1 : 0) +
+    (bedroomFilter ? 1 : 0) +
+    (arrFilter ? 1 : 0) +
+    (furnishedOnly ? 1 : 0) +
+    (petsOnly ? 1 : 0) +
+    (sort !== 'recent' ? 1 : 0);
 
   return (
-    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-screen-lg px-4 pb-12 pt-4 sm:px-6">
+      {/* カテゴリタブ (求人 / アパート / 売買 ...) */}
       <CommunityNav active="apartment" />
 
+      {/* ミニフィルタバー (sticky) */}
       <div className="mt-3">
-        <CommunityRegionPicker
+        <CompactFilterBar
           basePath="/apartments"
-          activeSlug={regionFilter.slug}
+          activeRegionSlug={regionFilter.slug}
+          activeRegionNameJa={regionFilter.nameJa}
           preserveQuery={{
             type: selectedTypes.length > 0 ? selectedTypes.join(',') : undefined,
             rent: rentBucket,
@@ -230,362 +220,129 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             audience: activeAudience,
             view: currentView !== 'card' ? currentView : undefined,
           }}
-        />
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <AudienceChips
-          active={activeAudience}
-          buildHref={(a) => buildHref({ audience: a ?? undefined })}
-        />
-        <ViewToggle
+          activeAudience={activeAudience}
+          buildAudienceHref={(a) => buildHref({ audience: a ?? null })}
           currentView={currentView}
-          buildHref={(v) => buildHref({ view: v === 'card' ? undefined : v })}
+          buildViewHref={(v) => buildHref({ view: v === 'card' ? null : v })}
+          sheetTrigger={
+            <FilterSheet activeCount={sheetFilterCount}>
+              <form action="/apartments" method="GET" className="space-y-4">
+                {regionFilter.active ? (
+                  <input type="hidden" name="region" value={regionFilter.slug} />
+                ) : null}
+                {activeAudience ? (
+                  <input type="hidden" name="audience" value={activeAudience} />
+                ) : null}
+                {currentView !== 'card' ? (
+                  <input type="hidden" name="view" value={currentView} />
+                ) : null}
+
+                <FilterSelect
+                  name="type"
+                  label="形態"
+                  defaultValue={selectedTypes[0] ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    ...APARTMENT_LISTING_TYPES.map((t) => ({
+                      value: t,
+                      label: APARTMENT_LISTING_TYPE_LABEL[t],
+                    })),
+                  ]}
+                />
+                <FilterSelect
+                  name="rent"
+                  label="家賃帯（月額）"
+                  defaultValue={rentBucket ?? ''}
+                  options={[
+                    { value: '', label: '指定なし' },
+                    ...RENT_BUCKETS.map((b) => ({ value: b.id, label: b.label })),
+                  ]}
+                />
+                <FilterSelect
+                  name="bedrooms"
+                  label="寝室数"
+                  defaultValue={bedroomFilter ?? ''}
+                  options={[
+                    { value: '', label: '指定なし' },
+                    ...BEDROOM_OPTIONS.map((b) => ({ value: b.id, label: b.label })),
+                  ]}
+                />
+                <div>
+                  <label
+                    htmlFor="arr"
+                    className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-foreground/55"
+                  >
+                    区 (Arrondissement)
+                  </label>
+                  <input
+                    id="arr"
+                    name="arr"
+                    defaultValue={arrFilter}
+                    placeholder="11e"
+                    className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="inline-flex items-center gap-2 text-[13px] text-foreground/80">
+                    <input
+                      type="checkbox"
+                      name="furnished"
+                      value="1"
+                      defaultChecked={furnishedOnly}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    <Sofa className="h-3.5 w-3.5" />
+                    家具付きのみ
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-[13px] text-foreground/80">
+                    <input
+                      type="checkbox"
+                      name="pets"
+                      value="1"
+                      defaultChecked={petsOnly}
+                      className="h-4 w-4 rounded border-border"
+                    />
+                    <PawPrint className="h-3.5 w-3.5" />
+                    ペット可
+                  </label>
+                </div>
+                <FilterSelect
+                  name="sort"
+                  label="並び順"
+                  defaultValue={sort}
+                  options={SORT_OPTIONS.map((s) => ({ value: s.id, label: s.label }))}
+                />
+
+                <div className="sticky bottom-0 -mx-4 mt-4 flex items-center gap-2 border-t border-border bg-background px-4 pb-1 pt-3">
+                  <Link
+                    href={buildHref({
+                      type: undefined,
+                      rent: undefined,
+                      bedrooms: undefined,
+                      arr: undefined,
+                      furnished: undefined,
+                      pets: undefined,
+                      sort: undefined,
+                    })}
+                    className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                  >
+                    リセット
+                  </Link>
+                  <button
+                    type="submit"
+                    className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                  >
+                    適用
+                  </button>
+                </div>
+              </form>
+            </FilterSheet>
+          }
         />
       </div>
-
-      {/* ヘッダ */}
-      <header className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0 sm:flex-1">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-            <HomeIcon className="h-3 w-3" />
-            アパート
-          </p>
-          <h1
-            className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-          >
-            {regionFilter.active ? regionFilter.nameJa : 'フランス'}で暮らす
-          </h1>
-          <p className="mt-2 max-w-prose text-[14px] leading-[1.9] text-foreground/70">
-            駐在員と長期滞在者のための物件掲示板。長期賃貸 / 短期 / シェア /
-            サブレを、Locore メッセージ経由で問い合わせできます。
-          </p>
-        </div>
-
-        <Link
-          href="/apartments/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[13px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
-        >
-          <Plus className="h-4 w-4" />
-          物件を出す
-        </Link>
-      </header>
-
-      <div className="mt-6">
-        <CommunityDisclaimer kind="apartment" />
-      </div>
-
-      {/* フィルタ（プルダウン式 / SUUMO 風）--------------------------------- */}
-      <form
-        action="/apartments"
-        method="GET"
-        className="mt-6 flex flex-wrap items-end gap-2 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
-      >
-        {regionFilter.active ? (
-          <input type="hidden" name="region" value={regionFilter.slug} />
-        ) : null}
-        {activeAudience ? (
-          <input type="hidden" name="audience" value={activeAudience} />
-        ) : null}
-        {currentView !== 'card' ? (
-          <input type="hidden" name="view" value={currentView} />
-        ) : null}
-        <FilterSelect
-          name="type"
-          label="形態"
-          defaultValue={selectedTypes[0] ?? ''}
-          options={[
-            { value: '', label: 'すべて' },
-            ...APARTMENT_LISTING_TYPES.map((t) => ({
-              value: t,
-              label: APARTMENT_LISTING_TYPE_LABEL[t],
-            })),
-          ]}
-        />
-        <FilterSelect
-          name="rent"
-          label="家賃帯"
-          defaultValue={rentBucket ?? ''}
-          options={[
-            { value: '', label: '指定なし' },
-            ...RENT_BUCKETS.map((b) => ({ value: b.id, label: b.label })),
-          ]}
-        />
-        <FilterSelect
-          name="bedrooms"
-          label="寝室"
-          defaultValue={bedroomFilter ?? ''}
-          options={[
-            { value: '', label: '指定なし' },
-            ...BEDROOM_OPTIONS.map((b) => ({ value: b.id, label: b.label })),
-          ]}
-        />
-        <FilterSelect
-          name="furnished"
-          label="家具"
-          defaultValue={furnishedOnly ? '1' : ''}
-          options={[
-            { value: '', label: '指定なし' },
-            { value: '1', label: '家具付きのみ' },
-          ]}
-        />
-        <FilterSelect
-          name="pets"
-          label="ペット"
-          defaultValue={petsOnly ? '1' : ''}
-          options={[
-            { value: '', label: '指定なし' },
-            { value: '1', label: 'ペット可' },
-          ]}
-        />
-        <FilterSelect
-          name="sort"
-          label="並び順"
-          defaultValue={sort}
-          options={SORT_OPTIONS.map((s) => ({ value: s.id, label: s.label }))}
-        />
-        <div className="flex flex-1 items-end gap-2">
-          <div className="min-w-[80px] flex-1">
-            <label
-              htmlFor="arr"
-              className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
-            >
-              区
-            </label>
-            <input
-              id="arr"
-              name="arr"
-              defaultValue={arrFilter}
-              placeholder="11e"
-              className="h-9 w-full rounded-md border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            className="h-9 shrink-0 rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
-          >
-            適用
-          </button>
-          {(selectedTypes.length > 0 ||
-            rentBucket ||
-            bedroomFilter ||
-            arrFilter ||
-            furnishedOnly ||
-            petsOnly ||
-            sort !== 'recent') ? (
-            <Link
-              href={buildHref({
-                type: undefined,
-                rent: undefined,
-                bedrooms: undefined,
-                arr: undefined,
-                furnished: undefined,
-                pets: undefined,
-                sort: undefined,
-              })}
-              className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
-            >
-              リセット
-            </Link>
-          ) : null}
-        </div>
-      </form>
-
-      {/* 旧 UI の section（ピル並びのフィルタ）は廃止 */}
-      <section className="mt-6 hidden space-y-3 rounded-xl bg-card p-4 ring-1 ring-border">
-        {/* 形態 */}
-        <div>
-          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-            形態
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {APARTMENT_LISTING_TYPES.map((t) => {
-              const on = selectedTypes.includes(t);
-              return (
-                <Link
-                  key={t}
-                  href={toggleType(t)}
-                  aria-pressed={on}
-                  className={
-                    'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                    (on
-                      ? 'bg-primary-500 text-neutral-950'
-                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-                  }
-                >
-                  {APARTMENT_LISTING_TYPE_LABEL[t]}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 家賃帯 */}
-        <div>
-          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-            家賃帯（月額）
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={buildHref({ rent: undefined })}
-              aria-pressed={!rentBucket}
-              className={
-                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                (!rentBucket
-                  ? 'bg-foreground text-background'
-                  : 'border border-border bg-background text-foreground/70 hover:border-foreground/30')
-              }
-            >
-              指定なし
-            </Link>
-            {RENT_BUCKETS.map((b) => {
-              const on = rentBucket === b.id;
-              return (
-                <Link
-                  key={b.id}
-                  href={buildHref({ rent: on ? undefined : b.id })}
-                  aria-pressed={on}
-                  className={
-                    'rounded-full px-3 py-1 text-[11px] font-semibold transition tabular ' +
-                    (on
-                      ? 'bg-foreground text-background'
-                      : 'border border-border bg-background text-foreground/70 hover:border-foreground/30')
-                  }
-                >
-                  {b.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 寝室数 */}
-        <div>
-          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-            寝室数
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            <Link
-              href={buildHref({ bedrooms: undefined })}
-              aria-pressed={!bedroomFilter}
-              className={
-                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                (!bedroomFilter
-                  ? 'bg-foreground text-background'
-                  : 'border border-border bg-background text-foreground/70 hover:border-foreground/30')
-              }
-            >
-              指定なし
-            </Link>
-            {BEDROOM_OPTIONS.map((b) => {
-              const on = bedroomFilter === b.id;
-              return (
-                <Link
-                  key={b.id}
-                  href={buildHref({ bedrooms: on ? undefined : b.id })}
-                  aria-pressed={on}
-                  className={
-                    'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                    (on
-                      ? 'bg-foreground text-background'
-                      : 'border border-border bg-background text-foreground/70 hover:border-foreground/30')
-                  }
-                >
-                  {b.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 区 + フラグ + 並び順 */}
-        <div className="flex flex-wrap items-center gap-3 pt-1">
-          <form
-            action="/apartments"
-            method="get"
-            className="flex items-center gap-1"
-          >
-            {/* 既存フィルタを hidden で保持 */}
-            {regionFilter.active ? (
-              <input type="hidden" name="region" value={regionFilter.slug} />
-            ) : null}
-            {selectedTypes.length > 0 ? (
-              <input type="hidden" name="type" value={selectedTypes.join(',')} />
-            ) : null}
-            {rentBucket ? <input type="hidden" name="rent" value={rentBucket} /> : null}
-            {bedroomFilter ? (
-              <input type="hidden" name="bedrooms" value={bedroomFilter} />
-            ) : null}
-            {furnishedOnly ? <input type="hidden" name="furnished" value="1" /> : null}
-            {petsOnly ? <input type="hidden" name="pets" value="1" /> : null}
-            {sort !== 'recent' ? <input type="hidden" name="sort" value={sort} /> : null}
-            <label className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-              区
-            </label>
-            <input
-              name="arr"
-              defaultValue={arrFilter}
-              placeholder="例: 11e"
-              className="w-24 rounded-md border border-border bg-background px-2 py-1 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:py-[3px] focus:outline-none"
-            />
-          </form>
-
-          <Link
-            href={buildHref({ furnished: furnishedOnly ? undefined : '1' })}
-            aria-pressed={furnishedOnly}
-            className={
-              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-              (furnishedOnly
-                ? 'bg-foreground text-background'
-                : 'border border-border bg-background text-foreground/70 hover:border-foreground/30')
-            }
-          >
-            <Sofa className="h-3 w-3" />
-            家具付きのみ
-          </Link>
-
-          <Link
-            href={buildHref({ pets: petsOnly ? undefined : '1' })}
-            aria-pressed={petsOnly}
-            className={
-              'inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-              (petsOnly
-                ? 'bg-foreground text-background'
-                : 'border border-border bg-background text-foreground/70 hover:border-foreground/30')
-            }
-          >
-            <PawPrint className="h-3 w-3" />
-            ペット可
-          </Link>
-
-          <div className="ml-auto flex items-center gap-1">
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-              並び順
-            </span>
-            {SORT_OPTIONS.map((s) => {
-              const on = sort === s.id;
-              return (
-                <Link
-                  key={s.id}
-                  href={buildHref({ sort: s.id === 'recent' ? undefined : s.id })}
-                  aria-pressed={on}
-                  className={
-                    'rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
-                    (on
-                      ? 'bg-primary-500 text-neutral-950'
-                      : 'text-foreground/65 hover:bg-primary-500/10 hover:text-primary-300')
-                  }
-                >
-                  {s.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* リスト ----------------------------------------------------------- */}
-      <p className="mt-6 mb-3 text-[12px] text-foreground/55 tabular">
+      <p className="mt-4 mb-3 text-[12px] text-foreground/55 tabular">
         {sorted.length} 件
       </p>
 
@@ -694,7 +451,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                   href={`/apartments/${p.id}`}
                   className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
                 >
-                  {/* 写真エリア (4:3) */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                     {cover ? (
                       <>
@@ -736,7 +492,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                     </div>
                   </div>
 
-                  {/* 本文 */}
                   <div className="p-3">
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-[18px] font-bold tracking-tight text-foreground tabular">
@@ -756,7 +511,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       {p.title}
                     </h2>
 
-                    {/* スペックバッジ */}
                     <ul className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-foreground/65">
                       {typeof meta.bedrooms === 'number' ? (
                         <li className="inline-flex items-center gap-0.5">
@@ -778,7 +532,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       ) : null}
                     </ul>
 
-                    {/* 場所 */}
                     {meta.arrondissement || meta.nearest_station || p.locationText ? (
                       <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-foreground/60">
                         <MapPin className="h-3 w-3" />
@@ -788,7 +541,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       </p>
                     ) : null}
 
-                    {/* 入居可能日 */}
                     {meta.available_from ? (
                       <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-foreground/60">
                         <Calendar className="h-3 w-3" />
@@ -796,7 +548,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       </p>
                     ) : null}
 
-                    {/* 投稿日 / 期限 */}
                     <p className="mt-2 flex items-center justify-between text-[10px] text-foreground/45">
                       <span>{formatPosted(p.createdAt)}</span>
                       {p.expiresAt ? (
@@ -810,13 +561,21 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
           })}
         </ul>
       )}
+
+      {/* 取引注意 (折りたたみで底に) */}
+      <details className="mt-8 rounded-lg border border-border bg-card text-[12px] text-foreground/65">
+        <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-semibold text-foreground/55">
+          ⚠️ ご利用上の注意
+        </summary>
+        <div className="border-t border-border p-3">
+          <CommunityDisclaimer kind="apartment" />
+        </div>
+      </details>
+
+      <PostFab href="/apartments/new" label="物件を出す" />
     </main>
   );
 }
-
-// =============================================================================
-// 日付フォーマッタ
-// =============================================================================
 
 function FilterSelect({
   name,
@@ -830,10 +589,10 @@ function FilterSelect({
   options: { value: string; label: string }[];
 }) {
   return (
-    <div className="min-w-[110px] flex-1 sm:flex-none">
+    <div>
       <label
         htmlFor={`f-${name}`}
-        className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+        className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-foreground/55"
       >
         {label}
       </label>
@@ -841,7 +600,7 @@ function FilterSelect({
         id={`f-${name}`}
         name={name}
         defaultValue={defaultValue}
-        className="h-9 w-full rounded-md border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
+        className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>

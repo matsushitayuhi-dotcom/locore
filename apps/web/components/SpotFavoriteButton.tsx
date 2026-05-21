@@ -132,7 +132,7 @@ export function SpotFavoriteButton({
         aria-pressed={bookmarked}
         aria-label={bookmarked ? 'お気に入りから外す' : 'お気に入りに追加'}
         className={
-          'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[12px] font-medium ring-1 transition ' +
+          'inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[12px] font-medium ring-1 transition active:scale-[0.96] ' +
           (bookmarked
             ? 'bg-primary-700 text-white ring-primary-700 hover:bg-primary-500'
             : 'bg-card text-primary-300 ring-border hover:bg-primary-500/10 hover:ring-primary-300')

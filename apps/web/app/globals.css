@@ -121,8 +121,11 @@
     color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     /* iOS Safari の bounce が親に伝播してページがガタガタするのを抑止 */
     overscroll-behavior-x: none;
+    /* スクロールバー出現で layout がガタつかないように */
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -135,6 +138,19 @@
     overflow-x: hidden;
     /* タッチ操作の横方向 over-scroll も封じる (iOS Safari) */
     overscroll-behavior-x: none;
+    /* iOS のホームバー領域に背景色を確実に塗る */
+    background-color: var(--color-bg);
+  }
+
+  /* iOS Safari の青いタップハイライトを消す。代わりに active:scale で
+     視覚フィードバックを与える (アプリ感) */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ボタン・リンクのデフォルトに「押した感」を出す。タッチ環境では特に効く。 */
+  a, button, [role="button"] {
+    touch-action: manipulation;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -148,6 +164,46 @@
     font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
+  }
+}
+
+@layer components {
+  /* レイアウト主要 children の余白。
+     - モバイル: BottomNav (h-14 ≒ 56px) + safe-area-inset-bottom
+     - md+: BottomNav が消えるので 0 (上書き済み) */
+  .app-main-pad {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
+  }
+  @media (min-width: 768px) {
+    .app-main-pad {
+      padding-bottom: 0;
+    }
+  }
+}
+
+@layer utilities {
+  /* アプリ風のタップフィードバック。
+     - active 時に scale 0.97
+     - 既存の hover transform を上書きしないよう、transform-origin は中央固定 */
+  .tap {
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+  .tap:active {
+    transform: scale(0.97);
+  }
+
+  /* safe-area ヘルパ */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .top-safe {
+    top: env(safe-area-inset-top, 0px);
   }
 }
 
@@ -208,6 +264,21 @@
   font-size: 16px;
 }
 
+/*
+ * 2026-05 改修: TipTap が生成する HTML をそのまま表示するため、prose-locore に
+ * 見出し / コールアウト / コードブロック / テーブル / リスト等のスタイルを拡張。
+ * 旧版は h2 + p だけだったので、それ以外の要素が裸のまま見えていた。
+ */
+.prose-locore h1 {
+  font-family: var(--font-sans-jp);
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+  letter-spacing: -0.01em;
+  color: var(--color-neutral-900);
+}
+
 .prose-locore h2 {
   font-family: var(--font-sans-jp);
   font-size: 22px;
@@ -216,6 +287,138 @@
   margin-bottom: 0.75em;
   letter-spacing: -0.01em;
   color: var(--color-neutral-900);
+}
+
+.prose-locore h3 {
+  font-family: var(--font-sans-jp);
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 1.6em;
+  margin-bottom: 0.5em;
+  color: var(--color-neutral-900);
+}
+
+.prose-locore strong { font-weight: 700; color: var(--color-neutral-900); }
+.prose-locore em { font-style: italic; }
+
+.prose-locore a {
+  color: var(--color-primary-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-locore a:hover { color: var(--color-primary-500); }
+
+.prose-locore ul,
+.prose-locore ol {
+  margin: 0 0 1.25em 1.5em;
+  padding-left: 0.5em;
+  line-height: 1.85;
+  color: var(--color-neutral-700);
+}
+.prose-locore ul { list-style: disc; }
+.prose-locore ol { list-style: decimal; }
+.prose-locore li { margin-bottom: 0.35em; }
+
+.prose-locore ul[data-type='taskList'] {
+  list-style: none;
+  margin-left: 0.25em;
+  padding-left: 0;
+}
+.prose-locore ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.prose-locore ul[data-type='taskList'] input[type='checkbox'] { margin-top: 0.4em; }
+
+.prose-locore blockquote {
+  margin: 1.25em 0;
+  padding: 0.75em 1em;
+  border-left: 4px solid var(--color-primary-300);
+  background: var(--color-neutral-25);
+  border-radius: 6px;
+  color: var(--color-neutral-700);
+}
+.prose-locore blockquote p { margin-bottom: 0.5em; }
+.prose-locore blockquote p:last-child { margin-bottom: 0; }
+
+/* コールアウト（data-callout 属性で色分け）。RichTextEditor の insertCallout が
+   inline style 付きで blockquote を吐くが、CSS でも上書きフォールバック。 */
+.prose-locore blockquote[data-callout='note']    { border-left-color: #3b82f6; background: #eff6ff; }
+.prose-locore blockquote[data-callout='warning'] { border-left-color: #eab308; background: #fefce8; }
+.prose-locore blockquote[data-callout='tip']     { border-left-color: #10b981; background: #ecfdf5; }
+
+.prose-locore code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--color-neutral-50);
+  color: var(--color-neutral-900);
+}
+
+.prose-locore pre {
+  margin: 1.25em 0;
+  padding: 1em 1.1em;
+  border-radius: 8px;
+  background: var(--color-neutral-900);
+  color: var(--color-neutral-50);
+  overflow-x: auto;
+  line-height: 1.6;
+  font-size: 13.5px;
+}
+.prose-locore pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+.prose-locore mark {
+  background: #fef08a;
+  color: var(--color-neutral-900);
+  padding: 0 0.15em;
+  border-radius: 2px;
+}
+
+.prose-locore hr {
+  border: none;
+  border-top: 1px solid var(--color-neutral-100);
+  margin: 2.25em 0;
+}
+
+.prose-locore img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.25em 0;
+}
+
+.prose-locore table,
+.prose-locore .rte-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25em 0;
+  font-size: 14.5px;
+}
+.prose-locore th,
+.prose-locore td {
+  border: 1px solid var(--color-neutral-100);
+  padding: 0.5em 0.75em;
+  text-align: left;
+  vertical-align: top;
+}
+.prose-locore th {
+  background: var(--color-neutral-50);
+  font-weight: 600;
+  color: var(--color-neutral-900);
+}
+
+.prose-locore iframe {
+  max-width: 100%;
+  margin: 1.25em 0;
+  border-radius: 8px;
 }
 
 .locore-map-canvas .gmnoprint,

@@ -13,6 +13,7 @@ import './globals.css';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
 import { BottomNav } from '../components/BottomNav';
+import { HeaderShell } from '../components/HeaderShell';
 import { getMyUnreadChatSummary } from '@/lib/chat/unread';
 import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
 
@@ -101,6 +102,9 @@ export const viewport: Viewport = {
   // Editorial Light のクリーム背景。スマホでアドレスバー色が揃う
   themeColor: '#FAF5EB',
   colorScheme: 'light',
+  // iOS の safe-area inset を有効化する (BottomNav / ヘッダがノッチ / ホームバー
+  // と被らないように env(safe-area-inset-*) を実際に値あり化する)
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({
@@ -127,9 +131,14 @@ export default async function RootLayout({
     <html lang={locale} className={fontVars}>
       <body className="bg-background text-foreground min-h-screen antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <SiteHeader />
-          {/* モバイルは BottomNav 分の余白を確保（pb-20）。md 以上では不要 */}
-          <div className="min-h-[calc(100vh-180px)] pb-20 md:pb-0">
+          {/* HeaderShell が sticky / scroll-collapse / safe-area-top を担当 */}
+          <HeaderShell>
+            <SiteHeader />
+          </HeaderShell>
+          {/* モバイルは BottomNav (h-14) + safe-area-inset-bottom 分の余白を確保。
+              max-w-full + overflow-x-hidden で意図しない横スクロールを最終遮断。
+              md+ は BottomNav が消えるので padding 不要 (.app-main-pad 内で分岐)。 */}
+          <div className="app-main-pad min-h-[calc(100vh-180px)] max-w-full overflow-x-hidden">
             {children}
           </div>
           <SiteFooter />

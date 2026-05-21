@@ -5,13 +5,13 @@ import {
   AvatarFallback,
   AvatarImage,
   Badge,
+  Button,
   CreatorBadge,
   LocalScoreBar,
-  PriceTag,
   ResidencyBadge,
   SatisfactionStars,
 } from '@locore/ui';
-import { ChevronRight, MapPin, Clock, Users } from '@locore/ui/icons';
+import { ChevronRight, Clock, MapPin, Star } from '@locore/ui/icons';
 import { Paywall } from '../Paywall';
 import { AddToTripButton } from '../AddToTripButton';
 import { ItineraryTimeline } from '../ItineraryTimeline';
@@ -19,7 +19,8 @@ import { PhotoJournalView } from '../PhotoJournalView';
 import { SpotsCardList } from '../SpotsCardList';
 import { ArticleSpotsMap } from '../ArticleSpotsMap';
 import { LikeButton } from './LikeButton';
-import { ReviewForm } from '../ReviewForm';
+import { ReviewFormToggle } from './ReviewFormToggle';
+import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import type { Article, Writer, Spot, Review } from '@/lib/mock';
 import type {
   ArticleBundleRegion,
@@ -217,112 +218,85 @@ export function ArticleRenderer({
           {article.title}
         </h1>
 
-        {/* Writer block */}
-        {writer ? (
-          <Link
-            href={`/residents/${writer.id}`}
-            className="mt-6 flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 transition hover:bg-muted"
+        {/* 1 行コンパクトメタ。本文への到達距離を最短にするのが目的なので、
+            ヘッダーには「著者の顔 + 評価ピル + 所要時間 + いいね/保存」だけを並べる。
+            著者の詳細プロフィール (bio / 在住年数 / フォロワー数) は本文後の
+            「この記事を書いた人」セクションにまとめる。 */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] text-foreground/65">
+          {writer ? (
+            <Link
+              href={`/residents/${writer.id}`}
+              className="group inline-flex items-center gap-1.5 rounded-full px-1 py-0.5 -ml-1 transition hover:bg-muted"
+            >
+              <Avatar size="sm">
+                <AvatarImage src={writer.avatarUrl} alt={writer.name} />
+                <AvatarFallback>{writer.name[0]}</AvatarFallback>
+              </Avatar>
+              <span className="text-[13px] font-semibold text-foreground group-hover:text-primary-300">
+                {writer.name}
+              </span>
+            </Link>
+          ) : null}
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75 tabular"
+            aria-label={`ローカル度 ${Math.round(article.localScoreAverage)}`}
           >
-            <Avatar size="md">
-              <AvatarImage src={writer.avatarUrl} alt={writer.name} />
-              <AvatarFallback>{writer.name[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-[15px] font-semibold">{writer.name}</p>
-                <ResidencyBadge tier={writer.tier} years={writer.residencyYears} />
-                {writer.isVerifiedCreator ? (
-                  <CreatorBadge type="verified" />
-                ) : null}
-                {writer.isFounding ? <CreatorBadge type="founding" /> : null}
-              </div>
-              <p className="mt-0.5 text-[12px] text-foreground/60">
-                パリ在住 {writer.residencyYears}年 ・{' '}
-                {writer.followerCount.toLocaleString('ja-JP')} followers
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-foreground/30" />
-          </Link>
-        ) : null}
-
-        {/* Meta */}
-        <div className="mt-6 grid gap-4 rounded-md border border-border bg-card p-4 sm:grid-cols-[1.4fr_1fr_auto]">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-              ローカル度
-            </p>
-            <div className="mt-1">
-              <LocalScoreBar value={article.localScoreAverage} size="md" />
-            </div>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-              満足度
-            </p>
-            <div className="mt-1">
-              <SatisfactionStars
-                rating={article.satisfactionAverage}
-                count={article.reviewCount}
-                size="md"
-              />
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-              価格
-            </p>
-            <PriceTag amount={article.priceJpy} size="lg" />
-            <p className="mt-1 text-[11px] text-foreground/50 tabular">
-              {article.purchaseCount.toLocaleString('ja-JP')} 人購入済
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-3 text-[12px] text-foreground/60">
-          <span className="inline-flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            エリア：{displayAreaLabel}（具体住所はマスク）
+            <MapPin className="h-3 w-3 text-primary-300" />
+            ローカル {Math.round(article.localScoreAverage)}
           </span>
-          <span className="inline-flex items-center gap-1">
+          <span
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75 tabular"
+            aria-label={`満足度 ${article.satisfactionAverage.toFixed(1)} 件数 ${article.reviewCount}`}
+          >
+            <Star className="h-3 w-3 fill-warning-500 text-warning-500" />
+            {article.satisfactionAverage.toFixed(1)}
+            <span className="text-foreground/50">({article.reviewCount})</span>
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75">
             <Clock className="h-3 w-3" />
             {article.durationType}
           </span>
-          <span className="inline-flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            スポット {article.spotIds.length} 箇所
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75">
+            {displayAreaLabel} ・ {article.spotIds.length} スポット
           </span>
-        </div>
 
-        {/* 読者向け CTA。プレビューモードでは描画しない */}
-        {!previewMode ? (
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <AddToTripButton
-              articleId={article.id}
-              size="md"
-              initialSaved={alreadySavedByMe}
-              initialCount={bookmarkCount}
-            />
-            <LikeButton
-              articleId={article.id}
-              initialLiked={initialLiked}
-              initialCount={likeCount}
-              viewerLoggedIn={viewerLoggedIn}
-            />
-          </div>
-        ) : null}
+          {/* 読者向け CTA。プレビューモードでは描画しない。
+              他のメタピルと同じ高さの小型ボタン (h-7) で行内に置く。 */}
+          {!previewMode ? (
+            <span className="ml-auto inline-flex items-center gap-2">
+              <LikeButton
+                articleId={article.id}
+                initialLiked={initialLiked}
+                initialCount={likeCount}
+                viewerLoggedIn={viewerLoggedIn}
+              />
+              <AddToTripButton
+                articleId={article.id}
+                size="sm"
+                compact
+                initialSaved={alreadySavedByMe}
+                initialCount={bookmarkCount}
+              />
+            </span>
+          ) : null}
+        </div>
       </header>
 
       {/* Body preview + paywall。PC でも 1 カラムにし、本文をフル幅で見せる。
           関連記事サイドカラムは廃止し、本文の下のフッター手前にグリッドで表示する。*/}
       <section className="mx-auto mt-10 max-w-3xl px-4 pb-20 sm:px-6">
         <div className="space-y-8">
-          <article className="prose-locore">
-            {preview.split(/\n\n+/).map((para, i) => (
-              <p key={i} className="whitespace-pre-line">
-                {para}
-              </p>
-            ))}
-          </article>
+          {/*
+            2026-05 改修: 本文は TipTap が生成した HTML をそのまま `articles.body` に
+            保存している。renderArticleBodyHtml が HTML / 旧 Markdown を判定し、
+            sanitize 済み HTML を返す。dangerouslySetInnerHTML で展開することで、
+            見出し / コールアウト / コードブロック / テーブル / タスクリスト等の
+            TipTap 由来ブロックがそのまま表示される。
+           */}
+          <article
+            className="prose-locore"
+            dangerouslySetInnerHTML={{ __html: renderArticleBodyHtml(preview) }}
+          />
 
           {/* 旅程プラン記事のときだけ構造化タイムラインを差し込む */}
           {article.articleType === 'itinerary' &&
@@ -387,15 +361,10 @@ export function ArticleRenderer({
                       有料パート（プレビュー解除中）
                     </div>
                   ) : null}
-                  {after.split(/\n\n+/).map((para, i) =>
-                    para.startsWith('## ') ? (
-                      <h2 key={i}>{para.replace(/^## /, '')}</h2>
-                    ) : (
-                      <p key={i} className="whitespace-pre-line">
-                        {para}
-                      </p>
-                    ),
-                  )}
+                  {/* 2026-05 改修: 有料パートも HTML / Markdown 両対応で sanitize render */}
+                  <div
+                    dangerouslySetInnerHTML={{ __html: renderArticleBodyHtml(after) }}
+                  />
                 </article>
               ) : null}
               <SpotsCardList
@@ -436,9 +405,74 @@ export function ArticleRenderer({
             </section>
           )}
 
-          {/* レビュー投稿フォーム（購入済み読者にのみ表示。プレビューでは出さない） */}
+          {/* レビュー投稿フォーム（購入済み読者にのみ表示。プレビューでは出さない）。
+              いきなり大きなフォームを出さず、ボタン押下で展開する。 */}
           {!previewMode && unlocked && !isOwner ? (
-            <ReviewForm articleId={article.id} initial={myReview} />
+            <ReviewFormToggle articleId={article.id} initial={myReview} />
+          ) : null}
+
+          {/* この記事を書いた人。ヘッダー直下を軽くしたぶん、本文を読み終えた後に
+              じっくり著者プロフィールを見せる。bio / 在住年数 / フォロワー数 /
+              プロフィールへのリンクをまとめて出す。 */}
+          {writer ? (
+            <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
+                この記事を書いた人
+              </p>
+              <div className="mt-3 flex items-start gap-4">
+                <Link
+                  href={`/residents/${writer.id}`}
+                  className="shrink-0"
+                  aria-label={`${writer.name} のプロフィールへ`}
+                >
+                  <Avatar size="lg">
+                    <AvatarImage src={writer.avatarUrl} alt={writer.name} />
+                    <AvatarFallback>{writer.name[0]}</AvatarFallback>
+                  </Avatar>
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/residents/${writer.id}`}
+                      className="text-[17px] font-semibold leading-tight hover:text-primary-300"
+                    >
+                      {writer.name}
+                    </Link>
+                    <ResidencyBadge
+                      tier={writer.tier}
+                      years={writer.residencyYears}
+                    />
+                    {writer.isVerifiedCreator ? (
+                      <CreatorBadge type="verified" />
+                    ) : null}
+                    {writer.isFounding ? (
+                      <CreatorBadge type="founding" />
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-[12px] text-foreground/55 tabular">
+                    {writer.city} ・ 在住 {writer.residencyYears} 年 ・{' '}
+                    {writer.followerCount.toLocaleString('ja-JP')} followers
+                  </p>
+                  {writer.bio ? (
+                    <p className="mt-3 whitespace-pre-line text-[13px] leading-relaxed text-foreground/80">
+                      {writer.bio}
+                    </p>
+                  ) : null}
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <Button asChild variant="primary" size="sm">
+                      <Link href={`/residents/${writer.id}`}>フォローする</Link>
+                    </Button>
+                    <Link
+                      href={`/residents/${writer.id}`}
+                      className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
+                    >
+                      この著者の他の記事
+                      <ChevronRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </section>
           ) : null}
 
           {/* Reviews */}

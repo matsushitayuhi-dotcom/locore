@@ -151,7 +151,8 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
               aria-selected={active}
               onClick={() => updateTypeFilter(t.id)}
               className={
-                'inline-flex items-center rounded-full border px-3 py-1 text-[12px] font-medium transition ' +
+                // min-h を 32px 確保 + active:scale でアプリ風タップ感
+                'inline-flex min-h-[32px] items-center rounded-full border px-3 py-1 text-[12px] font-medium transition active:scale-[0.96] ' +
                 (active
                   ? 'border-foreground bg-foreground text-background'
                   : 'border-border bg-background text-foreground/70 hover:border-foreground/30')
@@ -169,7 +170,7 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-[12px] font-medium text-foreground/80 transition hover:bg-muted"
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground/80 transition active:scale-[0.96] hover:bg-muted"
           >
             <SlidersHorizontal className="h-3 w-3" />
             詳細フィルタ
@@ -179,7 +180,7 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as typeof sort)}
-              className="h-8 rounded-md border border-border bg-background px-2 text-[13px] text-foreground/80"
+              className="h-9 min-h-[36px] rounded-md border border-border bg-background px-2 text-[13px] text-foreground/80"
               aria-label="並び順"
             >
               {SORTS.map((s) => (
@@ -217,7 +218,7 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
                             : [...prev, t],
                         )
                       }
-                      className={`rounded-full border px-2.5 py-0.5 text-[12px] transition ${
+                      className={`inline-flex min-h-[32px] items-center rounded-full border px-2.5 py-1 text-[12px] transition active:scale-[0.95] ${
                         on
                           ? 'border-primary-700 bg-primary-700 text-primary-foreground'
                           : 'border-border bg-background text-foreground/70 hover:border-foreground/30'
@@ -256,7 +257,7 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
                     key={p.id}
                     type="button"
                     onClick={() => setPrice(p.id)}
-                    className={`rounded-full border px-2.5 py-0.5 text-[12px] transition ${
+                    className={`inline-flex min-h-[32px] items-center rounded-full border px-2.5 py-1 text-[12px] transition active:scale-[0.95] ${
                       p.id === price
                         ? 'border-foreground bg-foreground text-background'
                         : 'border-border bg-background text-foreground/70'

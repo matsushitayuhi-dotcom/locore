@@ -352,7 +352,10 @@ export async function publishArticle(
       };
     }
   } else {
-    if (a.body.trim().length < 100) {
+    // 2026-05 改修: 本文は HTML 保存になったので、タグを除いた純粋テキストで判定する。
+    // （旧 Markdown 記事は `<` で始まらないのでタグ除去しても誤差なし）
+    const plain = a.body.replace(/<[^>]*>/g, '').trim();
+    if (plain.length < 100) {
       return {
         ok: false,
         error: '本文は 100 文字以上必要です',

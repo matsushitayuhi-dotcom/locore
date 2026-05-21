@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { markdownToHtml } from '@/lib/markdown/toHtml';
+import { renderArticleBodyHtml } from '@/lib/markdown/render';
 
 type Props = {
   title: string;
@@ -16,7 +16,8 @@ type Props = {
  * 実際の購入後ページとは異なるが、執筆中の感触を掴むための軽量版。
  */
 export function PreviewPane({ title, body, coverImageUrl, priceJpy, tags }: Props) {
-  const bodyHtml = useMemo(() => markdownToHtml(body), [body]);
+  // 2026-05 改修: 本文は HTML / 旧 Markdown 両対応で sanitize 済み HTML を得る
+  const bodyHtml = useMemo(() => renderArticleBodyHtml(body), [body]);
 
   return (
     <aside

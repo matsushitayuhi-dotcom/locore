@@ -1,21 +1,20 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import Image from 'next/image';
 import {
-  Briefcase,
   MapPin,
   Clock,
   Wifi,
   Plus,
-  ArrowLeft,
   Inbox,
   ImageIcon,
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
-import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
-import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
-import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
+import { type CommunityView } from '@/components/community/ViewToggle';
+import { CompactFilterBar } from '@/components/community/CompactFilterBar';
+import { FilterSheet } from '@/components/community/FilterSheet';
+import { PostFab } from '@/components/community/PostFab';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -56,7 +55,6 @@ type Props = {
     remote?: string;
     min?: string;
     sort?: string;
-    filters?: string;
     region?: string;
     audience?: string;
     view?: string;
@@ -68,7 +66,6 @@ function toArray(v: string | string[] | undefined): string[] {
   return Array.isArray(v) ? v : v.split(',').filter(Boolean);
 }
 
-/** メタから年収換算した数値を返す（並び替え / 下限フィルタ用） */
 function annualizedSalary(post: CommunityPostListItem): number | null {
   const amount = post.priceAmount;
   if (!amount) return null;
@@ -80,7 +77,6 @@ function annualizedSalary(post: CommunityPostListItem): number | null {
     case 'monthly':
       return amount * 12;
     case 'hourly':
-      // 35h/週 × 52週 を概算
       return Math.round(amount * 35 * 52);
     default:
       return null;
@@ -146,7 +142,6 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     return Number.isFinite(n) && n > 0 ? n : null;
   })();
   const sort: Sort = searchParams?.sort === 'salary' ? 'salary' : 'new';
-  const showFilters = searchParams?.filters === '1';
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
   const activeAudience: CommunityAudience | undefined =
     searchParams?.audience &&
@@ -161,7 +156,6 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     cityId: regionFilter.cityId,
   });
 
-  // フィルタリング
   const filtered = rawPosts.filter((p) => {
     const meta = p.metadata as {
       employment_type?: JobEmploymentType;
@@ -193,7 +187,6 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     return true;
   });
 
-  // 並べ替え
   if (sort === 'salary') {
     filtered.sort((a, b) => {
       const aS = annualizedSalary(a) ?? -1;
@@ -201,9 +194,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
       return bS - aS;
     });
   }
-  // デフォルト（new）は DB 側で createdAt desc に既に並んでいる
 
-  // URL ビルダー
   const buildHref = (overrides: Record<string, string | undefined | null>) => {
     const params = new URLSearchParams();
     if (activeTypes.length > 0) params.set('type', activeTypes.join(','));
@@ -212,7 +203,6 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     if (remoteOnly) params.set('remote', '1');
     if (minSalary) params.set('min', String(minSalary));
     if (sort !== 'new') params.set('sort', sort);
-    if (showFilters) params.set('filters', '1');
     if (regionFilter.active) params.set('region', regionFilter.slug);
     if (activeAudience) params.set('audience', activeAudience);
     if (currentView !== 'card') params.set('view', currentView);
@@ -224,32 +214,23 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     return qs ? `/jobs?${qs}` : '/jobs';
   };
 
-  const hasActiveFilter =
-    activeTypes.length > 0 ||
-    Boolean(activeCat) ||
-    activeLangs.length > 0 ||
-    remoteOnly ||
-    Boolean(minSalary) ||
-    sort !== 'new';
+  const sheetFilterCount =
+    activeTypes.length +
+    (activeCat ? 1 : 0) +
+    activeLangs.length +
+    (remoteOnly ? 1 : 0) +
+    (minSalary ? 1 : 0) +
+    (sort !== 'new' ? 1 : 0);
 
   return (
-    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        ホームに戻る
-      </Link>
-
-      <div className="mt-4">
-        <CommunityNav active="job" />
-      </div>
+    <main className="mx-auto max-w-screen-lg px-4 pb-12 pt-4 sm:px-6">
+      <CommunityNav active="job" />
 
       <div className="mt-3">
-        <CommunityRegionPicker
+        <CompactFilterBar
           basePath="/jobs"
-          activeSlug={regionFilter.slug}
+          activeRegionSlug={regionFilter.slug}
+          activeRegionNameJa={regionFilter.nameJa}
           preserveQuery={{
             type: activeTypes.length > 0 ? activeTypes.join(',') : undefined,
             cat: activeCat,
@@ -257,191 +238,128 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             remote: remoteOnly ? '1' : undefined,
             min: minSalary ? String(minSalary) : undefined,
             sort: sort !== 'new' ? sort : undefined,
-            filters: showFilters ? '1' : undefined,
             audience: activeAudience,
             view: currentView !== 'card' ? currentView : undefined,
           }}
-        />
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <AudienceChips
-          active={activeAudience}
-          buildHref={(a) => buildHref({ audience: a ?? null })}
-        />
-        <ViewToggle
+          activeAudience={activeAudience}
+          buildAudienceHref={(a) => buildHref({ audience: a ?? null })}
           currentView={currentView}
-          buildHref={(v) => buildHref({ view: v === 'card' ? null : v })}
+          buildViewHref={(v) => buildHref({ view: v === 'card' ? null : v })}
+          sheetTrigger={
+            <FilterSheet activeCount={sheetFilterCount}>
+              <form action="/jobs" method="GET" className="space-y-4">
+                {regionFilter.active ? (
+                  <input type="hidden" name="region" value={regionFilter.slug} />
+                ) : null}
+                {activeAudience ? (
+                  <input type="hidden" name="audience" value={activeAudience} />
+                ) : null}
+                {currentView !== 'card' ? (
+                  <input type="hidden" name="view" value={currentView} />
+                ) : null}
+
+                <FilterSelect
+                  name="type"
+                  label="雇用形態"
+                  defaultValue={activeTypes[0] ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    ...JOB_EMPLOYMENT_TYPES.map((t) => ({
+                      value: t,
+                      label: JOB_EMPLOYMENT_TYPE_LABEL[t],
+                    })),
+                  ]}
+                />
+                <FilterSelect
+                  name="cat"
+                  label="職種"
+                  defaultValue={activeCat ?? ''}
+                  options={[
+                    { value: '', label: 'すべて' },
+                    ...JOB_CATEGORIES.map((c) => ({
+                      value: c,
+                      label: JOB_CATEGORY_LABEL[c],
+                    })),
+                  ]}
+                />
+                <FilterSelect
+                  name="lang"
+                  label="言語要件"
+                  defaultValue={activeLangs[0] ?? ''}
+                  options={[
+                    { value: '', label: '問わず' },
+                    ...ALL_LANGS.map((l) => ({ value: l, label: LANG_LABEL[l] })),
+                  ]}
+                />
+                <div>
+                  <label
+                    htmlFor="f-min"
+                    className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-foreground/55"
+                  >
+                    年収下限（€）
+                  </label>
+                  <input
+                    id="f-min"
+                    type="number"
+                    name="min"
+                    min={0}
+                    step={1000}
+                    defaultValue={minSalary ?? ''}
+                    placeholder="35000"
+                    className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+                <label className="inline-flex items-center gap-2 text-[13px] text-foreground/80">
+                  <input
+                    type="checkbox"
+                    name="remote"
+                    value="1"
+                    defaultChecked={remoteOnly}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  <Wifi className="h-3.5 w-3.5" />
+                  リモート OK のみ
+                </label>
+                <FilterSelect
+                  name="sort"
+                  label="並び順"
+                  defaultValue={sort}
+                  options={[
+                    { value: 'new', label: '新着順' },
+                    { value: 'salary', label: '給与高い順' },
+                  ]}
+                />
+
+                <div className="sticky bottom-0 -mx-4 mt-4 flex items-center gap-2 border-t border-border bg-background px-4 pb-1 pt-3">
+                  <Link
+                    href={buildHref({
+                      type: null,
+                      cat: null,
+                      lang: null,
+                      remote: null,
+                      min: null,
+                      sort: null,
+                    })}
+                    className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                  >
+                    リセット
+                  </Link>
+                  <button
+                    type="submit"
+                    className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                  >
+                    適用
+                  </button>
+                </div>
+              </form>
+            </FilterSheet>
+          }
         />
       </div>
 
-      <header className="mt-6 mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 sm:flex-1">
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-            <Briefcase className="h-3 w-3" />
-            求人
-          </p>
-          <h1
-            className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-          >
-            {regionFilter.active ? regionFilter.nameJa : 'フランス'}ではたらく
-          </h1>
-          <p className="mt-2 text-[14px] leading-[1.9] text-foreground/70">
-            日系企業のオフィスから、飲食、翻訳、教育、IT まで。
-            日本語話者を募集するお仕事を集めました。
-          </p>
-        </div>
-        <Link
-          href="/jobs/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          求人を出す
-        </Link>
-      </header>
-
-      <div className="mb-4">
-        <CommunityDisclaimer kind="job" />
-      </div>
-
-      {/* 統合フィルタ。プルダウン版に一本化。詳細フィルタは折りたたみで同じ <form> 内に */}
-      <form
-        action="/jobs"
-        method="GET"
-        className="mb-5 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
-      >
-        {regionFilter.active ? (
-          <input type="hidden" name="region" value={regionFilter.slug} />
-        ) : null}
-        {activeAudience ? (
-          <input type="hidden" name="audience" value={activeAudience} />
-        ) : null}
-        {currentView !== 'card' ? (
-          <input type="hidden" name="view" value={currentView} />
-        ) : null}
-        {/* 詳細フィルタが開かれていた or 詳細フィルタの値が入っているなら次回も展開 */}
-        {showFilters || activeLangs.length > 0 || remoteOnly || minSalary ? (
-          <input type="hidden" name="filters" value="1" />
-        ) : null}
-
-        <div className="flex flex-wrap items-end gap-2">
-          <FilterSelect
-            name="type"
-            label="雇用形態"
-            defaultValue={activeTypes[0] ?? ''}
-            options={[
-              { value: '', label: 'すべて' },
-              ...JOB_EMPLOYMENT_TYPES.map((t) => ({
-                value: t,
-                label: JOB_EMPLOYMENT_TYPE_LABEL[t],
-              })),
-            ]}
-          />
-          <FilterSelect
-            name="cat"
-            label="職種"
-            defaultValue={activeCat ?? ''}
-            options={[
-              { value: '', label: 'すべて' },
-              ...JOB_CATEGORIES.map((c) => ({
-                value: c,
-                label: JOB_CATEGORY_LABEL[c],
-              })),
-            ]}
-          />
-          <FilterSelect
-            name="sort"
-            label="並び順"
-            defaultValue={sort}
-            options={[
-              { value: 'new', label: '新着順' },
-              { value: 'salary', label: '給与高い順' },
-            ]}
-          />
-          <div className="flex flex-1 items-end gap-2">
-            <button
-              type="submit"
-              className="h-9 shrink-0 rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
-            >
-              適用
-            </button>
-            {hasActiveFilter ? (
-              <Link
-                href={buildHref({
-                  type: null,
-                  cat: null,
-                  lang: null,
-                  remote: null,
-                  min: null,
-                  sort: null,
-                  filters: null,
-                })}
-                className="h-9 shrink-0 inline-flex items-center rounded-md bg-card px-3 text-[11px] font-medium text-foreground/65 ring-1 ring-border hover:bg-muted"
-              >
-                リセット
-              </Link>
-            ) : null}
-          </div>
-        </div>
-
-        {/* 詳細フィルタトグル */}
-        <div className="mt-3 border-t border-border pt-3">
-          <details
-            open={
-              showFilters || activeLangs.length > 0 || remoteOnly || Boolean(minSalary)
-            }
-            className="group"
-          >
-            <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-[11px] font-medium text-foreground/70 hover:text-foreground">
-              <span className="inline-block transition-transform group-open:rotate-180">
-                ▾
-              </span>
-              詳細フィルタ
-            </summary>
-
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <FilterSelect
-                name="lang"
-                label="言語要件"
-                defaultValue={activeLangs[0] ?? ''}
-                options={[
-                  { value: '', label: '問わず' },
-                  ...ALL_LANGS.map((l) => ({ value: l, label: LANG_LABEL[l] })),
-                ]}
-              />
-              <div className="min-w-0">
-                <label
-                  htmlFor="f-min"
-                  className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
-                >
-                  年収下限（€）
-                </label>
-                <input
-                  id="f-min"
-                  type="number"
-                  name="min"
-                  min={0}
-                  step={1000}
-                  defaultValue={minSalary ?? ''}
-                  placeholder="35000"
-                  className="h-9 w-full min-w-0 rounded-md border border-border bg-background px-2 text-[12px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
-                />
-              </div>
-              <label className="inline-flex items-center gap-2 text-[12px] text-foreground/80 sm:col-span-2">
-                <input
-                  type="checkbox"
-                  name="remote"
-                  value="1"
-                  defaultChecked={remoteOnly}
-                  className="h-4 w-4 rounded border-border"
-                />
-                <Wifi className="h-3.5 w-3.5" />
-                リモート OK のみ
-              </label>
-            </div>
-          </details>
-        </div>
-      </form>
+      <p className="mt-4 mb-3 text-[12px] text-foreground/55 tabular">
+        {filtered.length} 件
+      </p>
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/65">
@@ -481,6 +399,17 @@ export default async function JobsIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       )}
+
+      <details className="mt-8 rounded-lg border border-border bg-card text-[12px] text-foreground/65">
+        <summary className="cursor-pointer list-none px-3 py-2 text-[11px] font-semibold text-foreground/55">
+          ⚠️ ご利用上の注意
+        </summary>
+        <div className="border-t border-border p-3">
+          <CommunityDisclaimer kind="job" />
+        </div>
+      </details>
+
+      <PostFab href="/jobs/new" label="求人を出す" />
     </main>
   );
 }
@@ -497,10 +426,10 @@ function FilterSelect({
   options: { value: string; label: string }[];
 }) {
   return (
-    <div className="min-w-[120px] flex-1 sm:flex-none">
+    <div>
       <label
         htmlFor={`f-${name}`}
-        className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground/55"
+        className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-foreground/55"
       >
         {label}
       </label>
@@ -508,7 +437,7 @@ function FilterSelect({
         id={`f-${name}`}
         name={name}
         defaultValue={defaultValue}
-        className="h-9 w-full rounded-md border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
+        className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -537,7 +466,6 @@ function JobListItem({ post }: { post: CommunityPostListItem }) {
         href={`/jobs/${post.id}`}
         className="flex gap-3 p-3 transition hover:bg-primary-500/5"
       >
-        {/* 写真 (なければプレースホルダー) */}
         <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-muted sm:h-28 sm:w-28">
           {hero ? (
             <Image
@@ -555,7 +483,6 @@ function JobListItem({ post }: { post: CommunityPostListItem }) {
           )}
         </div>
 
-        {/* 右側 情報 */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
             {meta.employment_type ? (
@@ -622,7 +549,6 @@ function JobCard({ post }: { post: CommunityPostListItem }) {
         href={`/jobs/${post.id}`}
         className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
       >
-        {/* 写真エリア (4:3) */}
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
           {cover ? (
             <Image
@@ -668,13 +594,11 @@ function JobCard({ post }: { post: CommunityPostListItem }) {
           ) : null}
         </div>
 
-        {/* 本文 */}
         <div className="p-3">
           <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
             {post.title}
           </h2>
 
-          {/* メタ 1 行 */}
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {!salary && (
               <li className="text-foreground/45">給与情報なし</li>
@@ -707,7 +631,6 @@ function JobCard({ post }: { post: CommunityPostListItem }) {
             ) : null}
           </ul>
 
-          {/* audience バッジ + 投稿日 */}
           <div className="mt-2 flex items-center justify-between gap-1">
             <AudienceBadge audience={meta.audience} />
             <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
