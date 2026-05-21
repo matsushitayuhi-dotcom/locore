@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Button } from '@locore/ui';
 import { Sparkles, BadgeCheck } from '@locore/ui/icons';
 import { ArrowRight } from 'lucide-react';
@@ -29,7 +29,6 @@ export default function AboutPage() {
           </p>
           <h1
             className="text-[36px] font-semibold leading-[1.15] tracking-tight text-foreground sm:text-[52px]"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             観光ガイドの 1 行先にある、
             <br className="hidden sm:block" />
@@ -77,7 +76,6 @@ export default function AboutPage() {
           </p>
           <p
             className="mt-2 text-[20px] font-semibold leading-snug text-foreground"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             居住経験 = 信頼レイヤー、編集の手 = 品質レイヤー。
           </p>
@@ -190,7 +188,6 @@ export default function AboutPage() {
             </p>
             <p
               className="mt-2 text-[28px] font-semibold tabular text-foreground"
-              style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
             >
               ¥600 〜 ¥3,000
               <span className="ml-1 text-[14px] font-normal text-foreground/50">
@@ -208,7 +205,6 @@ export default function AboutPage() {
             </p>
             <p
               className="mt-2 text-[28px] font-semibold tabular text-foreground"
-              style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
             >
               売上の 70%
               <span className="ml-1 text-[14px] font-normal text-foreground/50">
@@ -292,7 +288,6 @@ export default function AboutPage() {
           </p>
           <h2
             className="mt-4 text-[28px] font-semibold leading-snug tracking-tight text-foreground"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             Locore を一緒に育てるクリエイター、
             <br className="hidden sm:block" />
@@ -335,7 +330,6 @@ function SectionHeader({
       </p>
       <h2
         className="text-[28px] font-semibold leading-tight tracking-tight text-foreground sm:text-[34px]"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         {title}
       </h2>

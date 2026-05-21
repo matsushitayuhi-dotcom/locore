@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button, Input } from '@locore/ui';
 import { upsertSpot, deleteSpot } from '@/app/writer/articles/[id]/edit/actions';
 import { SpotPlacesPicker, type PickedPlace } from './SpotPlacesPicker';
+import { TagsInput } from './TagsInput';
 
 export type SpotEditorValue = {
   id?: string;
@@ -385,11 +386,12 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">
             タグ
           </label>
-          <Input
-            type="text"
+          {/* #1 改修: 記事側と同じピル型 TagsInput を再利用。
+              # / カンマ / 空白 / Enter で確定、× で削除。 */}
+          <TagsInput
             value={v.tagsText}
-            onChange={(e) => set('tagsText', e.target.value)}
-            placeholder="朝食, テラス席"
+            onChange={(t) => set('tagsText', t)}
+            placeholder="例: 朝食 テラス席（# / カンマ / 空白で確定）"
           />
         </div>
       </div>

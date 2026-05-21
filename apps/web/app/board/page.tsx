@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Sparkles, MapPin, ArrowLeft, Inbox } from 'lucide-react';
 import { listBoardPosts } from '@/lib/board/db';
 import {
@@ -77,9 +77,6 @@ export default async function BoardIndexPage({ searchParams }: Props) {
         </p>
         <h1
           className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           今日と明日
         </h1>

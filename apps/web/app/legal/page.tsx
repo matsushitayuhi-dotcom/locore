@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { FileText, Shield, Receipt, Cookie, ArrowRight } from 'lucide-react';
 
 export const metadata = {
@@ -47,7 +47,6 @@ export default function LegalIndexPage() {
         </p>
         <h1
           className="mt-2 text-[28px] font-bold tracking-tight sm:text-[32px]"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           法務情報
         </h1>

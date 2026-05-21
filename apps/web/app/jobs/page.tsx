@@ -1,4 +1,5 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
+import Image from 'next/image';
 import {
   Briefcase,
   MapPin,
@@ -7,12 +8,14 @@ import {
   Plus,
   ArrowLeft,
   Inbox,
+  ImageIcon,
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
 import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
+import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -56,6 +59,7 @@ type Props = {
     filters?: string;
     region?: string;
     audience?: string;
+    view?: string;
   };
 };
 
@@ -149,6 +153,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
       ? (searchParams.audience as CommunityAudience)
       : undefined;
+  const currentView: CommunityView = searchParams?.view === 'list' ? 'list' : 'card';
 
   const rawPosts = await listCommunityPosts({
     kind: 'job',
@@ -210,6 +215,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     if (showFilters) params.set('filters', '1');
     if (regionFilter.active) params.set('region', regionFilter.slug);
     if (activeAudience) params.set('audience', activeAudience);
+    if (currentView !== 'card') params.set('view', currentView);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -253,14 +259,19 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             sort: sort !== 'new' ? sort : undefined,
             filters: showFilters ? '1' : undefined,
             audience: activeAudience,
+            view: currentView !== 'card' ? currentView : undefined,
           }}
         />
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <AudienceChips
           active={activeAudience}
           buildHref={(a) => buildHref({ audience: a ?? null })}
+        />
+        <ViewToggle
+          currentView={currentView}
+          buildHref={(v) => buildHref({ view: v === 'card' ? null : v })}
         />
       </div>
 
@@ -272,7 +283,6 @@ export default async function JobsIndexPage({ searchParams }: Props) {
           </p>
           <h1
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             {regionFilter.active ? regionFilter.nameJa : 'フランス'}ではたらく
           </h1>
@@ -305,6 +315,9 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         ) : null}
         {activeAudience ? (
           <input type="hidden" name="audience" value={activeAudience} />
+        ) : null}
+        {currentView !== 'card' ? (
+          <input type="hidden" name="view" value={currentView} />
         ) : null}
         {/* 詳細フィルタが開かれていた or 詳細フィルタの値が入っているなら次回も展開 */}
         {showFilters || activeLangs.length > 0 || remoteOnly || minSalary ? (
@@ -455,6 +468,12 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             </Link>
           </div>
         </div>
+      ) : currentView === 'list' ? (
+        <ul className="divide-y divide-border overflow-hidden rounded-lg bg-card ring-1 ring-border">
+          {filtered.map((p) => (
+            <JobListItem key={p.id} post={p} />
+          ))}
+        </ul>
       ) : (
         <ul className="space-y-3">
           {filtered.map((p) => (
@@ -501,6 +520,88 @@ function FilterSelect({
   );
 }
 
+function JobListItem({ post }: { post: CommunityPostListItem }) {
+  const meta = post.metadata as {
+    employment_type?: JobEmploymentType;
+    category?: JobCategory;
+    language_requirements?: Lang[];
+    remote_ok?: boolean;
+    audience?: CommunityAudience;
+  };
+  const salary = formatSalary(post);
+  const hero = post.photos?.[0];
+
+  return (
+    <li>
+      <Link
+        href={`/jobs/${post.id}`}
+        className="flex gap-3 p-3 transition hover:bg-primary-500/5"
+      >
+        {/* 写真 (なければプレースホルダー) */}
+        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-muted sm:h-28 sm:w-28">
+          {hero ? (
+            <Image
+              src={hero}
+              alt=""
+              fill
+              sizes="128px"
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-foreground/30">
+              <ImageIcon className="h-6 w-6" />
+            </div>
+          )}
+        </div>
+
+        {/* 右側 情報 */}
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1">
+            {meta.employment_type ? (
+              <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
+                {JOB_EMPLOYMENT_TYPE_LABEL[meta.employment_type]}
+              </span>
+            ) : null}
+            {meta.category ? (
+              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
+                {JOB_CATEGORY_LABEL[meta.category]}
+              </span>
+            ) : null}
+            {meta.remote_ok ? (
+              <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
+                <Wifi className="h-2.5 w-2.5" />
+                Remote
+              </span>
+            ) : null}
+            <AudienceBadge audience={meta.audience} />
+          </div>
+
+          <h2 className="mt-1 line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
+            {post.title}
+          </h2>
+
+          <dl className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {salary ? (
+              <div className="font-semibold text-primary-300">{salary}</div>
+            ) : null}
+            {post.locationText ? (
+              <div className="inline-flex items-center gap-0.5">
+                <MapPin className="h-3 w-3" />
+                {post.locationText}
+              </div>
+            ) : null}
+            <div className="inline-flex items-center gap-0.5 text-foreground/45">
+              <Clock className="h-2.5 w-2.5" />
+              {formatPostedAt(post.createdAt)}
+            </div>
+          </dl>
+        </div>
+      </Link>
+    </li>
+  );
+}
+
 function JobCard({ post }: { post: CommunityPostListItem }) {
   const meta = post.metadata as {
     employment_type?: JobEmploymentType;
@@ -541,7 +642,6 @@ function JobCard({ post }: { post: CommunityPostListItem }) {
 
         <h2
           className="mt-1.5 text-[16px] font-bold leading-snug text-foreground"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           {post.title}
         </h2>

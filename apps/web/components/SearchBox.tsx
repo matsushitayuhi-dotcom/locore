@@ -16,6 +16,10 @@ type Props = {
   defaultIn?: 'title' | 'body';
   /** label を出すかどうか（ホームでは非表示、検索ページでは表示） */
   showLabel?: boolean;
+  /** 入力欄の placeholder を上書き（未指定なら従来の mode 依存表示にフォールバック） */
+  placeholder?: string;
+  /** タイトル / 本文 トグルを描画するか。駐在員モードでは隠す。 */
+  showInToggle?: boolean;
   className?: string;
 };
 
@@ -23,6 +27,8 @@ export function SearchBox({
   defaultQuery = '',
   defaultIn = 'title',
   showLabel = false,
+  placeholder,
+  showInToggle = true,
   className,
 }: Props) {
   const router = useRouter();
@@ -35,7 +41,9 @@ export function SearchBox({
     if (trimmed.length < 1) return;
     const params = new URLSearchParams();
     params.set('q', trimmed);
-    params.set('in', mode);
+    if (showInToggle) {
+      params.set('in', mode);
+    }
     router.push(`/search?${params.toString()}`);
   };
 
@@ -64,9 +72,10 @@ export function SearchBox({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={
-              mode === 'title'
+              placeholder ??
+              (mode === 'title'
                 ? 'タイトルから検索（例: マレ ビストロ）'
-                : '本文から検索（例: 路地裏 朝食 ローカル）'
+                : '本文から検索（例: 路地裏 朝食 ローカル）')
             }
             className="h-10 w-full bg-transparent text-[14px] text-foreground placeholder:text-foreground/40 focus:outline-none"
           />
@@ -80,23 +89,25 @@ export function SearchBox({
         </button>
       </div>
 
-      <div
-        role="radiogroup"
-        aria-label="検索対象"
-        className="mt-2 flex flex-wrap items-center gap-1 px-1 text-[11px]"
-      >
-        <span className="mr-1 text-foreground/45">検索対象:</span>
-        <ModePill
-          label="タイトル"
-          checked={mode === 'title'}
-          onChange={() => setMode('title')}
-        />
-        <ModePill
-          label="本文"
-          checked={mode === 'body'}
-          onChange={() => setMode('body')}
-        />
-      </div>
+      {showInToggle ? (
+        <div
+          role="radiogroup"
+          aria-label="検索対象"
+          className="mt-2 flex flex-wrap items-center gap-1 px-1 text-[11px]"
+        >
+          <span className="mr-1 text-foreground/45">検索対象:</span>
+          <ModePill
+            label="タイトル"
+            checked={mode === 'title'}
+            onChange={() => setMode('title')}
+          />
+          <ModePill
+            label="本文"
+            checked={mode === 'body'}
+            onChange={() => setMode('body')}
+          />
+        </div>
+      ) : null}
     </form>
   );
 }

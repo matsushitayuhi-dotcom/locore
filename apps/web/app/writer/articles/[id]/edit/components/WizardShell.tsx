@@ -7,10 +7,8 @@ import { Button } from '@locore/ui';
 import {
   ArrowLeft,
   ArrowRight,
-  Camera,
   Check,
   Copy,
-  FileText,
   Link2,
   Link2Off,
   Send,
@@ -140,8 +138,12 @@ export function WizardShell({
   const [title, setTitle] = useState(article.title);
   const [body, setBody] = useState(article.body);
   const [bodyPaid, setBodyPaid] = useState(article.bodyPaid ?? '');
+  // #4 改修 (2026-05): 新規記事のデフォルトは 'classic'。
+  // ここで既存記事の bodyStyle はそのまま尊重するので、過去に 'photo_journal'
+  // として書かれた記事は引き続き photo_journal として編集される（互換性維持）。
+  // 新規はカテゴリ選択画面の直後に Step 1 へ抜け、bodyStyle 選択 UI は撤去されている。
   const [bodyStyle, setBodyStyle] = useState<'photo_journal' | 'classic'>(
-    article.bodyStyle ?? 'photo_journal',
+    article.bodyStyle ?? 'classic',
   );
   const [basic, setBasic] = useState<BasicInfoValue>({
     priceJpy: article.priceJpy,
@@ -169,15 +171,17 @@ export function WizardShell({
    */
   const seedSpotIntoPhotosAndItinerary = (next: SpotRow[]) => {
     if (next.length === 0) return;
-    // 写真エントリ: 場所名が空のものに 1 件目のスポット名を入れる
-    const firstName = next[0]!.name;
+    // 写真エントリ: 場所名が空のものに 1 件目のスポット名 + spotId を入れる。
+    // #3 改修で「場所」はスポット選択ドロップダウンになったので spotId も同時に
+    // 入れておき、初期状態でドロップダウンが正しく選択された状態になるようにする。
+    const firstSpot = next[0]!;
     setPhotoEntries((prev) => {
       if (prev.length === 0) return prev;
       let touched = false;
       const out = prev.map((e) => {
         if (!e.locationName || e.locationName.trim() === '') {
           touched = true;
-          return { ...e, locationName: firstName };
+          return { ...e, locationName: firstSpot.name, spotId: firstSpot.id };
         }
         return e;
       });
@@ -239,7 +243,8 @@ export function WizardShell({
   const initialSnapshot = useMemo(
     () => {
       const initArticleType = article.articleType;
-      const initBodyStyle = article.bodyStyle ?? 'photo_journal';
+      // #4: 新規記事は 'classic' 既定（既存記事は DB 値を尊重）
+      const initBodyStyle = article.bodyStyle ?? 'classic';
       return makeSnapshot({
         title: article.title,
         body: article.body,
@@ -255,8 +260,9 @@ export function WizardShell({
         coverImageUrl: article.coverImageUrl ?? '',
         itineraryBlocks:
           initArticleType === 'itinerary' ? article.itineraryBlocks ?? [] : [],
-        photoEntries:
-          initBodyStyle === 'photo_journal' ? article.photoEntries ?? [] : [],
+        // #4 改修: bodyStyle に関わらず photoEntries を保存対象にしたので、
+        // 初期スナップショットも常に DB 値を採用する（dirty 誤検知防止）
+        photoEntries: article.photoEntries ?? [],
       });
     },
     // 初期スナップショットは article（サーバから渡された初期値）に依存
@@ -312,7 +318,9 @@ export function WizardShell({
         basic,
         coverImageUrl,
         itineraryBlocks: isItinerary ? itineraryBlocks : [],
-        photoEntries: bodyStyle === 'photo_journal' ? photoEntries : [],
+        // #4 改修 (2026-05): classic でも Step 2 のフォト日記セクションで写真を
+        // 追加できるので、bodyStyle に関わらず photoEntries を保存対象に含める。
+        photoEntries,
       }),
     [
       title,
@@ -358,7 +366,8 @@ export function WizardShell({
           bodyPaid,
           bodyStyle,
           itineraryBlocks: isItinerary ? itineraryBlocks : null,
-          photoEntries: bodyStyle === 'photo_journal' ? photoEntries : [],
+          // #4 改修: classic でも Step 2 で追加した写真を保存する
+          photoEntries,
           priceJpy: basic.priceJpy,
           durationType: basic.durationType || undefined,
           articleType: basic.articleType,
@@ -609,9 +618,9 @@ export function WizardShell({
       {/* Step 2: 写真追加（省略可） */}
       {step === 2 ? (
         <Step2Photos
-          bodyStyle={bodyStyle}
           photoEntries={photoEntries}
           onChangePhotoEntries={setPhotoEntries}
+          spots={spotsForDropdown}
           onSkip={() => {
             // 「あとで」: goNext と同じく下書き保存後に次のステップへ
             goNext();
@@ -631,6 +640,7 @@ export function WizardShell({
           onChangeBodyPaid={setBodyPaid}
           photoEntries={photoEntries}
           onChangePhotoEntries={setPhotoEntries}
+          spots={spotsForDropdown}
         />
       ) : null}
 
@@ -639,8 +649,6 @@ export function WizardShell({
           basic={basic}
           onChangeBasic={setBasic}
           cities={cities}
-          bodyStyle={bodyStyle}
-          onChangeBodyStyle={setBodyStyle}
           coverImageUrl={coverImageUrl}
           onChangeCover={setCoverImageUrl}
           articleId={article.id}
@@ -824,9 +832,6 @@ function Header({
         </p>
         <h1
           className="mt-1 line-clamp-1 text-[20px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           {title}
         </h1>
@@ -980,6 +985,7 @@ function Step3TitleBody({
   onChangeBodyPaid,
   photoEntries,
   onChangePhotoEntries,
+  spots,
 }: {
   title: string;
   onChangeTitle: (v: string) => void;
@@ -990,6 +996,7 @@ function Step3TitleBody({
   onChangeBodyPaid: (v: string) => void;
   photoEntries: PhotoEntry[];
   onChangePhotoEntries: (v: PhotoEntry[]) => void;
+  spots: SpotRow[];
 }) {
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -999,9 +1006,6 @@ function Step3TitleBody({
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           タイトルと本文
         </h2>
@@ -1031,11 +1035,12 @@ function Step3TitleBody({
           />
         </div>
 
-        {/* 選んだエディタを描画 */}
+        {/* 選んだエディタを描画 — bodyStyle='photo_journal' は既存記事の互換性維持 */}
         {bodyStyle === 'photo_journal' ? (
           <PhotoJournalSection
             value={photoEntries}
             onChange={onChangePhotoEntries}
+            spots={spots}
           />
         ) : (
           <TitleBodySection
@@ -1047,56 +1052,6 @@ function Step3TitleBody({
         )}
       </section>
     </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-  sub,
-}: {
-  active: boolean;
-  onClick: () => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  icon: any;
-  label: string;
-  sub: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={
-        'flex flex-1 items-start gap-2 rounded-md border px-3 py-2.5 text-left text-[12px] transition ' +
-        (active
-          ? 'border-primary-500 bg-primary-500/10'
-          : 'border-border bg-background hover:border-foreground/30')
-      }
-    >
-      <Icon
-        className={
-          'mt-0.5 h-4 w-4 shrink-0 ' +
-          (active ? 'text-primary-500' : 'text-foreground/55')
-        }
-      />
-      <span>
-        <span
-          className={
-            'block text-[13px] font-bold ' +
-            (active ? 'text-foreground' : 'text-foreground/80')
-          }
-        >
-          {label}
-        </span>
-        <span className="block text-[10px] leading-relaxed text-foreground/55">
-          {sub}
-        </span>
-      </span>
-    </button>
   );
 }
 
@@ -1125,9 +1080,6 @@ function Step1Spots({
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           {isOptional
             ? 'スポットを追加する (任意)'
@@ -1172,9 +1124,6 @@ function StepItinerary({
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           旅程を組み立てる
         </h2>
@@ -1234,9 +1183,6 @@ function Step0CategorySelect({
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           どんな記事を書きますか？
         </h2>
@@ -1291,14 +1237,15 @@ function Step0CategorySelect({
 // Step 2: 写真追加（省略可・新ステップ #4）
 // =============================================================================
 function Step2Photos({
-  bodyStyle,
   photoEntries,
   onChangePhotoEntries,
+  spots,
   onSkip,
 }: {
-  bodyStyle: 'photo_journal' | 'classic';
   photoEntries: PhotoEntry[];
   onChangePhotoEntries: (v: PhotoEntry[]) => void;
+  /** PhotoJournalSection の場所ドロップダウンに渡すスポット候補 (#3) */
+  spots: SpotRow[];
   onSkip: () => void;
 }) {
   return (
@@ -1309,40 +1256,23 @@ function Step2Photos({
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           写真を追加する
         </h2>
         <p className="text-[12px] text-foreground/65">
           写真は記事の魅力を決める要素ですが、あとからでも追加できます。
-          先に登録したスポット名が「場所」欄に自動で入っているはずです。
+          「場所」欄は登録済みのスポットから選べます。
         </p>
       </header>
 
-      {bodyStyle === 'photo_journal' ? (
-        <PhotoJournalSection
-          value={photoEntries}
-          onChange={onChangePhotoEntries}
-        />
-      ) : (
-        // クラシック本文スタイルでは Step 3 本文中の `/image` で挿入する。
-        // ここでは案内のみ表示。
-        <section className="space-y-3 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
-          <h3 className="text-[14px] font-semibold tracking-tight">
-            クラシックスタイルの写真挿入
-          </h3>
-          <p className="text-[12px] text-foreground/65">
-            クラシック (テキスト主体) スタイルでは、Step 3 の本文中で
-            <kbd className="mx-1 rounded-sm border border-border bg-muted px-1 text-[10px]">/</kbd>
-            を打って表示される「画像」メニューから挿入できます。クリップボードからの貼り付け、ドラッグ&ドロップにも対応しています。
-          </p>
-          <p className="text-[12px] text-foreground/65">
-            このステップは「あとで」スキップして大丈夫です。
-          </p>
-        </section>
-      )}
+      {/* #4 改修 (2026-05): bodyStyle の選択 UI を撤去し、Step 2 では常に
+          PhotoJournalSection を表示する。クラシック本文スタイルでも写真は
+          ここから追加でき、本文中 `/image` のクイック挿入と併用できる。 */}
+      <PhotoJournalSection
+        value={photoEntries}
+        onChange={onChangePhotoEntries}
+        spots={spots}
+      />
 
       <button
         type="button"
@@ -1371,8 +1301,6 @@ function Step4Publish({
   basic,
   onChangeBasic,
   cities,
-  bodyStyle,
-  onChangeBodyStyle,
   coverImageUrl,
   onChangeCover,
   articleId,
@@ -1399,8 +1327,6 @@ function Step4Publish({
   basic: BasicInfoValue;
   onChangeBasic: (v: BasicInfoValue) => void;
   cities: CityOption[];
-  bodyStyle: 'photo_journal' | 'classic';
-  onChangeBodyStyle: (v: 'photo_journal' | 'classic') => void;
   coverImageUrl: string;
   onChangeCover: (v: string) => void;
   articleId: string;
@@ -1438,9 +1364,6 @@ function Step4Publish({
         </p>
         <h2
           className="text-[22px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           公開の準備
         </h2>
@@ -1485,34 +1408,9 @@ function Step4Publish({
           </div>
         </div>
 
-        <div>
-          <p className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55">
-            本文のスタイル
-          </p>
-          <div
-            role="tablist"
-            aria-label="本文スタイル"
-            className="flex flex-col gap-1.5 sm:flex-row"
-          >
-            <TabButton
-              active={bodyStyle === 'photo_journal'}
-              onClick={() => onChangeBodyStyle('photo_journal')}
-              icon={Camera}
-              label="インスタスタイル"
-              sub="写真 + 場所 + キャプション"
-            />
-            <TabButton
-              active={bodyStyle === 'classic'}
-              onClick={() => onChangeBodyStyle('classic')}
-              icon={FileText}
-              label="クラシック"
-              sub="従来のブログ風テキスト"
-            />
-          </div>
-          <p className="mt-1.5 text-[11px] text-foreground/55">
-            ※ スタイルを切り替えると、Step 1 の編集領域も変わります
-          </p>
-        </div>
+        {/* #4 改修 (2026-05): 本文スタイル（インスタ / クラシック）選択 UI は撤去。
+            すべての新規記事は classic として動き、写真は Step 2 のフォト日記
+            セクションで追加する。既存の photo_journal 記事はそのまま編集される。 */}
       </section>
 
       {/* 価格 / 都市 / 所要時間 / タグ */}
@@ -1971,9 +1869,6 @@ function PriceChangeConfirmDialog({
         <h3
           id="price-change-title"
           className="mt-1 text-[20px] font-bold leading-snug"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           価格を変更しますか？
         </h3>
@@ -2091,9 +1986,6 @@ function PublishConfirmDialog({
         <h3
           id="publish-confirm-title"
           className="mt-1 text-[20px] font-bold leading-snug"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           {isScheduled ? 'この日時で公開を予約しますか？' : 'この内容で公開しますか？'}
         </h3>

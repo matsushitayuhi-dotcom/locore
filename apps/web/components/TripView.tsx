@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -149,7 +149,6 @@ export function TripView({ trip: initialTrip, spotsById }: TripViewProps) {
         </p>
         <h1
           className="mt-1 text-[28px] font-semibold tracking-tight sm:text-[36px]"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           {trip.name}
         </h1>
@@ -222,9 +221,6 @@ export function TripView({ trip: initialTrip, spotsById }: TripViewProps) {
             </p>
             <h3
               className="mt-1 text-[20px] font-semibold leading-snug"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               同行者にこのリンクを送ると編集できます
             </h3>
@@ -281,10 +277,6 @@ function Timeline({
               </div>
               <p
                 className="mt-1.5 text-[16px] font-semibold leading-snug"
-                style={{
-                  fontFamily:
-                    'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 {spot?.name ?? item.freeSpotName ?? '自由スポット'}
               </p>

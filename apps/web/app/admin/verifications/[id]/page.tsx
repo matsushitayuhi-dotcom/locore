@@ -101,7 +101,6 @@ export default async function AdminVerificationDetailPage({
         </p>
         <h1
           className="mt-2 text-[24px] font-bold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           {r.userName ?? '匿名'} さんの申請
         </h1>

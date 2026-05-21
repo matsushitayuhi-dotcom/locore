@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 import { requireUser } from '@/lib/auth/require-user';
 import { SettingsNav } from './SettingsNav';
 
@@ -25,9 +25,6 @@ export default async function SettingsLayout({
           </p>
           <h1
             className="text-[28px] font-semibold tracking-tight text-foreground sm:text-[32px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             アカウント設定
           </h1>

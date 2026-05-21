@@ -66,15 +66,20 @@
     --color-fg-subtle: var(--color-neutral-400);
     --color-ring: var(--color-primary-500);
 
-    --font-sans:       "Inter Tight", "Inter", "Helvetica Neue", Helvetica,
-                       system-ui, sans-serif;
-    --font-sans-jp:    "Noto Sans JP", "Hiragino Sans", "Yu Gothic Medium",
-                       "Yu Gothic", "メイリオ", Meiryo, sans-serif;
+    --font-sans:       "Inter Tight", "Inter", system-ui, -apple-system,
+                       BlinkMacSystemFont, "Segoe UI", Roboto,
+                       "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-sans-jp:    system-ui, -apple-system, BlinkMacSystemFont,
+                       "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Sans",
+                       "Yu Gothic Medium", "Yu Gothic", "メイリオ", Meiryo,
+                       "Helvetica Neue", Arial, sans-serif;
     --font-sans-latin: var(--font-sans);
-    --font-serif-jp:   "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho",
-                       serif;
-    --font-serif:      "Noto Serif JP", "Hiragino Mincho ProN", Georgia, serif;
-    --font-display:    var(--font-serif-jp);
+    /* 明朝系トークンは互換性のために残しているが、値は sans-serif と
+       同一にして「明朝が漏れて表示される」事故を防ぐ。新規実装ではこれらを
+       参照せず、--font-sans-jp を使うこと。 */
+    --font-serif-jp:   var(--font-sans-jp);
+    --font-serif:      var(--font-sans-jp);
+    --font-display:    var(--font-sans-jp);
     --font-mono:       "SF Mono", "SFMono-Regular", Consolas,
                        "Liberation Mono", monospace;
 
@@ -133,7 +138,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-serif-jp);
+    font-family: var(--font-sans-jp);
     color: var(--color-neutral-900);
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -204,7 +209,7 @@
 }
 
 .prose-locore h2 {
-  font-family: var(--font-serif-jp);
+  font-family: var(--font-sans-jp);
   font-size: 22px;
   font-weight: 600;
   margin-top: 2em;

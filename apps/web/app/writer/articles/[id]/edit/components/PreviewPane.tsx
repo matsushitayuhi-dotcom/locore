@@ -41,7 +41,6 @@ export function PreviewPane({ title, body, coverImageUrl, priceJpy, tags }: Prop
 
       <h2
         className="text-[18px] font-semibold leading-snug"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         {title || '（無題）'}
       </h2>

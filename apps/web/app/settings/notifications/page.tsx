@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+﻿import { eq } from 'drizzle-orm';
 import { schema, DEFAULT_NOTIFICATION_PREFERENCES } from '@locore/db';
 import type { NotificationPreferences } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -30,7 +30,6 @@ export default async function NotificationsSettingsPage() {
       <header>
         <h2
           className="text-[20px] font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           通知
         </h2>

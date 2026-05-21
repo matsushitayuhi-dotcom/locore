@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { desc, eq } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { Badge } from '@locore/ui';
@@ -76,7 +76,6 @@ export default async function AdminReportsPage({
           </p>
           <h1
             className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[32px]"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             通報・お問い合わせ管理
           </h1>

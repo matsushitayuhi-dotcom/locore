@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, CalendarDays } from 'lucide-react';
 import type { BoardPostListItem } from '@/lib/board/db';
 import {
   BOARD_CATEGORY_LABEL,
@@ -52,13 +52,22 @@ export function BoardWidget({
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
           新着ニュース
         </p>
-        <Link
-          href="/board"
-          className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary-300 hover:underline"
-        >
-          すべて見る
-          <ArrowRight className="h-3 w-3" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/calendar"
+            className="inline-flex items-center gap-0.5 rounded-full border border-primary-300/40 px-1.5 py-0.5 text-[10px] font-semibold text-primary-300 transition hover:bg-primary-500/10 hover:border-primary-300"
+          >
+            <CalendarDays className="h-3 w-3" />
+            カレンダー形式で見る
+          </Link>
+          <Link
+            href="/board"
+            className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-primary-300 hover:underline"
+          >
+            すべて見る
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
       </header>
       <ul className="divide-y divide-border">
         {visible.map((p) => {

@@ -45,7 +45,6 @@ export default function FoundersPage() {
           </Badge>
           <h1
             className="mt-3 text-[36px] font-semibold leading-[1.15] tracking-tight sm:text-[52px]"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             先着50人
             <br className="hidden sm:block" />
@@ -72,7 +71,6 @@ export default function FoundersPage() {
       <section className="mx-auto max-w-screen-xl px-4 py-14 sm:px-6">
         <h2
           className="text-[24px] font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           Founders に贈る、5つの特典
         </h2>
@@ -85,9 +83,6 @@ export default function FoundersPage() {
               <Check className="h-4 w-4 text-accent-500" />
               <p
                 className="mt-2 text-[16px] font-semibold tracking-tight"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 {p.title}
               </p>
@@ -103,9 +98,6 @@ export default function FoundersPage() {
         <div className="mx-auto max-w-screen-xl px-4 py-14 sm:px-6">
           <h2
             className="text-[24px] font-semibold tracking-tight"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             収益例（あくまで仮計算）
           </h2>
@@ -167,9 +159,6 @@ export default function FoundersPage() {
       <section className="mx-auto max-w-screen-md px-4 py-14 sm:px-6">
         <h2
           className="text-[24px] font-semibold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           応募する
         </h2>

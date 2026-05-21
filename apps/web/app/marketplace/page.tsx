@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer'
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
 import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
+import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -63,6 +64,7 @@ type Props = {
     price?: string;
     region?: string;
     audience?: string;
+    view?: string;
   };
 };
 
@@ -112,6 +114,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
     (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
       ? (searchParams.audience as CommunityAudience)
       : undefined;
+  const currentView: CommunityView = searchParams?.view === 'list' ? 'list' : 'card';
 
   const rawPosts = await listCommunityPosts({
     kind: 'marketplace',
@@ -149,6 +152,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
     if (activePrice) params.set('price', activePrice.id);
     if (regionFilter.active) params.set('region', regionFilter.slug);
     if (activeAudience) params.set('audience', activeAudience);
+    if (currentView !== 'card') params.set('view', currentView);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -181,14 +185,19 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
             cond: activeCond,
             price: activePrice?.id,
             audience: activeAudience,
+            view: currentView !== 'card' ? currentView : undefined,
           }}
         />
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <AudienceChips
           active={activeAudience}
           buildHref={(a) => buildHref({ audience: a ?? null })}
+        />
+        <ViewToggle
+          currentView={currentView}
+          buildHref={(v) => buildHref({ view: v === 'card' ? null : v })}
         />
       </div>
 
@@ -200,7 +209,6 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
           </p>
           <h1
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             {regionFilter.active ? regionFilter.nameJa : 'フランス'}でゆずる
           </h1>
@@ -390,6 +398,12 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
             </Link>
           </div>
         </div>
+      ) : currentView === 'list' ? (
+        <ul className="divide-y divide-border overflow-hidden rounded-lg bg-card ring-1 ring-border">
+          {filtered.map((p) => (
+            <MarketplaceListItem key={p.id} post={p} />
+          ))}
+        </ul>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {filtered.map((p) => (
@@ -398,6 +412,89 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
         </ul>
       )}
     </main>
+  );
+}
+
+function MarketplaceListItem({ post }: { post: CommunityPostListItem }) {
+  const meta = post.metadata as {
+    side?: Side;
+    category?: MarketplaceCategory;
+    condition?: MarketplaceCondition;
+    audience?: CommunityAudience;
+  };
+  const price = formatPrice(post);
+  const hero = post.photos?.[0];
+
+  return (
+    <li>
+      <Link
+        href={`/marketplace/${post.id}`}
+        className="flex gap-3 p-3 transition hover:bg-primary-500/5"
+      >
+        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-muted sm:h-28 sm:w-28">
+          {hero ? (
+            <Image
+              src={hero}
+              alt={post.title}
+              fill
+              sizes="128px"
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-foreground/30">
+              <Camera className="h-6 w-6" />
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1">
+            {meta.side ? (
+              <span
+                className={
+                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                  (meta.side === 'sell'
+                    ? 'bg-primary-500 text-neutral-950'
+                    : 'bg-accent-500 text-neutral-950')
+                }
+              >
+                {SIDE_LABEL[meta.side]}
+              </span>
+            ) : null}
+            {meta.category ? (
+              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
+                {MARKETPLACE_CATEGORY_LABEL[meta.category]}
+              </span>
+            ) : null}
+            {meta.condition ? (
+              <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
+                {MARKETPLACE_CONDITION_LABEL[meta.condition]}
+              </span>
+            ) : null}
+            <AudienceBadge audience={meta.audience} />
+          </div>
+          <h2 className="mt-1 line-clamp-2 text-[13px] font-bold leading-snug">
+            {post.title}
+          </h2>
+          <p className="mt-0.5 inline-flex items-baseline gap-1 text-[14px] font-bold tabular text-primary-300">
+            <Tag className="h-3 w-3 self-center" />
+            {price ?? '価格応相談'}
+          </p>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/50">
+            {post.locationText ? (
+              <span className="inline-flex items-center gap-0.5">
+                <MapPin className="h-2.5 w-2.5" />
+                {post.locationText}
+              </span>
+            ) : null}
+            <span className="inline-flex items-center gap-0.5">
+              <Clock className="h-2.5 w-2.5" />
+              {formatPostedAt(post.createdAt)}
+            </span>
+          </p>
+        </div>
+      </Link>
+    </li>
   );
 }
 
@@ -463,7 +560,6 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
 
           <h2
             className="mt-1.5 line-clamp-2 text-[15px] font-bold leading-snug text-foreground"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             {post.title}
           </h2>

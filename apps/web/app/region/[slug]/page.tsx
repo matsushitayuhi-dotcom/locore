@@ -76,9 +76,6 @@ export default async function RegionHomePage({ params }: Props) {
           </p>
           <h1
             className="mt-3 text-[28px] font-bold tracking-tight"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {region.countryNameJa}・{region.nameJa}
           </h1>
@@ -149,9 +146,6 @@ export default async function RegionHomePage({ params }: Props) {
               </nav>
               <h1
                 className="!text-white mt-2 text-[28px] font-bold leading-tight tracking-tight sm:text-[36px]"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 {region.nameJa}
               </h1>
@@ -175,9 +169,6 @@ export default async function RegionHomePage({ params }: Props) {
             </nav>
             <h1
               className="mt-2 text-[28px] font-bold leading-tight tracking-tight sm:text-[36px]"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               {region.nameJa}
             </h1>
@@ -276,9 +267,6 @@ function SectionHeader({
         </p>
         <h2
           className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           {title}
         </h2>

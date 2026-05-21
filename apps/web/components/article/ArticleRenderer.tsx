@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import {
   Avatar,
@@ -213,7 +213,6 @@ export function ArticleRenderer({
         </div>
         <h1
           className="mt-4 text-[32px] font-semibold leading-[1.2] tracking-tight sm:text-[42px]"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           {article.title}
         </h1>
@@ -446,9 +445,6 @@ export function ArticleRenderer({
           <section>
             <h3
               className="mb-4 text-[18px] font-semibold tracking-tight"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               読者レビュー（{reviews.length}件）
             </h3>
@@ -504,7 +500,6 @@ export function ArticleRenderer({
         <section className="mx-auto max-w-screen-xl px-4 pb-20 sm:px-6">
           <h3
             className="mb-5 text-[20px] font-semibold tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             関連記事
           </h3>

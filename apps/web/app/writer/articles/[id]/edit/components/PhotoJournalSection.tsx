@@ -24,6 +24,13 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { uploadImage } from '@/lib/storage/uploadImage';
 import type { PhotoEntry } from '@/lib/mock/types';
+import type { SpotRow } from '@/components/writer/SpotList';
+
+/** PhotoJournalSection の「場所」ドロップダウン用：簡易スポット情報 */
+type SpotChoice = Pick<SpotRow, 'id' | 'name'>;
+
+/** 「その他（自由入力）」を示す sentinel 値（id は実在しないことが保証された予約語） */
+const FREE_INPUT_VALUE = '__free__';
 
 /**
  * フォト日記エディタ。最大 10 枚の写真 + キャプション + 場所名を編集する。
@@ -37,11 +44,16 @@ import type { PhotoEntry } from '@/lib/mock/types';
 export type PhotoJournalSectionProps = {
   value: PhotoEntry[];
   onChange: (next: PhotoEntry[]) => void;
+  /**
+   * 「場所」フィールドのドロップダウン候補として使う、この記事に登録済みのスポット。
+   * 未指定または空配列のときは自由入力フォールバックのみが表示される。 (#3 改修)
+   */
+  spots?: SpotChoice[];
 };
 
 const MAX_ENTRIES = 10;
 
-export function PhotoJournalSection({ value, onChange }: PhotoJournalSectionProps) {
+export function PhotoJournalSection({ value, onChange, spots = [] }: PhotoJournalSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(
@@ -187,10 +199,8 @@ export function PhotoJournalSection({ value, onChange }: PhotoJournalSectionProp
                   id={itemIds[i]!}
                   entry={entry}
                   index={i}
-                  onChangeCaption={(caption) => updateAt(i, { caption })}
-                  onChangeLocation={(locationName) =>
-                    updateAt(i, { locationName })
-                  }
+                  spots={spots}
+                  onPatch={(patch) => updateAt(i, patch)}
                   onRemove={() => removeAt(i)}
                 />
               ))}
@@ -230,17 +240,21 @@ function SortablePhotoItem({
   id,
   entry,
   index,
-  onChangeCaption,
-  onChangeLocation,
+  spots,
+  onPatch,
   onRemove,
 }: {
   id: string;
   entry: PhotoEntry;
   index: number;
-  onChangeCaption: (v: string) => void;
-  onChangeLocation: (v: string | null) => void;
+  /** ドロップダウン候補の登録済みスポット */
+  spots: SpotChoice[];
+  /** entry に対する部分更新を親に通知。spotId と locationName を 1 トランザクションで更新したいので、
+   *  個別の onChange ではなく patch 渡しに統一した (#3) */
+  onPatch: (patch: Partial<PhotoEntry>) => void;
   onRemove: () => void;
 }) {
+  const onChangeCaption = (caption: string) => onPatch({ caption });
   const {
     attributes,
     listeners,
@@ -332,19 +346,119 @@ function SortablePhotoItem({
             <MapPin className="mr-1 inline h-3 w-3" />
             場所
           </label>
-          <input
+          <LocationPicker
             id={`pj-loc-${index}`}
-            type="text"
-            value={entry.locationName ?? ''}
-            onChange={(e) =>
-              onChangeLocation(e.target.value ? e.target.value.slice(0, 200) : null)
-            }
-            placeholder="例: マレ地区 Du Pain et des Idées"
-            className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+            spots={spots}
+            spotId={entry.spotId ?? null}
+            locationName={entry.locationName ?? ''}
+            onPatch={onPatch}
           />
         </div>
       </div>
     </li>
+  );
+}
+
+// =============================================================================
+// 場所セレクタ（#3 改修）
+//
+//  - 登録済みスポットのドロップダウン + 末尾「その他（自由入力）」
+//  - スポットを選んだ瞬間に spotId / locationName を同時更新
+//  - 「その他」または `spotId` が見つからないケースでは自由入力欄を出す
+//  - スポット 0 件のときはドロップダウンを出さず自由入力フォールバックのみ
+// =============================================================================
+function LocationPicker({
+  id,
+  spots,
+  spotId,
+  locationName,
+  onPatch,
+}: {
+  id: string;
+  spots: SpotChoice[];
+  spotId: string | null;
+  locationName: string;
+  onPatch: (patch: Partial<PhotoEntry>) => void;
+}) {
+  // 選択されている spotId が、現在の spots リストに存在するか
+  const matchedSpot = spotId ? spots.find((s) => s.id === spotId) ?? null : null;
+  // 「その他（自由入力）」状態かどうか:
+  //  - 明示的に locationName だけが入って spotId 無し
+  //  - spotId は付いていたが該当スポットが消えたケースも自由入力に倒す
+  const isFreeMode = !spotId || (spotId && !matchedSpot);
+
+  // スポットがまだ 1 件も無いとき: 自由入力のみ（ヒント付き）
+  if (spots.length === 0) {
+    return (
+      <>
+        <p className="mb-1 rounded-sm bg-primary-500/10 px-2 py-1 text-[10px] text-primary-300">
+          先に下の「スポット」セクションで場所を追加すると、ここから選べるようになります。
+        </p>
+        <input
+          id={id}
+          type="text"
+          value={locationName}
+          onChange={(e) =>
+            onPatch({
+              spotId: null,
+              locationName: e.target.value
+                ? e.target.value.slice(0, 200)
+                : null,
+            })
+          }
+          placeholder="例: マレ地区 Du Pain et des Idées"
+          className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+        />
+      </>
+    );
+  }
+
+  const dropdownValue = matchedSpot ? matchedSpot.id : FREE_INPUT_VALUE;
+
+  return (
+    <div className="space-y-1.5">
+      <select
+        id={id}
+        value={dropdownValue}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === FREE_INPUT_VALUE) {
+            // 自由入力モードへ。spotId は外し、locationName は既存値を保持。
+            onPatch({ spotId: null });
+          } else {
+            // スポットを選択 → id を記録し name をコピー
+            const picked = spots.find((s) => s.id === v);
+            if (picked) {
+              onPatch({ spotId: picked.id, locationName: picked.name });
+            }
+          }
+        }}
+        className="h-9 w-full rounded-md border border-border bg-card px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
+      >
+        {spots.map((s) => (
+          <option key={s.id} value={s.id}>
+            {s.name}
+          </option>
+        ))}
+        <option value={FREE_INPUT_VALUE}>その他（自由入力）</option>
+      </select>
+      {isFreeMode ? (
+        <input
+          type="text"
+          value={locationName}
+          onChange={(e) =>
+            onPatch({
+              spotId: null,
+              locationName: e.target.value
+                ? e.target.value.slice(0, 200)
+                : null,
+            })
+          }
+          placeholder="例: マレ地区 Du Pain et des Idées"
+          className="h-9 w-full rounded-md border border-border bg-card px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+        />
+      ) : null}
+    </div>
   );
 }
 

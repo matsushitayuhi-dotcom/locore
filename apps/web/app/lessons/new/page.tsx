@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { requireUser } from '@/lib/auth/require-user';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
@@ -30,7 +30,6 @@ export default async function NewLessonPage() {
         </p>
         <h1
           className="mt-2 text-[26px] font-bold leading-tight tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           知っていることをおすそわけ
         </h1>

@@ -1,4 +1,4 @@
-import { ContactForm } from '@/components/ContactForm';
+﻿import { ContactForm } from '@/components/ContactForm';
 import { getCurrentUser } from '@/lib/auth/current-user';
 
 export const metadata = {
@@ -38,7 +38,6 @@ export default async function ContactPage({
           </p>
           <h1
             className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[36px]"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             お問い合わせ
           </h1>

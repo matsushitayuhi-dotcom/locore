@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
@@ -93,7 +93,6 @@ export function Paywall({
         <Lock className="mx-auto mb-3 h-5 w-5 text-primary-300" />
         <p
           className="text-[18px] font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           ここから先は、書き手のサポート
         </p>
@@ -141,9 +140,6 @@ export function Paywall({
             </p>
             <h3
               className="mt-1 text-[20px] font-semibold leading-snug"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               {article.title}
             </h3>
@@ -196,7 +192,6 @@ function SpotList({
     <section>
       <h3
         className="mb-3 text-[16px] font-semibold tracking-tight"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         この記事のスポット
       </h3>

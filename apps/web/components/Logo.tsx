@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -146,7 +146,6 @@ function FallbackText({
     <span
       className={`inline-flex items-center font-semibold tracking-[0.08em] text-primary-500 ${className}`}
       style={{
-        fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
         fontSize: `${fontSize}px`,
         lineHeight: 1,
         fontVariantCaps: 'small-caps',

@@ -1,4 +1,4 @@
-export const metadata = {
+﻿export const metadata = {
   title: '特定商取引法に基づく表記 — Locore',
   description:
     'Locore における有料コンテンツ販売およびユーザーサービス提供に関する、特定商取引法に基づく表記です。',
@@ -130,7 +130,6 @@ function Hero({
       </p>
       <h1
         className="mt-2 text-[28px] font-bold tracking-tight sm:text-[32px]"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         {title}
       </h1>

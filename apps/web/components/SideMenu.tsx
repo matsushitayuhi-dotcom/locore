@@ -60,7 +60,7 @@ type MenuItem = {
 // 旅行者: ホーム / 場所 (※ /world) / 地図 / 検索
 //   - 「場所」は SideMenu からは drill-down できないので、暫定で /world に飛ばす
 //     (全国一覧)。PC ヘッダの PlaceMenu で drill-down する想定。
-// 駐在員: ホーム / 場所 (※ /world) / 求人 / アパート / 売買 / サークル / 習い事 / 助け合い / 検索
+// 駐在員: ホーム / 場所 (※ /world) / アパート / 売買 / 求人 / イベント / 習い事 / 助け合い / 検索
 
 const TRAVELER_NAV_ITEMS: (mode: 'traveler' | 'resident' | null) => MenuItem[] = (
   mode,
@@ -79,10 +79,10 @@ const TRAVELER_NAV_ITEMS: (mode: 'traveler' | 'resident' | null) => MenuItem[] =
 const RESIDENT_NAV_ITEMS: MenuItem[] = [
   { href: '/expat', label: 'ホーム', icon: HomeIcon, matchPrefix: '/expat' },
   { href: '/world', label: '場所で探す', icon: Compass, matchPrefix: '/world' },
-  { href: '/jobs', label: '求人', icon: Briefcase, matchPrefix: '/jobs' },
   { href: '/apartments', label: 'アパート', icon: Building2, matchPrefix: '/apartments' },
   { href: '/marketplace', label: '売買', icon: ShoppingCart, matchPrefix: '/marketplace' },
-  { href: '/groups', label: 'サークル', icon: Users, matchPrefix: '/groups' },
+  { href: '/jobs', label: '求人', icon: Briefcase, matchPrefix: '/jobs' },
+  { href: '/groups', label: 'イベント', icon: Users, matchPrefix: '/groups' },
   { href: '/lessons', label: '習い事', icon: GraduationCap, matchPrefix: '/lessons' },
   { href: '/help', label: '助け合い', icon: HandHelping, matchPrefix: '/help' },
   { href: '/search', label: '検索', icon: Search, matchPrefix: '/search' },
@@ -106,7 +106,7 @@ const TRAVELER_USER_ITEMS: MenuItem[] = [
 ];
 
 // 駐在員モードのユーザー固有項目。
-// コミュニティ掲示板 (求人 / アパート / 売買 / サークル / 習い事 / 助け合い) は
+// コミュニティ掲示板 (アパート / 売買 / 求人 / イベント / 習い事 / 助け合い) は
 // 上部の「ナビゲーション」セクション (RESIDENT_NAV_ITEMS) に移したのでここには出さない。
 const RESIDENT_USER_ITEMS: MenuItem[] = [
   {

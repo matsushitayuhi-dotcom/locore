@@ -65,7 +65,6 @@ export default async function AccountSettingsPage() {
       <header>
         <h2
           className="text-[20px] font-semibold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           アカウント
         </h2>

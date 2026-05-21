@@ -174,7 +174,6 @@ export default async function JobDetailPage({ params }: Props) {
 
             <h1
               className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
-              style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
             >
               {post.title}
             </h1>
@@ -304,9 +303,6 @@ export default async function JobDetailPage({ params }: Props) {
               </p>
               <p
                 className="mt-1 text-[22px] font-bold leading-tight text-primary-300"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 {salary ?? '応相談'}
               </p>

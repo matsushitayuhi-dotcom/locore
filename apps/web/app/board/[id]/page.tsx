@@ -53,9 +53,6 @@ export default async function BoardDetailPage({ params }: Props) {
 
         <h1
           className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           {post.title}
         </h1>

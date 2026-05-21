@@ -99,27 +99,43 @@
 
 ## 3. フォント
 
-### 3.1 役割別
+**方針**: Web では明朝 (Noto Serif JP / Hiragino Mincho) を撤去し、すべて
+sans-serif に統一する。Chrome の標準 system UI フォントを起点に、日本語は
+Noto Sans JP / Hiragino Sans / Yu Gothic Medium にフォールバック。
+紙の雑誌感は色 (クリーム + テラコッタ) と余白・罫線で出し、書体では出さない。
+
+### 3.1 役割別 (Web)
 
 | 役割 | フォント | 入手先 | 備考 |
 |---|---|---|---|
-| **日本語見出し** (h1-h6) | **Noto Serif JP** | [Google Fonts](https://fonts.google.com/specimen/Noto+Serif+JP) | Weight: 400 / 500 / 600 / 700 |
-| **日本語本文** | **Noto Sans JP** | [Google Fonts](https://fonts.google.com/specimen/Noto+Sans+JP) | Weight: 400 / 500 / 700 |
+| **日本語見出し** (h1-h6) | **system-ui → Noto Sans JP** | [Google Fonts](https://fonts.google.com/specimen/Noto+Sans+JP) | Weight: 500 / 600 / 700 |
+| **日本語本文** | **system-ui → Noto Sans JP** | [Google Fonts](https://fonts.google.com/specimen/Noto+Sans+JP) | Weight: 400 / 500 |
 | Latin 文字本文 | Inter Tight (or Inter) | [Google Fonts](https://fonts.google.com/specimen/Inter+Tight) | サイズ感を Japanese と揃えやすい |
 | 等幅 (コード・数字) | SF Mono / Consolas | システム / Apple | フォールバックで対応 |
 
+CSS 変数 `--font-serif-jp` / `--font-serif` / `--font-display` は互換目的で
+残しているが、実値は `--font-sans-jp` と同一にエイリアスしている。新規実装
+ではこれらを参照せず `--font-sans-jp` を使うこと。
+
 ### 3.2 推奨ペアリング (資料作成時)
 
-- **タイトル / 見出し**: Noto Serif JP (Bold 700) — 字間 -0.01em
+紙資料・PowerPoint・Figma 用には、引き続き Noto Serif JP を使ってもよい
+(印刷・スライドは雑誌感を出しやすい)。Web は sans 統一。
+
+- **タイトル / 見出し (Web)**: Noto Sans JP (Bold 700) — 字間 -0.01em
+- **タイトル / 見出し (印刷・スライド)**: Noto Serif JP (Bold 700) — 字間 -0.01em
 - **サブタイトル / 本文**: Noto Sans JP (Regular 400) — 行間 1.85
 - **数字 / 西欧名**: Inter Tight (Medium 500)
 
 ### 3.3 フォールバック (Web)
 
 ```
-sans-jp:  Noto Sans JP → Hiragino Sans → Yu Gothic Medium → Yu Gothic → メイリオ
-serif-jp: Noto Serif JP → Hiragino Mincho ProN → Yu Mincho → serif
-sans:     Inter Tight → Inter → Helvetica Neue → Helvetica → system-ui
+sans-jp:  system-ui → -apple-system → BlinkMacSystemFont → Segoe UI → Roboto
+          → Noto Sans JP → Hiragino Sans → Yu Gothic Medium → Yu Gothic
+          → メイリオ → Helvetica Neue → Arial → sans-serif
+sans:     Inter Tight → Inter → system-ui → -apple-system → Segoe UI
+          → Roboto → Helvetica Neue → Helvetica → Arial → sans-serif
+serif-jp: (Web では使わない。値は --font-sans-jp と同じ)
 mono:     SF Mono → SFMono-Regular → Consolas → Liberation Mono
 ```
 
@@ -129,6 +145,7 @@ mono:     SF Mono → SFMono-Regular → Consolas → Liberation Mono
 - `letter-spacing: 0.005em` (本文)
 - `letter-spacing: -0.01em` (見出し)
 - `-webkit-font-smoothing: antialiased`
+- 明朝系フォントは Web では使わない (印刷・スライドのみ)
 
 ---
 
@@ -164,7 +181,8 @@ mono:     SF Mono → SFMono-Regular → Consolas → Liberation Mono
 
 - 背景はクリーム (`#FAFAF7`)、本文インク (`#18181B`)
 - アクセントはテラコッタ (`#D4634A`) を **1 枚に 1 箇所** だけ
-- 見出しは **Noto Serif JP Bold**、本文は **Noto Sans JP**
+- Web は **Noto Sans JP** (見出し・本文とも) で統一
+- 印刷・スライドは **Noto Serif JP Bold** の見出しもOK
 - 角丸は 12-16px、影はほぼ無し or `shadow-sm`
 - 区切り罫線は `#E7E5E0` の薄いライン
 
@@ -173,7 +191,7 @@ mono:     SF Mono → SFMono-Regular → Consolas → Liberation Mono
 - ❌ 純白背景 (`#FFFFFF`) — 紙感が出ない、クリームを使う
 - ❌ 黒文字 (`#000000`) — 強すぎる、インク (`#18181B`) を使う
 - ❌ テラコッタの大面積塗り — 1 枚に 1 アクセント
-- ❌ ゴシック体の見出し — 紙の雑誌感を壊す
+- ❌ Web で明朝体を使う — 画面では読みづらいので sans に統一
 - ❌ 影が強い (Material Design 的) — 平面的に保つ
 
 ### 5.3 印刷時の CMYK 近似
@@ -238,5 +256,5 @@ Locore/Border        #E7E5E0
 
 ---
 
-最終更新: 2026-05-19
+最終更新: 2026-05-21
 ソース: `apps/web/app/globals.css`, `packages/ui/src/tailwind-preset.ts`

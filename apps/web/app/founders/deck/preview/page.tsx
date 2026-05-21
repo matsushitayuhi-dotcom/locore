@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Printer } from 'lucide-react';
 import { DECK } from '@/lib/deck/tokens';
 import { SlideCover } from '@/components/deck/slides/Cover';
@@ -37,9 +37,6 @@ export default function DeckPreviewPage() {
             </p>
             <h1
               className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[36px]"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               ブランドキット + スライドマスター
             </h1>
@@ -295,7 +292,6 @@ function SectionTitle({
       ) : null}
       <h2
         className="mt-1 text-[20px] font-semibold tracking-tight sm:text-[24px]"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         {title}
       </h2>

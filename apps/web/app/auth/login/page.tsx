@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { GoogleButton } from '@/components/auth/GoogleButton';
@@ -40,7 +40,6 @@ export default async function LoginPage({
           </p>
           <h1
             className="mt-2 text-[22px] font-semibold tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             ログイン
           </h1>

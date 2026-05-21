@@ -189,7 +189,6 @@ export default async function LessonDetailPage({ params }: Props) {
 
             <h1
               className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
-              style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
             >
               {post.title}
             </h1>
@@ -299,9 +298,6 @@ export default async function LessonDetailPage({ params }: Props) {
               </p>
               <p
                 className="mt-1 inline-flex items-baseline gap-1 text-[22px] font-bold leading-tight text-primary-300"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 <Tag className="h-4 w-4 self-center" />
                 {price ?? '応相談'}

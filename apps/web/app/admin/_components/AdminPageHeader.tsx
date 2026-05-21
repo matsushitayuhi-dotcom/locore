@@ -1,4 +1,4 @@
-import { AdminBreadcrumb } from './AdminBreadcrumb';
+﻿import { AdminBreadcrumb } from './AdminBreadcrumb';
 
 /**
  * Admin ページ共通ヘッダー。パンくず + タイトル + 説明 + 右側アクション。
@@ -29,9 +29,6 @@ export function AdminPageHeader({
           {kicker ? <div className="mb-1.5">{kicker}</div> : null}
           <h1
             className="text-[22px] font-semibold tracking-tight sm:text-[26px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {title}
           </h1>

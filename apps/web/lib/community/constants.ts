@@ -10,10 +10,13 @@ import { z } from 'zod';
 // 種別
 // =============================================================================
 
+// 並び順は「住居 → モノ → 仕事 → コト → スキル → 助け合い」というユーザー
+// 主導の暮らしの優先度順。グローバルナビ・CommunityNav・/expat ホームは
+// この配列の順序を参照しているため、ここを変えるだけで全体が並び替わる。
 export const COMMUNITY_KINDS = [
-  'job',
   'apartment',
   'marketplace',
+  'job',
   'group',
   'lesson',
   'mutual_aid',
@@ -24,7 +27,8 @@ export const KIND_LABEL: Record<CommunityKind, string> = {
   job: '求人',
   apartment: 'アパート',
   marketplace: '売ります・買います',
-  group: 'メンバー募集',
+  // DB の kind は 'group' のまま (English ID は不変) だが、UI 表示は「イベント」に統一。
+  group: 'イベント',
   lesson: '教えます・習います',
   mutual_aid: '助け合い',
 };
@@ -266,7 +270,7 @@ export const marketplaceMetadataSchema = z.object({
 export type MarketplaceMetadata = z.infer<typeof marketplaceMetadataSchema>;
 
 // =============================================================================
-// メンバー募集 (group)
+// イベント (group) — DB の kind は 'group' のまま、UI 表記のみ「イベント」
 // =============================================================================
 
 export const groupMetadataSchema = z.object({

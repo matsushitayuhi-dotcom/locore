@@ -92,9 +92,6 @@ export default async function CountryPage({ params }: Props) {
             </p>
             <h1
               className="!text-white mt-1 text-[36px] font-bold leading-tight tracking-tight sm:text-[48px]"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               {country.nameJa}
             </h1>
@@ -137,9 +134,6 @@ export default async function CountryPage({ params }: Props) {
             </p>
             <h2
               className="mt-3 text-[24px] font-bold tracking-tight"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               {country.nameJa}は、もうすぐ
             </h2>
@@ -197,9 +191,6 @@ function SectionHeader({
         </p>
         <h2
           className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           {title}
         </h2>
@@ -266,9 +257,6 @@ function RegionCard({
         <div className="absolute inset-x-0 bottom-0 px-3 py-3 text-white">
           <h3
             className="!text-white truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {region.nameJa}
           </h3>

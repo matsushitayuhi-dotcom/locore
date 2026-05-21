@@ -45,7 +45,6 @@ export default async function ReportPage({
           </p>
           <h1
             className="mt-2 text-[26px] font-semibold tracking-tight sm:text-[32px]"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             通報する
           </h1>

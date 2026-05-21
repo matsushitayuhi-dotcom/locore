@@ -1,4 +1,4 @@
-export const metadata = {
+﻿export const metadata = {
   title: '利用規約 — Locore',
   description:
     'Locore（以下「本サービス」）の利用規約。会員登録、有料記事の購入、コミュニティ投稿、ユーザーサービスの提供などについて定めています。',
@@ -229,7 +229,6 @@ function Hero({
       </p>
       <h1
         className="mt-2 text-[28px] font-bold tracking-tight sm:text-[32px]"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         {title}
       </h1>

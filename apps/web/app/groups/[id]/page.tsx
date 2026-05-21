@@ -58,9 +58,9 @@ type Props = { params: { id: string } };
 
 export async function generateMetadata({ params }: Props) {
   const post = await getCommunityPost(params.id);
-  if (!post || post.kind !== 'group') return { title: 'メンバー募集 — Locore' };
+  if (!post || post.kind !== 'group') return { title: 'イベント — Locore' };
   return {
-    title: `${post.title} — Locore メンバー募集`,
+    title: `${post.title} — Locore イベント`,
     description: post.body.length > 140 ? post.body.slice(0, 137) + '…' : post.body,
   };
 }
@@ -139,7 +139,6 @@ export default async function GroupDetailPage({ params }: Props) {
 
             <h1
               className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
-              style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
             >
               {post.title}
             </h1>
@@ -261,9 +260,6 @@ export default async function GroupDetailPage({ params }: Props) {
                 </p>
                 <p
                   className="mt-1 text-[20px] font-bold leading-tight text-primary-300"
-                  style={{
-                    fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  }}
                 >
                   €{new Intl.NumberFormat('fr-FR').format(fee)} / 月
                 </p>
@@ -275,9 +271,6 @@ export default async function GroupDetailPage({ params }: Props) {
                 </p>
                 <p
                   className="mt-1 text-[20px] font-bold leading-tight text-primary-300"
-                  style={{
-                    fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  }}
                 >
                   無料
                 </p>

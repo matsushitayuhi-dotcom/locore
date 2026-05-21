@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { eq, gte, sql, desc, and, count } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -198,9 +198,6 @@ export default async function WriterDashboardPage() {
             </p>
             <h1
               className="text-[32px] font-semibold tracking-tight"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               売上レポート
             </h1>

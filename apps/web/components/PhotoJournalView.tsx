@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
@@ -248,10 +248,6 @@ function InstaSlide({
             >
               <p
                 className="whitespace-pre-line text-[14px] leading-[1.85] text-white sm:text-[15px]"
-                style={{
-                  fontFamily:
-                    'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 {entry.caption}
               </p>

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import { Lock, ArrowRight } from 'lucide-react';
 import type { CountryListItem } from '@/lib/geo/countries';
@@ -128,9 +128,6 @@ function CountryTile({ country }: { country: CountryListItem }) {
           </p>
           <h3
             className="!text-white mt-0.5 truncate text-[15px] font-bold leading-tight tracking-tight sm:text-[16px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {country.nameJa}
           </h3>

@@ -88,9 +88,6 @@ export default async function AdminReportDetailPage({
           <div className="flex items-center gap-3">
             <h1
               className="text-[24px] font-semibold tracking-tight"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               通報詳細
             </h1>

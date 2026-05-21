@@ -181,7 +181,6 @@ export default async function HelpDetailPage({ params }: Props) {
 
             <h1
               className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
-              style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
             >
               {post.title}
             </h1>
@@ -303,9 +302,6 @@ export default async function HelpDetailPage({ params }: Props) {
                     'mt-1 text-[20px] font-bold leading-tight tabular ' +
                     (expDays <= 3 ? 'text-danger-500' : 'text-primary-300')
                   }
-                  style={{
-                    fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  }}
                 >
                   {expDays >= 0 ? `あと ${expDays} 日` : '期限切れ'}
                 </p>

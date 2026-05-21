@@ -63,7 +63,6 @@ export function EditorHeader({
           </p>
           <h2
             className="mt-2 truncate text-[20px] font-semibold tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             {title || '（無題）'}
           </h2>

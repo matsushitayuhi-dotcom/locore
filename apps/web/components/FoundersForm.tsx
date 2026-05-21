@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -63,9 +63,6 @@ export function FoundersForm() {
           >
             <p
               className="text-[20px] font-semibold tracking-tight"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               申し込みを送信しました
             </p>

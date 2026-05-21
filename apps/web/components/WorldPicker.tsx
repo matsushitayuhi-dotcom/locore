@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import { Lock, MapPin, Sparkles, ArrowRight } from 'lucide-react';
 import type { CountryListItem } from '@/lib/geo/countries';
@@ -70,9 +70,6 @@ export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
             </p>
             <h2
               className="mt-2 text-[24px] font-bold leading-tight tracking-tight sm:text-[28px]"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               この国には、書き手がいます
             </h2>
@@ -146,9 +143,6 @@ function ActiveCountryCard({ country }: { country: CountryListItem }) {
           </p>
           <h3
             className="!text-white mt-1 text-[26px] font-bold leading-tight tracking-tight"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {country.nameJa}
           </h3>
@@ -208,9 +202,6 @@ function ComingSoonCard({ country }: { country: CountryListItem }) {
         <div className="absolute inset-x-0 bottom-0 p-3 text-white/95">
           <h3
             className="!text-white truncate text-[14px] font-bold leading-tight tracking-tight"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {country.nameJa}
           </h3>

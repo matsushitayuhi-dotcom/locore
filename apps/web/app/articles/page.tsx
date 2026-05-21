@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { FeedFilters } from '@/components/FeedFilters';
 import { getPublishedDbArticles } from '@/lib/articles/published';
@@ -68,9 +68,6 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
         </p>
         <h1
           className="mt-2 text-[28px] font-bold leading-tight tracking-tight sm:text-[32px]"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           {heading.title}
         </h1>

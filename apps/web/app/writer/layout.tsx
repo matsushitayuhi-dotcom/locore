@@ -32,7 +32,6 @@ export default async function WriterLayout({ children }: { children: ReactNode }
           </p>
           <h1
             className="text-[28px] font-semibold tracking-tight text-foreground sm:text-[32px]"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             クリエイターダッシュボード
           </h1>

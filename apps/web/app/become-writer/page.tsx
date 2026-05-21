@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Input } from '@locore/ui';
 import { requireUser } from '@/lib/auth/require-user';
@@ -26,9 +26,6 @@ export default async function BecomeWriterPage() {
           </p>
           <h1
             className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[36px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             書き手として登録する
           </h1>

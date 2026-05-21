@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowRight, Compass, Briefcase, MapPin } from 'lucide-react';
 import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
@@ -42,9 +42,6 @@ export default function SplashPage() {
         <header className="mx-auto max-w-2xl text-center">
           <p
             className="text-[40px] font-bold tracking-tight sm:text-[56px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             <span className="bg-gradient-to-br from-primary-300 to-primary-500 bg-clip-text text-transparent">
               Locore
@@ -55,9 +52,6 @@ export default function SplashPage() {
           </p>
           <p
             className="mt-6 text-[22px] font-bold leading-[1.4] tracking-tight text-foreground sm:text-[28px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             その街を、
             <br className="sm:hidden" />
@@ -157,9 +151,6 @@ function ChoiceCard({
           </p>
           <h2
             className="text-[24px] font-bold leading-tight tracking-tight text-foreground sm:text-[30px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {title}
           </h2>

@@ -137,7 +137,7 @@ export function ItineraryBlocksEditor({
             }}
             className="rounded-full bg-primary-500/10 px-3 py-1.5 text-[11px] font-bold text-primary-300 ring-1 ring-border hover:bg-primary-500/15"
           >
-            上のスポットから自動生成
+            登録したスポットから自動生成
           </button>
         ) : null}
       </header>

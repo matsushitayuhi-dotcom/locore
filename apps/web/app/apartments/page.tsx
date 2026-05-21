@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import {
   Plus,
@@ -25,6 +25,7 @@ import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer'
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
 import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
+import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 
 export const dynamic = 'force-dynamic';
@@ -80,6 +81,7 @@ type Props = {
     sort?: string;
     region?: string;
     audience?: string;
+    view?: string;
   };
 };
 
@@ -114,6 +116,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
       ? (searchParams.audience as CommunityAudience)
       : undefined;
+  const currentView: CommunityView = searchParams?.view === 'list' ? 'list' : 'card';
 
   // -------------------------------------------------------------------------
   // データ取得（active のみ）
@@ -192,6 +195,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
     if (sort !== 'recent') sp.set('sort', sort);
     if (regionFilter.active) sp.set('region', regionFilter.slug);
     if (activeAudience) sp.set('audience', activeAudience);
+    if (currentView !== 'card') sp.set('view', currentView);
     for (const [k, v] of Object.entries(patch)) {
       if (v === undefined || v === null || v === '') sp.delete(k);
       else sp.set(k, v);
@@ -224,14 +228,19 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
             pets: petsOnly ? '1' : undefined,
             sort: sort !== 'recent' ? sort : undefined,
             audience: activeAudience,
+            view: currentView !== 'card' ? currentView : undefined,
           }}
         />
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <AudienceChips
           active={activeAudience}
           buildHref={(a) => buildHref({ audience: a ?? undefined })}
+        />
+        <ViewToggle
+          currentView={currentView}
+          buildHref={(v) => buildHref({ view: v === 'card' ? undefined : v })}
         />
       </div>
 
@@ -244,7 +253,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
           </p>
           <h1
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             {regionFilter.active ? regionFilter.nameJa : 'フランス'}で暮らす
           </h1>
@@ -278,6 +286,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
         ) : null}
         {activeAudience ? (
           <input type="hidden" name="audience" value={activeAudience} />
+        ) : null}
+        {currentView !== 'card' ? (
+          <input type="hidden" name="view" value={currentView} />
         ) : null}
         <FilterSelect
           name="type"
@@ -586,6 +597,88 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
           </Link>
           をご覧ください。
         </div>
+      ) : currentView === 'list' ? (
+        <ul className="divide-y divide-border overflow-hidden rounded-lg bg-card ring-1 ring-border">
+          {sorted.map((p) => {
+            const meta = (p.metadata as ApartmentMetadata) ?? {};
+            const photos = p.photos ?? [];
+            const cover = photos[0];
+            const rent = meta.rent_monthly ?? p.priceAmount ?? null;
+            const lt = meta.listing_type;
+
+            return (
+              <li key={p.id}>
+                <Link
+                  href={`/apartments/${p.id}`}
+                  className="flex gap-3 p-3 transition hover:bg-primary-500/5"
+                >
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-muted sm:h-28 sm:w-28">
+                    {cover ? (
+                      <Image
+                        src={cover}
+                        alt={p.title}
+                        fill
+                        sizes="128px"
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-foreground/30">
+                        <Camera className="h-6 w-6" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1">
+                      {lt ? (
+                        <span
+                          className={
+                            'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                            (LISTING_TYPE_BADGE[lt] ?? 'bg-foreground/10 text-foreground/65')
+                          }
+                        >
+                          {APARTMENT_LISTING_TYPE_LABEL[lt]}
+                        </span>
+                      ) : null}
+                      <AudienceBadge audience={meta.audience} />
+                    </div>
+                    <div className="mt-1 flex items-baseline gap-1.5">
+                      <span className="text-[15px] font-bold tracking-tight tabular">
+                        {rent != null ? `€${rent.toLocaleString()}` : '応相談'}
+                      </span>
+                      {rent != null ? (
+                        <span className="text-[10px] text-foreground/55">/ 月</span>
+                      ) : null}
+                    </div>
+                    <h2 className="mt-0.5 line-clamp-2 text-[13px] font-bold leading-snug">
+                      {p.title}
+                    </h2>
+                    <ul className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground/65">
+                      {typeof meta.bedrooms === 'number' ? (
+                        <li className="inline-flex items-center gap-0.5">
+                          <Bed className="h-3 w-3" />
+                          {meta.bedrooms === 0 ? 'Studio' : `${meta.bedrooms} 寝室`}
+                        </li>
+                      ) : null}
+                      {typeof meta.size_sqm === 'number' ? (
+                        <li className="inline-flex items-center gap-0.5">
+                          <Maximize className="h-3 w-3" />
+                          {meta.size_sqm} m²
+                        </li>
+                      ) : null}
+                      {meta.arrondissement || p.locationText ? (
+                        <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                          <MapPin className="h-3 w-3" />
+                          {[meta.arrondissement, p.locationText].filter(Boolean).join(' / ')}
+                        </li>
+                      ) : null}
+                    </ul>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       ) : (
         <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {sorted.map((p) => {

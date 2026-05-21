@@ -1,4 +1,5 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeft,
   Plus,
@@ -7,12 +8,14 @@ import {
   Clock,
   Zap,
   Gift,
+  ImageIcon,
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { CommunityRegionPicker } from '@/components/community/CommunityRegionPicker';
 import { AudienceChips } from '@/components/community/AudienceChips';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
+import { ViewToggle, type CommunityView } from '@/components/community/ViewToggle';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
@@ -82,6 +85,7 @@ type Props = {
     cat?: string;
     region?: string;
     audience?: string;
+    view?: string;
   };
 };
 
@@ -127,6 +131,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
     (COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
       ? (searchParams.audience as CommunityAudience)
       : undefined;
+  const currentView: CommunityView = searchParams?.view === 'list' ? 'list' : 'card';
 
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
 
@@ -161,6 +166,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
     if (activeCat) params.set('cat', activeCat);
     if (regionFilter.active) params.set('region', regionFilter.slug);
     if (activeAudience) params.set('audience', activeAudience);
+    if (currentView !== 'card') params.set('view', currentView);
     for (const [k, v] of Object.entries(overrides)) {
       if (v === null || v === undefined || v === '') params.delete(k);
       else params.set(k, v);
@@ -192,14 +198,19 @@ export default async function HelpIndexPage({ searchParams }: Props) {
             urg: activeUrg,
             cat: activeCat,
             audience: activeAudience,
+            view: currentView !== 'card' ? currentView : undefined,
           }}
         />
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <AudienceChips
           active={activeAudience}
           buildHref={(a) => buildHref({ audience: a ?? null })}
+        />
+        <ViewToggle
+          currentView={currentView}
+          buildHref={(v) => buildHref({ view: v === 'card' ? null : v })}
         />
       </div>
 
@@ -211,7 +222,6 @@ export default async function HelpIndexPage({ searchParams }: Props) {
           </p>
           <h1
             className="mt-2 text-[30px] font-bold leading-tight tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             {regionFilter.active ? regionFilter.nameJa : 'フランス'}で助けあう
           </h1>
@@ -348,6 +358,12 @@ export default async function HelpIndexPage({ searchParams }: Props) {
           <br />
           フィルタを緩めて再度お試しください。
         </div>
+      ) : currentView === 'list' ? (
+        <ul className="divide-y divide-border overflow-hidden rounded-lg bg-card ring-1 ring-border">
+          {filtered.map((p) => (
+            <HelpListItem key={p.id} post={p} />
+          ))}
+        </ul>
       ) : (
         <ul className="space-y-3">
           {filtered.map((p) => (
@@ -356,6 +372,101 @@ export default async function HelpIndexPage({ searchParams }: Props) {
         </ul>
       )}
     </main>
+  );
+}
+
+function HelpListItem({ post }: { post: CommunityPostListItem }) {
+  const meta = post.metadata as {
+    request_type?: RequestType;
+    urgency?: Urgency;
+    category?: Category;
+    compensation?: Compensation;
+    audience?: CommunityAudience;
+  };
+  const hero = post.photos?.[0];
+
+  return (
+    <li>
+      <Link
+        href={`/help/${post.id}`}
+        className="flex gap-3 p-3 transition hover:bg-primary-500/5"
+      >
+        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-muted sm:h-28 sm:w-28">
+          {hero ? (
+            <Image
+              src={hero}
+              alt=""
+              fill
+              sizes="128px"
+              className="object-cover"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-foreground/30">
+              <ImageIcon className="h-6 w-6" />
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1">
+            {meta.request_type ? (
+              <span
+                className={
+                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                  (meta.request_type === 'offer'
+                    ? 'bg-primary-500 text-neutral-950'
+                    : 'bg-accent-500 text-neutral-950')
+                }
+              >
+                {REQUEST_TYPE_LABEL[meta.request_type]}
+              </span>
+            ) : null}
+            {meta.urgency ? (
+              <span
+                className={
+                  'inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                  (meta.urgency === 'now'
+                    ? 'bg-danger-500 text-white'
+                    : meta.urgency === 'this_week'
+                      ? 'bg-warning-500/20 text-warning-500'
+                      : 'bg-foreground/10 text-foreground/65')
+                }
+              >
+                {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5" /> : null}
+                {URGENCY_LABEL[meta.urgency]}
+              </span>
+            ) : null}
+            {meta.category ? (
+              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
+                {CATEGORY_LABEL[meta.category]}
+              </span>
+            ) : null}
+            <AudienceBadge audience={meta.audience} />
+          </div>
+          <h2 className="mt-1 line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
+            {post.title}
+          </h2>
+          <dl className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {meta.compensation ? (
+              <div className="inline-flex items-center gap-0.5">
+                <Gift className="h-3 w-3" />
+                {COMPENSATION_LABEL[meta.compensation]}
+              </div>
+            ) : null}
+            {post.locationText ? (
+              <div className="inline-flex items-center gap-0.5">
+                <MapPin className="h-3 w-3" />
+                {post.locationText}
+              </div>
+            ) : null}
+            <div className="inline-flex items-center gap-0.5 text-foreground/45">
+              <Clock className="h-2.5 w-2.5" />
+              {formatPostedAt(post.createdAt)}
+            </div>
+          </dl>
+        </div>
+      </Link>
+    </li>
   );
 }
 
@@ -419,7 +530,6 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
 
         <h2
           className="mt-1.5 text-[16px] font-bold leading-snug text-foreground"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           {post.title}
         </h2>

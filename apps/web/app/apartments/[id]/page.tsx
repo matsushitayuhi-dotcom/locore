@@ -121,7 +121,6 @@ export default async function ApartmentDetailPage({ params }: Props) {
 
           <h1
             className="mt-2 text-[26px] font-bold leading-tight tracking-tight text-foreground sm:text-[30px]"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             {post.title}
           </h1>

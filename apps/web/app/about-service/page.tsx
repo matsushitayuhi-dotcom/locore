@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowLeft, PenSquare } from 'lucide-react';
 
 export const revalidate = 300;
@@ -29,9 +29,6 @@ export default function AboutServicePage() {
       <header className="mt-4">
         <h1
           className="text-[22px] font-semibold tracking-tight text-foreground sm:text-[26px]"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           Locore について
         </h1>
@@ -166,7 +163,6 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
     <div>
       <h2
         className="text-[22px] font-bold leading-tight tracking-tight text-foreground sm:text-[24px]"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         {title}
       </h2>

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { WorldPicker } from '@/components/WorldPicker';
 import { listCountriesForPicker } from '@/lib/geo/countries';
@@ -42,9 +42,6 @@ export default async function WorldPage() {
           </p>
           <h1
             className="mt-3 text-[30px] font-bold leading-tight tracking-tight text-foreground sm:text-[40px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             旅したい国を、ぜんぶ。
           </h1>

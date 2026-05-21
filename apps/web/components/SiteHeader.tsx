@@ -17,7 +17,7 @@ import { Logo } from './Logo';
  * モード（旅行者 / 駐在員）でグローバルメニューを分岐する:
  *
  *   旅行者: ホーム / 場所 / 地図 / 検索
- *   駐在員: ホーム / 場所 / 求人 / アパート / 売買 / サークル / 習い事 / 助け合い / 検索
+ *   駐在員: ホーム / 場所 / アパート / 売買 / 求人 / イベント / 習い事 / 助け合い / 検索
  *
  * 「新着ニュース」は両モードともグローバルからは外している（駐在員ホーム内の
  *  BoardWidget からは引き続き辿れる）。
@@ -68,10 +68,10 @@ export async function SiteHeader() {
           />
           {isResident ? (
             <>
-              <NavLink href="/jobs">求人</NavLink>
               <NavLink href="/apartments">アパート</NavLink>
               <NavLink href="/marketplace">売買</NavLink>
-              <NavLink href="/groups">サークル</NavLink>
+              <NavLink href="/jobs">求人</NavLink>
+              <NavLink href="/groups">イベント</NavLink>
               <NavLink href="/lessons">習い事</NavLink>
               <NavLink href="/help">助け合い</NavLink>
               <NavLink href="/search">検索</NavLink>

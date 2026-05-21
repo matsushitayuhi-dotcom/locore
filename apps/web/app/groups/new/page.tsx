@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { requireUser } from '@/lib/auth/require-user';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
@@ -7,8 +7,8 @@ import { PostForm } from './PostForm';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'メンバーを募集する — Locore',
-  description: 'パリの駐在員コミュニティでメンバー募集を投稿する',
+  title: 'イベントを投稿する — Locore',
+  description: 'パリの駐在員コミュニティでイベントを投稿する',
 };
 
 export default async function NewGroupPage() {
@@ -26,11 +26,10 @@ export default async function NewGroupPage() {
 
       <header className="mt-4 mb-5">
         <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-          メンバー募集
+          イベント
         </p>
         <h1
           className="mt-2 text-[26px] font-bold leading-tight tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           仲間をゆっくり集める
         </h1>

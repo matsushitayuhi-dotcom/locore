@@ -42,8 +42,9 @@ export const DECK = {
 
   /** タイポグラフィ */
   font: {
-    serif: 'var(--font-serif-jp), var(--font-serif), "Times New Roman", serif',
-    sans: 'var(--font-sans), -apple-system, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif',
+    /* "serif" は名前のみ残し、実値は sans-serif スタックに統一 (明朝撤去後) */
+    serif: 'var(--font-sans-jp), system-ui, -apple-system, "Segoe UI", "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif',
+    sans: 'var(--font-sans), system-ui, -apple-system, "Helvetica Neue", "Hiragino Sans", "Yu Gothic", sans-serif',
     mono: 'var(--font-mono), "JetBrains Mono", "Menlo", monospace',
   },
 

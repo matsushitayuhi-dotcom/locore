@@ -1,4 +1,4 @@
-export const metadata = {
+﻿export const metadata = {
   title: 'プライバシーポリシー — Locore',
   description:
     'Locore がお預かりする個人情報の取扱いについて。利用目的、第三者提供、開示請求の方法、Cookie の利用などをまとめています。',
@@ -199,7 +199,6 @@ function Hero({
       </p>
       <h1
         className="mt-2 text-[28px] font-bold tracking-tight sm:text-[32px]"
-        style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
       >
         {title}
       </h1>

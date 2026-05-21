@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { createArticleDraft } from '../actions';
 import { listDuplicateCandidates } from './actions';
 import { NewArticleEntry } from './NewArticleEntry';
@@ -44,9 +44,6 @@ export default async function NewArticlePage({
         </p>
         <h1
           className="text-[22px] font-bold tracking-tight"
-          style={{
-            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-          }}
         >
           どこから書きはじめますか？
         </h1>

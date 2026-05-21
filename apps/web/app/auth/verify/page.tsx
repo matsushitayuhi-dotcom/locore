@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 
 export const metadata = {
   title: 'メール確認',
@@ -22,7 +22,6 @@ export default function VerifyPage({
           </p>
           <h1
             className="mt-2 text-[26px] font-semibold tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             メールを確認してください
           </h1>

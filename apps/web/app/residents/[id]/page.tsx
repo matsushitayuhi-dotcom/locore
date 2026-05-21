@@ -529,9 +529,6 @@ export default async function ResidentDetailPage({ params }: Params) {
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <h1
                 className="text-[24px] font-semibold tracking-tight sm:text-[28px]"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 {r.displayName}
               </h1>
@@ -932,9 +929,6 @@ export default async function ResidentDetailPage({ params }: Params) {
             </p>
             <h3
               className="mt-2 text-[18px] font-semibold tracking-tight"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               埋めるほど、声をかけてもらいやすくなります
             </h3>

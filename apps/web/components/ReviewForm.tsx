@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -92,7 +92,6 @@ export function ReviewForm({ articleId, initial }: Props) {
         </p>
         <h3
           className="mt-1 text-[18px] font-bold tracking-tight"
-          style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
         >
           この記事はどうでしたか？
         </h3>

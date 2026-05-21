@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { Button } from '@locore/ui';
 import { Check } from '@locore/ui/icons';
 
@@ -22,7 +22,6 @@ export default function ContactThanksPage({
           </span>
           <h1
             className="mt-4 text-[24px] font-semibold tracking-tight"
-            style={{ fontFamily: 'var(--font-serif-jp), var(--font-serif), serif' }}
           >
             お問い合わせを受け付けました
           </h1>

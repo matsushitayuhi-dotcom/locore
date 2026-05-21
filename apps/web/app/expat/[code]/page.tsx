@@ -71,9 +71,6 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           </p>
           <h1
             className="text-[24px] font-bold tracking-tight sm:text-[28px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {country.nameJa} の駐在員ホームは準備中です
           </h1>
@@ -102,10 +99,12 @@ export default async function ExpatCountryHomePage({ params }: Props) {
     );
   }
 
+  // 表示順は lib/community/constants.ts の COMMUNITY_KINDS と揃える:
+  // アパート → 売買 → 求人 → イベント → 習い事 → 助け合い
   const KINDS: { kind: CommunityKind; icon: typeof Briefcase }[] = [
-    { kind: 'job', icon: Briefcase },
     { kind: 'apartment', icon: HomeIcon },
     { kind: 'marketplace', icon: Megaphone },
+    { kind: 'job', icon: Briefcase },
     { kind: 'group', icon: Users },
     { kind: 'lesson', icon: GraduationCap },
     { kind: 'mutual_aid', icon: HandHelping },
@@ -160,9 +159,6 @@ export default async function ExpatCountryHomePage({ params }: Props) {
             </p>
             <h1
               className="mt-1 text-[22px] font-bold tracking-tight sm:text-[26px]"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               {country.nameJa} の駐在員ホーム
             </h1>
@@ -185,9 +181,6 @@ export default async function ExpatCountryHomePage({ params }: Props) {
               <h2
                 id="board-nav-title"
                 className="mt-1 text-[20px] font-semibold tracking-tight sm:text-[24px]"
-                style={{
-                  fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                }}
               >
                 住人どうしで、直接つながる
               </h2>

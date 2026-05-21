@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -60,9 +60,6 @@ export function DeleteAccountDialog({ disabled, hasUnsettled }: Props) {
               <div className="space-y-4 text-center">
                 <p
                   className="text-[18px] font-semibold tracking-tight"
-                  style={{
-                    fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  }}
                 >
                   退会手続きを完了しました
                 </p>
@@ -85,9 +82,6 @@ export function DeleteAccountDialog({ disabled, hasUnsettled }: Props) {
               <>
                 <h3
                   className="text-[18px] font-semibold tracking-tight text-danger-500"
-                  style={{
-                    fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  }}
                 >
                   退会の確認
                 </h3>

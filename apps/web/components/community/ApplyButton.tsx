@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -136,9 +136,6 @@ export function ApplyButton({
                 </p>
                 <h3
                   className="mt-0.5 text-[17px] font-bold tracking-tight"
-                  style={{
-                    fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-                  }}
                 >
                   最初のひとこと
                 </h3>

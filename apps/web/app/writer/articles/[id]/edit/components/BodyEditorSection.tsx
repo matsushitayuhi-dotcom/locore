@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { htmlToMarkdown } from '@/lib/markdown/toMarkdown';
@@ -36,8 +36,23 @@ export function BodyEditorSection({ value, onChange }: Props) {
   // WYSIWYG 内部状態（HTML）
   const [html, setHtml] = useState<string>(() => markdownToHtml(value));
 
+  /**
+   * #5 改修 (2026-05): 自分が `onChange` で送り出した markdown が親経由で `value` として
+   * 戻ってきたときに、もう一度 HTML を作り直してエディタに setContent すると、
+   *  - Enter での段落分割が壊れる（trailing 空 <p> が消える）
+   *  - スラッシュコマンドで挿入したノードが直後に上書きされて表示されない
+   * といった症状が出る（TipTap の onCreate 後の setContent はカーソル / undo を壊す）。
+   *
+   * そこで「自分が emit した markdown 」を ref に覚えておき、それと一致する value
+   * 変更は無視する。外部（モード切替・別画面からの戻り）由来の変更だけが
+   * HTML を再生成する。
+   */
+  const lastEmittedMarkdownRef = useRef<string>(value);
+
   // Markdown が外部から書き換わったら HTML を再生成
   useEffect(() => {
+    if (value === lastEmittedMarkdownRef.current) return;
+    lastEmittedMarkdownRef.current = value;
     setHtml(markdownToHtml(value));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -62,7 +77,9 @@ export function BodyEditorSection({ value, onChange }: Props) {
         onChange={(nextHtml) => {
           setHtml(nextHtml);
           // 自動的に Markdown へ変換し親に伝える（自動保存対象）
-          onChange(htmlToMarkdown(nextHtml));
+          const nextMd = htmlToMarkdown(nextHtml);
+          lastEmittedMarkdownRef.current = nextMd;
+          onChange(nextMd);
         }}
       />
 

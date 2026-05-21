@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Lock } from 'lucide-react';
 import { listCountriesForPicker } from '@/lib/geo/countries';
@@ -47,14 +47,11 @@ export default async function ExpatHomePage() {
             </p>
             <h1
               className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
             >
               どの国に住んでいますか？
             </h1>
             <p className="mt-1 max-w-2xl text-[12px] text-foreground/75 sm:text-[13px]">
-              暮らしている国を選ぶと、その国の掲示板（求人 / アパート / 売買 / メンバー募集 / 習い事 / 助け合い）と新着ニュースが見えます。今はフランスから始めています。
+              暮らしている国を選ぶと、その国の掲示板（アパート / 売買 / 求人 / イベント / 習い事 / 助け合い）と新着ニュースが見えます。今はフランスから始めています。
             </p>
           </div>
 
@@ -174,9 +171,6 @@ function ExpatCountryTile({ country }: { country: CountryListItem }) {
           </p>
           <h3
             className="!text-white mt-0.5 truncate text-[14px] font-bold leading-tight tracking-tight sm:text-[15px]"
-            style={{
-              fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-            }}
           >
             {country.nameJa}
           </h3>
