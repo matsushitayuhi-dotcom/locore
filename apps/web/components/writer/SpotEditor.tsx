@@ -387,11 +387,11 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
             タグ
           </label>
           {/* #1 改修: 記事側と同じピル型 TagsInput を再利用。
-              # / カンマ / 空白 / Enter で確定、× で削除。 */}
+              カンマ / 空白 / Enter で確定、× で削除。先頭の `#` は自動で外れる (#2)。 */}
           <TagsInput
             value={v.tagsText}
             onChange={(t) => set('tagsText', t)}
-            placeholder="例: 朝食 テラス席（# / カンマ / 空白で確定）"
+            placeholder="例: 朝食 テラス席（カンマ / 空白 / Enter で確定）"
           />
         </div>
       </div>

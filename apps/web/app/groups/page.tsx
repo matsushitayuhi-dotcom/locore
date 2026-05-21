@@ -147,7 +147,7 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
       <Link
         href="/"
         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
@@ -202,7 +202,7 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
         </div>
         <Link
           href="/groups/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
         >
           <Plus className="h-3.5 w-3.5" />
           募集する
@@ -300,7 +300,7 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
             <GroupCard key={p.id} post={p} />
           ))}
@@ -391,57 +391,83 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
     skill_level?: string;
     audience?: CommunityAudience;
   };
+  const photos = post.photos ?? [];
+  const cover = photos[0];
 
   return (
     <li>
       <Link
         href={`/groups/${post.id}`}
-        className="block rounded-lg bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+        className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
       >
-        <div className="flex flex-wrap items-center gap-1.5">
-          {meta.category ? (
-            <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
-              {GROUP_CATEGORY_LABEL[meta.category]}
-            </span>
-          ) : null}
-          {meta.meeting_frequency ? (
-            <span className="inline-flex items-center gap-0.5 rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
-              <Repeat className="h-2.5 w-2.5" />
-              {FREQUENCY_LABEL[meta.meeting_frequency]}
-            </span>
-          ) : null}
-          <AudienceBadge audience={meta.audience} />
+        {/* 写真エリア (4:3) */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+          {cover ? (
+            <Image
+              src={cover}
+              alt={post.title}
+              fill
+              sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition group-hover:scale-[1.02]"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] text-foreground/40">
+              <span className="inline-flex flex-col items-center gap-1">
+                <ImageIcon className="h-5 w-5" />
+                写真なし
+              </span>
+            </div>
+          )}
+
+          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+            {meta.category ? (
+              <span className="rounded-sm bg-primary-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
+                {GROUP_CATEGORY_LABEL[meta.category]}
+              </span>
+            ) : null}
+            {meta.meeting_frequency ? (
+              <span className="inline-flex items-center gap-0.5 rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                <Repeat className="h-2.5 w-2.5" />
+                {FREQUENCY_LABEL[meta.meeting_frequency]}
+              </span>
+            ) : null}
+          </div>
         </div>
 
-        <h2
-          className="mt-1.5 text-[16px] font-bold leading-snug text-foreground"
-        >
-          {post.title}
-        </h2>
+        {/* 本文 */}
+        <div className="p-3">
+          <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
+            {post.title}
+          </h2>
 
-        <dl className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-foreground/70">
-          {meta.group_size ? (
-            <div className="inline-flex items-center gap-0.5">
-              <UserCheck className="h-3 w-3" />
-              {meta.group_size} 名規模
-            </div>
-          ) : null}
-          {meta.age_range ? (
-            <div className="text-foreground/55">対象: {meta.age_range}</div>
-          ) : null}
-          {post.locationText ? (
-            <div className="text-foreground/55">{post.locationText}</div>
-          ) : null}
-        </dl>
+          {/* メタ 1 行 */}
+          <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {meta.group_size ? (
+              <li className="inline-flex items-center gap-0.5">
+                <UserCheck className="h-3 w-3" />
+                {meta.group_size} 名規模
+              </li>
+            ) : null}
+            {meta.age_range ? (
+              <li className="text-foreground/55">対象: {meta.age_range}</li>
+            ) : null}
+            {post.locationText ? (
+              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                {post.locationText}
+              </li>
+            ) : null}
+          </ul>
 
-        <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-foreground/65">
-          {post.body}
-        </p>
-
-        <p className="mt-2 flex items-center gap-0.5 text-[10px] text-foreground/45">
-          <Clock className="h-2.5 w-2.5" />
-          {formatPostedAt(post.createdAt)} 投稿
-        </p>
+          {/* audience バッジ + 投稿日 */}
+          <div className="mt-2 flex items-center justify-between gap-1">
+            <AudienceBadge audience={meta.audience} />
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5" />
+              {formatPostedAt(post.createdAt)}
+            </span>
+          </div>
+        </div>
       </Link>
     </li>
   );

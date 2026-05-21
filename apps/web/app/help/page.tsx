@@ -176,7 +176,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
       <Link
         href="/"
         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
@@ -232,7 +232,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
         </div>
         <Link
           href="/help/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
         >
           <Plus className="h-3.5 w-3.5" />
           投稿する
@@ -365,7 +365,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
             <HelpCard key={p.id} post={p} />
           ))}
@@ -480,95 +480,117 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
   };
   const expDays = daysUntil(post.expiresAt);
   const isUrgent = meta.urgency === 'now';
+  const photos = post.photos ?? [];
+  const cover = photos[0];
 
   return (
     <li>
       <Link
         href={`/help/${post.id}`}
         className={
-          'block rounded-lg p-4 ring-1 transition ' +
+          'group block overflow-hidden rounded-xl ring-1 transition hover:-translate-y-0.5 ' +
           (isUrgent
-            ? 'bg-danger-500/5 ring-danger-500/30 hover:bg-danger-500/10 hover:ring-danger-500/50'
-            : 'bg-card ring-border hover:bg-primary-500/10 hover:ring-primary-300')
+            ? 'bg-danger-500/5 ring-danger-500/30 hover:ring-danger-500/60'
+            : 'bg-card ring-border hover:ring-primary-300')
         }
       >
-        <div className="flex flex-wrap items-center gap-1.5">
-          {meta.request_type ? (
-            <span
-              className={
-                'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
-                (meta.request_type === 'offer'
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-accent-500 text-neutral-950')
-              }
-            >
-              {REQUEST_TYPE_LABEL[meta.request_type]}
-            </span>
-          ) : null}
-          {meta.urgency ? (
-            <span
-              className={
-                'inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
-                (meta.urgency === 'now'
-                  ? 'bg-danger-500 text-white'
-                  : meta.urgency === 'this_week'
-                    ? 'bg-warning-500/20 text-warning-500'
-                    : 'bg-foreground/10 text-foreground/65')
-              }
-            >
-              {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5" /> : null}
-              {URGENCY_LABEL[meta.urgency]}
-            </span>
-          ) : null}
-          {meta.category ? (
-            <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
-              {CATEGORY_LABEL[meta.category]}
-            </span>
-          ) : null}
-          <AudienceBadge audience={meta.audience} />
+        {/* 写真エリア (4:3) */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+          {cover ? (
+            <Image
+              src={cover}
+              alt={post.title}
+              fill
+              sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition group-hover:scale-[1.02]"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] text-foreground/40">
+              <span className="inline-flex flex-col items-center gap-1">
+                <ImageIcon className="h-5 w-5" />
+                写真なし
+              </span>
+            </div>
+          )}
+
+          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+            {meta.request_type ? (
+              <span
+                className={
+                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
+                  (meta.request_type === 'offer'
+                    ? 'bg-primary-500 text-neutral-950'
+                    : 'bg-accent-500 text-neutral-950')
+                }
+              >
+                {REQUEST_TYPE_LABEL[meta.request_type]}
+              </span>
+            ) : null}
+            {meta.urgency ? (
+              <span
+                className={
+                  'inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
+                  (meta.urgency === 'now'
+                    ? 'bg-danger-500 text-white'
+                    : meta.urgency === 'this_week'
+                      ? 'bg-warning-500/90 text-white'
+                      : 'bg-card/95 text-foreground/75 ring-1 ring-border/60 backdrop-blur')
+                }
+              >
+                {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5" /> : null}
+                {URGENCY_LABEL[meta.urgency]}
+              </span>
+            ) : null}
+            {meta.category ? (
+              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                {CATEGORY_LABEL[meta.category]}
+              </span>
+            ) : null}
+          </div>
         </div>
 
-        <h2
-          className="mt-1.5 text-[16px] font-bold leading-snug text-foreground"
-        >
-          {post.title}
-        </h2>
+        {/* 本文 */}
+        <div className="p-3">
+          <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
+            {post.title}
+          </h2>
 
-        <dl className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-foreground/70">
-          {meta.compensation ? (
-            <div className="inline-flex items-center gap-0.5">
-              <Gift className="h-3 w-3" />
-              {COMPENSATION_LABEL[meta.compensation]}
-            </div>
-          ) : null}
-          {post.locationText ? (
-            <div className="inline-flex items-center gap-0.5">
-              <MapPin className="h-3 w-3" />
-              {post.locationText}
-            </div>
-          ) : null}
-        </dl>
+          {/* メタ 1 行 */}
+          <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {meta.compensation ? (
+              <li className="inline-flex items-center gap-0.5">
+                <Gift className="h-3 w-3" />
+                {COMPENSATION_LABEL[meta.compensation]}
+              </li>
+            ) : null}
+            {post.locationText ? (
+              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3" />
+                {post.locationText}
+              </li>
+            ) : null}
+            {expDays !== null && expDays >= 0 ? (
+              <li
+                className={
+                  'inline-flex items-center gap-0.5 tabular ' +
+                  (expDays <= 3 ? 'font-bold text-danger-500' : 'text-foreground/55')
+                }
+              >
+                あと {expDays} 日
+              </li>
+            ) : null}
+          </ul>
 
-        <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-foreground/65">
-          {post.body}
-        </p>
-
-        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/50">
-          <span className="inline-flex items-center gap-0.5">
-            <Clock className="h-2.5 w-2.5" />
-            {formatPostedAt(post.createdAt)} 投稿
-          </span>
-          {expDays !== null && expDays >= 0 ? (
-            <span
-              className={
-                'tabular ' +
-                (expDays <= 3 ? 'font-bold text-danger-500' : 'text-foreground/45')
-              }
-            >
-              あと {expDays} 日
+          {/* audience バッジ + 投稿日 */}
+          <div className="mt-2 flex items-center justify-between gap-1">
+            <AudienceBadge audience={meta.audience} />
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5" />
+              {formatPostedAt(post.createdAt)}
             </span>
-          ) : null}
-        </p>
+          </div>
+        </div>
       </Link>
     </li>
   );

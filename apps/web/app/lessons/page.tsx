@@ -187,7 +187,7 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
       <Link
         href="/"
         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
@@ -244,7 +244,7 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
         </div>
         <Link
           href="/lessons/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
         >
           <Plus className="h-3.5 w-3.5" />
           投稿する
@@ -391,7 +391,7 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
             <LessonCard key={p.id} post={p} />
           ))}
@@ -497,75 +497,105 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
     audience?: CommunityAudience;
   };
   const price = formatLessonPrice(post);
+  const photos = post.photos ?? [];
+  const cover = photos[0];
 
   return (
     <li>
       <Link
         href={`/lessons/${post.id}`}
-        className="block rounded-lg bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+        className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
       >
-        <div className="flex flex-wrap items-center gap-1.5">
-          {meta.side ? (
-            <span
-              className={
-                'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
-                (meta.side === 'teach'
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-accent-500 text-neutral-950')
-              }
-            >
-              {SIDE_LABEL[meta.side]}
+        {/* 写真エリア (4:3) */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+          {cover ? (
+            <Image
+              src={cover}
+              alt={post.title}
+              fill
+              sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition group-hover:scale-[1.02]"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] text-foreground/40">
+              <span className="inline-flex flex-col items-center gap-1">
+                <ImageIcon className="h-5 w-5" />
+                写真なし
+              </span>
+            </div>
+          )}
+
+          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+            {meta.side ? (
+              <span
+                className={
+                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
+                  (meta.side === 'teach'
+                    ? 'bg-primary-500 text-neutral-950'
+                    : 'bg-accent-500 text-neutral-950')
+                }
+              >
+                {SIDE_LABEL[meta.side]}
+              </span>
+            ) : null}
+            {meta.category ? (
+              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                {LESSON_CATEGORY_LABEL[meta.category]}
+              </span>
+            ) : null}
+            {meta.trial_available ? (
+              <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
+                <Coffee className="h-2.5 w-2.5" />
+                体験
+              </span>
+            ) : null}
+          </div>
+
+          {price ? (
+            <span className="absolute right-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
+              {price}
             </span>
           ) : null}
-          {meta.category ? (
-            <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
-              {LESSON_CATEGORY_LABEL[meta.category]}
-            </span>
-          ) : null}
-          {meta.format ? (
-            <span className="inline-flex items-center gap-0.5 rounded-sm bg-primary-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
-              {meta.format === 'online' ? (
-                <Wifi className="h-2.5 w-2.5" />
-              ) : null}
-              {FORMAT_LABEL[meta.format]}
-            </span>
-          ) : null}
-          {meta.trial_available ? (
-            <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
-              <Coffee className="h-2.5 w-2.5" />
-              体験あり
-            </span>
-          ) : null}
-          <AudienceBadge audience={meta.audience} />
         </div>
 
-        <h2
-          className="mt-1.5 text-[16px] font-bold leading-snug text-foreground"
-        >
-          {post.title}
-        </h2>
+        {/* 本文 */}
+        <div className="p-3">
+          <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
+            {post.title}
+          </h2>
 
-        <dl className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-foreground/70">
-          {price ? (
-            <div className="inline-flex items-center gap-0.5 font-semibold text-primary-300">
-              <Tag className="h-3 w-3" />
-              {price}
-            </div>
-          ) : (
-            <div className="text-foreground/45">料金応相談</div>
-          )}
-          {post.locationText ? (
-            <div className="inline-flex items-center gap-0.5">
-              <MapPin className="h-3 w-3" />
-              {post.locationText}
-            </div>
-          ) : null}
-        </dl>
+          {/* メタ 1 行 */}
+          <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {meta.format ? (
+              <li className="inline-flex items-center gap-0.5">
+                {meta.format === 'online' ? <Wifi className="h-3 w-3" /> : null}
+                {FORMAT_LABEL[meta.format]}
+              </li>
+            ) : null}
+            {!price && (
+              <li className="inline-flex items-center gap-0.5 text-foreground/45">
+                <Tag className="h-3 w-3" />
+                料金応相談
+              </li>
+            )}
+            {post.locationText ? (
+              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3" />
+                {post.locationText}
+              </li>
+            ) : null}
+          </ul>
 
-        <p className="mt-2 flex items-center gap-0.5 text-[10px] text-foreground/45">
-          <Clock className="h-2.5 w-2.5" />
-          {formatPostedAt(post.createdAt)} 投稿
-        </p>
+          {/* audience バッジ + 投稿日 */}
+          <div className="mt-2 flex items-center justify-between gap-1">
+            <AudienceBadge audience={meta.audience} />
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5" />
+              {formatPostedAt(post.createdAt)}
+            </span>
+          </div>
+        </div>
       </Link>
     </li>
   );

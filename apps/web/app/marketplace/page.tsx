@@ -162,7 +162,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
   };
 
   return (
-    <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
       <Link
         href="/"
         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
@@ -219,7 +219,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
         </div>
         <Link
           href="/marketplace/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
         >
           <Plus className="h-3.5 w-3.5" />
           投稿する
@@ -391,7 +391,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
             </Link>
             <Link
               href="/marketplace/new"
-              className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+              className="inline-flex items-center gap-1 rounded-full border-2 border-primary-700 bg-primary-700 px-3 py-1.5 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
             >
               <Plus className="h-3 w-3" />
               投稿する
@@ -405,7 +405,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       ) : (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
             <MarketplaceCard key={p.id} post={p} />
           ))}
@@ -512,16 +512,17 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
     <li>
       <Link
         href={`/marketplace/${post.id}`}
-        className="block overflow-hidden rounded-lg bg-card ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+        className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
       >
-        <div className="relative aspect-[4/3] w-full bg-muted">
+        {/* 写真エリア (4:3) */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
           {hero ? (
             <Image
               src={hero}
               alt={post.title}
               fill
-              sizes="(min-width: 640px) 40vw, 100vw"
-              className="object-cover"
+              sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition group-hover:scale-[1.02]"
               unoptimized
             />
           ) : (
@@ -529,58 +530,69 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
               <Camera className="h-7 w-7" />
             </div>
           )}
-          {meta.side ? (
-            <span
-              className={
-                'absolute top-2 left-2 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
-                (meta.side === 'sell'
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-accent-500 text-neutral-950')
-              }
-            >
-              {SIDE_LABEL[meta.side]}
+
+          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+            {meta.side ? (
+              <span
+                className={
+                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
+                  (meta.side === 'sell'
+                    ? 'bg-primary-500 text-neutral-950'
+                    : 'bg-accent-500 text-neutral-950')
+                }
+              >
+                {SIDE_LABEL[meta.side]}
+              </span>
+            ) : null}
+            {meta.condition ? (
+              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                {MARKETPLACE_CONDITION_LABEL[meta.condition]}
+              </span>
+            ) : null}
+          </div>
+
+          {price ? (
+            <span className="absolute right-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
+              {price}
             </span>
           ) : null}
         </div>
 
+        {/* 本文 */}
         <div className="p-3">
-          <div className="flex flex-wrap items-center gap-1">
-            {meta.category ? (
-              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
-                {MARKETPLACE_CATEGORY_LABEL[meta.category]}
-              </span>
-            ) : null}
-            {meta.condition ? (
-              <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
-                {MARKETPLACE_CONDITION_LABEL[meta.condition]}
-              </span>
-            ) : null}
-            <AudienceBadge audience={meta.audience} />
-          </div>
-
-          <h2
-            className="mt-1.5 line-clamp-2 text-[15px] font-bold leading-snug text-foreground"
-          >
+          <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
             {post.title}
           </h2>
 
-          <p className="mt-1.5 flex items-baseline gap-1 text-[16px] font-bold tabular text-primary-300">
-            <Tag className="h-3 w-3 self-center" />
-            {price ?? '価格応相談'}
-          </p>
-
-          <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/50">
-            {post.locationText ? (
-              <span className="inline-flex items-center gap-0.5">
-                <MapPin className="h-2.5 w-2.5" />
-                {post.locationText}
-              </span>
+          {/* メタ 1 行 */}
+          <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {meta.category ? (
+              <li className="inline-flex items-center gap-0.5">
+                {MARKETPLACE_CATEGORY_LABEL[meta.category]}
+              </li>
             ) : null}
-            <span className="inline-flex items-center gap-0.5">
+            {!price ? (
+              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                <Tag className="h-3 w-3" />
+                価格応相談
+              </li>
+            ) : null}
+            {post.locationText ? (
+              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3" />
+                {post.locationText}
+              </li>
+            ) : null}
+          </ul>
+
+          {/* audience バッジ + 投稿日 */}
+          <div className="mt-2 flex items-center justify-between gap-1">
+            <AudienceBadge audience={meta.audience} />
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
               <Clock className="h-2.5 w-2.5" />
               {formatPostedAt(post.createdAt)}
             </span>
-          </p>
+          </div>
         </div>
       </Link>
     </li>

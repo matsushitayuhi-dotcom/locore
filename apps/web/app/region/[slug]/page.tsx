@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowRight, ArrowLeft, Lock } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Lock, CalendarDays } from 'lucide-react';
 import { SearchBox } from '@/components/SearchBox';
 import { BoardWidget } from '@/components/BoardWidget';
 import { ArticleScrollSection } from '@/components/ArticleScrollSection';
@@ -213,17 +213,26 @@ export default async function RegionHomePage({ params }: Props) {
         {/* 4. 新着ニュース (traveler 系画面では一番下) — UAT 指摘で
              縦幅タイトのコンパクト widget に + 説明文撤去 + 上位 5 件 */}
         <section>
-          <header className="mb-3 flex items-baseline justify-between">
+          <header className="mb-3 flex items-baseline justify-between gap-3">
             <h2 className="text-[16px] font-semibold tracking-tight">
               新着ニュース
             </h2>
             {hasBoard ? (
-              <Link
-                href="/board"
-                className="text-[11px] text-primary-300 hover:underline"
-              >
-                すべて見る →
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/calendar"
+                  className="inline-flex items-center gap-0.5 text-[11px] text-primary-300 hover:underline"
+                >
+                  <CalendarDays className="h-3 w-3" />
+                  カレンダー
+                </Link>
+                <Link
+                  href="/board"
+                  className="text-[11px] text-primary-300 hover:underline"
+                >
+                  すべて見る →
+                </Link>
+              </div>
             ) : null}
           </header>
           {hasBoard ? (

@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, ilike, isNull, ne, or } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, ne, or } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import type { CommunityKind, CommunityStatus } from '@/lib/community/constants';
@@ -220,6 +220,114 @@ export async function searchUsers(
     }));
   } catch (err) {
     console.warn('[searchUsers] failed:', err);
+    return [];
+  }
+}
+
+// ============================================================================
+// サービス (user_services)
+// ============================================================================
+
+export type SearchServiceHit = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  priceJpy: number | null;
+  priceUnit: string | null;
+  coverImageUrl: string | null;
+  cityNameJa: string | null;
+  ownerId: string;
+  ownerDisplayName: string;
+  ownerAvatarUrl: string | null;
+};
+
+/**
+ * user_services を title / description / category の ILIKE で横断検索。
+ *
+ * - is_active=true のみ
+ * - 削除ユーザー (users.deleted_at IS NOT NULL) は除外
+ * - 表示: position asc, createdAt desc。所属都市は cities.name_ja を leftJoin
+ * - 旅行者モード /search でのみ呼び出す想定 (audience フィルタは掛けない。
+ *   旧データの NULL audience も両モードに見せる方針 /lib/services/featured.ts
+ *   と同様、検索結果でも幅広く拾う)
+ * - 0046 / 0050 マイグレーション未適用環境では SELECT が失敗するため、
+ *   "does not exist" エラーは空配列にフォールバック。
+ */
+export async function searchServices(
+  q: string,
+  limit = 30,
+): Promise<SearchServiceHit[]> {
+  const query = q.trim();
+  if (!query) return [];
+  const pat = toPattern(query);
+
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: schema.userServices.id,
+        title: schema.userServices.title,
+        description: schema.userServices.description,
+        category: schema.userServices.category,
+        priceJpy: schema.userServices.priceJpy,
+        priceUnit: schema.userServices.priceUnit,
+        coverImageUrl: schema.userServices.coverImageUrl,
+        position: schema.userServices.position,
+        createdAt: schema.userServices.createdAt,
+        cityNameJa: schema.cities.nameJa,
+        ownerId: schema.users.id,
+        ownerDisplayName: schema.users.displayName,
+        ownerAvatarUrl: schema.users.avatarUrl,
+      })
+      .from(schema.userServices)
+      .innerJoin(
+        schema.users,
+        eq(schema.users.id, schema.userServices.userId),
+      )
+      .leftJoin(
+        schema.cities,
+        eq(schema.cities.id, schema.userServices.cityId),
+      )
+      .where(
+        and(
+          eq(schema.userServices.isActive, true),
+          isNull(schema.users.deletedAt),
+          or(
+            ilike(schema.userServices.title, pat),
+            ilike(schema.userServices.description, pat),
+            ilike(schema.userServices.category, pat),
+          )!,
+        ),
+      )
+      .orderBy(
+        asc(schema.userServices.position),
+        desc(schema.userServices.createdAt),
+      )
+      .limit(limit);
+
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      category: r.category,
+      priceJpy: r.priceJpy,
+      priceUnit: r.priceUnit,
+      coverImageUrl: r.coverImageUrl,
+      cityNameJa: r.cityNameJa ?? null,
+      ownerId: r.ownerId,
+      ownerDisplayName: r.ownerDisplayName,
+      ownerAvatarUrl: r.ownerAvatarUrl,
+    }));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[searchServices] user_services の追加カラム (city_id / audience / cover_image_url) が未適用です。',
+      );
+      return [];
+    }
+    console.warn('[searchServices] failed:', err);
     return [];
   }
 }

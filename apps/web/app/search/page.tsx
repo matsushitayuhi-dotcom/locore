@@ -1,16 +1,17 @@
 import Link from 'next/link';
-import { ArrowLeft, SearchX, MapPin, Briefcase } from 'lucide-react';
+import { ArrowLeft, SearchX, MapPin, Briefcase, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import { SearchBox } from '@/components/SearchBox';
-import { ArticleGrid } from '@/components/ArticleGrid';
-import { searchPublishedArticles } from '@/lib/articles/search';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getViewerMode } from '@/lib/mode/cookie';
 import {
   searchArticles,
   searchCommunityPosts,
+  searchServices,
   searchUsers,
+  type SearchArticleHit,
   type SearchCommunityHit,
+  type SearchServiceHit,
   type SearchUserHit,
 } from '@/lib/search/queries';
 import { KIND_LABEL, KIND_BASE_PATH } from '@/lib/community/constants';
@@ -23,27 +24,37 @@ type Props = {
 
 export const metadata = { title: '検索 — Locore' };
 
+const SERVICE_CATEGORY_LABEL: Record<string, string> = {
+  tourism: '観光・現地アテンド',
+  consulting: 'コンサル・相談',
+  study_abroad: '留学サポート',
+  translation: '翻訳・通訳',
+  attend: '同行・代行',
+  other: 'その他',
+};
+
 /**
  * /search — モード別検索。
  *
  * - 旅行者モード (mode === 'traveler' or null):
- *     「記事」+「住人」の 2 セクション。
- *     既存の `?in=title|body` トグルは記事セクション内で引き続き有効。
+ *     「記事」「住人」「サービス」の 3 セクション。
+ *     記事は title / body の両方を OR で部分一致検索 (トグル廃止)。
+ *     `?in=` パラメータは互換目的で受け取るが結果には影響しない。
  * - 駐在員モード (mode === 'resident'):
- *     「コミュニティ」+「住人」の 2 セクション。
+ *     「コミュニティ」+「住人」の 2 セクション (従来通り)。
  *
  * DB スキーマ変更なし。すべて既存テーブルへの ILIKE 部分一致で実装。
  */
 export default async function SearchPage({ searchParams }: Props) {
   const rawQ = (searchParams?.q ?? '').trim();
-  const rawIn = searchParams?.in === 'body' ? 'body' : 'title';
   const mode = getViewerMode();
   const isResident = mode === 'resident';
 
   // モード別に並列でクエリ。q が空のときは何も走らせない。
-  let articleHits: Awaited<ReturnType<typeof searchPublishedArticles>> = [];
+  let articleHits: SearchArticleHit[] = [];
   let communityHits: SearchCommunityHit[] = [];
   let userHits: SearchUserHit[] = [];
+  let serviceHits: SearchServiceHit[] = [];
 
   if (rawQ) {
     if (isResident) {
@@ -52,27 +63,31 @@ export default async function SearchPage({ searchParams }: Props) {
         searchUsers(rawQ, 30),
       ]);
     } else {
-      // 旅行者モード: 既存の searchPublishedArticles を再利用して
-      // `?in=title|body` トグルとの互換を維持する。
-      [articleHits, userHits] = await Promise.all([
-        searchPublishedArticles(rawQ, rawIn, 60),
+      // 旅行者モード: 記事 / 住人 / サービスの 3 軸。
+      // 記事は title/body OR の searchArticles に統一 (旧 in=title|body トグル廃止)。
+      [articleHits, userHits, serviceHits] = await Promise.all([
+        searchArticles(rawQ, 60),
         searchUsers(rawQ, 30),
+        searchServices(rawQ, 30),
       ]);
     }
   }
 
-  const socialCounts = await getArticleSocialCounts(
-    articleHits.map((a) => a.id),
-  );
+  // 記事カードはサムネ付きシンプル表示にする (旧 ArticleGrid は Article 型を期待し、
+  // SearchArticleHit には載っていないフィールドを多く要求するため再利用しない)
+  await getArticleSocialCounts(articleHits.map((a) => a.id));
 
-  // 結果が両方 0 件か（CTA 表示用）
-  const primaryHits = isResident ? communityHits : articleHits;
-  const bothEmpty =
-    rawQ.length > 0 && primaryHits.length === 0 && userHits.length === 0;
+  // 結果が全部 0 件か (CTA 表示用)
+  const bothEmpty = isResident
+    ? rawQ.length > 0 && communityHits.length === 0 && userHits.length === 0
+    : rawQ.length > 0 &&
+      articleHits.length === 0 &&
+      userHits.length === 0 &&
+      serviceHits.length === 0;
 
   const placeholder = isResident
     ? 'コミュニティ投稿・住人を検索'
-    : '記事タイトル・本文・住人を検索';
+    : '記事・住人・サービスを検索';
 
   return (
     <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10">
@@ -91,15 +106,14 @@ export default async function SearchPage({ searchParams }: Props) {
         <p className="mt-1 text-[13px] text-foreground/65">
           {isResident
             ? 'コミュニティ投稿（求人・物件・売買・募集・教えあい・助け合い）と、住人プロフィールを横断検索します。'
-            : '店名・地区名・気分を表す言葉、なんでもどうぞ。タイトルだけか本文も含めるか、切り替えられます。'}
+            : '記事 (タイトル・本文)、住人プロフィール、そして住人が提供しているサービスを横断検索します。'}
         </p>
       </header>
 
       <SearchBox
         defaultQuery={rawQ}
-        defaultIn={rawIn}
         placeholder={placeholder}
-        showInToggle={!isResident}
+        showInToggle={false}
         showLabel
       />
 
@@ -110,7 +124,7 @@ export default async function SearchPage({ searchParams }: Props) {
         </p>
       ) : null}
 
-      {/* 両方 0 件 */}
+      {/* 全部 0 件 */}
       {bothEmpty ? (
         <div className="mt-8 flex flex-col items-center gap-3 rounded-md border border-dashed border-border bg-card px-6 py-12 text-center text-[13px] text-foreground/65">
           <SearchX className="h-8 w-8 text-foreground/35" />
@@ -119,9 +133,6 @@ export default async function SearchPage({ searchParams }: Props) {
           </p>
           <p className="text-[12px] text-foreground/55">
             キーワードを少し変えてみてください。
-            {!isResident
-              ? ' タイトルだけでなく本文も含めて検索できます。'
-              : ''}
           </p>
           <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
             <Link
@@ -130,14 +141,6 @@ export default async function SearchPage({ searchParams }: Props) {
             >
               条件を変えてもう一度
             </Link>
-            {!isResident ? (
-              <Link
-                href={`/search?q=${encodeURIComponent(rawQ)}&in=${rawIn === 'body' ? 'title' : 'body'}`}
-                className="rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
-              >
-                {rawIn === 'body' ? 'タイトルで検索' : '本文も含めて検索'}
-              </Link>
-            ) : null}
           </div>
         </div>
       ) : null}
@@ -148,11 +151,6 @@ export default async function SearchPage({ searchParams }: Props) {
           <SectionHeader
             label={isResident ? 'コミュニティ' : '記事'}
             count={isResident ? communityHits.length : articleHits.length}
-            note={
-              !isResident
-                ? `${rawIn === 'body' ? '本文' : 'タイトル'}から検索`
-                : null
-            }
           />
           {isResident ? (
             communityHits.length > 0 ? (
@@ -161,7 +159,7 @@ export default async function SearchPage({ searchParams }: Props) {
               <EmptyInline label="コミュニティ投稿" />
             )
           ) : articleHits.length > 0 ? (
-            <ArticleGrid articles={articleHits} socialCounts={socialCounts} />
+            <ArticleHitGrid hits={articleHits} />
           ) : (
             <EmptyInline label="記事" />
           )}
@@ -176,6 +174,18 @@ export default async function SearchPage({ searchParams }: Props) {
             <UserHitGrid hits={userHits} />
           ) : (
             <EmptyInline label="住人" />
+          )}
+        </section>
+      ) : null}
+
+      {/* セクション 3: サービス (旅行者モードのみ) */}
+      {rawQ && !bothEmpty && !isResident ? (
+        <section className="mt-10">
+          <SectionHeader label="サービス" count={serviceHits.length} />
+          {serviceHits.length > 0 ? (
+            <ServiceHitGrid hits={serviceHits} />
+          ) : (
+            <EmptyInline label="サービス" />
           )}
         </section>
       ) : null}
@@ -216,6 +226,60 @@ function EmptyInline({ label }: { label: string }) {
     <p className="rounded-md border border-dashed border-border bg-card px-4 py-6 text-center text-[12px] text-foreground/55">
       {label}にぴったりの結果はまだありません
     </p>
+  );
+}
+
+// ============================================================================
+// 記事カード (検索結果用シンプル版)
+// ============================================================================
+
+function ArticleHitGrid({ hits }: { hits: SearchArticleHit[] }) {
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {hits.map((a) => (
+        <li
+          key={a.id}
+          className="overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:ring-primary-300"
+        >
+          <Link href={`/articles/${a.id}`} className="block">
+            <div className="relative aspect-[3/2] w-full overflow-hidden bg-muted">
+              {a.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={a.coverImageUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-foreground/35">
+                  <ImageIcon className="h-8 w-8" aria-hidden />
+                </div>
+              )}
+            </div>
+            <div className="p-3">
+              <h3 className="line-clamp-2 text-[14px] font-semibold leading-snug text-foreground hover:text-primary-300">
+                {a.title}
+              </h3>
+              {a.bodyExcerpt ? (
+                <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-foreground/65">
+                  {a.bodyExcerpt}
+                </p>
+              ) : null}
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/55">
+                {a.writerName ? <span>{a.writerName}</span> : null}
+                {a.cityNameJa ? (
+                  <span className="inline-flex items-center gap-0.5">
+                    <MapPin className="h-3 w-3" />
+                    {a.cityNameJa}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -314,6 +378,97 @@ function CommunityHitList({ hits }: { hits: SearchCommunityHit[] }) {
                 投稿者: {p.authorName}
               </p>
             ) : null}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ============================================================================
+// サービスカード (旅行者モード専用、/residents/[ownerId] へ飛ばす)
+// ============================================================================
+
+function ServiceHitGrid({ hits }: { hits: SearchServiceHit[] }) {
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {hits.map((s) => (
+        <li
+          key={s.id}
+          className="overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:ring-primary-300"
+        >
+          {/*
+            ServiceCarousel と同じ動作。サービス詳細ページが無いため
+            提供者の公開プロフィールへ誘導する。
+          */}
+          <Link href={`/residents/${s.ownerId}`} className="block">
+            <div className="relative aspect-[3/2] w-full overflow-hidden bg-muted">
+              {s.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={s.coverImageUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-foreground/35">
+                  <ImageIcon className="h-8 w-8" aria-hidden />
+                </div>
+              )}
+            </div>
+            <div className="p-3">
+              <div className="flex flex-wrap items-start gap-2">
+                {s.category ? (
+                  <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
+                    {SERVICE_CATEGORY_LABEL[s.category] ?? s.category}
+                  </span>
+                ) : null}
+                {s.priceJpy != null ? (
+                  <span className="ml-auto text-[13px] font-bold tabular text-primary-300">
+                    ¥{s.priceJpy.toLocaleString('ja-JP')}
+                    {s.priceUnit ? (
+                      <span className="ml-0.5 text-[10px] font-medium text-foreground/60">
+                        / {s.priceUnit}
+                      </span>
+                    ) : null}
+                  </span>
+                ) : (
+                  <span className="ml-auto text-[11px] font-medium text-foreground/50">
+                    応相談
+                  </span>
+                )}
+              </div>
+              <h3 className="mt-2 line-clamp-2 text-[14px] font-semibold leading-snug text-foreground hover:text-primary-300">
+                {s.title}
+              </h3>
+              {s.description ? (
+                <p className="mt-1.5 line-clamp-2 whitespace-pre-line text-[12px] leading-relaxed text-foreground/65">
+                  {s.description}
+                </p>
+              ) : null}
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Avatar size="sm" className="h-6 w-6 shrink-0">
+                    {s.ownerAvatarUrl ? (
+                      <AvatarImage src={s.ownerAvatarUrl} alt="" />
+                    ) : null}
+                    <AvatarFallback>
+                      {s.ownerDisplayName[0]?.toUpperCase() ?? '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="truncate text-[11px] font-medium text-foreground/75">
+                    {s.ownerDisplayName}
+                  </span>
+                </div>
+                {s.cityNameJa ? (
+                  <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground/60">
+                    <MapPin className="h-2.5 w-2.5" />
+                    {s.cityNameJa}
+                  </span>
+                ) : null}
+              </div>
+            </div>
           </Link>
         </li>
       ))}

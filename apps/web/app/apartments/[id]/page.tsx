@@ -13,7 +13,6 @@ import {
   Zap,
   Wallet,
   AlertTriangle,
-  Eye,
   Lock,
 } from 'lucide-react';
 import { getCommunityPost, incrementViewCount } from '@/lib/community/db';
@@ -26,6 +25,7 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { ApplyButton } from '@/components/community/ApplyButton';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
+import { OwnerViewCount } from '@/components/community/OwnerViewCount';
 import { PhotoGallery } from './PhotoGallery';
 import { OwnerControls } from './OwnerControls';
 
@@ -113,10 +113,11 @@ export default async function ApartmentDetailPage({ params }: Props) {
               </span>
             ) : null}
             <AudienceBadge audience={meta.audience} size="md" />
-            <span className="inline-flex items-center gap-1 text-[11px] text-foreground/45">
-              <Eye className="h-3 w-3" />
-              {post.viewCount.toLocaleString()} 閲覧
-            </span>
+            <OwnerViewCount
+              viewer={me}
+              ownerId={post.authorId}
+              count={post.viewCount}
+            />
           </div>
 
           <h1

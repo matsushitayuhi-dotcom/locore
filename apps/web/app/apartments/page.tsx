@@ -264,7 +264,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
 
         <Link
           href="/apartments/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[13px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
         >
           <Plus className="h-4 w-4" />
           物件を出す

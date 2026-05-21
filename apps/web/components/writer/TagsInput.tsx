@@ -6,8 +6,10 @@ import { X } from 'lucide-react';
 /**
  * Notion / Substack 風のピル型タグ入力。記事タグ・スポットタグ共通で使う汎用 UI。
  *
- * 仕様:
- *  - `#`, `,`, 空白（半角/全角）, Enter のいずれかを打った瞬間にタグ確定
+ * 仕様 (2026-05 改修 #2):
+ *  - `,` `、` 空白（半角/全角） Enter のいずれかを打った瞬間にタグ確定
+ *  - `#` は確定トリガから外し、入力可能にする。確定時に先頭の `#` は自動除去
+ *    （Twitter / X 的な hashtag 入力感）
  *  - 確定タグは色付きピルで表示。× ボタンで削除可能
  *  - 入力欄が空のとき backspace で末尾タグを削除
  *  - 既存の `tags: string[]` フィールドをそのまま使う（DB スキーマ非変更）
@@ -46,8 +48,12 @@ function tagsToCsv(tags: string[]): string {
   return tags.join(', ');
 }
 
-/** 入力テキストから「タグ化トリガー」の境界を判定し、確定対象を取り出す */
-const TRIGGER_RE = /[\s,、#]/;
+/**
+ * 入力テキストから「タグ化トリガー」の境界を判定し、確定対象を取り出す。
+ * 2026-05 改修 #2: `#` はトリガから除外。先頭 `#` は commitTag 側で除去するので、
+ * ユーザーは `#東京` のように打って空白で確定する hashtag 風 UX が成立する。
+ */
+const TRIGGER_RE = /[\s,、]/;
 
 export function TagsInput({
   value,
@@ -103,8 +109,10 @@ export function TagsInput({
 
   const onPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     const text = e.clipboardData.getData('text');
-    // カンマ・空白を含むテキストを貼り付けた場合は分割して一括登録
-    if (TRIGGER_RE.test(text)) {
+    // カンマ・空白・# を含むテキストを貼り付けた場合は分割して一括登録
+    // ( 単一入力時のトリガからは `#` を外したが、ペースト時は `#東京 #大阪`
+    //   のような hashtag 列も自然に分割したいので、ここでは `#` で split する )
+    if (TRIGGER_RE.test(text) || text.includes('#')) {
       e.preventDefault();
       const pieces = text.split(/[\s,、#]+/).filter((p) => p.trim());
       let working = [...tags];
@@ -169,7 +177,7 @@ export function TagsInput({
           isFull
             ? `最大 ${maxTags} 個まで`
             : tags.length === 0
-              ? placeholder ?? '例: 朝食 マレ 路地裏（# / カンマ / 空白で確定）'
+              ? placeholder ?? '例: 朝食 マレ 路地裏（カンマ / 空白 / Enter で確定。先頭の # は自動で外れます）'
               : ''
         }
         disabled={isFull}

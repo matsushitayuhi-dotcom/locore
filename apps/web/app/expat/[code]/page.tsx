@@ -9,6 +9,7 @@ import {
   GraduationCap,
   HandHelping,
   Search,
+  CalendarDays,
 } from 'lucide-react';
 import { listBoardPosts } from '@/lib/board/db';
 import { BoardWidget } from '@/components/BoardWidget';
@@ -223,12 +224,21 @@ export default async function ExpatCountryHomePage({ params }: Props) {
                 今日と明日の暮らし情報
               </h2>
             </div>
-            <Link
-              href="/board?audience=resident"
-              className="text-[12px] font-semibold text-primary-300 hover:underline"
-            >
-              すべて見る →
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/calendar"
+                className="inline-flex items-center gap-0.5 text-[12px] font-semibold text-primary-300 hover:underline"
+              >
+                <CalendarDays className="h-3 w-3" />
+                カレンダー
+              </Link>
+              <Link
+                href="/board?audience=resident"
+                className="text-[12px] font-semibold text-primary-300 hover:underline"
+              >
+                すべて見る →
+              </Link>
+            </div>
           </div>
           <BoardWidget posts={residentNews} />
         </section>

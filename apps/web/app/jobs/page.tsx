@@ -233,7 +233,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
     sort !== 'new';
 
   return (
-    <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
       <Link
         href="/"
         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
@@ -293,7 +293,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
         </div>
         <Link
           href="/jobs/new"
-          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border-2 border-primary-700 bg-primary-700 px-4 py-2 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
         >
           <Plus className="h-3.5 w-3.5" />
           求人を出す
@@ -461,7 +461,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
             </Link>
             <Link
               href="/jobs/new"
-              className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+              className="inline-flex items-center gap-1 rounded-full border-2 border-primary-700 bg-primary-700 px-3 py-1.5 text-[12px] font-bold text-white shadow-sm transition hover:border-primary-500 hover:bg-primary-500"
             >
               <Plus className="h-3 w-3" />
               求人を出す
@@ -475,7 +475,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
           ))}
         </ul>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p) => (
             <JobCard key={p.id} post={p} />
           ))}
@@ -613,82 +613,109 @@ function JobCard({ post }: { post: CommunityPostListItem }) {
   const salary = formatSalary(post);
   const expDays = daysUntil(post.expiresAt);
   const expiringSoon = expDays !== null && expDays >= 0 && expDays <= 3;
+  const photos = post.photos ?? [];
+  const cover = photos[0];
 
   return (
     <li>
       <Link
         href={`/jobs/${post.id}`}
-        className="block rounded-lg bg-card p-4 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+        className="group block overflow-hidden rounded-xl bg-card ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
       >
-        <div className="flex flex-wrap items-center gap-1.5">
-          {meta.employment_type ? (
-            <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
-              {JOB_EMPLOYMENT_TYPE_LABEL[meta.employment_type]}
+        {/* 写真エリア (4:3) */}
+        <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+          {cover ? (
+            <Image
+              src={cover}
+              alt={post.title}
+              fill
+              sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
+              className="object-cover transition group-hover:scale-[1.02]"
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] text-foreground/40">
+              <span className="inline-flex flex-col items-center gap-1">
+                <ImageIcon className="h-5 w-5" />
+                写真なし
+              </span>
+            </div>
+          )}
+
+          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+            {meta.employment_type ? (
+              <span className="rounded-sm bg-primary-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
+                {JOB_EMPLOYMENT_TYPE_LABEL[meta.employment_type]}
+              </span>
+            ) : null}
+            {meta.category ? (
+              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                {JOB_CATEGORY_LABEL[meta.category]}
+              </span>
+            ) : null}
+            {meta.remote_ok ? (
+              <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
+                <Wifi className="h-2.5 w-2.5" />
+                Remote
+              </span>
+            ) : null}
+          </div>
+
+          {salary ? (
+            <span className="absolute right-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
+              {salary}
             </span>
           ) : null}
-          {meta.category ? (
-            <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
-              {JOB_CATEGORY_LABEL[meta.category]}
-            </span>
-          ) : null}
-          {meta.remote_ok ? (
-            <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
-              <Wifi className="h-2.5 w-2.5" />
-              Remote OK
-            </span>
-          ) : null}
-          <AudienceBadge audience={meta.audience} />
         </div>
 
-        <h2
-          className="mt-1.5 text-[16px] font-bold leading-snug text-foreground"
-        >
-          {post.title}
-        </h2>
+        {/* 本文 */}
+        <div className="p-3">
+          <h2 className="line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
+            {post.title}
+          </h2>
 
-        <dl className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-foreground/70">
-          {salary ? (
-            <div className="inline-flex items-center gap-1 font-semibold text-primary-300">
-              <span>{salary}</span>
-            </div>
-          ) : (
-            <div className="text-foreground/45">給与情報なし</div>
-          )}
-          {post.locationText ? (
-            <div className="inline-flex items-center gap-0.5">
-              <MapPin className="h-3 w-3" />
-              {post.locationText}
-            </div>
-          ) : null}
-          {meta.language_requirements && meta.language_requirements.length > 0 ? (
-            <div className="inline-flex items-center gap-0.5">
-              <span aria-hidden>言語:</span>
-              {meta.language_requirements.map((l) => LANG_LABEL[l]).join(' / ')}
-            </div>
-          ) : null}
-        </dl>
+          {/* メタ 1 行 */}
+          <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {!salary && (
+              <li className="text-foreground/45">給与情報なし</li>
+            )}
+            {post.locationText ? (
+              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3" />
+                {post.locationText}
+              </li>
+            ) : null}
+            {meta.language_requirements && meta.language_requirements.length > 0 ? (
+              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+                {meta.language_requirements.map((l) => LANG_LABEL[l]).join(' / ')}
+              </li>
+            ) : null}
+            {expDays !== null && expDays >= 0 ? (
+              <li
+                className={
+                  'inline-flex items-center gap-0.5 tabular ' +
+                  (expiringSoon ? 'font-bold text-danger-500' : 'text-foreground/55')
+                }
+              >
+                締切まで {expDays}日
+              </li>
+            ) : null}
+            {post.priceUnit && !salary ? (
+              <li className="text-foreground/45">
+                {PRICE_UNIT_LABEL[post.priceUnit as keyof typeof PRICE_UNIT_LABEL]}
+              </li>
+            ) : null}
+          </ul>
 
-        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/50">
-          <span className="inline-flex items-center gap-0.5">
-            <Clock className="h-2.5 w-2.5" />
-            {formatPostedAt(post.createdAt)} 投稿
-          </span>
-          {expDays !== null && expDays >= 0 ? (
-            <span
-              className={
-                'tabular ' +
-                (expiringSoon ? 'font-bold text-danger-500' : 'text-foreground/45')
-              }
-            >
-              締切まで {expDays}日
+          {/* audience バッジ + 投稿日 */}
+          <div className="mt-2 flex items-center justify-between gap-1">
+            <AudienceBadge audience={meta.audience} />
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5" />
+              {formatPostedAt(post.createdAt)}
             </span>
-          ) : null}
-          {post.priceUnit && !salary ? (
-            <span className="text-foreground/45">
-              {PRICE_UNIT_LABEL[post.priceUnit as keyof typeof PRICE_UNIT_LABEL]}
-            </span>
-          ) : null}
-        </p>
+          </div>
+        </div>
       </Link>
     </li>
   );

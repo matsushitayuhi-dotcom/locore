@@ -312,15 +312,24 @@ export default async function MarketplaceDetailPage({ params }: Props) {
                   </dd>
                 </div>
               </div>
-              <div className="flex items-start gap-2">
-                <Clock className="mt-0.5 h-3 w-3 shrink-0 text-foreground/45" />
-                <div className="min-w-0 flex-1">
-                  <dt className="text-foreground/55">閲覧</dt>
-                  <dd className="font-medium tabular text-foreground/80">
-                    {post.viewCount}回
-                  </dd>
+              {/*
+                閲覧数は一般読者には出さず、投稿者本人と editor のみに見せる
+                (OwnerViewCount でガード)。
+              */}
+              {isOwn || me?.role === 'editor' ? (
+                <div className="flex items-start gap-2">
+                  <Clock className="mt-0.5 h-3 w-3 shrink-0 text-foreground/45" />
+                  <div className="min-w-0 flex-1">
+                    <dt className="text-foreground/55">
+                      閲覧 (
+                      {isOwn ? '投稿者にのみ表示' : 'editor のみに表示'})
+                    </dt>
+                    <dd className="font-medium tabular text-foreground/80">
+                      👁 {post.viewCount.toLocaleString()} views
+                    </dd>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </dl>
 
             <div className="rounded-md border border-amber-500/30 bg-amber-50/60 p-2.5 text-[10px] leading-relaxed text-amber-900">
