@@ -96,22 +96,28 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
     setV((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Google Places から自動取得済みかどうか（住所が埋まっている前提）
+  const isAutoFetched = !!(v.googlePlaceId && v.address.trim().length > 0);
+
   const onSave = () => {
     if (!v.name.trim() || !v.address.trim()) {
       toast.error('店舗名と住所は必須です');
       return;
     }
     if (v.lat === '' || v.lng === '') {
-      toast.error('緯度と経度を入力してください');
+      toast.error(
+        '緯度・経度が未設定です。「Google から取得し直す」で店舗を選び直してください',
+      );
       return;
     }
 
+    // 営業時間は UI から手入力できなくしたので、Google Places で取得した
+    // openingHoursText だけを尊重する（手入力 JSON は廃止）
     let openingHours: unknown = undefined;
     if (v.openingHoursText.trim().length > 0) {
       try {
         openingHours = JSON.parse(v.openingHoursText);
       } catch {
-        // JSON でなければ note として保存
         openingHours = { note: v.openingHoursText.trim() };
       }
     }
@@ -330,60 +336,36 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
         <label className="mb-1 block text-[12px] font-medium text-foreground/70">
           住所 <span className="text-danger-500">*</span>
         </label>
-        <Input
-          type="text"
-          value={v.address}
-          onChange={(e) => set('address', e.target.value)}
-          maxLength={300}
-          required
-        />
+        {isAutoFetched ? (
+          <div className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-body-md text-foreground/80">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-bold text-primary-300">
+              ✓ 自動取得済み
+            </span>
+            <span className="flex-1 truncate">{v.address}</span>
+          </div>
+        ) : (
+          <Input
+            type="text"
+            value={v.address}
+            onChange={(e) => set('address', e.target.value)}
+            maxLength={300}
+            required
+          />
+        )}
+        {isAutoFetched ? (
+          <p className="mt-1 text-[11px] text-foreground/50">
+            住所・緯度経度・営業時間は Google Places から自動取得しました。
+            修正したい場合は上の検索欄で店舗を選び直してください。
+          </p>
+        ) : null}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            緯度 (lat) <span className="text-danger-500">*</span>
-          </label>
-          <Input
-            type="number"
-            step="0.0001"
-            value={v.lat}
-            onChange={(e) =>
-              set('lat', e.target.value === '' ? '' : Number(e.target.value))
-            }
-            placeholder="48.8566"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            経度 (lng) <span className="text-danger-500">*</span>
-          </label>
-          <Input
-            type="number"
-            step="0.0001"
-            value={v.lng}
-            onChange={(e) =>
-              set('lng', e.target.value === '' ? '' : Number(e.target.value))
-            }
-            placeholder="2.3522"
-          />
-        </div>
-      </div>
-      <p className="text-[11px] text-foreground/50">
-        座標は{' '}
-        <a
-          href="https://www.google.com/maps"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary-300 underline-offset-4 hover:underline"
-        >
-          Google Maps
-        </a>
-        で店舗を右クリック → 表示される座標をコピーして貼り付けてください。
-      </p>
+      {/* 緯度・経度・営業時間は UI から完全に非表示。
+          Google Places 自動取得時はその値が state にそのまま保持され、
+          手動入力モードではそもそも入力させない。 */}
       {showParisWarn ? (
         <p className="text-[11px] text-warning-700">
-          想定範囲（フランス本土）の外です。座標を確認してください。
+          想定範囲（フランス本土）の外です。Google から取得し直すと正しい座標が入ります。
         </p>
       ) : null}
 
@@ -410,19 +392,6 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
             placeholder="朝食, テラス席"
           />
         </div>
-      </div>
-
-      <div>
-        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-          営業時間（任意）
-        </label>
-        <textarea
-          value={v.openingHoursText}
-          onChange={(e) => set('openingHoursText', e.target.value)}
-          rows={3}
-          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
-          placeholder='例：月-金 9:00-18:00、日曜定休 — JSON でも可：{"mon":["09:00-18:00"]}'
-        />
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-2 pt-2">

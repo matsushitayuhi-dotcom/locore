@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles, MapPin, ArrowLeft } from 'lucide-react';
+import { Sparkles, MapPin, ArrowLeft, Inbox } from 'lucide-react';
 import { listBoardPosts } from '@/lib/board/db';
 import {
   BOARD_CATEGORIES,
@@ -170,10 +170,24 @@ export default async function BoardIndexPage({ searchParams }: Props) {
       </div>
 
       {posts.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">
-          {activeCat
-            ? `「${BOARD_CATEGORY_LABEL[activeCat]}」の投稿はまだありません`
-            : '今はまだ投稿がありません。毎朝、現地時間の 7 時前後に更新します。'}
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/65">
+          <Inbox className="h-8 w-8 text-foreground/35" />
+          <p className="text-[14px] font-medium text-foreground/75">
+            {activeCat
+              ? `「${BOARD_CATEGORY_LABEL[activeCat]}」の投稿はまだ見つかりませんでした`
+              : 'ぴったりの新着はまだ見つかりませんでした'}
+          </p>
+          <p className="text-[12px] text-foreground/55">
+            条件を変えてみてください。新着は毎朝、現地時間の 7 時前後に更新します。
+          </p>
+          {(activeCat || activeAud !== 'all') ? (
+            <Link
+              href="/board"
+              className="mt-1 rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+            >
+              条件を変えてもう一度
+            </Link>
+          ) : null}
         </div>
       ) : (
         <ul className="space-y-3">

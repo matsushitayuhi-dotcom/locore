@@ -4,12 +4,26 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';
-import { ArrowLeft, ArrowRight, Camera, FileText, Send } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  Check,
+  Copy,
+  FileText,
+  Link2,
+  Link2Off,
+  Send,
+  ChevronDown,
+} from 'lucide-react';
 import { ModerationBanner } from '@/components/writer/ModerationBanner';
 import { useRouter } from 'next/navigation';
 import {
   saveDraftArticle,
   publishArticle,
+  updateArticlePrice,
+  generatePreviewToken,
+  revokePreviewToken,
 } from '@/app/writer/articles/[id]/edit/actions';
 import { runMockModeration } from '@/lib/moderation/mock';
 import type { BasicInfoValue } from './BasicInfoSection';
@@ -59,13 +73,24 @@ type ArticleInitial = {
   warned: boolean;
   moderationScore: number | null;
   updatedAt: Date;
+  /** 共有プレビュー magic-link 用トークン。NULL なら未発行。 */
+  previewToken: string | null;
+  /** 共有プレビュートークンの有効期限。 */
+  previewTokenExpiresAt: Date | null;
+  /**
+   * 公開日時。予約公開 (status='draft' + publishedAt が未来日時) を判定するのに使う。
+   * NULL なら未公開・未予約。
+   */
+  publishedAt: Date | null;
 };
+
+type CityOption = { id: string; nameJa: string; nameEn: string | null };
 
 type Props = {
   article: ArticleInitial;
   spots: SpotRow[];
   videos: VideoRow[];
-  cities: { id: string; nameJa: string }[];
+  cities: CityOption[];
   tier: 'S' | 'A' | 'B';
   googleMapsApiKey?: string;
 };
@@ -109,6 +134,30 @@ export function WizardShell({
     article.photoEntries ?? [],
   );
   const [spotsForDropdown, setSpotsForDropdown] = useState<SpotRow[]>(spots);
+
+  // ----- 公開タイミング (#16) -----
+  // 'now': 今すぐ公開 / 'scheduled': 予約公開
+  const [publishMode, setPublishMode] = useState<'now' | 'scheduled'>(() => {
+    if (
+      article.status === 'draft' &&
+      article.publishedAt &&
+      article.publishedAt.getTime() > Date.now()
+    ) {
+      return 'scheduled';
+    }
+    return 'now';
+  });
+  // datetime-local の生 string（"2026-05-25T10:00"）。空のときは未設定。
+  const [scheduledAtLocal, setScheduledAtLocal] = useState<string>(() => {
+    if (
+      article.status === 'draft' &&
+      article.publishedAt &&
+      article.publishedAt.getTime() > Date.now()
+    ) {
+      return toDatetimeLocalValue(article.publishedAt);
+    }
+    return '';
+  });
 
   // 「最後にサーバへ保存した時点」の dirty 判定スナップショット。
   // currentSnapshot と同じ正規化ルール（articleType / bodyStyle に応じた絞り込み）を
@@ -282,17 +331,41 @@ export function WizardShell({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPublishing, startPublishing] = useTransition();
   const handleConfirmPublish = () => {
+    // 予約公開時のクライアント側バリデーション
+    let scheduledAtIso: string | null = null;
+    if (publishMode === 'scheduled') {
+      scheduledAtIso = parseScheduledAt(scheduledAtLocal);
+      if (!scheduledAtIso) {
+        toast.error('予約日時を入力してください');
+        return;
+      }
+      if (new Date(scheduledAtIso).getTime() < Date.now()) {
+        toast.error('予約日時は未来の日時を指定してください');
+        return;
+      }
+    }
+
     startPublishing(async () => {
       // 公開前に最新を保存
       const saved = await handleSaveDraft(true);
       if (!saved) return;
-      const pubRes = await publishArticle(article.id);
+      const pubRes = await publishArticle({
+        articleId: article.id,
+        scheduledAt: scheduledAtIso,
+      });
       if (pubRes.ok) {
-        toast.success('公開しました');
+        toast.success(
+          pubRes.data?.scheduled ? '公開を予約しました' : '公開しました',
+        );
         // 公開直後は dirty を消すため snapshot をリセット
         lastSavedSnapshotRef.current = currentSnapshot;
         setConfirmOpen(false);
-        router.push(`/articles/${article.id}`);
+        // 予約公開のときは記事一覧へ。即時公開のときは公開ページへ。
+        if (pubRes.data?.scheduled) {
+          router.push('/writer/articles');
+        } else {
+          router.push(`/articles/${article.id}`);
+        }
       } else {
         toast.error(pubRes.error);
       }
@@ -308,32 +381,50 @@ export function WizardShell({
     );
   };
 
+  /**
+   * 公開条件 alert のジャンプリンクから呼ばれる。
+   * missing 項目に応じて該当ステップへ移動し、フィールド ID が分かる場合は
+   * Step 描画後にスクロール + フォーカスを行う。
+   */
+  const jumpToMissing = (item: string) => {
+    const goStep = (s: Step, anchor?: string) => {
+      setStep(s);
+      // ステップ切替後のレンダリングを待ってからスクロール
+      setTimeout(() => {
+        if (anchor) {
+          const el = document.getElementById(anchor);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            (el as HTMLElement).focus?.();
+            return;
+          }
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 50);
+    };
+
+    if (item === 'タイトル') {
+      goStep(1, 'wz-title');
+    } else if (item === '本文 100 字以上' || item === '写真 1 枚以上') {
+      goStep(1);
+    } else if (item === 'スポット 1 件以上') {
+      goStep(2);
+    } else if (item === '旅程ブロック 2 件以上') {
+      goStep(3);
+    } else if (item === 'カバー画像') {
+      goStep(4, 'wz-cover-anchor');
+    } else {
+      // 価格 / 都市 / 等の Step 4 系
+      goStep(4);
+    }
+  };
+
   const goNext = () => {
-    // step 1 → 2: ボディ入力チェック
-    if (step === 1) {
-      if (!title.trim()) {
-        toast.error('タイトルを入力してください');
-        return;
-      }
-      if (bodyStyle === 'classic' && totalBodyLength < 20) {
-        toast.error('本文を 20 文字以上書いてください');
-        return;
-      }
-      if (bodyStyle === 'photo_journal' && photoEntries.length === 0) {
-        toast.error('写真を 1 枚以上追加してください');
-        return;
-      }
-    }
-    // step 2 → 3: スポットチェック (expat_info は任意なのでスキップ)
-    if (step === 2 && !isExpatInfo && spotsForDropdown.length === 0) {
-      toast.error('スポットを 1 件以上登録してください');
-      return;
-    }
-    // step 3 → 4: 旅程ブロックチェック
-    if (step === 3 && isItinerary && itineraryBlocks.length < 2) {
-      toast.error('旅程ブロックを 2 件以上追加してください');
-      return;
-    }
+    // 2026-05 改修:
+    //   旧実装はステップ移動時に missing 項目を toast.error で警告していたが、
+    //   Step 4 の alert と二重表示になっていたため Toast 系は撤去。
+    //   未入力があってもステップ移動は許可し、Step 4 alert に集約する
+    //   （alert からはジャンプリンクで該当ステップへ戻れる）。
     if (!maybeConfirmDirty()) return;
 
     // itinerary 以外は step=3 を飛ばす
@@ -426,6 +517,26 @@ export function WizardShell({
           isPublished={article.status === 'published'}
           missing={missing}
           modScore={modScore}
+          // ----- SEO チェック用の入力 -----
+          title={title}
+          body={body}
+          bodyPaid={bodyPaid}
+          bodyStyleForSeo={bodyStyle}
+          photoEntries={photoEntries}
+          tags={tags}
+          articleType={basic.articleType}
+          // ----- 共有プレビュー link 用 -----
+          initialPreviewToken={article.previewToken}
+          initialPreviewExpiresAt={article.previewTokenExpiresAt}
+          onJumpToMissing={jumpToMissing}
+          // ----- 公開タイミング (#16) -----
+          publishMode={publishMode}
+          onChangePublishMode={setPublishMode}
+          scheduledAtLocal={scheduledAtLocal}
+          onChangeScheduledAt={setScheduledAtLocal}
+          // ----- 価格変更 (#17) -----
+          articleStatus={article.status}
+          articleInitialPriceJpy={article.priceJpy}
         />
       ) : null}
 
@@ -455,6 +566,10 @@ export function WizardShell({
             disabled={missing.length > 0 || isPublishing || isSavingDraft}
             missing={missing}
             onClick={() => setConfirmOpen(true)}
+            // #16: 予約公開モードのときはラベルを変える
+            label={
+              publishMode === 'scheduled' ? '公開を予約する' : '今すぐ公開'
+            }
           />
         ) : (
           <Button type="button" variant="primary" size="sm" onClick={goNext}>
@@ -477,10 +592,50 @@ export function WizardShell({
           onCancel={() => setConfirmOpen(false)}
           onConfirm={handleConfirmPublish}
           isLoading={isPublishing}
+          // #16: 予約公開情報をモーダルにも表示
+          scheduledAt={
+            publishMode === 'scheduled'
+              ? parseScheduledAt(scheduledAtLocal)
+              : null
+          }
         />
       ) : null}
     </div>
   );
+}
+
+// =============================================================================
+// 予約公開の datetime ヘルパー
+// =============================================================================
+
+/**
+ * Date を `<input type="datetime-local">` の value 形式
+ * "YYYY-MM-DDTHH:MM" (ローカルタイムゾーン) に変換する。
+ */
+function toDatetimeLocalValue(d: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return (
+    d.getFullYear() +
+    '-' +
+    pad(d.getMonth() + 1) +
+    '-' +
+    pad(d.getDate()) +
+    'T' +
+    pad(d.getHours()) +
+    ':' +
+    pad(d.getMinutes())
+  );
+}
+
+/**
+ * `<input type="datetime-local">` の value（ローカルタイム）を ISO string に変換する。
+ * 空文字 / 不正値のときは null。
+ */
+function parseScheduledAt(local: string): string | null {
+  if (!local) return null;
+  const d = new Date(local);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
 }
 
 // =============================================================================
@@ -927,10 +1082,26 @@ function Step4Publish({
   isPublished,
   missing,
   modScore,
+  title,
+  body,
+  bodyPaid,
+  bodyStyleForSeo,
+  photoEntries,
+  tags,
+  articleType,
+  initialPreviewToken,
+  initialPreviewExpiresAt,
+  onJumpToMissing,
+  publishMode,
+  onChangePublishMode,
+  scheduledAtLocal,
+  onChangeScheduledAt,
+  articleStatus,
+  articleInitialPriceJpy,
 }: {
   basic: BasicInfoValue;
   onChangeBasic: (v: BasicInfoValue) => void;
-  cities: { id: string; nameJa: string }[];
+  cities: CityOption[];
   bodyStyle: 'photo_journal' | 'classic';
   onChangeBodyStyle: (v: 'photo_journal' | 'classic') => void;
   coverImageUrl: string;
@@ -940,7 +1111,29 @@ function Step4Publish({
   isPublished: boolean;
   missing: string[];
   modScore: { finalScore: number; action: string } | null;
+  // SEO チェック向け
+  title: string;
+  body: string;
+  bodyPaid: string;
+  bodyStyleForSeo: 'photo_journal' | 'classic';
+  photoEntries: PhotoEntry[];
+  tags: string[];
+  articleType: 'spot_guide' | 'itinerary' | 'expat_info';
+  // 共有プレビュー link 向け
+  initialPreviewToken: string | null;
+  initialPreviewExpiresAt: Date | null;
+  /** missing 項目クリックで該当ステップ・該当フィールドへジャンプ */
+  onJumpToMissing: (item: string) => void;
+  // ----- 公開タイミング (#16) -----
+  publishMode: 'now' | 'scheduled';
+  onChangePublishMode: (v: 'now' | 'scheduled') => void;
+  scheduledAtLocal: string;
+  onChangeScheduledAt: (v: string) => void;
+  // ----- 価格変更 (#17) -----
+  articleStatus: 'draft' | 'published' | 'archived' | 'pending_review';
+  articleInitialPriceJpy: number;
 }) {
+  const currentCity = cities.find((c) => c.id === basic.cityId) ?? null;
   return (
     <div className="space-y-6">
       <header className="space-y-1">
@@ -1027,14 +1220,32 @@ function Step4Publish({
       </section>
 
       {/* 価格 / 都市 / 所要時間 / タグ */}
-      <BasicMetaSection value={basic} onChange={onChangeBasic} cities={cities} />
-
-      {/* カバー画像 */}
-      <CoverImageSection
-        value={coverImageUrl}
-        onChange={onChangeCover}
-        isPublished={isPublished}
+      <BasicMetaSection
+        value={basic}
+        onChange={onChangeBasic}
+        cities={cities}
+        // #17: 公開済みでも価格は変更可。価格変更時の確認モーダルを出すために必要
+        articleId={articleId}
+        isPublished={articleStatus === 'published'}
+        initialPriceJpy={articleInitialPriceJpy}
       />
+
+      {/* #16: 公開タイミング (今すぐ / 予約公開) */}
+      <PublishTimingSection
+        mode={publishMode}
+        onChangeMode={onChangePublishMode}
+        scheduledAtLocal={scheduledAtLocal}
+        onChangeScheduledAt={onChangeScheduledAt}
+      />
+
+      {/* カバー画像 — alert からのジャンプ先 (wz-cover-anchor) */}
+      <div id="wz-cover-anchor" tabIndex={-1}>
+        <CoverImageSection
+          value={coverImageUrl}
+          onChange={onChangeCover}
+          isPublished={isPublished}
+        />
+      </div>
 
       {/* 動画埋め込み */}
       <VideosSection articleId={articleId} initial={videos} />
@@ -1050,36 +1261,141 @@ function Step4Publish({
       {missing.length > 0 ? (
         <aside
           role="alert"
-          className="rounded-md border border-danger-500/40 bg-danger-50 p-3 text-[12px] text-danger-500"
+          className="space-y-2 rounded-md border border-warning-500/50 bg-warning-50 p-3 text-[12px] text-warning-700"
         >
-          公開前に必要な項目: {missing.join(' / ')}
+          <p className="font-bold">公開前に必要な項目があります</p>
+          <ul className="flex flex-wrap gap-1.5">
+            {missing.map((m) => (
+              <li key={m}>
+                <button
+                  type="button"
+                  onClick={() => onJumpToMissing(m)}
+                  className="inline-flex items-center gap-1 rounded-full border border-warning-500/60 bg-card px-2.5 py-1 text-[11px] font-semibold text-warning-700 underline-offset-2 transition hover:bg-warning-500/15 hover:underline focus:outline-none focus:ring-2 focus:ring-warning-500"
+                >
+                  {m}
+                  <span aria-hidden>→</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="text-[10px] text-warning-700/80">
+            項目をクリックすると、該当ステップ・該当フィールドへ移動します。
+          </p>
         </aside>
       ) : (
         <aside className="rounded-md border border-emerald-500/40 bg-emerald-50/60 p-3 text-[12px] text-emerald-700">
           すべての必須項目が揃いました。「公開する」で読者に届きます。
         </aside>
       )}
+
+      {/* SEO 簡易チェック ( missing alert の下、品質向上の提案レベル ) */}
+      <SeoChecklist
+        title={title}
+        body={body}
+        bodyPaid={bodyPaid}
+        bodyStyle={bodyStyleForSeo}
+        photoEntries={photoEntries}
+        tags={tags}
+        articleType={articleType}
+        coverImageUrl={coverImageUrl}
+        city={currentCity}
+      />
+
+      {/* プレビューを共有 ( magic-link 発行 / 無効化 ) */}
+      <SharePreviewSection
+        articleId={articleId}
+        initialToken={initialPreviewToken}
+        initialExpiresAt={initialPreviewExpiresAt}
+      />
     </div>
   );
 }
 
 /**
  * 価格 / 所要時間 / 都市 / タグの簡易セクション。
+ *
+ * 2026-05 改修 (#17): 公開済み記事でも価格は変更可能。確認モーダル経由で
+ * `updateArticlePrice` を即時呼び出す。価格以外のフィールドは従来どおり
+ * 親 state を更新するのみで、保存は親の handleSaveDraft 経由。
  */
 function BasicMetaSection({
   value,
   onChange,
   cities,
+  articleId,
+  isPublished,
+  initialPriceJpy,
 }: {
   value: BasicInfoValue;
   onChange: (next: BasicInfoValue) => void;
-  cities: { id: string; nameJa: string }[];
+  cities: CityOption[];
+  articleId: string;
+  isPublished: boolean;
+  /** サーバから渡された公開時点の価格。確認モーダルの「旧価格」表示に使う想定（現状は未使用） */
+  initialPriceJpy: number;
 }) {
+  // initialPriceJpy は将来用途のためにシグネチャに残す。
+  void initialPriceJpy;
+
+  // 公開済みのときは、価格 input は「最後にサーバ保存された価格」を表示し、
+  // 確定（モーダル confirm）するまで親 basic.priceJpy を変更しない。
+  const [draftPrice, setDraftPrice] = useState<number>(value.priceJpy);
+  // 親 priceJpy が外から変わったら追従（複製や autoSave 後など）
+  useEffect(() => {
+    setDraftPrice(value.priceJpy);
+  }, [value.priceJpy]);
+
+  const [priceConfirm, setPriceConfirm] = useState<{
+    from: number;
+    to: number;
+  } | null>(null);
+  const [isUpdatingPrice, startUpdatePrice] = useTransition();
+
+  const handlePriceChangeRaw = (next: number) => {
+    if (isPublished) {
+      // 公開済みは即 onChange しない。draft に置いて blur/confirm で確定。
+      setDraftPrice(next);
+    } else {
+      onChange({ ...value, priceJpy: next });
+    }
+  };
+
+  /** 公開済み: 「変更を確定」を押したときに確認モーダルを開く。 */
+  const handlePriceCommit = () => {
+    if (!isPublished) return;
+    if (draftPrice === value.priceJpy) return;
+    setPriceConfirm({ from: value.priceJpy, to: draftPrice });
+  };
+
+  const handlePriceConfirm = () => {
+    if (!priceConfirm) return;
+    startUpdatePrice(async () => {
+      const res = await updateArticlePrice({
+        articleId,
+        priceJpy: priceConfirm.to,
+      });
+      if (res.ok) {
+        toast.success('価格を更新しました');
+        onChange({ ...value, priceJpy: priceConfirm.to });
+        setPriceConfirm(null);
+      } else {
+        toast.error(res.error);
+      }
+    });
+  };
+
   return (
     <section className="space-y-4 rounded-md bg-card p-4 ring-1 ring-border sm:p-6">
-      <h3 className="text-[14px] font-semibold tracking-tight">
-        価格・タグ・都市
-      </h3>
+      <div className="flex flex-wrap items-center gap-2">
+        <h3 className="text-[14px] font-semibold tracking-tight">
+          価格・タグ・都市
+        </h3>
+        {isPublished ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+            価格は変更できます
+          </span>
+        ) : null}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -1097,24 +1413,43 @@ function BasicMetaSection({
               min={0}
               max={99999}
               step={50}
-              value={value.priceJpy}
+              value={isPublished ? draftPrice : value.priceJpy}
               onChange={(e) =>
-                onChange({
-                  ...value,
-                  priceJpy: Math.max(
-                    0,
-                    Math.floor(Number(e.target.value) || 0),
-                  ),
-                })
+                handlePriceChangeRaw(
+                  Math.max(0, Math.floor(Number(e.target.value) || 0)),
+                )
               }
               className="h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 text-[15px] font-bold tabular focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
             />
             <span className="inline-flex h-11 items-center rounded-md bg-muted px-3 text-[12px] font-semibold text-foreground/65">
               円
             </span>
+            {isPublished ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="primary"
+                disabled={
+                  draftPrice === value.priceJpy || isUpdatingPrice
+                }
+                onClick={handlePriceCommit}
+                className="h-11 shrink-0 px-3 text-[12px]"
+              >
+                変更を確定
+              </Button>
+            ) : null}
           </div>
           <p className="mt-1 text-[10px] text-foreground/55">
-            自由に設定できます。手数料はクリエイターランクに応じます。
+            {isPublished
+              ? '公開済み記事の価格は変更できます。購入済み読者の閲覧には影響しません。'
+              : '自由に設定できます。手数料はクリエイターランクに応じます。'}
+            {/* 元の価格と異なるとき、サマリを補助表示 */}
+            {isPublished && draftPrice !== value.priceJpy ? (
+              <span className="ml-1 text-warning-700">
+                （現行 ¥{value.priceJpy.toLocaleString('ja-JP')} → 変更後 ¥
+                {draftPrice.toLocaleString('ja-JP')}）
+              </span>
+            ) : null}
           </p>
         </div>
 
@@ -1184,7 +1519,191 @@ function BasicMetaSection({
           />
         </div>
       </div>
+
+      {/* #17: 公開済み記事の価格変更確認モーダル */}
+      {priceConfirm ? (
+        <PriceChangeConfirmDialog
+          fromPriceJpy={priceConfirm.from}
+          toPriceJpy={priceConfirm.to}
+          onCancel={() => setPriceConfirm(null)}
+          onConfirm={handlePriceConfirm}
+          isLoading={isUpdatingPrice}
+        />
+      ) : null}
     </section>
+  );
+}
+
+/**
+ * #16: 公開タイミング (今すぐ / 予約公開) セクション。
+ */
+function PublishTimingSection({
+  mode,
+  onChangeMode,
+  scheduledAtLocal,
+  onChangeScheduledAt,
+}: {
+  mode: 'now' | 'scheduled';
+  onChangeMode: (v: 'now' | 'scheduled') => void;
+  scheduledAtLocal: string;
+  onChangeScheduledAt: (v: string) => void;
+}) {
+  // datetime-local の min は 1 分後（クライアントローカルタイム）
+  const minDatetime = (() => {
+    const t = new Date(Date.now() + 60_000);
+    return toDatetimeLocalValue(t);
+  })();
+
+  return (
+    <section className="space-y-3 rounded-md bg-card p-4 ring-1 ring-border sm:p-6">
+      <h3 className="text-[14px] font-semibold tracking-tight">
+        公開タイミング
+      </h3>
+      <div role="radiogroup" className="flex flex-col gap-1.5 sm:flex-row">
+        <label
+          className={
+            'flex flex-1 cursor-pointer items-start gap-2 rounded-md border px-3 py-2.5 text-left text-[12px] transition ' +
+            (mode === 'now'
+              ? 'border-primary-500 bg-primary-500/10'
+              : 'border-border bg-background hover:border-foreground/30')
+          }
+        >
+          <input
+            type="radio"
+            name="wz-publish-mode"
+            value="now"
+            checked={mode === 'now'}
+            onChange={() => onChangeMode('now')}
+            className="mt-1"
+          />
+          <span>
+            <span className="block text-[13px] font-bold text-foreground">
+              今すぐ公開
+            </span>
+            <span className="block text-[10px] leading-relaxed text-foreground/55">
+              ボタンを押した時点で読者に表示されます
+            </span>
+          </span>
+        </label>
+
+        <label
+          className={
+            'flex flex-1 cursor-pointer items-start gap-2 rounded-md border px-3 py-2.5 text-left text-[12px] transition ' +
+            (mode === 'scheduled'
+              ? 'border-primary-500 bg-primary-500/10'
+              : 'border-border bg-background hover:border-foreground/30')
+          }
+        >
+          <input
+            type="radio"
+            name="wz-publish-mode"
+            value="scheduled"
+            checked={mode === 'scheduled'}
+            onChange={() => onChangeMode('scheduled')}
+            className="mt-1"
+          />
+          <span className="flex-1">
+            <span className="block text-[13px] font-bold text-foreground">
+              予約公開
+            </span>
+            <span className="block text-[10px] leading-relaxed text-foreground/55">
+              指定した日時に達するまで読者には表示されません
+            </span>
+          </span>
+        </label>
+      </div>
+
+      {mode === 'scheduled' ? (
+        <div>
+          <label
+            htmlFor="wz-scheduled-at"
+            className="mb-1 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55"
+          >
+            公開日時 <span className="text-danger-500">*</span>
+          </label>
+          <input
+            id="wz-scheduled-at"
+            type="datetime-local"
+            value={scheduledAtLocal}
+            min={minDatetime}
+            onChange={(e) => onChangeScheduledAt(e.target.value)}
+            className="h-11 w-full max-w-xs rounded-md border border-border bg-background px-3 text-[14px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+          />
+          <p className="mt-1 text-[10px] text-foreground/55">
+            タイムゾーンは端末ローカル。予約日時を過ぎると、次のアクセス時点で自動的に公開状態になります。
+          </p>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
+/**
+ * #17: 公開済み記事の価格変更確認モーダル。
+ */
+function PriceChangeConfirmDialog({
+  fromPriceJpy,
+  toPriceJpy,
+  onCancel,
+  onConfirm,
+  isLoading,
+}: {
+  fromPriceJpy: number;
+  toPriceJpy: number;
+  onCancel: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-neutral-900/50 px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="price-change-title"
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+          価格変更の確認
+        </p>
+        <h3
+          id="price-change-title"
+          className="mt-1 text-[20px] font-bold leading-snug"
+          style={{
+            fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
+          }}
+        >
+          価格を変更しますか？
+        </h3>
+
+        <p className="mt-4 text-[13px] leading-relaxed text-foreground/80">
+          公開済み記事の価格を{' '}
+          <span className="font-bold tabular">
+            ¥{fromPriceJpy.toLocaleString('ja-JP')}
+          </span>{' '}
+          から{' '}
+          <span className="font-bold tabular text-primary-300">
+            ¥{toPriceJpy.toLocaleString('ja-JP')}
+          </span>{' '}
+          に変更します。
+        </p>
+        <p className="mt-3 rounded-md bg-emerald-50/60 px-3 py-2 text-[11px] leading-relaxed text-emerald-700">
+          購入済み読者の閲覧には影響しません。新規購入者には変更後の価格が適用されます。
+        </p>
+
+        <div className="mt-6 flex justify-end gap-2">
+          <Button variant="ghost" onClick={onCancel} disabled={isLoading}>
+            キャンセル
+          </Button>
+          <Button variant="primary" onClick={onConfirm} disabled={isLoading}>
+            {isLoading ? '更新中…' : '価格を変更する'}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1195,10 +1714,13 @@ function PublishButton({
   disabled,
   missing,
   onClick,
+  label = '公開する',
 }: {
   disabled: boolean;
   missing: string[];
   onClick: () => void;
+  /** ボタンラベル。#16 で「今すぐ公開 / 公開を予約する」を動的に切り替えるために追加 */
+  label?: string;
 }) {
   const tooltip =
     missing.length > 0
@@ -1214,7 +1736,7 @@ function PublishButton({
         disabled={disabled}
       >
         <Send className="mr-1 h-4 w-4" />
-        公開する
+        {label}
       </Button>
     </span>
   );
@@ -1232,6 +1754,7 @@ function PublishConfirmDialog({
   onCancel,
   onConfirm,
   isLoading,
+  scheduledAt,
 }: {
   title: string;
   articleType: 'spot_guide' | 'itinerary' | 'expat_info';
@@ -1241,6 +1764,8 @@ function PublishConfirmDialog({
   onCancel: () => void;
   onConfirm: () => void;
   isLoading: boolean;
+  /** 予約公開のときの ISO 文字列。null なら即時公開。 */
+  scheduledAt: string | null;
 }) {
   const typeLabel =
     articleType === 'itinerary'
@@ -1248,6 +1773,7 @@ function PublishConfirmDialog({
       : articleType === 'expat_info'
         ? '駐在者情報'
         : 'スポット紹介';
+  const isScheduled = !!scheduledAt;
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-neutral-900/50 px-4"
@@ -1261,7 +1787,7 @@ function PublishConfirmDialog({
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-          公開の確認
+          {isScheduled ? '公開予約の確認' : '公開の確認'}
         </p>
         <h3
           id="publish-confirm-title"
@@ -1270,7 +1796,7 @@ function PublishConfirmDialog({
             fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
           }}
         >
-          この内容で公開しますか？
+          {isScheduled ? 'この日時で公開を予約しますか？' : 'この内容で公開しますか？'}
         </h3>
 
         <div className="mt-4 flex gap-3">
@@ -1297,12 +1823,27 @@ function PublishConfirmDialog({
             </dd>
             <dt className="text-foreground/55">都市</dt>
             <dd>{cityName}</dd>
+            {isScheduled ? (
+              <>
+                <dt className="text-foreground/55">公開日時</dt>
+                <dd className="font-semibold text-primary-300">
+                  {new Date(scheduledAt!).toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </dd>
+              </>
+            ) : null}
           </dl>
         </div>
 
         <p className="mt-4 rounded-md bg-warning-50 px-3 py-2 text-[11px] leading-relaxed text-warning-700">
-          公開後はすぐに読者に表示されます。価格やカバー画像はあとから変更可能ですが、
-          公開後の購入者には旧バージョンが届きます。
+          {isScheduled
+            ? '予約日時を過ぎたあと、最初の閲覧アクセス時に公開状態になります。それまでは読者には表示されません。'
+            : '公開後はすぐに読者に表示されます。価格やカバー画像はあとから変更可能ですが、公開後の購入者には旧バージョンが届きます。'}
         </p>
 
         <div className="mt-6 flex justify-end gap-2">
@@ -1310,10 +1851,511 @@ function PublishConfirmDialog({
             キャンセル
           </Button>
           <Button variant="primary" onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? '公開中…' : '公開する'}
+            {isLoading
+              ? isScheduled
+                ? '予約中…'
+                : '公開中…'
+              : isScheduled
+                ? '公開を予約する'
+                : '公開する'}
           </Button>
         </div>
       </div>
     </div>
   );
+}
+
+// =============================================================================
+// SEO 簡易チェック ( #19 )
+//
+// 公開前に「タイトル長すぎ」「都市名が本文に無い」等の品質ヒントを出す。
+// missing と違って公開はブロックしない（あくまで提案レベル）。
+// 入力が変わる度にリアルタイム再評価される Client Component。
+// =============================================================================
+type SeoSeverity = 'ok' | 'warn' | 'fail';
+
+type SeoCheckResult = {
+  key: string;
+  label: string;
+  severity: SeoSeverity;
+  detail: string;
+};
+
+function computeSeoChecks(input: {
+  title: string;
+  body: string;
+  bodyPaid: string;
+  bodyStyle: 'photo_journal' | 'classic';
+  photoEntries: PhotoEntry[];
+  tags: string[];
+  /** SEO ヒントの粒度を articleType ごとに変えるための拡張点 (現状は未使用) */
+  articleType: 'spot_guide' | 'itinerary' | 'expat_info';
+  coverImageUrl: string;
+  city: CityOption | null;
+}): SeoCheckResult[] {
+  // 現状は articleType 別の差分ロジックは無いが、将来のために型に残しておく
+  void input.articleType;
+  const results: SeoCheckResult[] = [];
+
+  // 1) タイトル長
+  const titleLen = input.title.trim().length;
+  if (titleLen === 0) {
+    results.push({
+      key: 'title-length',
+      label: 'タイトル',
+      severity: 'fail',
+      detail: '未入力',
+    });
+  } else if (titleLen < 16) {
+    results.push({
+      key: 'title-length',
+      label: 'タイトル',
+      severity: 'warn',
+      detail: `${titleLen} 字 — 16 字以上にすると検索に強くなります`,
+    });
+  } else if (titleLen > 60) {
+    results.push({
+      key: 'title-length',
+      label: 'タイトル',
+      severity: 'warn',
+      detail: `${titleLen} 字 — 60 字を超えると検索結果で省略されます`,
+    });
+  } else if (titleLen > 40) {
+    results.push({
+      key: 'title-length',
+      label: 'タイトル',
+      severity: 'warn',
+      detail: `${titleLen} 字 — 40 字以内が読みやすい目安`,
+    });
+  } else {
+    results.push({
+      key: 'title-length',
+      label: 'タイトル',
+      severity: 'ok',
+      detail: `${titleLen} 字 — 良い長さです`,
+    });
+  }
+
+  // 2) 本文長 ( photo_journal はキャプション合計で代用 )
+  const totalBody =
+    input.bodyStyle === 'photo_journal'
+      ? input.photoEntries
+          .map((p) => (p.caption ?? '').trim())
+          .join('\n')
+          .trim().length
+      : (input.body.trim().length + input.bodyPaid.trim().length);
+  if (totalBody < 100) {
+    results.push({
+      key: 'body-length',
+      label: '本文ボリューム',
+      severity: 'fail',
+      detail: `${totalBody} 字 — 100 字未満です`,
+    });
+  } else if (totalBody < 800) {
+    results.push({
+      key: 'body-length',
+      label: '本文ボリューム',
+      severity: 'warn',
+      detail: `${totalBody} 字 — 800 字以上が SEO の目安`,
+    });
+  } else if (totalBody > 3000) {
+    results.push({
+      key: 'body-length',
+      label: '本文ボリューム',
+      severity: 'warn',
+      detail: `${totalBody} 字 — 3000 字を超えると離脱率が上がりがち`,
+    });
+  } else {
+    results.push({
+      key: 'body-length',
+      label: '本文ボリューム',
+      severity: 'ok',
+      detail: `${totalBody} 字 — ちょうど良いボリュームです`,
+    });
+  }
+
+  // 3) 都市名が本文 or タイトルに含まれている
+  const haystack = [
+    input.title,
+    input.body,
+    input.bodyPaid,
+    ...input.photoEntries.map((p) => p.caption ?? ''),
+  ]
+    .join('\n')
+    .toLowerCase();
+  const cityHits: string[] = [];
+  if (input.city?.nameJa && haystack.includes(input.city.nameJa.toLowerCase())) {
+    cityHits.push(input.city.nameJa);
+  }
+  if (
+    input.city?.nameEn &&
+    haystack.includes(input.city.nameEn.toLowerCase())
+  ) {
+    cityHits.push(input.city.nameEn);
+  }
+  if (!input.city) {
+    results.push({
+      key: 'city-mention',
+      label: '都市名の言及',
+      severity: 'warn',
+      detail: '都市が未選択です',
+    });
+  } else if (cityHits.length > 0) {
+    results.push({
+      key: 'city-mention',
+      label: '都市名の言及',
+      severity: 'ok',
+      detail: `「${cityHits.join(' / ')}」が含まれています`,
+    });
+  } else {
+    results.push({
+      key: 'city-mention',
+      label: '都市名の言及',
+      severity: 'warn',
+      detail: `「${input.city.nameJa}」が本文・タイトルに見当たりません`,
+    });
+  }
+
+  // 4) カバー画像 ( SEO 観点で再掲 )
+  if (input.coverImageUrl.trim()) {
+    results.push({
+      key: 'cover',
+      label: 'カバー画像',
+      severity: 'ok',
+      detail: '設定済み — SNS シェア時のサムネに使われます',
+    });
+  } else {
+    results.push({
+      key: 'cover',
+      label: 'カバー画像',
+      severity: 'warn',
+      detail: '未設定 — シェア時に画像なしになります',
+    });
+  }
+
+  // 5) tags 1 つ以上
+  if (input.tags.length === 0) {
+    results.push({
+      key: 'tags',
+      label: 'タグ',
+      severity: 'warn',
+      detail: '1 つ以上設定すると関連記事に出やすくなります',
+    });
+  } else {
+    results.push({
+      key: 'tags',
+      label: 'タグ',
+      severity: 'ok',
+      detail: `${input.tags.length} 個 — OK`,
+    });
+  }
+
+  // 6) photo_journal なら写真 3 枚以上
+  if (input.bodyStyle === 'photo_journal') {
+    const photoCount = input.photoEntries.filter((p) => p.imageUrl).length;
+    if (photoCount < 3) {
+      results.push({
+        key: 'photo-count',
+        label: '写真の枚数',
+        severity: 'warn',
+        detail: `${photoCount} 枚 — フォト日記は 3 枚以上が魅力的です`,
+      });
+    } else {
+      results.push({
+        key: 'photo-count',
+        label: '写真の枚数',
+        severity: 'ok',
+        detail: `${photoCount} 枚 — 十分です`,
+      });
+    }
+  }
+
+  return results;
+}
+
+function SeoChecklist(props: {
+  title: string;
+  body: string;
+  bodyPaid: string;
+  bodyStyle: 'photo_journal' | 'classic';
+  photoEntries: PhotoEntry[];
+  tags: string[];
+  articleType: 'spot_guide' | 'itinerary' | 'expat_info';
+  coverImageUrl: string;
+  city: CityOption | null;
+}) {
+  const [open, setOpen] = useState(true);
+  // 計算は入力が変わるたびに再評価
+  const checks = useMemo(() => computeSeoChecks(props), [props]);
+  const counts = useMemo(() => {
+    let ok = 0;
+    let warn = 0;
+    let fail = 0;
+    for (const c of checks) {
+      if (c.severity === 'ok') ok++;
+      else if (c.severity === 'warn') warn++;
+      else fail++;
+    }
+    return { ok, warn, fail };
+  }, [checks]);
+
+  return (
+    <section className="rounded-md bg-card ring-1 ring-border">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left sm:px-6"
+        aria-expanded={open}
+      >
+        <div className="space-y-0.5">
+          <h3 className="text-[14px] font-semibold tracking-tight">
+            SEO チェック (品質向上の提案)
+          </h3>
+          <p className="text-[11px] text-foreground/55">
+            合格 {counts.ok} / 警告 {counts.warn} / 要対応 {counts.fail}
+            <span className="ml-2 text-foreground/40">
+              ※ 警告があっても公開はブロックされません
+            </span>
+          </p>
+        </div>
+        <ChevronDown
+          className={
+            'h-4 w-4 shrink-0 text-foreground/55 transition ' +
+            (open ? 'rotate-180' : '')
+          }
+        />
+      </button>
+
+      {open ? (
+        <ul className="divide-y divide-border border-t border-border">
+          {checks.map((c) => (
+            <li
+              key={c.key}
+              className="flex items-start gap-3 px-4 py-2.5 sm:px-6"
+            >
+              <SeoBadge severity={c.severity} />
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold text-foreground/85">
+                  {c.label}
+                </p>
+                <p className="text-[11px] text-foreground/60">{c.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
+function SeoBadge({ severity }: { severity: SeoSeverity }) {
+  if (severity === 'ok') {
+    return (
+      <span
+        aria-label="合格"
+        className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"
+      >
+        ✓
+      </span>
+    );
+  }
+  if (severity === 'warn') {
+    return (
+      <span
+        aria-label="警告"
+        className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-warning-50 text-warning-700"
+      >
+        ⚠
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-label="要対応"
+      className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-danger-50 text-danger-500"
+    >
+      ✗
+    </span>
+  );
+}
+
+// =============================================================================
+// プレビュー共有 link ( #18 )
+//
+// magic-link を発行 / 失効するだけのシンプルなセクション。
+// token は server action 経由で uuid v4 を発行・保存する。
+// =============================================================================
+function SharePreviewSection({
+  articleId,
+  initialToken,
+  initialExpiresAt,
+}: {
+  articleId: string;
+  initialToken: string | null;
+  initialExpiresAt: Date | null;
+}) {
+  const [token, setToken] = useState<string | null>(initialToken);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(
+    initialExpiresAt ? new Date(initialExpiresAt) : null,
+  );
+  const [isGenerating, startGenerating] = useTransition();
+  const [isRevoking, startRevoking] = useTransition();
+  const [copied, setCopied] = useState(false);
+
+  const shareUrl = useMemo(() => {
+    if (!token) return '';
+    // SSR では window が無いので空文字に倒す
+    if (typeof window === 'undefined') return `/preview/${token}`;
+    return `${window.location.origin}/preview/${token}`;
+  }, [token]);
+
+  const isExpired = !!expiresAt && expiresAt.getTime() < Date.now();
+
+  const handleGenerate = () => {
+    startGenerating(async () => {
+      const res = await generatePreviewToken(articleId);
+      if (res.ok && res.data) {
+        setToken(res.data.token);
+        setExpiresAt(new Date(res.data.expiresAt));
+        toast.success('共有リンクを発行しました');
+      } else if (!res.ok) {
+        toast.error(res.error);
+      }
+    });
+  };
+
+  const handleRevoke = () => {
+    if (
+      !window.confirm(
+        '共有リンクを無効化します。\nこの操作の後は、同じ URL でアクセスできなくなります。',
+      )
+    ) {
+      return;
+    }
+    startRevoking(async () => {
+      const res = await revokePreviewToken(articleId);
+      if (res.ok) {
+        setToken(null);
+        setExpiresAt(null);
+        toast.success('共有リンクを無効化しました');
+      } else {
+        toast.error(res.error);
+      }
+    });
+  };
+
+  const handleCopy = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success('リンクをコピーしました');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('コピーに失敗しました');
+    }
+  };
+
+  return (
+    <section className="space-y-3 rounded-md bg-card p-4 ring-1 ring-border sm:p-6">
+      <header className="space-y-1">
+        <h3 className="flex items-center gap-2 text-[14px] font-semibold tracking-tight">
+          <Link2 className="h-4 w-4 text-primary-300" />
+          プレビューを共有する
+        </h3>
+        <p className="text-[11px] text-foreground/55">
+          公開前の記事を、編集者や友人に確認してもらえる magic-link を発行できます。
+          リンクを知っている人なら誰でも全文 (有料部分含む) を閲覧できます。
+        </p>
+      </header>
+
+      {token && !isExpired ? (
+        <div className="space-y-2">
+          <div className="flex items-stretch gap-1.5">
+            <input
+              readOnly
+              value={shareUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className="h-10 w-full min-w-0 rounded-md border border-border bg-background px-3 text-[12px] tabular text-foreground/85 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+            >
+              {copied ? (
+                <>
+                  <Check className="mr-1 h-4 w-4" />
+                  コピー済
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-1 h-4 w-4" />
+                  リンクをコピー
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[11px] text-foreground/55">
+              有効期限: {expiresAt ? formatDateTime(expiresAt) : '無期限'}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleGenerate}
+                disabled={isGenerating || isRevoking}
+              >
+                {isGenerating ? '再発行中…' : 'リンクを再発行'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleRevoke}
+                disabled={isGenerating || isRevoking}
+              >
+                <Link2Off className="mr-1 h-4 w-4" />
+                {isRevoking ? '無効化中…' : 'リンクを無効化'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {token && isExpired ? (
+            <p className="text-[11px] text-warning-700">
+              前回のリンクは有効期限切れ ({expiresAt
+                ? formatDateTime(expiresAt)
+                : '不明'}
+              ) です。新しいリンクを発行してください。
+            </p>
+          ) : null}
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+          >
+            <Link2 className="mr-1 h-4 w-4" />
+            {isGenerating ? '発行中…' : 'プレビューを共有 (14 日間有効)'}
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function formatDateTime(d: Date): string {
+  return d.toLocaleString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }

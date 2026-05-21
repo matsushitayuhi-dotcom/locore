@@ -499,29 +499,6 @@ export function ArticleRenderer({
 
         {/* Side rail */}
         <aside className="space-y-6">
-          <div className="rounded-md border border-border bg-card p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
-              この街
-            </p>
-            <h4
-              className="mt-1 text-[18px] font-semibold tracking-tight"
-              style={{
-                fontFamily: 'var(--font-serif-jp), var(--font-serif), serif',
-              }}
-            >
-              {displayAreaLabel}
-            </h4>
-            <p className="mt-2 text-[13px] leading-relaxed text-foreground/70">
-              観光地から少し外れた、クリエイターが日常的に歩いているエリア。
-            </p>
-            <Link
-              href="/map"
-              className="mt-4 inline-flex text-[13px] font-medium text-primary-300 hover:underline"
-            >
-              地図で確認する →
-            </Link>
-          </div>
-
           {related.length > 0 ? (
             <div>
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/50">

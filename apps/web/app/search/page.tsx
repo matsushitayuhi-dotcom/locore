@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, SearchX } from 'lucide-react';
 import { SearchBox } from '@/components/SearchBox';
 import { ArticleGrid } from '@/components/ArticleGrid';
 import { searchPublishedArticles } from '@/lib/articles/search';
@@ -57,10 +57,28 @@ export default async function SearchPage({ searchParams }: Props) {
         )}
 
         {rawQ && results.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border bg-card px-6 py-12 text-center text-[13px] text-foreground/55">
-            その言葉ではまだ書かれていません。
-            <br />
-            キーワードを少し変えるか、検索対象を「本文」に切り替えてみてください。
+          <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border bg-card px-6 py-12 text-center text-[13px] text-foreground/65">
+            <SearchX className="h-8 w-8 text-foreground/35" />
+            <p className="text-[14px] font-medium text-foreground/75">
+              ぴったりの記事はまだ見つかりませんでした
+            </p>
+            <p className="text-[12px] text-foreground/55">
+              キーワードを少し変えるか、検索対象を「本文」に切り替えてみてください。
+            </p>
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+              <Link
+                href="/search"
+                className="rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+              >
+                条件を変えてもう一度
+              </Link>
+              <Link
+                href={`/search?q=${encodeURIComponent(rawQ)}&in=${rawIn === 'body' ? 'title' : 'body'}`}
+                className="rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+              >
+                {rawIn === 'body' ? 'タイトルで検索' : '本文も含めて検索'}
+              </Link>
+            </div>
           </div>
         ) : null}
 

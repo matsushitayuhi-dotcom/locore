@@ -154,6 +154,15 @@ export const articles = pgTable(
     warned: boolean('warned').notNull().default(false),
     moderationScore: integer('moderation_score'),
     publishedAt: timestamp('published_at', { withTimezone: true }),
+    /**
+     * 共有プレビュー用トークン (UUID v4)。NULL なら共有リンク無効。
+     * `manual/0049_article_preview_token.sql`
+     */
+    previewToken: uuid('preview_token'),
+    /** プレビューリンクの有効期限。NULL は実質無期限（運用上は常に値ありで発行）。 */
+    previewTokenExpiresAt: timestamp('preview_token_expires_at', {
+      withTimezone: true,
+    }),
     /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
     isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

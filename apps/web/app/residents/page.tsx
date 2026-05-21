@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { and, desc, isNull, ilike, or, sql, eq, ne } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
-import { Search, MapPin, Briefcase, Calendar, Coffee } from 'lucide-react';
+import { Search, MapPin, Briefcase, Calendar, Coffee, SearchX } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import {
   FAMILY_STAGE_LABEL,
@@ -173,87 +173,127 @@ export default async function ResidentsPage({
         <form
           action="/residents"
           method="GET"
-          className="mb-5 grid gap-2 rounded-xl bg-card p-3 ring-1 ring-border sm:grid-cols-[2fr_1fr_1fr_auto] sm:p-4"
+          className="mb-3 rounded-xl bg-card p-3 ring-1 ring-border sm:p-4"
         >
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+          {/* meetups は別ブロックだが、submit 時にチェック状態を引き継ぐため hidden で渡す */}
+          {meetupsOnly ? (
+            <input type="hidden" name="meetups" value="1" />
+          ) : null}
+
+          <div className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr] sm:items-center">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+              <input
+                type="search"
+                name="q"
+                defaultValue={q}
+                placeholder="名前・自己紹介・興味から検索"
+                className="h-10 w-full rounded-md border border-border bg-background pl-8 pr-2 text-[13px] focus:border-2 focus:border-primary-500 focus:pl-[31px] focus:outline-none"
+              />
+            </div>
+            <select
+              name="country"
+              defaultValue={country}
+              className="h-10 rounded-md border border-border bg-background px-2 text-[13px]"
+            >
+              <option value="">すべての国</option>
+              {countries.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
             <input
-              type="search"
-              name="q"
-              defaultValue={q}
-              placeholder="名前・自己紹介・興味から検索"
-              className="h-10 w-full rounded-md border border-border bg-background pl-8 pr-2 text-[13px] focus:border-2 focus:border-primary-500 focus:pl-[31px] focus:outline-none"
+              type="text"
+              name="city"
+              defaultValue={city}
+              placeholder="都市（部分一致）"
+              className="h-10 rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
             />
           </div>
-          <select
-            name="country"
-            defaultValue={country}
-            className="h-10 rounded-md border border-border bg-background px-2 text-[13px]"
-          >
-            <option value="">すべての国</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            name="city"
-            defaultValue={city}
-            placeholder="都市（部分一致）"
-            className="h-10 rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="h-10 rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
-          >
-            検索
-          </button>
 
-          <div className="flex flex-wrap items-center gap-2 sm:col-span-4">
-            <label className="inline-flex cursor-pointer items-center gap-1.5 text-[12px]">
-              <input
-                type="checkbox"
-                name="meetups"
-                value="1"
-                defaultChecked={meetupsOnly}
-                className="h-3.5 w-3.5"
-              />
-              <Coffee className="h-3 w-3 text-primary-300" />
-              気軽に会える人だけ
-            </label>
-            {tag ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-medium text-primary-300">
-                タグ: {tag}
-                <Link
-                  href={{
-                    pathname: '/residents',
-                    query: { q, country, city, meetups: meetupsOnly ? '1' : undefined },
-                  }}
-                  className="ml-1 text-primary-300/70 hover:text-primary-300"
-                >
-                  ✕
-                </Link>
-              </span>
-            ) : null}
-            {(q || country || city || meetupsOnly || tag) ? (
-              <Link
-                href="/residents"
-                className="ml-auto text-[11px] text-foreground/55 hover:underline"
-              >
-                条件をリセット
-              </Link>
-            ) : null}
+          <div className="mt-2 flex justify-end">
+            <button
+              type="submit"
+              className="h-10 w-full rounded-md bg-primary-500 px-4 text-[12px] font-bold text-neutral-950 hover:bg-primary-300 sm:w-auto"
+            >
+              検索
+            </button>
           </div>
         </form>
 
+        {/* 追加トグル: Meetups / タグバッジ / リセット (フォーム外、独立行) */}
+        <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px]">
+          <form action="/residents" method="GET" className="inline-flex">
+            {/* 現在の他フィルタは保持しつつ、meetups のみトグルする */}
+            {q ? <input type="hidden" name="q" value={q} /> : null}
+            {country ? <input type="hidden" name="country" value={country} /> : null}
+            {city ? <input type="hidden" name="city" value={city} /> : null}
+            {tag ? <input type="hidden" name="tag" value={tag} /> : null}
+            {!meetupsOnly ? (
+              <input type="hidden" name="meetups" value="1" />
+            ) : null}
+            <button
+              type="submit"
+              className={
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 transition ring-1 ' +
+                (meetupsOnly
+                  ? 'bg-primary-500/15 text-primary-300 ring-primary-500/40'
+                  : 'bg-background text-foreground/70 ring-border hover:bg-muted')
+              }
+            >
+              <Coffee className="h-3 w-3 text-primary-300" />
+              気軽に会える人だけ
+            </button>
+          </form>
+          {tag ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-medium text-primary-300">
+              タグ: {tag}
+              <Link
+                href={{
+                  pathname: '/residents',
+                  query: { q, country, city, meetups: meetupsOnly ? '1' : undefined },
+                }}
+                className="ml-1 text-primary-300/70 hover:text-primary-300"
+              >
+                ✕
+              </Link>
+            </span>
+          ) : null}
+          {(q || country || city || meetupsOnly || tag) ? (
+            <Link
+              href="/residents"
+              className="ml-auto text-[11px] text-foreground/55 hover:underline"
+            >
+              条件をリセット
+            </Link>
+          ) : null}
+        </div>
+
         {/* 結果 */}
         {residents.length === 0 ? (
-          <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">
-            条件に合う住人が見つかりませんでした。
-            <br />
-            フィルタを緩めて再度お試しください。
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/65">
+            <SearchX className="h-8 w-8 text-foreground/35" />
+            <p className="text-[14px] font-medium text-foreground/75">
+              ぴったりの住人はまだ見つかりませんでした
+            </p>
+            <p className="text-[12px] text-foreground/55">
+              フィルタを緩めてみるか、自分のプロフィールを充実させて声をかけてもらいやすくしてみましょう。
+            </p>
+            <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+              <Link
+                href="/residents"
+                className="rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+              >
+                条件を変えてもう一度
+              </Link>
+              <Link
+                href="/settings/profile"
+                className="rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+              >
+                自分のプロフィールを編集
+              </Link>
+            </div>
           </div>
         ) : (
           <>

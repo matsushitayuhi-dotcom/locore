@@ -83,7 +83,11 @@ export default async function EditArticlePage({
       .where(eq(schema.articleVideos.articleId, params.id))
       .orderBy(asc(schema.articleVideos.position)),
     db
-      .select({ id: schema.cities.id, nameJa: schema.cities.nameJa })
+      .select({
+        id: schema.cities.id,
+        nameJa: schema.cities.nameJa,
+        nameEn: schema.cities.nameEn,
+      })
       .from(schema.cities)
       .where(eq(schema.cities.isActive, true)),
     db
@@ -182,6 +186,9 @@ export default async function EditArticlePage({
         warned: article.warned,
         moderationScore: article.moderationScore,
         updatedAt: article.updatedAt,
+        previewToken: article.previewToken ?? null,
+        previewTokenExpiresAt: article.previewTokenExpiresAt ?? null,
+        publishedAt: article.publishedAt ?? null,
       }}
       spots={spots}
       videos={videos}

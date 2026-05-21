@@ -6,6 +6,7 @@ import {
   Wifi,
   Plus,
   ArrowLeft,
+  Inbox,
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
@@ -430,10 +431,29 @@ export default async function JobsIndexPage({ searchParams }: Props) {
       </form>
 
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/55">
-          条件に合う求人はまだありません。
-          <br />
-          フィルタを緩めて再度お試しください。
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/65">
+          <Inbox className="h-8 w-8 text-foreground/35" />
+          <p className="text-[14px] font-medium text-foreground/75">
+            ぴったりの求人はまだ見つかりませんでした
+          </p>
+          <p className="text-[12px] text-foreground/55">
+            条件を緩めるか、まだ募集がないなら自分で 1 件目を出してみるのも手です。
+          </p>
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+            <Link
+              href="/jobs"
+              className="rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+            >
+              条件を変えてもう一度
+            </Link>
+            <Link
+              href="/jobs/new"
+              className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+            >
+              <Plus className="h-3 w-3" />
+              求人を出す
+            </Link>
+          </div>
         </div>
       ) : (
         <ul className="space-y-3">

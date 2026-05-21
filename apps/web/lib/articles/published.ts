@@ -86,6 +86,10 @@ export async function getPublishedDbArticles(
         and(
           eq(schema.articles.status, 'published'),
           isNull(schema.articles.deletedAt),
+          // #16: 予約公開 (publishedAt > NOW()) は status='draft' 経路で除外されるが、
+          //   将来 status='published' のまま予約日時を扱うケースのために二重で防御。
+          //   publishedAt が NULL のときは（過去データ互換のため）通す。
+          sql`(${schema.articles.publishedAt} IS NULL OR ${schema.articles.publishedAt} <= NOW())`,
           regionSlug ? eq(schema.cities.slug, regionSlug) : sql`true`,
         ),
       )

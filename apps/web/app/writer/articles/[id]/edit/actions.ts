@@ -276,10 +276,51 @@ export async function saveDraftArticle(input: unknown): Promise<
   return { ok: true, data: { savedAt: Date.now() } };
 }
 
-export async function publishArticle(articleId: string): Promise<ActionResult<{
-  finalScore: number;
-  action: 'pass' | 'warned' | 'held';
-}>> {
+/**
+ * 公開アクション。
+ *
+ * 2026-05 改修 (#16): 予約公開に対応。`scheduledAt` を渡すと、即時公開ではなく
+ * `publishedAt = scheduledAt` の future date で **status='draft'** のまま保存する。
+ *
+ *  - lib/articles/published.ts は `status='published'` でフィルタしているため、
+ *    予約公開中の記事は読み手側のフィードに出ない。
+ *  - 予約日時に達したあとの「自動公開」cron は MVP では未実装。実運用では
+ *    予約日時を過ぎたら手動で改めて publishArticle({ articleId }) を叩く想定。
+ *    （別案: scheduledAt 専用カラム+status='scheduled' でも良いが、MVP は publishedAt+future の hack で対応）
+ *
+ * 後方互換のため、文字列の articleId をそのまま渡しても従来通り「即時公開」する。
+ */
+export async function publishArticle(
+  input: string | { articleId: string; scheduledAt?: string | null },
+): Promise<
+  ActionResult<{
+    finalScore: number;
+    action: 'pass' | 'warned' | 'held';
+    /** 予約公開扱いなら true */
+    scheduled: boolean;
+  }>
+> {
+  const articleId = typeof input === 'string' ? input : input.articleId;
+  const scheduledAtRaw =
+    typeof input === 'string' ? null : input.scheduledAt ?? null;
+
+  // scheduledAt のバリデーション: future date のみ受け付ける
+  let scheduledAt: Date | null = null;
+  if (scheduledAtRaw) {
+    const t = new Date(scheduledAtRaw);
+    if (Number.isNaN(t.getTime())) {
+      return { ok: false, error: '予約日時の形式が正しくありません' };
+    }
+    // 多少のズレを許容（現在時刻 - 1 分以前は不可）
+    if (t.getTime() < Date.now() - 60_000) {
+      return {
+        ok: false,
+        error: '予約日時は未来の日時を指定してください',
+      };
+    }
+    scheduledAt = t;
+  }
+
   const { article, db } = await assertOwnership(articleId);
 
   // 最新の article データを取得してモデレーション
@@ -343,13 +384,17 @@ export async function publishArticle(articleId: string): Promise<ActionResult<{
   const isWarned =
     moderation.action === 'warned' || moderation.action === 'held';
 
+  const isScheduled = scheduledAt != null;
+
   await db
     .update(schema.articles)
     .set({
-      status: 'published',
+      // 予約公開のときは status='draft' のまま publishedAt のみ未来日時に。
+      // 即時公開のときは従来通り status='published'。
+      status: isScheduled ? 'draft' : 'published',
       warned: isWarned,
       moderationScore: moderation.finalScore,
-      publishedAt: new Date(),
+      publishedAt: isScheduled ? scheduledAt! : new Date(),
       updatedAt: new Date(),
     })
     .where(eq(schema.articles.id, article.id));
@@ -359,8 +404,106 @@ export async function publishArticle(articleId: string): Promise<ActionResult<{
   revalidatePath('/writer/articles');
   return {
     ok: true,
-    data: { finalScore: moderation.finalScore, action: moderation.action },
+    data: {
+      finalScore: moderation.finalScore,
+      action: moderation.action,
+      scheduled: isScheduled,
+    },
   };
+}
+
+/**
+ * 公開済み記事の価格だけを更新する軽量アクション (#17)。
+ *
+ * - status='published' でも変更可（saveDraftArticle の経路では公開済みの場合の確認モーダルを
+ *   個別に出したくなかったため分離）
+ * - 購入済み読者の閲覧には影響しない（purchases.price_jpy は購入時点の値を保持）
+ *
+ * @param input.articleId
+ * @param input.priceJpy 新しい価格（整数）。クリエイターは自由に設定可
+ */
+const updatePriceSchema = z.object({
+  articleId: z.string().uuid(),
+  priceJpy: z.number().int().min(0).max(99999),
+});
+
+export async function updateArticlePrice(input: unknown): Promise<ActionResult> {
+  const parsed = updatePriceSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: '入力内容に誤りがあります',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  const data = parsed.data;
+  const { db } = await assertOwnership(data.articleId);
+
+  await db
+    .update(schema.articles)
+    .set({ priceJpy: data.priceJpy, updatedAt: new Date() })
+    .where(eq(schema.articles.id, data.articleId));
+
+  revalidatePath(`/writer/articles/${data.articleId}/edit`);
+  revalidatePath(`/writer/articles/${data.articleId}/preview`);
+  revalidatePath(`/articles/${data.articleId}`);
+  revalidatePath('/writer/articles');
+  return { ok: true };
+}
+
+// ---------- 共有プレビュートークン ----------
+
+/**
+ * プレビュー共有用 magic-link トークンを発行する。
+ *
+ * - UUID v4 を `crypto.randomUUID()` で生成
+ * - 有効期限は 14 日後
+ * - 既に token が発行済みでも上書きする（「再発行」相当）
+ *
+ * 認可: assertOwnership と同じく writer 本人 or editor のみ。
+ *
+ * @returns 成功時は token と expiresAt を返す。クライアントはこれをもとに
+ *   `${origin}/preview/${token}` の URL を組み立てる。
+ */
+export async function generatePreviewToken(
+  articleId: string,
+): Promise<ActionResult<{ token: string; expiresAt: string }>> {
+  const { article, db } = await assertOwnership(articleId);
+  const token = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+
+  await db
+    .update(schema.articles)
+    .set({
+      previewToken: token,
+      previewTokenExpiresAt: expiresAt,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.articles.id, article.id));
+
+  revalidatePath(`/writer/articles/${article.id}/edit`);
+  return { ok: true, data: { token, expiresAt: expiresAt.toISOString() } };
+}
+
+/**
+ * 共有プレビュートークンを無効化する（リンクを失効させる）。
+ * 単に preview_token / expires_at を NULL に戻すだけ。
+ */
+export async function revokePreviewToken(
+  articleId: string,
+): Promise<ActionResult> {
+  const { article, db } = await assertOwnership(articleId);
+  await db
+    .update(schema.articles)
+    .set({
+      previewToken: null,
+      previewTokenExpiresAt: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.articles.id, article.id));
+
+  revalidatePath(`/writer/articles/${article.id}/edit`);
+  return { ok: true };
 }
 
 export async function unpublishArticle(articleId: string): Promise<ActionResult> {
