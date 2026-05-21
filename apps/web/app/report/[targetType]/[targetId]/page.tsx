@@ -51,7 +51,10 @@ export default async function ReportPage({
           </h1>
           <p className="mt-3 text-[13px] leading-relaxed text-foreground/70">
             違反コンテンツの可能性がある投稿を運営に通報します。
-            運営は LEGAL.md §1 第15・16条 に沿って一次対応を行います。
+            Locore コミュニティガイドラインに沿って 24-72 時間以内に対応します。
+          </p>
+          <p className="mt-2 text-[12px] leading-relaxed text-foreground/50">
+            報告内容は運営チームのみが閲覧し、外部に共有されることはありません。
           </p>
         </header>
 

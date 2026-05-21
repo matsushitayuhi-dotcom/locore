@@ -1,6 +1,13 @@
 ﻿import Link from 'next/link';
 import { Logo } from './Logo';
 
+/**
+ * サイト全体のフッター。
+ *
+ * リンク先は全て実在ページにつながっている (旧版にあった
+ * /writers/wr_junko モック直書きや href="#" は廃止)。
+ * 法務 4 文書は /legal/* 配下に新設。
+ */
 export function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-border bg-surface-muted/40">
@@ -17,18 +24,19 @@ export function SiteFooter() {
         <FooterColumn
           title="サービス"
           links={[
-            { href: '/', label: 'フィード' },
+            { href: '/explore', label: '旅行者ホーム' },
+            { href: '/expat', label: '駐在員ホーム' },
+            { href: '/articles', label: '記事を読む' },
             { href: '/map', label: 'マップ' },
-            { href: '/trips', label: '旅程' },
-            { href: '/library', label: 'お気に入り' },
           ]}
         />
         <FooterColumn
           title="参加する"
           links={[
             { href: '/founders', label: 'Founders 枠（先着50人）' },
-            { href: '/writers/wr_junko', label: 'クリエイターとして' },
-            { href: '/collections/col_paris_spring_2026', label: '特集を読む' },
+            { href: '/become-writer', label: 'クリエイターになる' },
+            { href: '/residents', label: '住人を探す' },
+            { href: '/board', label: '新着ニュース' },
           ]}
         />
         <FooterColumn
@@ -36,9 +44,10 @@ export function SiteFooter() {
           links={[
             { href: '/about', label: 'Locore とは' },
             { href: '/contact', label: 'お問い合わせ' },
-            { href: '#', label: '利用規約' },
-            { href: '#', label: 'プライバシー' },
-            { href: '#', label: '特定商取引法' },
+            { href: '/legal/terms', label: '利用規約' },
+            { href: '/legal/privacy', label: 'プライバシー' },
+            { href: '/legal/commercial', label: '特定商取引法' },
+            { href: '/legal/cookies', label: 'Cookie ポリシー' },
           ]}
         />
       </div>

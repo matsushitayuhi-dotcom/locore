@@ -148,16 +148,33 @@ export async function getPublishedDbArticles(
  * @param id article UUID
  * @returns null（未検出 or 失敗）/ または記事＋著者＋スポット
  */
-export async function getDbArticleBundle(id: string): Promise<{
+export type ArticleBundleRegion = {
+  id: string;
+  slug: string | null;
+  nameJa: string;
+};
+
+export type ArticleBundleCountry = {
+  code: string | null;
+  nameJa: string;
+};
+
+export async function getDbArticleBundle(
+  id: string,
+  opts: { allowUnpublished?: boolean } = {},
+): Promise<{
   article: Article;
   writer: Writer | null;
   spots: Spot[];
   reviews: Review[];
   related: Article[];
+  region: ArticleBundleRegion | null;
+  country: ArticleBundleCountry | null;
 } | null> {
   // UUID v4 形式のみ DB を引く（mock の "art_001" などは早期 return）
   const uuidPat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidPat.test(id)) return null;
+  const { allowUnpublished = false } = opts;
 
   try {
     const db = getDb();
@@ -182,15 +199,39 @@ export async function getDbArticleBundle(id: string): Promise<{
         status: schema.articles.status,
         deletedAt: schema.articles.deletedAt,
         cityNameJa: schema.cities.nameJa,
+        citySlug: schema.cities.slug,
+        countryCode: schema.countries.code,
+        countryNameJa: schema.countries.nameJa,
       })
       .from(schema.articles)
       .leftJoin(schema.cities, eq(schema.articles.cityId, schema.cities.id))
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
+      )
       .where(eq(schema.articles.id, id))
       .limit(1);
 
     if (articleRows.length === 0) return null;
     const a = articleRows[0]!;
-    if (a.status !== 'published' || a.deletedAt) return null;
+    // プレビュー用途で allowUnpublished=true のときは draft/pending_review も返す。
+    // 削除済み (deleted_at) は常に弾く。
+    if (a.deletedAt) return null;
+    if (!allowUnpublished && a.status !== 'published') return null;
+
+    const region: ArticleBundleRegion | null = a.cityId
+      ? {
+          id: a.cityId,
+          slug: a.citySlug ?? null,
+          nameJa: a.cityNameJa ?? '',
+        }
+      : null;
+    const country: ArticleBundleCountry | null = a.countryNameJa
+      ? {
+          code: a.countryCode ?? null,
+          nameJa: a.countryNameJa,
+        }
+      : null;
 
     // 著者情報
     const writerRows = await db
@@ -467,7 +508,7 @@ export async function getDbArticleBundle(id: string): Promise<{
       spotIds: spots.map((s) => s.id),
     };
 
-    return { article, writer, spots, reviews, related };
+    return { article, writer, spots, reviews, related, region, country };
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn('[getDbArticleBundle] failed:', err);
