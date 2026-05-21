@@ -494,42 +494,55 @@ export function ArticleRenderer({
         </div>
       </section>
 
-      {/* Bottom related grid。PC のサイドカラムから本文の下に移動。
-          スマホ 1 列 / SM 2 列 / LG 3 列 / XL 4 列で並べる。*/}
+      {/* 関連記事 — グリッドではなく小型カードの横スクロールカルーセル。
+          1 カード w-[170px] の固定幅 + aspect-[4/3] サムネ。snap-x snap-mandatory で
+          スマホ指スワイプも PC のスクロールも気持ち良く止まる。 */}
       {related.length > 0 ? (
         <section className="mx-auto max-w-screen-xl px-4 pb-20 sm:px-6">
-          <h3
-            className="mb-5 text-[20px] font-semibold tracking-tight"
-          >
-            関連記事
-          </h3>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {related.map((a) => (
-              <Link
-                key={a.id}
-                href={`/articles/${a.id}`}
-                className="group flex flex-col overflow-hidden rounded-md border border-border bg-card transition hover:bg-muted"
-              >
-                <div className="relative aspect-[3/2] w-full overflow-hidden bg-muted">
-                  <Image
-                    src={a.coverImageUrl}
-                    alt={a.title}
-                    fill
-                    sizes="(min-width: 1280px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
-                    className="object-cover transition group-hover:scale-105"
-                  />
-                </div>
-                <div className="flex flex-1 flex-col gap-1 p-3">
-                  <p className="line-clamp-2 text-[13px] font-medium leading-snug">
-                    {a.title}
-                  </p>
-                  <p className="mt-auto text-[11px] text-foreground/50 tabular">
-                    ¥{a.priceJpy.toLocaleString('ja-JP')} ・ {a.area}
-                  </p>
-                </div>
-              </Link>
-            ))}
+          <div className="mb-4 flex items-baseline justify-between gap-3">
+            <h3
+              className="text-[20px] font-semibold tracking-tight"
+            >
+              関連記事
+            </h3>
+            <Link
+              href="/articles"
+              className="text-[12px] font-semibold text-primary-300 hover:underline"
+            >
+              すべての記事 →
+            </Link>
           </div>
+          <ul
+            className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {related.map((a) => (
+              <li key={a.id} className="snap-start">
+                <Link
+                  href={`/articles/${a.id}`}
+                  className="group flex w-[170px] flex-col overflow-hidden rounded-md border border-border bg-card transition hover:bg-muted"
+                >
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                    <Image
+                      src={a.coverImageUrl}
+                      alt={a.title}
+                      fill
+                      sizes="170px"
+                      className="object-cover transition group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1 p-2.5">
+                    <p className="line-clamp-2 text-[12px] font-medium leading-snug">
+                      {a.title}
+                    </p>
+                    <p className="mt-auto truncate text-[10px] text-foreground/50 tabular">
+                      {a.writerName ? `${a.writerName} ・ ` : ''}¥
+                      {a.priceJpy.toLocaleString('ja-JP')}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
     </main>

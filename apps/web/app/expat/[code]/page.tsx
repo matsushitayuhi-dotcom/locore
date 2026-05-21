@@ -8,7 +8,6 @@ import {
   Users,
   GraduationCap,
   HandHelping,
-  CalendarDays,
 } from 'lucide-react';
 import { listBoardPosts } from '@/lib/board/db';
 import { BoardWidget } from '@/components/BoardWidget';
@@ -163,25 +162,28 @@ export default async function ExpatCountryHomePage({ params }: Props) {
         />
       </div>
 
-      {/* 2. カテゴリピル列 — MixB / ジモティ風の 1 行横スクロール、上部に sticky 固定。
+      {/* 2. カテゴリピル列 — MixB / ジモティ風のコンパクト 1 行ナビ。
           SiteHeader (h-14, sticky top-0 z-30) の直下に張り付くため top-14 z-20。
-          ピルは min-w-[80px] のコンパクトサイズで、6 つを横スワイプで巡回できる。 */}
+          スマホ幅 (375px) で 6 つが横スクロールなしに 1 行に収まるよう、アイコンを
+          省略してテキストのみ、padding と font-size を絞った。sm 以上ではアイコン
+          付きの少しゆったりしたピルを復活させる。 */}
       <nav
         aria-label="コミュニティカテゴリ"
         className="sticky top-14 z-20 border-b border-border bg-background/85 backdrop-blur"
       >
         <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
-          <ul className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-3">
+          <ul className="flex justify-between gap-1.5 py-2 sm:justify-start sm:gap-3">
             {KINDS.map(({ kind, icon: Icon }) => (
-              <li key={kind} className="snap-start">
+              <li key={kind} className="min-w-0">
                 <Link
                   href={KIND_BASE_PATH[kind]}
-                  className="group flex min-w-[80px] flex-col items-center gap-1 rounded-xl bg-card px-3 py-2 text-center ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:min-w-[96px]"
+                  className="group flex items-center justify-center rounded-full bg-card px-2 py-1.5 text-center ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:flex-col sm:gap-1 sm:rounded-xl sm:px-3 sm:py-2"
                 >
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950 sm:h-8 sm:w-8">
-                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  {/* アイコンはスマホでは省略、sm 以上のみ表示 */}
+                  <span className="hidden sm:inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950">
+                    <Icon className="h-4 w-4" />
                   </span>
-                  <p className="text-[11px] font-semibold text-foreground sm:text-[12px]">
+                  <p className="whitespace-nowrap text-[11px] font-semibold text-foreground sm:text-[12px]">
                     {KIND_LABEL[kind]}
                   </p>
                 </Link>
@@ -212,7 +214,8 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           </Link>
         </div>
 
-        {/* 4. 新着ニュース掲示板 */}
+        {/* 4. 新着ニュース掲示板 — 「📅 カレンダー」「すべて見る →」は BoardWidget の
+             ヘッダ内に表示。外側のセクションヘッダにはリンクを置かず重複を防ぐ。 */}
         <section>
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <div>
@@ -223,23 +226,11 @@ export default async function ExpatCountryHomePage({ params }: Props) {
                 今日と明日の暮らし情報
               </h2>
             </div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/calendar"
-                className="inline-flex items-center gap-0.5 text-[12px] font-semibold text-primary-300 hover:underline"
-              >
-                <CalendarDays className="h-3 w-3" />
-                カレンダー
-              </Link>
-              <Link
-                href="/board?audience=resident"
-                className="text-[12px] font-semibold text-primary-300 hover:underline"
-              >
-                すべて見る →
-              </Link>
-            </div>
           </div>
-          <BoardWidget posts={residentNews} />
+          <BoardWidget
+            posts={residentNews}
+            allHref="/board?audience=resident"
+          />
         </section>
 
         {/* 5. 提供サービス — 駐在員向け。空のときはセクションごと出さない。 */}

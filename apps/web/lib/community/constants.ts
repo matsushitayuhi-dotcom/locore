@@ -26,10 +26,13 @@ export type CommunityKind = (typeof COMMUNITY_KINDS)[number];
 export const KIND_LABEL: Record<CommunityKind, string> = {
   job: '求人',
   apartment: 'アパート',
-  marketplace: '売ります・買います',
+  // スマホ幅でカテゴリピル列が 1 行に収まるよう短縮。詳細ページの h1 / kicker は
+  // 各 page.tsx 側でフルラベル「売ります・買います」を直接書いている。
+  marketplace: '売買',
   // DB の kind は 'group' のまま (English ID は不変) だが、UI 表示は「イベント」に統一。
   group: 'イベント',
-  lesson: '教えます・習います',
+  // 同上。/lessons の h1 / kicker は「教えます・習います」をフル表示。
+  lesson: '習い事',
   mutual_aid: '助け合い',
 };
 

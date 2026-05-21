@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, CalendarDays } from 'lucide-react';
 import type { BoardPostListItem } from '@/lib/board/db';
 import {
   BOARD_CATEGORY_LABEL,
@@ -33,9 +33,21 @@ const CATEGORY_LABEL_COLOR: Record<BoardCategory, string> = {
 export function BoardWidget({
   posts,
   limit = DEFAULT_LIMIT,
+  calendarHref = '/calendar',
+  allHref = '/board',
+  showLinks = true,
 }: {
   posts: BoardPostListItem[];
   limit?: number;
+  /** ヘッダの「📅 カレンダー」リンク先 (既定: /calendar) */
+  calendarHref?: string;
+  /** ヘッダの「すべて見る →」リンク先 (既定: /board) */
+  allHref?: string;
+  /**
+   * ヘッダ右側の「📅 カレンダー」「すべて見る →」を表示するか。
+   * 掲示板が運用されていない地域では false にして消す。
+   */
+  showLinks?: boolean;
 }) {
   const visible = posts.slice(0, limit);
   if (visible.length === 0) {
@@ -47,15 +59,28 @@ export function BoardWidget({
   }
   return (
     <div className="overflow-hidden rounded-lg bg-card ring-1 ring-border">
-      <header className="flex items-center justify-between border-b border-border bg-primary-500/10 px-3 py-1.5">
+      <header className="flex items-center justify-between gap-2 border-b border-border bg-primary-500/10 px-3 py-1.5">
         <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary-300">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
           新着ニュース
         </p>
-        {/*
-          NOTE: 「すべて見る →」「📅 カレンダー」は内側に持たない。
-          重複を避けるため呼び出し側の page.tsx のセクションヘッダで描画する。
-        */}
+        {showLinks ? (
+          <div className="flex items-center gap-3">
+            <Link
+              href={calendarHref}
+              className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary-300 hover:underline"
+            >
+              <CalendarDays className="h-3 w-3" />
+              カレンダー
+            </Link>
+            <Link
+              href={allHref}
+              className="text-[11px] font-semibold text-primary-300 hover:underline"
+            >
+              すべて見る →
+            </Link>
+          </div>
+        ) : null}
       </header>
       <ul className="divide-y divide-border">
         {visible.map((p) => {
