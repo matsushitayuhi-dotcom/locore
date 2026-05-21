@@ -8,13 +8,13 @@ import {
   Users,
   GraduationCap,
   HandHelping,
-  Search,
   CalendarDays,
 } from 'lucide-react';
 import { listBoardPosts } from '@/lib/board/db';
 import { BoardWidget } from '@/components/BoardWidget';
 import { ArticleScrollSection } from '@/components/ArticleScrollSection';
 import { CommunityCard } from '@/components/community/CommunityCard';
+import { SearchBox } from '@/components/SearchBox';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { listCommunityPosts } from '@/lib/community/db';
@@ -43,12 +43,15 @@ export async function generateMetadata({ params }: Props) {
 /**
  * 駐在員向け国別ホーム (/expat/[code])。
  *
- * 構成:
- *   1. コミュニティカテゴリ（6 つ）を最上部のタイル列で
- *   2. カテゴリごとの新着投稿 4 件を Airbnb 風のカードグリッドで
- *   3. 新着ニュース掲示板（BoardWidget）
- *   4. 駐在者向け記事（横スクロール）
- *   5. Founders 枠
+ * 構成 (MixB / ジモティ風):
+ *   1. 検索バー（最上部、コミュニティ + 住人を横断検索）
+ *   2. カテゴリピル列（6 つ、横スクロール、sticky で上部固定）
+ *   3. 国名見出し（{国名} の駐在員ホーム）
+ *   4. 新着ニュース掲示板（BoardWidget）
+ *   5. 提供サービス（駐在員向け、ServiceCarousel）
+ *   6. カテゴリごとの新着投稿 4 件（横スクロールカルーセル）
+ *   7. 駐在者向け記事
+ *   8. Founders 枠
  *
  * 国別フィルタリングについて:
  *   現状の listBoardPosts / listCommunityPosts / getFeaturedServices は
@@ -150,9 +153,46 @@ export default async function ExpatCountryHomePage({ params }: Props) {
 
   return (
     <main className="bg-background">
-      <div className="mx-auto max-w-screen-xl space-y-10 px-4 py-8 sm:space-y-14 sm:px-6 sm:py-12">
-        {/* 国名のごく軽いヘッダ（旧 /expat には無かったが、国別になったので
-            「今どの国を見ているか」を明示する） */}
+      {/* 1. 検索バー — 最上部。/search の駐在員モード (cookie ベース) で
+          コミュニティ投稿 + 住人を横断検索。showInToggle=false: タイトル/本文の
+          切替は記事検索用なので、駐在員モードでは隠す。 */}
+      <div className="mx-auto max-w-screen-xl px-4 pt-4 sm:px-6 sm:pt-6">
+        <SearchBox
+          placeholder="コミュニティ投稿・住人を検索"
+          showInToggle={false}
+        />
+      </div>
+
+      {/* 2. カテゴリピル列 — MixB / ジモティ風の 1 行横スクロール、上部に sticky 固定。
+          SiteHeader (h-14, sticky top-0 z-30) の直下に張り付くため top-14 z-20。
+          ピルは min-w-[80px] のコンパクトサイズで、6 つを横スワイプで巡回できる。 */}
+      <nav
+        aria-label="コミュニティカテゴリ"
+        className="sticky top-14 z-20 border-b border-border bg-background/85 backdrop-blur"
+      >
+        <div className="mx-auto max-w-screen-xl px-4 sm:px-6">
+          <ul className="flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden sm:gap-3">
+            {KINDS.map(({ kind, icon: Icon }) => (
+              <li key={kind} className="snap-start">
+                <Link
+                  href={KIND_BASE_PATH[kind]}
+                  className="group flex min-w-[80px] flex-col items-center gap-1 rounded-xl bg-card px-3 py-2 text-center ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:min-w-[96px]"
+                >
+                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950 sm:h-8 sm:w-8">
+                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  </span>
+                  <p className="text-[11px] font-semibold text-foreground sm:text-[12px]">
+                    {KIND_LABEL[kind]}
+                  </p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </nav>
+
+      <div className="mx-auto max-w-screen-xl space-y-6 px-4 py-4 sm:space-y-10 sm:px-6 sm:py-8">
+        {/* 3. 国名のヘッダ（hero タイトル） */}
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
@@ -172,48 +212,7 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           </Link>
         </div>
 
-        {/* 1. コミュニティ掲示板カテゴリ — 最上部 */}
-        <section aria-labelledby="board-nav-title">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                コミュニティ掲示板
-              </p>
-              <h2
-                id="board-nav-title"
-                className="mt-1 text-[20px] font-semibold tracking-tight sm:text-[24px]"
-              >
-                住人どうしで、直接つながる
-              </h2>
-            </div>
-            <Link
-              href="/residents"
-              className="inline-flex items-center gap-1 rounded-full bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
-            >
-              <Search className="h-3 w-3" />
-              住人を探す
-            </Link>
-          </div>
-          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6 sm:gap-3">
-            {KINDS.map(({ kind, icon: Icon }) => (
-              <li key={kind}>
-                <Link
-                  href={KIND_BASE_PATH[kind]}
-                  className="group flex flex-col items-center gap-1.5 rounded-xl bg-card px-2 py-3 text-center ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300 sm:gap-2 sm:py-4"
-                >
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-500/10 text-primary-300 transition group-hover:bg-primary-500 group-hover:text-neutral-950 sm:h-11 sm:w-11">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </span>
-                  <p className="text-[11px] font-bold text-foreground sm:text-[12px]">
-                    {KIND_LABEL[kind]}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* 2. 新着ニュース掲示板 (カテゴリタイルの直下) */}
+        {/* 4. 新着ニュース掲示板 */}
         <section>
           <div className="mb-3 flex items-baseline justify-between gap-3">
             <div>
@@ -243,7 +242,7 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           <BoardWidget posts={residentNews} />
         </section>
 
-        {/* 2.5 提供サービス — 駐在員向け。空のときはセクションごと出さない。 */}
+        {/* 5. 提供サービス — 駐在員向け。空のときはセクションごと出さない。 */}
         {residentServices.length > 0 ? (
           <section aria-labelledby="resident-services-title">
             <div className="mb-3 flex items-baseline justify-between gap-3">
@@ -263,7 +262,7 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           </section>
         ) : null}
 
-        {/* 3. カテゴリ別の新着 — 横スクロールのカルーセル */}
+        {/* 6. カテゴリ別の新着 — 横スクロールのカルーセル */}
         {KINDS.map(({ kind }) => {
           const posts = postsByKind[kind];
           if (posts.length === 0) return null;
@@ -316,7 +315,7 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           );
         })}
 
-        {/* 4. 駐在者向け記事 */}
+        {/* 7. 駐在者向け記事 */}
         {expatArticles.length > 0 ? (
           <section>
             <div className="mb-3 flex items-baseline justify-between gap-3">
@@ -341,7 +340,7 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           </section>
         ) : null}
 
-        {/* 5. Founders 枠 */}
+        {/* 8. Founders 枠 */}
         <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500/15 via-card to-card p-6 shadow-sm ring-1 ring-border sm:p-10">
           <div
             aria-hidden

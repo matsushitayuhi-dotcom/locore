@@ -114,7 +114,7 @@ type Props = {
  * articleType ごとにステップを動的に組み立てる。Step 0 (カテゴリ選択) は前後
  * ナビゲーション対象外で、選択完了で自動的に 1 へ抜ける。
  *
- * - itinerary (旅程プラン): category → itinerary → spots → photos → titleBody → publish
+ * - itinerary (旅程プラン): category → spots → itinerary → photos → titleBody → publish
  * - spot_guide (スポット紹介): category → spots → photos → titleBody → publish
  * - expat_info (その他):    category → photos → titleBody → publish
  *
@@ -324,14 +324,15 @@ export function WizardShell({
    * #1 / #3: ステップ順を articleType に応じて動的に算出する。
    * 'category' は前後ナビゲーション対象外（カテゴリを選ぶと自動で次へ抜ける）。
    *
-   * - itinerary (旅程プラン): itinerary → spots → photos → titleBody → publish
+   * - itinerary (旅程プラン): spots → itinerary → photos → titleBody → publish
+   *   旅程ブロックでスポットを参照するため、先にスポット登録 → 次に旅程組み立ての順とする。
    * - spot_guide (スポット紹介): spots → photos → titleBody → publish
    * - expat_info (その他):    photos → titleBody → publish
    */
   const stepSequence: StepKind[] = useMemo(
     () =>
       isItinerary
-        ? ['itinerary', 'spots', 'photos', 'titleBody', 'publish']
+        ? ['spots', 'itinerary', 'photos', 'titleBody', 'publish']
         : isExpatInfo
           ? ['photos', 'titleBody', 'publish']
           : ['spots', 'photos', 'titleBody', 'publish'],
@@ -628,7 +629,7 @@ export function WizardShell({
             // 選択した articleType の先頭ステップへ抜ける
             const nextSeq: StepKind[] =
               t === 'itinerary'
-                ? ['itinerary', 'spots', 'photos', 'titleBody', 'publish']
+                ? ['spots', 'itinerary', 'photos', 'titleBody', 'publish']
                 : t === 'expat_info'
                   ? ['photos', 'titleBody', 'publish']
                   : ['spots', 'photos', 'titleBody', 'publish'];
@@ -1346,14 +1347,9 @@ function Step2Photos({
 // =============================================================================
 // Step 4: 公開準備（メタ + カバー + 動画 + 公開）
 // =============================================================================
-const ARTICLE_TYPE_OPTIONS: {
-  value: 'spot_guide' | 'itinerary' | 'expat_info';
-  label: string;
-}[] = [
-  { value: 'spot_guide', label: 'スポット紹介' },
-  { value: 'itinerary', label: '旅程プラン' },
-  { value: 'expat_info', label: '駐在者情報' },
-];
+// 2026-05 改修 (#2): 公開準備内の「記事の種類」切替 UI を撤去したため
+// ARTICLE_TYPE_OPTIONS 定数も削除。記事種類の選択肢は Step0CategorySelect 側で
+// 独自にラベル付けしているので、ここから参照する必要はない。
 
 function Step4Publish({
   basic,
@@ -1430,46 +1426,15 @@ function Step4Publish({
         </p>
       </header>
 
-      {/* 記事タイプ + 本文スタイル */}
-      <section className="space-y-4 rounded-md bg-card p-4 ring-1 ring-border sm:p-6">
-        <h3 className="text-[14px] font-semibold tracking-tight">
-          記事の種類とスタイル
-        </h3>
+      {/*
+        2026-05 改修 (#2): 公開準備ステップから「記事の種類」切替 UI を撤去。
+        記事の種類は Step 0 (カテゴリ選択) で確定済みなので、ここで再度切り替える
+        UI は不要。誤って選んだ場合は「戻る」で Step 0 まで遡って変更する。
 
-        <div>
-          <p className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/55">
-            記事の種類 <span className="text-danger-500">*</span>
-          </p>
-          <div role="radiogroup" className="flex flex-wrap gap-1.5">
-            {ARTICLE_TYPE_OPTIONS.map((opt) => {
-              const on = basic.articleType === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  onClick={() =>
-                    onChangeBasic({ ...basic, articleType: opt.value })
-                  }
-                  className={
-                    'rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
-                    (on
-                      ? 'bg-primary-500 text-neutral-950'
-                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-                  }
-                >
-                  {opt.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* #4 改修 (2026-05): 本文スタイル（インスタ / クラシック）選択 UI は撤去。
-            すべての新規記事は classic として動き、写真は Step 2 のフォト日記
-            セクションで追加する。既存の photo_journal 記事はそのまま編集される。 */}
-      </section>
+        本文スタイル（インスタ / クラシック）選択 UI も以前の改修で撤去済み。
+        すべての新規記事は classic として動き、写真は Step 2 のフォト日記
+        セクションで追加する。既存の photo_journal 記事はそのまま編集される。
+      */}
 
       {/* 価格 / 都市 / 所要時間 / タグ */}
       <BasicMetaSection

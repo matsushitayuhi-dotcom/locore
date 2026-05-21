@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, MapIcon, Bookmark, MessageCircle, User } from '@locore/ui/icons';
+import { Compass, MapIcon, Bookmark, Search } from '@locore/ui/icons';
 import type { LucideIcon } from '@locore/ui/icons';
 
 /**
  * モバイル下部タブナビゲーション。
  *
  * - md 未満で固定表示、md 以上では非表示（PC は SiteHeader のインラインナビ）
- * - 5 タブ固定：フィード / マップ / 保存 / メッセージ / プロフィール
+ * - 4 タブ固定：ホーム / 検索 / マップ / 保存
  * - 安全エリア対応（iOS のホームバーに被らないよう env(safe-area-inset-bottom) を加算）
  * - 認証ページ・記事編集画面など、ナビを出したくない場所では非表示
  */
@@ -35,6 +35,12 @@ const makeTabs = (homeHref: '/explore' | '/expat'): Tab[] => [
       p.startsWith('/country/'),
   },
   {
+    href: '/search',
+    label: '検索',
+    icon: Search,
+    match: (p) => p.startsWith('/search'),
+  },
+  {
     href: '/map',
     label: 'マップ',
     icon: MapIcon,
@@ -49,21 +55,6 @@ const makeTabs = (homeHref: '/explore' | '/expat'): Tab[] => [
       p.startsWith('/purchases') ||
       p.startsWith('/trips'),
   },
-  {
-    href: '/chat',
-    label: 'メッセージ',
-    icon: MessageCircle,
-    match: (p) => p.startsWith('/chat'),
-  },
-  {
-    href: '/settings/profile',
-    label: 'プロフィール',
-    icon: User,
-    match: (p) =>
-      p.startsWith('/settings') ||
-      p.startsWith('/writer') ||
-      p.startsWith('/writers'),
-  },
 ];
 
 const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
@@ -77,7 +68,8 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
 ];
 
 export function BottomNav({
-  unreadChatCount = 0,
+  // 後方互換のため受け取るが、4 タブ構成ではメッセージタブが無くなったため未使用
+  unreadChatCount: _unreadChatCount = 0,
   homeHref = '/explore',
 }: {
   unreadChatCount?: number;
@@ -99,7 +91,6 @@ export function BottomNav({
         {TABS.map((t) => {
           const isActive = t.match(pathname);
           const Icon = t.icon;
-          const badge = t.href === '/chat' ? unreadChatCount : 0;
           return (
             <li key={t.href} className="flex-1">
               <Link
@@ -119,11 +110,6 @@ export function BottomNav({
                     fill={isActive ? 'currentColor' : 'none'}
                     fillOpacity={isActive ? 0.15 : 0}
                   />
-                  {badge > 0 ? (
-                    <span className="absolute -right-2 -top-1 inline-flex min-w-[16px] items-center justify-center rounded-full bg-accent-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-background">
-                      {badge > 99 ? '99+' : badge}
-                    </span>
-                  ) : null}
                 </div>
                 <span
                   className={
