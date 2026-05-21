@@ -426,3 +426,82 @@
 .locore-map-canvas a[href^="https://maps.google.com/maps"] {
   display: none !important;
 }
+
+/*
+ * Notion ライク本文エディタ (2026-05 改修)
+ * ----------------------------------------------------------------
+ * `.locore-editor` クラスを付けた TipTap エディタ内部の ProseMirror に対し、
+ * 既存の `prose` クラスの大きすぎる文字サイズを上書きしてコンパクトに整える。
+ * 仕上がりの記事閲覧側 (`.prose-locore`) は触らない。
+ *
+ * - 本文 (p / li / blockquote): 15px
+ * - 行間: 1.75
+ * - 見出し H1=22 / H2=18 / H3=16
+ * - 余計な top/bottom margin を縮める
+ */
+.locore-editor .ProseMirror {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--color-neutral-900);
+}
+.locore-editor .ProseMirror > * + * {
+  margin-top: 0.6em;
+}
+.locore-editor .ProseMirror p,
+.locore-editor .ProseMirror li,
+.locore-editor .ProseMirror blockquote {
+  font-size: 15px;
+  line-height: 1.75;
+  margin-top: 0;
+  margin-bottom: 0.4em;
+}
+.locore-editor .ProseMirror h1 {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin-top: 1em;
+  margin-bottom: 0.35em;
+  letter-spacing: -0.01em;
+}
+.locore-editor .ProseMirror h2 {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-top: 0.9em;
+  margin-bottom: 0.3em;
+  letter-spacing: -0.005em;
+}
+.locore-editor .ProseMirror h3 {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-top: 0.8em;
+  margin-bottom: 0.25em;
+}
+.locore-editor .ProseMirror ul,
+.locore-editor .ProseMirror ol {
+  margin: 0.3em 0 0.4em 1.25em;
+  padding-left: 0.4em;
+}
+.locore-editor .ProseMirror li { margin-bottom: 0.15em; }
+.locore-editor .ProseMirror blockquote {
+  padding: 0.5em 0.8em;
+  margin: 0.5em 0;
+}
+.locore-editor .ProseMirror pre {
+  font-size: 13px;
+  padding: 0.7em 0.9em;
+  margin: 0.6em 0;
+}
+.locore-editor .ProseMirror code { font-size: 0.92em; }
+.locore-editor .ProseMirror img {
+  margin: 0.6em 0;
+  border-radius: 6px;
+}
+.locore-editor .ProseMirror hr { margin: 1em 0; }
+.locore-editor .ProseMirror table { font-size: 14px; }
+
+/* キーボード追従ツールバー: 横スクロールのスクロールバーを隠す（タッチで横にスワイプ可） */
+.locore-mobile-toolbar { -webkit-overflow-scrolling: touch; }
+.locore-mobile-toolbar::-webkit-scrollbar { display: none; }
+.locore-mobile-toolbar { scrollbar-width: none; }

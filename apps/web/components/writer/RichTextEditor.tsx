@@ -26,6 +26,7 @@ import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { toast } from 'sonner';
 import { uploadImage } from '@/lib/storage/uploadImage';
+import { MobileEditorToolbar } from './MobileEditorToolbar';
 
 /**
  * クリップボード / ドロップから画像 File を取り出すユーティリティ。
@@ -878,8 +879,13 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
     content: initialHtml,
     editorProps: {
       attributes: {
+        // 2026-05 Notion ライク改修:
+        //  - prose の文字サイズは globals.css の `.locore-editor` で上書き (15px)
+        //  - スマホは min-h を 60vh、PC 70vh に拡張して書くスペースを広く取る
+        //  - キーボード追従ツールバー (h≈48px) と被らないように padding-bottom を厚めに
+        //  - padding は px-3 py-2 で詰めて画面横幅を活かす
         class:
-          'prose prose-sm sm:prose-base max-w-none rounded-md border border-border bg-card px-4 py-3 min-h-[420px] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1',
+          'locore-editor prose max-w-none rounded-md border border-border bg-card px-3 py-2 pb-16 min-h-[60vh] sm:min-h-[70vh] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1',
       },
       // クリップボード画像ペースト：cmd/ctrl+V で貼り付けた image を Supabase に上げて挿入
       handlePaste(view, event) {
@@ -959,6 +965,8 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
           onChange={(e) => onPickFile(e.target.files)}
         />
       </div>
+      {/* スマホ用キーボード追従ツールバー (PC では非表示) */}
+      <MobileEditorToolbar editor={editor} onPickImage={pickImage} />
       <p className="text-[11px] text-foreground/40">
         ヒント: 行頭で <kbd className="rounded-sm border border-border bg-muted px-1 text-[10px]">/</kbd> を打つとブロック挿入メニュー。
         文章を選択すると Bold / Italic / Link が浮上します。

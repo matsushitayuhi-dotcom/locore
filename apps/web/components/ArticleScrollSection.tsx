@@ -85,6 +85,8 @@ export function ArticleScrollSection({
           'sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 ' +
           'md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
         }
+        // 横スワイプ時に縦方向の慣性スクロールが入らないように pan-x で限定
+        style={{ touchAction: 'pan-x' }}
       >
         {sliced.map((article) => (
           <div

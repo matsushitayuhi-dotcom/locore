@@ -102,7 +102,10 @@ export async function CompactFilterBar({
 
   return (
     <div
-      className="sticky top-14 z-20 -mx-4 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0"
+      // SiteHeader (h-14=56px) + CommunityNav (~36px = py-1.5 + content) の下に積む。
+      // top-24 = 96px。CommunityNav が sticky top-14 で、その下に来る位置。
+      // 旧 top-14 だと CommunityNav と重なって CompactFilterBar が「見切れる」問題が出た。
+      className="sticky top-[88px] z-10 -mx-4 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0"
       data-community-filterbar
     >
       <div className="flex flex-wrap items-center gap-1.5">

@@ -25,17 +25,18 @@ export function TitleBodySection({
 }: Props) {
   return (
     <section
-      className="space-y-5 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
+      // 2026-05 改修: スマホで縦長になりすぎる問題への対応で外側余白を圧縮
+      className="space-y-3 rounded-md bg-card p-2 ring-1 ring-border sm:space-y-5 sm:p-6"
       aria-labelledby="title-body-section"
     >
       <header>
         <h3
           id="title-body-section"
-          className="text-[15px] font-semibold tracking-tight"
+          className="text-[14px] font-semibold tracking-tight sm:text-[15px]"
         >
           本文を書く
         </h3>
-        <p className="mt-1 text-[12px] text-foreground/60">
+        <p className="mt-1 text-[11px] text-foreground/60 sm:text-[12px]">
           無料パートは購入前に読者が読める部分。有料パートは購入後に解放されます。
         </p>
       </header>

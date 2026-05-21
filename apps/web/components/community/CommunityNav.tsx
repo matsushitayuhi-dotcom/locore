@@ -24,7 +24,11 @@ export function CommunityNav({ active }: { active: CommunityKind }) {
   return (
     <nav
       aria-label="コミュニティ"
-      className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+      // sticky top-14 (SiteHeader h-14 = 56px の真下)。
+      // CompactFilterBar は更にこの下 (top-[6.5rem] = 104px) に積み重なる。
+      // touch-action: pan-x で横スワイプ時の縦方向のぐらつきを防止。
+      className="sticky top-14 z-20 -mx-4 overflow-x-auto bg-background/95 px-4 py-1.5 backdrop-blur sm:mx-0 sm:px-0"
+      style={{ touchAction: 'pan-x' }}
     >
       <ul className="flex gap-2 sm:flex-wrap">
         {COMMUNITY_KINDS.map((k) => {

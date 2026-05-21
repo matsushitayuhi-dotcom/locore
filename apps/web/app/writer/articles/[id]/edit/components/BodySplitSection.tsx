@@ -26,16 +26,17 @@ export function BodySplitSection({
   onChangePaid,
 }: Props) {
   return (
-    <div className="space-y-5">
-      <div className="rounded-md border border-border bg-primary-500/10 px-4 py-3 text-[12px] text-primary-300">
+    // 2026-05 改修: スマホでの縦余白を圧縮
+    <div className="space-y-3 sm:space-y-5">
+      <div className="rounded-md border border-border bg-primary-500/10 px-3 py-2 text-[11px] text-primary-300 sm:px-4 sm:py-3 sm:text-[12px]">
         <p className="font-semibold">本文は 2 段に分かれています</p>
         <p className="mt-1 text-primary-300/80">
           上の「無料プレビュー」は購入前の読者にも表示されます。下の「有料部分」は購入後にだけ解放されます（空のままにすると、無料プレビューの後半を自動的に有料扱いにします）。
         </p>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-[13px] font-medium text-foreground/80">
+      <div className="space-y-1.5 sm:space-y-2">
+        <div className="flex items-center gap-2 text-[12px] font-medium text-foreground/80 sm:text-[13px]">
           <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary-500/15 text-[11px] text-primary-300">
             無
           </span>
@@ -44,8 +45,8 @@ export function BodySplitSection({
         <BodyEditorSection value={bodyFree} onChange={onChangeFree} />
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-[13px] font-medium text-foreground/80">
+      <div className="space-y-1.5 sm:space-y-2">
+        <div className="flex items-center gap-2 text-[12px] font-medium text-foreground/80 sm:text-[13px]">
           <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary-50 text-[11px] text-secondary-700">
             有
           </span>

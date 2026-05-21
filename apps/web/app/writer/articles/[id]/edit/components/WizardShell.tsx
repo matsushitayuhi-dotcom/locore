@@ -1056,15 +1056,16 @@ function Step4TitleBody({
   stepNumber: number;
 }) {
   return (
-    <div className="space-y-4 sm:space-y-6">
+    // 2026-05 Notion ライク改修: スマホで縦長になりすぎないよう、外側余白を圧縮
+    <div className="space-y-3 sm:space-y-6">
       <header className="space-y-1">
-        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300 sm:text-[11px]">
           ステップ {stepNumber}
         </p>
-        <h2 className="text-[22px] font-bold tracking-tight">
+        <h2 className="text-[18px] font-bold tracking-tight sm:text-[22px]">
           タイトルと本文
         </h2>
-        <p className="text-[12px] text-foreground/65">
+        <p className="hidden text-[12px] text-foreground/65 sm:block">
           スポット・写真を踏まえて、タイトルと本文を仕上げます。本文中で
           <kbd className="mx-1 rounded-sm border border-border bg-muted px-1 text-[10px]">/</kbd>
           を打つと、見出し・画像・YouTube・スポットカードなどの挿入メニューが開きます。
@@ -1072,7 +1073,7 @@ function Step4TitleBody({
       </header>
 
       {/* タイトル */}
-      <section className="space-y-4 rounded-md bg-card p-4 ring-1 ring-border sm:p-6">
+      <section className="space-y-3 rounded-md bg-card p-2 ring-1 ring-border sm:space-y-4 sm:p-6">
         <div>
           <label
             htmlFor="wz-title"
@@ -1087,7 +1088,7 @@ function Step4TitleBody({
             onChange={(e) => onChangeTitle(e.target.value || '新しい記事')}
             maxLength={200}
             placeholder="記事のタイトル"
-            className="h-14 w-full rounded-md border border-border bg-background px-3 text-[20px] font-bold tracking-tight focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none sm:text-[22px]"
+            className="h-11 w-full rounded-md border border-border bg-background px-3 text-[17px] font-bold tracking-tight focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none sm:h-14 sm:text-[22px]"
           />
         </div>
       </section>

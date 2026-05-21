@@ -98,9 +98,10 @@ export function BodyEditorSection({ value, onChange }: Props) {
   );
 
   return (
-    <section className="space-y-3 rounded-md border border-border bg-card p-5 sm:p-6" aria-labelledby="body-section-title">
+    // 2026-05 Notion ライク改修: スマホで余白を詰めて本文エリアを最大化
+    <section className="space-y-2 rounded-md border border-border bg-card p-2 sm:space-y-3 sm:p-5" aria-labelledby="body-section-title">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 id="body-section-title" className="text-[15px] font-medium tracking-tight">
+        <h3 id="body-section-title" className="text-[13px] font-medium tracking-tight sm:text-[15px]">
           本文
         </h3>
       </div>

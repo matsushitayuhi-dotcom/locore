@@ -37,7 +37,9 @@ export function CountryCarousel({ countries }: { countries: CountryListItem[] })
       <div
         className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2 scrollbar-thin sm:px-6"
         // iOS / Android のスムースで惰性のあるパンを有効化
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        // touchAction pan-x で横スワイプ時に縦方向の慣性スクロールが入らないようにし、
+        // 「カルーセル写真を動かす時に上下にぐらつく」を防止
+        style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}
       >
         {head.map((c) => (
           <div

@@ -548,6 +548,7 @@ export function ArticleRenderer({
           </div>
           <ul
             className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            style={{ touchAction: 'pan-x' }}
           >
             {related.map((a) => (
               <li key={a.id} className="snap-start">
