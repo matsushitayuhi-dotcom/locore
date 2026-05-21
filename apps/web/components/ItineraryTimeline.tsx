@@ -1,18 +1,48 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Clock, MapPin, Lock } from '@locore/ui/icons';
+import {
+  Footprints,
+  TrainFront,
+  Train,
+  Bus,
+  Car,
+  Bike,
+  ArrowDown,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { ArticleItineraryBlock, Spot } from '../lib/mock';
 import { Purchases } from '../lib/storage/local';
 
-const TRANSPORT_LABEL: Record<string, string> = {
+type TransportKey =
+  | 'walk'
+  | 'metro'
+  | 'bus'
+  | 'taxi'
+  | 'bike'
+  | 'train'
+  | 'other';
+
+const TRANSPORT_LABEL: Record<TransportKey, string> = {
   walk: '徒歩',
   metro: 'メトロ',
   bus: 'バス',
   train: '電車',
   taxi: 'タクシー',
   bike: '自転車',
-  other: 'その他',
+  other: '移動',
+};
+
+const TRANSPORT_ICON: Record<TransportKey, LucideIcon> = {
+  walk: Footprints,
+  metro: TrainFront,
+  bus: Bus,
+  train: Train,
+  taxi: Car,
+  bike: Bike,
+  other: ArrowDown,
 };
 
 /** 分を「X時間Y分」形式に。60 分未満は「Y分」のみ。0/負は空文字。 */
@@ -34,10 +64,16 @@ type Props = {
 };
 
 /**
- * 旅程プラン記事の構造化タイムライン。
+ * 旅程プラン記事の構造化タイムライン（縦タイムライン版）。
  *
- * 「09:00 → カフェ → 徒歩 10 分 → 10:30 美術館 → ...」のように、
- * ブロックの間に移動手段ピルを挟んで時系列に並べる。
+ * スポットを大きめのカードで縦に並べ、カードとカードの間を点線で繋ぐ。
+ * 点線の横に「徒歩 15 分」「メトロ 8 分 (Line 4)」のような移動手段ピルを置く。
+ *
+ * 未購入時は:
+ *   - スポット名はマスク（??????）
+ *   - 写真は blur + grayscale
+ *   - 時刻 / 移動手段 / 所要時間は表示（流れだけは見える）
+ *   - 末尾に「購入で全公開」CTA を出す
  */
 export function ItineraryTimeline({
   articleId,
@@ -57,7 +93,7 @@ export function ItineraryTimeline({
 
   return (
     <section className="rounded-2xl bg-card p-5 ring-1 ring-border sm:p-6">
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
@@ -73,91 +109,176 @@ export function ItineraryTimeline({
         ) : null}
       </div>
 
-      <ol className="space-y-3">
+      <ol className="relative">
         {blocks.map((b, idx) => {
           const isLast = idx === blocks.length - 1;
           const spot = b.spotId ? spotsById.get(b.spotId) : undefined;
+          const isFreeBlock = !spot;
           const placeName = unlocked
             ? (spot?.name ?? b.freeName ?? 'スポット未設定')
-            : '?????????';
+            : '★★★★★★★';
           const address = spot?.address;
+          const photo = spot?.photoUrls?.[0];
+
+          const transportKey = (b.transportToNext ?? null) as TransportKey | null;
+          const TransportIcon = transportKey
+            ? TRANSPORT_ICON[transportKey] ?? ArrowDown
+            : ArrowDown;
+          const showConnector =
+            !isLast &&
+            (b.transportToNext || b.travelMinutesAfter || b.transportNote);
 
           return (
-            <li key={b.id ?? idx}>
-              <div className="flex gap-3">
-                {/* 時刻列 */}
-                <div className="w-16 shrink-0 text-right">
-                  <p className="text-[13px] font-bold tabular text-primary-300">
+            <li key={b.id ?? idx} className="relative">
+              {/* ============ スポットカード ============ */}
+              <div
+                className={
+                  'relative overflow-hidden rounded-xl border border-border bg-background ' +
+                  'border-l-[3px] border-l-primary-500 ' +
+                  (isFreeBlock ? 'border-l-foreground/20 ' : '') +
+                  'shadow-sm'
+                }
+              >
+                {/* 時刻バッジ。カード上部に小さく */}
+                <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-4 py-2">
+                  <p className="inline-flex items-center gap-1.5 text-[12px] font-bold tabular text-primary-300">
+                    <Clock className="h-3.5 w-3.5" />
                     {b.startTime}
+                    {b.endTime ? (
+                      <span className="text-foreground/50">
+                        {' '}
+                        – {b.endTime}
+                      </span>
+                    ) : null}
                   </p>
-                  {b.endTime ? (
-                    <p className="text-[10px] tabular text-foreground/50">
-                      〜 {b.endTime}
-                    </p>
-                  ) : null}
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground/40 tabular">
+                    #{idx + 1}
+                  </span>
                 </div>
-                {/* 縦線アンカー */}
-                <div className="relative flex flex-col items-center">
-                  <span className="block h-3 w-3 rounded-full bg-primary-500 ring-4 ring-border" />
-                  {!isLast ? (
-                    <span
-                      aria-hidden
-                      className="mt-1 flex-1 border-l-2 border-dashed border-primary-500/40"
-                    />
+
+                <div className="flex flex-col gap-3 p-4 sm:flex-row sm:gap-4">
+                  {/* 写真サムネ（spot 由来のときのみ） */}
+                  {!isFreeBlock ? (
+                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-muted sm:w-44 sm:shrink-0">
+                      {photo ? (
+                        <Image
+                          src={photo}
+                          alt={unlocked ? placeName : '購入後に表示'}
+                          fill
+                          sizes="(min-width: 640px) 176px, 100vw"
+                          className={
+                            'object-cover transition ' +
+                            (unlocked ? '' : 'scale-110 blur-md grayscale')
+                          }
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[11px] text-foreground/40">
+                          {unlocked ? '写真なし' : 'ロック中'}
+                        </div>
+                      )}
+                      {!unlocked ? (
+                        <div className="absolute inset-0 flex items-center justify-center bg-foreground/10">
+                          <Lock className="h-5 w-5 text-white drop-shadow" />
+                        </div>
+                      ) : null}
+                    </div>
                   ) : null}
-                </div>
-                {/* 内容列 */}
-                <div className="flex-1 pb-4">
-                  <p
-                    className={
-                      unlocked
-                        ? 'text-[15px] font-bold leading-snug text-foreground'
-                        : 'inline-flex items-center gap-1.5 text-[15px] font-semibold text-foreground/40'
-                    }
-                  >
-                    <MapPin className="h-3.5 w-3.5 text-primary-500" />
-                    {placeName}
-                  </p>
-                  {unlocked && address ? (
-                    <p className="mt-0.5 text-[11px] text-foreground/60">
-                      {address}
-                    </p>
-                  ) : null}
-                  {b.notes ? (
-                    <p
+
+                  {/* 内容列 */}
+                  <div className="min-w-0 flex-1">
+                    <h4
                       className={
-                        'mt-1 whitespace-pre-line text-[13px] leading-relaxed ' +
-                        (unlocked ? 'text-foreground/80' : 'text-foreground/30')
+                        'flex items-start gap-1.5 text-[16px] font-bold leading-snug tracking-tight ' +
+                        (unlocked ? 'text-foreground' : 'text-foreground/40')
                       }
                     >
-                      {unlocked ? b.notes : 'メモは購入後に表示されます'}
-                    </p>
-                  ) : null}
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary-500" />
+                      <span className={unlocked ? '' : 'tracking-[0.2em]'}>
+                        {placeName}
+                      </span>
+                    </h4>
+                    {unlocked && address ? (
+                      <p className="mt-1 truncate text-[11px] text-foreground/60">
+                        {address}
+                      </p>
+                    ) : null}
+                    {spot?.category ? (
+                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary-500/5 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
+                        {spot.category}
+                      </p>
+                    ) : null}
+                    {b.notes ? (
+                      <p
+                        className={
+                          'mt-2 whitespace-pre-line text-[13px] leading-relaxed ' +
+                          (unlocked ? 'text-foreground/80' : 'text-foreground/30')
+                        }
+                      >
+                        {unlocked ? b.notes : 'メモは購入後に表示されます'}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-              {/* 次への移動手段 */}
-              {!isLast && (b.transportToNext || b.travelMinutesAfter || b.transportNote) ? (
-                <div className="ml-[76px] flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-semibold text-primary-300">
-                    <Clock className="h-3 w-3" />
-                    {b.transportToNext
-                      ? TRANSPORT_LABEL[b.transportToNext] ?? b.transportToNext
-                      : '移動'}
-                    {b.travelMinutesAfter
-                      ? ` ${formatDuration(b.travelMinutesAfter)}`
-                      : ''}
-                  </span>
-                  {b.transportNote ? (
-                    <span className="text-[11px] text-foreground/70">
-                      {b.transportNote}
+
+              {/* ============ 移動手段の点線コネクタ ============ */}
+              {showConnector ? (
+                <div className="my-1 flex items-stretch gap-3 px-4 sm:gap-4">
+                  {/* 縦点線 */}
+                  <div
+                    aria-hidden
+                    className="ml-2 flex w-0 flex-col items-center"
+                  >
+                    <span className="block min-h-[44px] flex-1 border-l-2 border-dashed border-foreground/25" />
+                  </div>
+                  {/* 移動手段ピル */}
+                  <div className="flex flex-1 flex-wrap items-center gap-2 py-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-[11px] font-semibold text-foreground/75">
+                      <TransportIcon className="h-3.5 w-3.5 text-primary-300" />
+                      {transportKey
+                        ? TRANSPORT_LABEL[transportKey]
+                        : '移動'}
+                      {b.travelMinutesAfter
+                        ? (
+                          <>
+                            <span className="text-foreground/30">・</span>
+                            <span className="tabular">
+                              {formatDuration(b.travelMinutesAfter)}
+                            </span>
+                          </>
+                        )
+                        : null}
                     </span>
-                  ) : null}
+                    {b.transportNote ? (
+                      <span className="text-[11px] text-foreground/60">
+                        {b.transportNote}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
+              ) : null}
+
+              {/* 連続するブロック間の余白（コネクタが無いときの最小スペース） */}
+              {!isLast && !showConnector ? (
+                <div className="h-3" />
               ) : null}
             </li>
           );
         })}
       </ol>
+
+      {/* 末尾に控えめな解放 CTA */}
+      {!unlocked ? (
+        <div className="mt-5 rounded-md border border-dashed border-primary-300/60 bg-primary-500/5 px-4 py-3 text-center">
+          <p className="text-[12px] font-bold text-primary-300">
+            <Lock className="mr-1 inline h-3 w-3" />
+            スポット名・写真・メモは購入後に全公開
+          </p>
+          <p className="mt-0.5 text-[11px] text-foreground/55">
+            時刻と移動手段だけ先に見せています
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }

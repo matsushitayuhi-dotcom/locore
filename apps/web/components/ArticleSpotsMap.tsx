@@ -7,8 +7,10 @@ import {
   InfoWindow,
   useMap,
 } from '@vis.gl/react-google-maps';
-import type { Spot, ArticleItineraryBlock } from '../lib/mock';
+import { ExternalLink } from '@locore/ui/icons';
+import type { Spot, ArticleItineraryBlock, PhotoEntry } from '../lib/mock';
 import { locoreMapStyles } from './map/locoreMapStyle';
+import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 
 /**
  * 記事の最下部に表示する、その記事のスポットをまとめてマッピングする地図。
@@ -21,7 +23,7 @@ import { locoreMapStyles } from './map/locoreMapStyle';
  *  - 移動手段アイコンをクリック → 区間の移動手段詳細を InfoWindow
  */
 
-type Point = { spot: Spot; label?: number };
+type Point = { spot: Spot; label?: number; photoUrl?: string | null };
 
 type Segment = {
   from: { lat: number; lng: number };
@@ -87,6 +89,53 @@ function makeNumberedPinSvg(color: string, label: number): string {
     `<text x="16" y="20" text-anchor="middle" ` +
     `font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="white">` +
     `${label}</text>` +
+    `</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+/**
+ * 円形写真マーカー。Google Maps の `Marker.icon` は data URL しか受けないため、
+ * 写真は `<image>` で SVG に埋め込み、`clipPath` で丸く切り抜く。
+ * 白枠 + 内側ライトリングで地図上でも視認性を確保する。
+ *
+ * `label` が与えられた場合は右下に小さな番号バッジを描く（旅程記事向け）。
+ *
+ * SIZE=52 で実物は 52x52、anchor は中央に設定する想定。
+ */
+function makePhotoMarkerSvg(opts: {
+  photoUrl: string;
+  borderColor: string;
+  label?: number;
+}): string {
+  const { photoUrl, borderColor, label } = opts;
+  // photoUrl は & 等を含む可能性があるため XML エスケープ
+  const safeUrl = photoUrl
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const badge =
+    typeof label === 'number'
+      ? `<circle cx="42" cy="42" r="9" fill="${borderColor}" stroke="white" stroke-width="1.5"/>` +
+        `<text x="42" y="45.5" text-anchor="middle" ` +
+        `font-family="Arial, Helvetica, sans-serif" font-size="10" font-weight="700" fill="white">${label}</text>`
+      : '';
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 52 52">` +
+    `<defs>` +
+    `<clipPath id="c"><circle cx="26" cy="26" r="22"/></clipPath>` +
+    `<filter id="s" x="-20%" y="-20%" width="140%" height="140%">` +
+    `<feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-opacity="0.35"/>` +
+    `</filter>` +
+    `</defs>` +
+    // 影付きの白い土台（外枠）
+    `<circle cx="26" cy="26" r="24" fill="white" filter="url(#s)"/>` +
+    // 写真本体（円形クリップ）
+    `<image href="${safeUrl}" x="4" y="4" width="44" height="44" ` +
+    `preserveAspectRatio="xMidYMid slice" clip-path="url(#c)"/>` +
+    // 上から薄いブランド色のリングを重ねて統一感を出す
+    `<circle cx="26" cy="26" r="22" fill="none" stroke="${borderColor}" stroke-width="2"/>` +
+    badge +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -170,20 +219,33 @@ function MarkersLayer({
     const G = (window as any).google?.maps;
     if (!G) return;
     const markersAndListeners = points.map((p) => {
-      const url =
-        numbered && typeof p.label === 'number'
-          ? makeNumberedPinSvg(PIN_COLOR, p.label)
-          : makePlainPinSvg(PIN_COLOR);
+      const hasPhoto = !!p.photoUrl;
+      let url: string;
+      let size: number;
+      if (hasPhoto) {
+        url = makePhotoMarkerSvg({
+          photoUrl: p.photoUrl!,
+          borderColor: PIN_COLOR,
+          label: numbered && typeof p.label === 'number' ? p.label : undefined,
+        });
+        size = 52;
+      } else if (numbered && typeof p.label === 'number') {
+        url = makeNumberedPinSvg(PIN_COLOR, p.label);
+        size = 32;
+      } else {
+        url = makePlainPinSvg(PIN_COLOR);
+        size = 28;
+      }
       const m = new G.Marker({
         position: { lat: p.spot.lat, lng: p.spot.lng },
         map,
         title: numbered && p.label ? `${p.label}. ${p.spot.name}` : p.spot.name,
         icon: {
           url,
-          scaledSize: new G.Size(numbered ? 32 : 28, numbered ? 32 : 28),
-          anchor: new G.Point(numbered ? 16 : 14, numbered ? 16 : 14),
+          scaledSize: new G.Size(size, size),
+          anchor: new G.Point(size / 2, size / 2),
         },
-        zIndex: 2,
+        zIndex: hasPhoto ? 3 : 2,
       });
       const listener = m.addListener('click', () => onPointClick(p));
       return { m, listener };
@@ -378,14 +440,60 @@ type Props = {
   spots: Spot[];
   articleType: 'spot_guide' | 'itinerary' | 'expat_info' | 'photo_journal';
   itineraryBlocks?: ArticleItineraryBlock[] | null;
+  /**
+   * フォト日記のエントリ。`spotId` が設定されているエントリの `imageUrl` を
+   * ピンの写真として使う（Google Photos に無いスポットの fallback）。
+   */
+  photoEntries?: PhotoEntry[] | null;
+  /**
+   * 購入済み / オーナー / 無料記事のときに true。
+   * true の場合のみピンに円形写真サムネを表示する（未購入時は generic ピン）。
+   * デフォルト true（呼び出し側で購入後だけマウントしているケースに合わせる）。
+   */
+  unlocked?: boolean;
 };
 
-function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
+function ArticleSpotsMapBody({
+  spots,
+  articleType,
+  itineraryBlocks,
+  photoEntries,
+  unlocked = true,
+}: Props) {
   type Selected =
     | { kind: 'spot'; point: Point }
     | { kind: 'segment'; segment: Segment; mid: { lat: number; lng: number } }
     | null;
   const [selected, setSelected] = useState<Selected>(null);
+
+  /**
+   * スポット ID → 円形ピンに使う写真 URL の解決。優先順位:
+   *  1. spot.photoUrls[0]                  (Google Places 連携で自動取得した写真)
+   *  2. photoEntries.find(spotId===s.id)?.imageUrl  (フォト日記でスポット指定された写真)
+   *  3. (将来) spot.coverImageUrl があれば
+   *  4. null → ピンは generic（番号付き or プレーン）
+   *
+   * unlocked=false のときは何も返さない（未購入は写真出さない）。
+   */
+  const photoBySpotId = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!unlocked) return map;
+    for (const s of spots) {
+      const fromGoogle =
+        Array.isArray(s.photoUrls) && s.photoUrls.length > 0
+          ? s.photoUrls[0]
+          : null;
+      const fromEntries =
+        photoEntries?.find((p) => p.spotId === s.id)?.imageUrl ?? null;
+      // 型に無い coverImageUrl 互換（将来）。安全に optional で読む
+      const fromCover =
+        (s as unknown as { coverImageUrl?: string | null }).coverImageUrl ??
+        null;
+      const chosen = fromGoogle || fromEntries || fromCover;
+      if (chosen) map.set(s.id, chosen);
+    }
+    return map;
+  }, [spots, photoEntries, unlocked]);
 
   const { points, segments } = useMemo(() => {
     const valid = spots.filter(
@@ -397,6 +505,8 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
         Number.isFinite(s.lng),
     );
     const byId = new Map(valid.map((s) => [s.id, s]));
+
+    const photoFor = (s: Spot): string | null => photoBySpotId.get(s.id) ?? null;
 
     if (articleType === 'itinerary' && itineraryBlocks?.length) {
       const ordered: Point[] = [];
@@ -410,7 +520,7 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
         const s = byId.get(b.spotId);
         if (!s) continue;
         const currentLabel = n++;
-        ordered.push({ spot: s, label: currentLabel });
+        ordered.push({ spot: s, label: currentLabel, photoUrl: photoFor(s) });
         if (prevSpot && prevBlock) {
           segs.push({
             from: { lat: prevSpot.lat, lng: prevSpot.lng },
@@ -430,16 +540,17 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
       }
       const usedIds = new Set(ordered.map((p) => p.spot.id));
       for (const s of valid) {
-        if (!usedIds.has(s.id)) ordered.push({ spot: s });
+        if (!usedIds.has(s.id))
+          ordered.push({ spot: s, photoUrl: photoFor(s) });
       }
       return { points: ordered, segments: segs };
     }
 
     return {
-      points: valid.map((s) => ({ spot: s })),
+      points: valid.map((s) => ({ spot: s, photoUrl: photoFor(s) })),
       segments: [] as Segment[],
     };
-  }, [spots, articleType, itineraryBlocks]);
+  }, [spots, articleType, itineraryBlocks, photoBySpotId]);
 
   const center = useMemo(() => {
     if (points.length === 0) return { lat: 48.8566, lng: 2.3522 };
@@ -497,10 +608,10 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
               lat: selected.point.spot.lat,
               lng: selected.point.spot.lng,
             }}
-            pixelOffset={[0, -18]}
+            pixelOffset={[0, -28]}
             onCloseClick={() => setSelected(null)}
           >
-            <div className="min-w-[200px] p-1 text-foreground">
+            <div className="min-w-[220px] p-1 text-foreground">
               {typeof selected.point.label === 'number' ? (
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-700">
                   #{String(selected.point.label).padStart(2, '0')}
@@ -514,6 +625,23 @@ function ArticleSpotsMapBody({ spots, articleType, itineraryBlocks }: Props) {
                   {selected.point.spot.address}
                 </p>
               ) : null}
+              <a
+                href={buildSpotGoogleMapsUrl({
+                  placeId: selected.point.spot.googlePlaceId,
+                  lat: selected.point.spot.lat,
+                  lng: selected.point.spot.lng,
+                  fallbackQuery:
+                    selected.point.spot.name +
+                    ' ' +
+                    (selected.point.spot.address ?? ''),
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-primary-700 underline-offset-4 hover:underline"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Google マップで開く
+              </a>
             </div>
           </InfoWindow>
         ) : null}
@@ -597,6 +725,8 @@ export function ArticleSpotsMap({
   spots,
   articleType,
   itineraryBlocks,
+  photoEntries,
+  unlocked = true,
 }: Props) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -639,6 +769,8 @@ export function ArticleSpotsMap({
           spots={spots}
           articleType={articleType}
           itineraryBlocks={itineraryBlocks}
+          photoEntries={photoEntries}
+          unlocked={unlocked}
         />
       </APIProvider>
     </section>

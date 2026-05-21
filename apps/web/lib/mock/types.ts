@@ -130,6 +130,12 @@ export interface Spot {
   description?: string;
   /** Google Places から拾った写真 URL の配列（最大 5 枚） */
   photoUrls?: string[];
+  /**
+   * Google Places の place_id（UI からの自動補完で取得した場合に保持）。
+   * 「Google マップで場所として開く」リンクや Directions URL の中継スポット指定で使う。
+   * 旧データ・mock では undefined のまま。
+   */
+  googlePlaceId?: string | null;
 }
 
 export interface Review {

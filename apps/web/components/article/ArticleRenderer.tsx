@@ -4,22 +4,21 @@ import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-  Badge,
   Button,
   CreatorBadge,
   LocalScoreBar,
   ResidencyBadge,
   SatisfactionStars,
 } from '@locore/ui';
-import { ChevronRight, Clock, MapPin, Star } from '@locore/ui/icons';
+import { ChevronRight } from '@locore/ui/icons';
 import { Paywall } from '../Paywall';
-import { AddToTripButton } from '../AddToTripButton';
 import { ItineraryTimeline } from '../ItineraryTimeline';
 import { PhotoJournalView } from '../PhotoJournalView';
 import { SpotsCardList } from '../SpotsCardList';
 import { ArticleSpotsMap } from '../ArticleSpotsMap';
-import { LikeButton } from './LikeButton';
+import { ArticleHero } from './ArticleHero';
 import { ReviewFormToggle } from './ReviewFormToggle';
+import { ItineraryDirectionsButton } from './ItineraryDirectionsButton';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import type { Article, Writer, Spot, Review } from '@/lib/mock';
 import type {
@@ -129,172 +128,38 @@ export function ArticleRenderer({
         </div>
       ) : null}
 
-      {/* Breadcrumbs */}
-      <div className="border-b border-border">
-        <nav
-          aria-label="パンくず"
-          className="mx-auto flex max-w-screen-lg items-center gap-1 px-4 py-3 text-[12px] text-foreground/60 sm:px-6"
-        >
-          <Link href="/" className="transition hover:text-foreground">
-            世界
-          </Link>
-          {country?.nameJa ? (
-            <>
-              <ChevronRight className="h-3 w-3 text-foreground/30" />
-              {country.code ? (
-                <Link
-                  href={`/country/${country.code}`}
-                  className="transition hover:text-foreground"
-                >
-                  {country.nameJa}
-                </Link>
-              ) : (
-                <span>{country.nameJa}</span>
-              )}
-            </>
-          ) : null}
-          {region?.nameJa ? (
-            <>
-              <ChevronRight className="h-3 w-3 text-foreground/30" />
-              {region.slug ? (
-                <Link
-                  href={`/region/${region.slug}`}
-                  className="transition hover:text-foreground"
-                >
-                  {region.nameJa}
-                </Link>
-              ) : (
-                <span>{region.nameJa}</span>
-              )}
-            </>
-          ) : null}
-          <ChevronRight className="h-3 w-3 text-foreground/30" />
-          <span className="line-clamp-1 max-w-[40ch] text-foreground">
-            {article.title}
-          </span>
-        </nav>
-      </div>
+      {/* 雑誌風ヒーロー (パンくず + フルブリードカバー + 大きいタイトル + 署名 + メタ帯) */}
+      <ArticleHero
+        article={article}
+        writer={writer}
+        region={region}
+        country={country}
+        displayAreaLabel={displayAreaLabel}
+        viewerLoggedIn={viewerLoggedIn}
+        alreadySavedByMe={alreadySavedByMe}
+        bookmarkCount={bookmarkCount}
+        likeCount={likeCount}
+        initialLiked={initialLiked}
+        previewMode={previewMode}
+      />
 
-      {/* Cover */}
-      <div className="mx-auto max-w-screen-lg px-4 pt-6 sm:px-6">
-        <div className="relative aspect-cover overflow-hidden rounded-lg border border-border bg-muted shadow-sm">
-          {article.coverImageUrl ? (
-            <Image
-              src={article.coverImageUrl}
-              alt={article.title}
-              fill
-              priority
-              sizes="(min-width: 1024px) 60vw, 100vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-[12px] text-foreground/40">
-              カバー画像未設定
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Header */}
-      <header className="mx-auto max-w-screen-lg px-4 pt-8 sm:px-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge
-            variant={article.articleType === 'itinerary' ? 'accent' : 'default'}
-            data-locore-article-type={article.articleType}
-          >
-            {article.articleType === 'itinerary' ? '旅程プラン' : 'スポット紹介'}
-          </Badge>
-          <Badge variant="outline">{displayAreaLabel}</Badge>
-          {article.tags.slice(0, 3).map((t) => (
-            <Badge key={t} variant="secondary">
-              {t}
-            </Badge>
-          ))}
-          <Badge variant="default">{article.durationType}</Badge>
-        </div>
-        <h1
-          className="mt-4 text-[32px] font-semibold leading-[1.2] tracking-tight sm:text-[42px]"
-        >
-          {article.title}
-        </h1>
-
-        {/* 1 行コンパクトメタ。本文への到達距離を最短にするのが目的なので、
-            ヘッダーには「著者の顔 + 評価ピル + 所要時間 + いいね/保存」だけを並べる。
-            著者の詳細プロフィール (bio / 在住年数 / フォロワー数) は本文後の
-            「この記事を書いた人」セクションにまとめる。 */}
-        <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-[12px] text-foreground/65">
-          {writer ? (
-            <Link
-              href={`/residents/${writer.id}`}
-              className="group inline-flex items-center gap-1.5 rounded-full px-1 py-0.5 -ml-1 transition hover:bg-muted"
-            >
-              <Avatar size="sm">
-                <AvatarImage src={writer.avatarUrl} alt={writer.name} />
-                <AvatarFallback>{writer.name[0]}</AvatarFallback>
-              </Avatar>
-              <span className="text-[13px] font-semibold text-foreground group-hover:text-primary-300">
-                {writer.name}
-              </span>
-            </Link>
-          ) : null}
-          <span
-            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75 tabular"
-            aria-label={`ローカル度 ${Math.round(article.localScoreAverage)}`}
-          >
-            <MapPin className="h-3 w-3 text-primary-300" />
-            ローカル {Math.round(article.localScoreAverage)}
-          </span>
-          <span
-            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75 tabular"
-            aria-label={`満足度 ${article.satisfactionAverage.toFixed(1)} 件数 ${article.reviewCount}`}
-          >
-            <Star className="h-3 w-3 fill-warning-500 text-warning-500" />
-            {article.satisfactionAverage.toFixed(1)}
-            <span className="text-foreground/50">({article.reviewCount})</span>
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75">
-            <Clock className="h-3 w-3" />
-            {article.durationType}
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/75">
-            {displayAreaLabel} ・ {article.spotIds.length} スポット
-          </span>
-
-          {/* 読者向け CTA。プレビューモードでは描画しない。
-              他のメタピルと同じ高さの小型ボタン (h-7) で行内に置く。 */}
-          {!previewMode ? (
-            <span className="ml-auto inline-flex items-center gap-2">
-              <LikeButton
-                articleId={article.id}
-                initialLiked={initialLiked}
-                initialCount={likeCount}
-                viewerLoggedIn={viewerLoggedIn}
-              />
-              <AddToTripButton
-                articleId={article.id}
-                size="sm"
-                compact
-                initialSaved={alreadySavedByMe}
-                initialCount={bookmarkCount}
-              />
-            </span>
-          ) : null}
-        </div>
-      </header>
-
-      {/* Body preview + paywall。PC でも 1 カラムにし、本文をフル幅で見せる。
+      {/* Body preview + paywall。PC でも 1 カラムにし、680px の読みやすい行幅で本文を見せる。
           関連記事サイドカラムは廃止し、本文の下のフッター手前にグリッドで表示する。*/}
-      <section className="mx-auto mt-10 max-w-3xl px-4 pb-20 sm:px-6">
-        <div className="space-y-8">
+      <section className="mx-auto mt-10 max-w-[680px] px-4 pb-20 sm:mt-14 sm:px-6">
+        <div className="space-y-10">
           {/*
             2026-05 改修: 本文は TipTap が生成した HTML をそのまま `articles.body` に
             保存している。renderArticleBodyHtml が HTML / 旧 Markdown を判定し、
             sanitize 済み HTML を返す。dangerouslySetInnerHTML で展開することで、
             見出し / コールアウト / コードブロック / テーブル / タスクリスト等の
             TipTap 由来ブロックがそのまま表示される。
+
+            2026-05 雑誌風改修: prose-locore に `prose-locore--editorial` を追加。
+            第 1 段落に Drop cap、リード (lede) として大きめサイズ、段落間余白広め、
+            blockquote をプルクオート風、本文中の <img> を疑似フルブリードに広げる。
            */}
           <article
-            className="prose-locore"
+            className="prose-locore prose-locore--editorial"
             dangerouslySetInnerHTML={{ __html: renderArticleBodyHtml(preview) }}
           />
 
@@ -355,7 +220,14 @@ export function ArticleRenderer({
             <>
               {/* 有料パートの本文。bodyPaid が空の無料記事のときは何も出さない */}
               {hasPaid && after.trim().length > 0 ? (
-                <article className="prose-locore">
+                <article className="prose-locore prose-locore--editorial prose-locore--continuation">
+                  {/* 章区切り (◆): 無料パート→有料パートの切り替わりを雑誌風の節記号で示す */}
+                  <div
+                    aria-hidden
+                    className="my-10 flex items-center justify-center text-[18px] tracking-[0.6em] text-foreground/30"
+                  >
+                    ◆ ◆ ◆
+                  </div>
                   {previewMode ? (
                     <div className="mb-3 inline-flex rounded-full bg-primary-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
                       有料パート（プレビュー解除中）
@@ -389,11 +261,26 @@ export function ArticleRenderer({
           {/* スポット地図（旅程記事はルート線、スポット紹介はピンのみ）。
               有料記事は購入後 / オーナー時のみ表示。 */}
           {unlocked ? (
-            <ArticleSpotsMap
-              spots={spots}
-              articleType={article.articleType}
-              itineraryBlocks={article.itineraryBlocks ?? null}
-            />
+            <div className="space-y-3">
+              {/* 旅程記事のときだけ、地図の上に「Google マップでルートを開く」ボタン。
+                  各スポットを Place ID 優先で waypoints として渡し、Google Maps 側で
+                  そのまま経路案内が出るようにする。 */}
+              {article.articleType === 'itinerary' &&
+              article.itineraryBlocks &&
+              article.itineraryBlocks.length > 0 ? (
+                <ItineraryDirectionsButton
+                  blocks={article.itineraryBlocks}
+                  spots={spots}
+                />
+              ) : null}
+              <ArticleSpotsMap
+                spots={spots}
+                articleType={article.articleType}
+                itineraryBlocks={article.itineraryBlocks ?? null}
+                photoEntries={article.photoEntries ?? null}
+                unlocked={unlocked}
+              />
+            </div>
           ) : (
             <section className="rounded-md bg-primary-500/10 p-6 text-center text-[12px] text-primary-300 ring-1 ring-border">
               <p className="font-semibold">スポット地図は購入後に解放されます</p>

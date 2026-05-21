@@ -6,6 +6,7 @@ import type { Spot } from '../lib/mock';
 import { SpotFavoriteButton } from './SpotFavoriteButton';
 import { BulkSpotFavoriteButton } from './BulkSpotFavoriteButton';
 import type { FolderSummary } from '@/lib/spotFavorites/actions';
+import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 
 /**
  * 記事ページのスポット一覧。
@@ -158,13 +159,16 @@ export function SpotsCardList({
                     }}
                   />
                   <ActionButton
-                    label="Google マップに追加"
+                    label="Google マップで開く"
                     icon={<ExternalLink className="h-4 w-4" />}
                     onClick={() => {
-                      const url =
-                        s.lat && s.lng
-                          ? `https://www.google.com/maps/search/?api=1&query=${s.lat},${s.lng}&query_place_id=${encodeURIComponent(s.name)}`
-                          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.name + ' ' + (s.address ?? ''))}`;
+                      // Place ID があれば「場所」として開く。無ければ緯度経度 fallback。
+                      const url = buildSpotGoogleMapsUrl({
+                        placeId: s.googlePlaceId,
+                        lat: s.lat,
+                        lng: s.lng,
+                        fallbackQuery: s.name + ' ' + (s.address ?? ''),
+                      });
                       window.open(url, '_blank', 'noopener,noreferrer');
                     }}
                   />

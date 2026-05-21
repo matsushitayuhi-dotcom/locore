@@ -421,6 +421,191 @@
   border-radius: 8px;
 }
 
+/*
+ * --------------------------------------------------------------------------
+ * 雑誌風 (editorial) バリアント。`prose-locore prose-locore--editorial` を
+ * 付けたコンテナで有効になる。Substack / Casa BRUTUS / NYT Magazine を参考に:
+ *   - 本文 17px / line-height 1.95 / 段落間 1.6em
+ *   - 第 1 段落をリード (大きめ + やや濃いめ) + Drop cap
+ *   - blockquote をプルクオート風 (中央寄せ、引用記号、italic)
+ *   - 本文中の <img> を 680px 枠を超えて疑似フルブリードに広げ、+ キャプション
+ *   - <hr> を ◆ 模様の節区切りに装飾
+ *   - 見出しはやや抑えめのサイズ + serif 寄りのウェイト感
+ * 既存の `.prose-locore` 単体スタイル (TipTap エディタプレビュー等) には影響しない。
+ * --------------------------------------------------------------------------
+ */
+.prose-locore--editorial {
+  font-size: 17px;
+}
+
+.prose-locore--editorial p {
+  font-size: 17px;
+  line-height: 1.95;
+  margin-bottom: 1.6em;
+  color: var(--color-neutral-800);
+  letter-spacing: 0.005em;
+}
+
+/* リード文 (lede): 第 1 段落だけ少し大きく、やや薄く、読み始めの引きを作る。
+   有料パートは `--continuation` 修飾で抑制し、drop cap を出さない。 */
+.prose-locore--editorial:not(.prose-locore--continuation)
+  > p:first-of-type,
+.prose-locore--editorial:not(.prose-locore--continuation)
+  > :first-child:not(h1):not(h2):not(h3) + p {
+  font-size: 20px;
+  line-height: 1.7;
+  color: var(--color-neutral-900);
+  margin-bottom: 1.4em;
+}
+
+/* Drop cap: 第 1 段落の 1 文字目だけ大きく落とす。
+   日本語ファースト文字でも崩れにくいよう、line-height と margin で微調整。
+   有料パートには付けない (--continuation で無効化)。 */
+.prose-locore--editorial:not(.prose-locore--continuation)
+  > p:first-of-type::first-letter {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 4.2em;
+  float: left;
+  line-height: 0.85;
+  margin: 0.08em 0.1em -0.08em 0;
+  font-weight: 700;
+  color: var(--color-primary-300);
+}
+
+/* 見出し (やや抑えめの編集タイポ) */
+.prose-locore--editorial h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 2.4em;
+  margin-bottom: 0.6em;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+.prose-locore--editorial h3 {
+  font-size: 19px;
+  font-weight: 600;
+  margin-top: 1.8em;
+  margin-bottom: 0.5em;
+  line-height: 1.35;
+}
+
+/* プルクオート (引用ブロック)。border-left をやめて、上下罫線 + 引用記号で目立たせる。
+   blockquote[data-callout] (情報ボックス) には影響させたくないので、属性なしのみに当てる。 */
+.prose-locore--editorial blockquote:not([data-callout]) {
+  position: relative;
+  margin: 2em 0;
+  padding: 1.4em 0.5em 1em;
+  border-left: none;
+  border-top: 1px solid var(--color-neutral-100);
+  border-bottom: 1px solid var(--color-neutral-100);
+  background: transparent;
+  border-radius: 0;
+  text-align: center;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.55;
+  color: var(--color-neutral-900);
+}
+.prose-locore--editorial blockquote:not([data-callout])::before {
+  content: '“';
+  position: absolute;
+  top: -0.05em;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  background: var(--color-background, #ffffff);
+  padding: 0 0.4em;
+  font-size: 38px;
+  line-height: 1;
+  color: var(--color-primary-300);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.prose-locore--editorial blockquote:not([data-callout]) p {
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  margin-bottom: 0.4em;
+}
+.prose-locore--editorial blockquote:not([data-callout]) p:last-child {
+  margin-bottom: 0;
+}
+
+/* 本文中の画像を疑似フルブリードに広げる。
+   本文枠は max-w-[680px] = 約 680px。画像は 800px くらいまで広げると雑誌感が出る。
+   `<img alt="…">` の alt をそのまま下にキャプションとして見せる手は使えないので、
+   <figure><img><figcaption> 形式を将来サポート前提に CSS は両対応にしておく。 */
+.prose-locore--editorial img {
+  display: block;
+  width: calc(100% + 80px);
+  max-width: none;
+  margin-left: -40px;
+  margin-right: -40px;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border-radius: 4px;
+}
+@media (max-width: 720px) {
+  .prose-locore--editorial img {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    border-radius: 4px;
+  }
+}
+
+/* figure / figcaption (将来 TipTap が figure を出したとき用)。
+   現状は <img> 単体だが、キャプションが付けば自動で雑誌風に整う。 */
+.prose-locore--editorial figure {
+  margin: 2em -40px;
+}
+.prose-locore--editorial figure img {
+  width: 100%;
+  margin: 0;
+}
+.prose-locore--editorial figcaption {
+  margin-top: 0.6em;
+  padding: 0 40px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-neutral-500, rgba(0, 0, 0, 0.55));
+  text-align: center;
+}
+@media (max-width: 720px) {
+  .prose-locore--editorial figure {
+    margin: 2em 0;
+  }
+  .prose-locore--editorial figcaption {
+    padding: 0;
+  }
+}
+
+/* 章区切り <hr> を装飾的に。中央寄せの ◆ 3 つ + 細罫線の余韻。 */
+.prose-locore--editorial hr {
+  border: none;
+  text-align: center;
+  margin: 3em 0;
+  height: 1em;
+  line-height: 1;
+}
+.prose-locore--editorial hr::before {
+  content: '◆ ◆ ◆';
+  letter-spacing: 0.6em;
+  color: var(--color-neutral-200, rgba(0, 0, 0, 0.18));
+  font-size: 14px;
+}
+
+/* 強調 (em / strong) を本文サイズに合わせて整える */
+.prose-locore--editorial em {
+  font-style: italic;
+}
+.prose-locore--editorial strong {
+  font-weight: 700;
+  color: var(--color-neutral-900);
+}
+
 .locore-map-canvas .gmnoprint,
 .locore-map-canvas .gm-style-cc,
 .locore-map-canvas a[href^="https://maps.google.com/maps"] {

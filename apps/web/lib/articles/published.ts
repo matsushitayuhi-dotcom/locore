@@ -287,6 +287,7 @@ export async function getDbArticleBundle(
       tags: string[];
       position: number;
       googlePhotoUrls: string[] | null;
+      googlePlaceId: string | null;
     }> = [];
     try {
       spotRows = await db
@@ -301,6 +302,7 @@ export async function getDbArticleBundle(
           tags: schema.spots.tags,
           position: schema.spots.position,
           googlePhotoUrls: schema.spots.googlePhotoUrls,
+          googlePlaceId: schema.spots.googlePlaceId,
         })
         .from(schema.spots)
         .where(eq(schema.spots.articleId, id))
@@ -318,6 +320,7 @@ export async function getDbArticleBundle(
           openingHours: schema.spots.openingHours,
           tags: schema.spots.tags,
           position: schema.spots.position,
+          googlePlaceId: schema.spots.googlePlaceId,
         })
         .from(schema.spots)
         .where(eq(schema.spots.articleId, id))
@@ -377,6 +380,7 @@ export async function getDbArticleBundle(
         openingHours: openingHoursText,
         tags: s.tags ?? [],
         photoUrls: s.googlePhotoUrls ?? [],
+        googlePlaceId: s.googlePlaceId ?? null,
       };
     });
 
