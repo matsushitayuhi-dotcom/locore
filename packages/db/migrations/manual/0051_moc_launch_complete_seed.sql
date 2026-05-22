@@ -68,6 +68,37 @@ DELETE FROM user_services
 
 DELETE FROM writer_profiles WHERE is_sample = true;
 
+-- ---------------------------------------------------------------
+-- users.id を RESTRICT で参照しているテーブルを先に潰す。
+-- (article_likes / bookmarks 等 CASCADE は自動で消えるが、
+--  editor_collections / chat_threads / chat_messages / payouts /
+--  purchases (buyer 側) は RESTRICT なので明示削除が必要)
+-- ---------------------------------------------------------------
+DELETE FROM editor_collections
+  WHERE editor_id IN (SELECT id FROM users WHERE is_sample = true);
+
+-- chat_messages.sender_id は RESTRICT。サンプルユーザーが送ったメッセージを先に削除。
+-- chat_thread_members.user_id は CASCADE なのでユーザー削除と同時に勝手に消える。
+-- chat_threads 自体は users への直接 FK が無いため放置 OK。
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables WHERE table_name = 'chat_messages'
+  ) THEN
+    EXECUTE 'DELETE FROM chat_messages
+              WHERE sender_id IN (SELECT id FROM users WHERE is_sample = true)';
+  END IF;
+END $$;
+
+DELETE FROM payouts
+  WHERE user_id IN (SELECT id FROM users WHERE is_sample = true);
+
+-- purchases.buyer_id も RESTRICT。サンプルユーザーが他記事を買っていた場合に備える
+DELETE FROM purchases
+  WHERE buyer_id IN (SELECT id FROM users WHERE is_sample = true);
+
+-- light_diaries / sns_links / push_subscriptions 等は CASCADE なので不要
+
 -- auth.users から先に is_sample ユーザーを削除 (CASCADE で identities も消える)
 DELETE FROM auth.users
   WHERE id IN (SELECT id FROM users WHERE is_sample = true);
