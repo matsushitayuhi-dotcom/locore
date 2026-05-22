@@ -91,7 +91,7 @@ BEGIN
 END $$;
 
 DELETE FROM payouts
-  WHERE user_id IN (SELECT id FROM users WHERE is_sample = true);
+  WHERE writer_id IN (SELECT id FROM users WHERE is_sample = true);
 
 -- purchases.buyer_id も RESTRICT。サンプルユーザーが他記事を買っていた場合に備える
 DELETE FROM purchases
