@@ -10,6 +10,7 @@ import { SideMenu } from './SideMenu';
 import { PlaceMenu } from './PlaceMenu';
 import { ModeToggle } from './ModeToggle';
 import { Logo } from './Logo';
+import { ServicesNavLink } from './nav/ServicesNavLink';
 
 /**
  * トップバー。
@@ -68,6 +69,7 @@ export async function SiteHeader() {
             mode={mode ?? 'traveler'}
             availableRegionSlugs={availableRegionSlugs}
           />
+          <ServicesNavLink />
           {isResident ? (
             <>
               <NavLink href="/apartments">住居</NavLink>
