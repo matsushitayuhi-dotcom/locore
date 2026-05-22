@@ -1,14 +1,14 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 import { and, desc, eq, gte, lt, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireWriter } from '@/lib/auth/require-user';
 
 /**
- * /writer/sales — クリエイター向けの売上レポート画面。
+ * /writer/sales — 駐在員向けの売上レポート画面。
  *
  * 表示するもの:
- *  ① 当月の「日別の売上部数 + 売上金額（＝ライターの取り分 payout）」
+ *  ① 当月の「日別の売上部数 + 売上金額（＝駐在員の取り分 payout）」
  *  ② 日付をクリックすると、その日の記事別ブレークダウン
  *  ③ CSV エクスポート（時系列 = 1 購入 1 行）ボタン
  *

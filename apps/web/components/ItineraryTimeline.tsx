@@ -71,7 +71,7 @@ type Props = {
   defaultUnlocked: boolean;
   /**
    * 写真フォールバック。`spot.photoUrls[0]` (Google Places 由来) が
-   * 空の場合に、ライターがアップした写真エントリ (`spotId` 指定あり) を
+   * 空の場合に、駐在員がアップした写真エントリ (`spotId` 指定あり) を
    * 使ってカード写真を埋める。
    */
   photoEntries?: PhotoEntry[] | null;
@@ -118,7 +118,7 @@ export function ItineraryTimeline({
 
   const spotsById = new Map(spots.map((s) => [s.id, s]));
 
-  // spotId → ライター由来の写真 URL マップ。
+  // spotId → 駐在員由来の写真 URL マップ。
   // photoEntries は spotId 指定がある順に走査して最初の 1 件を採用。
   const writerPhotoBySpot = new Map<string, string>();
   for (const e of photoEntries ?? []) {
@@ -164,7 +164,7 @@ export function ItineraryTimeline({
           const address = spot?.address;
           // 写真フォールバック順:
           //   1. spot.photoUrls[0] (Google Places autocomplete 由来)
-          //   2. photoEntries で spotId が一致する写真 (ライターアップ)
+          //   2. photoEntries で spotId が一致する写真 (駐在員アップ)
           //   3. spotId に紐付かない photoEntries を idx 順に消費
           //   4. それも無ければ最終手段で記事カバー画像
           let photo: string | null = spot?.photoUrls?.[0] ?? null;

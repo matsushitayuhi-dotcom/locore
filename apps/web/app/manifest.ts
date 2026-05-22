@@ -1,4 +1,4 @@
-import type { MetadataRoute } from 'next';
+﻿import type { MetadataRoute } from 'next';
 
 /**
  * PWA マニフェスト。
@@ -17,7 +17,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Locore — 在外邦人がつくる、もう一段深い旅',
     short_name: 'Locore',
     description:
-      '現地に住むクリエイターが書く、観光ガイドにはない街の物語。短尺の有料旅行誌。',
+      '現地に住む駐在員が書く、観光ガイドにはない街の物語。短尺の有料旅行誌。',
     start_url: '/',
     display: 'standalone',
     background_color: '#FAF5EB',

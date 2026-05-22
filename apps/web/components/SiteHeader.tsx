@@ -11,20 +11,21 @@ import { PlaceMenu } from './PlaceMenu';
 import { ModeToggle } from './ModeToggle';
 import { Logo } from './Logo';
 import { ServicesNavLink } from './nav/ServicesNavLink';
+import { ArticlesNavLink } from './nav/ArticlesNavLink';
+import { CommunityMenu } from './nav/CommunityMenu';
 
 /**
- * トップバー。
+ * トップバー。PR3 (マーケットプレイス進化) でナビを刷新:
  *
- * モード（旅行者 / 駐在員）でグローバルメニューを分岐する:
+ *   旅行者: ホーム / 記事 / サービス / マップ / 検索
+ *   駐在員: ホーム / 記事 / サービス / コミュニティ▼ / 検索
  *
- *   旅行者: ホーム / 場所 / 地図 / 検索
- *   駐在員: ホーム / 場所 / アパート / 売買 / 求人 / イベント / 習い事 / 助け合い / 検索
+ * 「コミュニティ」は 6 種 (求人 / 住居 / 売買 / 集まり / 習う / 助け) を
+ * dropdown menu に畳んだもの。場所ピッカー (旧 PlaceMenu) も維持するが、
+ * 「サービス」を第一級にして検索・出品・購入の主動線を太く見せる。
  *
- * 「新着ニュース」は両モードともグローバルからは外している（駐在員ホーム内の
- *  BoardWidget からは引き続き辿れる）。
- *
- * ユーザー固有のメニュー（お気に入り / 旅程 / 購入記事 / クリエイター系 /
- * アカウント設定）は SideMenu に集約。
+ * 旧: 「保存」「お気に入り」「旅程」「購入記事」など個人系メニューは
+ * SideMenu (ハンバーガー側) に集約。
  */
 export async function SiteHeader() {
   const [user, mode, countries, regionsWithContent] = await Promise.all([
@@ -36,16 +37,11 @@ export async function SiteHeader() {
   const isWriter = user?.role === 'resident_writer' || user?.role === 'editor';
   const unread = user ? await getMyUnreadChatSummary() : { count: 0, threadCount: 0 };
   const homeHref = mode ? homePathFor(mode) : '/';
-  // PlaceMenu のドロップダウンで「Coming Soon の地域」を出さないため、
-  // コンテンツ存在 slug 集合を Array で渡す (Client Component なので Set
-  // 直接渡しは serialize できない)
   const availableRegionSlugs = Array.from(regionsWithContent);
 
   const isResident = mode === 'resident';
 
   return (
-    // sticky / safe-area-top は外側の HeaderShell (Client Component) が持つ。
-    // ここは見た目だけ。
     <header className="w-full border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-3 px-4 sm:gap-5 sm:px-6">
         <Link
@@ -64,24 +60,20 @@ export async function SiteHeader() {
 
         <nav className="hidden flex-1 items-center justify-center gap-1 text-sm md:flex">
           <NavLink href={homeHref}>ホーム</NavLink>
-          <PlaceMenu
-            countries={countries}
-            mode={mode ?? 'traveler'}
-            availableRegionSlugs={availableRegionSlugs}
-          />
+          <ArticlesNavLink />
           <ServicesNavLink />
           {isResident ? (
             <>
-              <NavLink href="/apartments">住居</NavLink>
-              <NavLink href="/marketplace">売買</NavLink>
-              <NavLink href="/jobs">求人</NavLink>
-              <NavLink href="/groups">集まり</NavLink>
-              <NavLink href="/lessons">習う</NavLink>
-              <NavLink href="/help">助け</NavLink>
+              <CommunityMenu />
               <NavLink href="/search">検索</NavLink>
             </>
           ) : (
             <>
+              <PlaceMenu
+                countries={countries}
+                mode={mode ?? 'traveler'}
+                availableRegionSlugs={availableRegionSlugs}
+              />
               <NavLink href="/map">地図</NavLink>
               <NavLink href="/search">検索</NavLink>
             </>

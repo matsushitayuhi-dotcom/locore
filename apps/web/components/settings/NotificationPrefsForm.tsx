@@ -16,7 +16,7 @@ const TOPICS: { key: Topic; label: string; description: string }[] = [
   {
     key: 'article_published',
     label: '記事の新着',
-    description: 'フォロー中のクリエイターや注目都市の新しい記事',
+    description: 'フォロー中の駐在員や注目都市の新しい記事',
   },
   {
     key: 'trip_reminder',

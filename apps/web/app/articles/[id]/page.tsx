@@ -15,6 +15,7 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { eq, and } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
+import { listServicesByUserId } from '@/lib/services/list';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +86,7 @@ export default async function ArticleDetailPage({
     likedSet,
     bookmarkedArticleIds,
     myReview,
+    authorServices,
   ] = await Promise.all([
     listMyFolders(),
     listMyBookmarkedSpotIds(),
@@ -92,6 +94,8 @@ export default async function ArticleDetailPage({
     listMyLikedArticleIds(),
     getMyBookmarkedIdSet(),
     getMyReviewForArticle(article.id),
+    // 著者カード末尾に「この駐在員の他のサービス」セクションを出す用
+    writer?.id ? listServicesByUserId(writer.id, 3) : Promise.resolve([]),
   ]);
   const alreadySavedByMe = bookmarkedArticleIds.has(article.id);
   const viewerLoggedIn = !!me;
@@ -121,6 +125,7 @@ export default async function ArticleDetailPage({
       folders={folders}
       bookmarkedSpotIds={bookmarkedSpotIds}
       myReview={myReview}
+      authorServices={authorServices}
     />
   );
 }

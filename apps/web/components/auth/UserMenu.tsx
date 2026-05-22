@@ -81,11 +81,11 @@ export function UserMenu({ user }: Props) {
             </MenuItem>
             {isWriter ? (
               <MenuItem href="/writer/articles" onSelect={() => setOpen(false)}>
-                クリエイターダッシュボード
+                駐在員ダッシュボード
               </MenuItem>
             ) : (
               <MenuItem href="/become-writer" onSelect={() => setOpen(false)}>
-                クリエイターになる
+                駐在員として参加
               </MenuItem>
             )}
           </ul>

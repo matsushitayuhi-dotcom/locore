@@ -5,7 +5,7 @@ import { requireUser } from '@/lib/auth/require-user';
 import { becomeWriter } from './actions';
 
 export const metadata = {
-  title: 'クリエイターになる',
+  title: '駐在員として参加',
 };
 
 export const dynamic = 'force-dynamic';
@@ -39,7 +39,7 @@ export default async function BecomeWriterPage() {
         {/* Tier / 手数料の説明 */}
         <div className="mb-8 rounded-xl bg-card p-5 ring-1 ring-border">
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-            クリエイターランクと手数料
+            駐在員ランクと手数料
           </p>
           <p className="mt-1 text-[13px] text-foreground/70">
             記事の価格はランクによらず自由に設定できます。
@@ -150,7 +150,7 @@ export default async function BecomeWriterPage() {
               >
                 利用規約
               </Link>{' '}
-              および クリエイター規約（オリジナル性、ステマ禁止、禁止コンテンツ）に同意します。
+              および 駐在員規約（オリジナル性、ステマ禁止、禁止コンテンツ）に同意します。
             </span>
           </label>
 

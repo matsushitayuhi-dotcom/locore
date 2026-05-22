@@ -33,7 +33,7 @@ export default async function ChatListPage() {
       <header className="mb-6">
         <h1 className="text-[24px] font-bold tracking-tight">メッセージ</h1>
         <p className="mt-1 text-[13px] text-foreground/60">
-          クリエイターとのやり取りや、サービスへの問い合わせがここに集まります。
+          駐在員とのやり取りや、サービスへの問い合わせがここに集まります。
         </p>
       </header>
 

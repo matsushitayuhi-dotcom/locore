@@ -36,8 +36,8 @@ import {
  * グローバル左サイドメニュー。
  *
  * - ヘッダーのハンバーガーボタンで開閉
- * - 「見る」「クリエイター」「アカウント」「Locore について」の 4 セクション
- * - クリエイターセクションは isWriter のときだけ表示
+ * - 「見る」「駐在員」「アカウント」「Locore について」の 4 セクション
+ * - 駐在員セクションは isWriter のときだけ表示
  * - ナビゲーション後は自動で閉じる（pathname 変化を監視）
  * - 開いている間は body のスクロールをロック
  *
@@ -357,7 +357,7 @@ function DrawerPanel({
           </Section>
 
           {viewerLoggedIn && isWriter ? (
-            <Section title="クリエイター">
+            <Section title="駐在員">
               {WRITER_ITEMS.map((it) => (
                 <NavLink
                   key={it.href}
@@ -368,13 +368,13 @@ function DrawerPanel({
               ))}
             </Section>
           ) : viewerLoggedIn ? (
-            <Section title="クリエイター">
+            <Section title="駐在員">
               <Link
                 href="/become-writer"
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
               >
                 <PenSquare className="h-4 w-4" />
-                クリエイターになる
+                駐在員として参加
               </Link>
             </Section>
           ) : null}

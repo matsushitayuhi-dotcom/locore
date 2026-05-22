@@ -1,23 +1,18 @@
-import { redirect } from 'next/navigation';
+import { redirect, RedirectType } from 'next/navigation';
 
 /**
  * /writers/[id] — 旧 writer 個別ページ。
  *
- * 現在は /residents/[id] に統合済み（マッチングアプリ風のリッチな
- * プロフィールページ）。記事ページやチャットからの遷移リンクも
- * 含めて、ユーザープロフィールの表示はすべて /residents/[id] に
- * 集約する方針。
- *
- * 既存ブックマーク・SNS シェアの URL を壊さないように、ここでは
- * サーバーサイドで透過的にリダイレクトするだけにしている。
+ * /residents/[id] 駐在員ハブに統合済み。既存ブックマーク / SNS シェア /
+ * 外部記事リンクを壊さないため、サーバーサイドで透過的に置換リダイレクト。
  */
 
 export const dynamic = 'force-dynamic';
 
-export default function WriterRedirectPage({
+export default function WritersRedirect({
   params,
 }: {
   params: { id: string };
 }) {
-  redirect(`/residents/${params.id}`);
+  redirect(`/residents/${params.id}`, RedirectType.replace);
 }

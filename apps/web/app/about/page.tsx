@@ -6,7 +6,7 @@ import { ArrowRight } from 'lucide-react';
 export const metadata = {
   title: 'Locore とは',
   description:
-    'Locore は、在外邦人クリエイターが現地で書く有料・編集的な旅行誌。観光ガイドにはない街の輪郭を、現地で暮らす人の目線から届けます。',
+    'Locore は、在外邦人駐在員が現地で書く有料・編集的な旅行誌。観光ガイドにはない街の輪郭を、現地で暮らす人の目線から届けます。',
 };
 
 export default function AboutPage() {
@@ -35,7 +35,7 @@ export default function AboutPage() {
             街の本当の輪郭を持ち帰る
           </h1>
           <p className="mt-6 text-[16px] leading-[1.9] text-foreground/70">
-            Locore（ロコレ）は、在外邦人のクリエイターが現地で書く、有料・短尺の旅行誌です。
+            Locore（ロコレ）は、在外邦人の駐在員が現地で書く、有料・短尺の旅行誌です。
             映え目当ての観光ガイドや、誰でも書ける AI 旅行記事ではなく、
             <strong className="font-semibold text-foreground">
               {' '}その街で実際に暮らしている人だけが知っている「もう一段深い情報」
@@ -90,9 +90,9 @@ export default function AboutPage() {
       {/* Who: creators */}
       <section className="border-y border-border bg-card/40">
         <div className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHeader kicker="Who" title="書き手 — クリエイター" />
+          <SectionHeader kicker="Who" title="書き手 — 駐在員" />
           <p className="mt-6 text-[15px] leading-[1.9] text-foreground/75">
-            Locore のクリエイターは、現地に住む日本人。商業的に動くインフルエンサーではなく、
+            Locore の駐在員は、現地に住む日本人。商業的に動くインフルエンサーではなく、
             自分の街への愛着で書く生活者です。3 つの Tier に分かれており、
             居住年数とコンテンツ実績で判定します。
           </p>
@@ -114,7 +114,7 @@ export default function AboutPage() {
             />
           </div>
           <p className="mt-8 text-[13px] leading-[1.9] text-foreground/60">
-            クリエイターになるには
+            駐在員になるには
             <Link
               href="/become-writer"
               className="ml-1 text-primary-300 underline-offset-4 hover:underline"
@@ -136,7 +136,7 @@ export default function AboutPage() {
           />
           <PrincipleItem
             title="ローカルスコアで透明性を担保"
-            body="各記事に 0–100 のローカルスコアを付与します。Google 評価件数・SNS 露出度・クリエイターの主観などをハイブリッドで算出。観光地寄りの記事もスコアを明示した上で公開します。"
+            body="各記事に 0–100 のローカルスコアを付与します。Google 評価件数・SNS 露出度・駐在員の主観などをハイブリッドで算出。観光地寄りの記事もスコアを明示した上で公開します。"
           />
           <PrincipleItem
             title="映え禁止"
@@ -144,7 +144,7 @@ export default function AboutPage() {
           />
           <PrincipleItem
             title="スポット位置情報は購入後に解放"
-            body="無料プレビューではエリアまでしか表示しません。具体的な店舗・住所・営業時間は購入後に解放されます。クリエイターの取材コストを保護するための設計です。"
+            body="無料プレビューではエリアまでしか表示しません。具体的な店舗・住所・営業時間は購入後に解放されます。駐在員の取材コストを保護するための設計です。"
           />
         </ul>
       </section>
@@ -166,8 +166,8 @@ export default function AboutPage() {
             />
             <StepItem
               n={3}
-              title="気になることはクリエイターに直接質問"
-              body="記事クリエイターとは 1:1 のメッセージで質問できます。営業時間の変動など現地でないと分からないことも、直接聞けます。"
+              title="気になることは駐在員に直接質問"
+              body="記事駐在員とは 1:1 のメッセージで質問できます。営業時間の変動など現地でないと分からないことも、直接聞けます。"
             />
             <StepItem
               n={4}
@@ -201,7 +201,7 @@ export default function AboutPage() {
           </div>
           <div className="rounded-xl border border-border bg-card p-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50">
-              クリエイター
+              駐在員
             </p>
             <p
               className="mt-2 text-[28px] font-semibold tabular text-foreground"
@@ -229,7 +229,7 @@ export default function AboutPage() {
               a="原則できません。デジタルコンテンツの性質上、購入後すぐに本文と位置情報が解放されるためです。ただし、記載情報に重大な誤り（店舗閉業・全く異なる場所）がある場合は個別に審査のうえ対応します。"
             />
             <FaqItem
-              q="クリエイターはどう選んでいますか？"
+              q="駐在員はどう選んでいますか？"
               a="現地居住 1 年以上の証明（在留カード・公共料金の請求書等）を編集部が確認します。さらに最初の 3 本の投稿は編集レビュー必須。観光地紹介に偏ったり、事実誤認があれば差し戻します。"
             />
             <FaqItem
@@ -237,8 +237,8 @@ export default function AboutPage() {
               a="載ることはあります。ただし「観光地化済み」と編集が判断するとローカルスコアが下がる仕組みです。Locore の主役は「ガイドブックにまだ載っていない場所」ですが、地元の人が日常で通う店なら有名店も対象です。"
             />
             <FaqItem
-              q="購入後にクリエイターにどこまで質問できますか？"
-              a="基本的に 1 記事あたり数往復までは無料の範囲。「平日の何時頃が空いている？」「ベジタリアン対応？」のようなライトな質問が想定されています。深掘りした 1on1 コンサルティングは別途有料サービスとして提供しているクリエイターもいます。"
+              q="購入後に駐在員にどこまで質問できますか？"
+              a="基本的に 1 記事あたり数往復までは無料の範囲。「平日の何時頃が空いている？」「ベジタリアン対応？」のようなライトな質問が想定されています。深掘りした 1on1 コンサルティングは別途有料サービスとして提供している駐在員もいます。"
             />
             <FaqItem
               q="海外からでも使えますか？"
@@ -289,7 +289,7 @@ export default function AboutPage() {
           <h2
             className="mt-4 text-[28px] font-semibold leading-snug tracking-tight text-foreground"
           >
-            Locore を一緒に育てるクリエイター、
+            Locore を一緒に育てる駐在員、
             <br className="hidden sm:block" />
             いま探しています。
           </h2>

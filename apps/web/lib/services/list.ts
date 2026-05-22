@@ -192,6 +192,90 @@ export async function listServices(
 }
 
 /**
+ * 特定ユーザーが出品している有償サービスを最大 `limit` 件まで返す。
+ * /articles/[id] の著者カード末尾「この駐在員の他のサービス」セクションで使う。
+ *
+ * - is_active=true のみ
+ * - position 昇順 → createdAt 降順
+ * - city / audience カラムが無い古い環境では空配列にフォールバック
+ */
+export async function listServicesByUserId(
+  userId: string,
+  limit = 3,
+): Promise<FeaturedService[]> {
+  if (!userId) return [];
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({
+        id: schema.userServices.id,
+        title: schema.userServices.title,
+        description: schema.userServices.description,
+        category: schema.userServices.category,
+        priceJpy: schema.userServices.priceJpy,
+        priceUnit: schema.userServices.priceUnit,
+        contactMethod: schema.userServices.contactMethod,
+        externalUrl: schema.userServices.externalUrl,
+        audience: schema.userServices.audience,
+        coverImageUrl: schema.userServices.coverImageUrl,
+        cityNameJa: schema.cities.nameJa,
+        citySlug: schema.cities.slug,
+        ownerId: schema.users.id,
+        ownerDisplayName: schema.users.displayName,
+        ownerAvatarUrl: schema.users.avatarUrl,
+      })
+      .from(schema.userServices)
+      .innerJoin(
+        schema.users,
+        eq(schema.users.id, schema.userServices.userId),
+      )
+      .leftJoin(
+        schema.cities,
+        eq(schema.cities.id, schema.userServices.cityId),
+      )
+      .where(
+        and(
+          eq(schema.userServices.userId, userId),
+          eq(schema.userServices.isActive, true),
+          isNull(schema.users.deletedAt),
+        ),
+      )
+      .orderBy(
+        asc(schema.userServices.position),
+        desc(schema.userServices.createdAt),
+      )
+      .limit(limit);
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description,
+      category: r.category,
+      priceJpy: r.priceJpy,
+      priceUnit: r.priceUnit,
+      contactMethod: (r.contactMethod ?? 'chat') as 'chat' | 'external_url',
+      externalUrl: r.externalUrl,
+      cityNameJa: r.cityNameJa ?? null,
+      citySlug: r.citySlug ?? null,
+      audience: (r.audience as FeaturedService['audience']) ?? null,
+      coverImageUrl: r.coverImageUrl ?? null,
+      ownerId: r.ownerId,
+      ownerDisplayName: r.ownerDisplayName,
+      ownerAvatarUrl: r.ownerAvatarUrl,
+    }));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[listServicesByUserId] user_services 拡張カラム未適用。0046 / 0050 を適用してください。',
+      );
+      return [];
+    }
+    console.error('[listServicesByUserId] failed:', msg);
+    return [];
+  }
+}
+
+/**
  * フィルタ UI 用に、user_services.category で使われている値の一覧を distinct で取る。
  * 空のとき / 失敗時は空配列。
  */

@@ -74,7 +74,7 @@ export function WorldPicker({ countries }: { countries: CountryListItem[] }) {
               この国には、書き手がいます
             </h2>
             <p className="mt-1 text-[13px] text-foreground/65">
-              タップで、その国の地域一覧へ。地域を選ぶと、現地ライターの記事が並びます。
+              タップで、その国の地域一覧へ。地域を選ぶと、現地駐在員の記事が並びます。
             </p>
           </div>
         </header>

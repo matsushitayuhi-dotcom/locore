@@ -26,12 +26,12 @@ const becomeWriterSchema = z.object({
   agreeTerms: z
     .union([z.literal('on'), z.literal('true'), z.boolean()])
     .refine((v) => v === true || v === 'on' || v === 'true', {
-      message: 'クリエイター規約に同意してください',
+      message: '駐在員規約に同意してください',
     }),
 });
 
 /**
- * クリエイター登録（Tier B 自己申告）。
+ * 駐在員登録（Tier B 自己申告）。
  *
  * - users.role を 'resident_writer' に更新
  * - writer_profiles を Tier B で INSERT（既存があれば何もしない）
@@ -46,7 +46,7 @@ export async function becomeWriter(formData: FormData): Promise<void> {
   const user = await requireUser('/become-writer');
 
   if (user.role === 'resident_writer' || user.role === 'editor') {
-    // 既にクリエイター → ダッシュボードへ
+    // 既に駐在員 → ダッシュボードへ
     redirect('/writer/articles');
   }
 

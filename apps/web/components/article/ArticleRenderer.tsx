@@ -26,11 +26,13 @@ import type {
 } from '@/lib/articles/published';
 import type { FolderSummary } from '@/lib/spotFavorites/actions';
 import type { getMyReviewForArticle } from '@/lib/reviews/actions';
+import type { FeaturedService } from '@/lib/services/featured';
+import { ServiceCard } from '../services/ServiceCard';
 
 type MyReview = Awaited<ReturnType<typeof getMyReviewForArticle>>;
 
 /**
- * 記事の本体レンダリング。本番 `/articles/[id]` ページとライター用
+ * 記事の本体レンダリング。本番 `/articles/[id]` ページと駐在員用
  * `/writer/articles/[id]/preview` ページで共通利用する。
  *
  * `previewMode=true` のときは:
@@ -68,8 +70,13 @@ type ArticleRendererProps = {
   bookmarkedSpotIds: Set<string>;
   /** 自分の既存レビュー（編集用） */
   myReview: MyReview;
-  /** プレビューモード（ライター向け公開前確認画面） */
+  /** プレビューモード（駐在員 = 書き手向けの公開前確認画面） */
   previewMode?: boolean;
+  /**
+   * この駐在員 (= 著者) の他の出品サービス。最大 3 件想定。
+   * 空配列なら「他のサービス」ブロックを描かない。
+   */
+  authorServices?: FeaturedService[];
 };
 
 export function ArticleRenderer({
@@ -92,6 +99,7 @@ export function ArticleRenderer({
   bookmarkedSpotIds,
   myReview,
   previewMode = false,
+  authorServices = [],
 }: ArticleRendererProps) {
   const displayAreaLabel: string = region?.nameJa ?? article.area ?? '';
 
@@ -110,7 +118,7 @@ export function ArticleRenderer({
                 <span className="mr-2 rounded-full bg-warning-500/20 px-2 py-0.5 text-[11px] uppercase tracking-[0.16em]">
                   プレビュー
                 </span>
-                この画面はライター専用の公開前プレビューです
+                この画面は駐在員専用の公開前プレビューです
               </p>
               <Link
                 href={`/writer/articles/${article.id}/edit`}
@@ -341,18 +349,44 @@ export function ArticleRenderer({
                   ) : null}
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <Button asChild variant="primary" size="sm">
-                      <Link href={`/residents/${writer.id}`}>フォローする</Link>
+                      <Link href={`/residents/${writer.id}`}>
+                        プロフィールを見る
+                      </Link>
                     </Button>
                     <Link
-                      href={`/residents/${writer.id}`}
+                      href={`/residents/${writer.id}?tab=articles`}
                       className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
                     >
-                      この著者の他の記事
+                      この駐在員の他の記事
                       <ChevronRight className="h-3 w-3" />
                     </Link>
                   </div>
                 </div>
               </div>
+
+              {/* この駐在員の他のサービス (最大 3 件)。0 件なら描画しない。 */}
+              {authorServices.length > 0 ? (
+                <div className="mt-6 border-t border-border pt-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
+                      この駐在員の他のサービス
+                    </p>
+                    <Link
+                      href={`/residents/${writer.id}?tab=services`}
+                      className="text-[11px] font-semibold text-primary-300 hover:underline"
+                    >
+                      すべて見る →
+                    </Link>
+                  </div>
+                  <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {authorServices.map((s) => (
+                      <li key={s.id}>
+                        <ServiceCard service={s} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </section>
           ) : null}
 

@@ -16,7 +16,7 @@ export default async function AccountSettingsPage() {
   const isWriter = user.role === 'resident_writer' || user.role === 'editor';
   const alreadyDeleted = false; // モック現在ユーザーは生存前提
 
-  // クリエイターの場合、未精算の集計（簡易：完了購入の payout 合算と payouts の completed の差分）
+  // 駐在員の場合、未精算の集計（簡易：完了購入の payout 合算と payouts の completed の差分）
   let unsettledJpy = 0;
   let publishedCount = 0;
 

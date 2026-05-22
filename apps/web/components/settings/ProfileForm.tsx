@@ -9,7 +9,7 @@ import { uploadAvatar } from '@/lib/storage/uploadImage';
 /**
  * プロフィール編集フォーム。
  *
- * - クリエイター / 読者の区別なし（"writer 用 bio" は廃止）
+ * - 駐在員 / 読者の区別なし（"writer 用 bio" は廃止）
  * - アバター画像はファイル選択 / D&D で Supabase Storage にアップロード
  *   (UAT 指摘でクリップボード貼り付けは廃止)
  */

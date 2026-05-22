@@ -28,19 +28,19 @@ export default async function WriterLayout({ children }: { children: ReactNode }
       <div className="mx-auto max-w-screen-xl px-4 py-10 sm:px-6 sm:py-14">
         <header className="mb-8">
           <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-foreground/60">
-            Writer Studio
+            Resident Studio
           </p>
           <h1
             className="text-[28px] font-semibold tracking-tight text-foreground sm:text-[32px]"
           >
-            クリエイターダッシュボード
+            駐在員ダッシュボード
           </h1>
           <p className="mt-2 text-[13px] text-foreground/60">
             ようこそ、{user.displayName ?? user.email} さん。
           </p>
         </header>
 
-        <nav aria-label="クリエイターナビゲーション" className="mb-8 border-b border-border">
+        <nav aria-label="駐在員ナビゲーション" className="mb-8 border-b border-border">
           <ul className="flex gap-1">
             {NAV_ITEMS.map((item) => (
               <li key={item.href}>
