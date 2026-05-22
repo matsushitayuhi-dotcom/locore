@@ -111,6 +111,14 @@ export const users = pgTable(
     openToMeetups: boolean('open_to_meetups').notNull().default(false),
 
     /**
+     * マーケットプレイス出品者の Stripe Connect Express account_id。
+     * 詳細プロフィール（KYC 等）は seller_profiles テーブルに別途格納するが、
+     * 「すぐ Connect 接続済みか判定したい」場面のためここにも持つ（denormalized）。
+     * manual/0052_marketplace_schema.sql。
+     */
+    stripeConnectAccountId: text('stripe_connect_account_id'),
+
+    /**
      * サンプルデータ識別用フラグ。
      * 投入時 true、`DELETE FROM ... WHERE is_sample = true` で一括クリーンアップ可能。
      * 本番アカウントは常に false。マイグレーション: `manual/0010_is_sample.sql`

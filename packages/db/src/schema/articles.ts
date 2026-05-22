@@ -163,6 +163,12 @@ export const articles = pgTable(
     previewTokenExpiresAt: timestamp('preview_token_expires_at', {
       withTimezone: true,
     }),
+    /**
+     * 関連する listings.id（任意）。記事末尾に Listing カードを差し込む UX。
+     * 記事は集客窓口、Listing は決済導線という二段構えのリンク。
+     * manual/0052_marketplace_schema.sql。
+     */
+    relatedListingId: uuid('related_listing_id'),
     /** サンプルデータ識別用。`manual/0010_is_sample.sql` */
     isSample: boolean('is_sample').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
