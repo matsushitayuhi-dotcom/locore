@@ -4,6 +4,7 @@ import * as React from "react";
 import { Clock, Heart, MapPin, Star } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { type ResidencyTier } from "./ResidencyBadge";
+import { LocalTierBadge } from "./LocalTierBadge";
 
 export type DurationType = "1h" | "half-day" | "1day" | "multi-day" | string;
 
@@ -209,26 +210,9 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
             </button>
           ) : null}
 
-          {/* Bottom-left: local score pill (コンパクト) */}
-          <div
-            className={cn(
-              "absolute bottom-2 left-2 inline-flex items-center gap-1",
-              "rounded-full bg-neutral-950/80 px-2 py-0.5 backdrop-blur-md",
-            )}
-          >
-            <span
-              className={cn(
-                "size-1.5 rounded-full",
-                localScore >= 70
-                  ? "bg-primary-500"
-                  : localScore >= 30
-                    ? "bg-primary-300"
-                    : "bg-primary-900",
-              )}
-            />
-            <span className="text-[9px] font-bold tabular tracking-wider text-neutral-50">
-              {localScore}
-            </span>
+          {/* Bottom-left: local tier badge (ブロンズ / シルバー / ゴールド) */}
+          <div className="absolute bottom-2 left-2">
+            <LocalTierBadge score={localScore} size="sm" onDark />
           </div>
         </div>
 

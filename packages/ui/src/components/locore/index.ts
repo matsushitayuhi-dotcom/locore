@@ -1,5 +1,12 @@
 export { LocalScoreBar, type LocalScoreBarProps } from "./LocalScoreBar";
 export {
+  LocalTierBadge,
+  tierFromScore,
+  tierLabel,
+  type LocalTierBadgeProps,
+  type LocalTier,
+} from "./LocalTierBadge";
+export {
   ResidencyBadge,
   type ResidencyBadgeProps,
   type ResidencyTier,

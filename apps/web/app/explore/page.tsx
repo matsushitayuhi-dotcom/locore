@@ -57,25 +57,25 @@ export default async function ExplorePage() {
           <CountryGridByContinent countries={countries} />
         </section>
 
-        {/* 2. スポット紹介 (旅程より先に出すため、ここが 2 番目) */}
-        {spotGuides.length > 0 ? (
-          <section id="spot-guide">
-            <SectionHeader title="スポット紹介" href="/articles?type=spot_guide" />
-            <ArticleScrollSection
-              articles={spotGuides}
-              moreHref="/articles?type=spot_guide"
-              socialCounts={socialCounts}
-            />
-          </section>
-        ) : null}
-
-        {/* 3. 旅程プラン */}
+        {/* 2. 旅程プラン (スポット紹介より先に見せる) */}
         {itineraries.length > 0 ? (
           <section id="itinerary">
             <SectionHeader title="旅程プラン" href="/articles?type=itinerary" />
             <ArticleScrollSection
               articles={itineraries}
               moreHref="/articles?type=itinerary"
+              socialCounts={socialCounts}
+            />
+          </section>
+        ) : null}
+
+        {/* 3. スポット紹介 */}
+        {spotGuides.length > 0 ? (
+          <section id="spot-guide">
+            <SectionHeader title="スポット紹介" href="/articles?type=spot_guide" />
+            <ArticleScrollSection
+              articles={spotGuides}
+              moreHref="/articles?type=spot_guide"
               socialCounts={socialCounts}
             />
           </section>

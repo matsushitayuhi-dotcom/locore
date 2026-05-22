@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Badge } from '@locore/ui';
-import { ChevronRight, Clock, MapPin, Star } from '@locore/ui/icons';
+import { Badge, LocalTierBadge } from '@locore/ui';
+import { ChevronRight, Clock, Star } from '@locore/ui/icons';
 import { LikeButton } from './LikeButton';
 import { AddToTripButton } from '../AddToTripButton';
 import type { Article, Writer } from '@/lib/mock';
@@ -186,13 +186,10 @@ export function ArticleHero({
       <div className="mx-auto mt-8 max-w-3xl px-4 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-y border-border/70 py-3 text-[11px] text-foreground/70">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span
-              className="inline-flex items-center gap-1.5 font-medium tabular"
-              aria-label={`ローカル度 ${Math.round(article.localScoreAverage)}`}
-            >
-              <MapPin className="h-3.5 w-3.5 text-primary-300" />
-              ローカル {Math.round(article.localScoreAverage)}
-            </span>
+            <LocalTierBadge
+              score={article.localScoreAverage}
+              size="md"
+            />
             <span className="text-foreground/20">·</span>
             <span
               className="inline-flex items-center gap-1.5 font-medium tabular"

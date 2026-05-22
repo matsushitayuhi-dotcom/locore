@@ -6,7 +6,7 @@ import {
   AvatarImage,
   Button,
   CreatorBadge,
-  LocalScoreBar,
+  LocalTierBadge,
   ResidencyBadge,
   SatisfactionStars,
 } from '@locore/ui';
@@ -378,14 +378,8 @@ export function ArticleRenderer({
                       訪問 {new Date(r.visitedAt).toLocaleDateString('ja-JP')}
                     </p>
                   </div>
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="flex-1">
-                      <LocalScoreBar
-                        value={r.localScore}
-                        size="sm"
-                        showLabel={false}
-                      />
-                    </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <LocalTierBadge score={r.localScore} size="sm" />
                     <SatisfactionStars
                       rating={r.satisfaction}
                       size="sm"
