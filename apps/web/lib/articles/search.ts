@@ -2,6 +2,7 @@ import 'server-only';
 import { and, desc, eq, ilike, isNull } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
+import { getArticleReviewStats } from '@/lib/articles/published';
 import type { Article } from '@/lib/mock';
 
 /**
@@ -74,6 +75,9 @@ export async function searchPublishedArticles(
       other: '半日',
     };
 
+    // localScore / satisfaction / reviewCount / purchaseCount を一括集計
+    const stats = await getArticleReviewStats(rows.map((r) => r.id));
+
     return rows.map(
       (r): Article => ({
         id: r.id,
@@ -94,10 +98,10 @@ export async function searchPublishedArticles(
         articleType: r.articleType,
         createdAt: r.createdAt.toISOString(),
         publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
-        localScoreAverage: 70,
-        satisfactionAverage: 4.5,
-        reviewCount: 0,
-        purchaseCount: 0,
+        localScoreAverage: stats.get(r.id)?.localScoreAverage ?? 70,
+        satisfactionAverage: stats.get(r.id)?.satisfactionAverage ?? 4.5,
+        reviewCount: stats.get(r.id)?.reviewCount ?? 0,
+        purchaseCount: stats.get(r.id)?.purchaseCount ?? 0,
         spotIds: [],
       }),
     );

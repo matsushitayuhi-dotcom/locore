@@ -3,9 +3,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import {
   Noto_Sans_JP,
-  Noto_Serif_JP,
   Inter,
-  Fraunces,
   JetBrains_Mono,
 } from 'next/font/google';
 import { Toaster } from 'sonner';
@@ -24,24 +22,14 @@ const notoSansJp = Noto_Sans_JP({
   display: 'swap',
 });
 
-const notoSerifJp = Noto_Serif_JP({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-serif-jp',
-  display: 'swap',
-});
+// 明朝系フォント (Noto_Serif_JP / Fraunces) は 2026-05 改修で完全撤去。
+// ロゴ・本文・タイトル全て sans に統一。読み込みもしないことで初回フォント
+// ペイロードを ~120KB 削減 + flash-of-serif を完全に防ぐ。
 
 const inter = Inter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
-  display: 'swap',
-});
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-serif',
   display: 'swap',
 });
 
@@ -121,9 +109,7 @@ export default async function RootLayout({
 
   const fontVars = [
     notoSansJp.variable,
-    notoSerifJp.variable,
     inter.variable,
-    fraunces.variable,
     jetbrains.variable,
   ].join(' ');
 

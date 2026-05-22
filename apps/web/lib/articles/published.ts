@@ -111,11 +111,18 @@ export async function getPublishedDbArticles(
     other: '半日',
   };
 
+  // ----- レビュー集計 (一括) -----
+  // 1 クエリで全記事分のレビュー平均・件数 + 購入数を取得して Map に詰める。
+  // 記事数が 0 のときは余計なクエリを発行しない。
+  const articleIds = rows.map((r) => r.id);
+  const reviewStats = await getArticleReviewStats(articleIds);
+
   return rows.map((r) => {
     const country = r.countryNameJa ?? '';
     const region = r.cityNameJa ?? 'パリ';
     // 国・地域タグ。例: 「フランス・パリ＆近郊」
     const area = country && country !== region ? `${country}・${region}` : region;
+    const stats = reviewStats.get(r.id);
     return {
       id: r.id,
       title: r.title,
@@ -135,14 +142,99 @@ export async function getPublishedDbArticles(
       articleType: r.articleType,
       createdAt: r.createdAt.toISOString(),
       publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
-      // DB 集計が未実装のため暫定デフォルト
-      localScoreAverage: 70,
-      satisfactionAverage: 4.5,
-      reviewCount: 0,
-      purchaseCount: 0,
+      // reviews テーブルから集計 (一括クエリ)。レビュー 0 件のときは
+      // 「未評価」を示すデフォルト値 (localScore=70 中央値、satisfaction=4.5)。
+      localScoreAverage: stats?.localScoreAverage ?? 70,
+      satisfactionAverage: stats?.satisfactionAverage ?? 4.5,
+      reviewCount: stats?.reviewCount ?? 0,
+      purchaseCount: stats?.purchaseCount ?? 0,
       spotIds: [],
     };
   });
+}
+
+/**
+ * 複数記事のレビュー集計 + 購入数を 1 クエリで返す。
+ * 記事一覧の `localScoreAverage` / `satisfactionAverage` / `reviewCount` /
+ * `purchaseCount` をリアルに計算するためのヘルパー。
+ *
+ * 集計ルール:
+ *   - reviews.local_score の平均を四捨五入して整数化 (0-100)
+ *   - reviews.satisfaction_stars の平均を小数 1 桁に丸める
+ *   - reviewCount = レビュー件数 (NULL は除外)
+ *   - purchaseCount = purchases 件数 (refunded 等の status は今は集計しない)
+ *
+ * articleIds が空の場合は空 Map を返す。DB エラー時も空 Map (一覧は壊さない)。
+ */
+type ArticleReviewStats = {
+  localScoreAverage: number;
+  satisfactionAverage: number;
+  reviewCount: number;
+  purchaseCount: number;
+};
+
+export async function getArticleReviewStats(
+  articleIds: string[],
+): Promise<Map<string, ArticleReviewStats>> {
+  const out = new Map<string, ArticleReviewStats>();
+  if (articleIds.length === 0) return out;
+  try {
+    const db = getDb();
+    const dbAny = db as unknown as {
+      execute: (q: ReturnType<typeof sql>) => Promise<unknown>;
+    };
+    const result = (await dbAny.execute(
+      sql`
+        SELECT
+          p.article_id::text                   AS article_id,
+          AVG(r.local_score)::float            AS avg_local,
+          AVG(r.satisfaction_stars)::float     AS avg_sat,
+          COUNT(r.id)::int                     AS review_count,
+          (
+            SELECT COUNT(*)::int FROM purchases
+            WHERE article_id = p.article_id
+          )                                    AS purchase_count
+        FROM purchases p
+        LEFT JOIN reviews r ON r.purchase_id = p.id
+        WHERE p.article_id IN (${sql.join(
+          articleIds.map((id) => sql`${id}::uuid`),
+          sql`, `,
+        )})
+        GROUP BY p.article_id
+      `,
+    )) as
+      | Array<{
+          article_id: string;
+          avg_local: number | null;
+          avg_sat: number | null;
+          review_count: number;
+          purchase_count: number;
+        }>
+      | {
+          rows: Array<{
+            article_id: string;
+            avg_local: number | null;
+            avg_sat: number | null;
+            review_count: number;
+            purchase_count: number;
+          }>;
+        };
+    const rows = Array.isArray(result) ? result : result.rows;
+    for (const row of rows) {
+      out.set(row.article_id, {
+        localScoreAverage:
+          row.avg_local != null ? Math.round(row.avg_local) : 70,
+        satisfactionAverage:
+          row.avg_sat != null ? +row.avg_sat.toFixed(1) : 4.5,
+        reviewCount: row.review_count ?? 0,
+        purchaseCount: row.purchase_count ?? 0,
+      });
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[getArticleReviewStats] failed, returning empty map:', err);
+  }
+  return out;
 }
 
 /**

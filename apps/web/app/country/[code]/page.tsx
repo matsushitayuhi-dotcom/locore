@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Lock, MapPin, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Lock, MapPin } from 'lucide-react';
 import { getCountryByCode } from '@/lib/geo/countries';
 import type { RegionInfo } from '@/lib/geo/countries';
 
@@ -109,8 +109,7 @@ export default async function CountryPage({ params }: Props) {
         {activeRegions.length > 0 ? (
           <section>
             <SectionHeader
-              kicker="公開中の地域"
-              title="この街には、書き手がいます"
+              title="公開中"
               count={activeRegions.length}
             />
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
@@ -155,8 +154,7 @@ export default async function CountryPage({ params }: Props) {
         {lockedRegions.length > 0 ? (
           <section>
             <SectionHeader
-              kicker="準備中の地域"
-              title="この街で書ける人を、探しています"
+              title="準備中"
               count={lockedRegions.length}
             />
             <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -174,29 +172,19 @@ export default async function CountryPage({ params }: Props) {
 }
 
 function SectionHeader({
-  kicker,
   title,
   count,
 }: {
-  kicker: string;
   title: string;
   count?: number;
 }) {
   return (
     <header className="mb-4 flex items-end justify-between gap-4">
-      <div>
-        <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-          <Sparkles className="h-3 w-3" />
-          {kicker}
-        </p>
-        <h2
-          className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
-        >
-          {title}
-        </h2>
-      </div>
+      <h2 className="text-[20px] font-bold leading-tight tracking-tight sm:text-[24px]">
+        {title}
+      </h2>
       {typeof count === 'number' ? (
-        <span className="text-[11px] text-foreground/45">{count} 件</span>
+        <span className="text-[11px] text-foreground/45 tabular">{count}</span>
       ) : null}
     </header>
   );

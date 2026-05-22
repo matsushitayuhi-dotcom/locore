@@ -468,7 +468,7 @@
    モバイルは少しサイズを抑える (3.6em)。 */
 .prose-locore--editorial:not(.prose-locore--continuation)
   > p:first-of-type::first-letter {
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-sans-jp);
   font-size: 3.6em;
   float: left;
   line-height: 0.85;
@@ -541,7 +541,7 @@
   background: transparent;
   border-radius: 0;
   text-align: center;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-sans-jp);
   font-style: italic;
   font-size: 22px;
   line-height: 1.55;
@@ -558,7 +558,7 @@
   font-size: 38px;
   line-height: 1;
   color: var(--color-primary-300);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-sans-jp);
 }
 .prose-locore--editorial blockquote:not([data-callout]) p {
   font-size: inherit;
@@ -605,7 +605,7 @@
 .prose-locore--editorial figcaption {
   margin-top: 0.6em;
   padding: 0 40px;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: var(--font-sans-jp);
   font-style: italic;
   font-size: 13px;
   line-height: 1.5;
