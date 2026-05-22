@@ -85,34 +85,82 @@ export function Paywall({
     );
   }
 
+  // 2026-05 改修: 無料記事 (priceJpy=0) も明示的アンロックを通す方針。
+  //   表示・コピー・モーダル有無を free / paid で出し分ける。
+  const isFree = article.priceJpy === 0;
+
+  // 無料記事はワンクリック解放 (確認モーダル不要)。
+  const onUnlockFree = () => {
+    if (!viewerLoggedIn) {
+      // 未ログインでも localStorage で開く (DB 行は作らない)
+      Purchases.add(article.id);
+      setPurchased(true);
+      toast.success('アンロックしました');
+      router.refresh();
+      return;
+    }
+    startTransition(async () => {
+      const res = await purchaseArticleMock({ articleId: article.id });
+      if (res.ok) {
+        Purchases.add(article.id);
+        setPurchased(true);
+        toast.success(
+          res.alreadyOwned ? 'すでにアンロック済みでした' : 'アンロックしました',
+        );
+        router.refresh();
+      } else {
+        // DB 書込み失敗時も localStorage で開ける fallback
+        Purchases.add(article.id);
+        setPurchased(true);
+        toast.success('アンロックしました');
+        router.refresh();
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* 有料部分のプレビューは表示しない。
          ぼかし表示は「頑張れば読める」状態だったので、購入導線のみに集約。 */}
       <div className="rounded-lg border border-primary-500/30 bg-primary-500/10 p-6 text-center">
         <Lock className="mx-auto mb-3 h-5 w-5 text-primary-300" />
-        <p
-          className="text-[18px] font-semibold tracking-tight"
-        >
-          ここから先は、書き手のサポート
+        <p className="text-[18px] font-semibold tracking-tight">
+          {isFree
+            ? 'この記事を無料でアンロック'
+            : 'ここから先は、書き手のサポート'}
         </p>
         <p className="mt-2 text-[13px] text-foreground/65">
-          購入すると本文の続き、スポット名、住所、地図の正確な位置がすべて開きます。
-          支払いの 70% は書き手にお渡しします。
+          {isFree
+            ? 'スポット詳細、地図の正確な位置、駐在員からの細かな情報がすべて開きます。1 クリックで OK です。'
+            : '購入すると本文の続き、スポット名、住所、地図の正確な位置がすべて開きます。支払いの 70% は書き手にお渡しします。'}
         </p>
         <div className="mt-4 flex flex-col items-center gap-2">
-          <PriceTag amount={article.priceJpy} size="lg" suffix=" / 1記事" />
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => setOpen(true)}
-            className="mt-2 min-w-[260px]"
-          >
-            ¥{article.priceJpy.toLocaleString('ja-JP')} で読み進める
-          </Button>
-          <p className="mt-1 text-[11px] text-foreground/45">
-            ※ プロト版のため、実際の決済は発生しません
-          </p>
+          {isFree ? (
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={onUnlockFree}
+              disabled={isPending}
+              className="mt-2 min-w-[260px]"
+            >
+              {isPending ? '処理中…' : '🔓 無料でアンロック'}
+            </Button>
+          ) : (
+            <>
+              <PriceTag amount={article.priceJpy} size="lg" suffix=" / 1記事" />
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => setOpen(true)}
+                className="mt-2 min-w-[260px]"
+              >
+                ¥{article.priceJpy.toLocaleString('ja-JP')} で読み進める
+              </Button>
+              <p className="mt-1 text-[11px] text-foreground/45">
+                ※ プロト版のため、実際の決済は発生しません
+              </p>
+            </>
+          )}
         </div>
       </div>
 

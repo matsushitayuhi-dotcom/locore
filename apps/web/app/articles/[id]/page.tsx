@@ -34,9 +34,13 @@ export default async function ArticleDetailPage({
   const region = bundle.region;
   const country = bundle.country;
 
-  // 本文の分割：bodyPaid が空 → 全文無料記事として扱い Paywall を出さない
+  // 本文の分割：bodyPaid が空 → 全文無料記事として扱う。
+  // 2026-05 改修: 無料記事でも「アンロック」フローを通す方針 (便宜上の統一)。
+  //   - hasPaid: 有料本文の有無
+  //   - isFreeArticle: 価格 0 円の記事 (priceJpy === 0)。これも Paywall を
+  //     経由するが、CTA は「無料でアンロック」表記になる
   const hasPaid = !!article.bodyPaid && article.bodyPaid.trim().length > 0;
-  const isFreeArticle = !hasPaid;
+  const isFreeArticle = article.priceJpy === 0;
 
   // 関連記事は DB から取得済み
   const related = relatedDb.slice(0, 6);
@@ -65,7 +69,13 @@ export default async function ArticleDetailPage({
 
   // 自分の記事は常に全解放（オーナー / editor）
   const isOwner = !!me && (me.id === article.writerId || me.role === 'editor');
-  const unlocked = isFreeArticle || purchasedFromDb || isOwner;
+  // 2026-05 改修: 無料記事も明示的なアンロック必須に変更。
+  //   purchasedFromDb (DB の purchases 行あり) または isOwner (自分の記事)
+  //   のみで unlocked になる。無料記事のときは Paywall が「無料でアンロック」
+  //   ボタンを出し、1 クリックで purchases に amountJpy=0 で行を作る。
+  //   (Paywall コンポーネントが localStorage Purchases.has でも判定するので
+  //    未ログインユーザーも localStorage 経由で開ける)
+  const unlocked = purchasedFromDb || isOwner;
 
   // お気に入りスポット + いいね / ブックマーク数 + 自分の既存レビュー を並列取得
   const [
