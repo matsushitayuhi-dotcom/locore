@@ -18,7 +18,6 @@ import { SpotsCardList } from '../SpotsCardList';
 import { ArticleSpotsMap } from '../ArticleSpotsMap';
 import { ArticleHero } from './ArticleHero';
 import { ReviewFormToggle } from './ReviewFormToggle';
-import { ItineraryDirectionsButton } from './ItineraryDirectionsButton';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import type { Article, Writer, Spot, Review } from '@/lib/mock';
 import type {
@@ -158,12 +157,17 @@ export function ArticleRenderer({
             第 1 段落に Drop cap、リード (lede) として大きめサイズ、段落間余白広め、
             blockquote をプルクオート風、本文中の <img> を疑似フルブリードに広げる。
            */}
+          {/* 1. 無料パート本文 */}
           <article
             className="prose-locore prose-locore--editorial"
             dangerouslySetInnerHTML={{ __html: renderArticleBodyHtml(preview) }}
           />
 
-          {/* 旅程プラン記事のときだけ構造化タイムラインを差し込む */}
+          {/* 2. 旅程 or スポット情報。
+              - itinerary: ItineraryTimeline（カード内にお気に入り/地図/Google を埋め込み）
+              - spot_guide: SpotsCardList（unlocked 時のみ。Paywall 側でも別途出る）
+              - その他: 何も挟まない
+              重複回避のため itinerary では SpotsCardList を出さない。 */}
           {article.articleType === 'itinerary' &&
           article.itineraryBlocks &&
           article.itineraryBlocks.length > 0 ? (
@@ -174,10 +178,55 @@ export function ArticleRenderer({
               defaultUnlocked={unlocked}
               photoEntries={article.photoEntries ?? null}
               fallbackCoverImageUrl={article.coverImageUrl}
+              folders={folders}
+              bookmarkedSpotIds={bookmarkedSpotIds}
+              viewerLoggedIn={viewerLoggedIn}
+              mapAnchorId="article-spots-map"
+            />
+          ) : article.articleType === 'spot_guide' && unlocked ? (
+            <SpotsCardList
+              spots={spots}
+              folders={folders}
+              bookmarkedSpotIds={bookmarkedSpotIds}
+              viewerLoggedIn={viewerLoggedIn}
             />
           ) : null}
 
-          {/* フォト日記スタイルのときだけ縦スクロール没入ビュー（購入後のみ全部見せる） */}
+          {/* 3. 有料パート本文 or Paywall */}
+          {unlocked ? (
+            hasPaid && after.trim().length > 0 ? (
+              <article className="prose-locore prose-locore--editorial prose-locore--continuation">
+                {/* 章区切り (◆): 無料パート→有料パートの切り替わりを雑誌風の節記号で示す */}
+                <div
+                  aria-hidden
+                  className="my-10 flex items-center justify-center text-[18px] tracking-[0.6em] text-foreground/30"
+                >
+                  ◆ ◆ ◆
+                </div>
+                {previewMode ? (
+                  <div className="mb-3 inline-flex rounded-full bg-primary-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
+                    有料パート（プレビュー解除中）
+                  </div>
+                ) : null}
+                {/* 2026-05 改修: 有料パートも HTML / Markdown 両対応で sanitize render */}
+                <div
+                  dangerouslySetInnerHTML={{ __html: renderArticleBodyHtml(after) }}
+                />
+              </article>
+            ) : null
+          ) : (
+            <Paywall
+              article={article}
+              bodyAfter={after}
+              spots={spots}
+              folders={folders}
+              bookmarkedSpotIds={bookmarkedSpotIds}
+              viewerLoggedIn={viewerLoggedIn}
+              alreadyPurchased={purchasedOrOwner}
+            />
+          )}
+
+          {/* 4. 写真ギャラリー (フォト日記スタイル)。購入後のみ全部見せる。 */}
           {article.bodyStyle === 'photo_journal' &&
           article.photoEntries &&
           article.photoEntries.length > 0 ? (
@@ -215,63 +264,11 @@ export function ArticleRenderer({
             )
           ) : null}
 
+          {/* 5. スポット地図。旅程記事のときは地図 UI 内に
+              「Google マップでルートを開く」フローティングボタンが出る。
+              タイムラインカードの「地図」アイコンからの jump 先 (anchor)。 */}
           {unlocked ? (
-            <>
-              {/* 有料パートの本文。bodyPaid が空の無料記事のときは何も出さない */}
-              {hasPaid && after.trim().length > 0 ? (
-                <article className="prose-locore prose-locore--editorial prose-locore--continuation">
-                  {/* 章区切り (◆): 無料パート→有料パートの切り替わりを雑誌風の節記号で示す */}
-                  <div
-                    aria-hidden
-                    className="my-10 flex items-center justify-center text-[18px] tracking-[0.6em] text-foreground/30"
-                  >
-                    ◆ ◆ ◆
-                  </div>
-                  {previewMode ? (
-                    <div className="mb-3 inline-flex rounded-full bg-primary-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                      有料パート（プレビュー解除中）
-                    </div>
-                  ) : null}
-                  {/* 2026-05 改修: 有料パートも HTML / Markdown 両対応で sanitize render */}
-                  <div
-                    dangerouslySetInnerHTML={{ __html: renderArticleBodyHtml(after) }}
-                  />
-                </article>
-              ) : null}
-              <SpotsCardList
-                spots={spots}
-                folders={folders}
-                bookmarkedSpotIds={bookmarkedSpotIds}
-                viewerLoggedIn={viewerLoggedIn}
-              />
-            </>
-          ) : (
-            <Paywall
-              article={article}
-              bodyAfter={after}
-              spots={spots}
-              folders={folders}
-              bookmarkedSpotIds={bookmarkedSpotIds}
-              viewerLoggedIn={viewerLoggedIn}
-              alreadyPurchased={purchasedOrOwner}
-            />
-          )}
-
-          {/* スポット地図（旅程記事はルート線、スポット紹介はピンのみ）。
-              有料記事は購入後 / オーナー時のみ表示。 */}
-          {unlocked ? (
-            <div className="space-y-3">
-              {/* 旅程記事のときだけ、地図の上に「Google マップでルートを開く」ボタン。
-                  各スポットを Place ID 優先で waypoints として渡し、Google Maps 側で
-                  そのまま経路案内が出るようにする。 */}
-              {article.articleType === 'itinerary' &&
-              article.itineraryBlocks &&
-              article.itineraryBlocks.length > 0 ? (
-                <ItineraryDirectionsButton
-                  blocks={article.itineraryBlocks}
-                  spots={spots}
-                />
-              ) : null}
+            <div id="article-spots-map" className="scroll-mt-20">
               <ArticleSpotsMap
                 spots={spots}
                 articleType={article.articleType}
@@ -281,12 +278,15 @@ export function ArticleRenderer({
               />
             </div>
           ) : (
-            <section className="rounded-md bg-primary-500/10 p-6 text-center text-[12px] text-primary-300 ring-1 ring-border">
+            <section
+              id="article-spots-map"
+              className="scroll-mt-20 rounded-md bg-primary-500/10 p-6 text-center text-[12px] text-primary-300 ring-1 ring-border"
+            >
               <p className="font-semibold">地図は購入後</p>
             </section>
           )}
 
-          {/* レビュー投稿フォーム（購入済み読者にのみ表示。プレビューでは出さない）。
+          {/* 6. レビュー投稿フォーム（購入済み読者にのみ表示。プレビューでは出さない）。
               いきなり大きなフォームを出さず、ボタン押下で展開する。 */}
           {!previewMode && unlocked && !isOwner ? (
             <ReviewFormToggle articleId={article.id} initial={myReview} />

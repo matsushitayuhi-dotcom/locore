@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import Image from 'next/image';
-import { Clock, MapPin, Lock } from '@locore/ui/icons';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { Bookmark, Clock, ExternalLink, Lock, MapPin } from '@locore/ui/icons';
 import {
   Footprints,
   TrainFront,
@@ -15,6 +17,12 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { ArticleItineraryBlock, PhotoEntry, Spot } from '../lib/mock';
 import { Purchases } from '../lib/storage/local';
+import {
+  bookmarkSpot,
+  unbookmarkSpot,
+  type FolderSummary,
+} from '@/lib/spotFavorites/actions';
+import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 
 type TransportKey =
   | 'walk'
@@ -69,6 +77,14 @@ type Props = {
   photoEntries?: PhotoEntry[] | null;
   /** 写真がまったく無いときの最終フォールバック (記事のカバー画像) */
   fallbackCoverImageUrl?: string | null;
+  /** ログインユーザーのフォルダ一覧。アクション「お気に入り」で利用 */
+  folders?: FolderSummary[];
+  /** 既にお気に入り登録されている spot id 集合 */
+  bookmarkedSpotIds?: Set<string>;
+  /** ログイン状態（未ログインなら favorite ボタンが /auth/login に飛ばす） */
+  viewerLoggedIn?: boolean;
+  /** 「地図」アイコンの jump 先 anchor id（ページ内 ArticleSpotsMap の id） */
+  mapAnchorId?: string;
 };
 
 /**
@@ -90,6 +106,9 @@ export function ItineraryTimeline({
   defaultUnlocked,
   photoEntries,
   fallbackCoverImageUrl,
+  bookmarkedSpotIds,
+  viewerLoggedIn = false,
+  mapAnchorId,
 }: Props) {
   const [unlocked, setUnlocked] = useState(defaultUnlocked);
   useEffect(() => {
@@ -259,6 +278,18 @@ export function ItineraryTimeline({
                         {unlocked ? b.notes : 'メモは購入後に表示されます'}
                       </p>
                     ) : null}
+
+                    {/* スポット紐付きカードのみ、unlocked のときアクション行を出す */}
+                    {unlocked && !isFreeBlock && spot ? (
+                      <SpotActionRow
+                        spot={spot}
+                        initiallyBookmarked={
+                          bookmarkedSpotIds?.has(spot.id) ?? false
+                        }
+                        viewerLoggedIn={viewerLoggedIn}
+                        mapAnchorId={mapAnchorId}
+                      />
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -320,5 +351,126 @@ export function ItineraryTimeline({
         </div>
       ) : null}
     </section>
+  );
+}
+
+/**
+ * タイムラインカード右下に並ぶアクション 3 ボタン（h-7 w-7 円形）:
+ *   1. お気に入り — クリックで未分類フォルダに即追加 / 解除（簡易トグル）。
+ *      フォルダ選択 UI は出さず、追加先は「未分類」固定にしてコンパクト化。
+ *   2. 地図 — 同一ページ内 ArticleSpotsMap への anchor jump (scrollIntoView)。
+ *   3. Google マップで開く — buildSpotGoogleMapsUrl で外部リンク（新タブ）。
+ *
+ * 文字ラベルは出さず、aria-label / title で識別する。
+ */
+function SpotActionRow({
+  spot,
+  initiallyBookmarked,
+  viewerLoggedIn,
+  mapAnchorId,
+}: {
+  spot: Spot;
+  initiallyBookmarked: boolean;
+  viewerLoggedIn: boolean;
+  mapAnchorId?: string;
+}) {
+  const router = useRouter();
+  const [bookmarked, setBookmarked] = useState(initiallyBookmarked);
+  const [isPending, startTransition] = useTransition();
+
+  const onToggleBookmark = () => {
+    if (!viewerLoggedIn) {
+      router.push(
+        `/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`,
+      );
+      return;
+    }
+    startTransition(async () => {
+      if (bookmarked) {
+        const res = await unbookmarkSpot({ spotId: spot.id });
+        if (res.ok) {
+          setBookmarked(false);
+          toast.success('お気に入りから外しました');
+        } else {
+          toast.error(res.error);
+        }
+      } else {
+        const res = await bookmarkSpot({ spotId: spot.id, folderId: null });
+        if (res.ok) {
+          setBookmarked(true);
+          toast.success(`「${spot.name}」を未分類に追加しました`);
+        } else {
+          toast.error(res.error);
+        }
+      }
+    });
+  };
+
+  const onJumpToMap = () => {
+    if (!mapAnchorId) return;
+    const el = document.getElementById(mapAnchorId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const googleMapsUrl = buildSpotGoogleMapsUrl({
+    placeId: spot.googlePlaceId,
+    lat: spot.lat,
+    lng: spot.lng,
+    fallbackQuery: spot.name + ' ' + (spot.address ?? ''),
+  });
+
+  const baseBtn =
+    'inline-flex h-7 w-7 items-center justify-center rounded-full ring-1 transition';
+
+  return (
+    <div className="mt-3 flex items-center justify-end gap-1.5">
+      <button
+        type="button"
+        onClick={onToggleBookmark}
+        disabled={isPending}
+        aria-pressed={bookmarked}
+        aria-label={bookmarked ? 'お気に入りから外す' : 'お気に入りに追加'}
+        title={bookmarked ? 'お気に入り済み' : 'お気に入りに追加'}
+        className={
+          baseBtn +
+          ' ' +
+          (bookmarked
+            ? 'bg-primary-700 text-white ring-primary-700 hover:bg-primary-500'
+            : 'bg-card text-primary-300 ring-border hover:bg-primary-500/10 hover:ring-primary-300')
+        }
+      >
+        <Bookmark
+          className="h-3.5 w-3.5"
+          fill={bookmarked ? 'currentColor' : 'none'}
+        />
+      </button>
+      {mapAnchorId ? (
+        <button
+          type="button"
+          onClick={onJumpToMap}
+          aria-label="地図で見る"
+          title="地図で見る"
+          className={
+            baseBtn +
+            ' bg-card text-primary-300 ring-border hover:bg-primary-500/10 hover:ring-primary-300'
+          }
+        >
+          <MapPin className="h-3.5 w-3.5" />
+        </button>
+      ) : null}
+      <a
+        href={googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Google マップで開く"
+        title="Google マップで開く"
+        className={
+          baseBtn +
+          ' bg-card text-primary-300 ring-border hover:bg-primary-500/10 hover:ring-primary-300'
+        }
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+    </div>
   );
 }

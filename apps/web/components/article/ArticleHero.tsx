@@ -1,11 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Badge,
-} from '@locore/ui';
+import { Badge } from '@locore/ui';
 import { ChevronRight, Clock, MapPin, Star } from '@locore/ui/icons';
 import { LikeButton } from './LikeButton';
 import { AddToTripButton } from '../AddToTripButton';
@@ -45,7 +40,6 @@ type ArticleHeroProps = {
  */
 export function ArticleHero({
   article,
-  writer,
   region,
   country,
   displayAreaLabel,
@@ -141,10 +135,12 @@ export function ArticleHero({
         </div>
       </div>
 
-      {/* タイトル群 (画像の下にセンター寄せ。雑誌の表紙裏みたいに置く) */}
-      <header className="mx-auto max-w-3xl px-4 pt-6 text-center sm:px-6 sm:pt-12">
-        {/* 上の小タグ: 種別 + エリア。スマホでは撤去してタイトルを最短距離に */}
-        <div className="hidden flex-wrap items-center justify-center gap-2 sm:flex">
+      {/* タイトル群 (画像下に左揃え)。中央寄せをやめて、本文の読み始めと
+          視線の起点を揃える。著者署名はここから撤去し、本文末尾の
+          「この記事を書いた人」カードに集約する。 */}
+      <header className="mx-auto max-w-3xl px-4 pt-6 text-left sm:px-6 sm:pt-12">
+        {/* 上の小タグ: 種別 + エリア + 公開日。スマホでは撤去してタイトルを最短距離に */}
+        <div className="hidden flex-wrap items-center gap-2 sm:flex">
           <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-300">
             {article.articleType === 'itinerary' ? '旅程プラン' : 'スポット紹介'}
           </span>
@@ -152,40 +148,30 @@ export function ArticleHero({
           <span className="text-[11px] uppercase tracking-[0.18em] text-foreground/55">
             {displayAreaLabel}
           </span>
+          <span className="text-foreground/30">·</span>
+          <time
+            dateTime={article.publishedAt}
+            className="text-[11px] text-foreground/55 tabular"
+          >
+            {publishedLabel}
+          </time>
         </div>
 
         <h1 className="article-hero-title text-[22px] font-bold leading-[1.2] tracking-tight text-foreground sm:mt-4 sm:text-[40px] sm:leading-[1.15] md:text-[52px]">
           {article.title}
         </h1>
 
-        {/* 著者の小さな署名 (アバター + 名前 + 公開日) */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] text-foreground/65">
-          {writer ? (
-            <Link
-              href={`/residents/${writer.id}`}
-              className="group inline-flex items-center gap-2 transition hover:text-foreground"
-            >
-              <Avatar size="sm">
-                <AvatarImage src={writer.avatarUrl} alt={writer.name} />
-                <AvatarFallback>{writer.name[0]}</AvatarFallback>
-              </Avatar>
-              <span className="text-[13px] font-semibold text-foreground group-hover:text-primary-300">
-                {writer.name}
-              </span>
-            </Link>
-          ) : null}
-          {writer ? <span className="text-foreground/30">·</span> : null}
-          <time
-            dateTime={article.publishedAt}
-            className="text-[12px] text-foreground/55 tabular"
-          >
-            {publishedLabel}
-          </time>
-        </div>
+        {/* スマホ向けの公開日 (kicker が hidden の代わり) */}
+        <time
+          dateTime={article.publishedAt}
+          className="mt-3 block text-[11px] text-foreground/55 tabular sm:hidden"
+        >
+          {publishedLabel}
+        </time>
 
-        {/* タグ行 (中央寄せ、控えめ。スマホでは非表示にしてヘッダを軽くする) */}
+        {/* タグ行 (左揃え、控えめ。スマホでは非表示にしてヘッダを軽くする) */}
         {article.tags.length > 0 ? (
-          <div className="mt-4 hidden flex-wrap items-center justify-center gap-1.5 sm:flex">
+          <div className="mt-4 hidden flex-wrap items-center gap-1.5 sm:flex">
             {article.tags.slice(0, 3).map((t) => (
               <Badge key={t} variant="secondary">
                 {t}

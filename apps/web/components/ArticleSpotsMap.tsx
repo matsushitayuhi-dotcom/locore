@@ -10,7 +10,11 @@ import {
 import { ExternalLink, X } from '@locore/ui/icons';
 import type { Spot, ArticleItineraryBlock, PhotoEntry } from '../lib/mock';
 import { locoreMapStyles } from './map/locoreMapStyle';
-import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
+import {
+  buildItineraryDirectionsUrl,
+  buildSpotGoogleMapsUrl,
+  pickDominantTravelMode,
+} from '@/lib/maps/googleMapsUrls';
 
 /**
  * 記事末尾に出すスポット地図。Prism Japan 風のミニマル表現:
@@ -460,6 +464,32 @@ function ArticleSpotsMapBody({
     };
   }, [points]);
 
+  /**
+   * 旅程記事のとき、地図 UI の右上に「Google マップでルートを開く」を
+   * フローティングボタンとして重ねる。stops は itineraryBlocks の順序通り。
+   * stops が 2 未満のときは URL を作れないので非表示。
+   */
+  const directionsUrl = useMemo(() => {
+    if (articleType !== 'itinerary') return null;
+    if (!itineraryBlocks || itineraryBlocks.length === 0) return null;
+    const byId = new Map(spots.map((s) => [s.id, s]));
+    const stops = itineraryBlocks
+      .map((b) => (b.spotId ? byId.get(b.spotId) : null))
+      .filter((s): s is Spot => Boolean(s));
+    if (stops.length < 2) return null;
+    const travelMode = pickDominantTravelMode(
+      itineraryBlocks.map((b) => b.transportToNext),
+    );
+    return buildItineraryDirectionsUrl(
+      stops.map((s) => ({
+        placeId: s.googlePlaceId,
+        lat: s.lat,
+        lng: s.lng,
+      })),
+      travelMode,
+    );
+  }, [articleType, itineraryBlocks, spots]);
+
   if (points.length === 0) {
     return (
       <div className="flex h-[320px] items-center justify-center rounded-xl bg-primary-500/5 text-[13px] text-primary-300 ring-1 ring-border">
@@ -495,6 +525,20 @@ function ArticleSpotsMapBody({
           onPointClick={(p) => setSelectedPoint(p)}
         />
       </GoogleMap>
+
+      {/* 旅程記事のときだけ、地図右上に「Google マップでルートを開く」
+          フローティングボタンを重ねる。説明文は出さず、ボタンだけ。 */}
+      {directionsUrl ? (
+        <a
+          href={directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute right-2 top-2 z-[5] inline-flex items-center gap-1.5 rounded-full bg-card/95 px-3 py-1.5 text-[12px] font-semibold text-foreground shadow-sm ring-1 ring-border backdrop-blur transition hover:bg-card hover:ring-primary-300 sm:right-3 sm:top-3"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Google マップでルート
+        </a>
+      ) : null}
 
       {/* Prism 風ボトムシート: タップしたスポットの 1 枚カード */}
       {selectedPoint ? (
