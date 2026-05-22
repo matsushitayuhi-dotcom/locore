@@ -113,15 +113,17 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
 ];
 
 /**
- * ピンの色（local score に応じて切り替え）— モノクロ階調で。
- *   high   → ink (#18181b) zinc-900
- *   mid    → zinc-600
- *   low    → zinc-400
+ * ピンの色（local score に応じて切り替え）— Deloitte グリーン階調。
+ * 地図ベースが薄いグレースケールなので、最もローカルなスポットだけ
+ * ビビッドなグリーンで目立たせる。
+ *   high   → #86BC25 (Deloitte chartreuse, primary-500)
+ *   mid    → #A8D255 (primary-300, soft green)
+ *   low    → #A1A1AA (zinc-400 muted)
  */
 export function pinColorForScore(score: number): string {
-  if (score >= 70) return '#18181B'; // ink
-  if (score >= 30) return '#52525B'; // zinc-600
-  return '#A1A1AA'; // zinc-400
+  if (score >= 70) return '#86BC25';
+  if (score >= 30) return '#A8D255';
+  return '#A1A1AA';
 }
 
 /** ピンの「クラス」（HTML 用、locore-pin と組み合わせ） */
