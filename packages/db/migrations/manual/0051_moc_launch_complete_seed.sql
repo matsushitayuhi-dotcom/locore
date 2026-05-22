@@ -43,7 +43,7 @@ DELETE FROM article_likes
 DELETE FROM bookmarks
   WHERE article_id IN (SELECT id FROM articles WHERE is_sample = true);
 
-DELETE FROM spot_favorites
+DELETE FROM spot_bookmarks
   WHERE spot_id IN (SELECT id FROM spots WHERE is_sample = true);
 
 DELETE FROM spots WHERE is_sample = true;
