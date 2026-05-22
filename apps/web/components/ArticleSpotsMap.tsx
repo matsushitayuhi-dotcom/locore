@@ -1,26 +1,24 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import {
   APIProvider,
   Map as GoogleMap,
-  InfoWindow,
   useMap,
 } from '@vis.gl/react-google-maps';
-import { ExternalLink } from '@locore/ui/icons';
+import { ExternalLink, X } from '@locore/ui/icons';
 import type { Spot, ArticleItineraryBlock, PhotoEntry } from '../lib/mock';
 import { locoreMapStyles } from './map/locoreMapStyle';
 import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 
 /**
- * 記事の最下部に表示する、その記事のスポットをまとめてマッピングする地図。
- *
- * - articleType === 'spot_guide' → 番号なしピンを並べるだけ（順序に意味なし）
- * - articleType === 'itinerary'  → 旅程ブロックの順序に従って番号付きピン + ルート線
- *
- * クリック動作:
- *  - ピンをクリック → スポット名 / 住所を InfoWindow
- *  - 移動手段アイコンをクリック → 区間の移動手段詳細を InfoWindow
+ * 記事末尾に出すスポット地図。Prism Japan 風のミニマル表現:
+ *   - 見出し / 副題 / 凡例 / 移動手段アイコンは廃止
+ *   - 地図のみ。高さ 420 / rounded-xl
+ *   - ピンはモノクロ ink (#18181b)。写真があれば円形写真、無ければ黒丸 + 白枠
+ *   - タップしたスポットは画面下のボトムシート (sticky 風カード) に表示
+ *   - 旅程の場合は番号付きピン + 細い黒ポリライン（移動手段アイコンは出さない）
  */
 
 type Point = { spot: Spot; label?: number; photoUrl?: string | null };
@@ -37,57 +35,25 @@ type Segment = {
   minutes?: number | null;
 };
 
-const TRANSPORT_LABEL: Record<string, string> = {
-  walk: '徒歩',
-  metro: 'メトロ',
-  bus: 'バス',
-  train: '電車',
-  taxi: 'タクシー',
-  bike: '自転車',
-  other: 'その他',
-};
+const INK = '#18181B'; // zinc-900 / 墨黒
+const PIN_STROKE = '#FFFFFF';
 
-const PIN_COLOR = '#D4634A'; // primary-500 amber
-
-function formatDuration(min: number | null | undefined): string {
-  if (!min || min <= 0) return '';
-  if (min < 60) return `${min}分`;
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m === 0 ? `${h}時間` : `${h}時間${m}分`;
-}
-
-/** 「線（出発駅 → 到着駅）」形式の transportNote を分解 */
-function parseTransitNote(note: string | null | undefined): {
-  line: string;
-  from: string;
-  to: string;
-} | null {
-  if (!note) return null;
-  const m = note.match(/^(.+?)（(.+?)\s*→\s*(.+?)）\s*$/);
-  if (!m) return { line: note.trim(), from: '', to: '' };
-  return {
-    line: m[1]!.trim(),
-    from: m[2]!.trim(),
-    to: m[3]!.trim(),
-  };
-}
-
-function makePlainPinSvg(color: string): string {
+/** 写真の無いスポット用の標準ピン。直径 11 の黒丸 + 白枠 */
+function makePlainPinSvg(): string {
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">` +
-    `<circle cx="14" cy="14" r="11" fill="${color}" stroke="white" stroke-width="2"/>` +
-    `<circle cx="14" cy="14" r="4" fill="white"/>` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">` +
+    `<circle cx="11" cy="11" r="5.5" fill="${INK}" stroke="${PIN_STROKE}" stroke-width="2"/>` +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-function makeNumberedPinSvg(color: string, label: number): string {
+/** 番号付きピン。直径 30 程度、中央に白文字 */
+function makeNumberedPinSvg(label: number): string {
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">` +
-    `<circle cx="16" cy="16" r="13" fill="${color}" stroke="white" stroke-width="2"/>` +
-    `<text x="16" y="20" text-anchor="middle" ` +
-    `font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="white">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">` +
+    `<circle cx="15" cy="15" r="12" fill="${INK}" stroke="${PIN_STROKE}" stroke-width="2"/>` +
+    `<text x="15" y="19" text-anchor="middle" ` +
+    `font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" fill="white">` +
     `${label}</text>` +
     `</svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -95,26 +61,14 @@ function makeNumberedPinSvg(color: string, label: number): string {
 
 /**
  * 円形写真マーカーを `<canvas>` で合成して PNG data URL を返す。
- *
- * 設計メモ:
- *  - 以前は SVG 内の `<image href="...">` で外部画像を読み込んでいたが、
- *    SVG が `Marker.icon.url` の data URI として使われると **画像が
- *    sandbox 扱いになり外部リソース (https://lh3.googleusercontent.com/...) が
- *    読み込まれない** 既知の制約があった。結果として地図ピンが「白い丸」のままに
- *    なってしまっていたため、ここでは canvas 経由でラスタライズする方式に切替。
- *  - 画像は CORS を付けて読み込む。Google Places のフォト URL は CORS allow を
- *    返すので `toDataURL()` で taint されず data URL 化できる。
- *  - 読み込み失敗 / 5 秒タイムアウト時は null を返し、呼び出し側でフォールバック
- *    （番号付き or プレーンピン）に切り替えてもらう。
- *
- * SIZE=52、anchor は中央に設定する前提。
+ * 詳細は元実装と同じ。border 色を ink にしたモノクロ版。
  */
 function makePhotoMarkerPng(opts: {
   photoUrl: string;
-  borderColor: string;
   label?: number;
 }): Promise<string | null> {
-  const { photoUrl, borderColor, label } = opts;
+  const { photoUrl, label } = opts;
+  const borderColor = INK;
   return new Promise((resolve) => {
     if (typeof document === 'undefined') {
       resolve(null);
@@ -151,7 +105,7 @@ function makePhotoMarkerPng(opts: {
 
         // ドロップシャドウ付きの白い土台
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.35)';
+        ctx.shadowColor = 'rgba(0,0,0,0.30)';
         ctx.shadowBlur = 2.4;
         ctx.shadowOffsetY = 1;
         ctx.beginPath();
@@ -175,7 +129,7 @@ function makePhotoMarkerPng(opts: {
         ctx.drawImage(img, dx, dy, drawW, drawH);
         ctx.restore();
 
-        // ブランド色リング
+        // ink リング
         ctx.beginPath();
         ctx.arc(26, 26, 22, 0, Math.PI * 2);
         ctx.lineWidth = 2;
@@ -202,62 +156,11 @@ function makePhotoMarkerPng(opts: {
         settled = true;
         resolve(url);
       } catch {
-        // toDataURL が SecurityError (taint) を投げた場合など
         fail();
       }
     };
     img.src = photoUrl;
   });
-}
-
-/** 移動手段アイコン（白丸 + Material Icons 風シルエット）*/
-function transportIconSvg(
-  mode: ArticleItineraryBlock['transportToNext'],
-): string | null {
-  const paths: Record<string, string> = {
-    walk:
-      'M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9 7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7Z',
-    bike:
-      'M5 20.5C3.62 20.5 2.5 19.38 2.5 18S3.62 15.5 5 15.5s2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5zM5 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm6.8-3l1.9-1.9.6.6C15.35 11.65 16.71 12.2 18.4 12.2V10.3c-1.18 0-2.05-.34-2.78-1.07l-1.5-1.5c-.55-.55-1.18-.62-1.6-.62s-1.05.07-1.6.62L7.5 10.3c-.39.39-.39 1.02 0 1.41l3.3 3.3v3.6h2v-5.1l-1-1zM10 5.5c.83 0 1.5-.67 1.5-1.5S10.83 2.5 10 2.5 8.5 3.17 8.5 4 9.17 5.5 10 5.5zM19 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0 6.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-    taxi:
-      'M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z',
-    transit:
-      'M12 2c-4.42 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h12v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zM11 11H6V6h5v5zm2 0V6h5v5h-5zm3.5 6c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z',
-    other:
-      'M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
-  };
-  let key: string;
-  if (mode === 'walk') key = 'walk';
-  else if (mode === 'bike') key = 'bike';
-  else if (mode === 'taxi') key = 'taxi';
-  else if (mode === 'metro' || mode === 'bus' || mode === 'train')
-    key = 'transit';
-  else key = 'other';
-  const inner = paths[key]!;
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 28 28">` +
-    `<defs><filter id="s" x="-20%" y="-20%" width="140%" height="140%">` +
-    `<feDropShadow dx="0" dy="0.5" stdDeviation="0.6" flood-opacity="0.4"/>` +
-    `</filter></defs>` +
-    `<circle cx="14" cy="14" r="13" fill="white" stroke="${PIN_COLOR}" stroke-width="1.6" filter="url(#s)"/>` +
-    `<g transform="translate(2 2)" fill="${PIN_COLOR}">` +
-    `<path d="${inner}"/>` +
-    `</g></svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function midpointOf(path: any[]): { lat: number; lng: number } | null {
-  if (!path || path.length === 0) return null;
-  const mid = path[Math.floor(path.length / 2)];
-  if (!mid) return null;
-  if (typeof mid.lat === 'function' && typeof mid.lng === 'function') {
-    return { lat: mid.lat(), lng: mid.lng() };
-  }
-  if (typeof mid.lat === 'number' && typeof mid.lng === 'number') {
-    return { lat: mid.lat, lng: mid.lng };
-  }
-  return null;
 }
 
 function transportToTravelMode(
@@ -290,15 +193,14 @@ function MarkersLayer({
     if (!G) return;
 
     let cancelled = false;
-    // 各 point の最初のフォールバック (写真がまだ読めてない / 失敗時用) を即時に描画
     const markersAndListeners = points.map((p) => {
       const numberedLabel =
         numbered && typeof p.label === 'number' ? p.label : undefined;
       const fallbackUrl =
         typeof numberedLabel === 'number'
-          ? makeNumberedPinSvg(PIN_COLOR, numberedLabel)
-          : makePlainPinSvg(PIN_COLOR);
-      const fallbackSize = typeof numberedLabel === 'number' ? 32 : 28;
+          ? makeNumberedPinSvg(numberedLabel)
+          : makePlainPinSvg();
+      const fallbackSize = typeof numberedLabel === 'number' ? 30 : 22;
       const m = new G.Marker({
         position: { lat: p.spot.lat, lng: p.spot.lng },
         map,
@@ -313,11 +215,9 @@ function MarkersLayer({
       });
       const listener = m.addListener('click', () => onPointClick(p));
 
-      // 写真がある場合のみ非同期で canvas に合成して上書き
       if (p.photoUrl) {
         makePhotoMarkerPng({
           photoUrl: p.photoUrl,
-          borderColor: PIN_COLOR,
           label: numberedLabel,
         }).then((url) => {
           if (cancelled || !url) return;
@@ -343,6 +243,7 @@ function MarkersLayer({
   return null;
 }
 
+/** 旅程プランの polyline。Prism 風に細い黒の実線のみ（移動手段アイコンなし） */
 function StraightPolyline({ points }: { points: Point[] }) {
   const map = useMap();
   useEffect(() => {
@@ -353,21 +254,9 @@ function StraightPolyline({ points }: { points: Point[] }) {
     const line = new G.Polyline({
       path: points.map((p) => ({ lat: p.spot.lat, lng: p.spot.lng })),
       geodesic: true,
-      strokeColor: PIN_COLOR,
-      strokeOpacity: 0,
-      icons: [
-        {
-          icon: {
-            path: G.SymbolPath.CIRCLE,
-            fillColor: PIN_COLOR,
-            fillOpacity: 1,
-            strokeOpacity: 0,
-            scale: 3,
-          },
-          offset: '0',
-          repeat: '14px',
-        },
-      ],
+      strokeColor: INK,
+      strokeOpacity: 0.85,
+      strokeWeight: 1.5,
       map,
     });
     return () => {
@@ -377,13 +266,11 @@ function StraightPolyline({ points }: { points: Point[] }) {
   return null;
 }
 
-function DirectionsPolylines({
-  segments,
-  onSegmentClick,
-}: {
-  segments: Segment[];
-  onSegmentClick: (segIdx: number, mid: { lat: number; lng: number }) => void;
-}) {
+/**
+ * Google Directions が使える場合は実ルートを細い黒線で描画。
+ * 移動手段アイコンはタイムライン側で十分なので、ここでは出さない。
+ */
+function DirectionsPolylines({ segments }: { segments: Segment[] }) {
   const map = useMap();
   useEffect(() => {
     if (!map || segments.length === 0) return;
@@ -393,73 +280,29 @@ function DirectionsPolylines({
 
     const created: Array<{
       m?: { setMap: (m: unknown) => void };
-      listener?: { remove?: () => void };
     }> = [];
     let cancelled = false;
 
     const service = new G.DirectionsService();
 
-    const placeIcon = (
-      idx: number,
-      pos: { lat: number; lng: number },
-      mode: ArticleItineraryBlock['transportToNext'],
-    ) => {
-      const url = transportIconSvg(mode);
-      if (!url) return;
-      const marker = new G.Marker({
-        position: pos,
-        map,
-        clickable: true,
-        zIndex: 5,
-        cursor: 'pointer',
-        icon: {
-          url,
-          scaledSize: new G.Size(36, 36),
-          anchor: new G.Point(18, 18),
-        },
-      });
-      const listener = marker.addListener('click', () =>
-        onSegmentClick(idx, pos),
-      );
-      created.push({ m: marker, listener });
-    };
-
-    const dashedFallback = (seg: Segment, idx: number) => {
+    const drawStraight = (seg: Segment) => {
       const line = new G.Polyline({
         path: [seg.from, seg.to],
         geodesic: true,
-        strokeColor: PIN_COLOR,
-        strokeOpacity: 0,
-        icons: [
-          {
-            icon: {
-              path: G.SymbolPath.CIRCLE,
-              fillColor: PIN_COLOR,
-              fillOpacity: 1,
-              strokeOpacity: 0,
-              scale: 3,
-            },
-            offset: '0',
-            repeat: '14px',
-          },
-        ],
+        strokeColor: INK,
+        strokeOpacity: 0.85,
+        strokeWeight: 1.5,
         map,
       });
       created.push({ m: line });
-      const midPos = {
-        lat: (seg.from.lat + seg.to.lat) / 2,
-        lng: (seg.from.lng + seg.to.lng) / 2,
-      };
-      placeIcon(idx, midPos, seg.mode);
     };
 
-    segments.forEach((seg, idx) => {
+    segments.forEach((seg) => {
       const mode = transportToTravelMode(seg.mode, G);
       if (!mode) {
-        dashedFallback(seg, idx);
+        drawStraight(seg);
         return;
       }
-
       service.route(
         {
           origin: seg.from,
@@ -470,21 +313,19 @@ function DirectionsPolylines({
         (result: any, status: string) => {
           if (cancelled) return;
           if (status !== 'OK' || !result?.routes?.[0]?.overview_path) {
-            dashedFallback(seg, idx);
+            drawStraight(seg);
             return;
           }
           const path = result.routes[0].overview_path;
           const line = new G.Polyline({
             path,
             geodesic: true,
-            strokeColor: PIN_COLOR,
+            strokeColor: INK,
             strokeOpacity: 0.85,
-            strokeWeight: 4,
+            strokeWeight: 2,
             map,
           });
           created.push({ m: line });
-          const mid = midpointOf(path);
-          if (mid) placeIcon(idx, mid, seg.mode);
         },
       );
     });
@@ -492,11 +333,10 @@ function DirectionsPolylines({
     return () => {
       cancelled = true;
       for (const c of created) {
-        c.listener?.remove?.();
         c.m?.setMap(null);
       }
     };
-  }, [map, segments, onSegmentClick]);
+  }, [map, segments]);
   return null;
 }
 
@@ -523,16 +363,7 @@ type Props = {
   spots: Spot[];
   articleType: 'spot_guide' | 'itinerary' | 'expat_info' | 'photo_journal';
   itineraryBlocks?: ArticleItineraryBlock[] | null;
-  /**
-   * フォト日記のエントリ。`spotId` が設定されているエントリの `imageUrl` を
-   * ピンの写真として使う（Google Photos に無いスポットの fallback）。
-   */
   photoEntries?: PhotoEntry[] | null;
-  /**
-   * 購入済み / オーナー / 無料記事のときに true。
-   * true の場合のみピンに円形写真サムネを表示する（未購入時は generic ピン）。
-   * デフォルト true（呼び出し側で購入後だけマウントしているケースに合わせる）。
-   */
   unlocked?: boolean;
 };
 
@@ -543,21 +374,8 @@ function ArticleSpotsMapBody({
   photoEntries,
   unlocked = true,
 }: Props) {
-  type Selected =
-    | { kind: 'spot'; point: Point }
-    | { kind: 'segment'; segment: Segment; mid: { lat: number; lng: number } }
-    | null;
-  const [selected, setSelected] = useState<Selected>(null);
+  const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
 
-  /**
-   * スポット ID → 円形ピンに使う写真 URL の解決。優先順位:
-   *  1. spot.photoUrls[0]                  (Google Places 連携で自動取得した写真)
-   *  2. photoEntries.find(spotId===s.id)?.imageUrl  (フォト日記でスポット指定された写真)
-   *  3. (将来) spot.coverImageUrl があれば
-   *  4. null → ピンは generic（番号付き or プレーン）
-   *
-   * unlocked=false のときは何も返さない（未購入は写真出さない）。
-   */
   const photoBySpotId = useMemo(() => {
     const map = new Map<string, string>();
     if (!unlocked) return map;
@@ -568,7 +386,6 @@ function ArticleSpotsMapBody({
           : null;
       const fromEntries =
         photoEntries?.find((p) => p.spotId === s.id)?.imageUrl ?? null;
-      // 型に無い coverImageUrl 互換（将来）。安全に optional で読む
       const fromCover =
         (s as unknown as { coverImageUrl?: string | null }).coverImageUrl ??
         null;
@@ -645,7 +462,7 @@ function ArticleSpotsMapBody({
 
   if (points.length === 0) {
     return (
-      <div className="flex h-[320px] items-center justify-center rounded-lg bg-primary-500/10 text-[13px] text-primary-300 ring-1 ring-border">
+      <div className="flex h-[320px] items-center justify-center rounded-xl bg-primary-500/5 text-[13px] text-primary-300 ring-1 ring-border">
         スポットの位置情報が登録されていません
       </div>
     );
@@ -653,8 +470,8 @@ function ArticleSpotsMapBody({
 
   return (
     <div
-      className="locore-map-canvas overflow-hidden rounded-lg ring-1 ring-border"
-      style={{ position: 'relative', height: 360 }}
+      className="locore-map-canvas overflow-hidden rounded-xl ring-1 ring-border"
+      style={{ position: 'relative', height: 420 }}
     >
       <GoogleMap
         defaultCenter={center}
@@ -664,143 +481,104 @@ function ArticleSpotsMapBody({
         clickableIcons={false}
         styles={locoreMapStyles}
         style={{ width: '100%', height: '100%' }}
-        onClick={() => setSelected(null)}
+        onClick={() => setSelectedPoint(null)}
       >
         <FitBounds points={points} />
         {articleType === 'itinerary' && segments.length > 0 ? (
-          <DirectionsPolylines
-            segments={segments}
-            onSegmentClick={(idx, mid) => {
-              const segment = segments[idx];
-              if (segment) setSelected({ kind: 'segment', segment, mid });
-            }}
-          />
+          <DirectionsPolylines segments={segments} />
         ) : articleType === 'itinerary' ? (
           <StraightPolyline points={points} />
         ) : null}
         <MarkersLayer
           points={points}
           numbered={articleType === 'itinerary'}
-          onPointClick={(p) => setSelected({ kind: 'spot', point: p })}
+          onPointClick={(p) => setSelectedPoint(p)}
         />
-
-        {/* スポットの InfoWindow */}
-        {selected?.kind === 'spot' ? (
-          <InfoWindow
-            position={{
-              lat: selected.point.spot.lat,
-              lng: selected.point.spot.lng,
-            }}
-            pixelOffset={[0, -28]}
-            onCloseClick={() => setSelected(null)}
-          >
-            <div className="min-w-[220px] p-1 text-foreground">
-              {typeof selected.point.label === 'number' ? (
-                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-700">
-                  #{String(selected.point.label).padStart(2, '0')}
-                </p>
-              ) : null}
-              <p className="mt-0.5 text-[14px] font-semibold leading-snug">
-                {selected.point.spot.name}
-              </p>
-              {selected.point.spot.address ? (
-                <p className="mt-1 text-[11px] leading-relaxed text-neutral-600">
-                  {selected.point.spot.address}
-                </p>
-              ) : null}
-              <a
-                href={buildSpotGoogleMapsUrl({
-                  placeId: selected.point.spot.googlePlaceId,
-                  lat: selected.point.spot.lat,
-                  lng: selected.point.spot.lng,
-                  fallbackQuery:
-                    selected.point.spot.name +
-                    ' ' +
-                    (selected.point.spot.address ?? ''),
-                })}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-primary-700 underline-offset-4 hover:underline"
-              >
-                <ExternalLink className="h-3 w-3" />
-                Google マップで開く
-              </a>
-            </div>
-          </InfoWindow>
-        ) : null}
-
-        {/* 移動手段の InfoWindow */}
-        {selected?.kind === 'segment' ? (
-          <SegmentInfoWindow
-            segment={selected.segment}
-            position={selected.mid}
-            onClose={() => setSelected(null)}
-          />
-        ) : null}
       </GoogleMap>
+
+      {/* Prism 風ボトムシート: タップしたスポットの 1 枚カード */}
+      {selectedPoint ? (
+        <SpotBottomSheet
+          point={selectedPoint}
+          onClose={() => setSelectedPoint(null)}
+        />
+      ) : null}
     </div>
   );
 }
 
-function SegmentInfoWindow({
-  segment,
-  position,
+/**
+ * 地図の下部に貼り付く 1 枚カード。
+ * - 左に正方形 60px の写真 / 右に名前 + 住所 + Google マップリンク
+ * - 右上に ✕ ボタン
+ * - 地図コンテナの内側に absolute で配置するので、BottomNav とは別レイヤー
+ */
+function SpotBottomSheet({
+  point,
   onClose,
 }: {
-  segment: Segment;
-  position: { lat: number; lng: number };
+  point: Point;
   onClose: () => void;
 }) {
-  const modeKey = segment.mode ?? 'other';
-  const isTransit =
-    modeKey === 'metro' || modeKey === 'bus' || modeKey === 'train';
-  const modeLabel = TRANSPORT_LABEL[modeKey] ?? 'その他';
-  const transit = isTransit ? parseTransitNote(segment.transportNote) : null;
-  const durationLabel = formatDuration(segment.minutes);
-
+  const { spot, photoUrl, label } = point;
+  const mapsUrl = buildSpotGoogleMapsUrl({
+    placeId: spot.googlePlaceId,
+    lat: spot.lat,
+    lng: spot.lng,
+    fallbackQuery: spot.name + ' ' + (spot.address ?? ''),
+  });
   return (
-    <InfoWindow
-      position={position}
-      pixelOffset={[0, -18]}
-      onCloseClick={onClose}
-    >
-      <div className="min-w-[220px] p-1 text-foreground">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-primary-700">
-          {modeLabel}
-        </p>
-        {isTransit && transit ? (
-          <div className="mt-1 space-y-0.5 text-[12px] leading-snug">
-            {transit.line ? (
-              <p className="font-semibold text-neutral-900">{transit.line}</p>
-            ) : null}
-            {transit.from || transit.to ? (
-              <p className="text-neutral-600">
-                {transit.from || '？'} → {transit.to || '？'}
-              </p>
-            ) : null}
-            {durationLabel ? (
-              <p className="text-neutral-500">所要 {durationLabel}</p>
-            ) : null}
-          </div>
-        ) : (
-          <div className="mt-1 space-y-0.5 text-[12px] leading-snug">
-            <p className="text-neutral-700">
-              {segment.fromName}
-              {' → '}
-              {segment.toName}
+    <div className="pointer-events-none absolute inset-x-2 bottom-2 z-[5] sm:inset-x-3 sm:bottom-3">
+      <div className="pointer-events-auto relative flex items-stretch gap-3 rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="閉じる"
+          className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-foreground/50 hover:bg-primary-500/10 hover:text-foreground"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+        <div className="relative h-[60px] w-[60px] shrink-0 overflow-hidden rounded-lg bg-primary-500/10">
+          {photoUrl ? (
+            <Image
+              src={photoUrl}
+              alt={spot.name}
+              fill
+              sizes="60px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[10px] text-foreground/40">
+              No photo
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1 pr-6">
+          {typeof label === 'number' ? (
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/50">
+              #{String(label).padStart(2, '0')}
             </p>
-            {durationLabel ? (
-              <p className="font-semibold text-neutral-900">{durationLabel}</p>
-            ) : (
-              <p className="text-neutral-500 italic">所要時間未設定</p>
-            )}
-            {segment.transportNote ? (
-              <p className="text-neutral-500">{segment.transportNote}</p>
-            ) : null}
-          </div>
-        )}
+          ) : null}
+          <p className="truncate text-[14px] font-semibold leading-snug text-foreground">
+            {spot.name}
+          </p>
+          {spot.address ? (
+            <p className="mt-0.5 line-clamp-1 text-[11px] leading-relaxed text-foreground/60">
+              {spot.address}
+            </p>
+          ) : null}
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/70 underline-offset-4 hover:text-foreground hover:underline"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Google マップで開く →
+          </a>
+        </div>
       </div>
-    </InfoWindow>
+    </div>
   );
 }
 
@@ -823,39 +601,24 @@ export function ArticleSpotsMap({
   if (!hasAny) return null;
 
   if (!apiKey) {
+    // 見出し無しのまま、Map キー未設定だけ静かに知らせる
     return (
-      <section>
-        <h3 className="mb-3 text-[16px] font-bold tracking-tight">
-          スポット地図
-        </h3>
-        <div className="flex h-[200px] items-center justify-center rounded-lg bg-primary-500/10 text-[12px] text-primary-300 ring-1 ring-border">
-          Google Maps API キーが未設定です（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY）
-        </div>
-      </section>
+      <div className="flex h-[200px] items-center justify-center rounded-xl bg-primary-500/5 text-[12px] text-primary-300 ring-1 ring-border">
+        Google Maps API キーが未設定です（NEXT_PUBLIC_GOOGLE_MAPS_API_KEY）
+      </div>
     );
   }
 
+  // 見出し / 副題は廃止。地図のみ。
   return (
-    <section>
-      <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h3 className="text-[16px] font-bold tracking-tight">
-          スポット地図
-          <span className="ml-2 text-[12px] font-medium text-foreground/50">
-            {articleType === 'itinerary'
-              ? '旅程の順序でルート表示 / ピン・アイコンをタップで詳細'
-              : `${spots.length} 箇所 / ピンをタップで詳細`}
-          </span>
-        </h3>
-      </div>
-      <APIProvider apiKey={apiKey}>
-        <ArticleSpotsMapBody
-          spots={spots}
-          articleType={articleType}
-          itineraryBlocks={itineraryBlocks}
-          photoEntries={photoEntries}
-          unlocked={unlocked}
-        />
-      </APIProvider>
-    </section>
+    <APIProvider apiKey={apiKey}>
+      <ArticleSpotsMapBody
+        spots={spots}
+        articleType={articleType}
+        itineraryBlocks={itineraryBlocks}
+        photoEntries={photoEntries}
+        unlocked={unlocked}
+      />
+    </APIProvider>
   );
 }

@@ -41,8 +41,8 @@ const AUDIENCE_ITEMS: Array<{
   label: string;
 }> = [
   { value: undefined, label: 'すべて' },
-  { value: 'traveler', label: AUDIENCE_LABEL.traveler },
-  { value: 'resident', label: AUDIENCE_LABEL.resident },
+  { value: 'traveler', label: '旅行者' },
+  { value: 'resident', label: '駐在員' },
 ];
 
 export type CompactFilterBarProps = {
@@ -97,8 +97,14 @@ export async function CompactFilterBar({
     (r) => slugsWithContent.has(r.slug) || r.slug === activeRegionSlug,
   );
 
-  const regionLabel = activeRegionNameJa ?? '全都市';
-  const audienceLabel = activeAudience ? AUDIENCE_LABEL[activeAudience] : '対象者';
+  const regionLabel = activeRegionNameJa ?? '都市';
+  const audienceLabel = activeAudience
+    ? activeAudience === 'traveler'
+      ? '旅行者'
+      : activeAudience === 'resident'
+        ? '駐在員'
+        : AUDIENCE_LABEL[activeAudience]
+    : '対象';
 
   return (
     <div
@@ -127,7 +133,7 @@ export async function CompactFilterBar({
             <DropdownItem
               href={buildRegionHref(basePath, undefined, preserveQuery)}
               active={!activeRegionSlug}
-              label="全都市"
+              label="すべて"
             />
             {visibleRegions.map((r) => (
               <DropdownItem

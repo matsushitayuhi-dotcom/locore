@@ -196,37 +196,25 @@ export default async function ExpatCountryHomePage({ params }: Props) {
       <div className="mx-auto max-w-screen-xl space-y-6 px-4 py-4 sm:space-y-10 sm:px-6 sm:py-8">
         {/* 3. 国名のヘッダ（hero タイトル） */}
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-              {country.nameEn} — Residents
-            </p>
-            <h1
-              className="mt-1 text-[22px] font-bold tracking-tight sm:text-[26px]"
-            >
-              {country.nameJa} の駐在員ホーム
-            </h1>
-          </div>
+          <h1
+            className="text-[20px] font-bold tracking-tight sm:text-[24px]"
+          >
+            {country.nameJa}
+          </h1>
           <Link
             href="/expat"
             className="hidden whitespace-nowrap rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground/70 ring-1 ring-border transition hover:bg-primary-500/10 hover:text-foreground sm:inline-flex"
           >
-            国を選び直す
+            国を変える
           </Link>
         </div>
 
         {/* 4. 新着ニュース掲示板 — 「📅 カレンダー」「すべて見る →」は BoardWidget の
              ヘッダ内に表示。外側のセクションヘッダにはリンクを置かず重複を防ぐ。 */}
         <section>
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                新着ニュース
-              </p>
-              <h2 className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]">
-                今日と明日の暮らし情報
-              </h2>
-            </div>
-          </div>
+          <h2 className="mb-3 text-[18px] font-semibold tracking-tight sm:text-[20px]">
+            新着
+          </h2>
           <BoardWidget
             posts={residentNews}
             allHref="/board?audience=resident"
@@ -236,19 +224,12 @@ export default async function ExpatCountryHomePage({ params }: Props) {
         {/* 5. 提供サービス — 駐在員向け。空のときはセクションごと出さない。 */}
         {residentServices.length > 0 ? (
           <section aria-labelledby="resident-services-title">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                  提供サービス
-                </p>
-                <h2
-                  id="resident-services-title"
-                  className="mt-1 text-[18px] font-semibold tracking-tight sm:text-[20px]"
-                >
-                  暮らしを助けてくれる住人
-                </h2>
-              </div>
-            </div>
+            <h2
+              id="resident-services-title"
+              className="mb-3 text-[18px] font-semibold tracking-tight sm:text-[20px]"
+            >
+              サービス
+            </h2>
             <ServiceCarousel services={residentServices} />
           </section>
         ) : null}
@@ -265,16 +246,13 @@ export default async function ExpatCountryHomePage({ params }: Props) {
                   className="text-[18px] font-semibold tracking-tight sm:text-[20px]"
                 >
                   {KIND_LABEL[kind]}
-                  <span className="ml-2 text-[12px] font-normal text-foreground/55 tabular">
-                    新着 {posts.length} 件
-                  </span>
                 </h2>
                 <Link
                   href={KIND_BASE_PATH[kind]}
-                  className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
+                  aria-label={`${KIND_LABEL[kind]} をすべて見る`}
+                  className="inline-flex items-center text-[12px] font-semibold text-primary-300 hover:underline"
                 >
-                  すべて見る
-                  <ArrowRight className="h-3 w-3" />
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
               {/* 横スクロール: 各カードは固定幅、snap で左端揃え。
@@ -291,14 +269,14 @@ export default async function ExpatCountryHomePage({ params }: Props) {
                     <CommunityCard post={p} />
                   </li>
                 ))}
-                {/* カテゴリ TOP への末尾カード */}
+                {/* カテゴリ TOP への末尾カード — 矢印アイコンだけのミニマル版 */}
                 <li className="flex w-[62%] shrink-0 snap-start items-center justify-center rounded-xl bg-card text-center ring-1 ring-dashed ring-border sm:w-[32%] lg:w-[23%]">
                   <Link
                     href={KIND_BASE_PATH[kind]}
-                    className="block p-6 text-[12px] font-semibold text-primary-300 hover:underline"
+                    aria-label={`${KIND_LABEL[kind]} をすべて見る`}
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-full text-primary-300 hover:bg-primary-500/10"
                   >
-                    {KIND_LABEL[kind]} を<br />
-                    すべて見る →
+                    <ArrowRight className="h-5 w-5" />
                   </Link>
                 </li>
               </ul>
@@ -311,16 +289,14 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           <section>
             <div className="mb-3 flex items-baseline justify-between gap-3">
               <h2 className="text-[18px] font-semibold tracking-tight sm:text-[20px]">
-                駐在者情報
-                <span className="ml-2 text-[12px] font-normal text-foreground/55">
-                  長文の暮らしリファレンス
-                </span>
+                記事
               </h2>
               <Link
                 href="/articles?type=expat_info"
-                className="text-[12px] font-semibold text-primary-300 hover:underline"
+                aria-label="すべての記事を見る"
+                className="inline-flex items-center text-[12px] font-semibold text-primary-300 hover:underline"
               >
-                すべて見る →
+                <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
             <ArticleScrollSection

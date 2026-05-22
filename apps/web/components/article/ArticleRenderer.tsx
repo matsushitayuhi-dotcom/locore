@@ -208,10 +208,7 @@ export function ArticleRenderer({
                     <span className="tabular">
                       {article.photoEntries.length - 1}
                     </span>{' '}
-                    枚 + キャプションは購入後に
-                  </p>
-                  <p className="mt-1 text-[12px] text-white/60">
-                    縦スクロールで 1 枚ずつ全画面表示されます
+                    枚は購入後
                   </p>
                 </div>
               </section>
@@ -285,12 +282,7 @@ export function ArticleRenderer({
             </div>
           ) : (
             <section className="rounded-md bg-primary-500/10 p-6 text-center text-[12px] text-primary-300 ring-1 ring-border">
-              <p className="font-semibold">スポット地図は購入後に解放されます</p>
-              <p className="mt-1 text-foreground/60">
-                {article.articleType === 'itinerary'
-                  ? '実際に辿るルートと所要時間を地図上で確認できます'
-                  : 'すべてのスポットの位置をまとめて確認できます'}
-              </p>
+              <p className="font-semibold">地図は購入後</p>
             </section>
           )}
 
@@ -369,7 +361,10 @@ export function ArticleRenderer({
             <h3
               className="mb-4 text-[18px] font-semibold tracking-tight"
             >
-              読者レビュー（{reviews.length}件）
+              レビュー
+              <span className="ml-2 text-[12px] font-normal text-foreground/50 tabular">
+                {reviews.length}
+              </span>
             </h3>
             <div className="space-y-4">
               {reviews.slice(0, 6).map((r) => (
@@ -426,13 +421,14 @@ export function ArticleRenderer({
             <h3
               className="text-[20px] font-semibold tracking-tight"
             >
-              関連記事
+              関連
             </h3>
             <Link
               href="/articles"
+              aria-label="すべての記事を見る"
               className="text-[12px] font-semibold text-primary-300 hover:underline"
             >
-              すべての記事 →
+              →
             </Link>
           </div>
           <ul

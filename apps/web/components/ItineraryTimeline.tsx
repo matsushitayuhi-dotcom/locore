@@ -117,18 +117,15 @@ export function ItineraryTimeline({
 
   return (
     <section className="rounded-2xl bg-card p-5 ring-1 ring-border sm:p-6">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-            1日の流れ
-          </p>
-          <h3 className="mt-2 text-[20px] font-bold tracking-tight">旅程タイムライン</h3>
-        </div>
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h3 className="text-[20px] font-bold tracking-tight">旅程</h3>
         {!unlocked ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground/50">
+          <span
+            aria-label="購入で解放"
+            title="購入で解放"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-100 text-foreground/50"
+          >
             <Lock className="h-3 w-3" />
-            記事購入で解放
           </span>
         ) : null}
       </div>
@@ -313,15 +310,12 @@ export function ItineraryTimeline({
         })()}
       </ol>
 
-      {/* 末尾に控えめな解放 CTA */}
+      {/* 末尾に控えめな解放 CTA — 説明文は刈り込み、最短のひとこと */}
       {!unlocked ? (
         <div className="mt-5 rounded-md border border-dashed border-primary-300/60 bg-primary-500/5 px-4 py-3 text-center">
           <p className="text-[12px] font-bold text-primary-300">
             <Lock className="mr-1 inline h-3 w-3" />
-            スポット名・写真・メモは購入後に全公開
-          </p>
-          <p className="mt-0.5 text-[11px] text-foreground/55">
-            時刻と移動手段だけ先に見せています
+            続きは購入後
           </p>
         </div>
       ) : null}

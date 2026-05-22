@@ -54,9 +54,9 @@ export function SpotsCardList({
     <section>
       <div className="mb-3 flex items-end justify-between gap-3">
         <h3 className="text-[16px] font-bold tracking-tight">
-          この記事のスポット
-          <span className="ml-2 text-[12px] font-medium text-foreground/50">
-            {spots.length} 箇所
+          スポット
+          <span className="ml-2 text-[12px] font-medium text-foreground/50 tabular">
+            {spots.length}
           </span>
         </h3>
         {!locked ? (
@@ -149,7 +149,7 @@ export function SpotsCardList({
                     viewerLoggedIn={viewerLoggedIn}
                   />
                   <ActionButton
-                    label="地図で開く"
+                    label="地図"
                     icon={<MapPin className="h-4 w-4" />}
                     onClick={() => {
                       window.open(
@@ -158,8 +158,8 @@ export function SpotsCardList({
                       );
                     }}
                   />
-                  <ActionButton
-                    label="Google マップで開く"
+                  <ActionIconButton
+                    ariaLabel="Google マップで開く"
                     icon={<ExternalLink className="h-4 w-4" />}
                     onClick={() => {
                       // Place ID があれば「場所」として開く。無ければ緯度経度 fallback。
@@ -203,6 +203,32 @@ function ActionButton({
     >
       {icon}
       {label}
+    </button>
+  );
+}
+
+/** ラベルなしアイコンだけの正方形アクションボタン (Google マップ等の外部リンク用) */
+function ActionIconButton({
+  ariaLabel,
+  icon,
+  onClick,
+}: {
+  ariaLabel: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      title={ariaLabel}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-card text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+    >
+      {icon}
     </button>
   );
 }

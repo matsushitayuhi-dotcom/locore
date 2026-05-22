@@ -100,27 +100,17 @@ export function ArticleScrollSection({
           </div>
         ))}
 
-        {/* モバイル横スクロール末尾の「続きを見る」カード */}
-        <Link
-          href={moreHref}
-          aria-label="続きを見る"
-          className="flex w-[42vw] shrink-0 snap-start items-center justify-center rounded-2xl bg-primary-500/10 px-4 py-8 text-center text-[12px] font-semibold text-primary-300 ring-1 ring-primary-300/30 transition hover:bg-primary-500/15 sm:hidden"
-        >
-          <span>
-            続きを見る
-            <ArrowRight className="ml-1 inline h-3 w-3" />
-          </span>
-        </Link>
       </div>
 
-      {/* sm 以上では下中央に「続きを見る」CTA */}
+      {/* 中央の控えめな「→」だけの円形 CTA。sm 以上で表示。
+          スマホは横スクロールで自然に最後まで見えるので CTA を出さない。 */}
       <div className="mt-5 hidden sm:flex sm:justify-center">
         <Link
           href={moreHref}
-          className="inline-flex items-center gap-1.5 rounded-full bg-card px-5 py-2 text-[13px] font-semibold text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+          aria-label="もっと見る"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-card text-primary-300 ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
         >
-          続きを見る
-          <ArrowRight className="h-3.5 w-3.5" />
+          <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     </div>

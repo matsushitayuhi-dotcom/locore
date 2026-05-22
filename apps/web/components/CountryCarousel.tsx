@@ -68,17 +68,12 @@ function SeeMoreTile({ total }: { total: number }) {
   return (
     <Link
       href="/world"
+      aria-label={`他 ${total - CAROUSEL_LIMIT} ヶ国を見る`}
       className="group flex h-full flex-col items-center justify-center rounded-xl bg-primary-500/10 px-4 py-8 text-center ring-1 ring-primary-300/30 transition hover:bg-primary-500/15 hover:ring-primary-300"
     >
       <div className="aspect-[3/4] flex w-full flex-col items-center justify-center">
-        <p className="text-[28px] font-bold text-primary-300">+{total - CAROUSEL_LIMIT}</p>
-        <p className="mt-1 text-[11px] uppercase tracking-[0.18em] text-primary-300/70">
-          More countries
-        </p>
-        <p className="mt-3 inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold text-neutral-950 transition group-hover:bg-primary-300">
-          すべて見る
-          <ArrowRight className="h-3 w-3" />
-        </p>
+        <p className="text-[32px] font-bold text-primary-300">+{total - CAROUSEL_LIMIT}</p>
+        <ArrowRight className="mt-4 h-4 w-4 text-primary-300/70" />
       </div>
     </Link>
   );
@@ -119,9 +114,12 @@ function CountryTile({ country }: { country: CountryListItem }) {
           className={'absolute inset-0 ' + (active ? 'bg-black/30' : 'bg-black/45')}
         />
         {!active ? (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
+          <span
+            aria-label="準備中"
+            title="準備中"
+            className="absolute left-2 top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-50/90 text-foreground/55 backdrop-blur"
+          >
             <Lock className="h-2.5 w-2.5" />
-            準備中
           </span>
         ) : null}
         <div className="absolute inset-x-0 bottom-0 px-3 py-3 text-white">

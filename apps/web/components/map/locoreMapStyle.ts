@@ -1,18 +1,22 @@
 /**
- * Locore 用の Google Maps スタイル — Editorial Light v3。
+ * Locore 用の Google Maps スタイル — Prism Japan 風 Monochrome v1。
  *
  * 設計指針:
- *   - 全体をウォームオフホワイト (#FAFAF7) ベースで「紙の地図」感を出す
- *   - 道路は控えめな白〜薄ベージュで地形の主張を抑え、terra ピンが目立つようにする
- *   - 水域は穏やかな青グレー、公園は淡い warm green
- *   - POI / transit は全部 OFF（"Google 地図感" の消去）
+ *   - 紙の地図のような完全モノクロ。色相は一切持たない (neutral zinc / stone のみ)
+ *   - 道路は純白に近い、ストロークは細い neutral-200
+ *   - 水域は淡いグレー (青は廃止)
+ *   - landscape / park の緑は廃止
+ *   - POI / transit / 行政ラベル / 道路ラベルは限界まで間引き、ラベルが残るときも
+ *     neutral-500 を薄く一段だけ
+ *   - Apple Maps / Mapbox monochrome に近い視覚密度
  */
 export const locoreMapStyles: google.maps.MapTypeStyle[] = [
-  // 全体ベース：ウォームオフホワイト
+  // ベース：ほぼ白い zinc-50
   {
     elementType: 'geometry',
-    stylers: [{ color: '#FAFAF7' }],
+    stylers: [{ color: '#FAFAFA' }],
   },
+  // ラベルはほぼ全て OFF
   {
     elementType: 'labels',
     stylers: [{ visibility: 'off' }],
@@ -23,85 +27,101 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   },
   {
     elementType: 'labels.text.stroke',
-    stylers: [{ color: '#FFFFFF' }],
+    stylers: [{ color: '#FFFFFF' }, { weight: 3 }],
   },
 
-  // 行政界・ラベルは「主要都市・国名」だけ薄く残す
+  // 国名 / 主要都市名だけ、超薄く残す
   {
     featureType: 'administrative.country',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#A5A09A' }],
+    stylers: [{ color: '#A1A1AA' }],
   },
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#A5A09A' }, { visibility: 'on' }],
+    stylers: [{ color: '#A1A1AA' }, { visibility: 'on' }],
   },
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.stroke',
     stylers: [{ color: '#FFFFFF' }, { weight: 3 }],
   },
-  // 主要道路の名前だけ薄く残す
-  {
-    featureType: 'road.arterial',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#A5A09A' }, { visibility: 'on' }],
-  },
 
-  // POI (店・観光地アイコン) は全部消す
+  // POI / transit / business / attraction はすべて消す
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.attraction', stylers: [{ visibility: 'off' }] },
+  { featureType: 'poi.park', stylers: [{ visibility: 'off' }] },
 
-  // 道路：ほぼ白
+  // 道路 — 純白 + 細い neutral-200 のストローク
   {
     featureType: 'road',
     elementType: 'geometry',
     stylers: [{ color: '#FFFFFF' }],
   },
   {
+    featureType: 'road',
+    elementType: 'geometry.stroke',
+    stylers: [{ color: '#E4E4E7' }, { weight: 0.6 }],
+  },
+  {
     featureType: 'road.highway',
     elementType: 'geometry',
-    stylers: [{ color: '#F4F2EC' }],
+    stylers: [{ color: '#FFFFFF' }],
   },
   {
     featureType: 'road.highway',
     elementType: 'geometry.stroke',
-    stylers: [{ color: '#E7E5E0' }],
+    stylers: [{ color: '#D4D4D8' }, { weight: 0.8 }],
   },
   {
     featureType: 'road.arterial',
     elementType: 'geometry',
-    stylers: [{ color: '#FBFAF5' }],
+    stylers: [{ color: '#FFFFFF' }],
+  },
+  // 道路ラベルは消す（"Google らしさ" の排除）
+  {
+    featureType: 'road',
+    elementType: 'labels',
+    stylers: [{ visibility: 'off' }],
   },
 
-  // 公園：淡い warm green
+  // 自然 / landscape — 紙のグレー
+  {
+    featureType: 'landscape',
+    elementType: 'geometry',
+    stylers: [{ color: '#F4F4F5' }],
+  },
   {
     featureType: 'landscape.natural',
     elementType: 'geometry',
-    stylers: [{ color: '#EDF1E5' }],
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{ visibility: 'on' }, { color: '#E4ECD2' }],
+    stylers: [{ color: '#F4F4F5' }],
   },
 
-  // 水域：穏やかな青グレー
+  // 水域 — 淡い neutral-200 (青を廃止して紙の質感に)
   {
     featureType: 'water',
     elementType: 'geometry',
-    stylers: [{ color: '#DCEAF5' }],
+    stylers: [{ color: '#E4E4E7' }],
+  },
+  {
+    featureType: 'water',
+    elementType: 'labels',
+    stylers: [{ visibility: 'off' }],
   },
 ];
 
-/** ピンの色（local score に応じて切り替え）— terra-cotta 系の濃淡で */
+/**
+ * ピンの色（local score に応じて切り替え）— モノクロ階調で。
+ *   high   → ink (#18181b) zinc-900
+ *   mid    → zinc-600
+ *   low    → zinc-400
+ */
 export function pinColorForScore(score: number): string {
-  if (score >= 70) return '#D4634A'; // 鮮やか terra-cotta（最もローカル）
-  if (score >= 30) return '#DD9477'; // 中間
-  return '#C9C5BB'; // 淡いグレー（観光地寄り）
+  if (score >= 70) return '#18181B'; // ink
+  if (score >= 30) return '#52525B'; // zinc-600
+  return '#A1A1AA'; // zinc-400
 }
 
 /** ピンの「クラス」（HTML 用、locore-pin と組み合わせ） */

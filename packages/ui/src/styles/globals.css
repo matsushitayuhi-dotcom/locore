@@ -28,26 +28,30 @@
     --color-neutral-900: #18181b;      /* fg (primary text)             */
     --color-neutral-950: #0e0e0f;
 
-    /* === Primary: Terra-cotta — the mature warm accent =============== */
-    --color-primary-50:  #faf1ed;
-    --color-primary-100: #f4dace;
-    --color-primary-200: #ebc0ad;
-    --color-primary-300: #dd9477;
-    --color-primary-500: #d4634a;      /* main terra-cotta              */
-    --color-primary-700: #a84a35;
-    --color-primary-900: #6e2f1f;
+    /* === Primary: Monochrome ink (2026-05 改修) ======================
+       墨黒ベースのミニマリスト方針。primary-500 は CTA 用の真っ黒、
+       primary-300 は muted な mid-gray (旧 terracotta-300 の差し色用途)。
+       過去の primary 系クラスは全てここで一括変更される。 */
+    --color-primary-50:  #f4f4f5;
+    --color-primary-100: #e4e4e7;
+    --color-primary-200: #d4d4d8;
+    --color-primary-300: #71717a;
+    --color-primary-500: #18181b;      /* main ink black              */
+    --color-primary-700: #0e0e0f;
+    --color-primary-900: #000000;
 
-    /* === Secondary: Deep blue — rare, for trust signals ============== */
-    --color-secondary-50:  #dceaf5;
-    --color-secondary-300: #6ba1c9;
-    --color-secondary-500: #2c7eb4;
-    --color-secondary-700: #1c5384;
+    /* === Secondary: 同じくモノクロ (旧 deep blue は使わない方向) ===== */
+    --color-secondary-50:  #f4f4f5;
+    --color-secondary-300: #71717a;
+    --color-secondary-500: #3f3f46;
+    --color-secondary-700: #18181b;
 
-    /* === Accent: Deeper terra-red for hearts / saves ================= */
-    --color-accent-50:  #fce5dc;
-    --color-accent-300: #db8467;
-    --color-accent-500: #c84a2c;
-    --color-accent-700: #903019;
+    /* === Accent: Like / Save 用。モノクロ化に伴いインクで統一。
+           accent-50 だけ淡灰背景として使える幅を残す。 */
+    --color-accent-50:  #f4f4f5;
+    --color-accent-300: #52525b;
+    --color-accent-500: #18181b;
+    --color-accent-700: #000000;
 
     /* === Semantic — used sparingly =================================== */
     --color-success-50:  #dcfce7;
@@ -60,9 +64,9 @@
     --color-info-50:     #dbeafe;
     --color-info-500:    #2563eb;
 
-    /* === Local-score scale (terra gradient) ========================== */
-    --color-local-high: #d4634a;       /* 70-100, vivid terra           */
-    --color-local-mid:  #dd9477;       /* 30-69, soft terra             */
+    /* === Local-score scale (monochrome gradient) ===================== */
+    --color-local-high: #18181b;       /* 70-100, ink (most local)      */
+    --color-local-mid:  #71717a;       /* 30-69, mid gray               */
     --color-local-low:  #c9c5bb;       /* 0-29, muted gray              */
 
     /* === Surface roles =============================================== */

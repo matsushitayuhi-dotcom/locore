@@ -70,8 +70,8 @@ export function ArticleHero({
 
   return (
     <>
-      {/* Breadcrumbs */}
-      <div className="border-b border-border/60">
+      {/* Breadcrumbs — スマホでは非表示にしてヒーローを軽くする */}
+      <div className="hidden border-b border-border/60 sm:block">
         <nav
           aria-label="パンくず"
           className="mx-auto flex max-w-screen-xl items-center gap-1 px-4 py-3 text-[11px] text-foreground/55 sm:px-6"
@@ -142,9 +142,9 @@ export function ArticleHero({
       </div>
 
       {/* タイトル群 (画像の下にセンター寄せ。雑誌の表紙裏みたいに置く) */}
-      <header className="mx-auto max-w-3xl px-4 pt-8 text-center sm:px-6 sm:pt-12">
-        {/* 上の小タグ: 種別 + エリア。クラフトされた雑誌のキッカー (kicker) 風 */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
+      <header className="mx-auto max-w-3xl px-4 pt-6 text-center sm:px-6 sm:pt-12">
+        {/* 上の小タグ: 種別 + エリア。スマホでは撤去してタイトルを最短距離に */}
+        <div className="hidden flex-wrap items-center justify-center gap-2 sm:flex">
           <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-300">
             {article.articleType === 'itinerary' ? '旅程プラン' : 'スポット紹介'}
           </span>
@@ -154,7 +154,7 @@ export function ArticleHero({
           </span>
         </div>
 
-        <h1 className="article-hero-title mt-4 text-[26px] font-bold leading-[1.15] tracking-tight text-foreground sm:text-[40px] md:text-[52px]">
+        <h1 className="article-hero-title text-[22px] font-bold leading-[1.2] tracking-tight text-foreground sm:mt-4 sm:text-[40px] sm:leading-[1.15] md:text-[52px]">
           {article.title}
         </h1>
 
@@ -183,9 +183,9 @@ export function ArticleHero({
           </time>
         </div>
 
-        {/* タグ行 (中央寄せ、控えめ) */}
+        {/* タグ行 (中央寄せ、控えめ。スマホでは非表示にしてヘッダを軽くする) */}
         {article.tags.length > 0 ? (
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
+          <div className="mt-4 hidden flex-wrap items-center justify-center gap-1.5 sm:flex">
             {article.tags.slice(0, 3).map((t) => (
               <Badge key={t} variant="secondary">
                 {t}

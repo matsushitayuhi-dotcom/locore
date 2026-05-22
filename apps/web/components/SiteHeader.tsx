@@ -70,17 +70,17 @@ export async function SiteHeader() {
           />
           {isResident ? (
             <>
-              <NavLink href="/apartments">アパート</NavLink>
+              <NavLink href="/apartments">住居</NavLink>
               <NavLink href="/marketplace">売買</NavLink>
               <NavLink href="/jobs">求人</NavLink>
-              <NavLink href="/groups">イベント</NavLink>
-              <NavLink href="/lessons">習い事</NavLink>
-              <NavLink href="/help">助け合い</NavLink>
+              <NavLink href="/groups">集まり</NavLink>
+              <NavLink href="/lessons">習う</NavLink>
+              <NavLink href="/help">助け</NavLink>
               <NavLink href="/search">検索</NavLink>
             </>
           ) : (
             <>
-              <NavLink href="/map">地図から探す</NavLink>
+              <NavLink href="/map">地図</NavLink>
               <NavLink href="/search">検索</NavLink>
             </>
           )}

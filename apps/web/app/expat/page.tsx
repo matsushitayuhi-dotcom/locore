@@ -1,6 +1,6 @@
 ﻿import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { listCountriesForPicker } from '@/lib/geo/countries';
 import type { CountryListItem } from '@/lib/geo/countries';
 
@@ -40,20 +40,11 @@ export default async function ExpatHomePage() {
     <main className="bg-background">
       <div className="mx-auto max-w-screen-xl space-y-10 px-4 py-8 sm:space-y-14 sm:px-6 sm:py-12">
         <section>
-          <div className="mb-4">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-primary-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-              駐在員ホーム
-            </p>
-            <h1
-              className="mt-2 text-[22px] font-bold leading-tight tracking-tight sm:text-[26px]"
-            >
-              どの国に住んでいますか？
-            </h1>
-            <p className="mt-1 max-w-2xl text-[12px] text-foreground/75 sm:text-[13px]">
-              暮らしている国を選ぶと、その国の掲示板（アパート / 売買 / 求人 / イベント / 習い事 / 助け合い）と新着ニュースが見えます。今はフランスから始めています。
-            </p>
-          </div>
+          <h1
+            className="mb-4 text-[20px] font-bold leading-tight tracking-tight sm:text-[24px]"
+          >
+            国を選ぶ
+          </h1>
 
           <ExpatCountryGrid countries={adjusted} />
         </section>
@@ -160,9 +151,12 @@ function ExpatCountryTile({ country }: { country: CountryListItem }) {
           className={'absolute inset-0 ' + (active ? 'bg-black/30' : 'bg-black/45')}
         />
         {!active ? (
-          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-neutral-50/90 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/55 backdrop-blur">
+          <span
+            aria-label="準備中"
+            title="準備中"
+            className="absolute left-2 top-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-neutral-50/90 text-foreground/55 backdrop-blur"
+          >
             <Lock className="h-2.5 w-2.5" />
-            準備中
           </span>
         ) : null}
         <div className="absolute inset-x-0 bottom-0 px-3 py-3 text-white">
@@ -174,12 +168,6 @@ function ExpatCountryTile({ country }: { country: CountryListItem }) {
           >
             {country.nameJa}
           </h3>
-          {active ? (
-            <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-white/85">
-              駐在員ホームへ
-              <ArrowRight className="h-3 w-3" />
-            </p>
-          ) : null}
         </div>
       </div>
     </div>
