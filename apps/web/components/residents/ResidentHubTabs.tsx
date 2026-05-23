@@ -2,6 +2,16 @@
 
 import { useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+// 2026-05 修正: 'use client' のこのファイルから parseTab を export していたため
+// Server Component から呼ぶと本番ビルドで「parseTab is not a function」になっていた。
+// 定数 / parseTab は residentHubTabsShared.ts に分離し、ここからは re-export のみ。
+import {
+  RESIDENT_HUB_TABS,
+  parseTab,
+  type ResidentHubTabKey,
+} from './residentHubTabsShared';
+
+export { RESIDENT_HUB_TABS, parseTab, type ResidentHubTabKey };
 
 /**
  * 駐在員ハブのタブナビ (Client Component)。
@@ -10,25 +20,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
  * - クリック時に router.replace で `?tab=xxx` に切り替え、scroll: false で
  *   ハブ全体のスクロール位置を維持する
  * - サーバ側は SearchParams で `activeTab` を読んで該当 panel だけ表示する
- *   (パネル本体は親で組み立てて children として渡す)
- *
- * Tabs と Panel は親側 (server) で並べる前提。ここでは「ナビゲーション部分のみ」を担う。
  */
-
-export const RESIDENT_HUB_TABS = [
-  { key: 'overview', label: '概要' },
-  { key: 'articles', label: '記事' },
-  { key: 'services', label: '出品' },
-  { key: 'reviews', label: 'レビュー' },
-  { key: 'contact', label: '問い合わせ' },
-] as const;
-
-export type ResidentHubTabKey = (typeof RESIDENT_HUB_TABS)[number]['key'];
-
-export function parseTab(value: string | null | undefined): ResidentHubTabKey {
-  const found = RESIDENT_HUB_TABS.find((t) => t.key === value);
-  return (found?.key ?? 'overview') as ResidentHubTabKey;
-}
 
 type Props = {
   activeTab: ResidentHubTabKey;

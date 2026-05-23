@@ -455,6 +455,21 @@ export default function DeckPrintPage() {
           .deck-instructions {
             display: none !important;
           }
+          /* 親レイアウトの SiteHeader / BottomNav / Footer / Sonner も非表示 */
+          body > div > header,
+          body > div > nav,
+          body > div > footer,
+          .app-main-pad > header,
+          .app-main-pad ~ nav,
+          .app-main-pad ~ footer,
+          [data-sonner-toaster],
+          [aria-label="Notifications"] {
+            display: none !important;
+          }
+          .app-main-pad {
+            padding: 0 !important;
+            min-height: 0 !important;
+          }
           .deck-print-root {
             background: white !important;
           }
