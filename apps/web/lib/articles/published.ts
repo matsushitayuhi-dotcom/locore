@@ -16,15 +16,12 @@ import type { Article, Writer, Spot, Review } from '@/lib/mock';
  * @param limit       取得件数上限
  * @param regionSlug  指定すると cities.slug = regionSlug の記事だけ返す
  *                    （/region/[slug] ホーム用）
- * @param countryCode 指定すると countries.code = countryCode の記事だけ返す
- *                    （/country/[code] の記事タブ用、regionSlug と排他併用可）
  *
  * 将来：reviews / purchases の集計をマテビュー化して反映
  */
 export async function getPublishedDbArticles(
   limit = 50,
   regionSlug?: string,
-  countryCode?: string,
 ): Promise<Article[]> {
   let rows: Array<{
     id: string;
@@ -94,9 +91,6 @@ export async function getPublishedDbArticles(
           //   publishedAt が NULL のときは（過去データ互換のため）通す。
           sql`(${schema.articles.publishedAt} IS NULL OR ${schema.articles.publishedAt} <= NOW())`,
           regionSlug ? eq(schema.cities.slug, regionSlug) : sql`true`,
-          countryCode
-            ? eq(schema.countries.code, countryCode.toLowerCase())
-            : sql`true`,
         ),
       )
       .orderBy(desc(schema.articles.publishedAt))

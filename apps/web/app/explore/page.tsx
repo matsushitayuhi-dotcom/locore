@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { CountryGridByContinent } from '@/components/CountryGridByContinent';
 import { ArticleMagazineGrid } from '@/components/explore/ArticleMagazineGrid';
 import { FloatingMapButton } from '@/components/FloatingMapButton';
 import { listCountriesForPicker } from '@/lib/geo/countries';
@@ -21,21 +22,17 @@ export const metadata = {
 /**
  * 旅行者向けホーム (/explore)。
  *
- * 2026-05 再設計（行き先撤去版）:
- *   階層構造: ホーム → 国 → 記事 / サービス / コミュニティ
- *   /explore は「全国合算 aggregate」、国別のコンテンツは /country/[code] に集約。
- *
+ * 2026-05 再設計: 「他の旅行メディアと何が違うか」を 1 スクロールで伝える構成。
  *   1. Hero  — 「現地に住む人と、つながる旅。」 + 主要 CTA
- *   1.5 コンパクトな国チップ行 (人気上位 8 + すべての国を見る)
  *   2. 3 サービス紹介 (ロコア トラベル / サービス / コミュニティ)
  *   3. 今週の特集記事 (雑誌表紙風、1 本だけ大きく)
  *   4. 駐在員ピックアップ — 顔出しカルーセル (差別化の核)
  *   5. 旅程プラン (記事カルーセル)
  *   6. スポット紹介 (記事カルーセル)
- *   7. 駐在員ホーム導線
+ *   7. 行き先 (国グリッド)
+ *   8. 駐在員ホーム導線
  *
- * 大きな国グリッド（CountryGridByContinent）は撤去し、
- * 国選択はチップ行から /country/[code] に直行する。
+ * 「人」と「3 サービス」を上に厚く出して、コンテンツは下に。
  */
 export default async function ExplorePage() {
   const [countries, articles, residents] = await Promise.all([
@@ -118,15 +115,6 @@ export default async function ExplorePage() {
         </div>
       </section>
 
-      {/* ============ 1.5 コンパクトな国チップ行 ============ */}
-      {countries.length > 0 ? (
-        <section className="border-b border-border bg-card">
-          <div className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6 sm:py-5">
-            <CountryChipsRow countries={countries} />
-          </div>
-        </section>
-      ) : null}
-
       <div className="mx-auto max-w-screen-xl space-y-14 px-4 py-12 sm:space-y-16 sm:px-6 sm:py-14">
         {/* ============ 2. 3 サービス紹介 ============ */}
         <section id="services-intro">
@@ -178,6 +166,12 @@ export default async function ExplorePage() {
           </section>
         ) : null}
 
+        {/* ============ 7. 行き先 (国グリッド) ============ */}
+        <section id="destinations">
+          <SectionHeader title="行き先" />
+          <CountryGridByContinent countries={countries} />
+        </section>
+
         {/* ============ 8. 駐在員ホーム導線 ============ */}
         <section className="rounded-2xl bg-primary-500/10 px-6 py-8 text-center ring-1 ring-border">
           <h2 className="text-[20px] font-bold tracking-tight">
@@ -213,53 +207,6 @@ function SectionFooterMore({ href }: { href: string }) {
         <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     </div>
-  );
-}
-
-/**
- * Hero 直下のコンパクト国チップ行。
- * active な国を上位 8 件まで横並びにし、末尾に「すべての国を見る」リンクを置く。
- * 大きな国グリッド (CountryGridByContinent) は /explore から撤去したので、
- * 国選択の主な導線はここ + /world になる。
- */
-function CountryChipsRow({
-  countries,
-}: {
-  countries: Awaited<ReturnType<typeof listCountriesForPicker>>;
-}) {
-  // active=true（地域が存在する国）優先 + 名前順で上位 8 件
-  const active = countries.filter((c) => c.activeRegionCount > 0);
-  const others = countries.filter((c) => c.activeRegionCount === 0);
-  const sorted = [
-    ...active.sort((a, b) => a.nameJa.localeCompare(b.nameJa, 'ja')),
-    ...others.sort((a, b) => a.nameJa.localeCompare(b.nameJa, 'ja')),
-  ];
-  const top = sorted.slice(0, 8);
-  const total = countries.length;
-
-  return (
-    <nav aria-label="国 / 街を選ぶ" className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      <span className="shrink-0 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/45">
-        国 / 街
-      </span>
-      {top.map((c) => (
-        <Link
-          key={c.code}
-          href={`/country/${c.code}`}
-          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-background px-3 py-1.5 text-[12px] font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-primary-500/10 hover:text-foreground"
-        >
-          {c.emoji ? <span aria-hidden>{c.emoji}</span> : null}
-          {c.nameJa}
-        </Link>
-      ))}
-      <Link
-        href="/world"
-        className="ml-1 inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-500/10 px-3 py-1.5 text-[12px] font-bold text-primary-300 ring-1 ring-primary-300/40 transition hover:bg-primary-500/20"
-      >
-        すべての国を見る ({total})
-        <ArrowRight className="h-3 w-3" />
-      </Link>
-    </nav>
   );
 }
 

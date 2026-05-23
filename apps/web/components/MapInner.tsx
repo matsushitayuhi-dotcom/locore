@@ -18,9 +18,9 @@ import { locoreMapStyles, pinColorForScore } from './map/locoreMapStyle';
  * Prism Japan 風 /map の中身。
  *
  *   - 地図全面 + モノクロスタイル
- *   - 上部 UI は無し。
- *   - 下部はデフォルト空（薄い hint バーのみ）。
- *     ピンをタップすると bottom-sheet 風の詳細パネルがせり上がる。
+ *   - 上部 UI は無し。タッチで詳細はボトムシート
+ *   - 下部に sticky 横スクロールのスポットカード列を表示。
+ *     カードタップで地図を該当ピンに pan + pin pulse
  *   - 「同じ Google Place / 同じ座標」のスポットはマーカー 1 本に集約
  *   - locked グループは H3 ヘキサに集約して位置を匿名化（既存仕様）
  */
@@ -523,6 +523,12 @@ function MapBody({
   );
   const groupHasUnlock = activeGroup ? activeGroup.unlocked : false;
 
+  // 横スクロールカード列に出すスポット (unlocked + own のみ)
+  const visibleGroups = useMemo(
+    () => groupsWithUnlock.filter((g) => g.unlocked || g.isOwn),
+    [groupsWithUnlock],
+  );
+
   const panTarget = activeGroup
     ? activeGroup.displayPosition
     : activeHex
@@ -576,22 +582,73 @@ function MapBody({
       ) : activeHex ? (
         <HexBottomSheet hex={activeHex} onClose={() => setActiveHexId(null)} />
       ) : (
-        <HintBar />
+        <HorizontalSpotStrip
+          groups={visibleGroups}
+          activeKey={activeKey}
+          onSelect={(g) => {
+            setActiveHexId(null);
+            setActiveKey(g.key);
+          }}
+        />
       )}
     </div>
   );
 }
 
-/**
- * デフォルト表示の薄い hint バー。
- * 地図操作の邪魔にならないよう、画面下に小さく一行だけ。
- */
-function HintBar() {
+/** 下部 sticky の横スクロール薄カード。タップで地図を pan + ピン pulse */
+function HorizontalSpotStrip({
+  groups,
+  activeKey,
+  onSelect,
+}: {
+  groups: GroupWithUnlock[];
+  activeKey: string | null;
+  onSelect: (g: GroupWithUnlock) => void;
+}) {
+  if (groups.length === 0) return null;
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-16 z-[5] flex justify-center px-4 md:bottom-3">
-      <p className="pointer-events-none rounded-full bg-card/85 px-3 py-1 text-[11px] font-medium text-foreground/55 shadow-sm ring-1 ring-border backdrop-blur">
-        ピンをタップするとここに詳細が表示されます
-      </p>
+    <div className="pointer-events-none absolute inset-x-0 bottom-16 z-[5] md:bottom-3">
+      <div
+        className="pointer-events-auto flex gap-2 overflow-x-auto px-3 pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {groups.map((g) => {
+          const active = g.key === activeKey;
+          const a = g.articles[0];
+          return (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => onSelect(g)}
+              className={
+                'flex w-[240px] shrink-0 items-center gap-2 rounded-xl bg-card/95 p-2 text-left shadow-md ring-1 backdrop-blur transition ' +
+                (active
+                  ? 'ring-foreground'
+                  : 'ring-border hover:ring-foreground/40')
+              }
+            >
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-primary-500/10">
+                {a?.coverImageUrl ? (
+                  <Image
+                    src={a.coverImageUrl}
+                    alt={g.name}
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                ) : null}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] font-semibold text-foreground">
+                  {g.name}
+                </p>
+                <p className="truncate text-[10px] text-foreground/55">
+                  {g.articles.length} 件の記事
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

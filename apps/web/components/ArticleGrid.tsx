@@ -180,22 +180,28 @@ export function ArticleGrid({
   return (
     <>
       {/*
-        グリッドレイアウト（カルーセル撤去）:
-        - モバイル: 2 列（中身を目立たせる）
-        - sm: 2 列維持
-        - md: 3 列
-        - lg: 4 列
+        高密度レイアウト:
+        - モバイル (< sm): 横スクロール + scroll-snap、1 枚 ≒ 42vw（2.3 枚見える）
+        - sm: 3 列グリッド
+        - md: 4 列
         - xl: 5 列
         - 2xl: 6 列
       */}
       <div
         className={
-          'grid grid-cols-2 gap-3 ' +
-          'sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+          // モバイル横スクロール
+          'flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain -mx-4 px-4 pb-2 scrollbar-thin ' +
+          // sm+ で grid に切り替え
+          'sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0 ' +
+          'md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
         }
       >
         {articles.map((article) => (
-          <div key={article.id}>
+          <div
+            key={article.id}
+            // モバイル: w-[42vw] で 2.3 枚見える、snap-start で吸着
+            className="w-[42vw] shrink-0 snap-start sm:w-auto sm:shrink"
+          >
             <ArticleCard
               article={toCardModel(article, socialCounts?.get(article.id))}
               hideAuthor={hideAuthor}

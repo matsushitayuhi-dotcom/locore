@@ -132,79 +132,67 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
     return sorted;
   }, [articles, activeTags, localRange, price, sort, typeFilter]);
 
-  // 詳細フィルタ内のアクティブ条件数（バッジ用）
-  const advancedActiveCount =
-    (typeFilter !== 'all' ? 1 : 0) +
-    activeTags.length +
-    (price !== 'all' ? 1 : 0) +
-    ((localRange[0] ?? 0) > 0 || (localRange[1] ?? 100) < 100 ? 1 : 0);
-
   return (
     <div>
-      {/* 検索 + 絞り込みボタン 1 行 */}
-      <div className="mb-4 flex items-center gap-2">
-        <label className="relative flex-1">
-          <span className="sr-only">記事を絞り込む</span>
-          <input
-            type="search"
-            placeholder="絞り込み…"
-            aria-label="記事を絞り込む"
-            onFocus={() => setOpen(true)}
-            className="h-11 w-full rounded-full bg-background pl-4 pr-3 text-[13px] ring-1 ring-border placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </label>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-border bg-background px-3 text-[12px] font-semibold text-foreground/80 transition active:scale-[0.96] hover:bg-muted"
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-          絞り込み
-          {advancedActiveCount > 0 ? (
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary-500 px-1.5 text-[10px] font-bold text-neutral-950">
-              {advancedActiveCount}
-            </span>
-          ) : null}
-        </button>
+      {/* Type tabs (種別) */}
+      <div
+        role="tablist"
+        aria-label="記事の種別で絞り込む"
+        className="mb-3 flex flex-wrap items-center gap-1.5"
+      >
+        {TYPE_TABS.map((t) => {
+          const active = t.id === typeFilter;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => updateTypeFilter(t.id)}
+              className={
+                // min-h を 32px 確保 + active:scale でアプリ風タップ感
+                'inline-flex min-h-[32px] items-center rounded-full border px-3 py-1 text-[12px] font-medium transition active:scale-[0.96] ' +
+                (active
+                  ? 'border-foreground bg-foreground text-background'
+                  : 'border-border bg-background text-foreground/70 hover:border-foreground/30')
+              }
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* 詳細フィルタ (折りたたみ) — カテゴリも含めて全部ここに */}
-      {open ? (
-        <div className="mb-5 rounded-2xl border border-border/60 bg-card p-4">
-          <div className="mb-4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/50">
-              カテゴリ
-            </p>
-            <div
-              role="tablist"
-              aria-label="記事の種別で絞り込む"
-              className="flex flex-wrap items-center gap-1.5"
-            >
-              {TYPE_TABS.map((t) => {
-                const active = t.id === typeFilter;
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => updateTypeFilter(t.id)}
-                    className={
-                      'inline-flex min-h-[32px] items-center rounded-full border px-3 py-1 text-[12px] font-medium transition active:scale-[0.96] ' +
-                      (active
-                        ? 'border-foreground bg-foreground text-background'
-                        : 'border-border bg-background text-foreground/70 hover:border-foreground/30')
-                    }
-                  >
-                    {t.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+      {/* Filter bar */}
+      <div className="mb-6 rounded-lg border border-border bg-card px-4 py-3 shadow-xs">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground/80 transition active:scale-[0.96] hover:bg-muted"
+          >
+            <SlidersHorizontal className="h-3 w-3" />
+            詳細フィルタ
+          </button>
 
-          <div className="grid gap-5 border-t border-border/60 pt-4 md:grid-cols-3">
+          <div className="ml-auto flex items-center gap-2">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as typeof sort)}
+              className="h-9 min-h-[36px] rounded-md border border-border bg-background px-2 text-[13px] text-foreground/80"
+              aria-label="並び順"
+            >
+              {SORTS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {open ? (
+          <div className="mt-4 grid gap-5 border-t border-border/60 pt-4 md:grid-cols-3">
             <div>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/50">
                 テーマ
@@ -274,29 +262,15 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
               </div>
             </div>
           </div>
+        ) : null}
 
-          <div className="mt-4 flex items-center justify-between gap-2 border-t border-border/60 pt-3">
-            <div className="flex items-center gap-2 text-[12px] text-foreground/50">
-              <Badge variant="secondary" className="bg-muted">
-                {filtered.length} 件
-              </Badge>
-              <span>該当</span>
-            </div>
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as typeof sort)}
-              className="h-9 rounded-md border border-border bg-background px-2 text-[12px] text-foreground/80"
-              aria-label="並び順"
-            >
-              {SORTS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="mt-3 flex items-center gap-2 text-[12px] text-foreground/50">
+          <Badge variant="secondary" className="bg-muted">
+            {filtered.length} 件
+          </Badge>
+          <span>該当します</span>
         </div>
-      ) : null}
+      </div>
 
       <ArticleGrid articles={filtered} socialCounts={socialCounts} />
     </div>

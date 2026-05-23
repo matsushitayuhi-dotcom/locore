@@ -104,7 +104,7 @@ export function ServiceFilters({ state, cities, allTags }: Props) {
   const initiallyOpen = advancedActiveCount > 0;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:p-5">
       {/* 主要フィルタ 1 行: audience tabs + 検索 input */}
       <form
         action="/services"
