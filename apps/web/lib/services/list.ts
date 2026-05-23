@@ -30,6 +30,8 @@ export type ServiceSort = 'newest' | 'price_asc' | 'price_desc';
 export type ListServicesOptions = {
   audience?: ServiceAudienceFilter;
   citySlug?: string;
+  /** 国コード (countries.code, lowercase) で絞り込む。/country/[code] サービスタブで使用。 */
+  countryCode?: string;
   category?: string;
   /** 複数タグ。指定された場合は tags && {tag1,tag2,...} (overlap) でフィルタ。
    *  空配列 / undefined はノーフィルタ。 */
@@ -53,6 +55,7 @@ export async function listServices(
   const {
     audience = 'all',
     citySlug,
+    countryCode,
     category,
     tags,
     q,
@@ -92,6 +95,9 @@ export async function listServices(
       isNull(schema.users.deletedAt),
       matchAudience,
       citySlug ? eq(schema.cities.slug, citySlug) : undefined,
+      countryCode
+        ? eq(schema.countries.code, countryCode.toLowerCase())
+        : undefined,
       category ? eq(schema.userServices.category, category) : undefined,
       // tags && ARRAY[...] (overlap) — どれか 1 つでもマッチすれば true
       filteredTags.length > 0
@@ -154,6 +160,10 @@ export async function listServices(
         schema.cities,
         eq(schema.cities.id, schema.userServices.cityId),
       )
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
+      )
       .where(where)
       .orderBy(...orderBy)
       .limit(limit)
@@ -170,6 +180,10 @@ export async function listServices(
       .leftJoin(
         schema.cities,
         eq(schema.cities.id, schema.userServices.cityId),
+      )
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
       )
       .where(where);
 

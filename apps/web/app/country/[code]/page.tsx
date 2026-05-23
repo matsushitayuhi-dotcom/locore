@@ -4,10 +4,31 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Lock, MapPin } from 'lucide-react';
 import { getCountryByCode } from '@/lib/geo/countries';
 import type { RegionInfo } from '@/lib/geo/countries';
+import { getPublishedDbArticles } from '@/lib/articles/published';
+import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
+import { listServices } from '@/lib/services/list';
+import { listCommunityPosts } from '@/lib/community/db';
+import { ArticleGrid } from '@/components/ArticleGrid';
+import { ServiceCard } from '@/components/services/ServiceCard';
+import { CountryTabNav, type CountryTabKey } from '@/components/country/CountryTabNav';
+import {
+  KIND_LABEL,
+  KIND_BASE_PATH,
+  type CommunityKind,
+} from '@/lib/community/constants';
+import type { CommunityPostListItem } from '@/lib/community/db';
 
 export const revalidate = 60;
 
-type Props = { params: { code: string } };
+type Props = {
+  params: { code: string };
+  searchParams?: { tab?: string };
+};
+
+function parseTab(v: string | undefined): CountryTabKey {
+  if (v === 'services' || v === 'residents') return v;
+  return 'articles';
+}
 
 export async function generateMetadata({ params }: Props) {
   const country = await getCountryByCode(params.code);
@@ -43,9 +64,11 @@ const HIDDEN_REGION_SLUGS = new Set<string>([
   'french-alps',
 ]);
 
-export default async function CountryPage({ params }: Props) {
+export default async function CountryPage({ params, searchParams }: Props) {
   const country = await getCountryByCode(params.code);
   if (!country) notFound();
+
+  const tab = parseTab(searchParams?.tab);
 
   const visibleRegions = country.regions.filter(
     (r) => !HIDDEN_REGION_SLUGS.has(r.slug),
@@ -58,6 +81,45 @@ export default async function CountryPage({ params }: Props) {
   const lockedRegions = visibleRegions.filter(
     (r) => !r.isActive && r.kind !== 'other',
   );
+
+  // tab に応じて該当データを読む。articles タブが多くの人の入口なので、
+  // 他タブを開いていない場合は記事だけ読んで余計な DB I/O を避ける。
+  const articlesP =
+    tab === 'articles'
+      ? getPublishedDbArticles(48, undefined, country.code)
+      : Promise.resolve([]);
+  const servicesP =
+    tab === 'services'
+      ? listServices({ countryCode: country.code, limit: 48 })
+      : Promise.resolve({ services: [], total: 0 });
+  const communityP =
+    tab === 'residents'
+      ? Promise.all([
+          listCommunityPosts({ kind: 'apartment', countryCode: country.code, limit: 10 }),
+          listCommunityPosts({ kind: 'job', countryCode: country.code, limit: 10 }),
+          listCommunityPosts({ kind: 'marketplace', countryCode: country.code, limit: 10 }),
+          listCommunityPosts({ kind: 'group', countryCode: country.code, limit: 10 }),
+          listCommunityPosts({ kind: 'lesson', countryCode: country.code, limit: 10 }),
+          listCommunityPosts({ kind: 'mutual_aid', countryCode: country.code, limit: 10 }),
+        ])
+      : Promise.resolve([
+          [] as CommunityPostListItem[],
+          [] as CommunityPostListItem[],
+          [] as CommunityPostListItem[],
+          [] as CommunityPostListItem[],
+          [] as CommunityPostListItem[],
+          [] as CommunityPostListItem[],
+        ] as const);
+
+  const [articlesForTab, servicesForTab, communityForTab] = await Promise.all([
+    articlesP,
+    servicesP,
+    communityP,
+  ]);
+  const articleSocialCounts =
+    articlesForTab.length > 0
+      ? await getArticleSocialCounts(articlesForTab.map((a) => a.id))
+      : new Map();
 
   return (
     <main className="bg-background">
@@ -105,6 +167,50 @@ export default async function CountryPage({ params }: Props) {
       </section>
 
       <div className="mx-auto max-w-screen-xl space-y-12 px-4 py-10 sm:px-6 sm:py-14">
+        {/* 国内コンテンツの 3 タブ (記事 / サービス / コミュニティ) */}
+        <section aria-label={`${country.nameJa}のコンテンツ`}>
+          <CountryTabNav active={tab} />
+          <div className="mt-5">
+            {tab === 'articles' ? (
+              articlesForTab.length > 0 ? (
+                <ArticleGrid
+                  articles={articlesForTab}
+                  socialCounts={articleSocialCounts}
+                />
+              ) : (
+                <EmptyTabState
+                  title="この国の記事はまだありません"
+                  hint="駐在員が増えると、街ごとの記事が公開されていきます。"
+                />
+              )
+            ) : null}
+
+            {tab === 'services' ? (
+              servicesForTab.services.length > 0 ? (
+                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+                  {servicesForTab.services.map((s) => (
+                    <li key={s.id} className="h-full">
+                      <ServiceCard service={s} />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <EmptyTabState
+                  title="この国のサービスはまだありません"
+                  hint="駐在員が出品を始めると、ここに表示されます。"
+                />
+              )
+            ) : null}
+
+            {tab === 'residents' ? (
+              <CommunityTabContent
+                countryCode={country.code}
+                groups={communityForTab}
+              />
+            ) : null}
+          </div>
+        </section>
+
         {/* Active regions — もう少し小さめのグリッドで密度を上げる */}
         {activeRegions.length > 0 ? (
           <section>
@@ -168,6 +274,90 @@ export default async function CountryPage({ params }: Props) {
         ) : null}
       </div>
     </main>
+  );
+}
+
+function EmptyTabState({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-border bg-card px-6 py-10 text-center">
+      <h3 className="text-[14px] font-semibold text-foreground">{title}</h3>
+      <p className="mx-auto mt-2 max-w-md text-[12px] text-foreground/60">{hint}</p>
+    </div>
+  );
+}
+
+function CommunityTabContent({
+  countryCode,
+  groups,
+}: {
+  countryCode: string;
+  groups: readonly [
+    CommunityPostListItem[],
+    CommunityPostListItem[],
+    CommunityPostListItem[],
+    CommunityPostListItem[],
+    CommunityPostListItem[],
+    CommunityPostListItem[],
+  ];
+}) {
+  const order: CommunityKind[] = [
+    'apartment',
+    'marketplace',
+    'job',
+    'group',
+    'lesson',
+    'mutual_aid',
+  ];
+  const sections = order.map((kind, idx) => ({
+    kind,
+    posts: groups[idx] ?? [],
+  }));
+  const hasAny = sections.some((s) => s.posts.length > 0);
+  if (!hasAny) {
+    return (
+      <EmptyTabState
+        title="この国のコミュニティ投稿はまだありません"
+        hint="駐在員が増えると住居・求人・売買などの投稿が集まってきます。"
+      />
+    );
+  }
+  // 軽量にサマリーだけ。kind 別に件数 + 直近 1 件のタイトル + 一覧へのリンク。
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {sections.map(({ kind, posts }) => {
+        const top = posts[0];
+        return (
+          <li
+            key={kind}
+            className="rounded-2xl border border-border bg-card p-4"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-[14px] font-bold text-foreground">
+                {KIND_LABEL[kind]}
+                <span className="ml-1.5 text-[11px] font-semibold text-foreground/45">
+                  ({posts.length})
+                </span>
+              </h3>
+              <Link
+                href={`${KIND_BASE_PATH[kind]}?country=${countryCode}`}
+                className="text-[11px] font-semibold text-primary-300 hover:underline"
+              >
+                すべて見る →
+              </Link>
+            </div>
+            {top ? (
+              <p className="mt-2 line-clamp-2 text-[12px] text-foreground/70">
+                {top.title}
+              </p>
+            ) : (
+              <p className="mt-2 text-[12px] text-foreground/45">
+                投稿はまだありません
+              </p>
+            )}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

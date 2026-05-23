@@ -102,19 +102,9 @@ export default async function ServicesPage({
 
   return (
     <main className="bg-background">
-      <div className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10">
-        <header className="mb-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-            Locore Services
-          </p>
-          <h1 className="mt-1 text-[22px] font-semibold tracking-tight sm:text-[28px]">
-            サービスから探す
-          </h1>
-          <p className="mt-1 text-[13px] text-foreground/65">
-            現地駐在員が直接提供する観光アテンド・コンサル・通訳・撮影など。
-            気になるものを見つけたら、その場でメッセージで相談できます。
-          </p>
-        </header>
+      <div className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6 sm:py-8">
+        {/* aria 用に sr-only の H1 のみ残す */}
+        <h1 className="sr-only">サービスから探す</h1>
 
         <ServiceFilters state={filtersState} cities={cities} allTags={allTags} />
 
