@@ -101,6 +101,11 @@ export async function listServices(
         ? or(
             ilike(schema.userServices.title, `%${trimmedQ}%`),
             ilike(schema.userServices.description, `%${trimmedQ}%`),
+            // tags 配列も検索対象に。array_to_string で空白結合してから ILIKE。
+            // 0055 でタグ複数化したのに検索 q がタグを見ていなくて
+            // 「ワイン」「駐妻」等のキーワードがヒットしなくなる問題への対処。
+            sql`array_to_string(${schema.userServices.tags}, ' ') ILIKE ${'%' + trimmedQ + '%'}`,
+            ilike(schema.userServices.category, `%${trimmedQ}%`),
           )
         : undefined,
       minPrice != null

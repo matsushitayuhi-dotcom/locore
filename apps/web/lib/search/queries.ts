@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, desc, eq, ilike, isNull, ne, or } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import type { CommunityKind, CommunityStatus } from '@/lib/community/constants';
@@ -386,6 +386,9 @@ export async function searchServices(
             ilike(schema.userServices.title, pat),
             ilike(schema.userServices.description, pat),
             ilike(schema.userServices.category, pat),
+            // 0055 のタグ複数化に伴い、tags 配列も検索対象に含める。
+            // array_to_string で空白結合してから ILIKE。
+            sql`array_to_string(${schema.userServices.tags}, ' ') ILIKE ${pat}`,
           )!,
           code ? eq(schema.countries.code, code) : undefined,
           region ? eq(schema.cities.slug, region) : undefined,
