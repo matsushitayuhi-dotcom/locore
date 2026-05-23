@@ -63,6 +63,92 @@ function makePinSvg(color: string, pulse = false): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+/**
+ * 円形写真マーカーを <canvas> で合成して PNG data URL を返す。
+ * ArticleSpotsMap.tsx の同名関数と同じ実装。
+ *
+ * 画像のロード失敗 / CORS NG / 5 秒以上かかる場合は null を返し、
+ * 呼び出し側で従来のカラーピンにフォールバックする。
+ */
+function makePhotoMarkerPng(opts: {
+  photoUrl: string;
+  borderColor?: string;
+}): Promise<string | null> {
+  const { photoUrl, borderColor = INK } = opts;
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve(null);
+      return;
+    }
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    let settled = false;
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      resolve(null);
+    };
+    const timer = window.setTimeout(fail, 5000);
+    img.onerror = () => {
+      window.clearTimeout(timer);
+      fail();
+    };
+    img.onload = () => {
+      window.clearTimeout(timer);
+      if (settled) return;
+      try {
+        const canvas = document.createElement('canvas');
+        const SIZE = 44;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = SIZE * dpr;
+        canvas.height = SIZE * dpr;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          fail();
+          return;
+        }
+        ctx.scale(dpr, dpr);
+        // 白い土台 + シャドウ
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.30)';
+        ctx.shadowBlur = 2;
+        ctx.shadowOffsetY = 1;
+        ctx.beginPath();
+        ctx.arc(22, 22, 20, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.restore();
+        // 円形クリップして写真を cover フィット
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(22, 22, 18, 0, Math.PI * 2);
+        ctx.clip();
+        const ar = img.width / img.height;
+        let drawW = 36;
+        let drawH = 36;
+        if (ar > 1) drawW = 36 * ar;
+        else if (ar < 1) drawH = 36 / ar;
+        const dx = 22 - drawW / 2;
+        const dy = 22 - drawH / 2;
+        ctx.drawImage(img, dx, dy, drawW, drawH);
+        ctx.restore();
+        // 外周リング
+        ctx.beginPath();
+        ctx.arc(22, 22, 18, 0, Math.PI * 2);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = borderColor;
+        ctx.stroke();
+        const url = canvas.toDataURL('image/png');
+        settled = true;
+        resolve(url);
+      } catch {
+        fail();
+      }
+    };
+    img.src = photoUrl;
+  });
+}
+
 /** 自分の投稿用ピン: 中央に小さな白いドット入りの ink 丸 */
 function makeOwnPinSvg(): string {
   const svg =
@@ -325,6 +411,28 @@ function MarkersLayer({
         });
         const listener = m.addListener('click', () => onPinClick(g));
         created.push({ m, listener });
+
+        // 写真ピンへの非同期昇格: グループの先頭記事の cover を canvas で
+        // 円形マーカー化し、ロード成功時に setIcon で差し替える。
+        // 失敗 / CORS NG / 遅延 5s 超 のときはカラーピンのまま。
+        const photoUrl = g.articles?.[0]?.coverImageUrl;
+        if (photoUrl) {
+          const photoSize = isActive ? 52 : 44;
+          makePhotoMarkerPng({ photoUrl, borderColor: color }).then(
+            (dataUrl) => {
+              if (!dataUrl) return;
+              try {
+                m.setIcon({
+                  url: dataUrl,
+                  scaledSize: new G.Size(photoSize, photoSize),
+                  anchor: new G.Point(photoSize / 2, photoSize / 2),
+                });
+              } catch {
+                /* setIcon failed; marker already unmounted */
+              }
+            },
+          );
+        }
       }
     });
 
