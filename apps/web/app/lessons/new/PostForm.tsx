@@ -82,11 +82,11 @@ export function PostForm() {
     const t = title.trim();
     const b = body.trim();
     if (t.length < 4) {
-      toast.error('タイトルは 4 文字以上にしてください');
+      toast.error('タイトルは 2 文字以上にしてください');
       return;
     }
     if (b.length < 20) {
-      toast.error('本文は 20 文字以上にしてください');
+      toast.error('本文は 10 文字以上にしてください');
       return;
     }
     const amountNum = amount.trim() ? Number(amount) : null;

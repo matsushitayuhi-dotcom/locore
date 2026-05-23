@@ -45,11 +45,11 @@ export function PostForm() {
     const t = title.trim();
     const b = body.trim();
     if (t.length < 4) {
-      toast.error('タイトルは 4 文字以上にしてください');
+      toast.error('タイトルは 2 文字以上にしてください');
       return;
     }
     if (b.length < 20) {
-      toast.error('本文は 20 文字以上にしてください');
+      toast.error('本文は 10 文字以上にしてください');
       return;
     }
     // photos は PhotoUploader が Supabase Storage 経由でアップロード済の URL を持つ

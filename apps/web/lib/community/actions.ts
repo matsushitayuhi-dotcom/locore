@@ -50,8 +50,11 @@ function detectContactLeak(text: string): string | null {
 
 const createBaseSchema = z.object({
   kind: z.enum(COMMUNITY_KINDS),
-  title: z.string().trim().min(4).max(140),
-  body: z.string().trim().min(20).max(8000),
+  // MOC 期間中は緩い下限で「すぐ投稿できる」体験を優先する。
+  // フォーム側のフィールド別エラー文言と平仄を合わせるため、ここでも
+  // メッセージを明示する (parsed.error.errors[0]?.message として toast に出る)。
+  title: z.string().trim().min(2, 'タイトルは 2 文字以上で入力してください').max(140, 'タイトルは 140 文字以内で入力してください'),
+  body: z.string().trim().min(10, '本文は 10 文字以上で入力してください').max(8000, '本文は 8000 文字以内で入力してください'),
   cityId: z.string().uuid().optional().nullable(),
   locationText: z.string().trim().max(140).optional().nullable(),
   priceAmount: z.number().int().min(0).max(99_999_999).optional().nullable(),

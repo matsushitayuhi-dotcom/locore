@@ -34,8 +34,8 @@ const SALARY_PERIOD_LABEL: Record<SalaryPeriod, string> = {
 };
 
 const formSchema = z.object({
-  title: z.string().trim().min(4, 'タイトルは 4 文字以上').max(140, 'タイトルは 140 文字以内'),
-  body: z.string().trim().min(20, '本文は 20 文字以上').max(8000, '本文は 8000 文字以内'),
+  title: z.string().trim().min(2, 'タイトルは 2 文字以上').max(140, 'タイトルは 140 文字以内'),
+  body: z.string().trim().min(10, '本文は 10 文字以上').max(8000, '本文は 8000 文字以内'),
   locationText: z.string().trim().max(140).optional(),
   notes: z.string().trim().max(500).optional(),
 });
