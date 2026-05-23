@@ -283,6 +283,7 @@ export function ArticleRenderer({
                 itineraryBlocks={article.itineraryBlocks ?? null}
                 photoEntries={article.photoEntries ?? null}
                 unlocked={unlocked}
+                fallbackPhotoUrl={article.coverImageUrl ?? null}
               />
             </div>
           ) : (

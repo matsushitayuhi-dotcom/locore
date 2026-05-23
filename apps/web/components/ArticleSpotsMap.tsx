@@ -369,7 +369,23 @@ type Props = {
   itineraryBlocks?: ArticleItineraryBlock[] | null;
   photoEntries?: PhotoEntry[] | null;
   unlocked?: boolean;
+  /** スポットに使える写真が無いとき、ピンに使うフォールバック画像 (記事カバー想定) */
+  fallbackPhotoUrl?: string | null;
 };
+
+/**
+ * Google Maps の内部 PhotoService.GetPhoto URL は <img> / canvas から直接
+ * ロードできない。Editor で Places API 経由で保存した spots.google_photo_urls は
+ * この内部 URL の形式なので、ピン用画像としては使えない。
+ *   - JS API 内部 URL → false
+ *   - その他 (https の通常画像、data:、unsplash 等) → true
+ */
+function isLoadableImageUrl(u: string | null | undefined): u is string {
+  if (!u) return false;
+  if (u.includes('PhotoService.GetPhoto')) return false;
+  if (u.includes('maps.googleapis.com/maps/api/place/js/')) return false;
+  return true;
+}
 
 function ArticleSpotsMapBody({
   spots,
@@ -377,6 +393,7 @@ function ArticleSpotsMapBody({
   itineraryBlocks,
   photoEntries,
   unlocked = true,
+  fallbackPhotoUrl = null,
 }: Props) {
   const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
 
@@ -384,20 +401,22 @@ function ArticleSpotsMapBody({
     const map = new Map<string, string>();
     if (!unlocked) return map;
     for (const s of spots) {
-      const fromGoogle =
+      // Google Place 由来は JS API 内部 URL のことが多く、img/canvas でロードできない。
+      // isLoadableImageUrl で弾いて、次の候補 (photoEntries → cover → fallback) に進む。
+      const candidates: Array<string | null | undefined> = [
         Array.isArray(s.photoUrls) && s.photoUrls.length > 0
           ? s.photoUrls[0]
-          : null;
-      const fromEntries =
-        photoEntries?.find((p) => p.spotId === s.id)?.imageUrl ?? null;
-      const fromCover =
+          : null,
+        photoEntries?.find((p) => p.spotId === s.id)?.imageUrl ?? null,
         (s as unknown as { coverImageUrl?: string | null }).coverImageUrl ??
-        null;
-      const chosen = fromGoogle || fromEntries || fromCover;
+          null,
+        fallbackPhotoUrl ?? null,
+      ];
+      const chosen = candidates.find(isLoadableImageUrl);
       if (chosen) map.set(s.id, chosen);
     }
     return map;
-  }, [spots, photoEntries, unlocked]);
+  }, [spots, photoEntries, unlocked, fallbackPhotoUrl]);
 
   const { points, segments } = useMemo(() => {
     const valid = spots.filter(
@@ -632,6 +651,7 @@ export function ArticleSpotsMap({
   itineraryBlocks,
   photoEntries,
   unlocked = true,
+  fallbackPhotoUrl = null,
 }: Props) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -662,6 +682,7 @@ export function ArticleSpotsMap({
         itineraryBlocks={itineraryBlocks}
         photoEntries={photoEntries}
         unlocked={unlocked}
+        fallbackPhotoUrl={fallbackPhotoUrl}
       />
     </APIProvider>
   );

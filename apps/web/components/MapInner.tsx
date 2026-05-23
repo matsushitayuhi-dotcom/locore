@@ -415,7 +415,14 @@ function MarkersLayer({
         // 写真ピンへの非同期昇格: グループの先頭記事の cover を canvas で
         // 円形マーカー化し、ロード成功時に setIcon で差し替える。
         // 失敗 / CORS NG / 遅延 5s 超 のときはカラーピンのまま。
-        const photoUrl = g.articles?.[0]?.coverImageUrl;
+        // Google Maps JS API 内部 URL は <img> でロード不可なのでスキップ。
+        const photoUrlRaw = g.articles?.[0]?.coverImageUrl;
+        const photoUrl =
+          photoUrlRaw &&
+          !photoUrlRaw.includes('PhotoService.GetPhoto') &&
+          !photoUrlRaw.includes('maps.googleapis.com/maps/api/place/js/')
+            ? photoUrlRaw
+            : null;
         if (photoUrl) {
           const photoSize = isActive ? 52 : 44;
           makePhotoMarkerPng({ photoUrl, borderColor: color }).then(
