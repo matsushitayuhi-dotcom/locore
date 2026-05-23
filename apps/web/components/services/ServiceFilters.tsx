@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { Search } from 'lucide-react';
 import type { ActiveCityForPicker } from '@/lib/geo/countries';
+import type { TagWithCount } from '@/lib/services/list';
+import { TAG_LABEL } from '@/lib/services/tagLabels';
+import { ServiceFiltersTagSection } from './ServiceFiltersTagSection';
 
 /**
  * /services ブラウズページ用のフィルタバー (Server Component)。
@@ -8,12 +11,16 @@ import type { ActiveCityForPicker } from '@/lib/geo/countries';
  * URL クエリで状態管理:
  *   ?audience=all|traveler|resident
  *   ?city=<slug>
- *   ?cat=<category>
+ *   ?tags=<tag1>,<tag2>,...    (0055 で導入。複数選択、& overlap)
+ *   ?cat=<category>            (旧 UI 用 hidden 維持。新 UI には出さない)
  *   ?q=<freetext>
  *   ?min=<priceJpy>
  *   ?max=<priceJpy>
  *
- * GET form で素直に / 切替系のチップは事前構築したリンクで実装する。
+ * GET form で素直に書ける部分は GET form、タグ chips は事前構築リンクで実装する。
+ *
+ * タグ chips: 件数の多い順に上位 15 を最初に表示し、それ以外は
+ * `<details>` の "+他のタグ" 展開ブロックで開く (Server Component で完結)。
  */
 
 const AUDIENCE_TABS: Array<{
@@ -25,19 +32,12 @@ const AUDIENCE_TABS: Array<{
   { key: 'resident', label: '駐在員向け' },
 ];
 
-const CATEGORY_OPTIONS: Array<{ key: string; label: string }> = [
-  { key: 'tourism', label: '観光・現地アテンド' },
-  { key: 'consulting', label: 'コンサル・相談' },
-  { key: 'study_abroad', label: '留学サポート' },
-  { key: 'translation', label: '翻訳・通訳' },
-  { key: 'attend', label: '同行・代行' },
-  { key: 'other', label: 'その他' },
-];
-
 export type ServiceFiltersState = {
   audience: 'all' | 'traveler' | 'resident';
   city?: string;
+  /** 旧 UI で使っていた単一カテゴリ。新 UI では tags に統合済だが、後方互換で受け取る。 */
   cat?: string;
+  tags: string[];
   q?: string;
   min?: number;
   max?: number;
@@ -46,14 +46,21 @@ export type ServiceFiltersState = {
 type Props = {
   state: ServiceFiltersState;
   cities: ActiveCityForPicker[];
+  allTags: TagWithCount[];
 };
 
-function buildHref(state: ServiceFiltersState, patch: Partial<ServiceFiltersState>) {
+const TOP_TAG_COUNT = 15;
+
+export function buildServicesHref(
+  state: ServiceFiltersState,
+  patch: Partial<ServiceFiltersState>,
+): string {
   const next = { ...state, ...patch };
   const sp = new URLSearchParams();
   if (next.audience && next.audience !== 'all') sp.set('audience', next.audience);
   if (next.city) sp.set('city', next.city);
   if (next.cat) sp.set('cat', next.cat);
+  if (next.tags && next.tags.length > 0) sp.set('tags', next.tags.join(','));
   if (next.q) sp.set('q', next.q);
   if (next.min != null) sp.set('min', String(next.min));
   if (next.max != null) sp.set('max', String(next.max));
@@ -61,7 +68,30 @@ function buildHref(state: ServiceFiltersState, patch: Partial<ServiceFiltersStat
   return qs ? `/services?${qs}` : '/services';
 }
 
-export function ServiceFilters({ state, cities }: Props) {
+/** タグを toggle (state.tags に対して xor) した href を返す。 */
+export function toggleTagHref(
+  state: ServiceFiltersState,
+  tag: string,
+): string {
+  const has = state.tags.includes(tag);
+  const nextTags = has
+    ? state.tags.filter((t) => t !== tag)
+    : [...state.tags, tag];
+  return buildServicesHref(state, { tags: nextTags });
+}
+
+export function ServiceFilters({ state, cities, allTags }: Props) {
+  const top = allTags.slice(0, TOP_TAG_COUNT);
+  const rest = allTags.slice(TOP_TAG_COUNT);
+
+  // 「選択済みだが top に無いタグ」は常に表示しておきたい (絞り込み中なのに見えない
+  //  と外せない)。top に無いものは先頭に prepend する。
+  const topTagSet = new Set(top.map((t) => t.tag));
+  const extraSelected = state.tags
+    .filter((t) => !topTagSet.has(t))
+    .map((t) => ({ tag: t, count: 0 }));
+  const topRendered = [...extraSelected, ...top];
+
   return (
     <div className="space-y-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:p-5">
       {/* audience tabs */}
@@ -75,7 +105,7 @@ export function ServiceFilters({ state, cities }: Props) {
           return (
             <Link
               key={t.key}
-              href={buildHref(state, { audience: t.key })}
+              href={buildServicesHref(state, { audience: t.key })}
               role="tab"
               aria-selected={active}
               className={
@@ -97,11 +127,14 @@ export function ServiceFilters({ state, cities }: Props) {
         method="get"
         className="grid gap-2 sm:grid-cols-[1fr_180px_120px_120px_auto]"
       >
-        {/* hidden state preserved */}
+        {/* hidden state preserved across submit */}
         {state.audience !== 'all' ? (
           <input type="hidden" name="audience" value={state.audience} />
         ) : null}
         {state.cat ? <input type="hidden" name="cat" value={state.cat} /> : null}
+        {state.tags.length > 0 ? (
+          <input type="hidden" name="tags" value={state.tags.join(',')} />
+        ) : null}
 
         <label className="relative">
           <span className="sr-only">サービスを検索</span>
@@ -169,37 +202,13 @@ export function ServiceFilters({ state, cities }: Props) {
         </button>
       </form>
 
-      {/* category chips */}
-      <div className="flex flex-wrap items-center gap-1.5">
-        <Link
-          href={buildHref(state, { cat: undefined })}
-          className={
-            'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-            (!state.cat
-              ? 'bg-foreground text-background'
-              : 'bg-muted text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
-          }
-        >
-          カテゴリ: すべて
-        </Link>
-        {CATEGORY_OPTIONS.map((c) => {
-          const active = state.cat === c.key;
-          return (
-            <Link
-              key={c.key}
-              href={buildHref(state, { cat: active ? undefined : c.key })}
-              className={
-                'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
-                (active
-                  ? 'bg-primary-500/20 text-primary-300 ring-1 ring-primary-300'
-                  : 'bg-muted text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
-              }
-            >
-              {c.label}
-            </Link>
-          );
-        })}
-      </div>
+      {/* tag chips (multi-select) */}
+      <ServiceFiltersTagSection
+        state={state}
+        topTags={topRendered}
+        moreTags={rest}
+        renderTagLabel={(t) => TAG_LABEL[t] ?? t}
+      />
     </div>
   );
 }

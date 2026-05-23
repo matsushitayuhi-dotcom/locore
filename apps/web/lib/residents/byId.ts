@@ -258,6 +258,7 @@ export async function getResidentProfile(
         externalUrl: schema.userServices.externalUrl,
         audience: schema.userServices.audience,
         coverImageUrl: schema.userServices.coverImageUrl,
+        tags: schema.userServices.tags,
         cityNameJa: schema.cities.nameJa,
         citySlug: schema.cities.slug,
       })
@@ -286,6 +287,7 @@ export async function getResidentProfile(
       citySlug: r.citySlug ?? null,
       audience: (r.audience as FeaturedService['audience']) ?? null,
       coverImageUrl: r.coverImageUrl ?? null,
+      tags: Array.isArray(r.tags) ? r.tags : [],
       ownerId: userId,
       ownerDisplayName: u.displayName,
       ownerAvatarUrl: u.avatarUrl,
@@ -329,6 +331,7 @@ export async function getResidentProfile(
         citySlug: null,
         audience: null,
         coverImageUrl: null,
+        tags: [],
         ownerId: userId,
         ownerDisplayName: u.displayName,
         ownerAvatarUrl: u.avatarUrl,

@@ -14,10 +14,6 @@ import { BottomNav } from '../components/BottomNav';
 import { HeaderShell } from '../components/HeaderShell';
 import { getMyUnreadChatSummary } from '@/lib/chat/unread';
 import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
-import {
-  listCountriesForPicker,
-  listRegionsForPicker,
-} from '@/lib/geo/countries';
 
 const notoSansJp = Noto_Sans_JP({
   subsets: ['latin'],
@@ -110,15 +106,8 @@ export default async function RootLayout({
   // モード別ホーム遷移先（駐在員 → /expat、旅行者・未選択 → /explore）
   const viewerMode = getViewerMode();
   const homeHref = homePathFor(viewerMode ?? 'traveler');
-  // BottomNav の検索 Sheet 用に国 / 地域リストを server で取得
-  const [navCountries, navRegions] = await Promise.all([
-    listCountriesForPicker(),
-    listRegionsForPicker(),
-  ]);
-  const bottomNavCountries = navCountries.map((c) => ({
-    code: c.code,
-    nameJa: c.nameJa,
-  }));
+  // 検索 Sheet 廃止 (2026-05) に伴い、layout 側で国 / 地域リストを fetch する
+  // 必要は無くなった。新 /search ページが自分で fetch する。
 
   const fontVars = [
     notoSansJp.variable,
@@ -144,8 +133,6 @@ export default async function RootLayout({
           <BottomNav
             unreadChatCount={unread.count}
             homeHref={homeHref}
-            countries={bottomNavCountries}
-            regions={navRegions}
           />
           <Toaster
             position="bottom-center"

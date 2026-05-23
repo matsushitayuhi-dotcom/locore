@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SearchX } from 'lucide-react';
-import { listServices } from '@/lib/services/list';
+import { listServices, listAllTagsForServices } from '@/lib/services/list';
 import { getActiveCitiesForPicker } from '@/lib/geo/countries';
 import {
   ServiceFilters,
@@ -35,10 +35,20 @@ type Search = {
   audience?: string;
   city?: string;
   cat?: string;
+  /** カンマ区切りタグ。複数選択 (overlap) でフィルタ。 */
+  tags?: string;
   q?: string;
   min?: string;
   max?: string;
 };
+
+function parseTags(raw: string | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
 
 function parseAudience(v: string | undefined): 'all' | 'traveler' | 'resident' {
   if (v === 'traveler' || v === 'resident') return v;
@@ -60,27 +70,31 @@ export default async function ServicesPage({
   const audience = parseAudience(searchParams?.audience);
   const city = searchParams?.city?.trim() || undefined;
   const cat = searchParams?.cat?.trim() || undefined;
+  const selectedTags = parseTags(searchParams?.tags);
   const q = searchParams?.q?.trim() || undefined;
   const min = parseInt(searchParams?.min);
   const max = parseInt(searchParams?.max);
 
-  const [{ services, total }, cities] = await Promise.all([
+  const [{ services, total }, cities, allTags] = await Promise.all([
     listServices({
       audience,
       citySlug: city,
       category: cat,
+      tags: selectedTags,
       q,
       minPrice: min,
       maxPrice: max,
       limit: 48,
     }),
     getActiveCitiesForPicker(),
+    listAllTagsForServices(),
   ]);
 
   const filtersState: ServiceFiltersState = {
     audience,
     city,
     cat,
+    tags: selectedTags,
     q,
     min,
     max,
@@ -102,7 +116,7 @@ export default async function ServicesPage({
           </p>
         </header>
 
-        <ServiceFilters state={filtersState} cities={cities} />
+        <ServiceFilters state={filtersState} cities={cities} allTags={allTags} />
 
         <div className="mt-3 flex items-baseline justify-between gap-2">
           <p className="text-[12px] text-foreground/60">
@@ -110,7 +124,13 @@ export default async function ServicesPage({
               ? '該当 0 件'
               : `${total.toLocaleString('ja-JP')} 件中 ${services.length.toLocaleString('ja-JP')} 件を表示`}
           </p>
-          {q || cat || city || audience !== 'all' || min != null || max != null ? (
+          {q ||
+          cat ||
+          city ||
+          audience !== 'all' ||
+          min != null ||
+          max != null ||
+          selectedTags.length > 0 ? (
             <Link
               href="/services"
               className="text-[12px] font-semibold text-primary-300 hover:underline"

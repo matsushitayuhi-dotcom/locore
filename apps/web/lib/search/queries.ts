@@ -315,6 +315,8 @@ export type SearchServiceHit = {
   priceJpy: number | null;
   priceUnit: string | null;
   coverImageUrl: string | null;
+  /** 0055 で追加。サービスカードでチップ表示するためここでも返す。 */
+  tags: string[];
   cityNameJa: string | null;
   ownerId: string;
   ownerDisplayName: string;
@@ -355,6 +357,7 @@ export async function searchServices(
         priceJpy: schema.userServices.priceJpy,
         priceUnit: schema.userServices.priceUnit,
         coverImageUrl: schema.userServices.coverImageUrl,
+        tags: schema.userServices.tags,
         position: schema.userServices.position,
         createdAt: schema.userServices.createdAt,
         cityNameJa: schema.cities.nameJa,
@@ -402,6 +405,7 @@ export async function searchServices(
       priceJpy: r.priceJpy,
       priceUnit: r.priceUnit,
       coverImageUrl: r.coverImageUrl,
+      tags: Array.isArray(r.tags) ? r.tags : [],
       cityNameJa: r.cityNameJa ?? null,
       ownerId: r.ownerId,
       ownerDisplayName: r.ownerDisplayName,

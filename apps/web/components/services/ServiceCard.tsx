@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { MapPin, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import type { FeaturedService } from '@/lib/services/featured';
+import { TAG_LABEL } from '@/lib/services/tagLabels';
 
 /**
  * グリッド一覧用のサービスカード。
@@ -9,17 +10,14 @@ import type { FeaturedService } from '@/lib/services/featured';
  * - /services ブラウズページのグリッド (sm 2 / md 3 / lg 4 列) で使う想定
  * - /services/[id] 「同じ provider の他サービス」セクションでも再利用
  * - ServiceCarousel.tsx と意匠は揃えるが、こちらは「縦に積む / 高さ揃え」に最適化
+ *
+ * タグ表示方針 (0055):
+ *   - 旧: category (単一) チップ
+ *   - 新: tags 先頭 2 個をチップ、残りは "+N" にまとめる
+ *   - tags が空のレガシーレコードは category にフォールバック
  */
 
-const CATEGORY_LABEL: Record<string, string> = {
-  tourism: '観光・現地アテンド',
-  consulting: 'コンサル・相談',
-  study_abroad: '留学サポート',
-  translation: '翻訳・通訳',
-  attend: '同行・代行',
-  other: 'その他',
-};
-
+/** 主カテゴリ系タグの日本語ラベル (UI 表示用)。それ以外のフリー文字列はそのまま出す。 */
 const CATEGORY_PLACEHOLDER_BG: Record<string, string> = {
   tourism: 'bg-amber-500/15',
   consulting: 'bg-blue-500/15',
@@ -34,8 +32,18 @@ type Props = {
   href?: string;
 };
 
+/** 先頭 2 個を chip 表示、残りは +N にまとめる。
+ *  tags が空ならレガシー category 1 個にフォールバック。空なら何も返さない。 */
+function pickDisplayTags(s: FeaturedService): { shown: string[]; rest: number } {
+  const all = s.tags && s.tags.length > 0 ? s.tags : s.category ? [s.category] : [];
+  const shown = all.slice(0, 2);
+  const rest = Math.max(0, all.length - shown.length);
+  return { shown, rest };
+}
+
 export function ServiceCard({ service: s, href }: Props) {
   const link = href ?? `/services/${s.id}`;
+  const { shown, rest } = pickDisplayTags(s);
   return (
     <Link
       href={link}
@@ -67,9 +75,17 @@ export function ServiceCard({ service: s, href }: Props) {
       </div>
       <div className="flex flex-1 flex-col p-4">
         <div className="flex flex-wrap items-start gap-2">
-          {s.category ? (
-            <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
-              {CATEGORY_LABEL[s.category] ?? s.category}
+          {shown.map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300"
+            >
+              {TAG_LABEL[t] ?? t}
+            </span>
+          ))}
+          {rest > 0 ? (
+            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground/55">
+              +{rest}
             </span>
           ) : null}
           {s.priceJpy != null ? (

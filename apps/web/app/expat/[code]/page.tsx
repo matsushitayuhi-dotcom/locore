@@ -47,9 +47,10 @@ export async function generateMetadata({ params }: Props) {
  *   2. カテゴリピル列（6 つ、横スクロール、sticky で上部固定）
  *   3. 国名見出し（{国名} の駐在員ホーム）
  *   4. 新着ニュース掲示板（BoardWidget）
- *   5. 提供サービス（駐在員向け、ServiceCarousel）
- *   6. カテゴリごとの新着投稿 4 件（横スクロールカルーセル）
- *   7. 駐在者向け記事
+ *   5. カテゴリごとの新着投稿 4 件（横スクロールカルーセル）
+ *   6. 駐在者向け記事
+ *   7. 提供サービス（駐在員向け、ServiceCarousel） — グローバルナビにも
+ *      「サービス」タブがあるためここでは最下段、おまけ枠扱い
  *   8. Founders 枠
  *
  * 国別フィルタリングについて:
@@ -221,20 +222,7 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           />
         </section>
 
-        {/* 5. 提供サービス — 駐在員向け。空のときはセクションごと出さない。 */}
-        {residentServices.length > 0 ? (
-          <section aria-labelledby="resident-services-title">
-            <h2
-              id="resident-services-title"
-              className="mb-3 text-[18px] font-semibold tracking-tight sm:text-[20px]"
-            >
-              サービス
-            </h2>
-            <ServiceCarousel services={residentServices} />
-          </section>
-        ) : null}
-
-        {/* 6. カテゴリ別の新着 — 横スクロールのカルーセル */}
+        {/* 5. カテゴリ別の新着 — 横スクロールのカルーセル */}
         {KINDS.map(({ kind }) => {
           const posts = postsByKind[kind];
           if (posts.length === 0) return null;
@@ -284,7 +272,7 @@ export default async function ExpatCountryHomePage({ params }: Props) {
           );
         })}
 
-        {/* 7. 駐在者向け記事 */}
+        {/* 6. 駐在者向け記事 */}
         {expatArticles.length > 0 ? (
           <section>
             <div className="mb-3 flex items-baseline justify-between gap-3">
@@ -304,6 +292,29 @@ export default async function ExpatCountryHomePage({ params }: Props) {
               moreHref="/articles?type=expat_info"
               socialCounts={socialCounts}
             />
+          </section>
+        ) : null}
+
+        {/* 7. 提供サービス — 駐在員向け。グローバルナビにも「サービス」タブがあるので
+             ここでは目立たせない最下段。空のときはセクションごと出さない。 */}
+        {residentServices.length > 0 ? (
+          <section aria-labelledby="resident-services-title">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2
+                id="resident-services-title"
+                className="text-[18px] font-semibold tracking-tight sm:text-[20px]"
+              >
+                現地の駐在員サービス
+              </h2>
+              <Link
+                href="/services?audience=resident"
+                aria-label="すべてのサービスを見る"
+                className="inline-flex items-center text-[12px] font-semibold text-primary-300 hover:underline"
+              >
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            <ServiceCarousel services={residentServices} />
           </section>
         ) : null}
 

@@ -15,6 +15,7 @@ import { getServiceById } from '@/lib/services/byId';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { ServiceInquiryButton } from '@/components/services/ServiceInquiryButton';
 import { ServiceCard } from '@/components/services/ServiceCard';
+import { TAG_LABEL } from '@/lib/services/tagLabels';
 
 /**
  * /services/[id] — サービス詳細ページ。
@@ -32,15 +33,6 @@ import { ServiceCard } from '@/components/services/ServiceCard';
  */
 
 export const revalidate = 60;
-
-const CATEGORY_LABEL: Record<string, string> = {
-  tourism: '観光・現地アテンド',
-  consulting: 'コンサル・相談',
-  study_abroad: '留学サポート',
-  translation: '翻訳・通訳',
-  attend: '同行・代行',
-  other: 'その他',
-};
 
 const AUDIENCE_LABEL: Record<'traveler' | 'resident' | 'both', string> = {
   traveler: '旅行者向け',
@@ -101,11 +93,20 @@ export default async function ServiceDetailPage({ params }: Params) {
 
           <div className="space-y-4 p-5 sm:p-7">
             <div className="flex flex-wrap items-center gap-2">
-              {s.category ? (
-                <span className="rounded-full bg-primary-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary-300">
-                  {CATEGORY_LABEL[s.category] ?? s.category}
+              {/* タグ chips を全て表示。0 件のレガシーレコードは category にフォールバック */}
+              {(s.tags && s.tags.length > 0
+                ? s.tags
+                : s.category
+                  ? [s.category]
+                  : []
+              ).map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full bg-primary-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary-300"
+                >
+                  {TAG_LABEL[t] ?? t}
                 </span>
-              ) : null}
+              ))}
               {s.audience ? (
                 <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-foreground/70">
                   {AUDIENCE_LABEL[s.audience]}

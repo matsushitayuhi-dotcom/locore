@@ -2,15 +2,7 @@ import Link from 'next/link';
 import { MapPin, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import type { FeaturedService } from '@/lib/services/featured';
-
-const CATEGORY_LABEL: Record<string, string> = {
-  tourism: '観光・現地アテンド',
-  consulting: 'コンサル・相談',
-  study_abroad: '留学サポート',
-  translation: '翻訳・通訳',
-  attend: '同行・代行',
-  other: 'その他',
-};
+import { TAG_LABEL } from '@/lib/services/tagLabels';
 
 /** カバー画像が無いカテゴリの背景色 (アクセントだけのプレースホルダー) */
 const CATEGORY_PLACEHOLDER_BG: Record<string, string> = {
@@ -42,7 +34,16 @@ export function ServiceCarousel({ services }: Props) {
       className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       style={{ scrollSnapStop: 'always' }}
     >
-      {services.map((s) => (
+      {services.map((s) => {
+        const allTags =
+          s.tags && s.tags.length > 0
+            ? s.tags
+            : s.category
+              ? [s.category]
+              : [];
+        const shown = allTags.slice(0, 2);
+        const rest = Math.max(0, allTags.length - shown.length);
+        return (
         <li
           key={s.id}
           className="w-[72%] shrink-0 snap-start sm:w-[42%] lg:w-[28%]"
@@ -76,9 +77,17 @@ export function ServiceCarousel({ services }: Props) {
             </div>
             <div className="flex flex-1 flex-col p-4 sm:p-5">
             <div className="flex flex-wrap items-start gap-2">
-              {s.category ? (
-                <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
-                  {CATEGORY_LABEL[s.category] ?? s.category}
+              {shown.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300"
+                >
+                  {TAG_LABEL[t] ?? t}
+                </span>
+              ))}
+              {rest > 0 ? (
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground/55">
+                  +{rest}
                 </span>
               ) : null}
               {s.priceJpy != null ? (
@@ -130,7 +139,8 @@ export function ServiceCarousel({ services }: Props) {
             </div>
           </Link>
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 }

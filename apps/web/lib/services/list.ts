@@ -31,6 +31,9 @@ export type ListServicesOptions = {
   audience?: ServiceAudienceFilter;
   citySlug?: string;
   category?: string;
+  /** 複数タグ。指定された場合は tags && {tag1,tag2,...} (overlap) でフィルタ。
+   *  空配列 / undefined はノーフィルタ。 */
+  tags?: string[];
   q?: string;
   minPrice?: number;
   maxPrice?: number;
@@ -51,6 +54,7 @@ export async function listServices(
     audience = 'all',
     citySlug,
     category,
+    tags,
     q,
     minPrice,
     maxPrice,
@@ -78,6 +82,9 @@ export async function listServices(
   }
 
   const trimmedQ = q?.trim();
+  const filteredTags = (tags ?? [])
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
 
   try {
     const where = and(
@@ -86,6 +93,10 @@ export async function listServices(
       matchAudience,
       citySlug ? eq(schema.cities.slug, citySlug) : undefined,
       category ? eq(schema.userServices.category, category) : undefined,
+      // tags && ARRAY[...] (overlap) — どれか 1 つでもマッチすれば true
+      filteredTags.length > 0
+        ? sql`${schema.userServices.tags} && ${filteredTags}::text[]`
+        : undefined,
       trimmedQ
         ? or(
             ilike(schema.userServices.title, `%${trimmedQ}%`),
@@ -122,6 +133,7 @@ export async function listServices(
         externalUrl: schema.userServices.externalUrl,
         audience: schema.userServices.audience,
         coverImageUrl: schema.userServices.coverImageUrl,
+        tags: schema.userServices.tags,
         cityNameJa: schema.cities.nameJa,
         citySlug: schema.cities.slug,
         ownerId: schema.users.id,
@@ -171,6 +183,7 @@ export async function listServices(
       citySlug: r.citySlug ?? null,
       audience: (r.audience as FeaturedService['audience']) ?? null,
       coverImageUrl: r.coverImageUrl ?? null,
+      tags: Array.isArray(r.tags) ? r.tags : [],
       ownerId: r.ownerId,
       ownerDisplayName: r.ownerDisplayName,
       ownerAvatarUrl: r.ownerAvatarUrl,
@@ -218,6 +231,7 @@ export async function listServicesByUserId(
         externalUrl: schema.userServices.externalUrl,
         audience: schema.userServices.audience,
         coverImageUrl: schema.userServices.coverImageUrl,
+        tags: schema.userServices.tags,
         cityNameJa: schema.cities.nameJa,
         citySlug: schema.cities.slug,
         ownerId: schema.users.id,
@@ -258,6 +272,7 @@ export async function listServicesByUserId(
       citySlug: r.citySlug ?? null,
       audience: (r.audience as FeaturedService['audience']) ?? null,
       coverImageUrl: r.coverImageUrl ?? null,
+      tags: Array.isArray(r.tags) ? r.tags : [],
       ownerId: r.ownerId,
       ownerDisplayName: r.ownerDisplayName,
       ownerAvatarUrl: r.ownerAvatarUrl,
@@ -271,6 +286,60 @@ export async function listServicesByUserId(
       return [];
     }
     console.error('[listServicesByUserId] failed:', msg);
+    return [];
+  }
+}
+
+/**
+ * フィルタ UI 用に、is_active=true な user_services から tags を unnest して
+ * 出現回数の多い順に返す。0055 マイグレーション (tags 列追加) が未適用の環境では
+ * 空配列にフォールバック。
+ *
+ * 戻り値: `{ tag, count }` の配列 (count 降順)。同 count は tag 昇順。
+ */
+export type TagWithCount = { tag: string; count: number };
+
+export async function listAllTagsForServices(): Promise<TagWithCount[]> {
+  try {
+    const db = getDb();
+    // unnest(tags) を sql テンプレートで打つ。is_active=true / owner 未削除に限定。
+    const result = await db.execute(sql`
+      SELECT t.tag AS tag, COUNT(*)::int AS count
+        FROM user_services us
+        INNER JOIN users u ON u.id = us.user_id
+        CROSS JOIN LATERAL unnest(us.tags) AS t(tag)
+       WHERE us.is_active = true
+         AND u.deleted_at IS NULL
+         AND t.tag IS NOT NULL
+         AND t.tag <> ''
+       GROUP BY t.tag
+       ORDER BY count DESC, tag ASC
+    `);
+    // postgres-js は配列を直接返す / pg は { rows: [...] }。両対応。
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows: any = result;
+    const list: Array<{ tag?: unknown; count?: unknown }> = Array.isArray(rows)
+      ? rows
+      : rows?.rows ?? [];
+    const out: TagWithCount[] = [];
+    for (const r of list) {
+      if (!r || typeof r.tag !== 'string') continue;
+      const tag = r.tag.trim();
+      if (!tag) continue;
+      const count = typeof r.count === 'number' ? r.count : Number(r.count);
+      if (!Number.isFinite(count)) continue;
+      out.push({ tag, count });
+    }
+    return out;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[listAllTagsForServices] user_services.tags 列が未適用です。manual/0055_user_services_tags.sql を適用してください。',
+      );
+      return [];
+    }
+    console.warn('[listAllTagsForServices] failed:', err);
     return [];
   }
 }

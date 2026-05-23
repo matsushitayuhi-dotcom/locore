@@ -29,6 +29,8 @@ export type FeaturedService = {
   audience: 'traveler' | 'resident' | 'both' | null;
   /** カバー画像 URL。NULL = 未設定 (カード側でプレースホルダーを描く) */
   coverImageUrl: string | null;
+  /** 0055 で追加。複数指定可のタグ。空配列もあり得る (カード/詳細で考慮)。 */
+  tags: string[];
   ownerId: string;
   ownerDisplayName: string;
   ownerAvatarUrl: string | null;
@@ -83,6 +85,7 @@ export async function getFeaturedServices(
         externalUrl: schema.userServices.externalUrl,
         audience: schema.userServices.audience,
         coverImageUrl: schema.userServices.coverImageUrl,
+        tags: schema.userServices.tags,
         position: schema.userServices.position,
         createdAt: schema.userServices.createdAt,
         cityNameJa: schema.cities.nameJa,
@@ -120,6 +123,7 @@ export async function getFeaturedServices(
       citySlug: r.citySlug ?? null,
       audience: (r.audience as FeaturedService['audience']) ?? null,
       coverImageUrl: r.coverImageUrl ?? null,
+      tags: Array.isArray(r.tags) ? r.tags : [],
       ownerId: r.ownerId,
       ownerDisplayName: r.ownerDisplayName,
       ownerAvatarUrl: r.ownerAvatarUrl,
@@ -128,8 +132,8 @@ export async function getFeaturedServices(
     const msg = err instanceof Error ? err.message : String(err);
     if (/does not exist/i.test(msg)) {
       console.warn(
-        '[getFeaturedServices] user_services.city_id/audience/cover_image_url missing — ' +
-          'Supabase Studio で manual/0046_user_services_city_audience.sql / 0050_user_services_cover_image.sql を実行してください。',
+        '[getFeaturedServices] user_services.city_id/audience/cover_image_url/tags missing — ' +
+          'Supabase Studio で manual/0046_user_services_city_audience.sql / 0050_user_services_cover_image.sql / 0055_user_services_tags.sql を実行してください。',
       );
       return [];
     }

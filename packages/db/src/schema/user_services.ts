@@ -48,6 +48,10 @@ export const userServices = pgTable(
     audience: text('audience'),
     /** カバー画像 URL (0050 で追加)。NULL = 未設定 (プレースホルダー表示) */
     coverImageUrl: text('cover_image_url'),
+    /** タグ複数指定 (0055 で追加)。category は「主」、tags は補助 + フリーキーワード。
+     *  フィルタは ?tags=consulting,study_abroad のように複数指定可。
+     *  クエリは postgres array && (overlap) を Drizzle の sql テンプレートで組む。 */
+    tags: text('tags').array().notNull().default([]),
     isActive: boolean('is_active').notNull().default(true),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true })
