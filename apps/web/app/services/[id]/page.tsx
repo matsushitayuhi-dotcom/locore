@@ -180,10 +180,13 @@ export default async function ServiceDetailPage({ params }: Params) {
           <div className="mt-4 flex items-start gap-4">
             <Avatar size="lg" className="h-16 w-16 shrink-0">
               {provider.avatarUrl ? (
-                <AvatarImage src={provider.avatarUrl} alt="" />
+                <AvatarImage
+                  src={provider.avatarUrl}
+                  alt={provider.displayName}
+                />
               ) : null}
               <AvatarFallback>
-                {provider.displayName[0]?.toUpperCase() ?? '?'}
+                {provider.displayName?.[0]?.toUpperCase() ?? '?'}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">

@@ -104,7 +104,7 @@ export function ServiceCard({ service: s, href }: Props) {
                 <AvatarImage src={s.ownerAvatarUrl} alt="" />
               ) : null}
               <AvatarFallback>
-                {s.ownerDisplayName[0]?.toUpperCase() ?? '?'}
+                {s.ownerDisplayName?.[0]?.toUpperCase() ?? '?'}
               </AvatarFallback>
             </Avatar>
             <span className="truncate text-[11px] font-medium text-foreground/75">
