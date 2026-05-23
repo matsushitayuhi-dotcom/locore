@@ -89,7 +89,7 @@ export function CommunityMenu() {
             : 'text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
         }
       >
-        コミュニティ
+        駐在員向け
         <ChevronDown
           className={'h-3.5 w-3.5 transition-transform ' + (open ? 'rotate-180' : '')}
           aria-hidden
@@ -99,7 +99,7 @@ export function CommunityMenu() {
       {open ? (
         <div
           role="menu"
-          aria-label="コミュニティ"
+          aria-label="駐在員向け"
           className="absolute left-1/2 z-50 mt-2 w-56 -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-card shadow-lg ring-1 ring-black/5"
         >
           <ul className="py-1.5">

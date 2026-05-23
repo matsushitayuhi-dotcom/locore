@@ -3,43 +3,48 @@ import { Button } from '@locore/ui';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { getMyUnreadChatSummary } from '@/lib/chat/unread';
 import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
-import { listCountriesForPicker } from '@/lib/geo/countries';
-import { getRegionsWithContent } from '@/lib/geo/region-content';
+import {
+  listCountriesForPicker,
+  listRegionsForPicker,
+} from '@/lib/geo/countries';
 import { UserMenu } from './auth/UserMenu';
 import { SideMenu } from './SideMenu';
-import { PlaceMenu } from './PlaceMenu';
 import { ModeToggle } from './ModeToggle';
 import { Logo } from './Logo';
 import { ServicesNavLink } from './nav/ServicesNavLink';
 import { ArticlesNavLink } from './nav/ArticlesNavLink';
-import { CommunityMenu } from './nav/CommunityMenu';
+import { ResidentsNavLink } from './nav/ResidentsNavLink';
+import { SearchTrigger } from './SearchTrigger';
 
 /**
- * トップバー。PR3 (マーケットプレイス進化) でナビを刷新:
+ * トップバー。2026-05 IA 3 領域モデル改修でナビを刷新:
  *
- *   旅行者: ホーム / 記事 / サービス / マップ / 検索
- *   駐在員: ホーム / 記事 / サービス / コミュニティ▼ / 検索
+ *   旅行者・駐在員 共通: ホーム / 記事 / サービス / 駐在員向け / 検索
  *
- * 「コミュニティ」は 6 種 (求人 / 住居 / 売買 / 集まり / 習う / 助け) を
- * dropdown menu に畳んだもの。場所ピッカー (旧 PlaceMenu) も維持するが、
- * 「サービス」を第一級にして検索・出品・購入の主動線を太く見せる。
+ * 「マップ」「場所」(PlaceMenu) は廃止。地図は /explore の浮動ボタン経由、
+ * 場所ピッカーは記事タブの国グリッドから drilling できる。
  *
- * 旧: 「保存」「お気に入り」「旅程」「購入記事」など個人系メニューは
- * SideMenu (ハンバーガー側) に集約。
+ * 「コミュニティ▼」も「駐在員向け」リンクに置換。dropdown ではなく
+ * 単一の /expat へのリンクとし、配下 6 種は /expat 内で導線を出す。
+ *
+ * 検索は Sheet 化されており、ボタンを押すと領域 / 国 / 地域フィルタ付きの
+ * シートが開く。
  */
 export async function SiteHeader() {
-  const [user, mode, countries, regionsWithContent] = await Promise.all([
+  const [user, mode, countries, regions] = await Promise.all([
     getCurrentUser(),
     Promise.resolve(getViewerMode()),
     listCountriesForPicker(),
-    getRegionsWithContent(),
+    listRegionsForPicker(),
   ]);
   const isWriter = user?.role === 'resident_writer' || user?.role === 'editor';
   const unread = user ? await getMyUnreadChatSummary() : { count: 0, threadCount: 0 };
   const homeHref = mode ? homePathFor(mode) : '/';
-  const availableRegionSlugs = Array.from(regionsWithContent);
 
-  const isResident = mode === 'resident';
+  const sheetCountries = countries.map((c) => ({
+    code: c.code,
+    nameJa: c.nameJa,
+  }));
 
   return (
     <header className="w-full border-b border-border bg-background/85 backdrop-blur">
@@ -62,22 +67,8 @@ export async function SiteHeader() {
           <NavLink href={homeHref}>ホーム</NavLink>
           <ArticlesNavLink />
           <ServicesNavLink />
-          {isResident ? (
-            <>
-              <CommunityMenu />
-              <NavLink href="/search">検索</NavLink>
-            </>
-          ) : (
-            <>
-              <PlaceMenu
-                countries={countries}
-                mode={mode ?? 'traveler'}
-                availableRegionSlugs={availableRegionSlugs}
-              />
-              <NavLink href="/map">地図</NavLink>
-              <NavLink href="/search">検索</NavLink>
-            </>
-          )}
+          <ResidentsNavLink />
+          <SearchTrigger countries={sheetCountries} regions={regions} />
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">

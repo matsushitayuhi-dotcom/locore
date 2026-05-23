@@ -23,8 +23,30 @@ export const dynamic = 'force-dynamic';
 type Tab = 'residents' | 'services' | 'articles' | 'community';
 
 type Props = {
-  searchParams?: { q?: string; tab?: string; in?: string };
+  searchParams?: {
+    q?: string;
+    tab?: string;
+    in?: string;
+    areas?: string;
+    country?: string;
+    region?: string;
+  };
 };
+
+const VALID_AREAS = ['articles', 'services', 'residents'] as const;
+type Area = (typeof VALID_AREAS)[number];
+
+function parseAreas(raw: string | undefined): Set<Area> {
+  if (!raw) return new Set(VALID_AREAS);
+  const parts = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s): s is Area =>
+      (VALID_AREAS as readonly string[]).includes(s),
+    );
+  if (parts.length === 0) return new Set(VALID_AREAS);
+  return new Set(parts);
+}
 
 export const metadata = { title: '検索 — Locore' };
 
@@ -83,7 +105,14 @@ export default async function SearchPage({ searchParams }: Props) {
   const requestedTab = normalizeTab(searchParams?.tab, isResident);
   const activeTab: Tab = requestedTab ?? pickDefaultTab(rawQ, isResident);
 
+  // 2026-05 IA リファクタ: areas / country / region の追加クエリ
+  const areas = parseAreas(searchParams?.areas);
+  const country = (searchParams?.country ?? '').trim().toLowerCase() || undefined;
+  const region = (searchParams?.region ?? '').trim() || undefined;
+  const scope = { countryCode: country, regionSlug: region };
+
   // 全タブの件数を出すため、q がある場合は並列で全部走らせる (バッジ表示)。
+  // areas で領域が絞られている場合は、選ばれた領域だけ走らせて他は空のまま。
   let articleHits: SearchArticleHit[] = [];
   let communityHits: SearchCommunityHit[] = [];
   let userHits: SearchUserHit[] = [];
@@ -91,16 +120,48 @@ export default async function SearchPage({ searchParams }: Props) {
 
   if (rawQ) {
     if (isResident) {
-      [communityHits, userHits] = await Promise.all([
-        searchCommunityPosts(rawQ, 30),
-        searchUsers(rawQ, 30),
-      ]);
+      const tasks: Promise<unknown>[] = [];
+      // 駐在員モードの areas マッピング:
+      //   residents → users / community 両方
+      const wantCommunity = areas.has('residents');
+      const wantResidents = areas.has('residents');
+      tasks.push(
+        wantCommunity
+          ? searchCommunityPosts(rawQ, 30).then((r) => {
+              communityHits = r;
+            })
+          : Promise.resolve(),
+        wantResidents
+          ? searchUsers(rawQ, 30, scope).then((r) => {
+              userHits = r;
+            })
+          : Promise.resolve(),
+      );
+      await Promise.all(tasks);
     } else {
-      [articleHits, userHits, serviceHits] = await Promise.all([
-        searchArticles(rawQ, 60),
-        searchUsers(rawQ, 30),
-        searchServices(rawQ, 30),
-      ]);
+      const tasks: Promise<unknown>[] = [];
+      if (areas.has('articles')) {
+        tasks.push(
+          searchArticles(rawQ, 60, scope).then((r) => {
+            articleHits = r;
+          }),
+        );
+      }
+      if (areas.has('residents')) {
+        tasks.push(
+          searchUsers(rawQ, 30, scope).then((r) => {
+            userHits = r;
+          }),
+        );
+      }
+      if (areas.has('services')) {
+        tasks.push(
+          searchServices(rawQ, 30, scope).then((r) => {
+            serviceHits = r;
+          }),
+        );
+      }
+      await Promise.all(tasks);
     }
   }
 
@@ -152,6 +213,7 @@ export default async function SearchPage({ searchParams }: Props) {
         counts={counts}
         rawQ={rawQ}
         isResident={isResident}
+        visibleAreas={areas}
       />
 
       {/* クエリ未入力 */}
@@ -207,22 +269,26 @@ function TabBar({
   counts,
   rawQ,
   isResident,
+  visibleAreas,
 }: {
   activeTab: Tab;
   counts: { residents: number; services: number; articles: number; community: number };
   rawQ: string;
   isResident: boolean;
+  visibleAreas: Set<Area>;
 }) {
-  const tabs: { key: Tab; label: string; count: number }[] = isResident
-    ? [
-        { key: 'community', label: 'コミュニティ', count: counts.community },
-        { key: 'residents', label: '駐在員', count: counts.residents },
-      ]
-    : [
-        { key: 'residents', label: '駐在員', count: counts.residents },
-        { key: 'services', label: 'サービス', count: counts.services },
-        { key: 'articles', label: '記事', count: counts.articles },
-      ];
+  const allTabs: { key: Tab; label: string; count: number; area: Area | null }[] =
+    isResident
+      ? [
+          { key: 'community', label: 'コミュニティ', count: counts.community, area: 'residents' },
+          { key: 'residents', label: '駐在員', count: counts.residents, area: 'residents' },
+        ]
+      : [
+          { key: 'residents', label: '駐在員', count: counts.residents, area: 'residents' },
+          { key: 'services', label: 'サービス', count: counts.services, area: 'services' },
+          { key: 'articles', label: '記事', count: counts.articles, area: 'articles' },
+        ];
+  const tabs = allTabs.filter((t) => !t.area || visibleAreas.has(t.area));
 
   const buildHref = (tab: Tab) => {
     const params = new URLSearchParams();

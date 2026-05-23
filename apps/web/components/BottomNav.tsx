@@ -2,115 +2,144 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Compass, MapIcon, Bookmark, Search } from '@locore/ui/icons';
-import type { LucideIcon } from '@locore/ui/icons';
+import { useState } from 'react';
+import {
+  Compass,
+  BookOpen,
+  Briefcase,
+  Users,
+  Search,
+  type LucideIcon,
+} from 'lucide-react';
+import {
+  SearchSheet,
+  type SearchSheetCountry,
+  type SearchSheetRegion,
+} from './SearchSheet';
 
 /**
- * モバイル下部タブナビゲーション。
+ * モバイル下部タブナビゲーション (md 未満で固定表示)。
  *
- * - md 未満で固定表示、md 以上では非表示（PC は SiteHeader のインラインナビ）
- * - 4 タブ固定：ホーム / 検索 / マップ / 保存
- * - 安全エリア対応（iOS のホームバーに被らないよう env(safe-area-inset-bottom) を加算）
+ * 2026-05 IA 3 領域モデル改修で、5 タブ構成に統一:
+ *   ホーム / 記事 / サービス / 駐在員向け / 検索
+ *
+ * 「検索」タブは Link ではなくボタンで、SearchSheet を開く。
+ *
+ * - 安全エリア対応 (env(safe-area-inset-bottom))
  * - 認証ページ・記事編集画面など、ナビを出したくない場所では非表示
  */
 
-type Tab = {
+type LinkTab = {
+  kind: 'link';
   href: string;
   label: string;
   icon: LucideIcon;
-  /** active 判定 */
   match: (pathname: string) => boolean;
 };
 
-const makeTabs = (homeHref: '/explore' | '/expat'): Tab[] => [
-  {
-    href: homeHref,
-    label: 'ホーム',
-    icon: Compass,
-    match: (p) =>
-      p === '/' ||
-      p.startsWith('/explore') ||
-      p.startsWith('/expat') ||
-      p.startsWith('/region/') ||
-      p.startsWith('/country/'),
-  },
-  {
-    href: '/search',
-    label: '検索',
-    icon: Search,
-    match: (p) => p.startsWith('/search'),
-  },
-  {
-    href: '/map',
-    label: 'マップ',
-    icon: MapIcon,
-    match: (p) => p.startsWith('/map'),
-  },
-  {
-    href: '/library',
-    label: '保存',
-    icon: Bookmark,
-    match: (p) =>
-      p.startsWith('/library') ||
-      p.startsWith('/purchases') ||
-      p.startsWith('/trips'),
-  },
-];
+type ButtonTab = {
+  kind: 'button';
+  label: string;
+  icon: LucideIcon;
+  onClick: () => void;
+  match: (pathname: string) => boolean;
+};
+
+type Tab = LinkTab | ButtonTab;
 
 const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => p.startsWith('/auth/'),
-  // 記事編集中はキャンバスを邪魔したくない
   (p) => /^\/writer\/articles\/[^/]+\/edit$/.test(p),
-  // チャットの個別スレッド画面はフルスクリーン UX
   (p) => /^\/chat\/[^/]+$/.test(p),
-  // スプラッシュ画面はナビゲーション系を全部消す（最大限スタイリッシュに）
   (p) => p === '/',
 ];
 
 export function BottomNav({
-  // 後方互換のため受け取るが、4 タブ構成ではメッセージタブが無くなったため未使用
+  // 後方互換のため受け取るが、5 タブ構成ではメッセージタブが無いため未使用
   unreadChatCount: _unreadChatCount = 0,
   homeHref = '/explore',
+  countries = [],
+  regions = [],
 }: {
   unreadChatCount?: number;
   /** 駐在員モードなら /expat、旅行者モード（未選択含む）なら /explore */
   homeHref?: '/explore' | '/expat';
+  /** 検索 Sheet 用に server 側で fetch した国 / region 一覧 */
+  countries?: SearchSheetCountry[];
+  regions?: SearchSheetRegion[];
 } = {}) {
   const pathname = usePathname() ?? '/';
+  const [searchOpen, setSearchOpen] = useState(false);
+
   if (HIDE_ON_ROUTES.some((fn) => fn(pathname))) return null;
 
-  const TABS = makeTabs(homeHref);
+  const TABS: Tab[] = [
+    {
+      kind: 'link',
+      href: homeHref,
+      label: 'ホーム',
+      icon: Compass,
+      match: (p) =>
+        p === '/' ||
+        p.startsWith('/explore') ||
+        p.startsWith('/expat') ||
+        p.startsWith('/region/') ||
+        p.startsWith('/country/'),
+    },
+    {
+      kind: 'link',
+      href: '/articles',
+      label: '記事',
+      icon: BookOpen,
+      match: (p) => p.startsWith('/articles'),
+    },
+    {
+      kind: 'link',
+      href: '/services',
+      label: 'サービス',
+      icon: Briefcase,
+      match: (p) => p.startsWith('/services'),
+    },
+    {
+      kind: 'link',
+      href: '/expat',
+      label: '駐在員向け',
+      icon: Users,
+      match: (p) =>
+        p.startsWith('/expat') ||
+        p.startsWith('/board') ||
+        p.startsWith('/community') ||
+        p.startsWith('/jobs') ||
+        p.startsWith('/apartments') ||
+        p.startsWith('/marketplace') ||
+        p.startsWith('/groups') ||
+        p.startsWith('/lessons') ||
+        p.startsWith('/help'),
+    },
+    {
+      kind: 'button',
+      label: '検索',
+      icon: Search,
+      onClick: () => setSearchOpen(true),
+      match: (p) => p.startsWith('/search'),
+    },
+  ];
 
   return (
-    <nav
-      aria-label="モバイルナビゲーション"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl md:hidden"
-      style={{
-        // iOS のホームバー (notch / home indicator) と被らないよう
-        // 安全領域の分だけ内側に押し込む。
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-      }}
-    >
-      <ul className="flex items-stretch justify-around px-1 pt-1">
-        {TABS.map((t) => {
-          const isActive = t.match(pathname);
-          const Icon = t.icon;
-          return (
-            <li key={t.href} className="flex-1">
-              <Link
-                href={t.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={
-                  // h-14 (56px) でタップ領域は iOS HIG 44px を余裕で超える。
-                  // active:scale で「押した感」、tap-highlight は globals.css で
-                  // グローバル消去済み。
-                  'group relative flex h-14 min-h-[56px] flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast active:scale-[0.94] ' +
-                  (isActive
-                    ? 'text-primary-700'
-                    : 'text-foreground/55 hover:text-foreground active:text-primary-500')
-                }
-              >
-                {/* active タブ上部の小さな縦バー (アプリ風インジケータ) */}
+    <>
+      <nav
+        aria-label="モバイルナビゲーション"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl md:hidden"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        }}
+      >
+        <ul className="flex items-stretch justify-around px-1 pt-1">
+          {TABS.map((t, i) => {
+            const isActive = t.match(pathname);
+            const Icon = t.icon;
+            const inner = (
+              <>
                 <span
                   aria-hidden
                   className={
@@ -131,19 +160,53 @@ export function BottomNav({
                 </div>
                 <span
                   className={
-                    // ラベルは常に同じ font-weight にしてアクティブ切替時の
-                    // レイアウトシフトを避ける。色変化だけで主張する。
                     'text-[10px] font-semibold tracking-tight ' +
                     (isActive ? '' : 'opacity-80')
                   }
                 >
                   {t.label}
                 </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </nav>
+              </>
+            );
+
+            const className =
+              'group relative flex h-14 min-h-[56px] w-full flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast active:scale-[0.94] ' +
+              (isActive
+                ? 'text-primary-700'
+                : 'text-foreground/55 hover:text-foreground active:text-primary-500');
+
+            return (
+              <li key={i} className="flex-1">
+                {t.kind === 'link' ? (
+                  <Link
+                    href={t.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={className}
+                  >
+                    {inner}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={t.onClick}
+                    aria-label={t.label}
+                    className={className}
+                  >
+                    {inner}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+
+      <SearchSheet
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        countries={countries}
+        regions={regions}
+      />
+    </>
   );
 }

@@ -179,6 +179,49 @@ export async function listCountriesForPicker(): Promise<CountryListItem[]> {
   }
 }
 
+/**
+ * 検索 Sheet 用に、すべての region (cities) を country code 付きで一括取得。
+ * is_active なものに限定 (UI で見せられないものを混ぜない)。
+ */
+export type RegionForPicker = {
+  slug: string;
+  nameJa: string;
+  countryCode: string;
+};
+
+export async function listRegionsForPicker(): Promise<RegionForPicker[]> {
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        slug: schema.cities.slug,
+        nameJa: schema.cities.nameJa,
+        kind: schema.cities.kind,
+        isActive: schema.cities.isActive,
+        position: schema.cities.position,
+        countryCode: schema.countries.code,
+        countryPosition: schema.countries.position,
+      })
+      .from(schema.cities)
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
+      )
+      .orderBy(asc(schema.countries.position), asc(schema.cities.position));
+
+    return rows
+      .filter((r) => r.isActive && r.kind !== 'other' && r.countryCode)
+      .map((r) => ({
+        slug: r.slug,
+        nameJa: r.nameJa,
+        countryCode: r.countryCode as string,
+      }));
+  } catch (err) {
+    console.warn('[listRegionsForPicker] failed:', err);
+    return [];
+  }
+}
+
 /** region slug から region 情報 + 国情報を取得（/region/[slug] 用）。 */
 export async function getRegionBySlug(slug: string): Promise<RegionInfo | null> {
   try {
