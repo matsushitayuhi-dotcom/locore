@@ -19,11 +19,14 @@ import {
   type ResidentProfileBundle,
 } from '@/lib/residents/byId';
 import { ResidentHeader } from '@/components/residents/ResidentHeader';
+import { ResidentHubTabs } from '@/components/residents/ResidentHubTabs';
+// parseTab / 型は 'use client' を跨がない shared から直接 import する。
+// 旧コードは ResidentHubTabs ('use client') 経由で parseTab を読んでおり、
+// Server Component から呼ぶと本番ビルドで undefined になっていた。
 import {
-  ResidentHubTabs,
   parseTab,
   type ResidentHubTabKey,
-} from '@/components/residents/ResidentHubTabs';
+} from '@/components/residents/residentHubTabsShared';
 import { ResidentReviewsSummary } from '@/components/residents/ResidentReviewsSummary';
 import { COMMON_LANGUAGES, LANGUAGE_LEVEL_LABEL } from '@/lib/resident/constants';
 
