@@ -2,7 +2,8 @@
 
 import { Input } from '@locore/ui';
 
-const PRICE_OPTIONS = [300, 500, 800, 1000, 1500, 2000, 3000, 5000] as const;
+// 0 = 無料記事 (アンロックフローで「無料でアンロック」CTA)。
+const PRICE_OPTIONS = [0, 300, 500, 800, 1000, 1500, 2000, 3000, 5000] as const;
 
 const DURATION_OPTIONS: { value: 'half_day' | 'full_day' | 'few_hours' | 'other'; label: string }[] = [
   { value: 'few_hours', label: '数時間' },
@@ -113,12 +114,12 @@ export function BasicInfoSection({ value, onChange, cities, tier: _tier }: Props
           >
             {allowedPrices.map((p) => (
               <option key={p} value={p}>
-                ¥{p.toLocaleString('ja-JP')}
+                {p === 0 ? '無料 (¥0)' : `¥${p.toLocaleString('ja-JP')}`}
               </option>
             ))}
           </select>
           <p className="mt-1 text-[11px] text-foreground/50">
-            価格は自由に設定できます。Tier の差は手数料率で扱います。
+            価格は自由に設定できます。¥0 (無料) も選択可能。Tier の差は手数料率で扱います。
           </p>
         </div>
 

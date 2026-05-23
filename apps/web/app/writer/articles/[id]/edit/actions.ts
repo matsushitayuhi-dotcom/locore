@@ -10,7 +10,9 @@ import { runMockModeration } from '@/lib/moderation/mock';
 
 // ---------- 共通 ----------
 
-const PRICE_OPTIONS = [300, 500, 800, 1000, 1500, 2000, 3000, 5000] as const;
+// 0 = 無料記事 (アンロックフローを通すが課金しない)。
+// 「記事は無料で出して、サービスで稼ぐ」パターンを許容するため 0 を含める。
+const PRICE_OPTIONS = [0, 300, 500, 800, 1000, 1500, 2000, 3000, 5000] as const;
 type PriceOption = (typeof PRICE_OPTIONS)[number];
 
 // クリエイターランクによる価格上限は 2026-05 に撤廃。
@@ -339,26 +341,27 @@ export async function publishArticle(
   const a = rows[0]!;
 
   if (!a.title.trim()) {
-    return { ok: false, error: 'タイトルを入力してください' };
+    return { ok: false, error: 'タイトル: 1 文字以上で入力してください' };
   }
 
-  // 本文要件: クラシックは 100 字以上、フォト日記は写真 1 枚以上
+  // 本文要件: クラシックは 30 字以上、フォト日記は写真 1 枚以上。
+  // MOC 期間中は短い投稿でも公開できる方が「すぐ試せる」体験になるため、
+  // 旧 100 字制限を 30 字に緩和。十分短ければそもそも fail させない選択もある。
   if (a.bodyStyle === 'photo_journal') {
     const photos = Array.isArray(a.photoEntries) ? a.photoEntries : [];
     if (photos.length < 1) {
       return {
         ok: false,
-        error: 'フォト日記には写真を 1 枚以上アップロードしてください',
+        error: '写真ギャラリー: 1 枚以上アップロードしてください',
       };
     }
   } else {
-    // 2026-05 改修: 本文は HTML 保存になったので、タグを除いた純粋テキストで判定する。
-    // （旧 Markdown 記事は `<` で始まらないのでタグ除去しても誤差なし）
+    // 2026-05 改修: 本文は HTML 保存になったので、タグを除いた純粋テキストで判定。
     const plain = a.body.replace(/<[^>]*>/g, '').trim();
-    if (plain.length < 100) {
+    if (plain.length < 30) {
       return {
         ok: false,
-        error: '本文は 100 文字以上必要です',
+        error: `本文: 30 文字以上で入力してください (現在 ${plain.length} 文字)`,
       };
     }
   }
