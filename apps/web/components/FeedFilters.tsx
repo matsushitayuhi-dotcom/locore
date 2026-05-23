@@ -1,10 +1,9 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { Slider, Button, Badge } from '@locore/ui';
-import { MapIcon, SlidersHorizontal } from '@locore/ui/icons';
+import { Slider, Badge } from '@locore/ui';
+import { SlidersHorizontal } from '@locore/ui/icons';
 import { ArticleGrid } from './ArticleGrid';
 import type { Article, ArticleType } from '../lib/mock';
 
@@ -189,12 +188,6 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
                 </option>
               ))}
             </select>
-            <Link href="/map">
-              <Button variant="outline" size="sm">
-                <MapIcon className="mr-1 h-3 w-3" />
-                マップで見る
-              </Button>
-            </Link>
           </div>
         </div>
 

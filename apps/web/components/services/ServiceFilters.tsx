@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown } from 'lucide-react';
 import type { ActiveCityForPicker } from '@/lib/geo/countries';
 import type { TagWithCount } from '@/lib/services/list';
 import { TAG_LABEL } from '@/lib/services/tagLabels';
@@ -92,40 +92,24 @@ export function ServiceFilters({ state, cities, allTags }: Props) {
     .map((t) => ({ tag: t, count: 0 }));
   const topRendered = [...extraSelected, ...top];
 
+  // 「主要フィルタ以外」が何個アクティブか — details の見出しに表示
+  const advancedActiveCount =
+    (state.city ? 1 : 0) +
+    (state.min != null ? 1 : 0) +
+    (state.max != null ? 1 : 0) +
+    (state.cat ? 1 : 0) +
+    state.tags.length;
+
+  // details を初期表示で開いておくか — 何か選択中なら開く
+  const initiallyOpen = advancedActiveCount > 0;
+
   return (
     <div className="space-y-3 rounded-2xl bg-card p-4 ring-1 ring-border sm:p-5">
-      {/* audience tabs */}
-      <div
-        role="tablist"
-        aria-label="対象を選ぶ"
-        className="flex flex-wrap items-center gap-1.5 rounded-full bg-muted p-1"
-      >
-        {AUDIENCE_TABS.map((t) => {
-          const active = state.audience === t.key;
-          return (
-            <Link
-              key={t.key}
-              href={buildServicesHref(state, { audience: t.key })}
-              role="tab"
-              aria-selected={active}
-              className={
-                'rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
-                (active
-                  ? 'bg-primary-500 text-neutral-950 shadow-sm'
-                  : 'text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
-              }
-            >
-              {t.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* search + city + price (GET form) */}
+      {/* 主要フィルタ 1 行: audience tabs + 検索 input */}
       <form
         action="/services"
         method="get"
-        className="grid gap-2 sm:grid-cols-[1fr_180px_120px_120px_auto]"
+        className="flex flex-col gap-2 sm:flex-row sm:items-center"
       >
         {/* hidden state preserved across submit */}
         {state.audience !== 'all' ? (
@@ -135,8 +119,44 @@ export function ServiceFilters({ state, cities, allTags }: Props) {
         {state.tags.length > 0 ? (
           <input type="hidden" name="tags" value={state.tags.join(',')} />
         ) : null}
+        {state.city ? (
+          <input type="hidden" name="city" value={state.city} />
+        ) : null}
+        {state.min != null ? (
+          <input type="hidden" name="min" value={String(state.min)} />
+        ) : null}
+        {state.max != null ? (
+          <input type="hidden" name="max" value={String(state.max)} />
+        ) : null}
 
-        <label className="relative">
+        {/* audience tabs */}
+        <div
+          role="tablist"
+          aria-label="対象を選ぶ"
+          className="flex shrink-0 flex-wrap items-center gap-1 rounded-full bg-muted p-1"
+        >
+          {AUDIENCE_TABS.map((t) => {
+            const active = state.audience === t.key;
+            return (
+              <Link
+                key={t.key}
+                href={buildServicesHref(state, { audience: t.key })}
+                role="tab"
+                aria-selected={active}
+                className={
+                  'rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
+                  (active
+                    ? 'bg-primary-500 text-neutral-950 shadow-sm'
+                    : 'text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
+                }
+              >
+                {t.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        <label className="relative flex-1">
           <span className="sr-only">サービスを検索</span>
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40"
@@ -151,64 +171,115 @@ export function ServiceFilters({ state, cities, allTags }: Props) {
             className="h-11 w-full rounded-full bg-background pl-9 pr-3 text-[13px] ring-1 ring-border placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </label>
-        <label>
-          <span className="sr-only">都市で絞り込む</span>
-          <select
-            name="city"
-            defaultValue={state.city ?? ''}
-            aria-label="都市で絞り込む"
-            className="h-11 w-full rounded-full bg-background px-3 text-[13px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value="">都市: すべて</option>
-            {cities.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.countryNameJa ? `${c.countryNameJa} / ` : ''}
-                {c.nameJa}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          <span className="sr-only">最低価格 (円)</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            name="min"
-            min={0}
-            defaultValue={state.min ?? ''}
-            placeholder="¥ 最低"
-            aria-label="最低価格 (円)"
-            className="h-11 w-full rounded-full bg-background px-3 text-[13px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </label>
-        <label>
-          <span className="sr-only">上限価格 (円)</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            name="max"
-            min={0}
-            defaultValue={state.max ?? ''}
-            placeholder="¥ 上限"
-            aria-label="上限価格 (円)"
-            className="h-11 w-full rounded-full bg-background px-3 text-[13px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-        </label>
+
         <button
           type="submit"
-          className="h-11 rounded-full bg-primary-500 px-5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="h-11 shrink-0 rounded-full bg-primary-500 px-5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
         >
-          絞り込む
+          検索
         </button>
       </form>
 
-      {/* tag chips (multi-select) */}
-      <ServiceFiltersTagSection
-        state={state}
-        topTags={topRendered}
-        moreTags={rest}
-        renderTagLabel={(t) => TAG_LABEL[t] ?? t}
-      />
+      {/* 詳細フィルタ (折りたたみ) — details で OS ネイティブ挙動 */}
+      <details
+        className="group rounded-xl border border-border/60 bg-background/40"
+        {...(initiallyOpen ? { open: true } : {})}
+      >
+        <summary
+          className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-xl px-4 py-2.5 text-[12px] font-semibold text-foreground/75 transition hover:bg-muted [&::-webkit-details-marker]:hidden"
+        >
+          <span className="inline-flex items-center gap-1.5">
+            絞り込み
+            {advancedActiveCount > 0 ? (
+              <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary-500 px-1.5 text-[10px] font-bold text-neutral-950">
+                {advancedActiveCount}
+              </span>
+            ) : null}
+          </span>
+          <ChevronDown
+            className="h-4 w-4 text-foreground/55 transition-transform duration-200 group-open:rotate-180"
+            aria-hidden
+          />
+        </summary>
+
+        <div className="space-y-4 border-t border-border/60 px-4 py-4">
+          {/* 都市 / 価格レンジ (GET form 第二段) */}
+          <form
+            action="/services"
+            method="get"
+            className="grid gap-2 sm:grid-cols-[1fr_120px_120px_auto]"
+          >
+            {state.audience !== 'all' ? (
+              <input type="hidden" name="audience" value={state.audience} />
+            ) : null}
+            {state.cat ? (
+              <input type="hidden" name="cat" value={state.cat} />
+            ) : null}
+            {state.tags.length > 0 ? (
+              <input type="hidden" name="tags" value={state.tags.join(',')} />
+            ) : null}
+            {state.q ? <input type="hidden" name="q" value={state.q} /> : null}
+
+            <label>
+              <span className="sr-only">都市で絞り込む</span>
+              <select
+                name="city"
+                defaultValue={state.city ?? ''}
+                aria-label="都市で絞り込む"
+                className="h-11 w-full rounded-full bg-background px-3 text-[13px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="">都市: すべて</option>
+                {cities.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.countryNameJa ? `${c.countryNameJa} / ` : ''}
+                    {c.nameJa}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="sr-only">最低価格 (円)</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                name="min"
+                min={0}
+                defaultValue={state.min ?? ''}
+                placeholder="¥ 最低"
+                aria-label="最低価格 (円)"
+                className="h-11 w-full rounded-full bg-background px-3 text-[13px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </label>
+            <label>
+              <span className="sr-only">上限価格 (円)</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                name="max"
+                min={0}
+                defaultValue={state.max ?? ''}
+                placeholder="¥ 上限"
+                aria-label="上限価格 (円)"
+                className="h-11 w-full rounded-full bg-background px-3 text-[13px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </label>
+            <button
+              type="submit"
+              className="h-11 rounded-full bg-primary-500 px-5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
+            >
+              適用
+            </button>
+          </form>
+
+          {/* tag chips (multi-select) */}
+          <ServiceFiltersTagSection
+            state={state}
+            topTags={topRendered}
+            moreTags={rest}
+            renderTagLabel={(t) => TAG_LABEL[t] ?? t}
+          />
+        </div>
+      </details>
     </div>
   );
 }

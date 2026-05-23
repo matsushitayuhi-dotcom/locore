@@ -1,14 +1,14 @@
 /**
- * Locore 用の Google Maps スタイル — Prism Japan 風 Monochrome v1。
+ * Locore 用の Google Maps スタイル — Prism Japan 風 Monochrome + 緑アクセント v2。
  *
  * 設計指針:
- *   - 紙の地図のような完全モノクロ。色相は一切持たない (neutral zinc / stone のみ)
- *   - 道路は純白に近い、ストロークは細い neutral-200
- *   - 水域は淡いグレー (青は廃止)
- *   - landscape / park の緑は廃止
- *   - POI / transit / 行政ラベル / 道路ラベルは限界まで間引き、ラベルが残るときも
- *     neutral-500 を薄く一段だけ
- *   - Apple Maps / Mapbox monochrome に近い視覚密度
+ *   - 基本はモノクロ紙地図のトーン (zinc グレースケール)
+ *   - 水域に primary-50 の極めて薄いシャルトリューズ緑を差し、ブランド配色を匂わせる
+ *   - 公園 / landscape.natural は非表示にせず、薄い primary-50 で控えめに復活
+ *   - 道路は引き続き純白
+ *   - 行政ラベル (administrative.locality) は primary-700 系を薄く（読みやすさ優先）
+ *   - POI / transit / business / attraction はノイズなので消す
+ *   - 「全面緑」ではなく、印象として "うっすら緑が差す" レベル
  */
 export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   // ベース：ほぼ白い zinc-50
@@ -30,7 +30,7 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
     stylers: [{ color: '#FFFFFF' }, { weight: 3 }],
   },
 
-  // 国名 / 主要都市名だけ、超薄く残す
+  // 国名 / 主要都市名 — primary-700 を薄く効かせてブランドの匂いを残す
   {
     featureType: 'administrative.country',
     elementType: 'labels.text.fill',
@@ -39,7 +39,7 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#A1A1AA' }, { visibility: 'on' }],
+    stylers: [{ color: '#5d8d0e' }, { visibility: 'on' }],
   },
   {
     featureType: 'administrative.locality',
@@ -47,12 +47,23 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
     stylers: [{ color: '#FFFFFF' }, { weight: 3 }],
   },
 
-  // POI / transit / business / attraction はすべて消す
+  // POI / transit / business / attraction はノイズなので消す
   { featureType: 'poi', stylers: [{ visibility: 'off' }] },
   { featureType: 'transit', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.business', stylers: [{ visibility: 'off' }] },
   { featureType: 'poi.attraction', stylers: [{ visibility: 'off' }] },
-  { featureType: 'poi.park', stylers: [{ visibility: 'off' }] },
+
+  // 公園だけは控えめに復活させる — primary-50 の極淡シャルトリューズ
+  {
+    featureType: 'poi.park',
+    elementType: 'geometry',
+    stylers: [{ color: '#f3f9e1' }, { visibility: 'on' }],
+  },
+  {
+    featureType: 'poi.park',
+    elementType: 'labels',
+    stylers: [{ visibility: 'off' }],
+  },
 
   // 道路 — 純白 + 細い neutral-200 のストローク
   {
@@ -87,23 +98,24 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
     stylers: [{ visibility: 'off' }],
   },
 
-  // 自然 / landscape — 紙のグレー
+  // landscape — 紙のグレー基調
   {
     featureType: 'landscape',
     elementType: 'geometry',
     stylers: [{ color: '#F4F4F5' }],
   },
+  // landscape.natural（森・河川敷など）はうっすら primary-50 で緑を匂わせる
   {
     featureType: 'landscape.natural',
     elementType: 'geometry',
-    stylers: [{ color: '#F4F4F5' }],
+    stylers: [{ color: '#f3f9e1' }],
   },
 
-  // 水域 — 淡い neutral-200 (青を廃止して紙の質感に)
+  // 水域 — primary-50 のごく薄い緑 (ブランド色を最も自然に差せるエリア)
   {
     featureType: 'water',
     elementType: 'geometry',
-    stylers: [{ color: '#E4E4E7' }],
+    stylers: [{ color: '#f3f9e1' }],
   },
   {
     featureType: 'water',

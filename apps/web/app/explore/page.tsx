@@ -1,12 +1,7 @@
 import Link from 'next/link';
-import {
-  ArrowRight,
-  BookOpen,
-  Briefcase,
-  Users,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { CountryGridByContinent } from '@/components/CountryGridByContinent';
-import { ArticleScrollSection } from '@/components/ArticleScrollSection';
+import { ArticleMagazineGrid } from '@/components/explore/ArticleMagazineGrid';
 import { FloatingMapButton } from '@/components/FloatingMapButton';
 import { listCountriesForPicker } from '@/lib/geo/countries';
 import { getPublishedDbArticles } from '@/lib/articles/published';
@@ -54,10 +49,10 @@ export default async function ExplorePage() {
 
   const spotGuides = articles
     .filter((a) => a.articleType === 'spot_guide')
-    .slice(0, 10);
+    .slice(0, 6);
   const itineraries = articles
     .filter((a) => a.articleType === 'itinerary')
-    .slice(0, 10);
+    .slice(0, 6);
 
   // 「今週の特集記事」= cover ありの最新公開記事を 1 本選定。
   // 価格・タイプ問わず、ローカル度の高いものを優先。
@@ -146,11 +141,12 @@ export default async function ExplorePage() {
         {itineraries.length > 0 ? (
           <section id="itinerary">
             <SectionHeader title="旅程プラン" href="/articles?type=itinerary" />
-            <ArticleScrollSection
+            <ArticleMagazineGrid
               articles={itineraries}
-              moreHref="/articles?type=itinerary"
+              limit={6}
               socialCounts={socialCounts}
             />
+            <SectionFooterMore href="/articles?type=itinerary" />
           </section>
         ) : null}
 
@@ -161,11 +157,12 @@ export default async function ExplorePage() {
               title="スポット紹介"
               href="/articles?type=spot_guide"
             />
-            <ArticleScrollSection
+            <ArticleMagazineGrid
               articles={spotGuides}
-              moreHref="/articles?type=spot_guide"
+              limit={6}
               socialCounts={socialCounts}
             />
+            <SectionFooterMore href="/articles?type=spot_guide" />
           </section>
         ) : null}
 
@@ -195,6 +192,21 @@ export default async function ExplorePage() {
 
       <FloatingMapButton />
     </main>
+  );
+}
+
+function SectionFooterMore({ href }: { href: string }) {
+  return (
+    <div className="mt-5 flex justify-center">
+      <Link
+        href={href}
+        aria-label="すべて見る"
+        className="inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-[12px] font-semibold text-foreground/80 ring-1 ring-border transition hover:bg-primary-500/10 hover:text-foreground"
+      >
+        すべて見る
+        <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    </div>
   );
 }
 

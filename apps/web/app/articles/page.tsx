@@ -1,6 +1,7 @@
 ﻿import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { FeedFilters } from '@/components/FeedFilters';
+import { FloatingMapButton } from '@/components/FloatingMapButton';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getRegionBySlug } from '@/lib/geo/countries';
@@ -75,6 +76,8 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
       </header>
 
       <FeedFilters articles={articles} socialCounts={socialCounts} />
+
+      <FloatingMapButton />
     </main>
   );
 }

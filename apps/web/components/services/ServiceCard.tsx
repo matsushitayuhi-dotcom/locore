@@ -73,8 +73,8 @@ export function ServiceCard({ service: s, href }: Props) {
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <div className="flex flex-wrap items-start gap-2">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <div className="flex flex-wrap items-start gap-1.5 sm:gap-2">
           {shown.map((t) => (
             <span
               key={t}
@@ -89,33 +89,33 @@ export function ServiceCard({ service: s, href }: Props) {
             </span>
           ) : null}
           {s.priceJpy != null ? (
-            <span className="ml-auto text-[14px] font-bold tabular text-primary-300">
+            <span className="ml-auto text-[12px] font-bold tabular text-primary-300 sm:text-[14px]">
               ¥{s.priceJpy.toLocaleString('ja-JP')}
               {s.priceUnit ? (
-                <span className="ml-0.5 text-[10px] font-medium text-foreground/60">
+                <span className="ml-0.5 text-[9px] font-medium text-foreground/60 sm:text-[10px]">
                   / {s.priceUnit}
                 </span>
               ) : null}
             </span>
           ) : (
-            <span className="ml-auto text-[12px] font-medium text-foreground/50">
+            <span className="ml-auto text-[11px] font-medium text-foreground/50 sm:text-[12px]">
               応相談
             </span>
           )}
         </div>
 
-        <h3 className="mt-2 line-clamp-2 text-[14px] font-semibold leading-snug">
+        <h3 className="mt-2 line-clamp-2 text-[13px] font-semibold leading-snug sm:text-[14px]">
           {s.title}
         </h3>
         {s.description ? (
-          <p className="mt-2 line-clamp-2 whitespace-pre-line text-[12px] leading-relaxed text-foreground/65">
+          <p className="mt-1.5 line-clamp-2 whitespace-pre-line text-[11px] leading-relaxed text-foreground/65 sm:mt-2 sm:text-[12px]">
             {s.description}
           </p>
         ) : null}
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <Avatar size="sm" className="h-7 w-7 shrink-0">
+        <div className="mt-auto flex items-center justify-between gap-1.5 pt-3 sm:gap-2">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <Avatar size="sm" className="h-6 w-6 shrink-0 sm:h-7 sm:w-7">
               {s.ownerAvatarUrl ? (
                 <AvatarImage src={s.ownerAvatarUrl} alt="" />
               ) : null}
@@ -123,12 +123,12 @@ export function ServiceCard({ service: s, href }: Props) {
                 {s.ownerDisplayName?.[0]?.toUpperCase() ?? '?'}
               </AvatarFallback>
             </Avatar>
-            <span className="truncate text-[11px] font-medium text-foreground/75">
+            <span className="truncate text-[10px] font-medium text-foreground/75 sm:text-[11px]">
               {s.ownerDisplayName}
             </span>
           </div>
           {s.cityNameJa ? (
-            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground/60">
+            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-foreground/60 sm:px-2 sm:text-[10px]">
               <MapPin className="h-2.5 w-2.5" />
               {s.cityNameJa}
             </span>
