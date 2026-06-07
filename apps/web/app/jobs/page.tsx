@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import {
   MapPin,
@@ -124,7 +125,67 @@ function daysUntil(iso: string | null): number | null {
   return Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
+// 既知の searchParams キー。これ以外が来たら canonical /jobs に 308 リダイレクト。
+// クローラがゴミクエリ (?utm_*, ?ref, ?_gl ほか) を踏み続けて ISR キャッシュを
+// 汚染するのを防ぐ。Origin Data Transfer 課金の主因対策。
+const ALLOWED_JOBS_SEARCH_KEYS = new Set([
+  'type',
+  'cat',
+  'lang',
+  'remote',
+  'min',
+  'sort',
+  'region',
+  'audience',
+  'view',
+]);
+
 export default async function JobsIndexPage({ searchParams }: Props) {
+  // ─── searchParams 衛生化 ────────────────────────────────────────
+  // 1) 未知キーが混ざっていたら canonical /jobs に redirect
+  // 2) `min` が非数値 / 0 / 巨大値なら redirect (?min=300, ?min=301... の爆撃対策)
+  // 3) 列挙値 (cat / sort / view / audience / remote) のうち想定外を弾く
+  if (searchParams) {
+    const keys = Object.keys(searchParams);
+    const hasUnknown = keys.some((k) => !ALLOWED_JOBS_SEARCH_KEYS.has(k));
+    if (hasUnknown) redirect('/jobs');
+
+    const rawMin = searchParams.min;
+    if (rawMin != null && rawMin !== '') {
+      const n = Number(rawMin);
+      // 任意整数を無制限に許すとキャッシュキー爆発する。
+      // 200 万円刻みだけ許容 (200, 400, 600, ..., 3000)。それ以外は丸めて redirect。
+      if (!Number.isFinite(n) || n <= 0 || n > 5000 || n % 200 !== 0) {
+        redirect('/jobs');
+      }
+    }
+    if (
+      searchParams.cat &&
+      !(JOB_CATEGORIES as readonly string[]).includes(searchParams.cat)
+    ) {
+      redirect('/jobs');
+    }
+    if (
+      searchParams.sort &&
+      searchParams.sort !== 'new' &&
+      searchParams.sort !== 'salary'
+    ) {
+      redirect('/jobs');
+    }
+    if (searchParams.view && searchParams.view !== 'list' && searchParams.view !== 'card') {
+      redirect('/jobs');
+    }
+    if (
+      searchParams.audience &&
+      !(COMMUNITY_AUDIENCES as readonly string[]).includes(searchParams.audience)
+    ) {
+      redirect('/jobs');
+    }
+    if (searchParams.remote && searchParams.remote !== '1') {
+      redirect('/jobs');
+    }
+  }
+
   const activeTypes = toArray(searchParams?.type).filter((t): t is JobEmploymentType =>
     (JOB_EMPLOYMENT_TYPES as readonly string[]).includes(t),
   );

@@ -63,6 +63,23 @@ export default function robots(): MetadataRoute.Robots {
           '/preview/',
           '/*/new', // 投稿フォーム系全般
           '/*/edit',
+          // ─────────────────────────────────────────────
+          // Origin Data Transfer 抑制: フィルタ URL のキャッシュ爆発を防ぐ
+          // /jobs と /services はフィルタ次元が多く (9〜7次元 + 任意整数 min/max)、
+          // クローラがフィルタチップの組み合わせを総当たりすると ISR キャッシュが
+          // 1 URL ごとに無限増殖 → MISS の度に Origin が HTML+RSC を返し続ける。
+          // canonical (パラメータなし) のみ許可し、クエリ付き URL は Disallow。
+          // ─────────────────────────────────────────────
+          '/jobs?*',
+          '/services?*',
+          '/apartments?*',
+          '/marketplace?*',
+          '/groups?*',
+          '/lessons?*',
+          '/help?*',
+          '/board?*',
+          '/articles?*',
+          '/residents?*',
         ],
         // 1 秒あたり 0.5 リクエスト相当のクロール間隔目安
         crawlDelay: 2,

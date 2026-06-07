@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { SearchX } from 'lucide-react';
 import { listServices, listAllTagsForServices } from '@/lib/services/list';
 import { getActiveCitiesForPicker } from '@/lib/geo/countries';
@@ -62,11 +63,54 @@ function parseInt(v: string | undefined): number | undefined {
   return Math.floor(n);
 }
 
+// 既知の searchParams キー。Origin Data Transfer 課金抑制のため、未知キーや
+// 想定外の値が来たら canonical /services に 308 リダイレクトしてキャッシュ汚染を防ぐ。
+const ALLOWED_SERVICES_SEARCH_KEYS = new Set([
+  'audience',
+  'city',
+  'cat',
+  'tags',
+  'q',
+  'min',
+  'max',
+]);
+
 export default async function ServicesPage({
   searchParams,
 }: {
   searchParams?: Search;
 }) {
+  // ─── searchParams 衛生化 ────────────────────────────────────────
+  if (searchParams) {
+    const keys = Object.keys(searchParams);
+    if (keys.some((k) => !ALLOWED_SERVICES_SEARCH_KEYS.has(k))) {
+      redirect('/services');
+    }
+    // 価格レンジは 5,000 円刻みに丸める (任意整数で爆撃される対策)
+    for (const key of ['min', 'max'] as const) {
+      const raw = searchParams[key];
+      if (raw != null && raw !== '') {
+        const n = Number(raw);
+        if (!Number.isFinite(n) || n < 0 || n > 10_000_000 || n % 5000 !== 0) {
+          redirect('/services');
+        }
+      }
+    }
+    // 検索ワードは長すぎる/制御文字を弾く
+    if (searchParams.q && (searchParams.q.length > 60 || /[\x00-\x1f]/.test(searchParams.q))) {
+      redirect('/services');
+    }
+    // audience は all/traveler/resident のみ
+    if (
+      searchParams.audience &&
+      searchParams.audience !== 'all' &&
+      searchParams.audience !== 'traveler' &&
+      searchParams.audience !== 'resident'
+    ) {
+      redirect('/services');
+    }
+  }
+
   const audience = parseAudience(searchParams?.audience);
   const city = searchParams?.city?.trim() || undefined;
   const cat = searchParams?.cat?.trim() || undefined;
