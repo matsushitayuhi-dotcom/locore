@@ -20,7 +20,7 @@ import {
   type CommunityAudience,
 } from '@/lib/community/constants';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: 'イベント — Locore',
@@ -109,7 +109,7 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
 
   const rawPosts = await listCommunityPosts({
     kind: 'group',
-    limit: 80,
+    limit: 30,
     cityId: regionFilter.cityId,
   });
 

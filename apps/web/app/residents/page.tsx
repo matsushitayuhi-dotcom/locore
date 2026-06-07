@@ -22,7 +22,7 @@ import {
  *   - tag     … 興味 or 探していること タグの完全一致
  */
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: '住人を探す — Locore',

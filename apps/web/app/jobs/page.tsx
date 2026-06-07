@@ -29,7 +29,7 @@ import {
   type CommunityAudience,
 } from '@/lib/community/constants';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: '求人 — Locore',
@@ -152,7 +152,7 @@ export default async function JobsIndexPage({ searchParams }: Props) {
 
   const rawPosts = await listCommunityPosts({
     kind: 'job',
-    limit: 80,
+    limit: 30,
     cityId: regionFilter.cityId,
   });
 

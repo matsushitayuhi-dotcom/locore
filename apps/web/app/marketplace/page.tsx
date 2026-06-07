@@ -28,7 +28,7 @@ import {
   type CommunityAudience,
 } from '@/lib/community/constants';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: '売ります・買います — Locore',
@@ -117,7 +117,7 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
 
   const rawPosts = await listCommunityPosts({
     kind: 'marketplace',
-    limit: 80,
+    limit: 30,
     cityId: regionFilter.cityId,
   });
 

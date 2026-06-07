@@ -27,7 +27,7 @@ import { FilterSheet } from '@/components/community/FilterSheet';
 import { PostFab } from '@/components/community/PostFab';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: 'アパート — パリの物件掲示板',
@@ -115,7 +115,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
 
   const allPosts = await listCommunityPosts({
     kind: 'apartment',
-    limit: 120,
+    limit: 30,
     cityId: regionFilter.cityId,
   });
 

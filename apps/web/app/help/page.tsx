@@ -21,7 +21,7 @@ import {
   type CommunityAudience,
 } from '@/lib/community/constants';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: '助け合い — Locore',
@@ -135,7 +135,7 @@ export default async function HelpIndexPage({ searchParams }: Props) {
 
   const rawPosts = await listCommunityPosts({
     kind: 'mutual_aid',
-    limit: 80,
+    limit: 30,
     cityId: regionFilter.cityId,
   });
 

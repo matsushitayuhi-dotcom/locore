@@ -55,7 +55,7 @@ export default async function BoardIndexPage({ searchParams }: Props) {
         : 'all';
 
   const posts = await listBoardPosts({
-    limit: 60,
+    limit: 30,
     categories: activeCat ? [activeCat] : undefined,
     audiences: activeAud === 'all' ? undefined : [activeAud],
   });

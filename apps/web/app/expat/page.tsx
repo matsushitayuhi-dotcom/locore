@@ -4,7 +4,7 @@ import { Lock } from 'lucide-react';
 import { listCountriesForPicker } from '@/lib/geo/countries';
 import type { CountryListItem } from '@/lib/geo/countries';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export const metadata = {
   title: 'Locore for Residents — 国を選ぶ',
