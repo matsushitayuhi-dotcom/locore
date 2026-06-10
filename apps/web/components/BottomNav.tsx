@@ -10,6 +10,7 @@ import {
   Search,
   type LucideIcon,
 } from 'lucide-react';
+import { useViewer } from './viewer/ViewerProvider';
 
 /**
  * モバイル下部タブナビゲーション (md 未満で固定表示)。
@@ -38,16 +39,13 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => p === '/',
 ];
 
-export function BottomNav({
-  // 後方互換のため受け取るが、5 タブ構成ではメッセージタブが無いため未使用
-  unreadChatCount: _unreadChatCount = 0,
-  homeHref = '/explore',
-}: {
-  unreadChatCount?: number;
-  /** 駐在員モードなら /expat、旅行者モード（未選択含む）なら /explore */
-  homeHref?: '/explore' | '/expat';
-} = {}) {
+export function BottomNav() {
   const pathname = usePathname() ?? '/';
+  const { mode } = useViewer();
+  // 駐在員モードなら /expat、旅行者モード（未選択含む）なら /explore。
+  // mode はクライアントの locore_mode cookie 由来（ViewerProvider が供給）。
+  const homeHref: '/explore' | '/expat' =
+    mode === 'resident' ? '/expat' : '/explore';
 
   if (HIDE_ON_ROUTES.some((fn) => fn(pathname))) return null;
 

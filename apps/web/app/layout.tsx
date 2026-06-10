@@ -1,6 +1,5 @@
 ﻿import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
 import {
   Noto_Sans_JP,
   Inter,
@@ -8,12 +7,26 @@ import {
 } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
+import jaMessages from '../messages/ja.json';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
 import { BottomNav } from '../components/BottomNav';
 import { HeaderShell } from '../components/HeaderShell';
-import { getMyUnreadChatSummary } from '@/lib/chat/unread';
-import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
+import { ViewerProvider } from '../components/viewer/ViewerProvider';
+
+/**
+ * 【2026-06 キャッシュ改修】
+ * 以前はここで getLocale()/getMessages()/getViewerMode()/getMyUnreadChatSummary()
+ * を呼んでおり、これらが request の cookie/header を読むためルートレイアウト
+ * （＝全ページ）が動的レンダリング扱いになり、Vercel Edge Cache が 0% だった。
+ * → /jobs 等の公開ページで revalidate を書いても無視され Origin Data Transfer 暴騰。
+ *
+ * 対策:
+ *   - locale / messages は静的化（Phase 1 は ja 固定なので request 読み取り不要）
+ *   - 認証 / 未読 / モードは ViewerProvider (client, /api/me) に委譲
+ * これでレイアウトが完全に静的になり、配下の公開ページがキャッシュ可能になる。
+ */
+const LOCALE = 'ja';
 
 const notoSansJp = Noto_Sans_JP({
   subsets: ['latin'],
@@ -95,20 +108,11 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const locale = await getLocale();
-  const messages = await getMessages();
-  const unread = await getMyUnreadChatSummary();
-  // モード別ホーム遷移先（駐在員 → /expat、旅行者・未選択 → /explore）
-  const viewerMode = getViewerMode();
-  const homeHref = homePathFor(viewerMode ?? 'traveler');
-  // 検索 Sheet 廃止 (2026-05) に伴い、layout 側で国 / 地域リストを fetch する
-  // 必要は無くなった。新 /search ページが自分で fetch する。
-
   const fontVars = [
     notoSansJp.variable,
     inter.variable,
@@ -116,24 +120,26 @@ export default async function RootLayout({
   ].join(' ');
 
   return (
-    <html lang={locale} className={fontVars}>
+    <html lang={LOCALE} className={fontVars}>
       <body className="bg-background text-foreground min-h-screen antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          {/* HeaderShell が sticky / scroll-collapse / safe-area-top を担当 */}
-          <HeaderShell>
-            <SiteHeader />
-          </HeaderShell>
-          {/* モバイルは BottomNav (h-14) + safe-area-inset-bottom 分の余白を確保。
-              max-w-full + overflow-x-hidden で意図しない横スクロールを最終遮断。
-              md+ は BottomNav が消えるので padding 不要 (.app-main-pad 内で分岐)。 */}
-          <div className="app-main-pad min-h-[calc(100vh-180px)] max-w-full overflow-x-hidden">
-            {children}
-          </div>
-          <SiteFooter />
-          <BottomNav
-            unreadChatCount={unread.count}
-            homeHref={homeHref}
-          />
+        <NextIntlClientProvider locale={LOCALE} messages={jaMessages}>
+          {/* 認証 / 未読 / モードはここで一括取得し、ヘッダー・BottomNav に供給。
+              cookie 読み取りはクライアント (/api/me) に閉じ込め、レイアウト自体は
+              完全に静的に保つことで公開ページの Edge Cache を有効化する。 */}
+          <ViewerProvider>
+            {/* HeaderShell が sticky / scroll-collapse / safe-area-top を担当 */}
+            <HeaderShell>
+              <SiteHeader />
+            </HeaderShell>
+            {/* モバイルは BottomNav (h-14) + safe-area-inset-bottom 分の余白を確保。
+                max-w-full + overflow-x-hidden で意図しない横スクロールを最終遮断。
+                md+ は BottomNav が消えるので padding 不要 (.app-main-pad 内で分岐)。 */}
+            <div className="app-main-pad min-h-[calc(100vh-180px)] max-w-full overflow-x-hidden">
+              {children}
+            </div>
+            <SiteFooter />
+            <BottomNav />
+          </ViewerProvider>
           <Toaster
             position="bottom-center"
             offset={80}

@@ -1,11 +1,6 @@
 import Link from 'next/link';
 import { Search } from 'lucide-react';
-import { Button } from '@locore/ui';
-import { getCurrentUser } from '@/lib/auth/current-user';
-import { getMyUnreadChatSummary } from '@/lib/chat/unread';
-import { getViewerMode, homePathFor } from '@/lib/mode/cookie';
-import { UserMenu } from './auth/UserMenu';
-import { SideMenu } from './SideMenu';
+import { HeaderUserArea } from './HeaderUserArea';
 import { Logo } from './Logo';
 import { ServicesNavLink } from './nav/ServicesNavLink';
 import { ArticlesNavLink } from './nav/ArticlesNavLink';
@@ -26,15 +21,17 @@ import { ResidentsNavLink } from './nav/ResidentsNavLink';
  * (めり込み Sheet が分かりにくいというフィードバックを受けて 2026-05 改修)。
  *
  * 駐在員/旅行者のモード切替タブは UI から撤去 (cookie ベースの自動判定は維持)。
+ *
+ * 【2026-06 キャッシュ改修】
+ * 以前はここで getCurrentUser() / getViewerMode() / getMyUnreadChatSummary() を
+ * 呼んでいたが、これがルートレイアウト経由で全ページを動的レンダリング扱いにし、
+ * Vercel Edge Cache を 0% にしていた (Origin Data Transfer 暴騰の真因)。
+ * 認証依存パーツは HeaderUserArea (client, /api/me) に切り出し、本コンポーネントは
+ * cookie を一切読まない純粋な静的シェルにした。ホーム導線は cookie でモード分岐する
+ * 入口 `/` に集約する。
  */
-export async function SiteHeader() {
-  const [user, mode] = await Promise.all([
-    getCurrentUser(),
-    Promise.resolve(getViewerMode()),
-  ]);
-  const isWriter = user?.role === 'resident_writer' || user?.role === 'editor';
-  const unread = user ? await getMyUnreadChatSummary() : { count: 0, threadCount: 0 };
-  const homeHref = mode ? homePathFor(mode) : '/';
+export function SiteHeader() {
+  const homeHref = '/';
 
   return (
     <header className="w-full border-b border-border bg-background/85 backdrop-blur">
@@ -65,29 +62,7 @@ export async function SiteHeader() {
           </Link>
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
-          {user ? (
-            <UserMenu
-              user={{
-                email: user.email,
-                displayName: user.displayName,
-                avatarUrl: user.avatarUrl,
-                role: user.role,
-              }}
-            />
-          ) : (
-            <Button asChild variant="primary" size="sm">
-              <Link href="/auth/login">ログイン</Link>
-            </Button>
-          )}
-
-          <SideMenu
-            viewerLoggedIn={!!user}
-            isWriter={isWriter}
-            unreadChatCount={unread.count}
-            currentMode={mode}
-          />
-        </div>
+        <HeaderUserArea />
       </div>
     </header>
   );
