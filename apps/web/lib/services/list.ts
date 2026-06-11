@@ -93,9 +93,15 @@ export async function listServices(
       matchAudience,
       citySlug ? eq(schema.cities.slug, citySlug) : undefined,
       category ? eq(schema.userServices.category, category) : undefined,
-      // tags && ARRAY[...] (overlap) — どれか 1 つでもマッチすれば true
+      // tags && ARRAY[...] (overlap) — どれか 1 つでもマッチすれば true。
+      // 注意: `${jsArray}::text[]` だと postgres-js が配列を単一スカラーとして
+      // バインドし "malformed array literal" になる。各要素を個別パラメータに
+      // 展開した ARRAY[$1, $2, ...]::text[] を組み立てて回避する。
       filteredTags.length > 0
-        ? sql`${schema.userServices.tags} && ${filteredTags}::text[]`
+        ? sql`${schema.userServices.tags} && ARRAY[${sql.join(
+            filteredTags.map((t) => sql`${t}`),
+            sql`, `,
+          )}]::text[]`
         : undefined,
       trimmedQ
         ? or(
