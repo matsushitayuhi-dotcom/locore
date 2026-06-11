@@ -1,40 +1,101 @@
-import type { NextRequest } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
 /**
- * 全リクエストで Supabase セッションを refresh し、
- * 認証必須パス（/settings, /writer, /admin, /library, /become-writer）を保護する。
- * 静的アセット系は config.matcher で除外する。
+ * middleware の責務は 2 つ:
+ *
+ * 1. 【ボット遮断】robots.txt を無視してスクレイピングする AI / SEO クローラを
+ *    User-Agent で判定し、即 403 を返す。これらは Fast Data Transfer (エッジ→
+ *    クライアント帯域) を食い潰す主因。403 は ~1KB なので、48KB のページを返す
+ *    のに比べて転送量を ~98% 削減できる。NextResponse.next() で素通しする通常
+ *    リクエストは Set-Cookie しないため ISR エッジキャッシュはそのまま効く。
+ *
+ * 2. 【認証】保護パス (/settings, /writer 等) のみ Supabase セッションを refresh
+ *    し、未ログインなら /auth/login へリダイレクトする。公開ページは素通しして
+ *    キャッシュを最大化する。
  */
+
+// robots.txt を無視しがちで、かつ実トラフィック価値の無いクローラ群。
+// 正規の検索エンジン (Googlebot / Bingbot / DuckDuckBot 等) は含めない。
+const BLOCKED_UA = [
+  /GPTBot/i,
+  /ChatGPT-User/i,
+  /OAI-SearchBot/i,
+  /ClaudeBot/i,
+  /Claude-Web/i,
+  /anthropic-ai/i,
+  /CCBot/i,
+  /PerplexityBot/i,
+  /Perplexity-User/i,
+  /Bytespider/i,
+  /Amazonbot/i,
+  /Applebot-Extended/i,
+  /Diffbot/i,
+  /DataForSeoBot/i,
+  /MJ12bot/i,
+  /AhrefsBot/i,
+  /SemrushBot/i,
+  /DotBot/i,
+  /Meta-ExternalAgent/i,
+  /Meta-ExternalFetcher/i,
+  /FacebookBot/i,
+  /ImagesiftBot/i,
+  /Omgili/i,
+  /PetalBot/i,
+  /Webzio/i,
+  /YouBot/i,
+  /SeekportBot/i,
+  /SerpstatBot/i,
+  /MegaIndex/i,
+  /BLEXBot/i,
+  /ZoominfoBot/i,
+  /Scrapy/i,
+  /python-requests/i,
+  /Go-http-client/i,
+  /node-fetch/i,
+];
+
+const PROTECTED_PREFIXES = [
+  '/settings',
+  '/writer',
+  '/admin',
+  '/library',
+  '/become-writer',
+  '/purchases',
+  '/chat',
+  '/auth',
+];
+
 export async function middleware(request: NextRequest) {
-  return updateSession(request);
+  // 1. ボット遮断（最優先・最安）
+  const ua = request.headers.get('user-agent') ?? '';
+  if (ua && BLOCKED_UA.some((re) => re.test(ua))) {
+    return new NextResponse('Forbidden', {
+      status: 403,
+      headers: { 'cache-control': 'private, no-store' },
+    });
+  }
+
+  // 2. 認証が要るパスだけ Supabase セッション処理。公開ページは素通し
+  //    （Set-Cookie しないので ISR エッジキャッシュを保つ）。
+  const { pathname } = request.nextUrl;
+  const isProtected = PROTECTED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+  if (isProtected) {
+    return updateSession(request);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     /*
-     * 認証必須パス + 認証フロー + モード切替を含むユーザ操作系のみ。
-     *
-     * 公開一覧ページ (/jobs, /apartments, /services, /articles, /explore など) は
-     * Vercel Edge Cache (ISR) をフル活用させるため middleware から除外する。
-     * これらに middleware を通すと:
-     *   1) auth.getUser() 経由で Supabase へ毎リクエスト問い合わせ
-     *   2) locore_mode cookie の Set-Cookie で Edge Cache が完全バイパス
-     * → revalidate=300 が機能せず、Origin Data Transfer が爆発する。
-     *
-     * モード同期は Server Component 側の cookies() / 各ページの Layout で
-     * 処理する（Set-Cookie は ServerAction や ModeToggle クリック時にだけ発火）。
+     * 静的アセットを除く全パス。ボット遮断を全ページに効かせるため広めに取るが、
+     * 通常リクエストは UA チェック + next() のみで Set-Cookie しないため、
+     * 公開ページの ISR エッジキャッシュは維持される。
      */
-    '/settings/:path*',
-    '/writer/:path*',
-    '/admin/:path*',
-    '/library/:path*',
-    '/become-writer/:path*',
-    '/purchases/:path*',
-    '/chat/:path*',
-    '/auth/:path*',
-    // 各 Server Component の requireUser() / createServerClient() で
-    // 個別に認証チェックする方針。cron / webhook / 公開 API は
-    // それぞれ独自のチェックを持つので middleware は不要。
+    '/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|css|js|woff2?)$).*)',
   ],
 };

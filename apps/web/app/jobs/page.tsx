@@ -3,7 +3,7 @@ import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { listCommunityPosts } from '@/lib/community/db';
 import { getRegionsWithContent } from '@/lib/geo/region-content';
-import { JobsBrowser, type JobRegion } from './JobsBrowser';
+import { JobsBrowser, type JobRegion, type JobListPost } from './JobsBrowser';
 
 /**
  * /jobs — 求人一覧。
@@ -40,11 +40,45 @@ const CANDIDATE_REGIONS: JobRegion[] = [
   { slug: 'rennes', label: 'レンヌ' },
 ];
 
+// メタデータからカードで使うキーだけ抜き出す（payload 最小化）。
+const META_KEYS = [
+  'employment_type',
+  'category',
+  'language_requirements',
+  'remote_ok',
+  'audience',
+  'salary_period',
+  'region_slug',
+] as const;
+
 export default async function JobsIndexPage() {
-  const [posts, slugsWithContent] = await Promise.all([
-    listCommunityPosts({ kind: 'job', limit: 100 }),
+  const [rawPosts, slugsWithContent] = await Promise.all([
+    // カード表示に必要な分だけ。100→30 に削減し Fast Data Transfer を圧縮。
+    listCommunityPosts({ kind: 'job', limit: 30 }),
     getRegionsWithContent(),
   ]);
+
+  // body / author / contactEmail / viewCount など未使用フィールドを落とし、
+  // クライアントへ渡す JSON を最小化する。
+  const posts: JobListPost[] = rawPosts.map((p) => {
+    const m = (p.metadata ?? {}) as Record<string, unknown>;
+    const meta: Record<string, unknown> = {};
+    for (const k of META_KEYS) {
+      if (m[k] !== undefined) meta[k] = m[k];
+    }
+    return {
+      id: p.id,
+      title: p.title,
+      photo: p.photos?.[0] ?? null,
+      locationText: p.locationText,
+      priceAmount: p.priceAmount,
+      priceCurrency: p.priceCurrency,
+      priceUnit: p.priceUnit,
+      createdAt: p.createdAt,
+      expiresAt: p.expiresAt,
+      meta: meta as JobListPost['meta'],
+    };
+  });
 
   const regions = CANDIDATE_REGIONS.filter((r) => slugsWithContent.has(r.slug));
 

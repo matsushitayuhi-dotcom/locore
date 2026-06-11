@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { PostFab } from '@/components/community/PostFab';
-import type { CommunityPostListItem } from '@/lib/community/db';
 import {
   JOB_EMPLOYMENT_TYPES,
   JOB_EMPLOYMENT_TYPE_LABEL,
@@ -71,11 +70,28 @@ type JobMeta = {
   region_slug?: string;
 };
 
-function annualizedSalary(post: CommunityPostListItem): number | null {
+/**
+ * クライアントへ渡す求人 1 件のスリム表現。
+ * カードに表示しない body / author / contactEmail / viewCount 等は含めず、
+ * payload を最小化する（Fast Data Transfer 課金対策）。
+ */
+export type JobListPost = {
+  id: string;
+  title: string;
+  photo: string | null;
+  locationText: string | null;
+  priceAmount: number | null;
+  priceCurrency: string;
+  priceUnit: string | null;
+  createdAt: string;
+  expiresAt: string | null;
+  meta: JobMeta;
+};
+
+function annualizedSalary(post: JobListPost): number | null {
   const amount = post.priceAmount;
   if (!amount) return null;
-  const meta = post.metadata as JobMeta;
-  const period = meta.salary_period ?? post.priceUnit;
+  const period = post.meta.salary_period ?? post.priceUnit;
   switch (period) {
     case 'annual':
       return amount;
@@ -88,8 +104,8 @@ function annualizedSalary(post: CommunityPostListItem): number | null {
   }
 }
 
-function formatSalary(post: CommunityPostListItem): string | null {
-  const meta = post.metadata as JobMeta;
+function formatSalary(post: JobListPost): string | null {
+  const meta = post.meta;
   if (!post.priceAmount) {
     if (meta.salary_period === 'negotiable') return '応相談';
     return null;
@@ -188,7 +204,7 @@ export function JobsBrowser({
   posts,
   regions,
 }: {
-  posts: CommunityPostListItem[];
+  posts: JobListPost[];
   regions: JobRegion[];
 }) {
   const sp = useSearchParams();
@@ -225,7 +241,7 @@ export function JobsBrowser({
 
   const filtered = useMemo(() => {
     const out = posts.filter((p) => {
-      const meta = p.metadata as JobMeta;
+      const meta = p.meta;
       if (filters.region) {
         const rs = meta.region_slug;
         if (rs && rs !== filters.region) return false;
@@ -649,10 +665,10 @@ function SelectField({
   );
 }
 
-function JobListItem({ post }: { post: CommunityPostListItem }) {
-  const meta = post.metadata as JobMeta;
+function JobListItem({ post }: { post: JobListPost }) {
+  const meta = post.meta;
   const salary = formatSalary(post);
-  const hero = post.photos?.[0];
+  const hero = post.photo;
 
   return (
     <li>
@@ -723,13 +739,12 @@ function JobListItem({ post }: { post: CommunityPostListItem }) {
   );
 }
 
-function JobCard({ post }: { post: CommunityPostListItem }) {
-  const meta = post.metadata as JobMeta;
+function JobCard({ post }: { post: JobListPost }) {
+  const meta = post.meta;
   const salary = formatSalary(post);
   const expDays = daysUntil(post.expiresAt);
   const expiringSoon = expDays !== null && expDays >= 0 && expDays <= 3;
-  const photos = post.photos ?? [];
-  const cover = photos[0];
+  const cover = post.photo;
 
   return (
     <li>
