@@ -1,30 +1,22 @@
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { SearchX } from 'lucide-react';
+import { Suspense } from 'react';
 import { listServices, listAllTagsForServices } from '@/lib/services/list';
 import { getActiveCitiesForPicker } from '@/lib/geo/countries';
-import {
-  ServiceFilters,
-  type ServiceFiltersState,
-} from '@/components/services/ServiceFilters';
-import { ServiceCard } from '@/components/services/ServiceCard';
+import { ServicesBrowser } from './ServicesBrowser';
 
 /**
  * /services — サービス一覧（ブラウズ）。
  *
- * URL クエリ:
- *   - audience: 'all' | 'traveler' | 'resident'  (なし = all)
- *   - city: <city slug>
- *   - cat: <category key>
- *   - q: 検索ワード (title/description ILIKE)
- *   - min / max: 価格レンジ (JPY)
+ * 【2026-06 キャッシュ改修 / /jobs と同方針】
+ * このページは searchParams を一切読まない。サーバーは全アクティブサービス
+ * (最大 200) + 都市 + タグ一覧を取得して静的レンダリング (revalidate=300) し、
+ * フィルタは ServicesBrowser (client) が担う。これにより /services が静的化され、
+ * /services?tags=... 等のクエリ付き URL も CDN が同一キャッシュを返す
+ * (= クローラがタグリンクを総当たりしても Origin に到達しない)。
  *
- * - ISR (revalidate=60)
- * - 該当なしは空状態 UI
- * - グリッドは sm 2 / md 3 / lg 4 列
+ * 以前は searchParams をサーバーで読んでいたため Next.js が強制的に動的 (no-store)
+ * 化し、エッジキャッシュ 0% / Origin 直撃で課金が嵩んでいた。
  */
-
-export const revalidate = 60;
+export const revalidate = 300;
 
 export const metadata = {
   title: 'サービスを探す — Locore',
@@ -32,192 +24,25 @@ export const metadata = {
     '現地駐在員が提供する観光アテンド・通訳・相談・留学サポートなどのサービスを探せます。',
 };
 
-type Search = {
-  audience?: string;
-  city?: string;
-  cat?: string;
-  /** カンマ区切りタグ。複数選択 (overlap) でフィルタ。 */
-  tags?: string;
-  q?: string;
-  min?: string;
-  max?: string;
-};
-
-function parseTags(raw: string | undefined): string[] {
-  if (!raw) return [];
-  return raw
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
-}
-
-function parseAudience(v: string | undefined): 'all' | 'traveler' | 'resident' {
-  if (v === 'traveler' || v === 'resident') return v;
-  return 'all';
-}
-
-function parseInt(v: string | undefined): number | undefined {
-  if (v == null || v === '') return undefined;
-  const n = Number(v);
-  if (!Number.isFinite(n) || n < 0) return undefined;
-  return Math.floor(n);
-}
-
-// 既知の searchParams キー。Origin Data Transfer 課金抑制のため、未知キーや
-// 想定外の値が来たら canonical /services に 308 リダイレクトしてキャッシュ汚染を防ぐ。
-const ALLOWED_SERVICES_SEARCH_KEYS = new Set([
-  'audience',
-  'city',
-  'cat',
-  'tags',
-  'q',
-  'min',
-  'max',
-]);
-
-export default async function ServicesPage({
-  searchParams,
-}: {
-  searchParams?: Search;
-}) {
-  // ─── searchParams 衛生化 ────────────────────────────────────────
-  if (searchParams) {
-    const keys = Object.keys(searchParams);
-    if (keys.some((k) => !ALLOWED_SERVICES_SEARCH_KEYS.has(k))) {
-      redirect('/services');
-    }
-    // 価格レンジは 5,000 円刻みに丸める (任意整数で爆撃される対策)
-    for (const key of ['min', 'max'] as const) {
-      const raw = searchParams[key];
-      if (raw != null && raw !== '') {
-        const n = Number(raw);
-        if (!Number.isFinite(n) || n < 0 || n > 10_000_000 || n % 5000 !== 0) {
-          redirect('/services');
-        }
-      }
-    }
-    // 検索ワードは長すぎる/制御文字を弾く
-    if (searchParams.q && (searchParams.q.length > 60 || /[\x00-\x1f]/.test(searchParams.q))) {
-      redirect('/services');
-    }
-    // audience は all/traveler/resident のみ
-    if (
-      searchParams.audience &&
-      searchParams.audience !== 'all' &&
-      searchParams.audience !== 'traveler' &&
-      searchParams.audience !== 'resident'
-    ) {
-      redirect('/services');
-    }
-  }
-
-  const audience = parseAudience(searchParams?.audience);
-  const city = searchParams?.city?.trim() || undefined;
-  const cat = searchParams?.cat?.trim() || undefined;
-  const selectedTags = parseTags(searchParams?.tags);
-  const q = searchParams?.q?.trim() || undefined;
-  const min = parseInt(searchParams?.min);
-  const max = parseInt(searchParams?.max);
-
-  const [{ services, total }, cities, allTags] = await Promise.all([
-    listServices({
-      audience,
-      citySlug: city,
-      category: cat,
-      tags: selectedTags,
-      q,
-      minPrice: min,
-      maxPrice: max,
-      limit: 48,
-    }),
+export default async function ServicesPage() {
+  const [{ services }, cities, allTags] = await Promise.all([
+    listServices({ limit: 200 }),
     getActiveCitiesForPicker(),
     listAllTagsForServices(),
   ]);
 
-  const filtersState: ServiceFiltersState = {
-    audience,
-    city,
-    cat,
-    tags: selectedTags,
-    q,
-    min,
-    max,
-  };
-
   return (
     <main className="bg-background">
       <div className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6 sm:py-8">
-        {/* aria 用に sr-only の H1 のみ残す */}
-        <h1 className="sr-only">サービスから探す</h1>
-
-        <ServiceFilters state={filtersState} cities={cities} allTags={allTags} />
-
-        <div className="mt-3 flex items-baseline justify-between gap-2">
-          <p className="text-[12px] text-foreground/60">
-            {services.length === 0
-              ? '該当 0 件'
-              : `${total.toLocaleString('ja-JP')} 件中 ${services.length.toLocaleString('ja-JP')} 件を表示`}
-          </p>
-          {q ||
-          cat ||
-          city ||
-          audience !== 'all' ||
-          min != null ||
-          max != null ||
-          selectedTags.length > 0 ? (
-            <Link
-              href="/services"
-              className="text-[12px] font-semibold text-primary-300 hover:underline"
-            >
-              フィルタをクリア
-            </Link>
-          ) : null}
-        </div>
-
-        {services.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <ul
-            className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
-          >
-            {services.map((s) => (
-              <li key={s.id} className="h-full">
-                <ServiceCard service={s} />
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* useSearchParams を使うため Suspense で包む（静的プリレンダ境界） */}
+        <Suspense fallback={<div className="min-h-[50vh]" />}>
+          <ServicesBrowser
+            services={services}
+            cities={cities}
+            allTags={allTags}
+          />
+        </Suspense>
       </div>
     </main>
-  );
-}
-
-function EmptyState() {
-  return (
-    <section className="mt-6 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center">
-      <div className="rounded-full bg-muted p-3 text-foreground/50">
-        <SearchX className="h-6 w-6" aria-hidden />
-      </div>
-      <h2 className="text-[15px] font-semibold">該当するサービスがありません</h2>
-      <p className="max-w-md text-[12px] text-foreground/60">
-        条件を変えるか、別のカテゴリで探してみてください。
-        まだ Locore に登録されているサービスは少数なので、希望が無ければ
-        住人のプロフィールから直接相談することもできます。
-      </p>
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-        <Link
-          href="/services"
-          className="rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
-        >
-          フィルタをクリア
-        </Link>
-        <Link
-          href="/residents"
-          className="rounded-full bg-card px-4 py-2 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
-        >
-          住人を見る
-        </Link>
-      </div>
-    </section>
   );
 }
