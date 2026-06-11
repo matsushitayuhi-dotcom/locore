@@ -38,6 +38,8 @@ const BLOCKED_UA = [
   /DotBot/i,
   /Meta-ExternalAgent/i,
   /Meta-ExternalFetcher/i,
+  /meta-webindexer/i, // ← 実測の主犯 (137K req / 7.49GB)。Meta AI 検索インデクサ
+  /webindexer/i,
   /FacebookBot/i,
   /ImagesiftBot/i,
   /Omgili/i,
