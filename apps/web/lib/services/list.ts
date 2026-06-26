@@ -30,6 +30,8 @@ export type ServiceSort = 'newest' | 'price_asc' | 'price_desc';
 export type ListServicesOptions = {
   audience?: ServiceAudienceFilter;
   citySlug?: string;
+  /** ISO alpha-2 lowercase (例: 'fr')。指定すると cities→countries 経由で国で絞る。 */
+  countryCode?: string;
   category?: string;
   /** 複数タグ。指定された場合は tags && {tag1,tag2,...} (overlap) でフィルタ。
    *  空配列 / undefined はノーフィルタ。 */
@@ -53,6 +55,7 @@ export async function listServices(
   const {
     audience = 'all',
     citySlug,
+    countryCode,
     category,
     tags,
     q,
@@ -92,6 +95,7 @@ export async function listServices(
       isNull(schema.users.deletedAt),
       matchAudience,
       citySlug ? eq(schema.cities.slug, citySlug) : undefined,
+      countryCode ? eq(schema.countries.code, countryCode) : undefined,
       category ? eq(schema.userServices.category, category) : undefined,
       // tags && ARRAY[...] (overlap) — どれか 1 つでもマッチすれば true。
       // 注意: `${jsArray}::text[]` だと postgres-js が配列を単一スカラーとして
@@ -160,6 +164,10 @@ export async function listServices(
         schema.cities,
         eq(schema.cities.id, schema.userServices.cityId),
       )
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
+      )
       .where(where)
       .orderBy(...orderBy)
       .limit(limit)
@@ -176,6 +184,10 @@ export async function listServices(
       .leftJoin(
         schema.cities,
         eq(schema.cities.id, schema.userServices.cityId),
+      )
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
       )
       .where(where);
 
@@ -257,6 +269,10 @@ export async function listServicesByUserId(
       .leftJoin(
         schema.cities,
         eq(schema.cities.id, schema.userServices.cityId),
+      )
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
       )
       .where(
         and(

@@ -22,6 +22,7 @@ import type { Article, Writer, Spot, Review } from '@/lib/mock';
 export async function getPublishedDbArticles(
   limit = 50,
   regionSlug?: string,
+  countryCode?: string,
 ): Promise<Article[]> {
   let rows: Array<{
     id: string;
@@ -91,6 +92,7 @@ export async function getPublishedDbArticles(
           //   publishedAt が NULL のときは（過去データ互換のため）通す。
           sql`(${schema.articles.publishedAt} IS NULL OR ${schema.articles.publishedAt} <= NOW())`,
           regionSlug ? eq(schema.cities.slug, regionSlug) : sql`true`,
+          countryCode ? eq(schema.countries.code, countryCode) : sql`true`,
         ),
       )
       .orderBy(desc(schema.articles.publishedAt))
