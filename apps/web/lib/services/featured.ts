@@ -41,6 +41,9 @@ type Options = {
   limit?: number;
   /** 都市 slug で絞り込みたい場合（将来用） */
   citySlug?: string;
+  /** 国コード (ISO alpha-2 lowercase) で絞り込み。国別ランディング用。
+   *  指定すると city_id NULL のサービスは除外される（国が確定できないため）。 */
+  countryCode?: string;
 };
 
 export async function getFeaturedServices(
@@ -71,6 +74,7 @@ export async function getFeaturedServices(
       isNull(schema.users.deletedAt),
       matchAudience,
       opts.citySlug ? eq(schema.cities.slug, opts.citySlug) : undefined,
+      opts.countryCode ? eq(schema.countries.code, opts.countryCode) : undefined,
     );
 
     const rows = await db
@@ -102,6 +106,10 @@ export async function getFeaturedServices(
       .leftJoin(
         schema.cities,
         eq(schema.cities.id, schema.userServices.cityId),
+      )
+      .leftJoin(
+        schema.countries,
+        eq(schema.countries.id, schema.cities.countryId),
       )
       .where(baseWhere)
       .orderBy(

@@ -12,14 +12,48 @@ const SLUG_TO_CODE: Record<string, string> = {
   france: 'fr',
 };
 
+/**
+ * 既知スラッグの最小限の国情報（フォールバック）。
+ *
+ * 国別ページは revalidate + generateStaticParams で「ビルド時」に静的生成される。
+ * このとき getCountryByCode は DB を引くが、ビルド環境で DB に到達できないと
+ * null を返し、ページが notFound()（= 404 を静的に焼き込み）になってしまう。
+ * 一度 404 を焼くと revalidate ウィンドウのあいだ 404 が固定され、ランタイムで
+ * DB が復活しても 404 のままになる。
+ *
+ * 「対応している国かどうか」は SLUG_TO_CODE で確定しているので、DB 不通は
+ * 「ページを出さない理由」にはならない。DB が引けたらリッチな情報（regions・
+ * heroImageUrl 等）を使い、引けなければこの最小情報で必ずページを描画する。
+ * 記事・サービス・掲示板など DB 依存の中身は空表示にフォールバックし、
+ * revalidate 後のランタイム再生成で実データが埋まる。
+ */
+const FALLBACK_COUNTRY: Record<string, CountryDetail> = {
+  fr: {
+    code: 'fr',
+    nameJa: 'フランス',
+    nameEn: 'France',
+    continent: 'Europe',
+    status: 'active',
+    emoji: '🇫🇷',
+    heroImageUrl: null,
+    shortDescription: null,
+    regions: [],
+  },
+};
+
 /** 対応している国スラッグ一覧（generateStaticParams 用）。 */
 export const SUPPORTED_COUNTRY_SLUGS = Object.keys(SLUG_TO_CODE);
 
-/** スラッグから国情報を解決。未対応スラッグや該当国なしなら null。 */
+/**
+ * スラッグから国情報を解決。未対応スラッグなら null（= 正当な 404）。
+ * 対応スラッグなら DB を優先し、DB 不通時は最小フォールバックを返す
+ * （対応国を DB 都合で 404 にしないため）。
+ */
 export async function getCountryBySlug(
   slug: string,
 ): Promise<CountryDetail | null> {
   const code = SLUG_TO_CODE[slug.toLowerCase()];
   if (!code) return null;
-  return getCountryByCode(code);
+  const fromDb = await getCountryByCode(code);
+  return fromDb ?? FALLBACK_COUNTRY[code] ?? null;
 }

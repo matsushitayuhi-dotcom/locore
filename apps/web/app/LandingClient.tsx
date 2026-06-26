@@ -39,11 +39,10 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .nlogin{font-size:14px;font-weight:500;color:rgba(255,255,255,.86)}
 .nlogin:hover{color:#fff}
 
-.heroPin{position:relative;height:230vh;background:var(--bg)}
-.hero{position:sticky;top:0;height:100vh;overflow:hidden;background:#080a10;color:#fff;text-align:center}
+.hero{position:relative;min-height:100vh;overflow:hidden;background:#080a10;color:#fff;text-align:center;display:flex;align-items:center;justify-content:center}
 .hero-bg{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(14,16,26,.28),rgba(14,16,26,.42) 58%,rgba(14,16,26,.74)),url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1700&q=78') center/cover}
 .lp #net{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block}
-.hero-content{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:clamp(118px,14vh,168px) 32px 0;will-change:opacity}
+.hero-content{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:56px 32px 0}
 .hero h1{font-size:clamp(50px,8vw,100px);font-weight:800;margin:0 auto;max-width:13ch;color:#fff;text-shadow:0 6px 54px rgba(0,0,0,.5)}
 .hero h1 .lime{color:var(--lime)}
 .hero .lead{font-family:'JetBrains Mono',monospace;font-size:clamp(15px,1.6vw,18px);color:rgba(255,255,255,.82);max-width:600px;margin:32px auto 0;line-height:1.8}
@@ -52,8 +51,6 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .hero .btn:hover{background:rgba(255,255,255,.14)}
 .hero .btn.pri{background:var(--lime);border-color:var(--lime);color:#1c2a06}
 .hero .btn.pri:hover{background:#b6ec33}
-.hero-phone{position:absolute;left:50%;transform:translateX(-50%);top:clamp(480px,61vh,720px);z-index:4;will-change:transform}
-.hero-phone .device{width:300px;margin:0}
 
 .shot{position:relative;z-index:2;max-width:1000px;margin:92px auto 0;perspective:1700px}
 .frame{transform:rotateX(7deg);transform-origin:center top;border-radius:18px;border:1px solid var(--bd2);background:var(--white);box-shadow:0 70px 130px -40px rgba(0,0,0,.42),0 30px 60px -40px var(--glow);overflow:hidden}
@@ -246,7 +243,6 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
   <div class="nright"><a class="nlogin" href="/auth/login">ログイン</a><a class="btn pri" href="/auth/signup" style="padding:9px 18px;font-size:14px">無料ではじめる</a></div>
 </nav></div></div>
 
-<div class="heroPin">
 <header class="hero">
   <div class="hero-bg"></div>
   <canvas id="net"></canvas>
@@ -258,17 +254,7 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
       <a class="btn" href="/auth/login">ログイン</a>
     </div>
   </div>
-  <div class="hero-phone">
-    <div class="device">
-      <div class="dbody">
-        <div class="island"><span class="cam"></span></div>
-        <span class="dbtn dl1"></span><span class="dbtn dl2"></span><span class="dbtn dl3"></span><span class="dbtn dr1"></span>
-        <div class="dscreen"><img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=520&h=1120&q=80" alt="風景"></div>
-      </div>
-    </div>
-  </div>
 </header>
-</div>
 
 
 <div class="feats" id="feats"><div class="wrap">
@@ -435,27 +421,10 @@ export function LandingClient() {
     const io = new IntersectionObserver((entries) => { entries.forEach((e) => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add('reveal-in'); io.unobserve(e.target); } }); }, { root, threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
     els.forEach((el) => io.observe(el));
 
-    // nav darken on scroll + hero scroll-scrub (phone rises, hero fades, then scrolls away)
+    // nav: transparent over the hero, darkens once scrolled
     const navwrap = root.querySelector('.navwrap');
-    const heroPin = root.querySelector('.heroPin') as HTMLElement | null;
-    const heroPhone = root.querySelector('.hero-phone') as HTMLElement | null;
-    const heroContent = root.querySelector('.hero-content') as HTMLElement | null;
-    const heroBg = root.querySelector('.hero-bg') as HTMLElement | null;
-    const netEl = root.querySelector('#net') as HTMLElement | null;
     const onScroll = () => {
-      const st = root.scrollTop;
-      if (navwrap) navwrap.classList.toggle('scrolled', st > 14);
-      if (heroPin && heroPhone) {
-        const range = heroPin.offsetHeight - root.clientHeight;
-        const p = range > 0 ? Math.min(1, Math.max(0, st / range)) : 0;
-        const rise = Math.min(1, p / 0.55);
-        const ty = 20 + rise * -320;
-        heroPhone.style.transform = `translateX(-50%) translateY(${ty.toFixed(1)}px)`;
-        if (heroContent) heroContent.style.opacity = Math.max(0, 1 - p * 2.6).toFixed(3);
-        const bgo = Math.max(0, Math.min(1, 1 - (p - 0.42) * 2.4)).toFixed(3);
-        if (heroBg) heroBg.style.opacity = bgo;
-        if (netEl) netEl.style.opacity = bgo;
-      }
+      if (navwrap) navwrap.classList.toggle('scrolled', root.scrollTop > 14);
     };
     root.addEventListener('scroll', onScroll, { passive: true });
     onScroll();

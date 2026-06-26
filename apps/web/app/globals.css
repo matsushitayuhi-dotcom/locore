@@ -10,10 +10,10 @@
 @layer base {
   :root {
     --color-neutral-0:   #ffffff;
-    --color-neutral-25:  #fafaf7;
-    --color-neutral-50:  #f4f2ec;
-    --color-neutral-100: #e7e5e0;
-    --color-neutral-200: #c9c5bb;
+    --color-neutral-25:  #F4F4EF;
+    --color-neutral-50:  #ECECE4;
+    --color-neutral-100: #E7E7E0;
+    --color-neutral-200: #D8D8CF;
     --color-neutral-300: #a5a09a;
     --color-neutral-400: #837f78;
     --color-neutral-500: #71717a;
@@ -21,17 +21,18 @@
     --color-neutral-900: #18181b;
     --color-neutral-950: #0e0e0f;
 
-    /* Primary: Deloitte Green (2026-05 改修)。
-       Deloitte の #86BC25 (chartreuse / lime green) を primary-500 にした
-       黄緑トーン。背景・文字はモノクロを維持し、CTA・選択状態・ハイライトだけ
-       がビビッドに光る設計。過去の primary 系クラスは全て一括追従。 */
-    --color-primary-50:  #f3f9e1;
-    --color-primary-100: #e2f0b5;
-    --color-primary-200: #cbe583;
-    --color-primary-300: #a8d255;
-    --color-primary-500: #86BC25;
-    --color-primary-700: #5d8d0e;
-    --color-primary-900: #3d5e07;
+    /* Primary: Locore Lime (2026-06 改修)。
+       ランディングページの配色 (--lime #A8E01C / --lime-d #5E8B0E /
+       --lime-l #E3F7B8) をそのままサイト全体のパレットに昇格。背景・文字は
+       クリーム＋モノクロを維持し、CTA・選択状態・ハイライトだけがビビッドな
+       ライムで光る設計。過去の primary 系クラスは全て一括追従。 */
+    --color-primary-50:  #F5FBE2;
+    --color-primary-100: #E3F7B8;
+    --color-primary-200: #CDF088;
+    --color-primary-300: #B6E84E;
+    --color-primary-500: #A8E01C;
+    --color-primary-700: #5E8B0E;
+    --color-primary-900: #3D5E07;
 
     /* Secondary: グリーンに対するモノクロのバランサ */
     --color-secondary-50:  #f4f4f5;
@@ -39,11 +40,11 @@
     --color-secondary-500: #3f3f46;
     --color-secondary-700: #18181b;
 
-    /* Accent: Like / Save 用。primary グリーンの濃淡で揃える */
-    --color-accent-50:  #f3f9e1;
-    --color-accent-300: #5d8d0e;
-    --color-accent-500: #86BC25;
-    --color-accent-700: #3d5e07;
+    /* Accent: Like / Save 用。primary ライムの濃淡で揃える */
+    --color-accent-50:  #F5FBE2;
+    --color-accent-300: #5E8B0E;
+    --color-accent-500: #A8E01C;
+    --color-accent-700: #3D5E07;
 
     --color-success-50:  #dcfce7;
     --color-success-500: #15803d;
@@ -55,9 +56,9 @@
     --color-info-50:     #dbeafe;
     --color-info-500:    #2563eb;
 
-    --color-local-high: #86BC25;
-    --color-local-mid:  #cbe583;
-    --color-local-low:  #c9c5bb;
+    --color-local-high: #A8E01C;
+    --color-local-mid:  #CDF088;
+    --color-local-low:  #D8D8CF;
 
     --color-bg: var(--color-neutral-25);
     --color-surface: var(--color-neutral-0);

@@ -39,7 +39,7 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
   {
     featureType: 'administrative.locality',
     elementType: 'labels.text.fill',
-    stylers: [{ color: '#5d8d0e' }, { visibility: 'on' }],
+    stylers: [{ color: '#5E8B0E' }, { visibility: 'on' }],
   },
   {
     featureType: 'administrative.locality',
@@ -128,13 +128,13 @@ export const locoreMapStyles: google.maps.MapTypeStyle[] = [
  * ピンの色（local score に応じて切り替え）— Deloitte グリーン階調。
  * 地図ベースが薄いグレースケールなので、最もローカルなスポットだけ
  * ビビッドなグリーンで目立たせる。
- *   high   → #86BC25 (Deloitte chartreuse, primary-500)
- *   mid    → #A8D255 (primary-300, soft green)
+ *   high   → #A8E01C (Locore lime, primary-500)
+ *   mid    → #B6E84E (primary-300, soft lime)
  *   low    → #A1A1AA (zinc-400 muted)
  */
 export function pinColorForScore(score: number): string {
-  if (score >= 70) return '#86BC25';
-  if (score >= 30) return '#A8D255';
+  if (score >= 70) return '#A8E01C';
+  if (score >= 30) return '#B6E84E';
   return '#A1A1AA';
 }
 

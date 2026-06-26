@@ -37,6 +37,8 @@ export type ListOpts = {
   authorId?: string;
   /** city slug などで絞り込みたい場合は city_id で */
   cityId?: string;
+  /** 国コード (ISO alpha-2 lowercase, 例 'fr') で絞り込み。city→country 経由 */
+  countryCode?: string;
 };
 
 export async function listCommunityPosts(
@@ -52,6 +54,18 @@ export async function listCommunityPosts(
   }
   if (opts.cityId) {
     filters.push(eq(schema.communityPosts.cityId, opts.cityId));
+  }
+  if (opts.countryCode) {
+    // city_id → cities → countries.code でサブクエリ絞り込み。
+    // join を増やさず既存 SELECT 形をそのまま保てるよう IN (...) で表現。
+    filters.push(
+      sql`${schema.communityPosts.cityId} IN (
+        SELECT ${schema.cities.id} FROM ${schema.cities}
+        JOIN ${schema.countries}
+          ON ${schema.countries.id} = ${schema.cities.countryId}
+        WHERE ${schema.countries.code} = ${opts.countryCode}
+      )`,
+    );
   }
 
   // 基本 SELECT は contactEmail を含めて投げる。manual/0040 が未適用な
