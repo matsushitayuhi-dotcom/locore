@@ -56,6 +56,12 @@ export type ResidentProfileBundle = {
   residencyCity: string | null;
   arrivalYear: number | null;
   occupation: string | null;
+  /** プロフィールのヒーロー背景画像 URL。NULL = ネットワーク演出のみ */
+  coverImageUrl: string | null;
+  /** 「こんな相談に乗れます」= 提供できることの箇条書き */
+  offerings: string[];
+  /** ソーシャルリンク（sns_links）。登録があるものだけ表示 */
+  socialLinks: Array<{ platform: string; url: string }>;
   languages: Array<{ code: string; level: LanguageLevel }>;
   interests: string[];
   /** writer_profiles.tier (S/A/B) — 一般住人は null */
@@ -96,6 +102,8 @@ export async function getResidentProfile(
     residencyCity: string | null;
     arrivalYear: number | null;
     occupation: string | null;
+    coverImageUrl: string | null;
+    offerings: unknown;
     languages: unknown;
     interests: unknown;
     tier: 'S' | 'A' | 'B' | null;
@@ -117,6 +125,8 @@ export async function getResidentProfile(
         residencyCity: schema.users.residencyCity,
         arrivalYear: schema.users.arrivalYear,
         occupation: schema.users.occupation,
+        coverImageUrl: schema.users.coverImageUrl,
+        offerings: schema.users.offerings,
         languages: schema.users.languages,
         interests: schema.users.interests,
         tier: schema.writerProfiles.tier,
@@ -174,6 +184,8 @@ export async function getResidentProfile(
           residencyCity: null,
           arrivalYear: null,
           occupation: null,
+          coverImageUrl: null,
+          offerings: [],
           languages: [],
           interests: [],
           tier: (r.tier as 'S' | 'A' | 'B' | null) ?? null,
@@ -202,6 +214,25 @@ export async function getResidentProfile(
     isVerified = rows[0]?.status === 'approved';
   } catch {
     isVerified = false;
+  }
+
+  // ----- 2.5 ソーシャルリンク (sns_links) -----
+  let socialLinks: Array<{ platform: string; url: string }> = [];
+  try {
+    const rows = await db
+      .select({
+        platform: schema.snsLinks.platform,
+        url: schema.snsLinks.url,
+        createdAt: schema.snsLinks.createdAt,
+      })
+      .from(schema.snsLinks)
+      .where(eq(schema.snsLinks.userId, userId))
+      .orderBy(asc(schema.snsLinks.createdAt));
+    socialLinks = rows
+      .filter((r) => r.url)
+      .map((r) => ({ platform: r.platform as string, url: r.url }));
+  } catch {
+    socialLinks = [];
   }
 
   // ----- 3. 公開記事 -----
@@ -426,6 +457,9 @@ export async function getResidentProfile(
     residencyCity: u.residencyCity,
     arrivalYear: u.arrivalYear,
     occupation: u.occupation,
+    coverImageUrl: u.coverImageUrl ?? null,
+    offerings: (u.offerings ?? []) as string[],
+    socialLinks,
     languages: (u.languages ?? []) as Array<{
       code: string;
       level: LanguageLevel;

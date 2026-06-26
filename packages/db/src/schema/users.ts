@@ -111,6 +111,18 @@ export const users = pgTable(
     openToMeetups: boolean('open_to_meetups').notNull().default(false),
 
     /**
+     * プロフィールのヒーロー（ヘッダー）背景画像の Public URL。
+     * NULL = 未設定（表示側はライムのネットワーク演出にフォールバック）。
+     * manual/0056_resident_profile_social_cover.sql。
+     */
+    coverImageUrl: text('cover_image_url'),
+    /**
+     * 「こんな相談に乗れます」= 提供できることの箇条書き（フリーテキスト配列）。
+     * /residents/[id] の自己紹介セクションに表示。manual/0056。
+     */
+    offerings: jsonb('offerings').$type<string[]>().notNull().default([]),
+
+    /**
      * マーケットプレイス出品者の Stripe Connect Express account_id。
      * 詳細プロフィール（KYC 等）は seller_profiles テーブルに別途格納するが、
      * 「すぐ Connect 接続済みか判定したい」場面のためここにも持つ（denormalized）。

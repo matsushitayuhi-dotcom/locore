@@ -49,6 +49,11 @@ export const snsPlatformEnum = pgEnum('sns_platform', [
   'x',
   'threads',
   'blog',
+  // 2026-06 追加（manual/0056）。プロフィールのソーシャルアイコン拡充。
+  'facebook',
+  'note',
+  'website',
+  'email',
 ]);
 
 export const foundingStatusEnum = pgEnum('founding_status', [

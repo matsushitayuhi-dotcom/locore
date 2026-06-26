@@ -6,15 +6,29 @@ import { Button, Input } from '@locore/ui';
 import { Trash2 } from 'lucide-react';
 import { addSnsLink, deleteSnsLink } from '@/app/settings/profile/actions';
 
-type Platform = 'tiktok' | 'instagram' | 'youtube' | 'x' | 'threads' | 'blog';
+type Platform =
+  | 'tiktok'
+  | 'instagram'
+  | 'youtube'
+  | 'x'
+  | 'threads'
+  | 'blog'
+  | 'facebook'
+  | 'note'
+  | 'website'
+  | 'email';
 
 const PLATFORMS: { value: Platform; label: string }[] = [
-  { value: 'tiktok', label: 'TikTok' },
   { value: 'instagram', label: 'Instagram' },
-  { value: 'youtube', label: 'YouTube' },
   { value: 'x', label: 'X' },
   { value: 'threads', label: 'Threads' },
+  { value: 'note', label: 'note' },
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'facebook', label: 'Facebook' },
   { value: 'blog', label: 'Blog' },
+  { value: 'website', label: 'Website' },
+  { value: 'email', label: 'メール' },
 ];
 
 type SnsRow = { id: string; platform: Platform; url: string };

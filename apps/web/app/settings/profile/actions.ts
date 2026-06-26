@@ -22,6 +22,10 @@ const SNS_PLATFORMS = [
   'x',
   'threads',
   'blog',
+  'facebook',
+  'note',
+  'website',
+  'email',
 ] as const;
 type SnsPlatform = (typeof SNS_PLATFORMS)[number];
 
@@ -130,6 +134,15 @@ const updateResidentProfileSchema = z.object({
     .optional()
     .or(z.literal('').transform(() => undefined)),
   occupation: optionalText(80),
+  coverImageUrl: z
+    .string()
+    .trim()
+    .max(2048)
+    .url()
+    .optional()
+    .or(z.literal('').transform(() => undefined))
+    .or(z.null().transform(() => undefined)),
+  offerings: z.array(z.string().trim().min(1).max(120)).max(8).default([]),
   languages: z.array(languageSchema).max(8).default([]),
   interests: z.array(z.string().trim().min(1).max(30)).max(20).default([]),
   lookingFor: z.array(z.string().trim().min(1).max(30)).max(10).default([]),
@@ -161,6 +174,8 @@ export async function updateResidentProfile(
       arrivalYear: data.arrivalYear ?? null,
       familyStage: data.familyStage ?? null,
       occupation: data.occupation ?? null,
+      coverImageUrl: data.coverImageUrl ?? null,
+      offerings: data.offerings,
       languages: data.languages,
       interests: data.interests,
       lookingFor: data.lookingFor,
@@ -171,6 +186,7 @@ export async function updateResidentProfile(
 
   revalidatePath('/settings/profile');
   revalidatePath(`/writers/${user.id}`);
+  revalidatePath(`/residents/${user.id}`);
   revalidatePath('/residents');
   return { ok: true };
 }

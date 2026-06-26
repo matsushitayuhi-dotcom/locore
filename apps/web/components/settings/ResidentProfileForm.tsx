@@ -42,6 +42,8 @@ type Props = {
     arrivalYear: number | null;
     familyStage: FamilyStage | '';
     occupation: string;
+    coverImageUrl: string;
+    offerings: string[];
     languages: Lang[];
     interests: string[];
     lookingFor: string[];
@@ -75,12 +77,15 @@ export function ResidentProfileForm({ initial }: Props) {
     initial.familyStage,
   );
   const [occupation, setOccupation] = useState(initial.occupation);
+  const [coverImageUrl, setCoverImageUrl] = useState(initial.coverImageUrl);
+  const [offerings, setOfferings] = useState<string[]>(initial.offerings);
   const [languages, setLanguages] = useState<Lang[]>(initial.languages);
   const [interests, setInterests] = useState<string[]>(initial.interests);
   const [lookingFor, setLookingFor] = useState<string[]>(initial.lookingFor);
   const [openToMeetups, setOpenToMeetups] = useState(initial.openToMeetups);
   const [interestDraft, setInterestDraft] = useState('');
   const [lookingForDraft, setLookingForDraft] = useState('');
+  const [offeringDraft, setOfferingDraft] = useState('');
   const [isPending, startTransition] = useTransition();
 
   const toggleInterest = (tag: string) => {
@@ -106,6 +111,14 @@ export function ResidentProfileForm({ initial }: Props) {
     setLookingFor([...lookingFor, v]);
     setLookingForDraft('');
   };
+  const addOffering = () => {
+    const v = offeringDraft.trim();
+    if (!v || offerings.includes(v) || offerings.length >= 8) return;
+    setOfferings([...offerings, v]);
+    setOfferingDraft('');
+  };
+  const toggleOffering = (tag: string) =>
+    setOfferings((prev) => prev.filter((t) => t !== tag));
 
   const addLanguage = (code: string) => {
     if (languages.some((l) => l.code === code)) return;
@@ -132,6 +145,8 @@ export function ResidentProfileForm({ initial }: Props) {
         arrivalYear: yearBucket === '' ? undefined : arrivalYearFromBucket(yearBucket),
         familyStage: familyStage || undefined,
         occupation: occupation || undefined,
+        coverImageUrl: coverImageUrl || undefined,
+        offerings,
         languages,
         interests,
         lookingFor,
@@ -265,10 +280,44 @@ export function ResidentProfileForm({ initial }: Props) {
         <Input
           value={occupation}
           onChange={(e) => setOccupation(e.target.value)}
-          placeholder="例: IT エンジニア / 飲食 / 教育 / 駐在帯同"
+          placeholder="例: ヴィンテージバイヤー / スタイリスト"
           maxLength={80}
         />
+        <p className="mt-1 text-[11px] text-foreground/55">
+          プロフィール上部に大きく表示されます。
+        </p>
       </div>
+
+      {/* ヘッダー画像 */}
+      <div>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+          ヘッダー画像（URL）
+        </label>
+        <Input
+          value={coverImageUrl}
+          onChange={(e) => setCoverImageUrl(e.target.value)}
+          placeholder="https://… プロフィール上部の背景写真"
+          maxLength={2048}
+          type="url"
+        />
+        <p className="mt-1 text-[11px] text-foreground/55">
+          プロフィールのヒーロー背景になります。未設定でもライムのネットワーク演出が表示されます。
+        </p>
+      </div>
+
+      {/* こんな相談に乗れます */}
+      <TagPicker
+        label="こんな相談に乗れます"
+        helper="提供できることを短い文で。タグより具体的に書くほど相談につながります（最大 8 個）。"
+        presets={[]}
+        selected={offerings}
+        onToggle={toggleOffering}
+        draft={offeringDraft}
+        setDraft={setOfferingDraft}
+        onAdd={addOffering}
+        limit={8}
+        maxInputLen={120}
+      />
 
       {/* 言語 */}
       <div>
@@ -388,6 +437,7 @@ function TagPicker({
   setDraft,
   onAdd,
   limit,
+  maxInputLen = 30,
 }: {
   label: string;
   helper: string;
@@ -398,6 +448,7 @@ function TagPicker({
   setDraft: (v: string) => void;
   onAdd: () => void;
   limit: number;
+  maxInputLen?: number;
 }) {
   return (
     <div>
@@ -440,7 +491,7 @@ function TagPicker({
               onAdd();
             }
           }}
-          maxLength={30}
+          maxLength={maxInputLen}
           placeholder="自由追加（Enter で確定）"
           className="h-8 flex-1 rounded-sm border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
         />

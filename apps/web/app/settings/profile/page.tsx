@@ -35,6 +35,8 @@ export default async function ProfileSettingsPage() {
         arrivalYear: schema.users.arrivalYear,
         familyStage: schema.users.familyStage,
         occupation: schema.users.occupation,
+        coverImageUrl: schema.users.coverImageUrl,
+        offerings: schema.users.offerings,
         languages: schema.users.languages,
         interests: schema.users.interests,
         lookingFor: schema.users.lookingFor,
@@ -72,6 +74,8 @@ export default async function ProfileSettingsPage() {
           arrivalYear: me?.arrivalYear ?? null,
           familyStage: (me?.familyStage as FamilyStage | null) ?? '',
           occupation: me?.occupation ?? '',
+          coverImageUrl: me?.coverImageUrl ?? '',
+          offerings: (me?.offerings ?? []) as string[],
           languages: (me?.languages ?? []) as Array<{
             code: string;
             level: LanguageLevel;
