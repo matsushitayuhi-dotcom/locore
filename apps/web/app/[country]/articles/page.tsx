@@ -1,11 +1,9 @@
-import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { FeedFilters } from '@/components/FeedFilters';
 import { FloatingMapButton } from '@/components/FloatingMapButton';
+import { ArticleJournal } from '@/components/articles/ArticleJournal';
 import { getPublishedDbArticles } from '@/lib/articles/published';
-import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getCountryBySlug, SUPPORTED_COUNTRY_SLUGS } from '@/lib/geo/countrySlug';
 
 export const revalidate = 300;
@@ -31,27 +29,20 @@ export default async function CountryArticlesPage({ params }: Props) {
   if (!country) notFound();
 
   const articles = await getPublishedDbArticles(200, undefined, country.code);
-  const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
 
   return (
-    <main className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6 sm:py-8">
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <main className="mx-auto max-w-screen-xl px-4 py-4 sm:px-6 sm:py-6">
+      <div className="mb-2">
         <Link
           href={`/${params.country}/community`}
-          className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
+          className="inline-flex items-center gap-1 font-mono text-[12px] font-medium text-primary-700 hover:underline"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           {country.nameJa}トップ
         </Link>
       </div>
 
-      <h1 className="mb-4 text-[20px] font-bold leading-tight tracking-tight sm:text-[24px]">
-        {country.nameJa}の記事
-      </h1>
-
-      <Suspense fallback={<div className="min-h-[50vh]" />}>
-        <FeedFilters articles={articles} socialCounts={socialCounts} />
-      </Suspense>
+      <ArticleJournal articles={articles} moreHref="/articles" />
 
       <FloatingMapButton />
     </main>
