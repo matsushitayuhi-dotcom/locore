@@ -17,6 +17,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .lp{position:fixed;inset:0;z-index:100;box-sizing:border-box;overflow-y:auto;overflow-x:hidden;background:var(--bg);color:var(--ink);font-family:'Noto Sans JP','Space Grotesk',sans-serif;line-height:1.7;scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 .lp h1,.lp h2,.lp h3,.lp .disp{font-family:'Space Grotesk','Noto Sans JP',sans-serif;font-weight:700;letter-spacing:-.022em;line-height:1.08}
 .lp a{color:inherit;text-decoration:none}
+.lp h1,.lp h2,.lp h3,.lp p{word-break:auto-phrase}
 .mono{font-family:'JetBrains Mono',monospace}
 .wrap{max-width:1180px;margin:0 auto;padding:0 32px}
 .btn{display:inline-flex;align-items:center;gap:9px;padding:15px 28px;border-radius:999px;font-size:15px;font-weight:700;font-family:'Space Grotesk','Noto Sans JP';border:2px solid var(--ink);transition:.18s;background:transparent;color:var(--ink);cursor:pointer}
@@ -25,20 +26,24 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .btn.pri:hover{box-shadow:0 16px 36px -8px var(--glow)}
 .klabel{font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;color:var(--lime-d);text-transform:uppercase}
 
-.navwrap{position:sticky;top:20px;z-index:60}
-.lp nav{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px;padding:0 12px 0 24px;background:rgba(255,255,255,.74);backdrop-filter:blur(16px);border:1px solid var(--bd);border-radius:999px;box-shadow:0 12px 34px -18px rgba(0,0,0,.22)}
+.navwrap{position:sticky;top:0;z-index:60;border-bottom:1px solid transparent;transition:background .35s ease,border-color .35s ease}
+.navwrap.scrolled{background:rgba(11,13,19,.82);backdrop-filter:blur(14px);border-bottom-color:rgba(255,255,255,.09)}
+.lp nav{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:72px;padding:0 24px;background:transparent;border:none;border-radius:0;box-shadow:none}
 .logo{display:flex;align-items:center;gap:8px;font-family:'Space Grotesk';font-weight:700;font-size:22px}
 .logo b{color:var(--lime-d)}
-.nlinks{display:flex;gap:30px;font-size:14px;color:var(--ink2);font-weight:500}
-.nlinks a:hover{color:var(--lime-d)}
+.navwrap .logo{color:#fff}
+.navwrap .logo b{color:var(--lime)}
+.nlinks{display:flex;gap:30px;font-size:14px;color:rgba(255,255,255,.86);font-weight:500}
+.nlinks a:hover{color:#fff}
 .nright{display:flex;align-items:center;gap:18px}
-.nlogin{font-size:14px;font-weight:500;color:var(--ink2)}
-.nlogin:hover{color:var(--lime-d)}
+.nlogin{font-size:14px;font-weight:500;color:rgba(255,255,255,.86)}
+.nlogin:hover{color:#fff}
 
-.hero{position:relative;min-height:100vh;overflow:hidden;background:#080a10;color:#fff;text-align:center}
+.heroPin{position:relative;height:230vh;background:var(--bg)}
+.hero{position:sticky;top:0;height:100vh;overflow:hidden;background:#080a10;color:#fff;text-align:center}
 .hero-bg{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(14,16,26,.28),rgba(14,16,26,.42) 58%,rgba(14,16,26,.74)),url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1700&q=78') center/cover}
 .lp #net{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block}
-.hero-content{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:clamp(116px,16vh,196px) 32px 0}
+.hero-content{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:clamp(118px,14vh,168px) 32px 0;will-change:opacity}
 .hero h1{font-size:clamp(50px,8vw,100px);font-weight:800;margin:0 auto;max-width:13ch;color:#fff;text-shadow:0 6px 54px rgba(0,0,0,.5)}
 .hero h1 .lime{color:var(--lime)}
 .hero .lead{font-family:'JetBrains Mono',monospace;font-size:clamp(15px,1.6vw,18px);color:rgba(255,255,255,.82);max-width:600px;margin:32px auto 0;line-height:1.8}
@@ -47,7 +52,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .hero .btn:hover{background:rgba(255,255,255,.14)}
 .hero .btn.pri{background:var(--lime);border-color:var(--lime);color:#1c2a06}
 .hero .btn.pri:hover{background:#b6ec33}
-.hero-phone{position:absolute;left:50%;transform:translateX(-50%);top:clamp(430px,55vh,640px);z-index:4}
+.hero-phone{position:absolute;left:50%;transform:translateX(-50%);top:clamp(480px,61vh,720px);z-index:4;will-change:transform}
 .hero-phone .device{width:300px;margin:0}
 
 .shot{position:relative;z-index:2;max-width:1000px;margin:92px auto 0;perspective:1700px}
@@ -203,13 +208,10 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .lp #global{background:#FAFAF6}
 .lp #people{background:#ECEDE3}
 .lp #start{background:#F8F8F3}
-/* pinned statement (scroll pause) */
-.stmt{position:relative;height:185vh;background:#0d0f15;color:#fff}
-.stmt-pin{position:sticky;top:0;height:100vh;display:flex;align-items:center;justify-content:center;padding:0 28px;text-align:center;overflow:hidden}
-.stmt-glow{position:absolute;width:680px;height:680px;border-radius:50%;background:var(--lime);filter:blur(150px);opacity:.16;top:50%;left:50%;transform:translate(-50%,-50%)}
-.stmt-kal{display:block;font-family:'JetBrains Mono';font-size:12px;letter-spacing:.22em;color:var(--lime);text-transform:uppercase;font-weight:400;margin-bottom:26px}
-.stmt-inner{position:relative;z-index:2;font-family:'Space Grotesk','Noto Sans JP';font-weight:800;font-size:clamp(30px,5.2vw,66px);line-height:1.32;letter-spacing:-.02em;max-width:18ch}
-.stmt-inner .lime{color:var(--lime)}
+/* one big growing stat */
+.bigstat{text-align:center;padding:26px 0 0}
+.bigstat-n{font-family:'Space Grotesk';font-weight:800;font-size:clamp(110px,20vw,240px);line-height:.92;letter-spacing:-.045em;color:var(--lime-d)}
+.bigstat-l{font-family:'JetBrains Mono';font-size:clamp(13px,1.7vw,16px);letter-spacing:.08em;color:var(--mu);margin-top:10px}
 /* final CTA (lime finale) */
 .finalcta{background:var(--lime);color:#1b2a06;text-align:center;padding:clamp(90px,14vh,150px) 24px}
 .finalcta h2{font-size:clamp(36px,5.4vw,68px);font-weight:800;letter-spacing:-.02em}
@@ -244,6 +246,7 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
   <div class="nright"><a class="nlogin" href="/auth/login">ログイン</a><a class="btn pri" href="/auth/signup" style="padding:9px 18px;font-size:14px">無料ではじめる</a></div>
 </nav></div></div>
 
+<div class="heroPin">
 <header class="hero">
   <div class="hero-bg"></div>
   <canvas id="net"></canvas>
@@ -265,6 +268,7 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
     </div>
   </div>
 </header>
+</div>
 
 
 <div class="feats" id="feats"><div class="wrap">
@@ -344,13 +348,8 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
 </div></div>
 
 <section id="global"><div class="wrap">
-  <div class="shead"><div class="klabel">[ Global by default ]</div><h2>世界中の街に、現地の仲間を</h2><p>まずフランス全土から。住んでいる人がいる街を、ひとつずつ増やしています。</p></div>
-  <div class="stats">
-    <div class="stat"><div class="n">320</div><div class="l">いま、つながれる人</div></div>
-    <div class="stat"><div class="n">28</div><div class="l">対応都市</div></div>
-    <div class="stat"><div class="n">1,200<em>+</em></div><div class="l">現地からの投稿</div></div>
-    <div class="stat"><div class="n">480</div><div class="l">頼めるサービス</div></div>
-  </div>
+  <div class="shead"><div class="klabel">[ Growing together ]</div><h2>みんなで育てる、<br>成長中のプラットフォーム</h2><p>住んでいる人が増えるほど、つながれる街も広がっていく。あなたの一歩が、次に来る誰かの道しるべに。</p></div>
+  <div class="bigstat"><div class="bigstat-n" data-count="28">0</div><div class="bigstat-l">対応都市 ・ ただいま拡大中</div></div>
   <div class="tmarq"><div class="ttrack" id="tcities"></div></div>
 </div></section>
 
@@ -369,11 +368,6 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
     <div class="fchevs"><svg viewBox="0 0 24 13"><path class="inka" d="M4 4 L12 10 L20 4"/></svg><svg viewBox="0 0 24 13"><path class="inka" d="M4 4 L12 10 L20 4"/></svg><svg viewBox="0 0 24 13"><path class="inka" d="M4 4 L12 10 L20 4"/></svg></div>
     <div class="fstep"><div class="fnode">03</div><div class="fbody"><h3>話しかけてみる</h3><p>チャットで相談、案内をお願い。もちろん自分が発信者になるのもOK！</p></div></div>
   </div>
-</div></section>
-
-<section class="stmt"><div class="stmt-pin">
-  <div class="stmt-glow"></div>
-  <p class="stmt-inner">旅する人も、暮らす人も。<br><span class="lime">ここでは、みんな「現地とつながる人」。</span></p>
 </div></section>
 
 <section class="finalcta">
@@ -436,12 +430,66 @@ export function LandingClient() {
       window.addEventListener('resize', rs);
     }
 
-    const els = Array.from(root.querySelectorAll('.feat,.shead,.stat,.step,.stmt-inner')) as HTMLElement[];
+    const els = Array.from(root.querySelectorAll('.feat,.shead,.step,.bigstat')) as HTMLElement[];
     els.forEach((el) => el.classList.add('reveal-init'));
     const io = new IntersectionObserver((entries) => { entries.forEach((e) => { if (e.isIntersecting) { (e.target as HTMLElement).classList.add('reveal-in'); io.unobserve(e.target); } }); }, { root, threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
     els.forEach((el) => io.observe(el));
 
-    return () => { if (raf) cancelAnimationFrame(raf); if (resizeHandler) window.removeEventListener('resize', resizeHandler); io.disconnect(); };
+    // nav darken on scroll + hero scroll-scrub (phone rises, hero fades, then scrolls away)
+    const navwrap = root.querySelector('.navwrap');
+    const heroPin = root.querySelector('.heroPin') as HTMLElement | null;
+    const heroPhone = root.querySelector('.hero-phone') as HTMLElement | null;
+    const heroContent = root.querySelector('.hero-content') as HTMLElement | null;
+    const heroBg = root.querySelector('.hero-bg') as HTMLElement | null;
+    const netEl = root.querySelector('#net') as HTMLElement | null;
+    const onScroll = () => {
+      const st = root.scrollTop;
+      if (navwrap) navwrap.classList.toggle('scrolled', st > 14);
+      if (heroPin && heroPhone) {
+        const range = heroPin.offsetHeight - root.clientHeight;
+        const p = range > 0 ? Math.min(1, Math.max(0, st / range)) : 0;
+        const rise = Math.min(1, p / 0.55);
+        const ty = 20 + rise * -320;
+        heroPhone.style.transform = `translateX(-50%) translateY(${ty.toFixed(1)}px)`;
+        if (heroContent) heroContent.style.opacity = Math.max(0, 1 - p * 2.6).toFixed(3);
+        const bgo = Math.max(0, Math.min(1, 1 - (p - 0.42) * 2.4)).toFixed(3);
+        if (heroBg) heroBg.style.opacity = bgo;
+        if (netEl) netEl.style.opacity = bgo;
+      }
+    };
+    root.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // count-up for the one big stat
+    let countIo: IntersectionObserver | null = null;
+    const bigN = root.querySelector('.bigstat-n') as HTMLElement | null;
+    if (bigN) {
+      const target = parseInt(bigN.getAttribute('data-count') || '0', 10);
+      countIo = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const dur = 1500;
+          let start = 0;
+          const stepFn = (now: number) => {
+            if (!start) start = now;
+            const k = Math.min(1, (now - start) / dur);
+            bigN.textContent = String(Math.round(target * (1 - Math.pow(1 - k, 3))));
+            if (k < 1) requestAnimationFrame(stepFn);
+          };
+          requestAnimationFrame(stepFn);
+          countIo?.unobserve(e.target);
+        });
+      }, { root, threshold: 0.5 });
+      countIo.observe(bigN);
+    }
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+      root.removeEventListener('scroll', onScroll);
+      io.disconnect();
+      if (countIo) countIo.disconnect();
+    };
   }, []);
 
   return (
