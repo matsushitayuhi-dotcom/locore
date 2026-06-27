@@ -13,13 +13,16 @@ import {
   GraduationCap,
   HandHelping,
   Megaphone,
+  CalendarDays,
   type LucideIcon,
 } from 'lucide-react';
 import { ArticleScrollSection } from '@/components/ArticleScrollSection';
 import { ServiceCarousel } from '@/components/services/ServiceCarousel';
+import { BoardWidget } from '@/components/BoardWidget';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getFeaturedServices } from '@/lib/services/featured';
+import { listBoardPosts } from '@/lib/board/db';
 import { getCountryBySlug, SUPPORTED_COUNTRY_SLUGS } from '@/lib/geo/countrySlug';
 import {
   COMMUNITY_KINDS,
@@ -75,9 +78,10 @@ export default async function CountryHubPage({ params }: Props) {
   const articlesHref = `/articles?country=${code}`;
   const servicesHref = `/services?country=${code}`;
 
-  const [articles, services] = await Promise.all([
+  const [articles, services, boardPosts] = await Promise.all([
     getPublishedDbArticles(13, undefined, code),
     getFeaturedServices({ audience: 'resident', limit: 13, countryCode: code }),
+    listBoardPosts({ limit: 30 }),
   ]);
   const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
 
@@ -87,10 +91,27 @@ export default async function CountryHubPage({ params }: Props) {
   const restServices = services.slice(1);
   const pickupServiceTag = pickupService?.tags[0];
 
+  // board（新着）と近日のイベント。イベントは eventStartDate がある投稿のうち
+  // 今日以降を日付昇順で。
+  const news = boardPosts.slice(0, 5);
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const upcomingEvents = boardPosts
+    .filter((p) => {
+      const d = p.eventStartDate ?? p.eventDate;
+      return d != null && d.slice(0, 10) >= todayISO;
+    })
+    .sort((a, b) => {
+      const da = (a.eventStartDate ?? a.eventDate)!;
+      const db = (b.eventStartDate ?? b.eventDate)!;
+      return da < db ? -1 : 1;
+    })
+    .slice(0, 4);
+
   const nav = [
     { href: articlesHref, label: '記事', icon: Newspaper },
     { href: servicesHref, label: 'サービス', icon: Sparkles },
     { href: '#community', label: 'コミュニティ', icon: Users },
+    { href: '#news', label: '新着・イベント', icon: CalendarDays },
   ];
 
   return (
@@ -259,6 +280,79 @@ export default async function CountryHubPage({ params }: Props) {
                 在住者どうしの新着ニュース・お知らせ・ちょっとした相談。
               </p>
             </Link>
+          </div>
+        </section>
+
+        {/* 新着・お知らせ（board）＋ 近日のイベント（calendar 機能をここに移行） */}
+        <section id="news" className="scroll-mt-20 space-y-5">
+          <header className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-700">
+              News &amp; Events
+            </p>
+            <h2 className="mt-1 text-[20px] font-bold tracking-tight sm:text-[26px]">
+              {country.nameJa}の新着・イベント
+            </h2>
+          </header>
+
+          <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+            {/* 新着ニュース */}
+            <BoardWidget posts={news} allHref="/board" calendarHref="/calendar" />
+
+            {/* 近日のイベント */}
+            <div className="rounded-2xl bg-card p-5 ring-1 ring-border">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="flex items-center gap-1.5 text-[14px] font-bold">
+                  <CalendarDays className="h-4 w-4 text-primary-700" />
+                  近日のイベント
+                </h3>
+                <Link
+                  href="/calendar"
+                  className="text-[12px] font-semibold text-primary-700 hover:underline"
+                >
+                  カレンダー →
+                </Link>
+              </div>
+              {upcomingEvents.length > 0 ? (
+                <ul className="space-y-2">
+                  {upcomingEvents.map((e) => {
+                    const d = (e.eventStartDate ?? e.eventDate)!;
+                    const dt = new Date(d);
+                    const label = Number.isNaN(dt.getTime())
+                      ? ''
+                      : `${dt.getMonth() + 1}/${dt.getDate()}`;
+                    return (
+                      <li key={e.id}>
+                        <Link
+                          href={`/board/${e.id}`}
+                          className="flex items-start gap-3 rounded-lg p-2 transition hover:bg-primary-500/5"
+                        >
+                          <span className="mt-0.5 inline-flex h-9 w-12 flex-none flex-col items-center justify-center rounded-md bg-primary-500/10 text-primary-700">
+                            <span className="font-mono text-[12px] font-bold leading-none tabular">
+                              {label}
+                            </span>
+                          </span>
+                          <span className="min-w-0">
+                            <span className="line-clamp-1 text-[13px] font-semibold">
+                              {e.title}
+                            </span>
+                            {e.eventLocation ? (
+                              <span className="mt-0.5 flex items-center gap-1 text-[11px] text-foreground/55">
+                                <MapPin className="h-3 w-3" />
+                                {e.eventLocation}
+                              </span>
+                            ) : null}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="py-6 text-center text-[12px] text-foreground/55">
+                  予定されているイベントはまだありません。
+                </p>
+              )}
+            </div>
           </div>
         </section>
       </div>
