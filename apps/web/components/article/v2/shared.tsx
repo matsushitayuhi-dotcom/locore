@@ -64,13 +64,15 @@ export function fmtDate(iso?: string | null): string {
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
-/** 著者メタ「◯◯ 在住 N年 · 駐在員 X」。クレジット式は出さない（spec §7）。 */
+/**
+ * 著者メタ「◯◯ 在住 N年」。中立表現（「駐在員 X」のティア表記は出さない）。
+ * クレジット式は出さない（spec §7）。
+ */
 export function authorMeta(writer: Writer): string {
   const parts: string[] = [];
   if (writer.city) parts.push(`${writer.city} 在住`);
   if (writer.residencyYears) parts.push(`${writer.residencyYears}年`);
-  const head = parts.join(' ');
-  return writer.tier ? `${head} · 駐在員 ${writer.tier}` : head;
+  return parts.join(' ');
 }
 
 /* ===================== reveal フック ===================== */

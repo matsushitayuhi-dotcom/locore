@@ -120,12 +120,23 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-authlink{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
 .pg-authlink:hover{text-decoration:underline}
 .pg-authlink svg{width:12px;height:12px}
-.pg-authsvc{margin-top:26px;border-top:1px solid var(--bd);padding-top:22px}
-.pg-authsvc .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.pg-authsvc .lab .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime-d)}
-.pg-authsvc .lab a{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--lime-d)}
-.pg-authsvc-grid{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:720px){.pg-authsvc-grid{grid-template-columns:1fr}}
+/* 著者の他のサービス（自前クリーンカード・ランディングのトーン）*/
+.pg-svcsec{margin-top:22px}
+.pg-svcsec .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
+.pg-svcsec .lab .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime-d)}
+.pg-svcsec .lab a{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--lime-d)}
+.pg-svcsec .lab a:hover{text-decoration:underline}
+.pg-svcgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pg-svccard{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--bd);border-radius:16px;overflow:hidden;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;box-shadow:0 10px 26px -20px rgba(17,17,17,.22)}
+.pg-svccard:hover{transform:translateY(-3px);border-color:rgba(168,224,28,.55);box-shadow:0 20px 40px -24px rgba(17,17,17,.26)}
+.pg-svccard .cover{position:relative;aspect-ratio:16/9;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.pg-svccard .cover img{width:100%;height:100%;object-fit:cover}
+.pg-svccard .cover .ph{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--lime-d);background:var(--lime-l);padding:6px 14px;border-radius:999px}
+.pg-svccard .meta{padding:14px 16px 16px;display:flex;flex-direction:column;gap:5px}
+.pg-svccard .cat{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);font-weight:600}
+.pg-svccard h4{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:15px;line-height:1.35}
+.pg-svccard .price{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink2)}
+@media(max-width:720px){.pg-svcgrid{grid-template-columns:1fr}}
 
 .pg-related{position:relative;width:100vw;left:50%;transform:translateX(-50%);background:var(--bg2);padding:80px 0 92px}
 .pg-related .head{margin-bottom:32px}

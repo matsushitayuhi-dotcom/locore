@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Heart, Bookmark, BookmarkCheck } from 'lucide-react';
 import { LocalTierBadge, SatisfactionStars } from '@locore/ui';
-import { ServiceCard } from '../../services/ServiceCard';
 import { toggleArticleLike } from '@/lib/articleLikes/actions';
 import { addBookmark, removeBookmark } from '@/lib/bookmarks/actions';
 import { authorMeta } from './shared';
@@ -263,10 +262,53 @@ function ArrowIcon() {
 }
 
 /**
- * 「この記事を書いた人」カード。モック（TripArticleMock 末尾の .tj-authcard /
- * PlaceGuideMock の .pg-authcard / EssayMock の .es-byline）の見た目に合わせて作り直す。
- * 著者情報（アバター / 名前 / 在住メタ / bio / プロフィールリンク / 他の記事 ・ サービス）は
- * 保ちつつ、scoped class（variant）で各タイプのきれいなレイアウトに描画する。
+ * 著者フッター内のクリーンなサービスカード（自前）。
+ *
+ * 共有の `ServiceCard`（他画面で使用・空グレー箱になりガタガタ）流用をやめ、ランディングの
+ * トーン（白カード・角丸・ライムアクセント）で堅牢に描く。カバー画像があれば上に、無ければ
+ * 単色プレースホルダ。画像が無くても崩れない。リンクは /services/[id]。
+ */
+function V2ServiceCard({
+  service,
+  variant,
+}: {
+  service: FeaturedService;
+  variant: V2Variant;
+}) {
+  const price =
+    typeof service.priceJpy === 'number' && service.priceJpy > 0
+      ? `¥${service.priceJpy.toLocaleString('ja-JP')}${
+          service.priceUnit ? ` / ${service.priceUnit}` : ''
+        }`
+      : service.priceJpy === 0
+        ? '無料'
+        : '';
+  return (
+    <Link className={`${variant}-svccard`} href={`/services/${service.id}`}>
+      <div className="cover">
+        {service.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={service.coverImageUrl} alt="" loading="lazy" />
+        ) : (
+          <span className="ph" aria-hidden>
+            SERVICE
+          </span>
+        )}
+      </div>
+      <div className="meta">
+        {service.category ? <div className="cat">{service.category}</div> : null}
+        <h4>{service.title}</h4>
+        {price ? <div className="price">{price}</div> : null}
+      </div>
+    </Link>
+  );
+}
+
+/**
+ * 「この記事を書いた人」フッター。ランディングのトーン（ライム×クリーム・角丸・余白広め・
+ * クリーン）で著者カード＋他のサービスを再構成する。3タイプ共通。
+ * 著者情報（アバター / 名前 / 在住地 / bio / プロフィールリンク / 他の記事 / 他のサービス）を
+ * 保ちつつ、scoped class（variant）で描画。コピーは中立表現（「この書き手の…」）。
  */
 export function AuthorCard({
   writer,
@@ -300,36 +342,40 @@ export function AuthorCard({
       </Link>
       <div className={`${variant}-authlinks`}>
         <Link className={`${variant}-authlink`} href={`/users/${writer.id}?tab=articles`}>
-          この駐在員の他の記事
+          この書き手の他の記事
           <ArrowIcon />
         </Link>
       </div>
-      {authorServices.length > 0 ? (
-        <div className={`${variant}-authsvc`}>
-          <div className="lab">
-            <span className="k">この駐在員の他のサービス</span>
-            <Link href={`/users/${writer.id}?tab=services`}>すべて見る →</Link>
-          </div>
-          <div className={`${variant}-authsvc-grid`}>
-            {authorServices.map((s) => (
-              <ServiceCard key={s.id} service={s} />
-            ))}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 
   // essay は byline スタイル（中央寄せ・上下ボーダー）。tj / pg は authcard。
   const cardClass = variant === 'es' ? 'es-byline' : `${variant}-authcard`;
   return (
-    <div className={`${cardClass} ${variant}-rev`}>
-      <Link href={`/users/${writer.id}`} aria-label={`${writer.name} のプロフィールへ`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={writer.avatarUrl} alt={writer.name} />
-      </Link>
-      {body}
-    </div>
+    <>
+      <div className={`${cardClass} ${variant}-rev`}>
+        <Link href={`/users/${writer.id}`} aria-label={`${writer.name} のプロフィールへ`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={writer.avatarUrl} alt={writer.name} />
+        </Link>
+        {body}
+      </div>
+
+      {/* 他のサービス（自前のクリーンカード。空でも崩れない）*/}
+      {authorServices.length > 0 ? (
+        <div className={`${variant}-svcsec ${variant}-rev`}>
+          <div className="lab">
+            <span className="k">この書き手の他のサービス</span>
+            <Link href={`/users/${writer.id}?tab=services`}>すべて見る →</Link>
+          </div>
+          <div className={`${variant}-svcgrid`}>
+            {authorServices.slice(0, 4).map((s) => (
+              <V2ServiceCard key={s.id} service={s} variant={variant} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

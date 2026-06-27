@@ -84,11 +84,23 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .es-authlinks{margin-top:12px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 .es-authlink{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
 .es-authlink:hover{text-decoration:underline}
-.es-authsvc{margin-top:20px}
-.es-authsvc .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
-.es-authsvc .lab .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime-d)}
-.es-authsvc-grid{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:720px){.es-authsvc-grid{grid-template-columns:1fr}}
+/* 著者の他のサービス（自前クリーンカード・ランディングのトーン）*/
+.es-svcsec{margin-top:24px}
+.es-svcsec .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:13px}
+.es-svcsec .lab .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime-d)}
+.es-svcsec .lab a{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--lime-d)}
+.es-svcsec .lab a:hover{text-decoration:underline}
+.es-svcgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.es-svccard{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--bd);border-radius:16px;overflow:hidden;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s;box-shadow:0 10px 26px -20px rgba(17,17,17,.22)}
+.es-svccard:hover{transform:translateY(-3px);border-color:rgba(168,224,28,.55);box-shadow:0 20px 40px -24px rgba(17,17,17,.26)}
+.es-svccard .cover{position:relative;aspect-ratio:16/9;background:var(--bg2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.es-svccard .cover img{width:100%;height:100%;object-fit:cover}
+.es-svccard .cover .ph{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--lime-d);background:var(--lime-l);padding:6px 14px;border-radius:999px}
+.es-svccard .meta{padding:14px 16px 16px;display:flex;flex-direction:column;gap:5px}
+.es-svccard .cat{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);font-weight:600}
+.es-svccard h4{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:15px;line-height:1.35}
+.es-svccard .price{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink2)}
+@media(max-width:720px){.es-svcgrid{grid-template-columns:1fr}}
 
 .es-related{position:relative;width:100vw;left:50%;transform:translateX(-50%);background:var(--bg2);padding:74px 0 90px;margin-top:50px}
 .es-related .head{margin-bottom:30px}
