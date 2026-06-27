@@ -1,151 +1,38 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import {
+  AUTHOR,
+  AUTHOR_AVATAR,
+  HERO_PHOTO,
+  placeMapUrl,
+  RELATED,
+  routeEmbedUrl,
+  STOPS,
+  TIPS,
+  TRIP,
+} from './tripData';
 
 /**
- * 旅程系（イチネラリー）ブログ記事ページのモックアップ案 v1。
+ * 旅程系（イチネラリー）ブログ記事ページのモックアップ案 A（タイムライン主役）。
  *
  * - ランディング (LandingClient) と同じ世界観: フルブリードのダークヒーロー
  *   ＋ ライムの network canvas ＋ Space Grotesk / JetBrains Mono / Noto Sans JP。
- * - 本番の型/データには依存せず、サンプルデータはこのファイル内にハードコード。
+ * - データ/ブロックモデルは tripData.ts に集約（B/C 案と共有）。本番の型には依存しない。
  * - scoped CSS（`.tj-` 接頭辞）＋ `useEffect` で network / reveal / scroll を駆動。
  * - グローバルの h1-h6 色上書き対策として、見出しは color を明示する。
  *
  * プレビュー: /mockup/trip-article
  */
 
-/* ============================ サンプルデータ ============================ */
-
-type Stop = {
-  time: string;
-  end?: string;
-  name: string;
-  cat: string;
-  photo: string;
-  body: string;
-  cost?: string;
-  tip?: string;
-  next?: { mins: string; mode: string }; // 次のスポットまでの移動
-};
-
-const HERO_PHOTO =
-  'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1900&q=80';
-const AUTHOR_AVATAR =
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=240&q=80';
-
-const STOPS: Stop[] = [
-  {
-    time: '08:00',
-    end: '08:45',
-    name: 'Du Pain et des Idées',
-    cat: 'ブーランジュリー',
-    photo:
-      'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1100&q=80',
-    body: '10区の名店で朝食を。看板はエスカルゴ・ショコラ・ピスターシュ。バターの層が信じられないほど薄く、焼きたての香りだけで一日が始まる。観光客が並ぶ前の8時台が狙い目。テラスは無いので、運河沿いのベンチへ持ち出すのが地元流。',
-    cost: '€4.20',
-    tip: '日曜・月曜は定休。木曜の朝が一番空いている。',
-    next: { mins: '徒歩 6分', mode: 'walk' },
-  },
-  {
-    time: '09:00',
-    end: '10:00',
-    name: 'Canal Saint-Martin の朝散歩',
-    cat: '街歩き',
-    photo:
-      'https://images.unsplash.com/photo-1551634979-2b11f8c946fe?auto=format&fit=crop&w=1100&q=80',
-    body: '跳ね橋とプラタナス並木の運河沿いを、北へゆっくり歩く。朝の斜光が水面に揺れて、まだ眠そうな街がだんだん動き出す時間帯。アンティーク雑貨の小店が開き始めるのもこの頃。買ったパンはここで。',
-    tip: 'République 側より Jaurès 側のほうが人が少なく、写真が撮りやすい。',
-    next: { mins: 'メトロ 11分 (M5)', mode: 'metro' },
-  },
-  {
-    time: '10:30',
-    end: '12:30',
-    name: "Musée de l'Orangerie",
-    cat: '美術館',
-    photo:
-      'https://images.unsplash.com/photo-1545987796-200677ee1011?auto=format&fit=crop&w=1100&q=80',
-    body: 'モネの《睡蓮》の大壁画を、楕円形の部屋で360度に浴びる。ルーヴルより遥かに小さく、人も少なく、1時間半で「絵に包まれる」体験ができる。地下のジュ・ド・ポーム側コレクションも侮れない。',
-    cost: '€12.50',
-    tip: '事前にオンラインで時間指定予約。木曜は夜21時まで開館。',
-    next: { mins: '徒歩 12分', mode: 'walk' },
-  },
-  {
-    time: '13:00',
-    end: '14:30',
-    name: 'Bistrot Paul Bert',
-    cat: 'ランチ・ビストロ',
-    photo:
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1100&q=80',
-    body: '黒板メニューのみの正統派ビストロ。名物のステーク・フリットと、世界一と評されるパリ・ブレスト。昼のプリフィクスはディナーの半額近く、これを目当てに通う在住者も多い。予約は必須。',
-    cost: '€28（昼コース）',
-    tip: '11区は昼でも予約が埋まる。前日までに電話を。',
-    next: { mins: 'メトロ 16分 (M8→M1)', mode: 'metro' },
-  },
-  {
-    time: '15:00',
-    end: '17:00',
-    name: 'Le Marais の路地裏さんぽ',
-    cat: 'ショッピング・街歩き',
-    photo:
-      'https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=1100&q=80',
-    body: '石畳の細い通りに、独立系の古着店・香水店・ギャラリーがひしめく。ヴォージュ広場のアーケードで一息ついたら、ファラフェルの名店 L\'As du Fallafel の行列を横目に。買い物より「迷う」のが正解の街。',
-    tip: '日曜も多くの店が開いているのがマレの強み（パリでは貴重）。',
-    next: { mins: '徒歩 9分 + メトロ 7分', mode: 'walk' },
-  },
-  {
-    time: '17:30',
-    end: '18:30',
-    name: 'Shakespeare and Company で休憩',
-    cat: '書店・カフェ',
-    photo:
-      'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1100&q=80',
-    body: 'セーヌ左岸、ノートルダムを望む伝説の英語書店。隣のカフェで一杯。ヘミングウェイの時代から続く、旅人と本の交差点。夕方の光が棚に差し込む時間が一番うつくしい。',
-    cost: '€5（カフェ）',
-    next: { mins: '徒歩 4分', mode: 'walk' },
-  },
-  {
-    time: '19:30',
-    end: '21:30',
-    name: 'Bateaux & 夜のセーヌ',
-    cat: 'クルーズ・夜景',
-    photo:
-      'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=1100&q=80',
-    body: '一日の締めは川から。日没とともに橋がライトアップされ、エッフェル塔が毎正時に5分だけきらめく。デッキの一番後ろ、進行方向の右舷が穴場。冷えるので一枚羽織って。',
-    cost: '€17',
-    tip: '21時発の便なら、塔のシャンパンフラッシュを真正面で見られる。',
-  },
-];
-
-const TIPS = [
-  ['Navigo Easy', 'カルネより使いやすい交通ICカード。1乗車€2.15、回数券扱いで割安。'],
-  ['水筒を持参', '街中の「Wallace 噴水」で無料給水。夏は必携。'],
-  ['予約は前日まで', '人気ビストロ・美術館は当日では入れないことが多い。'],
-  ['16時の閉店', '日曜は商店が早く閉まる。買い物は午前中に。'],
-];
-
-const RELATED = [
-  {
-    t: 'リヨンで過ごす美食の48時間 ― ブションと絹織物の街',
-    cat: 'ITINERARY · LYON',
-    img: 'https://images.unsplash.com/photo-1524396309943-e03f5249f002?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    t: '南仏ニース、海と市場のスローな一日',
-    cat: 'ITINERARY · NICE',
-    img: 'https://images.unsplash.com/photo-1491166617655-0723a0999cfc?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    t: 'パリで子連れでも疲れない、半日モデルコース',
-    cat: 'ITINERARY · PARIS',
-    img: 'https://images.unsplash.com/photo-1438786657495-640937046d18?auto=format&fit=crop&w=800&q=80',
-  },
-];
-
 /* ============================ CSS（scoped .tj-） ============================ */
 
 const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;800;900&display=swap');
 
-.tj{--bg:#F4F4EF;--bg2:#ECECE4;--white:#fff;--ink:#111;--ink2:#2a2a28;--mu:#6E6E6E;--bd:#E7E7E0;--bd2:#D8D8CF;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;--glow:rgba(168,224,28,.5);--mono:'JetBrains Mono',ui-monospace,monospace;--disp:'Space Grotesk','Noto Sans JP',sans-serif;--jp:'Noto Sans JP',system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);position:relative;background:var(--bg);color:var(--ink);font-family:var(--jp);line-height:1.75;-webkit-font-smoothing:antialiased}
+/* フルブリード（width:100vw）の数px はみ出し対策。100vw は縦スクロールバー幅を
+   含むため、full-bleed セクションが内容幅より少し広くなり横スクロールが出る。
+   ルートで overflow-x:clip して、その僅かなはみ出しを切り落とす。 */
+.tj{--bg:#F4F4EF;--bg2:#ECECE4;--white:#fff;--ink:#111;--ink2:#2a2a28;--mu:#6E6E6E;--bd:#E7E7E0;--bd2:#D8D8CF;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;--glow:rgba(168,224,28,.5);--mono:'JetBrains Mono',ui-monospace,monospace;--disp:'Space Grotesk','Noto Sans JP',sans-serif;--jp:'Noto Sans JP',system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);position:relative;background:var(--bg);color:var(--ink);font-family:var(--jp);line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:clip}
 .tj *{box-sizing:border-box;margin:0;padding:0}
 .tj a{color:inherit;text-decoration:none}
 .tj img{display:block;max-width:100%}
@@ -183,7 +70,6 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .tj-lead .tj-kicker{display:block;text-align:center;margin-bottom:26px}
 .tj-lead p{font-family:var(--disp);font-weight:500;font-size:clamp(21px,2.7vw,30px);line-height:1.6;letter-spacing:-.012em;color:var(--ink);text-align:center}
 .tj-lead p em{font-style:normal;color:var(--lime-d);background:linear-gradient(transparent 62%,var(--lime-l) 62%);padding:0 .08em}
-.tj-leadby{margin-top:30px;text-align:center;font-family:var(--mono);font-size:12.5px;color:var(--mu)}
 
 /* ===== タイムライン（コア）===== */
 .tj-tl{padding:72px 0 40px}
@@ -210,7 +96,13 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .tj-ctime{position:absolute;bottom:13px;left:15px;z-index:2;font-family:var(--mono);font-size:12px;color:#fff;display:flex;align-items:center;gap:7px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .tj-ctime .dot{width:5px;height:5px;border-radius:50%;background:var(--lime)}
 .tj-cbody{padding:22px 24px 24px}
+.tj-chead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
 .tj-cbody h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(20px,2.4vw,26px);letter-spacing:-.015em;line-height:1.22}
+.tj-maplink{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--lime-d);background:var(--lime-l);border:1px solid rgba(168,224,28,.5);padding:7px 12px;border-radius:999px;white-space:nowrap;transition:background .2s,transform .2s}
+.tj-maplink:hover{background:#d6f29a;transform:translateY(-1px)}
+.tj-maplink svg{width:13px;height:13px}
+.tj-cplace{margin-top:7px;font-family:var(--mono);font-size:11.5px;color:var(--mu);display:flex;align-items:center;gap:6px}
+.tj-cplace svg{width:12px;height:12px;color:var(--lime-d);flex:none}
 .tj-ctxt{margin-top:13px;font-size:14.5px;line-height:1.95;color:var(--ink2)}
 .tj-cextras{margin-top:18px;display:flex;flex-wrap:wrap;gap:9px}
 .tj-cost{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);background:var(--lime-l);border:1px solid rgba(168,224,28,.45);padding:6px 13px;border-radius:999px}
@@ -236,28 +128,35 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .tj-stat .n em{font-style:normal;color:var(--lime)}
 .tj-stat .l{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:rgba(255,255,255,.6);margin-top:12px}
 
-/* ===== 地図風ビジュアル ＋ tips ===== */
+/* ===== Route Map（実 Google Maps 埋め込み）＋ tips ===== */
 .tj-mapsec{padding:84px 0}
-.tj-mapgrid{display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:stretch}
-.tj-mapcard{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--bd);min-height:330px;background:#10131a}
-.tj-mapcard img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55;filter:grayscale(.3) contrast(1.05)}
-.tj-mapcard .ov{position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,13,16,.2),rgba(10,13,16,.7))}
-.tj-maplabel{position:absolute;left:22px;bottom:20px;z-index:3;color:#fff}
-.tj-maplabel .k{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime)}
-.tj-maplabel .v{font-family:var(--disp);font-weight:700;font-size:22px;color:#fff;margin-top:6px}
-/* 地図上のライムのピン（装飾）*/
-.tj-mappin{position:absolute;z-index:3;width:30px;height:30px;border-radius:50% 50% 50% 0;background:var(--lime);transform:rotate(-45deg);box-shadow:0 6px 16px -4px var(--glow);display:flex;align-items:center;justify-content:center}
-.tj-mappin span{transform:rotate(45deg);font-family:var(--mono);font-size:11px;font-weight:700;color:#0b0c09}
-.tj-mappin::after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55);top:6px;left:6px}
+.tj-maphead{margin-bottom:24px}
+.tj-maphead h2{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(24px,3.2vw,38px);letter-spacing:-.02em;margin-top:10px}
+.tj-maphead p{color:var(--mu);font-size:14px;margin-top:10px}
+.tj-mapgrid{display:grid;grid-template-columns:1.3fr .7fr;gap:36px;align-items:stretch}
+.tj-mapframe{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--bd);min-height:420px;background:#dfe4e8;box-shadow:0 18px 44px -26px rgba(17,17,17,.3)}
+.tj-mapframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.tj-mapbadge{position:absolute;top:14px;left:14px;z-index:3;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;color:#0b0c09;background:var(--lime);padding:7px 13px;border-radius:999px;box-shadow:0 6px 16px -6px var(--glow)}
+.tj-maplist{display:flex;flex-direction:column;gap:0}
+.tj-maplist .lab{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--lime-d);margin-bottom:8px}
+.tj-mlrow{display:flex;align-items:center;gap:12px;padding:11px 2px;border-bottom:1px solid var(--bd)}
+.tj-mlrow .num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--lime);font-family:var(--mono);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.tj-mlrow .nm{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tj-mlrow .tm{font-family:var(--mono);font-size:11px;color:var(--mu);flex:none}
+.tj-mlrow a.pin{flex:none;color:var(--lime-d)}
+.tj-mlrow a.pin svg{width:16px;height:16px}
+
+/* ===== tips ===== */
+.tj-tipsec{padding:0 0 84px}
 .tj-tips h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:24px;letter-spacing:-.015em;margin-bottom:8px}
-.tj-tiplist{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.tj-tiplist{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .tj-tipitem{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;background:var(--white);border:1px solid var(--bd);border-radius:15px}
 .tj-tipitem .num{flex:none;width:30px;height:30px;border-radius:9px;background:var(--lime-l);color:var(--lime-d);font-family:var(--mono);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
 .tj-tipitem .tt{color:var(--ink);font-weight:700;font-size:14.5px}
 .tj-tipitem .td{color:var(--mu);font-size:13px;line-height:1.7;margin-top:3px}
 
 /* ===== 著者カード ===== */
-.tj-authsec{padding:30px 0 84px}
+.tj-authsec{padding:30px 0 56px}
 .tj-authcard{display:flex;gap:26px;align-items:center;background:var(--white);border:1px solid var(--bd);border-radius:24px;padding:32px 34px;box-shadow:0 18px 44px -26px rgba(17,17,17,.22)}
 .tj-authcard img{width:96px;height:96px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--lime)}
 .tj-authcard .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime-d)}
@@ -267,6 +166,13 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .tj-authcard .bio{font-size:13.5px;line-height:1.85;color:var(--ink2);margin-top:13px;max-width:52ch}
 .tj-authcta{margin-top:16px;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:var(--lime);padding:11px 22px;border-radius:999px;transition:transform .2s,box-shadow .2s;box-shadow:0 12px 28px -10px var(--glow)}
 .tj-authcta:hover{transform:translateY(-2px)}
+
+/* ===== 日付クレジット（末尾・フッター的）===== */
+.tj-dates{padding:0 0 70px}
+.tj-dateline{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;align-items:center;font-family:var(--mono);font-size:12px;color:var(--mu);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:20px 0}
+.tj-dateline span{display:inline-flex;align-items:center;gap:8px}
+.tj-dateline b{color:var(--ink2);font-weight:600}
+.tj-dateline i{width:5px;height:5px;border-radius:50%;background:var(--lime);display:inline-block}
 
 /* ===== 関連記事 ===== */
 .tj-related{position:relative;width:100vw;left:50%;transform:translateX(-50%);background:var(--bg2);padding:84px 0 96px}
@@ -292,12 +198,13 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 
 @media(max-width:880px){
   .tj-mapgrid{grid-template-columns:1fr;gap:28px}
-  .tj-mapcard{min-height:260px}
+  .tj-mapframe{min-height:340px}
 }
 @media(max-width:720px){
   .tj-hinner{padding:0 22px 48px}
   .tj-lead{padding:64px 0 8px}
   .tj-stats{grid-template-columns:1fr 1fr;gap:12px}
+  .tj-tiplist{grid-template-columns:1fr}
   .tj-authcard{flex-direction:column;text-align:center;padding:30px 22px}
   .tj-authcard .bio{margin-left:auto;margin-right:auto}
   .tj-rgrid{grid-template-columns:1fr}
@@ -308,6 +215,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
   .tj-stop{padding-left:64px}
   .tj-conn{padding-left:64px}
   .tj-line::before{left:24px}
+  .tj-chead{flex-direction:column;gap:10px}
 }
 `;
 
@@ -327,6 +235,15 @@ function ModeIcon({ mode }: { mode: string }) {
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="ic">
       <circle cx="12" cy="4" r="2" />
       <path d="M9 21l1.5-6L8 12l2-5 3 1 2 3M10.5 15 8 21M13.5 13 16 21" />
+    </svg>
+  );
+}
+
+function PinIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 21s7-5.7 7-11a7 7 0 1 0-14 0c0 5.3 7 11 7 11Z" />
+      <circle cx="12" cy="10" r="2.5" />
     </svg>
   );
 }
@@ -442,7 +359,7 @@ export function TripArticleMock() {
         <canvas className="tj-hnet" />
         <div className="tj-hshade" />
         <div className="tj-hinner">
-          <span className="tj-hkick">ITINERARY · PARIS</span>
+          <span className="tj-hkick">ITINERARY · {TRIP.cityEn}</span>
           <h1>
             パリ、<em>路地裏のパン屋</em>から
             <br />
@@ -457,28 +374,29 @@ export function TripArticleMock() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={AUTHOR_AVATAR} alt="" />
             <div>
-              <div className="nm">中村 さくら</div>
+              <div className="nm">{AUTHOR.name}</div>
               <div className="meta">
-                パリ 在住 10年 · <span className="tier">駐在員 S</span>
+                {AUTHOR.city} 在住 {AUTHOR.years}年 ·{' '}
+                <span className="tier">{AUTHOR.role}</span>
               </div>
             </div>
           </div>
 
           <div className="tj-hmeta">
             <span className="tj-pill">
-              所要 <b>約13時間</b>
+              所要 <b>約{TRIP.hours}時間</b>
             </span>
             <span className="tj-pill">
-              スポット <b>7</b>
+              スポット <b>{TRIP.spots}</b>
             </span>
             <span className="tj-pill">
-              予算 <b>€110前後</b>
+              予算 <b>€{TRIP.budget}前後</b>
             </span>
             <span className="tj-pill">
               ベスト <b>春・初夏</b>
             </span>
             <span className="tj-pill">
-              歩行 <b>約6.5km</b>
+              歩行 <b>約{TRIP.walkKm}km</b>
             </span>
           </div>
         </div>
@@ -498,9 +416,6 @@ export function TripArticleMock() {
             このまちで暮らす私が、友人が訪ねてきたら必ず連れていく順番で組んだ、
             一切無駄のない一日の地図だ。
           </p>
-          <div className="tj-leadby">
-            文・写真 — 中村 さくら / 2026年5月 · 最終更新 2026年6月
-          </div>
         </div>
       </section>
 
@@ -510,7 +425,7 @@ export function TripArticleMock() {
           <div className="tj-tlhead tj-rev">
             <span className="tj-kicker dk">— The itinerary</span>
             <h2>1日のながれ</h2>
-            <p>朝 8:00 スタート / 夜 21:30 まで · 全7スポット</p>
+            <p>朝 8:00 スタート / 夜 21:30 まで · 全{TRIP.spots}スポット</p>
           </div>
 
           <div className="tj-line">
@@ -533,7 +448,23 @@ export function TripArticleMock() {
                       </span>
                     </div>
                     <div className="tj-cbody">
-                      <h3>{s.name}</h3>
+                      <div className="tj-chead">
+                        <h3>{s.name}</h3>
+                        {/* 場所フィールドから自動生成する個別「地図で見る」リンク */}
+                        <a
+                          className="tj-maplink"
+                          href={placeMapUrl(s.place)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <PinIcon />
+                          地図で見る
+                        </a>
+                      </div>
+                      <div className="tj-cplace">
+                        <PinIcon />
+                        {s.place.name}
+                      </div>
                       <p className="tj-ctxt">{s.body}</p>
                       {s.cost ? (
                         <div className="tj-cextras">
@@ -583,25 +514,25 @@ export function TripArticleMock() {
           <div className="tj-stats">
             <div className="tj-stat">
               <div className="n">
-                <em>13</em>h
+                <em>{TRIP.hours}</em>h
               </div>
               <div className="l">所要時間</div>
             </div>
             <div className="tj-stat">
               <div className="n">
-                €<em>110</em>
+                €<em>{TRIP.budget}</em>
               </div>
               <div className="l">1人あたり予算</div>
             </div>
             <div className="tj-stat">
               <div className="n">
-                <em>6.5</em>km
+                <em>{TRIP.walkKm}</em>km
               </div>
               <div className="l">歩行距離</div>
             </div>
             <div className="tj-stat">
               <div className="n">
-                <em>7</em>
+                <em>{TRIP.spots}</em>
               </div>
               <div className="l">立ち寄りスポット</div>
             </div>
@@ -609,50 +540,69 @@ export function TripArticleMock() {
         </div>
       </section>
 
-      {/* ===== 地図風ビジュアル ＋ tips ===== */}
+      {/* ===== Route Map（実 Google Maps 埋め込み）===== */}
       <section className="tj-mapsec">
-        <div className="tj-wrap" style={{ maxWidth: 1180 }}>
+        <div className="tj-wide">
+          <div className="tj-maphead tj-rev">
+            <span className="tj-kicker dk">— Route map</span>
+            <h2>1日のルート</h2>
+            <p>
+              各スポットの「場所」フィールドから自動生成したルート。全{TRIP.spots}
+              スポットを順に結んでいます。
+            </p>
+          </div>
           <div className="tj-mapgrid">
-            <div className="tj-mapcard tj-rev">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://images.unsplash.com/photo-1569949381669-ecf31ae8e613?auto=format&fit=crop&w=1100&q=80"
-                alt=""
+            <div className="tj-mapframe tj-rev">
+              <span className="tj-mapbadge">Google マップ連携</span>
+              {/* 全スポットを順に通る directions 埋め込み（APIキー不要）。
+                  本番では公式 Google Maps Embed API（要APIキー）に差し替え予定。 */}
+              <iframe
+                title="旅程ルートマップ"
+                src={routeEmbedUrl(STOPS)}
                 loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
               />
-              <div className="ov" />
-              <div className="tj-mappin" style={{ top: '22%', left: '28%' }}>
-                <span>1</span>
-              </div>
-              <div className="tj-mappin" style={{ top: '38%', left: '52%' }}>
-                <span>3</span>
-              </div>
-              <div className="tj-mappin" style={{ top: '60%', left: '40%' }}>
-                <span>5</span>
-              </div>
-              <div className="tj-mappin" style={{ top: '70%', left: '66%' }}>
-                <span>7</span>
-              </div>
-              <div className="tj-maplabel">
-                <div className="k">Route map</div>
-                <div className="v">10区 → ルーヴル → マレ → 左岸</div>
-              </div>
             </div>
+            <div className="tj-maplist tj-rev">
+              <div className="lab">立ち寄り順</div>
+              {STOPS.map((s, i) => (
+                <div key={i} className="tj-mlrow">
+                  <span className="num">{i + 1}</span>
+                  <span className="nm">{s.name}</span>
+                  <span className="tm">{s.time}</span>
+                  <a
+                    className="pin"
+                    href={placeMapUrl(s.place)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${s.name} を地図で見る`}
+                    title="地図で見る"
+                  >
+                    <PinIcon />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="tj-tips tj-rev">
-              <span className="tj-kicker dk">— Local know-how</span>
-              <h3 style={{ marginTop: 10 }}>失敗しないための小技</h3>
-              <div className="tj-tiplist">
-                {TIPS.map(([t, d], i) => (
-                  <div key={i} className="tj-tipitem">
-                    <span className="num">{i + 1}</span>
-                    <div>
-                      <div className="tt">{t}</div>
-                      <div className="td">{d}</div>
-                    </div>
+      {/* ===== tips ===== */}
+      <section className="tj-tipsec">
+        <div className="tj-wide">
+          <div className="tj-tips tj-rev">
+            <span className="tj-kicker dk">— Local know-how</span>
+            <h3 style={{ marginTop: 10 }}>失敗しないための小技</h3>
+            <div className="tj-tiplist">
+              {TIPS.map(([t, d], i) => (
+                <div key={i} className="tj-tipitem">
+                  <span className="num">{i + 1}</span>
+                  <div>
+                    <div className="tt">{t}</div>
+                    <div className="td">{d}</div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -660,21 +610,18 @@ export function TripArticleMock() {
 
       {/* ===== 著者カード ===== */}
       <section className="tj-authsec">
-        <div className="tj-wrap" style={{ maxWidth: 1180 }}>
+        <div className="tj-wide">
           <div className="tj-authcard tj-rev">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={AUTHOR_AVATAR} alt="" />
             <div>
               <div className="k">この記事を書いた人</div>
-              <h3>中村 さくら</h3>
+              <h3>{AUTHOR.name}</h3>
               <div className="role">
-                パリ在住 10年 · フードライター / <span className="tier">駐在員 S</span>
+                {AUTHOR.city}在住 {AUTHOR.years}年 · {AUTHOR.role} /{' '}
+                <span className="tier">{AUTHOR.tier}</span>
               </div>
-              <p className="bio">
-                2016年からパリ10区在住。地元の市場とビストロを巡るのがライフワーク。
-                日本語メディアへの寄稿多数。「観光客の半歩内側」を案内するのが得意で、
-                Locore では旅程プランと現地グルメの記事を中心に発信中。
-              </p>
+              <p className="bio">{AUTHOR.bio}</p>
               <a className="tj-authcta" href="#">
                 プロフィールを見る
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
@@ -682,6 +629,21 @@ export function TripArticleMock() {
                 </svg>
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 日付クレジット（末尾・フッター的位置）===== */}
+      <section className="tj-dates">
+        <div className="tj-wide">
+          <div className="tj-dateline tj-rev">
+            <span>
+              公開 <b>{TRIP.publishedAt}</b>
+            </span>
+            <i />
+            <span>
+              最終更新 <b>{TRIP.updatedAt}</b>
+            </span>
           </div>
         </div>
       </section>
