@@ -45,7 +45,7 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
         initialCountry={asCountry(searchParams?.country)}
         initialCat={asCat(searchParams?.type)}
       />
-      <FloatingMapButton />
+      <FloatingMapButton positionClassName="bottom-5 right-5" />
     </main>
   );
 }

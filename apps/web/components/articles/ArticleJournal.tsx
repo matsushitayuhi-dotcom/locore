@@ -44,11 +44,12 @@ function md(iso: string): string {
   return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// 日記系のヒーロー画像（手書きノート＋コーヒーの静物）。
 const HERO_PHOTO =
-  'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1700&q=78';
+  'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1700&q=80';
 
 const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
-.aj{--card:#FFFFFF;--bg2:#ECECE4;--ink:#111111;--mu:rgba(17,17,17,.56);--mu2:rgba(17,17,17,.34);--line:#E4E4DC;--lime:#A8E01C;--lime-soft:rgba(168,224,28,.16);--lime-d:#5E8B0E;--lime-l:#E3F7B8;--mono:'JetBrains Mono',ui-monospace,monospace;--jp:'Noto Sans JP',system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);position:relative;font-family:var(--jp);color:var(--ink);line-height:1.6}
+.aj{--card:#15170F;--bg2:#0e100a;--ink:#F2F1EA;--mu:rgba(242,241,234,.56);--mu2:rgba(242,241,234,.34);--line:rgba(242,241,234,.13);--lime:#A8E01C;--lime-soft:rgba(168,224,28,.18);--lime-d:#B6E84E;--lime-l:#E3F7B8;--mono:'JetBrains Mono',ui-monospace,monospace;--jp:'Noto Sans JP',system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);position:relative;font-family:var(--jp);color:var(--ink);line-height:1.6;background:#0B0C09}
 .aj *{box-sizing:border-box}
 .aj a{color:inherit;text-decoration:none}
 .aj img{display:block;max-width:100%}
@@ -74,7 +75,11 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
 .aj-country select:hover{border-color:var(--lime)}
 .aj-country .g{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:rgba(255,255,255,.75);pointer-events:none}
 .aj-country .c{position:absolute;right:15px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:rgba(255,255,255,.75);pointer-events:none}
-.aj-sbox{flex:1;min-width:0;display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);transition:border-color .25s,box-shadow .25s}
+.aj-sbox{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:56px;padding:0 7px 0 18px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);transition:border-color .25s,box-shadow .25s}
+.aj-sbtn{flex:none;background:var(--lime);color:#0b0c09;border:none;border-radius:10px;height:42px;padding:0 18px;font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .2s,transform .15s}
+.aj-sbtn:hover{background:#b6ec33}
+.aj-sbtn:active{transform:scale(.97)}
+.aj-sbtn svg{width:15px;height:15px}
 .aj-sbox:focus-within{border-color:var(--lime);box-shadow:0 8px 30px rgba(168,224,28,.25)}
 .aj-sbox svg{width:19px;height:19px;color:rgba(255,255,255,.75);flex:none}
 .aj-sbox input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:var(--jp);font-size:15px;color:#fff}
@@ -107,9 +112,8 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
   .aj-scroll{display:none}
 }
 
-/* FEED (light) */
-.aj-feedwrap{position:relative;padding:56px 0 90px;background:var(--bg2)}
-.aj-feedwrap{background:transparent}
+/* FEED (dark) */
+.aj-feedwrap{position:relative;padding:56px 0 90px;background:transparent}
 .aj-rhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
 .aj-count{font-family:var(--mono);font-size:13px;color:var(--mu)}
 .aj-count b{color:var(--ink);font-weight:600}
@@ -333,8 +337,11 @@ export function ArticleJournal({
   initialCat = 'all',
   moreHref,
 }: Props) {
+  // 適用済み（フィルタに使う）と入力中（pending）を分離。検索ボタン/Enter で確定。
   const [q, setQ] = useState('');
   const [country, setCountry] = useState(initialCountry);
+  const [pendingQ, setPendingQ] = useState('');
+  const [pendingCountry, setPendingCountry] = useState(initialCountry);
   const [cats, setCats] = useState<Set<ArticleType>>(
     initialCat && initialCat !== 'all' ? new Set([initialCat]) : new Set(),
   );
@@ -384,6 +391,16 @@ export function ArticleJournal({
       return next;
     });
 
+  // 検索ボタン / Enter で国＋キーワードを確定（リアルタイム検索はしない）。
+  const doSearch = () => {
+    setCountry(pendingCountry);
+    setQ(pendingQ.trim());
+  };
+  const clearSearch = () => {
+    setPendingQ('');
+    setQ('');
+  };
+
   const searching = query.length > 0;
   const shown = searching ? results : byCat;
   const lead = byCat[0];
@@ -419,8 +436,8 @@ export function ArticleJournal({
                   <path d="M3.3 12h17.4M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
                 </svg>
                 <select
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
+                  value={pendingCountry}
+                  onChange={(e) => setPendingCountry(e.target.value)}
                   aria-label="国で絞り込む"
                 >
                   <option value="all">すべての国</option>
@@ -440,18 +457,28 @@ export function ArticleJournal({
                   <path d="m20 20-3.2-3.2" />
                 </svg>
                 <input
-                  type="search"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="記事を検索 — 例: 蚤の市、子連れ、リヨン"
+                  type="text"
+                  value={pendingQ}
+                  onChange={(e) => setPendingQ(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') doSearch();
+                  }}
+                  placeholder="キーワードで検索 — 例: 蚤の市、子連れ、リヨン"
                   autoComplete="off"
                   aria-label="記事を検索"
                 />
-                {q ? (
-                  <button className="x" onClick={() => setQ('')} aria-label="クリア">
+                {pendingQ ? (
+                  <button className="x" onClick={clearSearch} aria-label="クリア">
                     ✕
                   </button>
                 ) : null}
+                <button className="aj-sbtn" onClick={doSearch}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.2-3.2" />
+                  </svg>
+                  検索
+                </button>
               </div>
               <button
                 className={`aj-adv-btn${advOpen ? ' on' : ''}`}
