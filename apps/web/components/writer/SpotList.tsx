@@ -16,6 +16,8 @@ export type SpotRow = {
   lat: number;
   lng: number;
   category: 'food' | 'sight' | 'shopping' | 'lodging' | 'other' | null;
+  description: string | null;
+  tip: string | null;
   priceEstimate: string | null;
   openingHoursText: string;
   tags: string[];
@@ -49,6 +51,8 @@ function rowToValue(row: SpotRow): SpotEditorValue {
     lat: row.lat,
     lng: row.lng,
     category: row.category ?? '',
+    description: row.description ?? '',
+    tip: row.tip ?? '',
     priceEstimate: row.priceEstimate ?? '',
     openingHoursText: row.openingHoursText,
     tagsText: (row.tags ?? []).join(', '),
@@ -68,6 +72,8 @@ function valueToRow(v: SpotEditorValue): SpotRow {
     lat: typeof v.lat === 'number' ? v.lat : Number(v.lat) || 0,
     lng: typeof v.lng === 'number' ? v.lng : Number(v.lng) || 0,
     category: (v.category || null) as SpotRow['category'],
+    description: v.description.trim() || null,
+    tip: v.tip.trim() || null,
     priceEstimate: v.priceEstimate || null,
     openingHoursText: v.openingHoursText,
     tags: v.tagsText
@@ -199,6 +205,8 @@ export function SpotList({
             lat: '',
             lng: '',
             category: '',
+            description: '',
+            tip: '',
             priceEstimate: '',
             openingHoursText: '',
             tagsText: '',

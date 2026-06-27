@@ -557,6 +557,22 @@ export async function unpublishArticle(articleId: string): Promise<ActionResult>
  */
 const FRANCE_BOUNDS = { lat: [41, 51] as const, lng: [-5, 10] as const };
 
+/**
+ * 0057_spot_description_tip 未適用環境で description / tip 列が無いことに起因する
+ * 「column ... does not exist」エラーかどうかを判定する。
+ * これに該当する場合のみ、その 2 列を外して書き込みをリトライする。
+ */
+function isMissingDescTipColumn(e: unknown): boolean {
+  const msg =
+    typeof e === 'object' && e !== null && 'message' in e
+      ? String((e as { message: unknown }).message)
+      : String(e);
+  return (
+    /does not exist/i.test(msg) &&
+    /\b(description|tip)\b/i.test(msg)
+  );
+}
+
 const upsertSpotSchema = z.object({
   id: z.string().uuid().optional(),
   articleId: z.string().uuid(),
@@ -567,6 +583,10 @@ const upsertSpotSchema = z.object({
     lng: z.number().min(-180).max(180),
   }),
   category: z.enum(['food', 'sight', 'shopping', 'lodging', 'other']).optional(),
+  /** スポット単位の説明文（複数行・任意） */
+  description: z.string().trim().max(2000).optional().nullable(),
+  /** スポット単位の「コツ」（1〜数行・任意） */
+  tip: z.string().trim().max(600).optional().nullable(),
   priceEstimate: z.string().trim().max(100).optional(),
   openingHours: z.any().optional(),
   tags: z.array(z.string().trim().min(1).max(40)).max(20).default([]),
@@ -607,6 +627,13 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
   // inFrance フラグは UI で使う想定（現状ログのみ）
   void inFrance;
 
+  // スポット単位の説明文・コツ（0057 未適用環境では列が無いので別扱い）。
+  // 空文字は NULL に正規化する。
+  const descTip = {
+    description: data.description?.trim() ? data.description.trim() : null,
+    tip: data.tip?.trim() ? data.tip.trim() : null,
+  };
+
   // 共通の Place 詳細フィールド
   const placeDetails = {
     phoneNumber: data.phoneNumber ?? null,
@@ -631,30 +658,7 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
     if (existing.length === 0 || existing[0]!.articleId !== data.articleId) {
       return { ok: false, error: 'スポットが見つかりません' };
     }
-    await db
-      .update(schema.spots)
-      .set({
-        name: data.name,
-        address: data.address,
-        location: data.location,
-        category: data.category,
-        priceEstimate: data.priceEstimate,
-        openingHours: data.openingHours ?? null,
-        tags: data.tags,
-        position: data.position,
-        googlePlaceId: data.googlePlaceId ?? null,
-        ...placeDetails,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.spots.id, data.id));
-    revalidatePath(`/writer/articles/${data.articleId}/edit`);
-    return { ok: true, data: { id: data.id } };
-  }
-
-  const inserted = await db
-    .insert(schema.spots)
-    .values({
-      articleId: data.articleId,
+    const baseSet = {
       name: data.name,
       address: data.address,
       location: data.location,
@@ -665,8 +669,58 @@ export async function upsertSpot(input: unknown): Promise<ActionResult<{ id: str
       position: data.position,
       googlePlaceId: data.googlePlaceId ?? null,
       ...placeDetails,
-    })
-    .returning({ id: schema.spots.id });
+      updatedAt: new Date(),
+    };
+    try {
+      await db
+        .update(schema.spots)
+        .set({ ...baseSet, ...descTip })
+        .where(eq(schema.spots.id, data.id));
+    } catch (e) {
+      // 0057 未適用（description / tip 列なし）→ それらを外して再実行
+      if (isMissingDescTipColumn(e)) {
+        await db
+          .update(schema.spots)
+          .set(baseSet)
+          .where(eq(schema.spots.id, data.id));
+      } else {
+        throw e;
+      }
+    }
+    revalidatePath(`/writer/articles/${data.articleId}/edit`);
+    return { ok: true, data: { id: data.id } };
+  }
+
+  const baseValues = {
+    articleId: data.articleId,
+    name: data.name,
+    address: data.address,
+    location: data.location,
+    category: data.category,
+    priceEstimate: data.priceEstimate,
+    openingHours: data.openingHours ?? null,
+    tags: data.tags,
+    position: data.position,
+    googlePlaceId: data.googlePlaceId ?? null,
+    ...placeDetails,
+  };
+  let inserted: { id: string }[];
+  try {
+    inserted = await db
+      .insert(schema.spots)
+      .values({ ...baseValues, ...descTip })
+      .returning({ id: schema.spots.id });
+  } catch (e) {
+    // 0057 未適用（description / tip 列なし）→ それらを外して再実行
+    if (isMissingDescTipColumn(e)) {
+      inserted = await db
+        .insert(schema.spots)
+        .values(baseValues)
+        .returning({ id: schema.spots.id });
+    } else {
+      throw e;
+    }
+  }
 
   revalidatePath(`/writer/articles/${data.articleId}/edit`);
   return { ok: true, data: { id: inserted[0]!.id } };

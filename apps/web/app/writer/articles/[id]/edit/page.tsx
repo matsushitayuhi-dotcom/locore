@@ -43,6 +43,8 @@ export default async function EditArticlePage({
             name: schema.spots.name,
             address: schema.spots.address,
             category: schema.spots.category,
+            description: schema.spots.description,
+            tip: schema.spots.tip,
             priceEstimate: schema.spots.priceEstimate,
             openingHours: schema.spots.openingHours,
             tags: schema.spots.tags,
@@ -54,7 +56,7 @@ export default async function EditArticlePage({
           .where(eq(schema.spots.articleId, params.id))
           .orderBy(asc(schema.spots.position));
       } catch {
-        // 0025_spot_photos 未適用：列なしでフォールバック
+        // 0025_spot_photos / 0057_spot_description_tip 未適用：列なしでフォールバック
         const fallback = await db
           .select({
             id: schema.spots.id,
@@ -73,6 +75,8 @@ export default async function EditArticlePage({
           .orderBy(asc(schema.spots.position));
         return fallback.map((r) => ({
           ...r,
+          description: null as string | null,
+          tip: null as string | null,
           googlePhotoUrls: null as string[] | null,
         }));
       }
@@ -137,6 +141,8 @@ export default async function EditArticlePage({
       lat: coords.lat,
       lng: coords.lng,
       category: s.category,
+      description: s.description ?? null,
+      tip: s.tip ?? null,
       priceEstimate: s.priceEstimate,
       openingHoursText,
       tags: s.tags ?? [],

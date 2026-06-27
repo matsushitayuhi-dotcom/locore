@@ -15,6 +15,10 @@ export type SpotEditorValue = {
   lat: number | '';
   lng: number | '';
   category: 'food' | 'sight' | 'shopping' | 'lodging' | 'other' | '';
+  /** スポット単位の説明文（複数行・任意） */
+  description: string;
+  /** スポット単位の「コツ」（1〜数行・任意） */
+  tip: string;
   priceEstimate: string;
   openingHoursText: string;
   tagsText: string;
@@ -136,6 +140,8 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
         address: v.address.trim(),
         location: { lat: Number(v.lat), lng: Number(v.lng) },
         category: v.category || undefined,
+        description: v.description.trim() || null,
+        tip: v.tip.trim() || null,
         priceEstimate: v.priceEstimate.trim() || undefined,
         openingHours,
         tags,
@@ -359,6 +365,41 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
             修正したい場合は上の検索欄で店舗を選び直してください。
           </p>
         ) : null}
+      </div>
+
+      {/* スポット単位の説明・コツ（仕様 §3「場所ブロック」）。どちらも任意。 */}
+      <div>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+          説明
+        </label>
+        <textarea
+          value={v.description}
+          onChange={(e) => set('description', e.target.value)}
+          maxLength={2000}
+          rows={4}
+          placeholder="この場所の見どころ・雰囲気・行く理由などを書く（任意・複数行可）"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground placeholder:text-foreground/40 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
+        />
+        <p className="mt-1 text-[11px] text-foreground/50">
+          場所カード・旅程の各スポットの本文として表示されます。
+        </p>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+          コツ
+        </label>
+        <textarea
+          value={v.tip}
+          onChange={(e) => set('tip', e.target.value)}
+          maxLength={600}
+          rows={2}
+          placeholder="例: 朝イチが空いている／奥のテラス席が穴場（任意・1〜数行）"
+          className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-body-md text-foreground placeholder:text-foreground/40 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
+        />
+        <p className="mt-1 text-[11px] text-foreground/50">
+          表示側で「コツ」ボックスとして強調されます。
+        </p>
       </div>
 
       {/* 緯度・経度・営業時間は UI から完全に非表示。
