@@ -57,17 +57,6 @@ const BLOCKED_UA = [
   /node-fetch/i,
 ];
 
-const PROTECTED_PREFIXES = [
-  '/settings',
-  '/writer',
-  '/admin',
-  '/library',
-  '/become-writer',
-  '/purchases',
-  '/chat',
-  '/auth',
-];
-
 export async function middleware(request: NextRequest) {
   // 1. ボット遮断（最優先・最安）
   const ua = request.headers.get('user-agent') ?? '';
@@ -78,17 +67,15 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  // 2. 認証が要るパスだけ Supabase セッション処理。公開ページは素通し
-  //    （Set-Cookie しないので ISR エッジキャッシュを保つ）。
+  // 2. 【改修中の全サイトゲート】API 以外の全ページをログイン必須にする。
+  //    updateSession が未ログインを /auth/login へリダイレクトする。
+  //    API は自前で認証し JSON を返すため対象外（HTML リダイレクトを返さない）。
+  //    一般公開を再開するときは、ここを元の「保護パスだけ updateSession」に戻す。
   const { pathname } = request.nextUrl;
-  const isProtected = PROTECTED_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
-  if (isProtected) {
-    return updateSession(request);
+  if (pathname === '/api' || pathname.startsWith('/api/')) {
+    return NextResponse.next();
   }
-
-  return NextResponse.next();
+  return updateSession(request);
 }
 
 export const config = {

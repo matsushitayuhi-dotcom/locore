@@ -2,16 +2,13 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * 認証必須パス（未ログイン時に /auth/login へリダイレクトする）。
- * 配下含む完全前方一致。
+ * 【改修中の全サイトゲート 2026-06】
+ * サイト全体をログイン必須にしている。ログイン前にアクセスできる公開パスは
+ * 認証画面 (/auth/*) のみ。一般公開を再開するときは、ここを元の限定リスト
+ * （/settings, /writer, /admin, /library, /become-writer）に戻し、下の
+ * isProtected 判定も「そのリストに含まれるか」に戻すこと。
  */
-const PROTECTED_PREFIXES = [
-  '/settings',
-  '/writer',
-  '/admin',
-  '/library',
-  '/become-writer',
-];
+const PUBLIC_PREFIXES = ['/auth'];
 
 /**
  * URL から「このページがどちらのモードに属するか」を推定。
@@ -107,11 +104,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 認証必須パスのチェック
+  // 認証チェック（改修中は /auth 以外すべて要ログイン）
   const { pathname } = request.nextUrl;
-  const isProtected = PROTECTED_PREFIXES.some(
+  const isPublic = PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+  const isProtected = !isPublic;
 
   if (isProtected && !user) {
     const loginUrl = request.nextUrl.clone();

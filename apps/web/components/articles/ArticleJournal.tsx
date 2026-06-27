@@ -44,11 +44,17 @@ function md(iso: string): string {
   return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
-/** 無料プレビュー本文から、フィーチャー枠用の抜粋（マークダウン記号を除去）を作る。 */
+/** 無料プレビュー本文から抜粋を作る。HTML タグ・マークダウン記号・実体参照を除去。 */
 function excerptOf(body: string | undefined): string {
   if (!body) return '';
   return body
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // 画像
+    .replace(/<[^>]+>/g, ' ') // HTML タグ（<p> 等）
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&#?\w+;/g, '') // その他の実体参照
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // 画像 (markdown)
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // リンク → テキスト
     .replace(/[#*_>`~|]/g, '')
     .replace(/^\s*[-•]\s*/gm, '')
