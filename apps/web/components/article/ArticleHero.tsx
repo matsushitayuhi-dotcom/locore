@@ -40,7 +40,6 @@ type ArticleHeroProps = {
  */
 export function ArticleHero({
   article,
-  region,
   country,
   displayAreaLabel,
   viewerLoggedIn,
@@ -50,6 +49,8 @@ export function ArticleHero({
   initialLiked,
   previewMode,
 }: ArticleHeroProps) {
+  // 国ハブ (/[slug]) への遷移用に code → スラッグを解決。当面フランスのみ。
+  const countrySlug = country?.code === 'fr' ? 'france' : null;
   const publishedLabel = (() => {
     try {
       return new Date(article.publishedAt).toLocaleDateString('ja-JP', {
@@ -76,30 +77,15 @@ export function ArticleHero({
           {country?.nameJa ? (
             <>
               <ChevronRight className="h-3 w-3 text-foreground/30" />
-              {country.code ? (
+              {countrySlug ? (
                 <Link
-                  href={`/country/${country.code}`}
+                  href={`/${countrySlug}`}
                   className="transition hover:text-foreground"
                 >
                   {country.nameJa}
                 </Link>
               ) : (
                 <span>{country.nameJa}</span>
-              )}
-            </>
-          ) : null}
-          {region?.nameJa ? (
-            <>
-              <ChevronRight className="h-3 w-3 text-foreground/30" />
-              {region.slug ? (
-                <Link
-                  href={`/region/${region.slug}`}
-                  className="transition hover:text-foreground"
-                >
-                  {region.nameJa}
-                </Link>
-              ) : (
-                <span>{region.nameJa}</span>
               )}
             </>
           ) : null}

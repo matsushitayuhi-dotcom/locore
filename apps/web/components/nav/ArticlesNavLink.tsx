@@ -6,14 +6,11 @@ import { BookOpen } from 'lucide-react';
 
 /**
  * グローバルナビの「記事」タブ。
- * /articles, /country/, /region/ など読み物系の配下に居るときに active 表示。
+ * /articles 配下に居るときに active 表示。
  */
 export function ArticlesNavLink() {
   const pathname = usePathname() ?? '';
-  const active =
-    pathname.startsWith('/articles') ||
-    pathname.startsWith('/country/') ||
-    pathname.startsWith('/region/');
+  const active = pathname.startsWith('/articles');
   return (
     <Link
       href="/articles"
