@@ -37,6 +37,9 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => /^\/writer\/articles\/[^/]+\/edit$/.test(p),
   (p) => /^\/chat\/[^/]+$/.test(p),
   (p) => p === '/',
+  // 記事一覧はフルスクリーンの没入レイアウトなので下部メニューを隠す
+  // （/articles/[id] の記事詳細では残す）。
+  (p) => p === '/articles',
 ];
 
 export function BottomNav() {
