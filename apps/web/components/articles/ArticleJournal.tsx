@@ -49,7 +49,7 @@ const HERO_PHOTO =
   'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1700&q=80';
 
 const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
-.aj{--card:#15170F;--bg2:#0e100a;--ink:#F2F1EA;--mu:rgba(242,241,234,.56);--mu2:rgba(242,241,234,.34);--line:rgba(242,241,234,.13);--lime:#A8E01C;--lime-soft:rgba(168,224,28,.18);--lime-d:#B6E84E;--lime-l:#E3F7B8;--mono:'JetBrains Mono',ui-monospace,monospace;--jp:'Noto Sans JP',system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);position:relative;font-family:var(--jp);color:var(--ink);line-height:1.6;background:#0B0C09}
+.aj{--card:#FFFFFF;--bg2:#ECECE4;--ink:#111111;--mu:rgba(17,17,17,.56);--mu2:rgba(17,17,17,.34);--line:#E4E4DC;--lime:#A8E01C;--lime-soft:rgba(168,224,28,.16);--lime-d:#5E8B0E;--lime-l:#E3F7B8;--mono:'JetBrains Mono',ui-monospace,monospace;--jp:'Noto Sans JP',system-ui,sans-serif;--ease:cubic-bezier(.22,1,.36,1);position:relative;font-family:var(--jp);color:var(--ink);line-height:1.6;background:#F4F4EF}
 .aj *{box-sizing:border-box}
 .aj a{color:inherit;text-decoration:none}
 .aj img{display:block;max-width:100%}
@@ -59,11 +59,11 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
 .aj-hero{position:relative;min-height:calc(100svh - 56px);display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:56px 0 56px;color:#fff}
 .aj-hbg{position:absolute;inset:0;z-index:0;background-size:cover;background-position:center}
 .aj-hnet{position:absolute;inset:0;z-index:1}
-.aj-hshade{position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgba(8,10,16,.5),rgba(8,10,16,.46) 46%,rgba(8,10,16,.74) 100%)}
+.aj-hshade{position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgba(6,8,10,.88),rgba(6,8,10,.82) 42%,rgba(6,8,10,.93) 100%)}
 .aj-hero .inner{position:relative;z-index:3;width:100%}
 .aj-eyebrow{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--lime);display:inline-flex;align-items:center;gap:11px}
 .aj-eyebrow::before{content:"";width:26px;height:1.5px;background:var(--lime)}
-.aj-hero h1{font-weight:900;letter-spacing:-.03em;line-height:1.0;font-size:clamp(40px,8.4vw,104px);margin-top:22px;text-shadow:0 2px 24px rgba(0,0,0,.3)}
+.aj-hero h1{font-weight:900;letter-spacing:-.03em;line-height:1.0;font-size:clamp(40px,8.4vw,104px);margin-top:22px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6),0 4px 34px rgba(0,0,0,.5)}
 .aj-hero h1 em{font-style:normal;color:var(--lime)}
 .aj-hero .sub{margin-top:22px;max-width:540px;font-size:15px;line-height:1.95;color:rgba(255,255,255,.82)}
 .aj-controls{margin-top:34px;max-width:780px}
@@ -75,11 +75,11 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
 .aj-country select:hover{border-color:var(--lime)}
 .aj-country .g{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:rgba(255,255,255,.75);pointer-events:none}
 .aj-country .c{position:absolute;right:15px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:rgba(255,255,255,.75);pointer-events:none}
-.aj-sbox{flex:1;min-width:0;display:flex;align-items:center;gap:10px;height:56px;padding:0 7px 0 18px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);transition:border-color .25s,box-shadow .25s}
-.aj-sbtn{flex:none;background:var(--lime);color:#0b0c09;border:none;border-radius:10px;height:42px;padding:0 18px;font-family:var(--mono);font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .2s,transform .15s}
-.aj-sbtn:hover{background:#b6ec33}
-.aj-sbtn:active{transform:scale(.97)}
-.aj-sbtn svg{width:15px;height:15px}
+.aj-sbox{flex:1;min-width:0;display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);transition:border-color .25s,box-shadow .25s}
+.aj-gobtn{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;height:54px;margin-top:14px;background:var(--lime);color:#0b0c09;border:none;border-radius:14px;font-family:var(--mono);font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 12px 30px -8px rgba(168,224,28,.55);transition:background .2s,transform .15s}
+.aj-gobtn:hover{background:#b6ec33}
+.aj-gobtn:active{transform:scale(.99)}
+.aj-gobtn svg{width:16px;height:16px}
 .aj-sbox:focus-within{border-color:var(--lime);box-shadow:0 8px 30px rgba(168,224,28,.25)}
 .aj-sbox svg{width:19px;height:19px;color:rgba(255,255,255,.75);flex:none}
 .aj-sbox input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:var(--jp);font-size:15px;color:#fff}
@@ -112,8 +112,8 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
   .aj-scroll{display:none}
 }
 
-/* FEED (dark) */
-.aj-feedwrap{position:relative;padding:56px 0 90px;background:transparent}
+/* FEED (light, landing cream) */
+.aj-feedwrap{position:relative;padding:28px 0 90px;background:transparent}
 .aj-rhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}
 .aj-count{font-family:var(--mono);font-size:13px;color:var(--mu)}
 .aj-count b{color:var(--ink);font-weight:600}
@@ -342,9 +342,10 @@ export function ArticleJournal({
   const [country, setCountry] = useState(initialCountry);
   const [pendingQ, setPendingQ] = useState('');
   const [pendingCountry, setPendingCountry] = useState(initialCountry);
-  const [cats, setCats] = useState<Set<ArticleType>>(
-    initialCat && initialCat !== 'all' ? new Set([initialCat]) : new Set(),
-  );
+  const seed = (): Set<ArticleType> =>
+    initialCat && initialCat !== 'all' ? new Set([initialCat]) : new Set();
+  const [cats, setCats] = useState<Set<ArticleType>>(seed);
+  const [pendingCats, setPendingCats] = useState<Set<ArticleType>>(seed);
   const [advOpen, setAdvOpen] = useState(false);
   const [view, setView] = useState<'card' | 'list'>('card');
 
@@ -377,24 +378,30 @@ export function ArticleJournal({
     );
   }, [byCat, query]);
 
+  // 詳細設定の件数プレビューは「これから検索する国」(pending) 基準で出す。
   const counts = useMemo(() => {
+    const base =
+      pendingCountry === 'all'
+        ? articles
+        : articles.filter((a) => a.countryCode === pendingCountry);
     const c: Record<string, number> = {};
-    for (const a of byCountry) c[a.articleType] = (c[a.articleType] ?? 0) + 1;
+    for (const a of base) c[a.articleType] = (c[a.articleType] ?? 0) + 1;
     return c;
-  }, [byCountry]);
+  }, [articles, pendingCountry]);
 
   const toggleCat = (t: ArticleType) =>
-    setCats((prev) => {
+    setPendingCats((prev) => {
       const next = new Set(prev);
       if (next.has(t)) next.delete(t);
       else next.add(t);
       return next;
     });
 
-  // 検索ボタン / Enter で国＋キーワードを確定（リアルタイム検索はしない）。
+  // 国・キーワード・詳細設定（タイプ）をまとめて確定する。リアルタイム検索はしない。
   const doSearch = () => {
     setCountry(pendingCountry);
     setQ(pendingQ.trim());
+    setCats(new Set(pendingCats));
   };
   const clearSearch = () => {
     setPendingQ('');
@@ -424,8 +431,11 @@ export function ArticleJournal({
             街の<em>素顔</em>。
           </h1>
           <p className="sub">
-            ガイドブックには載らない一次情報。路地裏のパン屋、蚤の市の歩き方、子連れで行ける日常の場所。
-            現地で暮らす書き手が、短く、深く綴る記録。
+            SNSやAIには載らない一次情報。
+            <br />
+            路地裏のパン屋や子連れで行ける公園など、
+            <br />
+            現地で暮らす書き手が発信します。
           </p>
 
           <div className="aj-controls">
@@ -472,13 +482,6 @@ export function ArticleJournal({
                     ✕
                   </button>
                 ) : null}
-                <button className="aj-sbtn" onClick={doSearch}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="m20 20-3.2-3.2" />
-                  </svg>
-                  検索
-                </button>
               </div>
               <button
                 className={`aj-adv-btn${advOpen ? ' on' : ''}`}
@@ -486,7 +489,9 @@ export function ArticleJournal({
                 aria-expanded={advOpen}
               >
                 詳細設定
-                {cats.size > 0 ? <span className="badge">{cats.size}</span> : null}
+                {pendingCats.size > 0 ? (
+                  <span className="badge">{pendingCats.size}</span>
+                ) : null}
                 <svg className="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
                   <path d="m6 9 6 6 6-6" />
                 </svg>
@@ -500,7 +505,7 @@ export function ArticleJournal({
                   <label key={t} className="aj-check">
                     <input
                       type="checkbox"
-                      checked={cats.has(t)}
+                      checked={pendingCats.has(t)}
                       onChange={() => toggleCat(t)}
                     />
                     <span className="lbl">{TYPE_LABEL[t]}</span>
@@ -509,6 +514,15 @@ export function ArticleJournal({
                 ))}
               </div>
             ) : null}
+
+            {/* 国・キーワード・詳細設定をまとめて確定する検索ボタン */}
+            <button className="aj-gobtn" onClick={doSearch}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.2-3.2" />
+              </svg>
+              この条件で検索
+            </button>
           </div>
         </div>
         <div className="aj-scroll">
