@@ -463,7 +463,8 @@ function insertCallout(
   const config: Record<typeof type, { emoji: string; bg: string; border: string }> = {
     note: { emoji: '💡', bg: '#eff6ff', border: '#3b82f6' },
     warning: { emoji: '⚠️', bg: '#fefce8', border: '#eab308' },
-    tip: { emoji: '✨', bg: '#ecfdf5', border: '#10b981' },
+    // tip（コツ）はブランドのライムに合わせる（§2「コツ・注意ボックス＝ライム」）。
+    tip: { emoji: '✨', bg: '#F3FBE0', border: '#A8E01C' },
   };
   const c = config[type];
   // blockquote 要素として挿入することで、改行/編集が自然にできる。
