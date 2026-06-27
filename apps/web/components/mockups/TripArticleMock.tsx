@@ -406,7 +406,7 @@ export function TripArticleMock() {
         </div>
       </header>
 
-      {/* ===== リード文 ===== */}
+      {/* ===== editorsNote（前書き帯）===== */}
       <section className="tj-lead tj-rev">
         <div className="tj-wrap">
           <span className="tj-kicker dk">— Editor's note</span>
@@ -419,7 +419,54 @@ export function TripArticleMock() {
         </div>
       </section>
 
-      {/* ===== タイムライン（コア）===== */}
+      {/* ===== 集約マップ＋スポット概観（タイムラインの前）===== */}
+      <section className="tj-mapsec">
+        <div className="tj-wide">
+          <div className="tj-maphead tj-rev">
+            <span className="tj-kicker dk">— Route map &amp; spots</span>
+            <h2>1日のルートと、立ち寄り先</h2>
+            <p>
+              各スポットの「場所」フィールドから自動生成したルート。先に全体像を
+              つかんでから、下の旅程を時間順に読んでいきましょう。全{TRIP.spots}スポット。
+            </p>
+          </div>
+          <div className="tj-mapgrid">
+            <div className="tj-mapframe tj-rev">
+              <span className="tj-mapbadge">Google マップ連携</span>
+              {/* order に沿った directions 埋め込み（APIキー不要）。
+                  本番では公式 Google Maps Embed API（要APIキー）に差し替え予定。 */}
+              <iframe
+                title="旅程ルートマップ"
+                src={routeEmbedUrl(STOPS)}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+            <div className="tj-maplist tj-rev">
+              <div className="lab">立ち寄り順</div>
+              {STOPS.map((s, i) => (
+                <div key={i} className="tj-mlrow">
+                  <span className="num">{i + 1}</span>
+                  <span className="nm">{s.name}</span>
+                  <span className="tm">{s.time}</span>
+                  <a
+                    className="pin"
+                    href={placeMapUrl(s.place)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${s.name} を地図で見る`}
+                    title="地図で見る"
+                  >
+                    <PinIcon />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 旅程タイムライン（order/time/transfer 付き place）===== */}
       <section className="tj-tl">
         <div className="tj-wrap">
           <div className="tj-tlhead tj-rev">
@@ -540,54 +587,7 @@ export function TripArticleMock() {
         </div>
       </section>
 
-      {/* ===== Route Map（実 Google Maps 埋め込み）===== */}
-      <section className="tj-mapsec">
-        <div className="tj-wide">
-          <div className="tj-maphead tj-rev">
-            <span className="tj-kicker dk">— Route map</span>
-            <h2>1日のルート</h2>
-            <p>
-              各スポットの「場所」フィールドから自動生成したルート。全{TRIP.spots}
-              スポットを順に結んでいます。
-            </p>
-          </div>
-          <div className="tj-mapgrid">
-            <div className="tj-mapframe tj-rev">
-              <span className="tj-mapbadge">Google マップ連携</span>
-              {/* 全スポットを順に通る directions 埋め込み（APIキー不要）。
-                  本番では公式 Google Maps Embed API（要APIキー）に差し替え予定。 */}
-              <iframe
-                title="旅程ルートマップ"
-                src={routeEmbedUrl(STOPS)}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
-            <div className="tj-maplist tj-rev">
-              <div className="lab">立ち寄り順</div>
-              {STOPS.map((s, i) => (
-                <div key={i} className="tj-mlrow">
-                  <span className="num">{i + 1}</span>
-                  <span className="nm">{s.name}</span>
-                  <span className="tm">{s.time}</span>
-                  <a
-                    className="pin"
-                    href={placeMapUrl(s.place)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${s.name} を地図で見る`}
-                    title="地図で見る"
-                  >
-                    <PinIcon />
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== tips ===== */}
+      {/* ===== Local know-how（tips）===== */}
       <section className="tj-tipsec">
         <div className="tj-wide">
           <div className="tj-tips tj-rev">
@@ -633,21 +633,6 @@ export function TripArticleMock() {
         </div>
       </section>
 
-      {/* ===== 日付クレジット（末尾・フッター的位置）===== */}
-      <section className="tj-dates">
-        <div className="tj-wide">
-          <div className="tj-dateline tj-rev">
-            <span>
-              公開 <b>{TRIP.publishedAt}</b>
-            </span>
-            <i />
-            <span>
-              最終更新 <b>{TRIP.updatedAt}</b>
-            </span>
-          </div>
-        </div>
-      </section>
-
       {/* ===== 関連記事 ===== */}
       <section className="tj-related">
         <div className="tj-wide">
@@ -676,6 +661,21 @@ export function TripArticleMock() {
                 </div>
               </a>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== 日付クレジット（末尾・フッター帯）===== */}
+      <section className="tj-dates">
+        <div className="tj-wide">
+          <div className="tj-dateline tj-rev">
+            <span>
+              公開 <b>{TRIP.publishedAt}</b>
+            </span>
+            <i />
+            <span>
+              最終更新 <b>{TRIP.updatedAt}</b>
+            </span>
           </div>
         </div>
       </section>

@@ -1,23 +1,30 @@
 /**
- * 旅程記事モックアップ共通の「エディタ・ブロックモデル」とサンプルデータ。
+ * 記事モックアップ共通の「エディタ・ブロックモデル」とサンプルデータ。
+ * （仕様: docs/editor-spec.md）
  *
- * 位置づけ: 投稿エディタは以下のブロックから本文を組み立てる前提。
- *   - 共通ブロック: 見出し / 本文 / 画像 / 引用 / 区切り / コールアウト（コツ・注意）
- *   - 旅程専用の構造化「スポット」ブロック:
- *       時刻・場所〔地図〕・写真・本文・費用・コツ をフィールドで持つ
+ * 設計の肝: 場所を構成する `place` ブロックは記事タイプ間で同一。
+ *   - 共通ブロック: heading / paragraph / image / video / quote / callout /
+ *     divider / editorsNote
+ *   - `place`（全タイプ共通）: name / category / location〔地図〕/ photo / body /
+ *     cost / tip。ここから個別「地図で見る」と集約マップを自動生成する。
+ *   - 旅程（itinerary）のときだけ `place` に order / time / transfer を付記する。
  *
- * この1つのデータ（STOPS / TRIP）から、レイアウト違いの複数案
- * （/mockup/trip-article, -b マップ先行, -c エディトリアル）を出し分ける。
- * `place`（場所＝施設名＋緯度経度）はスポットブロックの1フィールドで、
- * ここから各スポットの「地図で見る」個別リンクと Route Map（全スポットを
- * 順に結ぶ埋め込み地図）を自動生成する。
+ * この1セットのデータから、タイプ別レイアウトを描き分ける:
+ *   - itinerary  : /mockup/trip-article（順路マップ＋時刻タイムライン）
+ *   - place-guide: /mockup/place-guide（順不同の場所紹介＋ピン集約マップ）
+ *   - essay      : /mockup/essay（場所・地図なし。文章/写真/動画の読み物）
  *
- * 本番では Google Maps は公式 Embed API（要APIキー: maps/embed/v1/...）に
- * 差し替え予定。モックでは APIキー不要の公開URLを使う。
+ * 地図は APIキー不要の `maps.google.com/maps?...&output=embed` を使用。
+ * 本番は公式 Google Maps Embed API（要APIキー）に差し替え予定。
  */
 
+/** 場所ブロックの地図フィールド（spec §3 GeoRef を緯度経度で簡略化）。 */
 export type Place = { name: string; lat: number; lng: number };
 
+/**
+ * itinerary 用のスポット = `place` に旅程拡張（order/time/transfer）を付けたもの。
+ * place 由来のフィールド（name/cat/photo/body/cost/tip/place）は place-guide と共通。
+ */
 export type Stop = {
   time: string;
   end?: string;
@@ -27,8 +34,19 @@ export type Stop = {
   body: string;
   cost?: string;
   tip?: string;
-  place: Place; // 場所（地図フィールド）= 構造化スポットブロックの1フィールド
-  next?: { mins: string; mode: 'walk' | 'metro' }; // 次のスポットまでの移動
+  place: Place; // 場所（地図フィールド）= 全タイプ共通の place ブロック
+  next?: { mins: string; mode: 'walk' | 'metro' }; // 旅程拡張: 次の場所への移動
+};
+
+/** place-guide 用の場所ブロック（order/time/transfer を持たない素の place）。 */
+export type PlaceCard = {
+  name: string;
+  cat: string;
+  photo: string;
+  body: string;
+  cost?: string;
+  tip?: string;
+  place: Place;
 };
 
 export const HERO_PHOTO =
@@ -187,7 +205,7 @@ export function placeMapUrl(p: Place): string {
  *   始点 = 最初のスポット, 終点 = 最後, 中間は " to:" で経由地として連結。
  * maps.google.com の saddr/daddr + output=embed 形式はキー不要で動作する。
  */
-export function routeEmbedUrl(stops: Stop[]): string {
+export function routeEmbedUrl(stops: { place: Place }[]): string {
   const pts = stops.map((s) => `${s.place.lat},${s.place.lng}`);
   if (pts.length < 2) {
     const q = pts[0] ?? 'Paris';
@@ -199,3 +217,146 @@ export function routeEmbedUrl(stops: Stop[]): string {
     saddr,
   )}&daddr=${encodeURIComponent(daddr)}&output=embed`;
 }
+
+/**
+ * 集約「ピン」マップの埋め込み URL（順路ではない・place-guide 用）。
+ * 順番を持たない記事なので directions ではなく、中心座標に寄せた単純な地図を出す。
+ * （APIキー不要の output=embed では複数ピンの個別描画はできないため、本番は
+ *  公式 Embed API の `maps/embed/v1/search` 等で全ピン表示に差し替え予定。）
+ */
+export function pinsEmbedUrl(places: { place: Place }[]): string {
+  if (places.length === 0) {
+    return `https://maps.google.com/maps?q=Paris&z=12&output=embed`;
+  }
+  const lat = places.reduce((a, p) => a + p.place.lat, 0) / places.length;
+  const lng = places.reduce((a, p) => a + p.place.lng, 0) / places.length;
+  return `https://maps.google.com/maps?q=${lat},${lng}&z=13&output=embed`;
+}
+
+/* ===================== 場所紹介（place-guide）サンプル =====================
+ * 同じ place ブロックを order/time/transfer 無しで順不同に並べた standard 記事。 */
+
+export const GUIDE = {
+  city: 'パリ',
+  cityEn: 'PARIS',
+  publishedAt: '2026年4月2日',
+  updatedAt: '2026年6月8日',
+  count: '6',
+} as const;
+
+export const GUIDE_HERO =
+  'https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=1900&q=80';
+
+export const PLACES: PlaceCard[] = [
+  {
+    name: 'Café de Flore',
+    cat: 'カフェ',
+    photo:
+      'https://images.unsplash.com/photo-1453614512568-c4024d13c247?auto=format&fit=crop&w=1100&q=80',
+    body: 'サン=ジェルマンの老舗カフェ。サルトルやボーヴォワールが通った2階席は今も健在。観光地価格だが、その分「時間を買う」つもりで。朝いちが一番静か。',
+    cost: 'カフェ €4.80〜',
+    place: { name: 'Café de Flore, Paris', lat: 48.854, lng: 2.3324 },
+  },
+  {
+    name: 'Marché des Enfants Rouges',
+    cat: '市場・フード',
+    photo:
+      'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1100&q=80',
+    body: 'パリ最古の屋根付き市場。モロッコ・日本・イタリアの惣菜店が並び、昼は地元客で大賑わい。立ち食いでも座っても。マレ散策のランチに最適。',
+    tip: '正午前に行かないと人気店は売り切れる。',
+    place: { name: 'Marché des Enfants Rouges, Paris', lat: 48.8627, lng: 2.3626 },
+  },
+  {
+    name: 'Sainte-Chapelle',
+    cat: '教会・建築',
+    photo:
+      'https://images.unsplash.com/photo-1549144511-f099e773c147?auto=format&fit=crop&w=1100&q=80',
+    body: '15メートルのステンドグラスが四方を囲む、光の礼拝堂。晴れた午後、光が差し込む時間に行くと、床まで色が溢れる。ノートルダムの隣、シテ島に。',
+    cost: '€13',
+    place: { name: 'Sainte-Chapelle, Paris', lat: 48.8554, lng: 2.345 },
+  },
+  {
+    name: 'Promenade Plantée',
+    cat: '公園・散歩',
+    photo:
+      'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1100&q=80',
+    body: '廃線の高架を緑道に変えた、ニューヨークのハイラインの原型。バスティーユから東へ、街を見下ろしながら歩く約5km。地元の人のジョギングコース。',
+    place: { name: 'Coulée verte René-Dumont, Paris', lat: 48.8492, lng: 2.3786 },
+  },
+  {
+    name: 'Le Comptoir Général',
+    cat: 'バー・カルチャー',
+    photo:
+      'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1100&q=80',
+    body: '運河沿いの隠れ家。植物だらけの空間で、アフリカ系のカルチャーとカクテルを。看板が出ていないので、入口を見つけるのが最初の関門。夜が本番。',
+    tip: '入口は門の奥。Googleマップのピンを頼りに。',
+    place: { name: 'Le Comptoir Général, Paris', lat: 48.8708, lng: 2.3637 },
+  },
+  {
+    name: 'Buttes-Chaumont',
+    cat: '公園・絶景',
+    photo:
+      'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=1100&q=80',
+    body: '19区の起伏に富んだ公園。断崖の上の小神殿からの眺めは、観光客のいないパリそのもの。ピクニックの王道。坂が多いので歩きやすい靴で。',
+    place: { name: 'Parc des Buttes-Chaumont, Paris', lat: 48.8809, lng: 2.3829 },
+  },
+];
+
+export const GUIDE_RELATED = [
+  {
+    t: 'パリの「ひとり時間」に効く、静かな美術館5選',
+    cat: 'GUIDE · PARIS',
+    img: 'https://images.unsplash.com/photo-1545987796-200677ee1011?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    t: '在住者が選ぶ、本当に美味しいブーランジュリー',
+    cat: 'GUIDE · PARIS',
+    img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    t: 'マレ地区、半日で巡る古着とギャラリー',
+    cat: 'GUIDE · PARIS',
+    img: 'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?auto=format&fit=crop&w=800&q=80',
+  },
+];
+
+/* ===================== 読み物（essay）サンプル =====================
+ * place ブロック・地図を持たない standard 記事。paragraph / image / video /
+ * quote / callout / divider の自由な連なり。 */
+
+export const ESSAY = {
+  titleKick: 'ESSAY · PARIS',
+  publishedAt: '2026年3月20日',
+  updatedAt: '2026年5月30日',
+} as const;
+
+export const ESSAY_HERO =
+  'https://images.unsplash.com/photo-1471623320832-752e8bbf8413?auto=format&fit=crop&w=1900&q=80';
+
+/** YouTube の埋め込み（video ブロック）。プライバシー強化ドメインを使用。 */
+export const ESSAY_VIDEO_ID = 'iik25wqIuFo'; // パリの街並み（サンプル）
+
+export const ESSAY_PHOTOS = {
+  cafe:
+    'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1300&q=80',
+  street:
+    'https://images.unsplash.com/photo-1550340499-a6c60fc8287c?auto=format&fit=crop&w=1300&q=80',
+} as const;
+
+export const ESSAY_RELATED = [
+  {
+    t: '言葉が通じない街で、はじめて泣いた日のこと',
+    cat: 'ESSAY · PARIS',
+    img: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    t: '日本の「すみません」を、フランス語にできない',
+    cat: 'ESSAY · LANGUAGE',
+    img: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    t: '海外で10年。それでも「帰る場所」の話をしよう',
+    cat: 'ESSAY · LIFE',
+    img: 'https://images.unsplash.com/photo-1485871981521-5b1fd3805eee?auto=format&fit=crop&w=800&q=80',
+  },
+];
