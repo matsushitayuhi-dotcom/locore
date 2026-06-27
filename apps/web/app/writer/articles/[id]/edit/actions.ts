@@ -7,6 +7,28 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { runMockModeration } from '@/lib/moderation/mock';
+import {
+  hasPaywallMarker,
+  splitBodyByPaywall,
+} from '@/lib/editor/paywallMarker';
+
+/**
+ * Phase C: 入力の body にペイウォール境界（<hr data-paywall>）が含まれる場合、
+ * サーバ側でも保険として body / bodyPaid に分割する。
+ *
+ * - 通常はクライアント (WizardShell) が既に分割して送るのでここは no-op。
+ * - 万一 combined HTML がそのまま届いても、境界より前を body、後を bodyPaid にする。
+ * - 境界が無ければ data をそのまま返す（従来どおり全文 body）。
+ *
+ * data.body は in-place で書き換えず、新しいオブジェクトを返す（zod parsed の不変性維持）。
+ */
+function normalizePaywallSplit<
+  T extends { body?: string; bodyPaid?: string | null },
+>(data: T): T {
+  if (data.body === undefined || !hasPaywallMarker(data.body)) return data;
+  const { free, paid } = splitBodyByPaywall(data.body);
+  return { ...data, body: free, bodyPaid: paid || null };
+}
 
 // ---------- 共通 ----------
 
@@ -122,7 +144,7 @@ export async function updateArticle(input: unknown): Promise<ActionResult> {
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const data = parsed.data;
+  const data = normalizePaywallSplit(parsed.data);
   const { user, db } = await assertOwnership(data.id);
 
   // 価格上限は 2026-05 に撤廃済み。Tier の差は手数料率で扱う。
@@ -181,7 +203,7 @@ export async function autoSaveArticle(input: unknown): Promise<
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const data = parsed.data;
+  const data = normalizePaywallSplit(parsed.data);
   const { user, db } = await assertOwnership(data.id);
 
   if (data.priceJpy != null) {
@@ -236,7 +258,7 @@ export async function saveDraftArticle(input: unknown): Promise<
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }
-  const data = parsed.data;
+  const data = normalizePaywallSplit(parsed.data);
   const { user, db } = await assertOwnership(data.id);
 
   if (data.priceJpy != null) {

@@ -8,7 +8,7 @@ import {
   useState,
   useTransition,
 } from 'react';
-import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+import { useEditor, EditorContent, Extension, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -62,6 +62,11 @@ type Props = {
   /** 編集中の HTML を親に通知（debounce は親側で処理） */
   onChange: (html: string) => void;
   placeholder?: string;
+  /**
+   * Phase C: 本文上部に「ここから下を有料に」ボタン（ペイウォール境界の挿入/解除）を
+   * 表示する。記事本文エディタでのみ true を渡す。
+   */
+  showPaywallControl?: boolean;
 };
 
 // =============================================================================
@@ -305,6 +310,27 @@ function buildCommands(): SlashCommand[] {
         editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
     },
     {
+      id: 'paywall',
+      label: 'ここから下を有料に',
+      hint: '区切りより下を購入後だけ表示',
+      shortcut: '/paid',
+      category: 'ブロック',
+      keywords: [
+        'paywall',
+        'paid',
+        '有料',
+        'ゆうりょう',
+        '課金',
+        '区切り',
+        'ペイウォール',
+      ],
+      icon: '🔒',
+      run: ({ editor, range }) => {
+        editor.chain().focus().deleteRange(range).run();
+        insertPaywallDivider(editor);
+      },
+    },
+    {
       id: 'hr-stars',
       label: '区切り (◆ 装飾)',
       hint: '別スタイルの区切り (◆ ◆ ◆)',
@@ -446,6 +472,28 @@ function insertCallout(
     `<p><span aria-hidden="true" style="margin-right:0.5em">${c.emoji}</span>${type === 'note' ? '補足' : type === 'warning' ? '注意' : 'ヒント'}: ここに本文を書く</p>` +
     `</blockquote><p></p>`;
   editor.chain().focus().deleteRange(range).insertContent(html).run();
+}
+
+/**
+ * Phase C: 本文中に「ここから下を有料」区切り（ペイウォール境界）を 1 箇所だけ挿入する。
+ *
+ * - 既に境界が存在する場合は新規挿入せず toast で案内する（境界は常に 1 本）。
+ * - 区切りは `<hr data-paywall="true">` として挿入し、保存時に
+ *   lib/editor/paywallMarker.ts の splitBodyByPaywall がこれを境界に body/body_paid を分割する。
+ */
+function insertPaywallDivider(editor: Editor) {
+  const html = editor.getHTML();
+  if (/data-paywall/i.test(html)) {
+    toast.info('有料の区切りは 1 記事に 1 つだけです');
+    return;
+  }
+  editor
+    .chain()
+    .focus()
+    .insertContent(
+      '<hr data-paywall="true"><p></p>',
+    )
+    .run();
 }
 
 function escapeAttr(s: string) {
@@ -794,8 +842,47 @@ function BubbleBtn({
 // 本体
 // =============================================================================
 
-export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
+/**
+ * Phase C: `horizontalRule` ノードに `data-paywall` 属性を追加するグローバル拡張。
+ *
+ * StarterKit 標準の HorizontalRule は未知の属性を parse 時に捨ててしまうため、
+ * `<hr data-paywall="true">`（ペイウォール境界）を round-trip させるには、
+ * 属性を明示的に許可する必要がある。属性付きの hr は CSS（globals.css の
+ * `hr[data-paywall]`）で「ここから下が有料」ラインとして視覚化する。
+ */
+const PaywallHorizontalRule = Extension.create({
+  name: 'paywallHorizontalRuleAttr',
+  addGlobalAttributes() {
+    return [
+      {
+        types: ['horizontalRule'],
+        attributes: {
+          'data-paywall': {
+            default: null,
+            parseHTML: (element: HTMLElement) =>
+              element.getAttribute('data-paywall') === 'true' ? 'true' : null,
+            renderHTML: (attributes: Record<string, unknown>) => {
+              if (!attributes['data-paywall']) return {};
+              return { 'data-paywall': 'true' };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
+export function RichTextEditor({
+  initialHtml,
+  onChange,
+  placeholder,
+  showPaywallControl = false,
+}: Props) {
   const [mounted, setMounted] = useState(false);
+  // 本文中にペイウォール境界が存在するか（ボタンのラベル/状態を切り替える）
+  const [hasPaywall, setHasPaywall] = useState<boolean>(() =>
+    /data-paywall/i.test(initialHtml ?? ''),
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -853,6 +940,7 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      PaywallHorizontalRule,
       Image.configure({ inline: false, allowBase64: false }),
       Link.configure({
         openOnClick: false,
@@ -912,7 +1000,9 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
       },
     },
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const nextHtml = editor.getHTML();
+      onChange(nextHtml);
+      setHasPaywall(/data-paywall/i.test(nextHtml));
       const view = editor.view as unknown as { _tiptapEditor?: Editor };
       view._tiptapEditor = editor;
     },
@@ -935,9 +1025,22 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
     const current = editor.getHTML();
     if (initialHtml !== current) {
       editor.commands.setContent(initialHtml || '<p></p>', { emitUpdate: false });
+      setHasPaywall(/data-paywall/i.test(initialHtml ?? ''));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialHtml]);
+
+  /** 「ここから下を有料に」ボタン: 境界が無ければ挿入、あれば解除する。 */
+  const togglePaywallDivider = useCallback(() => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    if (/data-paywall/i.test(ed.getHTML())) {
+      // 既存の境界を通常の区切り線に戻す（= 全文無料に戻す）
+      ed.chain().focus().updateAttributes('horizontalRule', { 'data-paywall': null }).run();
+    } else {
+      insertPaywallDivider(ed);
+    }
+  }, []);
 
   if (!mounted) {
     return (
@@ -949,6 +1052,29 @@ export function RichTextEditor({ initialHtml, onChange, placeholder }: Props) {
 
   return (
     <div className="space-y-2">
+      {showPaywallControl ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={togglePaywallDivider}
+            aria-pressed={hasPaywall}
+            className={
+              'inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[12px] font-semibold transition ' +
+              (hasPaywall
+                ? 'border-secondary-700/40 bg-secondary-50 text-secondary-700 hover:bg-secondary-50/70'
+                : 'border-border bg-card text-foreground/75 hover:border-primary-500 hover:text-primary-300')
+            }
+          >
+            <span aria-hidden>🔒</span>
+            {hasPaywall ? '有料の区切りを解除' : 'ここから下を有料に'}
+          </button>
+          <span className="text-[11px] text-foreground/55">
+            {hasPaywall
+              ? 'この区切りより下が、購入後だけ表示されます。'
+              : 'カーソル位置に「ここから下を有料」の区切りを 1 つ挿入できます。'}
+          </span>
+        </div>
+      ) : null}
       <div ref={containerRef} className="relative">
         <EditorContent editor={editor} />
         <SlashMenu

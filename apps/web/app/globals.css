@@ -726,6 +726,31 @@
 .locore-editor .ProseMirror hr { margin: 1em 0; }
 .locore-editor .ProseMirror table { font-size: 14px; }
 
+/*
+ * Phase C: 本文中「ここから下を有料」境界（<hr data-paywall="true">）を、
+ * 通常の区切り線と区別して目立たせる。この線より下が購入後に解放される有料パート。
+ */
+.locore-editor .ProseMirror hr[data-paywall='true'] {
+  position: relative;
+  border: 0;
+  border-top: 2px dashed var(--color-secondary-700, #b45309);
+  margin: 1.75em 0;
+  overflow: visible;
+}
+.locore-editor .ProseMirror hr[data-paywall='true']::after {
+  content: '🔒 ここから下は有料（購入後に表示）';
+  position: absolute;
+  top: -0.85em;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 0 0.6em;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-secondary-700, #b45309);
+  background: var(--color-card, #fff);
+}
+
 /* キーボード追従ツールバー: 横スクロールのスクロールバーを隠す（タッチで横にスワイプ可） */
 .locore-mobile-toolbar { -webkit-overflow-scrolling: touch; }
 .locore-mobile-toolbar::-webkit-scrollbar { display: none; }

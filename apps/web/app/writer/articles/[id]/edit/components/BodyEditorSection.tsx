@@ -32,6 +32,8 @@ type Props = {
   /** 本文（HTML 保存形式。旧データは Markdown のこともある） */
   value: string;
   onChange: (html: string) => void;
+  /** Phase C: 「ここから下を有料に」ボタンを本文上部に表示する */
+  showPaywallControl?: boolean;
 };
 
 const MAX_BODY = 20000;
@@ -64,7 +66,11 @@ function toInitialHtml(value: string): string {
   return isHtmlBody(value) ? value : markdownToHtml(value);
 }
 
-export function BodyEditorSection({ value, onChange }: Props) {
+export function BodyEditorSection({
+  value,
+  onChange,
+  showPaywallControl = false,
+}: Props) {
   // WYSIWYG 内部状態（HTML）
   const [html, setHtml] = useState<string>(() => toInitialHtml(value));
 
@@ -108,6 +114,7 @@ export function BodyEditorSection({ value, onChange }: Props) {
 
       <RichTextEditor
         initialHtml={html}
+        showPaywallControl={showPaywallControl}
         onChange={(nextHtml) => {
           setHtml(nextHtml);
           // 2026-05 改修: HTML をそのまま親に伝える（DB 保存形式 = HTML）
