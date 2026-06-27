@@ -38,8 +38,25 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .nlinks{display:flex;gap:30px;font-size:14px;color:rgba(255,255,255,.86);font-weight:500}
 .nlinks a:hover{color:#fff}
 .nright{display:flex;align-items:center;gap:18px}
-.nlogin{font-size:14px;font-weight:500;color:rgba(255,255,255,.86)}
-.nlogin:hover{color:#fff}
+.nlogin{font-size:14px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.45);padding:8px 16px;border-radius:999px;transition:.18s}
+.nlogin:hover{color:#fff;border-color:rgba(255,255,255,.85);background:rgba(255,255,255,.08)}
+
+/* モバイル用ハンバーガー＋ドロワー。>880px では非表示、≤880px のみ表示。 */
+.nburger{display:none;flex-direction:column;justify-content:center;gap:5px;width:42px;height:42px;padding:0 9px;background:transparent;border:1px solid rgba(255,255,255,.45);border-radius:11px;cursor:pointer}
+.nburger span{display:block;height:2px;width:100%;background:#fff;border-radius:2px;transition:.25s}
+.nburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.nburger.open span:nth-child(2){opacity:0}
+.nburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+.mmenu{position:fixed;inset:0;z-index:70;display:none}
+.mmenu.open{display:block}
+.mmenu-ov{position:absolute;inset:0;background:rgba(6,8,13,.55);backdrop-filter:blur(2px)}
+.mmenu-panel{position:absolute;top:0;right:0;width:min(78vw,320px);height:100%;background:rgba(11,13,19,.97);backdrop-filter:blur(14px);border-left:1px solid rgba(255,255,255,.09);padding:88px 26px 32px;display:flex;flex-direction:column;gap:6px}
+.mmenu-panel a{color:rgba(255,255,255,.88);font-size:17px;font-weight:600;padding:13px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
+.mmenu-panel a:hover{color:#fff}
+.mmenu-cta{margin-top:22px;display:flex;flex-direction:column;gap:12px}
+.mmenu-cta a{border-bottom:none;text-align:center;border-radius:999px;padding:13px 18px}
+.mmenu-cta .ml-login{border:1px solid rgba(255,255,255,.45);color:#fff}
+.mmenu-cta .ml-signup{background:var(--lime);color:#1c2a06;font-weight:700}
 
 .hero{position:relative;min-height:100vh;overflow:hidden;background:#080a10;color:#fff;text-align:center;display:flex;align-items:center;justify-content:center}
 .hero-bg{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,rgba(14,16,26,.28),rgba(14,16,26,.42) 58%,rgba(14,16,26,.74)),url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1700&q=78') center/cover}
@@ -229,6 +246,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 
 @media(max-width:880px){
   .nlinks,.nlogin{display:none}
+  .nburger{display:flex}
   .frame{transform:none}
   .pgrid{grid-template-columns:1fr}
   .feat{grid-template-columns:1fr;gap:40px;padding:76px 0;text-align:center}
@@ -242,8 +260,24 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 const BODY = `<div class="navwrap"><div class="wrap"><nav>
   <div class="logo">Lo<b>core</b></div>
   <div class="nlinks"><a href="/articles">記事</a><a href="/services">サービス</a><a href="/community">コミュニティ</a><a href="/search">検索</a></div>
-  <div class="nright"><a class="nlogin" href="/auth/login?redirect_to=%2Farticles">ログイン</a><a class="btn pri" href="/auth/signup?redirect_to=%2Farticles" style="padding:9px 18px;font-size:14px">無料ではじめる</a></div>
+  <div class="nright"><a class="nlogin" href="/auth/login?redirect_to=%2Farticles">ログイン</a><a class="btn pri" href="/auth/signup?redirect_to=%2Farticles" style="padding:9px 18px;font-size:14px">無料ではじめる</a>
+    <button class="nburger" type="button" aria-label="メニュー" aria-expanded="false"><span></span><span></span><span></span></button>
+  </div>
 </nav></div></div>
+
+<div class="mmenu" id="mmenu">
+  <div class="mmenu-ov" data-mclose></div>
+  <div class="mmenu-panel">
+    <a href="/articles">記事</a>
+    <a href="/services">サービス</a>
+    <a href="/community">コミュニティ</a>
+    <a href="/search">検索</a>
+    <div class="mmenu-cta">
+      <a class="ml-login" href="/auth/login?redirect_to=%2Farticles">ログイン</a>
+      <a class="ml-signup" href="/auth/signup?redirect_to=%2Farticles">無料ではじめる →</a>
+    </div>
+  </div>
+</div>
 
 <header class="hero">
   <div class="hero-bg"></div>
@@ -454,12 +488,31 @@ export function LandingClient() {
       countIo.observe(bigN);
     }
 
+    // mobile hamburger drawer: toggle open/close, close on link or overlay click
+    const burger = root.querySelector('.nburger') as HTMLButtonElement | null;
+    const mmenu = root.querySelector('#mmenu') as HTMLElement | null;
+    const setMenu = (open: boolean) => {
+      if (!mmenu || !burger) return;
+      mmenu.classList.toggle('open', open);
+      burger.classList.toggle('open', open);
+      burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    const onBurger = () => setMenu(!mmenu?.classList.contains('open'));
+    const onMenuClick = (e: Event) => {
+      const t = e.target as HTMLElement;
+      if (t.closest('a') || t.hasAttribute('data-mclose')) setMenu(false);
+    };
+    if (burger) burger.addEventListener('click', onBurger);
+    if (mmenu) mmenu.addEventListener('click', onMenuClick);
+
     return () => {
       if (raf) cancelAnimationFrame(raf);
       if (resizeHandler) window.removeEventListener('resize', resizeHandler);
       root.removeEventListener('scroll', onScroll);
       io.disconnect();
       if (countIo) countIo.disconnect();
+      if (burger) burger.removeEventListener('click', onBurger);
+      if (mmenu) mmenu.removeEventListener('click', onMenuClick);
     };
   }, []);
 

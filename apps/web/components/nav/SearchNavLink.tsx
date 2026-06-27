@@ -16,7 +16,7 @@ export function SearchNavLink() {
       aria-current={active ? 'page' : undefined}
       className={
         'text-[14px] font-medium transition ' +
-        (active ? 'text-primary-400' : 'text-white/80 hover:text-white')
+        (active ? 'text-primary-300' : 'text-white/80 hover:text-white')
       }
     >
       検索

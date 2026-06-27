@@ -6,7 +6,6 @@ import {
   BookOpen,
   MessagesSquare,
   Briefcase,
-  Users,
   Search,
   type LucideIcon,
 } from 'lucide-react';
@@ -14,8 +13,8 @@ import {
 /**
  * モバイル下部タブナビゲーション (md 未満で固定表示)。
  *
- * 2026-06 改修: 旅行者/駐在員モードを撤去し、モードに依存しない 5 タブに統一:
- *   記事 / コミュニティ / サービス / ユーザー / 検索
+ * 2026-06 改修: 旅行者/駐在員モードを撤去し、モードに依存しない 4 タブに統一:
+ *   記事 / コミュニティ / サービス / 検索
  * （ホームは「記事」に集約）。
  *
  * - 安全エリア対応 (env(safe-area-inset-bottom))
@@ -63,12 +62,6 @@ const TABS: Tab[] = [
     label: 'サービス',
     icon: Briefcase,
     match: (p) => p.startsWith('/services'),
-  },
-  {
-    href: '/users',
-    label: 'ユーザー',
-    icon: Users,
-    match: (p) => p.startsWith('/users'),
   },
   {
     href: '/search',
