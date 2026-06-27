@@ -183,7 +183,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
 .aj-fbadge::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-120%);animation:ajshine 3.6s ease-in-out infinite}
 @keyframes ajshine{0%,60%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
 .aj-fcat{margin-top:20px;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--lime-l);font-weight:600}
-.aj-feature h2{font-weight:900;letter-spacing:-.03em;line-height:1.05;font-size:clamp(34px,6vw,76px);margin-top:14px;max-width:16ch;text-shadow:0 2px 30px rgba(0,0,0,.45)}
+.aj-feature h2{color:#fff;font-weight:900;letter-spacing:-.03em;line-height:1.05;font-size:clamp(34px,6vw,76px);margin-top:14px;max-width:16ch;text-shadow:0 2px 30px rgba(0,0,0,.45)}
 .aj-fexcerpt{margin-top:20px;max-width:560px;font-size:15.5px;line-height:1.9;color:rgba(255,255,255,.86);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .aj-frow{margin-top:30px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
 .aj-fcta{display:inline-flex;align-items:center;gap:10px;background:var(--lime);color:#0b0c09;font-family:var(--mono);font-size:14px;font-weight:600;padding:15px 26px;border-radius:999px;transition:transform .2s,box-shadow .2s;box-shadow:0 14px 34px -8px rgba(168,224,28,.6)}
