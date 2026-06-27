@@ -129,7 +129,10 @@ export interface Spot {
   priceEstimate: string;
   openingHours: string;
   tags: string[];
+  /** スポット単位の説明文（場所カード／旅程 stop の本文）。 */
   description?: string;
+  /** スポット単位の「コツ」（表示側でライムの破線ボックスに描画）。 */
+  tip?: string;
   /** Google Places から拾った写真 URL の配列（最大 5 枚） */
   photoUrls?: string[];
   /**

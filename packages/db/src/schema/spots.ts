@@ -69,6 +69,16 @@ export const spots = pgTable(
     address: text('address'),
     location: point('location').notNull(),
     category: spotCategoryEnum('category'),
+    /**
+     * スポット単位の説明文（複数行可）。場所カード／旅程 stop の本文として表示する。
+     * マイグレーション: `manual/0057_spot_description_tip.sql`（additive・nullable）。
+     */
+    description: text('description'),
+    /**
+     * スポット単位の「コツ」（1〜数行）。場所カード／旅程 stop でライムの破線ボックスに表示する。
+     * マイグレーション: `manual/0057_spot_description_tip.sql`（additive・nullable）。
+     */
+    tip: text('tip'),
     priceEstimate: text('price_estimate'),
     openingHours: jsonb('opening_hours').$type<OpeningHours>(),
     tags: text('tags').array().notNull().default([]),
