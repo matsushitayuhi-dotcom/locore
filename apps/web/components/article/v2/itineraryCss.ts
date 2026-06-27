@@ -87,6 +87,10 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-ctxt blockquote{border-left:3px solid var(--lime);padding-left:14px;color:var(--ink2);margin:.6em 0}
 .tj-cextras{margin-top:18px;display:flex;flex-wrap:wrap;gap:9px}
 .tj-cost{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);background:var(--lime-l);border:1px solid rgba(168,224,28,.45);padding:6px 13px;border-radius:999px}
+.tj-tipline{margin-top:14px;display:flex;gap:11px;align-items:flex-start;padding:12px 15px;border-radius:12px;background:var(--bg);border:1px dashed var(--bd2);font-size:12.5px;line-height:1.7;color:var(--ink2)}
+.tj-tipline .ic,.tj-tipline>svg{flex:none;color:var(--lime-d);margin-top:1px;width:16px;height:16px}
+.tj-tipline b{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);display:block;margin-bottom:2px}
+.tj-tipline .tx{white-space:pre-line}
 .tj-conn{position:relative;padding-left:74px;margin:6px 0 18px}
 @media(min-width:721px){.tj-conn{padding-left:92px}}
 .tj-conn .pill{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink2);background:var(--white);border:1px solid var(--bd);border-radius:999px;padding:8px 16px;box-shadow:0 4px 14px -8px rgba(17,17,17,.2)}
@@ -118,8 +122,30 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-authcard .role{font-family:var(--mono);font-size:12.5px;color:var(--mu);margin-top:4px}
 .tj-authcard .role .tier{color:var(--lime-d);font-weight:700}
 .tj-authcard .bio{font-size:13.5px;line-height:1.85;color:var(--ink2);margin-top:13px;max-width:52ch}
+.tj-authcard .body{flex:1;min-width:0}
+.tj-authcta{margin-top:16px;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:var(--lime);padding:11px 22px;border-radius:999px;transition:transform .2s,box-shadow .2s;box-shadow:0 12px 28px -10px var(--glow)}
+.tj-authcta:hover{transform:translateY(-2px)}
+.tj-authcta svg{width:14px;height:14px}
+.tj-authlinks{margin-top:14px;display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.tj-authlink{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
+.tj-authlink:hover{text-decoration:underline}
+.tj-authlink svg{width:12px;height:12px}
+/* 著者サービス */
+.tj-authsvc{margin-top:26px;border-top:1px solid var(--bd);padding-top:22px}
+.tj-authsvc .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.tj-authsvc .lab .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime-d)}
+.tj-authsvc .lab a{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--lime-d)}
+.tj-authsvc-grid{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.tj-authsvc-grid{grid-template-columns:1fr}}
 
+/* ヒーロー内アクション（いいね / 保存）= 既定 白 / active ライム */
 .tj-heroact{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tj-hact{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:#fff;border:1px solid rgba(255,255,255,.7);padding:10px 18px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s,box-shadow .2s;box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
+.tj-hact:hover{transform:translateY(-1px)}
+.tj-hact:disabled{opacity:.7;cursor:default}
+.tj-hact svg{width:16px;height:16px}
+.tj-hact .ct{font-variant-numeric:tabular-nums}
+.tj-hact.on{background:var(--lime);color:#0b0c09;border-color:var(--lime);box-shadow:0 10px 26px -10px var(--glow)}
 .tj-body{padding:48px 0 20px}
 .tj-bodywrap{max-width:760px;margin:0 auto;padding:0 24px}
 @media(max-width:720px){.tj-body{padding:32px 0 12px}}

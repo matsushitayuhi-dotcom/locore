@@ -184,10 +184,14 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
         </div>
       </section>
 
-      {/* ===== 著者カード ＋ サービス ===== */}
+      {/* ===== 著者カード ＋ サービス（モック .es-byline 準拠）===== */}
       <section className="es-foot">
         <div className="es-read">
-          <AuthorCard writer={writer} authorServices={authorServices} />
+          <AuthorCard
+            writer={writer}
+            authorServices={authorServices}
+            variant="es"
+          />
         </div>
       </section>
 
@@ -199,7 +203,7 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
       </section>
 
       {/* ===== 関連記事 ===== */}
-      <RelatedArticles related={related} />
+      <RelatedArticles related={related} variant="es" />
 
       {/* ===== 日付フッター ===== */}
       <section className="es-dates">

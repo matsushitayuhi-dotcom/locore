@@ -42,7 +42,6 @@ export function ArticleRendererV2(props: ArticleRendererV2Props) {
 
   // 各レイアウトに渡す共通 props（EngagementProps の全バンドル）
   const eng: EngagementProps = props;
-  const heroActions = <HeroActions {...eng} />;
 
   if (kind === 'itinerary') {
     return (
@@ -52,7 +51,7 @@ export function ArticleRendererV2(props: ArticleRendererV2Props) {
           {...eng}
           region={region}
           country={country}
-          heroActions={heroActions}
+          heroActions={<HeroActions {...eng} variant="tj" />}
         />
       </>
     );
@@ -66,7 +65,7 @@ export function ArticleRendererV2(props: ArticleRendererV2Props) {
           {...eng}
           region={region}
           country={country}
-          heroActions={heroActions}
+          heroActions={<HeroActions {...eng} variant="pg" />}
         />
       </>
     );
@@ -78,7 +77,7 @@ export function ArticleRendererV2(props: ArticleRendererV2Props) {
       <PreviewBanner article={article} previewMode={previewMode} />
       <EssayArticleV2
         {...eng}
-        heroActions={heroActions}
+        heroActions={<HeroActions {...eng} variant="es" />}
         videosSlot={<EssayVideos videos={videos} />}
       />
     </>

@@ -71,6 +71,10 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-maplink{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink);border:1px solid var(--bd2);padding:7px 13px;border-radius:999px;transition:border-color .2s,color .2s}
 .pg-maplink:hover{border-color:var(--lime);color:var(--lime-d)}
 .pg-maplink svg{width:13px;height:13px}
+.pg-ptip{margin-top:14px;display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:12px;background:var(--bg);border:1px dashed var(--bd2);font-size:12.5px;line-height:1.7;color:var(--ink2)}
+.pg-ptip svg{flex:none;color:var(--lime-d);margin-top:1px;width:15px;height:15px}
+.pg-ptip b{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);display:block;margin-bottom:2px}
+.pg-ptip .tx{white-space:pre-line}
 
 .pg-mapsec{position:relative;width:100vw;left:50%;transform:translateX(-50%);background:var(--ink);padding:78px 0;margin-top:46px;overflow:hidden}
 .pg-mapsec .glow{position:absolute;width:540px;height:540px;border-radius:50%;background:var(--lime);filter:blur(150px);opacity:.16;top:-220px;left:-60px}
@@ -106,6 +110,20 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-authcard h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:23px;margin-top:7px}
 .pg-authcard .role{font-family:var(--mono);font-size:12.5px;color:var(--mu);margin-top:4px}
 .pg-authcard .bio{font-size:13.5px;line-height:1.85;color:var(--ink2);margin-top:12px;max-width:52ch}
+.pg-authcard .body{flex:1;min-width:0}
+.pg-authcta{margin-top:16px;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:var(--lime);padding:11px 22px;border-radius:999px;transition:transform .2s;box-shadow:0 12px 28px -10px var(--glow)}
+.pg-authcta:hover{transform:translateY(-2px)}
+.pg-authcta svg{width:14px;height:14px}
+.pg-authlinks{margin-top:14px;display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.pg-authlink{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
+.pg-authlink:hover{text-decoration:underline}
+.pg-authlink svg{width:12px;height:12px}
+.pg-authsvc{margin-top:26px;border-top:1px solid var(--bd);padding-top:22px}
+.pg-authsvc .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.pg-authsvc .lab .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime-d)}
+.pg-authsvc .lab a{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--lime-d)}
+.pg-authsvc-grid{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.pg-authsvc-grid{grid-template-columns:1fr}}
 
 .pg-related{position:relative;width:100vw;left:50%;transform:translateX(-50%);background:var(--bg2);padding:80px 0 92px}
 .pg-related .head{margin-bottom:32px}
@@ -121,6 +139,12 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-rb h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:17px;line-height:1.35;margin-top:9px}
 
 .pg-heroact{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pg-hact{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:#fff;border:1px solid rgba(255,255,255,.7);padding:10px 18px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s,box-shadow .2s;box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
+.pg-hact:hover{transform:translateY(-1px)}
+.pg-hact:disabled{opacity:.7;cursor:default}
+.pg-hact svg{width:16px;height:16px}
+.pg-hact .ct{font-variant-numeric:tabular-nums}
+.pg-hact.on{background:var(--lime);color:#0b0c09;border-color:var(--lime);box-shadow:0 10px 26px -10px var(--glow)}
 .pg-body{padding:54px 0 20px}
 .pg-bodywrap{max-width:760px;margin:0 auto;padding:0 24px}
 @media(max-width:720px){.pg-body{padding:36px 0 12px}}

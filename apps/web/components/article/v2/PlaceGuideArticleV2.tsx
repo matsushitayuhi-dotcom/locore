@@ -6,8 +6,6 @@ import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
 import { ArticleSpotsMap } from '../../ArticleSpotsMap';
-import { SpotFavoriteButton } from '../../SpotFavoriteButton';
-import { BulkSpotFavoriteButton } from '../../BulkSpotFavoriteButton';
 import { ReviewFormToggle } from '../ReviewFormToggle';
 import { CSS } from './placeGuideCss';
 import {
@@ -15,6 +13,7 @@ import {
   HeroNetCanvas,
   PinIcon,
   CostIcon,
+  BulbIcon,
   hasCoords,
   pinsEmbedUrl,
   useReveal,
@@ -24,16 +23,15 @@ import {
   AuthorCard,
   RelatedArticles,
   ReviewsList,
-  SpotTipBox,
   type EngagementProps,
 } from './engagement';
 
 /**
  * ブログ・場所あり（place-guide）の v2 レイアウト。
  *
- * Phase A の新デザイン本文（場所カード / ピン地図 / 場所リスト）を現行の実データ（spots）で
- * 描画しつつ、Phase B の課金（Paywall）とインタラクション（いいね/保存・スポット保存・
- * レビュー・著者・関連・地図）を新スタイルに織り込む。
+ * モック（PlaceGuideMock）の見た目を正として、実データ（spots）で描画する。場所カードは
+ * 写真付き（モックの .pg-prow / .pg-pphoto・左右交互）。記事レベルのいいね/保存（ヒーロー）は
+ * 維持するが、スポット単位のお気に入りボタンはモックに無いため撤去。課金（Paywall）は維持。
  *
  * ゲート意味論（収益直結）:
  *   - unlocked 時のみ、場所カードの詳細（名前 / 住所 / description / tip / コスト /
@@ -187,7 +185,8 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
               </div>
               <div className="pg-prich">
                 {spots.map((s, i) => {
-                  const photo = s.photoUrls?.[0];
+                  // 写真はモック準拠で常に表示。spot 写真が無ければ記事カバーへフォールバック。
+                  const photo = s.photoUrls?.[0] || article.coverImageUrl;
                   const mapHref =
                     hasCoords(s.lat, s.lng) || s.googlePlaceId
                       ? buildSpotGoogleMapsUrl({
@@ -199,17 +198,12 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
                       : null;
                   const desc = s.description?.trim() || spotFallbackDesc(s);
                   return (
-                    <article
-                      key={s.id}
-                      className={`pg-prow pg-rev${photo ? '' : ' nophoto'}`}
-                    >
-                      {photo ? (
-                        <div className="pg-pphoto">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={photo} alt="" loading="lazy" />
-                          {s.category ? <span className="pg-pcat">{s.category}</span> : null}
-                        </div>
-                      ) : null}
+                    <article key={s.id} className="pg-prow pg-rev">
+                      <div className="pg-pphoto">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={photo} alt="" loading="lazy" />
+                        {s.category ? <span className="pg-pcat">{s.category}</span> : null}
+                      </div>
                       <div className="pg-pbody">
                         <div className="pg-pname">
                           <span className="pg-pidx">{String(i + 1).padStart(2, '0')}</span>
@@ -222,9 +216,14 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
                           </div>
                         ) : null}
                         {desc ? <p className="pg-ptxt">{desc}</p> : null}
+                        {/* spot.tip（モック .pg-ptip 準拠の破線「コツ」・Phase C-2） */}
                         {s.tip?.trim() ? (
-                          <div style={{ marginTop: 12 }}>
-                            <SpotTipBox tip={s.tip} />
+                          <div className="pg-ptip">
+                            <BulbIcon />
+                            <div>
+                              <b>ローカルのコツ</b>
+                              <span className="tx">{s.tip}</span>
+                            </div>
                           </div>
                         ) : null}
                         <div className="pg-pextras">
@@ -245,31 +244,12 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
                               地図で見る
                             </a>
                           ) : null}
-                          <SpotFavoriteButton
-                            spotId={s.id}
-                            spotName={s.name}
-                            bookmarked={bookmarkedSpotIds?.has(s.id) ?? false}
-                            folders={folders}
-                            viewerLoggedIn={viewerLoggedIn}
-                          />
                         </div>
                       </div>
                     </article>
                   );
                 })}
               </div>
-              {spots.length > 0 ? (
-                <div className="pg-placeshead pg-rev" style={{ marginTop: 20 }}>
-                  <div className="pg-heroact" style={{ marginTop: 0 }}>
-                    <BulkSpotFavoriteButton
-                      spotIds={spots.map((s) => s.id)}
-                      folders={folders}
-                      viewerLoggedIn={viewerLoggedIn}
-                      bookmarkedSpotIds={bookmarkedSpotIds}
-                    />
-                  </div>
-                </div>
-              ) : null}
             </div>
           </section>
 
@@ -404,10 +384,14 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
         </>
       )}
 
-      {/* ===== 著者カード ＋ サービス ===== */}
+      {/* ===== 著者カード ＋ サービス（モック .pg-authcard 準拠）===== */}
       <section className="pg-authsec">
         <div className="pg-wide">
-          <AuthorCard writer={writer} authorServices={authorServices} />
+          <AuthorCard
+            writer={writer}
+            authorServices={authorServices}
+            variant="pg"
+          />
         </div>
       </section>
 
@@ -419,7 +403,7 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
       </section>
 
       {/* ===== 関連記事 ===== */}
-      <RelatedArticles related={related} />
+      <RelatedArticles related={related} variant="pg" />
 
       {/* ===== 日付フッター ===== */}
       <section className="pg-dates">

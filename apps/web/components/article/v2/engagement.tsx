@@ -1,27 +1,24 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-  Button,
-  CreatorBadge,
-  LocalTierBadge,
-  ResidencyBadge,
-  SatisfactionStars,
-} from '@locore/ui';
-import { ChevronRight } from '@locore/ui/icons';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { Heart, Bookmark, BookmarkCheck } from 'lucide-react';
+import { LocalTierBadge, SatisfactionStars } from '@locore/ui';
 import { ServiceCard } from '../../services/ServiceCard';
-import { LikeButton } from '../LikeButton';
-import { AddToTripButton } from '../../AddToTripButton';
+import { toggleArticleLike } from '@/lib/articleLikes/actions';
+import { addBookmark, removeBookmark } from '@/lib/bookmarks/actions';
+import { authorMeta } from './shared';
 import type { Article, Writer, Spot, Review } from '@/lib/mock';
 import type { FolderSummary } from '@/lib/spotFavorites/actions';
 import type { getMyReviewForArticle } from '@/lib/reviews/actions';
 import type { FeaturedService } from '@/lib/services/featured';
 import type { ArticleVideoRow } from './classify';
 import { toVideoEmbedSrc } from './classify';
+
+/** v2 各タイプの scoped class 接頭辞（tj=モデルコース / pg=場所あり / es=場所なし）。 */
+export type V2Variant = 'tj' | 'pg' | 'es';
 
 /**
  * エンゲージメント層（共通の機能つき部品）。
@@ -69,8 +66,12 @@ export type EngagementProps = {
 /* ===================== ヒーロー内アクション ===================== */
 
 /**
- * いいね / 保存ボタン。v2 ヒーローの著者ブロック付近に差す。
- * previewMode では出さない（旧仕様踏襲）。
+ * 記事レベルの「いいね / 保存（お気に入り）」ボタン。v2 ヒーロー内に差す。
+ *
+ * モック準拠のブランド配色トグル: 既定は白、active（いいね済み / 保存済み）で
+ * ライムグリーン（`.{v}-hact.on`）。共有の LikeButton / AddToTripButton（Tailwind
+ * トークン配色）は他画面でも使うため触らず、ヒーロー専用に同じ server action を
+ * 直接叩く軽量ボタンとして実装する。previewMode では出さない（旧仕様踏襲）。
  */
 export function HeroActions({
   article,
@@ -80,24 +81,114 @@ export function HeroActions({
   likeCount,
   initialLiked,
   previewMode,
-}: EngagementProps) {
+  variant = 'tj',
+}: EngagementProps & { variant?: V2Variant }) {
+  const router = useRouter();
+  const [liked, setLiked] = useState(initialLiked);
+  const [likes, setLikes] = useState(likeCount);
+  const [saved, setSaved] = useState(alreadySavedByMe);
+  const [saves, setSaves] = useState(bookmarkCount);
+  const [likePending, startLike] = useTransition();
+  const [savePending, startSave] = useTransition();
+
   if (previewMode) return null;
+
+  const cls = (on: boolean) => `${variant}-hact${on ? ' on' : ''}`;
+
+  const onLike = () => {
+    if (!viewerLoggedIn) {
+      router.push(
+        `/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`,
+      );
+      return;
+    }
+    const was = liked;
+    setLiked(!was);
+    setLikes((c) => c + (was ? -1 : 1));
+    startLike(async () => {
+      const res = await toggleArticleLike({ articleId: article.id });
+      if (!res.ok) {
+        setLiked(was);
+        setLikes((c) => c + (was ? 1 : -1));
+        toast.error(res.error);
+      } else if (res.data && res.data.liked !== !was) {
+        setLiked(res.data.liked);
+      }
+    });
+  };
+
+  const onSave = () => {
+    const was = saved;
+    setSaved(!was);
+    setSaves((c) => Math.max(0, c + (was ? -1 : 1)));
+    startSave(async () => {
+      try {
+        const res = was
+          ? await removeBookmark({ articleId: article.id })
+          : await addBookmark({ articleId: article.id });
+        if (res.ok) {
+          if (was) {
+            toast('保存ライブラリから外しました');
+          } else {
+            toast.success('記事を保存しました', {
+              description: '「保存ライブラリ」から見返せます',
+              action: {
+                label: 'ライブラリを開く',
+                onClick: () => router.push('/library'),
+              },
+            });
+          }
+          return;
+        }
+        setSaved(was);
+        setSaves((c) => Math.max(0, c + (was ? 1 : -1)));
+        if (res.reason === 'unauthenticated') {
+          toast('ログインすると保存できます', {
+            action: {
+              label: 'ログインする',
+              onClick: () => router.push('/auth/login?redirect_to=/library'),
+            },
+          });
+        } else {
+          toast.error('保存に失敗しました', {
+            description: res.message ?? '時間をおいて再度お試しください',
+          });
+        }
+      } catch (err) {
+        setSaved(was);
+        setSaves((c) => Math.max(0, c + (was ? 1 : -1)));
+        toast.error('保存に失敗しました', {
+          description: err instanceof Error ? err.message : '不明なエラー',
+        });
+      }
+    });
+  };
+
   return (
-    <div className="v2-hero-actions">
-      <LikeButton
-        articleId={article.id}
-        initialLiked={initialLiked}
-        initialCount={likeCount}
-        viewerLoggedIn={viewerLoggedIn}
-      />
-      <AddToTripButton
-        articleId={article.id}
-        size="sm"
-        compact
-        initialSaved={alreadySavedByMe}
-        initialCount={bookmarkCount}
-      />
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={onLike}
+        disabled={likePending}
+        aria-pressed={liked}
+        aria-label={liked ? `いいね済み（${likes}）` : `いいね（${likes}）`}
+        className={cls(liked)}
+      >
+        <Heart fill={liked ? 'currentColor' : 'none'} strokeWidth={2} />
+        <span className="ct">{likes.toLocaleString('ja-JP')}</span>
+      </button>
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={savePending}
+        aria-pressed={saved}
+        aria-label={saved ? '保存済み（クリックで外す）' : 'お気に入りに保存'}
+        className={cls(saved)}
+      >
+        {saved ? <BookmarkCheck strokeWidth={2} /> : <Bookmark strokeWidth={2} />}
+        <span className="ct">{saves.toLocaleString('ja-JP')}</span>
+      </button>
+    </>
   );
 }
 
@@ -161,91 +252,84 @@ export function SpotTipBox({ tip }: { tip: string }) {
   );
 }
 
-/* ===================== 著者カード ===================== */
+/* ===================== 著者カード（モック準拠）===================== */
 
+function ArrowIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+/**
+ * 「この記事を書いた人」カード。モック（TripArticleMock 末尾の .tj-authcard /
+ * PlaceGuideMock の .pg-authcard / EssayMock の .es-byline）の見た目に合わせて作り直す。
+ * 著者情報（アバター / 名前 / 在住メタ / bio / プロフィールリンク / 他の記事 ・ サービス）は
+ * 保ちつつ、scoped class（variant）で各タイプのきれいなレイアウトに描画する。
+ */
 export function AuthorCard({
   writer,
   authorServices,
+  variant = 'tj',
 }: {
   writer: Writer | null;
   authorServices: FeaturedService[];
+  variant?: V2Variant;
 }) {
   if (!writer) return null;
-  return (
-    <section className="rounded-2xl border border-border bg-card p-5 sm:p-6">
-      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-        この記事を書いた人
-      </p>
-      <div className="mt-3 flex items-start gap-4">
-        <Link
-          href={`/users/${writer.id}`}
-          className="shrink-0"
-          aria-label={`${writer.name} のプロフィールへ`}
-        >
-          <Avatar size="lg">
-            <AvatarImage src={writer.avatarUrl} alt={writer.name} />
-            <AvatarFallback>{writer.name[0]}</AvatarFallback>
-          </Avatar>
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/users/${writer.id}`}
-              className="text-[17px] font-semibold leading-tight hover:text-primary-300"
-            >
-              {writer.name}
-            </Link>
-            <ResidencyBadge tier={writer.tier} years={writer.residencyYears} />
-            {writer.isVerifiedCreator ? <CreatorBadge type="verified" /> : null}
-            {writer.isFounding ? <CreatorBadge type="founding" /> : null}
-          </div>
-          <p className="mt-1 text-[12px] text-foreground/55 tabular">
-            {writer.city} ・ 在住 {writer.residencyYears} 年 ・{' '}
-            {writer.followerCount.toLocaleString('ja-JP')} followers
-          </p>
-          {writer.bio ? (
-            <p className="mt-3 whitespace-pre-line text-[13px] leading-relaxed text-foreground/80">
-              {writer.bio}
-            </p>
-          ) : null}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button asChild variant="primary" size="sm">
-              <Link href={`/users/${writer.id}`}>プロフィールを見る</Link>
-            </Button>
-            <Link
-              href={`/users/${writer.id}?tab=articles`}
-              className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
-            >
-              この駐在員の他の記事
-              <ChevronRight className="h-3 w-3" />
-            </Link>
-          </div>
-        </div>
-      </div>
 
+  const meta = (
+    <>
+      {authorMeta(writer)}
+      {writer.followerCount
+        ? ` · ${writer.followerCount.toLocaleString('ja-JP')} followers`
+        : ''}
+    </>
+  );
+
+  const body = (
+    <div className="body">
+      <div className="k">この記事を書いた人</div>
+      <h3>{writer.name}</h3>
+      <div className="role">{meta}</div>
+      {writer.bio ? <p className="bio">{writer.bio}</p> : null}
+      <Link className={`${variant}-authcta`} href={`/users/${writer.id}`}>
+        プロフィールを見る
+        <ArrowIcon />
+      </Link>
+      <div className={`${variant}-authlinks`}>
+        <Link className={`${variant}-authlink`} href={`/users/${writer.id}?tab=articles`}>
+          この駐在員の他の記事
+          <ArrowIcon />
+        </Link>
+      </div>
       {authorServices.length > 0 ? (
-        <div className="mt-6 border-t border-border pt-5">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
-              この駐在員の他のサービス
-            </p>
-            <Link
-              href={`/users/${writer.id}?tab=services`}
-              className="text-[11px] font-semibold text-primary-300 hover:underline"
-            >
-              すべて見る →
-            </Link>
+        <div className={`${variant}-authsvc`}>
+          <div className="lab">
+            <span className="k">この駐在員の他のサービス</span>
+            <Link href={`/users/${writer.id}?tab=services`}>すべて見る →</Link>
           </div>
-          <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className={`${variant}-authsvc-grid`}>
             {authorServices.map((s) => (
-              <li key={s.id}>
-                <ServiceCard service={s} />
-              </li>
+              <ServiceCard key={s.id} service={s} />
             ))}
-          </ul>
+          </div>
         </div>
       ) : null}
-    </section>
+    </div>
+  );
+
+  // essay は byline スタイル（中央寄せ・上下ボーダー）。tj / pg は authcard。
+  const cardClass = variant === 'es' ? 'es-byline' : `${variant}-authcard`;
+  return (
+    <div className={`${cardClass} ${variant}-rev`}>
+      <Link href={`/users/${writer.id}`} aria-label={`${writer.name} のプロフィールへ`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={writer.avatarUrl} alt={writer.name} />
+      </Link>
+      {body}
+    </div>
   );
 }
 
@@ -294,54 +378,56 @@ export function ReviewsList({ reviews }: { reviews: Review[] }) {
   );
 }
 
-/* ===================== 関連記事 ===================== */
+/* ===================== 関連記事（モック準拠）===================== */
 
-export function RelatedArticles({ related }: { related: Article[] }) {
+const RELATED_HEADING: Record<V2Variant, string> = {
+  tj: 'ほかのモデルコース',
+  pg: 'ほかの場所ガイド',
+  es: 'ほかの読み物',
+};
+
+/**
+ * 関連記事。モック（.tj-related / .pg-related / .es-related のカードグリッド）の体裁に
+ * 寄せる。各カードは実記事へリンク（/articles/[id]）。
+ */
+export function RelatedArticles({
+  related,
+  variant = 'tj',
+}: {
+  related: Article[];
+  variant?: V2Variant;
+}) {
   if (related.length === 0) return null;
   return (
-    <section className="mx-auto max-w-screen-xl px-4 pb-20 sm:px-6">
-      <div className="mb-4 flex items-baseline justify-between gap-3">
-        <h3 className="text-[20px] font-semibold tracking-tight">関連</h3>
-        <Link
-          href="/articles"
-          aria-label="すべての記事を見る"
-          className="text-[12px] font-semibold text-primary-300 hover:underline"
-        >
-          →
-        </Link>
-      </div>
-      <ul
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-        style={{ touchAction: 'pan-x' }}
-      >
-        {related.map((a) => (
-          <li key={a.id} className="snap-start">
-            <Link
-              href={`/articles/${a.id}`}
-              className="group flex w-[170px] flex-col overflow-hidden rounded-md border border-border bg-card transition hover:bg-muted"
-            >
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-                <Image
-                  src={a.coverImageUrl}
-                  alt={a.title}
-                  fill
-                  sizes="170px"
-                  className="object-cover transition group-hover:scale-105"
-                />
+    <section className={`${variant}-related`}>
+      <div className={`${variant}-wide`}>
+        <div className={`head ${variant}-rev`}>
+          <div>
+            <span className={`${variant}-kicker dk`}>— You might also like</span>
+            <h2 style={{ marginTop: 10 }}>{RELATED_HEADING[variant]}</h2>
+          </div>
+        </div>
+        <div className={`${variant}-rgrid`}>
+          {related.map((a) => (
+            <Link key={a.id} className={`${variant}-rcard ${variant}-rev`} href={`/articles/${a.id}`}>
+              <div className={`${variant}-rcov`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={a.coverImageUrl} alt="" loading="lazy" />
               </div>
-              <div className="flex flex-1 flex-col gap-1 p-2.5">
-                <p className="line-clamp-2 text-[12px] font-medium leading-snug">
-                  {a.title}
-                </p>
-                <p className="mt-auto truncate text-[10px] text-foreground/50 tabular">
-                  {a.writerName ? `${a.writerName} ・ ` : ''}¥
-                  {a.priceJpy.toLocaleString('ja-JP')}
-                </p>
+              <div className={`${variant}-rb`}>
+                <div className="c">{a.area}</div>
+                <h3>{a.title}</h3>
+                {variant === 'tj' ? (
+                  <div className="go">
+                    記事を読む
+                    <ArrowIcon />
+                  </div>
+                ) : null}
               </div>
             </Link>
-          </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

@@ -10,8 +10,6 @@ import {
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
 import { ArticleSpotsMap } from '../../ArticleSpotsMap';
-import { SpotFavoriteButton } from '../../SpotFavoriteButton';
-import { BulkSpotFavoriteButton } from '../../BulkSpotFavoriteButton';
 import { ReviewFormToggle } from '../ReviewFormToggle';
 import { CSS } from './itineraryCss';
 import {
@@ -19,6 +17,7 @@ import {
   HeroNetCanvas,
   PinIcon,
   CostIcon,
+  BulbIcon,
   ModeIcon,
   hasCoords,
   routeEmbedUrl,
@@ -29,19 +28,18 @@ import {
   AuthorCard,
   RelatedArticles,
   ReviewsList,
-  SpotTipBox,
   type EngagementProps,
 } from './engagement';
 
 /**
  * モデルコース（article_type === 'itinerary'）の v2 レイアウト。
  *
- * Phase A の新デザイン本文（ルートマップ＋スポット概観 / 旅程タイムライン）を
- * 現行の実データ（itinerary_blocks + spots）で描画しつつ、Phase B で入れた課金
- * （Paywall）とインタラクション（いいね/保存・スポット保存・レビュー・著者・関連・
- * 地図）を新スタイルの中に織り込む。
+ * モック（TripArticleMock）の見た目を正として、実データ（itinerary_blocks + spots）で
+ * 描画する。各 stop は写真付きカード（モックの .tj-card / .tj-cphoto）。記事レベルの
+ * いいね/保存（ヒーロー HeroActions）は維持するが、スポット単位のお気に入りボタンは
+ * モックに無いため撤去。課金（Paywall）は維持する。
  *
- * ゲート意味論（旧 engagement.PaidBodyAndExtras 踏襲・収益直結）:
+ * ゲート意味論（収益直結）:
  *   - unlocked（購入/owner/無料記事アンロック/preview）時のみ、旅程の詳細
  *     （stop の notes / spot.description / spot.tip / 住所 / コスト）と body_paid・
  *     地図・レビューフォームを出す。
@@ -116,7 +114,8 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
     return blocks.map((b, i) => {
       const spot = b.spotId ? spotById.get(b.spotId) : undefined;
       const name = spot?.name || b.freeName || `スポット ${i + 1}`;
-      const photo = spot?.photoUrls?.[0];
+      // 写真はモック準拠で常に表示。spot 写真が無ければ記事カバーにフォールバック。
+      const photo = spot?.photoUrls?.[0] || article.coverImageUrl || undefined;
       const cost = spot?.priceEstimate || undefined;
       const hasTransfer =
         b.transportToNext ||
@@ -319,27 +318,19 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
                     ))}
                   </div>
                 </div>
-                <div className="tj-maphead tj-rev" style={{ marginTop: 18 }}>
-                  <div className="tj-heroact" style={{ marginTop: 0 }}>
-                    <BulkSpotFavoriteButton
-                      spotIds={spots.map((s) => s.id)}
-                      folders={folders}
-                      viewerLoggedIn={viewerLoggedIn}
-                      bookmarkedSpotIds={bookmarkedSpotIds}
-                    />
-                    {directionsUrl ? (
-                      <a
-                        className="tj-maplink"
-                        href={directionsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <PinIcon />
-                        Google マップでルートを開く
-                      </a>
-                    ) : null}
+                {directionsUrl ? (
+                  <div className="tj-maphead tj-rev" style={{ marginTop: 18 }}>
+                    <a
+                      className="tj-maplink"
+                      href={directionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <PinIcon />
+                      Google マップでルートを開く
+                    </a>
                   </div>
-                </div>
+                ) : null}
               </div>
             </section>
           ) : null}
@@ -362,6 +353,8 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
                         {s.time ? <span className="t">{s.time}</span> : null}
                       </div>
                       <div className="tj-card">
+                        {/* 写真は常に表示（モック準拠）。スポット写真が無ければ
+                            記事カバーにフォールバックしてカード体裁を保つ。 */}
                         {s.photo ? (
                           <div className="tj-cphoto">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -417,29 +410,24 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
                               </p>
                             </div>
                           ) : null}
-                          {/* spot.tip（ライム破線「コツ」・Phase C-2） */}
-                          {s.tip ? (
-                            <div className="tj-cextras" style={{ display: 'block' }}>
-                              <SpotTipBox tip={s.tip} />
-                            </div>
-                          ) : null}
-                          <div className="tj-cextras">
-                            {s.cost ? (
+                          {s.cost ? (
+                            <div className="tj-cextras">
                               <span className="tj-cost">
                                 <CostIcon />
                                 {s.cost}
                               </span>
-                            ) : null}
-                            {s.spot ? (
-                              <SpotFavoriteButton
-                                spotId={s.spot.id}
-                                spotName={s.spot.name}
-                                bookmarked={bookmarkedSpotIds?.has(s.spot.id) ?? false}
-                                folders={folders}
-                                viewerLoggedIn={viewerLoggedIn}
-                              />
-                            ) : null}
-                          </div>
+                            </div>
+                          ) : null}
+                          {/* spot.tip（モック .tj-tipline 準拠の破線「コツ」ボックス・Phase C-2） */}
+                          {s.tip ? (
+                            <div className="tj-tipline">
+                              <BulbIcon />
+                              <div>
+                                <b>ローカルのコツ</b>
+                                <span className="tx">{s.tip}</span>
+                              </div>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     </div>
@@ -516,10 +504,14 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
         </>
       )}
 
-      {/* ===== 著者カード ＋ サービス ＝ engagement の AuthorCard ===== */}
+      {/* ===== 著者カード ＋ サービス（モック .tj-authcard 準拠）===== */}
       <section className="tj-authsec">
         <div className="tj-wide">
-          <AuthorCard writer={writer} authorServices={authorServices} />
+          <AuthorCard
+            writer={writer}
+            authorServices={authorServices}
+            variant="tj"
+          />
         </div>
       </section>
 
@@ -531,7 +523,7 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
       </section>
 
       {/* ===== 関連記事 ===== */}
-      <RelatedArticles related={related} />
+      <RelatedArticles related={related} variant="tj" />
 
       {/* ===== 日付フッター ===== */}
       <section className="tj-dates">
