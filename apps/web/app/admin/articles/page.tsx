@@ -277,7 +277,7 @@ export default async function AdminArticlesPage({
                     by{' '}
                     {a.writerId ? (
                       <Link
-                        href={`/residents/${a.writerId}`}
+                        href={`/users/${a.writerId}`}
                         className="hover:text-primary-300 hover:underline"
                       >
                         {a.writerName ?? '（無名）'}

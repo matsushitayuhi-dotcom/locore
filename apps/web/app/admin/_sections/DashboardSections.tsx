@@ -474,7 +474,7 @@ export async function TopAndRecent() {
                   {i + 1}
                 </span>
                 <Link
-                  href={`/residents/${row.writerId}`}
+                  href={`/users/${row.writerId}`}
                   className="min-w-0 flex-1 truncate text-[12px] font-medium hover:text-primary-300"
                 >
                   {row.writerName ?? '（無名）'}

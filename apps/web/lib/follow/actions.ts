@@ -39,7 +39,7 @@ export async function followUser(input: unknown): Promise<FollowActionResult> {
     })
     .onConflictDoNothing();
 
-  revalidatePath(`/writers/${parsed.data.targetUserId}`);
+  revalidatePath(`/users/${parsed.data.targetUserId}`);
   return { ok: true };
 }
 
@@ -60,7 +60,7 @@ export async function unfollowUser(
       ),
     );
 
-  revalidatePath(`/writers/${parsed.data.targetUserId}`);
+  revalidatePath(`/users/${parsed.data.targetUserId}`);
   return { ok: true };
 }
 

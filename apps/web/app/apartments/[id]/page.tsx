@@ -224,7 +224,7 @@ export default async function ApartmentDetailPage({ params }: Props) {
           {/* 投稿者 */}
           {post.authorId ? (
             <Link
-              href={`/residents/${post.authorId}`}
+              href={`/users/${post.authorId}`}
               className="mt-8 flex items-center gap-3 rounded-xl border border-border bg-card p-4 transition hover:bg-muted hover:ring-1 hover:ring-primary-300"
             >
               {post.authorAvatarUrl ? (

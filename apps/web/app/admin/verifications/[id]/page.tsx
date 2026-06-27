@@ -114,7 +114,7 @@ export default async function AdminVerificationDetailPage({
             {r.userName ?? '匿名'} <span className="text-foreground/55">({r.userEmail ?? '—'})</span>
             <br />
             <Link
-              href={`/residents/${r.userId}`}
+              href={`/users/${r.userId}`}
               className="text-[11px] text-primary-300 hover:underline"
             >
               プロフィールを見る →

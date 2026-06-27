@@ -14,5 +14,5 @@ export default function WritersRedirect({
 }: {
   params: { id: string };
 }) {
-  redirect(`/residents/${params.id}`, RedirectType.replace);
+  redirect(`/users/${params.id}`, RedirectType.replace);
 }

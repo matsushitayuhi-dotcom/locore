@@ -326,7 +326,7 @@ export default async function AdminCommunityPage({
                     by{' '}
                     {p.authorId ? (
                       <Link
-                        href={`/residents/${p.authorId}`}
+                        href={`/users/${p.authorId}`}
                         className="hover:text-primary-300 hover:underline"
                       >
                         {p.authorName ?? '匿名'}

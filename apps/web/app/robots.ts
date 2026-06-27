@@ -79,7 +79,7 @@ export default function robots(): MetadataRoute.Robots {
           '/help?*',
           '/board?*',
           '/articles?*',
-          '/residents?*',
+          '/users?*',
         ],
         // 1 秒あたり 0.5 リクエスト相当のクロール間隔目安
         crawlDelay: 2,

@@ -193,7 +193,7 @@ export default async function ServiceDetailPage({ params }: Params) {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <Link
-                  href={`/residents/${provider.id}`}
+                  href={`/users/${provider.id}`}
                   className="text-[16px] font-semibold hover:text-primary-300 hover:underline"
                 >
                   {provider.displayName}
@@ -240,7 +240,7 @@ export default async function ServiceDetailPage({ params }: Params) {
               ) : null}
               <div className="mt-3">
                 <Link
-                  href={`/residents/${provider.id}`}
+                  href={`/users/${provider.id}`}
                   className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
                 >
                   プロフィールを見る

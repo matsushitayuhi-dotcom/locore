@@ -279,7 +279,7 @@ export default async function JobDetailPage({ params }: Props) {
               </p>
               {post.authorId ? (
                 <Link
-                  href={`/residents/${post.authorId}`}
+                  href={`/users/${post.authorId}`}
                   className="mt-0.5 inline-block text-[13px] font-bold text-foreground underline-offset-2 hover:text-primary-300 hover:underline"
                 >
                   {post.authorName ?? 'Locore メンバー'}

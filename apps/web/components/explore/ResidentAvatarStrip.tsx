@@ -43,7 +43,7 @@ export function ResidentAvatarStrip({
         return (
           <li key={r.id} className="shrink-0 snap-start">
             <Link
-              href={`/residents/${r.id}`}
+              href={`/users/${r.id}`}
               className="flex h-full w-[200px] flex-col items-center rounded-2xl bg-card px-4 py-5 text-center ring-1 ring-border transition hover:bg-primary-500/5 hover:ring-primary-300"
             >
               <Avatar size="lg" className="h-20 w-20 shrink-0">
@@ -85,7 +85,7 @@ export function ResidentAvatarStrip({
       {/* 末尾「すべて見る」カード */}
       <li className="shrink-0 snap-start">
         <Link
-          href="/residents"
+          href="/users"
           aria-label="駐在員をすべて見る"
           className="flex h-full w-[140px] flex-col items-center justify-center rounded-2xl bg-primary-500/10 px-4 py-5 text-center text-primary-300 ring-1 ring-primary-300/30 transition hover:bg-primary-500/15"
         >

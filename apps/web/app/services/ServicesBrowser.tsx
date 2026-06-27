@@ -446,7 +446,7 @@ function EmptyState({ onClear }: { onClear: () => void }) {
       <p className="max-w-md text-[12px] text-foreground/60">
         条件を変えるか、別のカテゴリで探してみてください。
         まだ Locore に登録されているサービスは少数なので、希望が無ければ
-        住人のプロフィールから直接相談することもできます。
+        ユーザーのプロフィールから直接相談することもできます。
       </p>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
         <button
@@ -457,10 +457,10 @@ function EmptyState({ onClear }: { onClear: () => void }) {
           フィルタをクリア
         </button>
         <Link
-          href="/residents"
+          href="/users"
           className="rounded-full bg-card px-4 py-2 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
         >
-          住人を見る
+          ユーザーを見る
         </Link>
       </div>
     </section>

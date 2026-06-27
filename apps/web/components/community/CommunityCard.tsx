@@ -90,7 +90,7 @@ export function CommunityCard({ post, showKindBadge }: Props) {
       <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-0 text-[10px] text-foreground/50 sm:px-4 sm:pb-4">
         {post.authorId ? (
           <Link
-            href={`/residents/${post.authorId}`}
+            href={`/users/${post.authorId}`}
             className="line-clamp-1 underline-offset-2 hover:text-primary-300 hover:underline"
           >
             {post.authorName ?? '匿名'}

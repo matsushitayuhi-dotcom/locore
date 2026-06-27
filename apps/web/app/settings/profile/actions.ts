@@ -81,7 +81,7 @@ export async function updateProfile(input: unknown): Promise<UpdateProfileResult
 
   revalidatePath('/settings/profile');
   // 公開プロフィールも再生成（自分のアバター / 表示名変更が反映される）
-  revalidatePath(`/writers/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
   return { ok: true };
 }
 
@@ -185,9 +185,9 @@ export async function updateResidentProfile(
     .where(eq(schema.users.id, user.id));
 
   revalidatePath('/settings/profile');
-  revalidatePath(`/writers/${user.id}`);
-  revalidatePath(`/residents/${user.id}`);
-  revalidatePath('/residents');
+  revalidatePath(`/users/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
+  revalidatePath('/users');
   return { ok: true };
 }
 
@@ -228,7 +228,7 @@ export async function addSnsLink(input: unknown): Promise<SnsActionResult> {
     .returning({ id: schema.snsLinks.id });
 
   revalidatePath('/settings/profile');
-  revalidatePath(`/writers/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
   return { ok: true, data: { id: inserted[0]!.id } };
 }
 
@@ -255,6 +255,6 @@ export async function deleteSnsLink(input: unknown): Promise<SnsActionResult> {
     );
 
   revalidatePath('/settings/profile');
-  revalidatePath(`/writers/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
   return { ok: true };
 }

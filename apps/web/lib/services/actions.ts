@@ -121,8 +121,8 @@ export async function upsertUserService(
       })
       .where(eq(schema.userServices.id, data.id));
     revalidatePath('/settings/services');
-    revalidatePath(`/writers/${user.id}`);
-    revalidatePath(`/residents/${user.id}`);
+    revalidatePath(`/users/${user.id}`);
+    revalidatePath(`/users/${user.id}`);
     revalidatePath('/explore');
     revalidatePath('/expat');
     return { ok: true, data: { id: data.id } };
@@ -156,8 +156,8 @@ export async function upsertUserService(
     .returning({ id: schema.userServices.id });
 
   revalidatePath('/settings/services');
-  revalidatePath(`/writers/${user.id}`);
-  revalidatePath(`/residents/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
   revalidatePath('/explore');
   revalidatePath('/expat');
   return { ok: true, data: { id: inserted[0]!.id } };
@@ -183,8 +183,8 @@ export async function deleteUserService(
     );
 
   revalidatePath('/settings/services');
-  revalidatePath(`/writers/${user.id}`);
-  revalidatePath(`/residents/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
+  revalidatePath(`/users/${user.id}`);
   revalidatePath('/explore');
   revalidatePath('/expat');
   return { ok: true };

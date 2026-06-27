@@ -35,7 +35,7 @@ export function SiteFooter() {
           links={[
             { href: '/founders', label: 'Founders 枠（先着50人）' },
             { href: '/become-writer', label: '駐在員として参加' },
-            { href: '/residents', label: '駐在員を探す' },
+            { href: '/users', label: '駐在員を探す' },
             { href: '/board', label: '新着ニュース' },
           ]}
         />

@@ -49,7 +49,7 @@ export function ServiceCarousel({ services }: Props) {
           className="w-[72%] shrink-0 snap-start sm:w-[42%] lg:w-[28%]"
         >
           <Link
-            href={`/residents/${s.ownerId}`}
+            href={`/users/${s.ownerId}`}
             className="flex h-full flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border transition hover:ring-primary-300"
           >
             <div

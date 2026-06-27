@@ -167,7 +167,7 @@ export async function approveVerification(
   revalidatePath('/admin/verifications');
   revalidatePath(`/admin/verifications/${parsed.data.id}`);
   revalidatePath('/settings/verification');
-  revalidatePath(`/residents/${verif.userId}`);
+  revalidatePath(`/users/${verif.userId}`);
   return { ok: true };
 }
 

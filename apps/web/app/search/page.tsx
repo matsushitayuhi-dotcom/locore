@@ -426,7 +426,7 @@ function UserHitGrid({ hits }: { hits: SearchUserHit[] }) {
           key={u.id}
           className="rounded-xl bg-card p-4 ring-1 ring-border transition hover:ring-primary-300"
         >
-          <Link href={`/residents/${u.id}`} className="flex items-start gap-3">
+          <Link href={`/users/${u.id}`} className="flex items-start gap-3">
             <Avatar size="lg" className="ring-1 ring-border">
               {u.avatarUrl ? <AvatarImage src={u.avatarUrl} alt="" /> : null}
               <AvatarFallback>

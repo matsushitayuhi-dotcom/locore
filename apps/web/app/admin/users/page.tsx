@@ -217,7 +217,7 @@ export default async function AdminUsersPage({
                       </Avatar>
                       <div className="min-w-0">
                         <Link
-                          href={`/residents/${u.id}`}
+                          href={`/users/${u.id}`}
                           className="block truncate text-[13px] font-semibold hover:text-primary-300"
                         >
                           {u.displayName}
@@ -256,7 +256,7 @@ export default async function AdminUsersPage({
                   </td>
                   <td className="px-3 py-3 text-right">
                     <Link
-                      href={`/residents/${u.id}`}
+                      href={`/users/${u.id}`}
                       className="text-[11px] text-primary-300 hover:underline"
                     >
                       プロフィール →

@@ -39,8 +39,8 @@ function revalidateArticleSurfaces(articleId: string, writerId?: string) {
   // 該当 region/writer の一覧も更新が必要だが、slug を取得していないので
   // 包括的に / 経由でも対応 (/region/* は force-dynamic なのでキャッシュ無し)
   if (writerId) {
-    revalidatePath(`/residents/${writerId}`);
-    revalidatePath(`/writers/${writerId}`);
+    revalidatePath(`/users/${writerId}`);
+    revalidatePath(`/users/${writerId}`);
   }
 }
 

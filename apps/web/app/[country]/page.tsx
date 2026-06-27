@@ -196,7 +196,7 @@ export default async function CountryHubPage({ params }: Props) {
         <Section label="サービス" title={`${country.nameJa}で頼れる人`} allHref={servicesHref}>
           {pickupService ? (
             <PickupCard
-              href={`/residents/${pickupService.ownerId}`}
+              href={`/users/${pickupService.ownerId}`}
               image={pickupService.coverImageUrl}
               eyebrow="Pickup サービス"
               title={pickupService.title}

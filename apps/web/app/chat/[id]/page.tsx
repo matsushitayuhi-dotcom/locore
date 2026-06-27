@@ -105,7 +105,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
       <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
         {partner ? (
           <Link
-            href={`/residents/${partner.id}`}
+            href={`/users/${partner.id}`}
             className="flex items-center gap-2"
           >
             <Avatar size="sm">

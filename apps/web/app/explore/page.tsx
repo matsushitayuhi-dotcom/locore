@@ -132,7 +132,7 @@ export default async function ExplorePage() {
         {/* ============ 4. 駐在員ピックアップ ============ */}
         {residents.length > 0 ? (
           <section id="residents">
-            <SectionHeader title="現地に住む人たち" href="/residents" />
+            <SectionHeader title="現地に住む人たち" href="/users" />
             <ResidentAvatarStrip residents={residents} />
           </section>
         ) : null}

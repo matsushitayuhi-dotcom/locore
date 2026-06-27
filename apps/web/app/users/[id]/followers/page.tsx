@@ -38,7 +38,7 @@ export default async function FollowersPage({
   return (
     <main className="mx-auto max-w-screen-md px-4 py-6 sm:px-6 sm:py-10">
       <Link
-        href={`/residents/${params.id}`}
+        href={`/users/${params.id}`}
         className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
@@ -93,7 +93,7 @@ function FollowEntryCard({
   return (
     <li>
       <Link
-        href={`/residents/${user.id}`}
+        href={`/users/${user.id}`}
         className="flex gap-3 rounded-xl bg-card p-3 ring-1 ring-border transition hover:ring-primary-300 sm:p-4"
       >
         <Avatar size="md" className="ring-1 ring-border">

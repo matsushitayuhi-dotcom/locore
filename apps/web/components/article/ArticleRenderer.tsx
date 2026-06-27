@@ -311,7 +311,7 @@ export function ArticleRenderer({
               </p>
               <div className="mt-3 flex items-start gap-4">
                 <Link
-                  href={`/residents/${writer.id}`}
+                  href={`/users/${writer.id}`}
                   className="shrink-0"
                   aria-label={`${writer.name} のプロフィールへ`}
                 >
@@ -323,7 +323,7 @@ export function ArticleRenderer({
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
-                      href={`/residents/${writer.id}`}
+                      href={`/users/${writer.id}`}
                       className="text-[17px] font-semibold leading-tight hover:text-primary-300"
                     >
                       {writer.name}
@@ -350,12 +350,12 @@ export function ArticleRenderer({
                   ) : null}
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <Button asChild variant="primary" size="sm">
-                      <Link href={`/residents/${writer.id}`}>
+                      <Link href={`/users/${writer.id}`}>
                         プロフィールを見る
                       </Link>
                     </Button>
                     <Link
-                      href={`/residents/${writer.id}?tab=articles`}
+                      href={`/users/${writer.id}?tab=articles`}
                       className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300 hover:underline"
                     >
                       この駐在員の他の記事
@@ -373,7 +373,7 @@ export function ArticleRenderer({
                       この駐在員の他のサービス
                     </p>
                     <Link
-                      href={`/residents/${writer.id}?tab=services`}
+                      href={`/users/${writer.id}?tab=services`}
                       className="text-[11px] font-semibold text-primary-300 hover:underline"
                     >
                       すべて見る →
