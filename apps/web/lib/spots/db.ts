@@ -14,21 +14,50 @@ export async function getSpotsForArticles(
   if (articleIds.length === 0) return [];
   try {
     const db = getDb();
-    const rows = await db
-      .select({
-        id: schema.spots.id,
-        articleId: schema.spots.articleId,
-        name: schema.spots.name,
-        address: schema.spots.address,
-        category: schema.spots.category,
-        priceEstimate: schema.spots.priceEstimate,
-        openingHours: schema.spots.openingHours,
-        tags: schema.spots.tags,
-        position: schema.spots.position,
-        googlePlaceId: schema.spots.googlePlaceId,
-      })
-      .from(schema.spots)
-      .where(inArray(schema.spots.articleId, articleIds));
+    const baseCols = {
+      id: schema.spots.id,
+      articleId: schema.spots.articleId,
+      name: schema.spots.name,
+      address: schema.spots.address,
+      category: schema.spots.category,
+      priceEstimate: schema.spots.priceEstimate,
+      openingHours: schema.spots.openingHours,
+      tags: schema.spots.tags,
+      position: schema.spots.position,
+      googlePlaceId: schema.spots.googlePlaceId,
+    };
+    type Row = {
+      id: string;
+      articleId: string;
+      name: string;
+      address: string | null;
+      category: string | null;
+      priceEstimate: string | null;
+      openingHours: unknown;
+      tags: string[];
+      position: number;
+      googlePlaceId: string | null;
+      description: string | null;
+      tip: string | null;
+    };
+    let rows: Row[];
+    try {
+      rows = (await db
+        .select({
+          ...baseCols,
+          description: schema.spots.description,
+          tip: schema.spots.tip,
+        })
+        .from(schema.spots)
+        .where(inArray(schema.spots.articleId, articleIds))) as Row[];
+    } catch {
+      // 0057 未適用 → description / tip 列なしでフォールバック
+      const fallback = await db
+        .select(baseCols)
+        .from(schema.spots)
+        .where(inArray(schema.spots.articleId, articleIds));
+      rows = fallback.map((r) => ({ ...r, description: null, tip: null }));
+    }
     if (rows.length === 0) return [];
 
     // PostGIS の lat/lng は別 SELECT
@@ -67,6 +96,8 @@ export async function getSpotsForArticles(
         lat: coords.lat,
         lng: coords.lng,
         category: s.category ?? 'other',
+        description: s.description ?? undefined,
+        tip: s.tip ?? undefined,
         priceEstimate: s.priceEstimate ?? '',
         openingHours: openingHoursText,
         tags: s.tags ?? [],

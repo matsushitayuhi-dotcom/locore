@@ -377,6 +377,8 @@ export async function getDbArticleBundle(
       name: string;
       address: string | null;
       category: string | null;
+      description: string | null;
+      tip: string | null;
       priceEstimate: string | null;
       openingHours: unknown;
       tags: string[];
@@ -392,6 +394,8 @@ export async function getDbArticleBundle(
           name: schema.spots.name,
           address: schema.spots.address,
           category: schema.spots.category,
+          description: schema.spots.description,
+          tip: schema.spots.tip,
           priceEstimate: schema.spots.priceEstimate,
           openingHours: schema.spots.openingHours,
           tags: schema.spots.tags,
@@ -403,7 +407,7 @@ export async function getDbArticleBundle(
         .where(eq(schema.spots.articleId, id))
         .orderBy(asc(schema.spots.position));
     } catch {
-      // 0025 未適用 → google_photo_urls 列なしでフォールバック
+      // 0025 / 0057 未適用 → google_photo_urls・description・tip 列なしでフォールバック
       const fallback = await db
         .select({
           id: schema.spots.id,
@@ -420,7 +424,12 @@ export async function getDbArticleBundle(
         .from(schema.spots)
         .where(eq(schema.spots.articleId, id))
         .orderBy(asc(schema.spots.position));
-      spotRows = fallback.map((r) => ({ ...r, googlePhotoUrls: null }));
+      spotRows = fallback.map((r) => ({
+        ...r,
+        description: null,
+        tip: null,
+        googlePhotoUrls: null,
+      }));
     }
 
     const coordsMap = new Map<string, { lat: number; lng: number }>();
@@ -471,6 +480,8 @@ export async function getDbArticleBundle(
         lat: coords.lat,
         lng: coords.lng,
         category: (s.category ?? 'other') as Spot['category'],
+        description: s.description ?? undefined,
+        tip: s.tip ?? undefined,
         priceEstimate: s.priceEstimate ?? '',
         openingHours: openingHoursText,
         tags: s.tags ?? [],

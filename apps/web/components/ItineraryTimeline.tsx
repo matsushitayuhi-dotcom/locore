@@ -279,6 +279,30 @@ export function ItineraryTimeline({
                       </p>
                     ) : null}
 
+                    {/* スポットの説明（spot.description）。block notes とは別に、
+                        場所そのものの紹介文として表示する。unlocked 時のみ。 */}
+                    {unlocked && spot?.description?.trim() ? (
+                      <p className="mt-2 whitespace-pre-line text-[13px] leading-relaxed text-foreground/80">
+                        {spot.description}
+                      </p>
+                    ) : null}
+
+                    {/* スポットのコツ（spot.tip）= ライムの破線ボックス。unlocked 時のみ。 */}
+                    {unlocked && spot?.tip?.trim() ? (
+                      <div
+                        className="mt-2 rounded-md border border-dashed px-3 py-2"
+                        style={{ borderColor: '#A8E01C', background: '#F3FBE0' }}
+                      >
+                        <p className="mb-0.5 flex items-center gap-1 text-[11px] font-bold tracking-wide text-[#5E8B0E]">
+                          <span aria-hidden>✨</span>
+                          コツ
+                        </p>
+                        <p className="whitespace-pre-line text-[13px] leading-relaxed text-foreground/80">
+                          {spot.tip}
+                        </p>
+                      </div>
+                    ) : null}
+
                     {/* スポット紐付きカードのみ、unlocked のときアクション行を出す */}
                     {unlocked && !isFreeBlock && spot ? (
                       <SpotActionRow

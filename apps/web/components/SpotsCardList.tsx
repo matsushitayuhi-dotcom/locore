@@ -126,6 +126,14 @@ export function SpotsCardList({
               {/* 詳細メニュー */}
               {open && !locked ? (
                 <div className="space-y-3 border-t border-border bg-primary-500/10 px-4 py-3">
+                  {/* スポット説明（あれば本文として表示）。無ければ住所が要約として残る */}
+                  {s.description?.trim() ? (
+                    <p className="whitespace-pre-line text-[13px] leading-relaxed text-foreground/80">
+                      {s.description}
+                    </p>
+                  ) : null}
+                  {/* コツ（ライムの破線ボックス。place 内のミニ callout） */}
+                  {s.tip?.trim() ? <SpotTipBox tip={s.tip} /> : null}
                   {/* 写真ギャラリー（最大 5 枚 / 横スクロール） */}
                   {s.photoUrls && s.photoUrls.length > 1 ? (
                     <div className="flex gap-2 overflow-x-auto overscroll-x-contain">
@@ -180,6 +188,30 @@ export function SpotsCardList({
         })}
       </ul>
     </section>
+  );
+}
+
+/**
+ * スポットの「コツ」を、本文中の callout (tip) と揃えたライムの破線ボックスで表示する。
+ * 仕様 §3「tip = place 内のミニ callout」/ §2「コツ・注意ボックス（ライム破線）」に準拠。
+ */
+function SpotTipBox({ tip }: { tip: string }) {
+  return (
+    <div
+      className="rounded-md border border-dashed px-3 py-2"
+      style={{
+        borderColor: '#A8E01C',
+        background: '#F3FBE0',
+      }}
+    >
+      <p className="mb-0.5 flex items-center gap-1 text-[11px] font-bold tracking-wide text-[#5E8B0E]">
+        <span aria-hidden>✨</span>
+        コツ
+      </p>
+      <p className="whitespace-pre-line text-[13px] leading-relaxed text-foreground/80">
+        {tip}
+      </p>
+    </div>
   );
 }
 
