@@ -14,6 +14,11 @@ import { CompactFilterBar } from '@/components/community/CompactFilterBar';
 import { FilterSheet } from '@/components/community/FilterSheet';
 import { PostFab } from '@/components/community/PostFab';
 import { listCommunityPosts, type CommunityPostListItem } from '@/lib/community/db';
+import {
+  resolveCountryCode,
+  SUPPORTED_COUNTRIES,
+} from '@/lib/geo/countrySlug';
+import { CommunityCountrySelect } from '@/components/community/CommunityCountrySelect';
 import { resolveCommunityRegion } from '@/lib/community/region-filter';
 import {
   COMMUNITY_AUDIENCES,
@@ -75,6 +80,7 @@ type Props = {
     region?: string;
     audience?: string;
     view?: string;
+    country?: string;
   };
 };
 
@@ -107,10 +113,12 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
 
   const regionFilter = await resolveCommunityRegion(searchParams?.region);
 
+  const countryCode = resolveCountryCode(searchParams?.country);
   const rawPosts = await listCommunityPosts({
     kind: 'group',
     limit: 30,
     cityId: regionFilter.cityId,
+    countryCode,
   });
 
   const filtered = rawPosts.filter((p) => {
@@ -150,7 +158,16 @@ export default async function GroupsIndexPage({ searchParams }: Props) {
     <main className="mx-auto max-w-screen-lg px-4 pb-12 pt-4 sm:px-6">
       <CommunityNav active="group" />
 
+      {/* 国フィルタ */}
       <div className="mt-3">
+        <CommunityCountrySelect
+          current={countryCode}
+          countries={SUPPORTED_COUNTRIES}
+        />
+      </div>
+
+      {/* ミニフィルタバー */}
+      <div className="mt-2">
         <CompactFilterBar
           basePath="/groups"
           activeRegionSlug={regionFilter.slug}

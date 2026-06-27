@@ -3,6 +3,11 @@ import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { listCommunityPosts } from '@/lib/community/db';
 import { getRegionsWithContent } from '@/lib/geo/region-content';
+import {
+  resolveCountryCode,
+  SUPPORTED_COUNTRIES,
+} from '@/lib/geo/countrySlug';
+import { CommunityCountrySelect } from '@/components/community/CommunityCountrySelect';
 import { JobsBrowser, type JobRegion, type JobListPost } from './JobsBrowser';
 
 /**
@@ -51,10 +56,15 @@ const META_KEYS = [
   'region_slug',
 ] as const;
 
-export default async function JobsIndexPage() {
+export default async function JobsIndexPage({
+  searchParams,
+}: {
+  searchParams?: { country?: string };
+}) {
+  const countryCode = resolveCountryCode(searchParams?.country);
   const [rawPosts, slugsWithContent] = await Promise.all([
     // カード表示に必要な分だけ。100→30 に削減し Fast Data Transfer を圧縮。
-    listCommunityPosts({ kind: 'job', limit: 30 }),
+    listCommunityPosts({ kind: 'job', limit: 30, countryCode }),
     getRegionsWithContent(),
   ]);
 
@@ -86,9 +96,16 @@ export default async function JobsIndexPage() {
     <main className="mx-auto max-w-screen-lg px-4 pb-12 pt-4 sm:px-6">
       <CommunityNav active="job" />
 
+      {/* 国フィルタ */}
       <div className="mt-3">
-        {/* useSearchParams を使うため Suspense で包む。fallback は件数バーの
-            高さ分の簡易プレースホルダ。静的プリレンダリングはこの境界で確定する。 */}
+        <CommunityCountrySelect
+          current={countryCode}
+          countries={SUPPORTED_COUNTRIES}
+        />
+      </div>
+
+      <div className="mt-2">
+        {/* useSearchParams を使うため Suspense で包む。 */}
         <Suspense fallback={<div className="min-h-[40vh]" />}>
           <JobsBrowser posts={posts} regions={regions} />
         </Suspense>

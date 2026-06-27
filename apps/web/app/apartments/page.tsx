@@ -11,6 +11,11 @@ import {
 } from 'lucide-react';
 import { listCommunityPosts } from '@/lib/community/db';
 import {
+  resolveCountryCode,
+  SUPPORTED_COUNTRIES,
+} from '@/lib/geo/countrySlug';
+import { CommunityCountrySelect } from '@/components/community/CommunityCountrySelect';
+import {
   APARTMENT_LISTING_TYPES,
   APARTMENT_LISTING_TYPE_LABEL,
   COMMUNITY_AUDIENCES,
@@ -81,6 +86,7 @@ type Props = {
     region?: string;
     audience?: string;
     view?: string;
+    country?: string;
   };
 };
 
@@ -113,10 +119,12 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
       : undefined;
   const currentView: CommunityView = searchParams?.view === 'list' ? 'list' : 'card';
 
+  const countryCode = resolveCountryCode(searchParams?.country);
   const allPosts = await listCommunityPosts({
     kind: 'apartment',
     limit: 30,
     cityId: regionFilter.cityId,
+    countryCode,
   });
 
   const filtered = allPosts.filter((p) => {
@@ -203,8 +211,16 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
       {/* カテゴリタブ (求人 / アパート / 売買 ...) */}
       <CommunityNav active="apartment" />
 
-      {/* ミニフィルタバー (sticky) */}
+      {/* 国フィルタ */}
       <div className="mt-3">
+        <CommunityCountrySelect
+          current={countryCode}
+          countries={SUPPORTED_COUNTRIES}
+        />
+      </div>
+
+      {/* ミニフィルタバー (sticky) */}
+      <div className="mt-2">
         <CompactFilterBar
           basePath="/apartments"
           activeRegionSlug={regionFilter.slug}

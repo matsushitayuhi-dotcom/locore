@@ -60,6 +60,15 @@ export function codeFromSlug(slug: string): string | null {
   return SLUG_TO_CODE[slug.toLowerCase()] ?? null;
 }
 
+/** ?country= の値を検証。対応国コードならそのまま、未対応/未指定は undefined。 */
+export function resolveCountryCode(
+  code: string | undefined | null,
+): string | undefined {
+  return code && SUPPORTED_COUNTRIES.some((c) => c.code === code)
+    ? code
+    : undefined;
+}
+
 /**
  * スラッグから国情報を解決。未対応スラッグなら null（= 正当な 404）。
  * 対応スラッグなら DB を優先し、DB 不通時は最小フォールバックを返す
