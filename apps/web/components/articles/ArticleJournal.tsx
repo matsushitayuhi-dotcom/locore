@@ -44,6 +44,19 @@ function md(iso: string): string {
   return `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
 }
 
+/** 無料プレビュー本文から、フィーチャー枠用の抜粋（マークダウン記号を除去）を作る。 */
+function excerptOf(body: string | undefined): string {
+  if (!body) return '';
+  return body
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // 画像
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // リンク → テキスト
+    .replace(/[#*_>`~|]/g, '')
+    .replace(/^\s*[-•]\s*/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 150);
+}
+
 // 日記系のヒーロー画像（手書きノート＋コーヒーの静物）。
 const HERO_PHOTO =
   'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1700&q=80';
@@ -149,6 +162,42 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
 .aj-go svg{width:18px;height:18px}
 .aj-post:hover .aj-go{transform:rotate(-12deg) scale(1.06)}
 
+/* FEATURED (latest) */
+.aj-feature{position:relative;display:grid;grid-template-columns:1.18fr .82fr;border-radius:26px;overflow:hidden;background:var(--card);border:1px solid var(--line);box-shadow:0 0 0 1.5px rgba(168,224,28,.45),0 26px 60px -18px rgba(17,17,17,.22);margin-bottom:30px}
+@media(max-width:820px){.aj-feature{grid-template-columns:1fr}}
+.aj-fcov{position:relative;overflow:hidden;min-height:430px;background:var(--bg2)}
+@media(max-width:820px){.aj-fcov{min-height:0;aspect-ratio:16/10}}
+.aj-fcov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:ajken 16s var(--ease) infinite alternate;transition:transform .6s var(--ease)}
+@keyframes ajken{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.12) translate(-1.5%,-2%)}}
+.aj-feature:hover .aj-fcov img{animation-play-state:paused;transform:scale(1.1)}
+.aj-fbadge{position:absolute;top:20px;left:20px;z-index:2;display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;background:var(--lime);color:#0b0c09;padding:8px 14px;border-radius:999px;overflow:hidden}
+.aj-fbadge .dot{width:6px;height:6px;border-radius:50%;background:#0b0c09;animation:ajpulse 1.8s ease-in-out infinite}
+@keyframes ajpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.aj-fbadge::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);transform:translateX(-120%);animation:ajshine 3.6s ease-in-out infinite}
+@keyframes ajshine{0%,60%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
+.aj-fbody{padding:42px 44px;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:820px){.aj-fbody{padding:30px 26px 34px}}
+.aj-fcat{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);font-weight:600;display:flex;align-items:center;gap:10px}
+.aj-fcat .ln{flex:1;height:1px;background:var(--line);max-width:90px;transform-origin:left;transform:scaleX(0);transition:transform .7s var(--ease) .3s}
+.aj-feature.in .aj-fcat .ln{transform:scaleX(1)}
+.aj-fbody h2{font-weight:900;letter-spacing:-.025em;line-height:1.14;font-size:clamp(26px,3.2vw,40px);margin-top:16px}
+.aj-fexcerpt{margin-top:16px;font-size:14.5px;line-height:1.95;color:var(--mu);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.aj-fwho{margin-top:24px;display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:12px;color:var(--mu);flex-wrap:wrap}
+.aj-fwho img{width:34px;height:34px;border-radius:50%;object-fit:cover}
+.aj-fwho b{color:var(--ink);font-weight:500}
+.aj-fwho .tier{color:var(--lime-d)}
+.aj-fwho .sep{width:3px;height:3px;border-radius:50%;background:var(--mu2)}
+.aj-fcta{margin-top:28px;display:inline-flex;align-items:center;gap:10px;align-self:flex-start;background:var(--lime);color:#0b0c09;font-family:var(--mono);font-size:13px;font-weight:600;padding:13px 22px;border-radius:999px;transition:transform .2s,box-shadow .2s}
+.aj-fcta:hover{transform:translateY(-2px);box-shadow:0 12px 28px -6px rgba(168,224,28,.55)}
+.aj-fcta svg{width:15px;height:15px;transition:transform .25s var(--ease)}
+.aj-feature:hover .aj-fcta svg{transform:translateX(4px)}
+.aj-feature .rvc{opacity:0;transform:translateY(16px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.aj-feature.in .rvc{opacity:1;transform:none}
+.aj-feature.in .rvc.d1{transition-delay:.1s}
+.aj-feature.in .rvc.d2{transition-delay:.2s}
+.aj-feature.in .rvc.d3{transition-delay:.3s}
+.aj-fother{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mu2);margin:0 0 14px}
+
 .aj-list{display:flex;flex-direction:column}
 .aj-lrow{display:flex;gap:16px;align-items:center;padding:16px 6px;border-bottom:1px solid var(--line);transition:padding .3s var(--ease)}
 .aj-lrow:first-child{border-top:1px solid var(--line)}
@@ -249,6 +298,79 @@ function ListRow({ a }: { a: Article }) {
           <path d="M9 6l6 6-6 6" />
         </svg>
       </span>
+    </Link>
+  );
+}
+
+/** 最新記事のフィーチャー枠（大画面・抜粋つき・控えめなアニメーション）。 */
+function FeatureCard({ a }: { a: Article }) {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (es) => {
+        for (const e of es)
+          if (e.isIntersecting) {
+            setShown(true);
+            io.disconnect();
+          }
+      },
+      { threshold: 0.18 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const date = a.publishedAt ? md(a.publishedAt) : '';
+  const excerpt = excerptOf(a.body);
+
+  return (
+    <Link
+      ref={ref}
+      className={`aj-feature${shown ? ' in' : ''}`}
+      href={`/articles/${a.id}`}
+    >
+      <div className="aj-fcov">
+        <span className="aj-fbadge">
+          <span className="dot" />
+          最新 · FEATURED
+        </span>
+        {a.coverImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={a.coverImageUrl} alt="" />
+        ) : null}
+      </div>
+      <div className="aj-fbody">
+        <div className="aj-fcat rvc">
+          {TYPE_LABEL[a.articleType] ?? a.articleType}
+          {a.area ? ` · ${a.area}` : ''}
+          <span className="ln" />
+        </div>
+        <h2 className="rvc d1">{a.title}</h2>
+        {excerpt ? <p className="aj-fexcerpt rvc d2">{excerpt}…</p> : null}
+        <div className="aj-fwho rvc d3">
+          {a.writerAvatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={a.writerAvatarUrl} alt="" />
+          ) : null}
+          <b>{a.writerName ?? '匿名'}</b>
+          {a.writerTier ? <span className="tier">{TIER_LABEL[a.writerTier]}</span> : null}
+          {date ? (
+            <>
+              <span className="sep" />
+              {date}
+            </>
+          ) : null}
+        </div>
+        <span className="aj-fcta rvc d3">
+          記事を読む
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
+      </div>
     </Link>
   );
 }
@@ -601,12 +723,19 @@ export function ArticleJournal({
               ))}
             </div>
           ) : (
-            <div className="aj-feed">
-              {lead ? <BigCard a={lead} lead /> : null}
-              {rest.map((a) => (
-                <BigCard key={a.id} a={a} />
-              ))}
-            </div>
+            <>
+              {lead ? <FeatureCard a={lead} /> : null}
+              {rest.length > 0 ? (
+                <>
+                  <p className="aj-fother">ほかの記事</p>
+                  <div className="aj-feed">
+                    {rest.map((a) => (
+                      <BigCard key={a.id} a={a} />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </>
           )}
 
           {!searching && moreHref ? (
