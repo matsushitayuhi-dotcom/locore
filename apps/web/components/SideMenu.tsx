@@ -189,7 +189,7 @@ export function SideMenu({
         aria-label="メニューを開く"
         aria-expanded={open}
         onClick={() => setOpen(true)}
-        className="inline-flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full text-foreground/70 transition active:scale-[0.92] hover:bg-primary-500/10 hover:text-primary-300"
+        className="inline-flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full text-white/80 transition active:scale-[0.92] hover:bg-white/10 hover:text-white"
       >
         <Menu className="h-5 w-5" />
       </button>

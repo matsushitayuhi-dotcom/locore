@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from '@locore/ui';
 import { UserMenu } from './auth/UserMenu';
 import { SideMenu } from './SideMenu';
 import { useViewer } from './viewer/ViewerProvider';
@@ -31,9 +30,20 @@ export function HeaderUserArea() {
           }}
         />
       ) : (
-        <Button asChild variant="primary" size="sm">
-          <Link href="/auth/login">ログイン</Link>
-        </Button>
+        <>
+          <Link
+            href="/auth/login"
+            className="hidden text-[14px] font-medium text-white/85 transition hover:text-white sm:inline"
+          >
+            ログイン
+          </Link>
+          <Link
+            href="/auth/signup?redirect_to=%2Farticles"
+            className="inline-flex items-center rounded-full bg-primary-500 px-3.5 py-1.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-400 active:scale-[0.98]"
+          >
+            無料ではじめる
+          </Link>
+        </>
       )}
 
       <SideMenu

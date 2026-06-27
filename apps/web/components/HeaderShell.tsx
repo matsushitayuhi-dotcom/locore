@@ -57,9 +57,11 @@ export function HeaderShell({ children }: { children: React.ReactNode }) {
         (hidden ? '-translate-y-full' : 'translate-y-0')
       }
       style={{
-        // ノッチ機種でステータスバー帯に色を伸ばす (アプリ風)
+        // ノッチ機種でステータスバー帯に色を伸ばす (アプリ風)。
+        // ヘッダーをランディングと同じダークバーに統一したので、safe-area 帯も
+        // ダークで塗る。
         paddingTop: 'env(safe-area-inset-top, 0px)',
-        backgroundColor: 'var(--color-bg)',
+        backgroundColor: '#0b0d13',
       }}
     >
       {children}

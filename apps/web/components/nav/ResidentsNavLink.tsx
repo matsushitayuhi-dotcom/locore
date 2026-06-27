@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MessagesSquare } from 'lucide-react';
 
 /**
- * グローバルナビの「コミュニティ」タブ。
+ * グローバルナビの「コミュニティ」タブ。ランディングのダークナビに合わせたプレーン表示。
  *
  * 2026-06: 旅行者/駐在員モードを撤去。コミュニティ系（求人 / 住居 / 売買 /
- * 集まり / 習う / 助け / 掲示板 / カレンダー）の入口 /community に飛ばす。
+ * 集まり / 習う / 助け / 掲示板 / カレンダー）配下で active（ライム）表示。
  */
 export function ResidentsNavLink() {
   const pathname = usePathname() ?? '';
@@ -27,13 +26,10 @@ export function ResidentsNavLink() {
       href="/community"
       aria-current={active ? 'page' : undefined}
       className={
-        'inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-medium transition ' +
-        (active
-          ? 'bg-primary-500/15 text-primary-300'
-          : 'text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
+        'text-[14px] font-medium transition ' +
+        (active ? 'text-primary-400' : 'text-white/80 hover:text-white')
       }
     >
-      <MessagesSquare className="h-3.5 w-3.5" aria-hidden />
       コミュニティ
     </Link>
   );

@@ -4,22 +4,22 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 /**
- * グローバルナビの「サービス」タブ。ランディングのダークナビに合わせたプレーン表示。
- * /services 配下に居るときに active（ライム）表示。
+ * グローバルナビの「検索」タブ。ランディングのダークナビに合わせたプレーン表示。
+ * /search 配下で active（ライム）表示。
  */
-export function ServicesNavLink() {
+export function SearchNavLink() {
   const pathname = usePathname() ?? '';
-  const active = pathname.startsWith('/services');
+  const active = pathname.startsWith('/search');
   return (
     <Link
-      href="/services"
+      href="/search"
       aria-current={active ? 'page' : undefined}
       className={
         'text-[14px] font-medium transition ' +
         (active ? 'text-primary-400' : 'text-white/80 hover:text-white')
       }
     >
-      サービス
+      検索
     </Link>
   );
 }

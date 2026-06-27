@@ -359,9 +359,9 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
 </div></section>
 
 <section class="finalcta">
-  <h2>さあ、はじめよう。</h2>
-  <p>旅でも、暮らしでも、仕事でも。あなたの海外に、つながる人を。</p>
-  <a class="fbtn" href="/auth/signup?redirect_to=%2Farticles">無料ではじめる →</a>
+  <h2>海外をもっと身近に。もっと深く。</h2>
+  <p>旅でも、暮らしでも、仕事でも。<br>つながる人を見つけましょう！</p>
+  <a class="fbtn" href="/auth/signup?redirect_to=%2Farticles">無料で始める →</a>
   <div class="ftrust"><span><i></i>登録無料</span><span><i></i>約2分</span><span><i></i>本人確認で安心</span></div>
 </section>
 

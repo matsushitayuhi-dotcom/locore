@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen } from 'lucide-react';
 
 /**
- * グローバルナビの「記事」タブ。
- * /articles 配下に居るときに active 表示。
+ * グローバルナビの「記事」タブ。ランディングのダークナビに合わせたプレーン表示。
+ * /articles 配下に居るときに active（ライム）表示。
  */
 export function ArticlesNavLink() {
   const pathname = usePathname() ?? '';
@@ -16,13 +15,10 @@ export function ArticlesNavLink() {
       href="/articles"
       aria-current={active ? 'page' : undefined}
       className={
-        'inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-medium transition ' +
-        (active
-          ? 'bg-primary-500/15 text-primary-300'
-          : 'text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
+        'text-[14px] font-medium transition ' +
+        (active ? 'text-primary-400' : 'text-white/80 hover:text-white')
       }
     >
-      <BookOpen className="h-3.5 w-3.5" aria-hidden />
       記事
     </Link>
   );
