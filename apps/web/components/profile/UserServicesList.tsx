@@ -30,11 +30,6 @@ export type PublicService = {
   audience?: 'traveler' | 'resident' | 'both' | null;
 };
 
-const AUDIENCE_LABEL: Record<'traveler' | 'resident' | 'both', string> = {
-  traveler: '旅行者向け',
-  resident: '駐在員向け',
-  both: '旅行者・駐在員',
-};
 
 type Props = {
   /** プロフィール対象ユーザー（=サービス出品者） */
@@ -132,18 +127,11 @@ export function UserServicesList({
                 {s.description}
               </p>
             ) : null}
-            {s.cityNameJa || s.audience ? (
+            {s.cityNameJa ? (
               <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-foreground/55">
-                {s.cityNameJa ? (
-                  <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
-                    📍 {s.cityNameJa}
-                  </span>
-                ) : null}
-                {s.audience ? (
-                  <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
-                    {AUDIENCE_LABEL[s.audience]}
-                  </span>
-                ) : null}
+                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+                  📍 {s.cityNameJa}
+                </span>
               </div>
             ) : null}
             <div className="mt-4 flex justify-end">

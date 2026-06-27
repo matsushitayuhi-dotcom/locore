@@ -24,7 +24,6 @@ import {
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { ApplyButton } from '@/components/community/ApplyButton';
-import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { OwnerViewCount } from '@/components/community/OwnerViewCount';
 import { PhotoGallery } from './PhotoGallery';
 import { OwnerControls } from './OwnerControls';
@@ -112,7 +111,6 @@ export default async function ApartmentDetailPage({ params }: Props) {
                 {APARTMENT_LISTING_TYPE_LABEL[lt]}
               </span>
             ) : null}
-            <AudienceBadge audience={meta.audience} size="md" />
             <OwnerViewCount
               viewer={me}
               ownerId={post.authorId}

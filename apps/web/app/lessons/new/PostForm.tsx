@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
 import { ContactEmailField } from '@/components/community/ContactEmailField';
-import { AudienceField } from '@/components/community/AudienceField';
 import type { CommunityAudience } from '@/lib/community/constants';
 
 type Side = 'teach' | 'learn';
@@ -63,7 +62,7 @@ export function PostForm() {
   const [isPending, startTransition] = useTransition();
 
   const [side, setSide] = useState<Side>('teach');
-  const [audience, setAudience] = useState<CommunityAudience>('resident');
+  const audience: CommunityAudience = 'both';
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<LessonCategory>('language');
   const [format, setFormat] = useState<Format>('in_person');
@@ -165,7 +164,6 @@ export function PostForm() {
         </div>
       </fieldset>
 
-      <AudienceField value={audience} onChange={setAudience} />
 
       <div>
         <label htmlFor="title" className="block text-[12px] font-bold text-foreground">

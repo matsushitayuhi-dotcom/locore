@@ -1,10 +1,7 @@
 import Link from 'next/link';
-import { MapPin, ChevronDown, List, LayoutGrid, Plane, Briefcase, Check } from 'lucide-react';
+import { MapPin, ChevronDown, List, LayoutGrid, Check } from 'lucide-react';
 import { getRegionsWithContent } from '@/lib/geo/region-content';
-import {
-  AUDIENCE_LABEL,
-  type CommunityAudience,
-} from '@/lib/community/constants';
+import type { CommunityAudience } from '@/lib/community/constants';
 import type { CommunityView } from './ViewToggle';
 
 /**
@@ -36,15 +33,6 @@ const CANDIDATE_REGIONS: Array<{ slug: string; label: string }> = [
   { slug: 'rennes', label: 'レンヌ' },
 ];
 
-const AUDIENCE_ITEMS: Array<{
-  value: CommunityAudience | undefined;
-  label: string;
-}> = [
-  { value: undefined, label: 'すべて' },
-  { value: 'traveler', label: '旅行者' },
-  { value: 'resident', label: '駐在員' },
-];
-
 export type CompactFilterBarProps = {
   basePath: string;
   /** 現在の region slug */
@@ -53,10 +41,12 @@ export type CompactFilterBarProps = {
   activeRegionNameJa: string | undefined;
   /** region 以外のクエリを buildHref に頼まず保持するためのオブジェクト */
   preserveQuery: Record<string, string | undefined | null>;
-  /** audience フィルタ */
-  activeAudience: CommunityAudience | undefined;
-  /** audience 変更時の href を返す関数 (親の buildHref を渡す) */
-  buildAudienceHref: (a: CommunityAudience | undefined) => string;
+  /**
+   * audience フィルタ。2026-06 に旅行者/駐在員の概念を撤去し UI からは外したが、
+   * 呼び出し側との後方互換のため optional プロップとして型だけ残す（未使用）。
+   */
+  activeAudience?: CommunityAudience | undefined;
+  buildAudienceHref?: (a: CommunityAudience | undefined) => string;
   /** 現在のビュー */
   currentView: CommunityView;
   /** view 変更時の href を返す関数 */
@@ -86,8 +76,6 @@ export async function CompactFilterBar({
   activeRegionSlug,
   activeRegionNameJa,
   preserveQuery,
-  activeAudience,
-  buildAudienceHref,
   currentView,
   buildViewHref,
   sheetTrigger,
@@ -98,13 +86,6 @@ export async function CompactFilterBar({
   );
 
   const regionLabel = activeRegionNameJa ?? '都市';
-  const audienceLabel = activeAudience
-    ? activeAudience === 'traveler'
-      ? '旅行者'
-      : activeAudience === 'resident'
-        ? '駐在員'
-        : AUDIENCE_LABEL[activeAudience]
-    : '対象';
 
   return (
     <div
@@ -142,38 +123,6 @@ export async function CompactFilterBar({
                 href={buildRegionHref(basePath, r.slug, preserveQuery)}
                 active={activeRegionSlug === r.slug}
                 label={r.label}
-              />
-            ))}
-          </div>
-        </details>
-
-        {/* 対象者 ドロップダウン */}
-        <details className="group relative shrink-0">
-          <summary
-            className={
-              'inline-flex cursor-pointer list-none items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
-              (activeAudience
-                ? 'bg-primary-500 text-neutral-950'
-                : 'bg-muted text-foreground/75 hover:bg-foreground/10')
-            }
-          >
-            {activeAudience === 'traveler' ? (
-              <Plane className="h-3.5 w-3.5" />
-            ) : activeAudience === 'resident' ? (
-              <Briefcase className="h-3.5 w-3.5" />
-            ) : (
-              <Plane className="h-3.5 w-3.5" />
-            )}
-            <span className="max-w-[6rem] truncate">{audienceLabel}</span>
-            <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
-          </summary>
-          <div className="absolute left-0 top-full z-30 mt-1 w-44 rounded-xl border border-border bg-card p-1 shadow-xl">
-            {AUDIENCE_ITEMS.map((it) => (
-              <DropdownItem
-                key={it.value ?? 'all'}
-                href={buildAudienceHref(it.value)}
-                active={it.value === activeAudience}
-                label={it.label}
               />
             ))}
           </div>

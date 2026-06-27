@@ -34,12 +34,6 @@ import { TAG_LABEL } from '@/lib/services/tagLabels';
 
 export const revalidate = 60;
 
-const AUDIENCE_LABEL: Record<'traveler' | 'resident' | 'both', string> = {
-  traveler: '旅行者向け',
-  resident: '駐在員向け',
-  both: '旅行者・駐在員 両方',
-};
-
 type Params = { params: { id: string } };
 
 export async function generateMetadata({ params }: Params) {
@@ -107,11 +101,6 @@ export default async function ServiceDetailPage({ params }: Params) {
                   {TAG_LABEL[t] ?? t}
                 </span>
               ))}
-              {s.audience ? (
-                <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-foreground/70">
-                  {AUDIENCE_LABEL[s.audience]}
-                </span>
-              ) : null}
               {s.cityNameJa ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-foreground/70">
                   <MapPin className="h-3 w-3" aria-hidden />

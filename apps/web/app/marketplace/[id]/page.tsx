@@ -18,7 +18,6 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { ApplyButton } from '@/components/community/ApplyButton';
-import { AudienceBadge } from '@/components/community/AudienceBadge';
 import {
   MARKETPLACE_CONDITION_LABEL,
   MARKETPLACE_CATEGORY_LABEL,
@@ -183,7 +182,6 @@ export default async function MarketplaceDetailPage({ params }: Props) {
                   {MARKETPLACE_CONDITION_LABEL[meta.condition]}
                 </span>
               ) : null}
-              <AudienceBadge audience={meta.audience} size="md" />
             </div>
 
             <h1

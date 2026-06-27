@@ -26,12 +26,6 @@ const CATEGORIES: { value: string; label: string }[] = [
 
 const PRICE_UNITS = ['1時間あたり', '1日', '1件', '応相談'] as const;
 
-const AUDIENCE_OPTIONS: { value: '' | 'traveler' | 'resident' | 'both'; label: string }[] = [
-  { value: '', label: '指定なし（両方に表示）' },
-  { value: 'traveler', label: '旅行者向け' },
-  { value: 'resident', label: '駐在員向け' },
-  { value: 'both', label: '両方向け' },
-];
 
 type CityOption = {
   id: string;
@@ -330,24 +324,6 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-medium text-foreground/70">
-                  対象
-                </label>
-                <select
-                  value={r.audience}
-                  onChange={(e) =>
-                    update(idx, 'audience', e.target.value as Service['audience'])
-                  }
-                  className="flex h-10 w-full rounded-sm border border-border bg-card px-3 text-body-md focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
-                >
-                  {AUDIENCE_OPTIONS.map((a) => (
-                    <option key={a.value} value={a.value}>
-                      {a.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
@@ -457,22 +433,6 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
                 <option key={c.id} value={c.id}>
                   {c.countryNameJa ? `${c.countryNameJa}・` : ''}
                   {c.nameJa}
-                </option>
-              ))}
-            </select>
-            <select
-              value={draft.audience}
-              onChange={(e) =>
-                setDraft({
-                  ...draft,
-                  audience: e.target.value as Service['audience'],
-                })
-              }
-              className="h-10 rounded-sm border border-border bg-card px-3 text-body-md"
-            >
-              {AUDIENCE_OPTIONS.map((a) => (
-                <option key={a.value} value={a.value}>
-                  {a.label}
                 </option>
               ))}
             </select>

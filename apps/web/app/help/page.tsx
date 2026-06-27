@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
-import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { type CommunityView } from '@/components/community/ViewToggle';
 import { CompactFilterBar } from '@/components/community/CompactFilterBar';
 import { FilterSheet } from '@/components/community/FilterSheet';
@@ -419,7 +418,6 @@ function HelpListItem({ post }: { post: CommunityPostListItem }) {
                 {CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
-            <AudienceBadge audience={meta.audience} />
           </div>
           <h2 className="mt-1 line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
             {post.title}
@@ -558,7 +556,6 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
           </ul>
 
           <div className="mt-2 flex items-center justify-between gap-1">
-            <AudienceBadge audience={meta.audience} />
             <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
               <Clock className="h-2.5 w-2.5" />
               {formatPostedAt(post.createdAt)}

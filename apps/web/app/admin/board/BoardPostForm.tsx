@@ -8,43 +8,28 @@ import {
   BOARD_CATEGORIES,
   BOARD_CATEGORY_LABEL,
   BOARD_CATEGORY_HINT,
-  BOARD_AUDIENCES,
-  BOARD_AUDIENCE_LABEL,
-  isAudienceAllowed,
-  defaultAudienceForCategory,
   type BoardCategory,
-  type BoardAudience,
 } from '@/lib/board/constants';
 
 /**
  * 編集チームが掲示板に投稿するフォーム（manual ソース）。
  *
  * 必須: カテゴリ / タイトル / 本文
- * 任意: 対象（イベントのみ選択可、他は駐在員固定）/ 開催日 / 場所
+ * 任意: 開催日 / 場所
+ *
+ * 2026-06: 旅行者/駐在員の概念撤去に伴い「対象（audience）」UI を削除。
+ * 投稿は audience='both'（全員向け）で固定保存する。
  */
 export function BoardPostForm() {
   const router = useRouter();
   const [category, setCategory] = useState<BoardCategory>('event');
-  const [audience, setAudience] = useState<BoardAudience>('both');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [eventDate, setEventDate] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [isPending, startTransition] = useTransition();
 
-  // カテゴリが event 以外なら audience を resident に強制
-  const audienceLocked = category !== 'event';
-  const effectiveAudience: BoardAudience = audienceLocked ? 'resident' : audience;
-
-  const onCategoryChange = (next: BoardCategory) => {
-    setCategory(next);
-    // 切替時に audience を妥当な値に補正
-    if (next !== 'event') {
-      setAudience('resident');
-    } else if (!isAudienceAllowed(next, audience)) {
-      setAudience(defaultAudienceForCategory(next));
-    }
-  };
+  const onCategoryChange = (next: BoardCategory) => setCategory(next);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +48,7 @@ export function BoardPostForm() {
         title: t,
         body: b,
         category,
-        audience: effectiveAudience,
+        audience: 'both',
         eventDate: eventDate || null,
         eventLocation: eventLocation.trim() || null,
       });
@@ -113,42 +98,6 @@ export function BoardPostForm() {
         <p className="mt-1.5 text-[10px] text-foreground/55">
           {BOARD_CATEGORY_HINT[category]}
         </p>
-      </div>
-
-      {/* 対象（イベントのみ選択可） */}
-      <div>
-        <label className="mb-1 block text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-          対象
-          {audienceLocked ? (
-            <span className="ml-2 text-[10px] font-normal text-foreground/45">
-              （このカテゴリは駐在員向けで固定）
-            </span>
-          ) : null}
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          {BOARD_AUDIENCES.map((a) => {
-            const on = a === effectiveAudience;
-            const disabled = audienceLocked && a !== 'resident';
-            return (
-              <button
-                key={a}
-                type="button"
-                disabled={disabled}
-                onClick={() => !audienceLocked && setAudience(a)}
-                className={
-                  'rounded-full px-3 py-1 text-[12px] font-medium transition ' +
-                  (on
-                    ? 'bg-primary-500 text-neutral-950'
-                    : disabled
-                      ? 'bg-foreground/5 text-foreground/30 cursor-not-allowed'
-                      : 'bg-primary-500/10 text-primary-300 hover:bg-primary-500/15')
-                }
-              >
-                {BOARD_AUDIENCE_LABEL[a]}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* タイトル */}
@@ -251,7 +200,7 @@ function placeholderFor(category: BoardCategory): {
     case 'event':
       return {
         title: '例: 今週末、République 広場でクリエイターズマルシェ',
-        body: 'いつ・どこで・何が起きるか。\n旅行者と駐在員のどちらにも刺さるなら「両方向け」、現地民の催しなら「駐在員向け」。',
+        body: 'いつ・どこで・何が起きるか。場所・日時・対象を具体的に。',
       };
     case 'transit':
       return {

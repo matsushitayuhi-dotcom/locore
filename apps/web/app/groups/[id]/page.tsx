@@ -15,7 +15,6 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { ApplyButton } from '@/components/community/ApplyButton';
-import { AudienceBadge } from '@/components/community/AudienceBadge';
 import type { CommunityAudience } from '@/lib/community/constants';
 import { OwnerActions } from './OwnerActions';
 
@@ -134,7 +133,6 @@ export default async function GroupDetailPage({ params }: Props) {
                   {FREQUENCY_LABEL[meta.meeting_frequency]}
                 </span>
               ) : null}
-              <AudienceBadge audience={meta.audience} size="md" />
             </div>
 
             <h1

@@ -48,12 +48,6 @@ const EMPTY: FilterState = {
 
 const COUNTRY_LABEL: Record<string, string> = { fr: 'フランス' };
 
-const AUDIENCE_TABS: Array<{ key: Audience; label: string }> = [
-  { key: 'all', label: 'すべて' },
-  { key: 'traveler', label: '旅行者向け' },
-  { key: 'resident', label: '駐在員向け' },
-];
-
 const TOP_TAG_COUNT = 15;
 
 function parseAudience(v: string | null): Audience {
@@ -209,38 +203,11 @@ export function ServicesBrowser({
       ) : null}
 
       <div className="space-y-3">
-        {/* audience tabs + 検索 */}
+        {/* 検索 */}
         <form
           onSubmit={submitSearch}
           className="flex flex-col gap-2 sm:flex-row sm:items-center"
         >
-          <div
-            role="tablist"
-            aria-label="対象を選ぶ"
-            className="flex shrink-0 flex-wrap items-center gap-1 rounded-full bg-muted p-1"
-          >
-            {AUDIENCE_TABS.map((t) => {
-              const active = filters.audience === t.key;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={() => set('audience', t.key)}
-                  className={
-                    'rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
-                    (active
-                      ? 'bg-primary-500 text-neutral-950 shadow-sm'
-                      : 'text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
-                  }
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-
           <label className="relative flex-1">
             <span className="sr-only">サービスを検索</span>
             <Search

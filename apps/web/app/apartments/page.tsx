@@ -25,7 +25,6 @@ import {
 } from '@/lib/community/constants';
 import { CommunityNav } from '@/components/community/CommunityNav';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
-import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { type CommunityView } from '@/components/community/ViewToggle';
 import { CompactFilterBar } from '@/components/community/CompactFilterBar';
 import { FilterSheet } from '@/components/community/FilterSheet';
@@ -413,7 +412,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                           {APARTMENT_LISTING_TYPE_LABEL[lt]}
                         </span>
                       ) : null}
-                      <AudienceBadge audience={meta.audience} />
                     </div>
                     <div className="mt-1 flex items-baseline gap-1.5">
                       <span className="text-[15px] font-bold tracking-tight tabular">
@@ -504,7 +502,6 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                           {APARTMENT_LISTING_TYPE_LABEL[lt]}
                         </span>
                       ) : null}
-                      <AudienceBadge audience={meta.audience} />
                     </div>
                   </div>
 

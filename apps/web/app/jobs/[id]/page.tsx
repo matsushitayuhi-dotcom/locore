@@ -16,7 +16,6 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
 import { ApplyButton } from '@/components/community/ApplyButton';
-import { AudienceBadge } from '@/components/community/AudienceBadge';
 import {
   JOB_EMPLOYMENT_TYPE_LABEL,
   JOB_CATEGORY_LABEL,
@@ -169,7 +168,6 @@ export default async function JobDetailPage({ params }: Props) {
                   経験者優遇
                 </span>
               ) : null}
-              <AudienceBadge audience={meta.audience} size="md" />
             </div>
 
             <h1

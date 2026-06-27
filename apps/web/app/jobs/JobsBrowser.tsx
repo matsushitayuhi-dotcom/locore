@@ -17,7 +17,6 @@ import {
   SlidersHorizontal,
   X,
 } from 'lucide-react';
-import { AudienceBadge } from '@/components/community/AudienceBadge';
 import { PostFab } from '@/components/community/PostFab';
 import {
   JOB_EMPLOYMENT_TYPES,
@@ -711,7 +710,6 @@ function JobListItem({ post }: { post: JobListPost }) {
                 Remote
               </span>
             ) : null}
-            <AudienceBadge audience={meta.audience} />
           </div>
 
           <h2 className="mt-1 line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
@@ -833,7 +831,6 @@ function JobCard({ post }: { post: JobListPost }) {
           </ul>
 
           <div className="mt-2 flex items-center justify-between gap-1">
-            <AudienceBadge audience={meta.audience} />
             <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
               <Clock className="h-2.5 w-2.5" />
               {formatPostedAt(post.createdAt)}

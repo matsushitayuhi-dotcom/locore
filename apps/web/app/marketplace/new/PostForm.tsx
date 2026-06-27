@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactEmailField } from '@/components/community/ContactEmailField';
-import { AudienceField } from '@/components/community/AudienceField';
 import {
   MARKETPLACE_CONDITIONS,
   MARKETPLACE_CONDITION_LABEL,
@@ -26,7 +25,7 @@ export function PostForm() {
   const [isPending, startTransition] = useTransition();
 
   const [side, setSide] = useState<Side>('sell');
-  const [audience, setAudience] = useState<CommunityAudience>('resident');
+  const audience: CommunityAudience = 'both';
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<MarketplaceCategory>('furniture');
   const [condition, setCondition] = useState<MarketplaceCondition>('good');
@@ -129,8 +128,6 @@ export function PostForm() {
         </div>
       </fieldset>
 
-      {/* 対象者 */}
-      <AudienceField value={audience} onChange={setAudience} />
 
       {/* タイトル */}
       <div>

@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactEmailField } from '@/components/community/ContactEmailField';
 import { ContactLeakWarning } from '@/components/community/CommunityDisclaimer';
-import { AudienceField } from '@/components/community/AudienceField';
 import type { CommunityAudience } from '@/lib/community/constants';
 
 type GroupCategory =
@@ -57,7 +56,7 @@ export function PostForm() {
   const [isPending, startTransition] = useTransition();
 
   const [title, setTitle] = useState('');
-  const [audience, setAudience] = useState<CommunityAudience>('resident');
+  const audience: CommunityAudience = 'both';
   const [category, setCategory] = useState<GroupCategory>('hobby');
   const [frequency, setFrequency] = useState<Frequency>('monthly');
   const [skillLevel, setSkillLevel] = useState<Level>('any');
@@ -123,7 +122,6 @@ export function PostForm() {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      <AudienceField value={audience} onChange={setAudience} />
 
       <div>
         <label htmlFor="title" className="block text-[12px] font-bold text-foreground">
