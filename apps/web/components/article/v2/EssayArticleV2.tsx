@@ -1,33 +1,31 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, type ReactNode } from 'react';
 import type { Article, Writer } from '@/lib/mock';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { CSS } from './essayCss';
 import { fmtDate, HeroNetCanvas, useReveal, authorMeta } from './shared';
-import { toVideoEmbedSrc, type ArticleVideoRow } from './classify';
 
 /**
- * ブログ・場所なし（essay）の新レンダラ。EssayMock 相当。
+ * ブログ・場所なし（essay）の v2 レイアウト。
  *
- * データマッピング:
- *   - Hero → 本文（renderArticleBodyHtml(body) を描画 ＋ article_videos を 16:9 埋め込み
- *     ＋ photo_entries があれば写真として流す）→ 著者 → 関連 → 日付。
- *   - 地図・スポットなし。
- *   - 動画は essay モック同様 16:9 中央（二重センタリング禁止）。埋め込み不可の
- *     プラットフォーム（TikTok/IG/X 等）は「元動画を開く」リンクにフォールバック。
+ * Phase B では「ブランドヒーロー＋本文(無料 body)＋写真(photo_entries)＋動画スロット」を
+ * v2 デザインで描き、その下に engagement 層（Paywall で body_paid をゲート、レビュー、
+ * 著者、関連）を children として差し込む。地図・スポットは持たない。
  */
-
 export function EssayArticleV2({
   article,
   writer,
-  related,
-  videos,
+  videosSlot,
+  children,
+  heroActions,
 }: {
   article: Article;
   writer: Writer | null;
-  related: Article[];
-  videos: ArticleVideoRow[];
+  /** article_videos を 16:9 で描く要素（engagement.EssayVideos）。本文末に流す。 */
+  videosSlot?: ReactNode;
+  children?: ReactNode;
+  heroActions?: ReactNode;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useReveal(ref, '.es-rev');
@@ -35,12 +33,6 @@ export function EssayArticleV2({
   const bodyHtml = useMemo(
     () => (article.body?.trim() ? renderArticleBodyHtml(article.body) : ''),
     [article.body],
-  );
-  // body_paid もプレビューでは全文表示（本番差し替え時に課金分岐を戻す）
-  const paidHtml = useMemo(
-    () =>
-      article.bodyPaid?.trim() ? renderArticleBodyHtml(article.bodyPaid) : '',
-    [article.bodyPaid],
   );
 
   const photoEntries = (article.photoEntries ?? [])
@@ -71,6 +63,7 @@ export function EssayArticleV2({
               </div>
             </div>
           ) : null}
+          {heroActions ? <div className="es-heroact">{heroActions}</div> : null}
         </div>
         <div className="es-scroll">
           読む
@@ -78,7 +71,7 @@ export function EssayArticleV2({
         </div>
       </header>
 
-      {/* ===== 本文 ===== */}
+      {/* ===== 本文（無料 body）＋写真＋動画 ===== */}
       <article className="es-article">
         <div className="es-read">
           <span className="es-kicker es-rev">— Essay</span>
@@ -91,14 +84,6 @@ export function EssayArticleV2({
           />
         ) : null}
 
-        {paidHtml ? (
-          <div
-            className="es-body es-rev"
-            style={{ marginTop: 26 }}
-            dangerouslySetInnerHTML={{ __html: paidHtml }}
-          />
-        ) : null}
-
         {/* photo_entries（あれば写真として流す）*/}
         {photoEntries.map((p, i) => (
           <figure key={`pe-${i}`} className="es-figure es-rev">
@@ -106,7 +91,7 @@ export function EssayArticleV2({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={p.imageUrl} alt={p.caption ?? ''} loading="lazy" />
             </div>
-            {(p.caption || p.locationName) ? (
+            {p.caption || p.locationName ? (
               <figcaption className="es-figcap">
                 {p.caption}
                 {p.locationName ? ` · ${p.locationName}` : ''}
@@ -116,79 +101,13 @@ export function EssayArticleV2({
         ))}
 
         {/* article_videos（16:9 中央）*/}
-        {videos.map((v) => {
-          const src = toVideoEmbedSrc(v.embedUrl);
-          if (src) {
-            return (
-              <div key={v.id} className="es-video es-rev">
-                <div className="es-vframe">
-                  <span className="es-vbadge">VIDEO</span>
-                  <iframe
-                    title="動画"
-                    src={src}
-                    loading="lazy"
-                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
-                </div>
-              </div>
-            );
-          }
-          // 埋め込み不可（TikTok/IG/X 等）は元動画リンクにフォールバック
-          return (
-            <div key={v.id} className="es-vlink es-rev">
-              <a href={v.embedUrl} target="_blank" rel="noopener noreferrer">
-                ▶ 動画を開く（{v.platform}）
-              </a>
-            </div>
-          );
-        })}
+        {videosSlot}
       </article>
 
-      {/* ===== 著者カード ===== */}
-      {writer ? (
-        <section className="es-foot">
-          <div className="es-read">
-            <div className="es-byline es-rev">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={writer.avatarUrl} alt="" />
-              <div>
-                <div className="k">この記事を書いた人</div>
-                <h3>{writer.name}</h3>
-                <div className="role">{authorMeta(writer)}</div>
-                {writer.bio ? <p className="bio">{writer.bio}</p> : null}
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {/* ===== 関連 ===== */}
-      {related.length > 0 ? (
-        <section className="es-related">
-          <div className="es-wide">
-            <div className="head es-rev">
-              <span className="es-kicker">— You might also like</span>
-              <h2 style={{ marginTop: 10 }}>ほかの読み物</h2>
-            </div>
-            <div className="es-rgrid">
-              {related.map((r) => (
-                <a key={r.id} className="es-rcard es-rev" href={`/mockup/real/${r.id}`}>
-                  <div className="es-rcov">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={r.coverImageUrl} alt="" loading="lazy" />
-                  </div>
-                  <div className="es-rb">
-                    <div className="c">{r.area}</div>
-                    <h3>{r.title}</h3>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
+      {/* ===== engagement 本体（有料 body ゲート / レビュー / 著者 / 関連）===== */}
+      <section className="es-body-extras">
+        <div className="es-read">{children}</div>
+      </section>
 
       {/* ===== 日付フッター ===== */}
       <section className="es-dates">

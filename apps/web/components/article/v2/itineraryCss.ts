@@ -119,6 +119,11 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-authcard .role .tier{color:var(--lime-d);font-weight:700}
 .tj-authcard .bio{font-size:13.5px;line-height:1.85;color:var(--ink2);margin-top:13px;max-width:52ch}
 
+.tj-heroact{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tj-body{padding:48px 0 20px}
+.tj-bodywrap{max-width:760px;margin:0 auto;padding:0 24px}
+@media(max-width:720px){.tj-body{padding:32px 0 12px}}
+
 .tj-dates{padding:0 0 70px}
 .tj-dateline{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;align-items:center;font-family:var(--mono);font-size:12px;color:var(--mu);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:20px 0}
 .tj-dateline span{display:inline-flex;align-items:center;gap:8px}

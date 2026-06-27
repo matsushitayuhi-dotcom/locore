@@ -3,7 +3,8 @@ import { eq, and, isNotNull } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { getDbArticleBundle } from '@/lib/articles/published';
-import { ArticleRenderer } from '@/components/article/ArticleRenderer';
+import { getArticleVideos } from '@/lib/articles/v2';
+import { ArticleRendererV2 } from '@/components/article/v2/ArticleRendererV2';
 
 export const metadata = {
   title: '共有プレビュー',
@@ -67,6 +68,8 @@ export default async function PreviewByTokenPage({
   const bundle = await getDbArticleBundle(row.id, { allowUnpublished: true });
   if (!bundle) return notFound();
 
+  const videos = await getArticleVideos(bundle.article.id);
+
   return (
     <div className="space-y-3">
       <aside
@@ -78,7 +81,7 @@ export default async function PreviewByTokenPage({
         公開後は通常の記事ページ (/articles/{bundle.article.id}) からアクセスしてください。
       </aside>
 
-      <ArticleRenderer
+      <ArticleRendererV2
         article={bundle.article}
         writer={bundle.writer}
         spots={bundle.spots}
@@ -100,6 +103,8 @@ export default async function PreviewByTokenPage({
         folders={[]}
         bookmarkedSpotIds={new Set()}
         myReview={null}
+        authorServices={[]}
+        videos={videos}
         previewMode
       />
     </div>

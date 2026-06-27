@@ -91,6 +91,10 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .es-rb .c{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);font-weight:600}
 .es-rb h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:17px;line-height:1.35;margin-top:9px}
 
+.es-heroact{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center}
+.es-body-extras{padding:20px 0 10px}
+.es-body-extras .es-read{display:flex;flex-direction:column;gap:40px}
+
 .es-dates{padding:40px 0 70px}
 .es-dateline{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;align-items:center;font-family:var(--mono);font-size:12px;color:var(--mu);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:20px 0}
 .es-dateline span{display:inline-flex;align-items:center;gap:8px}

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getDbArticleBundle } from '@/lib/articles/published';
-import { ArticleRenderer } from '@/components/article/ArticleRenderer';
+import { getArticleVideos } from '@/lib/articles/v2';
+import { ArticleRendererV2 } from '@/components/article/v2/ArticleRendererV2';
 import { requireUser } from '@/lib/auth/require-user';
 
 export const metadata = {
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic';
 /**
  * ライター向け公開前プレビュー。
  *
- * 本番 `/articles/[id]` ページと同じ `<ArticleRenderer />` を使って
+ * 本番 `/articles/[id]` ページと同じ `<ArticleRendererV2 />` を使って
  * 「公開後の見え方」を再現する。違いは:
  *   - 下書きや審査中（status != published）も表示可能
  *   - 有料パートは強制解除
@@ -34,8 +35,10 @@ export default async function PreviewArticlePage({
     return notFound();
   }
 
+  const videos = await getArticleVideos(article.id);
+
   return (
-    <ArticleRenderer
+    <ArticleRendererV2
       article={article}
       writer={bundle.writer}
       spots={bundle.spots}
@@ -57,6 +60,8 @@ export default async function PreviewArticlePage({
       folders={[]}
       bookmarkedSpotIds={new Set()}
       myReview={null}
+      authorServices={[]}
+      videos={videos}
       previewMode
     />
   );

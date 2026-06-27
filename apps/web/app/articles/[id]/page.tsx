@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getDbArticleBundle } from '../../../lib/articles/published';
-import { ArticleRenderer } from '../../../components/article/ArticleRenderer';
+import { getArticleVideos } from '../../../lib/articles/v2';
+import { ArticleRendererV2 } from '../../../components/article/v2/ArticleRendererV2';
 import {
   listMyFolders,
   listMyBookmarkedSpotIds,
@@ -87,6 +88,7 @@ export default async function ArticleDetailPage({
     bookmarkedArticleIds,
     myReview,
     authorServices,
+    videos,
   ] = await Promise.all([
     listMyFolders(),
     listMyBookmarkedSpotIds(),
@@ -96,6 +98,8 @@ export default async function ArticleDetailPage({
     getMyReviewForArticle(article.id),
     // 著者カード末尾に「この駐在員の他のサービス」セクションを出す用
     writer?.id ? listServicesByUserId(writer.id, 3) : Promise.resolve([]),
+    // essay（ブログ・場所なし）v2 レンダラ用の外部動画
+    getArticleVideos(article.id),
   ]);
   const alreadySavedByMe = bookmarkedArticleIds.has(article.id);
   const viewerLoggedIn = !!me;
@@ -106,7 +110,7 @@ export default async function ArticleDetailPage({
   const initialLiked = likedSet.has(article.id);
 
   return (
-    <ArticleRenderer
+    <ArticleRendererV2
       article={article}
       writer={writer}
       spots={spots}
@@ -126,6 +130,8 @@ export default async function ArticleDetailPage({
       bookmarkedSpotIds={bookmarkedSpotIds}
       myReview={myReview}
       authorServices={authorServices}
+      videos={videos}
+      previewMode={false}
     />
   );
 }

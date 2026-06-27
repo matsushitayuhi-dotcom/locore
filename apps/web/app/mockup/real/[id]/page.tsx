@@ -60,10 +60,25 @@ export default async function MockupRealArticlePage({
         article={bundle.article}
         writer={bundle.writer}
         spots={bundle.spots}
+        reviews={bundle.reviews}
         related={bundle.related}
         region={bundle.region}
         country={bundle.country}
+        // 検証プレビュー: 全文解除。previewMode でいいね/購入/レビュー導線は抑止。
+        unlocked={true}
+        purchasedOrOwner={true}
+        isOwner={true}
+        viewerLoggedIn={false}
+        alreadySavedByMe={false}
+        bookmarkCount={0}
+        likeCount={0}
+        initialLiked={false}
+        folders={[]}
+        bookmarkedSpotIds={new Set()}
+        myReview={null}
+        authorServices={[]}
         videos={bundle.videos}
+        previewMode
       />
     </>
   );
