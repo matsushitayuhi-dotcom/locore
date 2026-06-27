@@ -36,6 +36,10 @@ import { SpotsSection } from './SpotsSection';
 import { TagsInput } from './TagsInput';
 import type { PhotoEntry } from '@/lib/mock/types';
 import type { SpotRow } from '@/components/writer/SpotList';
+import {
+  joinBodyWithPaywall,
+  splitBodyByPaywall,
+} from '@/lib/editor/paywallMarker';
 
 /**
  * 記事編集のステップ式ウィザード（Substack 風）。
@@ -152,21 +156,32 @@ export function WizardShell({
     (article.body ?? '').trim() === '' &&
     (article.photoEntries?.length ?? 0) === 0 &&
     spots.length === 0;
-  // 新規記事はカテゴリ選択から、既存記事は articleType に応じた 1 ステップ目から始まる
+  // Phase C: 新規記事はカテゴリ選択（2 択）から、既存記事は入口区分に応じた 1 ステップ目から。
+  //  - モデルコース (itinerary): 'itinerary'（旧来どおり、先に旅程を見せる）
+  //  - ブログ (非 itinerary):    'spots'（スポットは任意だが、最初のステップは共通で spots）
   const [step, setStep] = useState<StepKind>(
     isPristine
       ? 'category'
-      : article.articleType === 'expat_info'
-        ? 'photos'
-        : article.articleType === 'itinerary'
-          ? 'itinerary'
-          : 'spots',
+      : article.articleType === 'itinerary'
+        ? 'itinerary'
+        : 'spots',
   );
 
   // 共通 state
   const [title, setTitle] = useState(article.title);
-  const [body, setBody] = useState(article.body);
-  const [bodyPaid, setBodyPaid] = useState(article.bodyPaid ?? '');
+  /**
+   * Phase C: 本文は「無料 + ペイウォール境界 + 有料」を 1 本にまとめた combined HTML
+   * として編集する。保存時に splitBodyByPaywall で body / bodyPaid に分割する。
+   * 読み込み時は joinBodyWithPaywall で既存の body / body_paid を結合して復元する。
+   */
+  const [combinedBody, setCombinedBody] = useState<string>(() =>
+    joinBodyWithPaywall(article.body, article.bodyPaid ?? ''),
+  );
+  // combined を境界で分割した派生値（snapshot / 保存 / モデレーション用）
+  const { free: body, paid: bodyPaid } = useMemo(
+    () => splitBodyByPaywall(combinedBody),
+    [combinedBody],
+  );
   // #4 改修 (2026-05): 新規記事のデフォルトは 'classic'。
   // ここで既存記事の bodyStyle はそのまま尊重するので、過去に 'photo_journal'
   // として書かれた記事は引き続き photo_journal として編集される（互換性維持）。
@@ -274,10 +289,15 @@ export function WizardShell({
       const initArticleType = article.articleType;
       // #4: 新規記事は 'classic' 既定（既存記事は DB 値を尊重）
       const initBodyStyle = article.bodyStyle ?? 'classic';
+      // Phase C: combinedBody と同じ join→split 正規化を通して初期 body/bodyPaid を作る。
+      // これを通さないと trim 差分で「開いた瞬間に未保存」になってしまう。
+      const initSplit = splitBodyByPaywall(
+        joinBodyWithPaywall(article.body, article.bodyPaid ?? ''),
+      );
       return makeSnapshot({
         title: article.title,
-        body: article.body,
-        bodyPaid: article.bodyPaid ?? '',
+        body: initSplit.free,
+        bodyPaid: initSplit.paid,
         bodyStyle: initBodyStyle,
         basic: {
           priceJpy: article.priceJpy,
@@ -314,11 +334,11 @@ export function WizardShell({
 
   const isItinerary = basic.articleType === 'itinerary';
   /**
-   * 駐在者向け実務情報 (expat_info) は地図上のスポットを必須にしない。
-   * 「殺虫剤はここで買えました」「ビザ申請の流れ」のような文章主体の
-   * 記事ではスポット登録があっても無くても良いというポリシー。
+   * Phase C: 入口 2 択のうち「ブログ」= itinerary 以外（spot_guide / expat_info /
+   * 旧 photo_journal）。ブログではスポット登録は任意（足せば place-guide 表示・
+   * 足さなければ essay 表示に classify.ts が自動分岐する）。モデルコースのみスポット必須。
    */
-  const isExpatInfo = basic.articleType === 'expat_info';
+  const isBlog = !isItinerary;
 
   /**
    * #1 / #3: ステップ順を articleType に応じて動的に算出する。
@@ -329,14 +349,16 @@ export function WizardShell({
    * - spot_guide (スポット紹介): spots → photos → titleBody → publish
    * - expat_info (その他):    photos → titleBody → publish
    */
+  // Phase C: 入口が「モデルコース / ブログ」の 2 択になったため、ステップ順も 2 分岐に。
+  //  - モデルコース (itinerary): spots → itinerary → photos → titleBody → publish
+  //  - ブログ (非 itinerary):    spots → photos → titleBody → publish
+  // ブログでもスポット step は表示するが、スポット登録は任意（足せば place-guide 表示になる）。
   const stepSequence: StepKind[] = useMemo(
     () =>
       isItinerary
         ? ['spots', 'itinerary', 'photos', 'titleBody', 'publish']
-        : isExpatInfo
-          ? ['photos', 'titleBody', 'publish']
-          : ['spots', 'photos', 'titleBody', 'publish'],
-    [isItinerary, isExpatInfo],
+        : ['spots', 'photos', 'titleBody', 'publish'],
+    [isItinerary],
   );
   const totalSteps = stepSequence.length;
   const currentStepIdx = Math.max(0, stepSequence.indexOf(step));
@@ -453,7 +475,8 @@ export function WizardShell({
     missing.push('本文 100 字以上');
   if (bodyStyle === 'photo_journal' && !photoEntriesValid)
     missing.push('写真 1 枚以上');
-  if (!isExpatInfo && spotsForDropdown.length === 0)
+  // Phase C: スポット必須はモデルコース (itinerary) のみ。ブログは任意。
+  if (isItinerary && spotsForDropdown.length === 0)
     missing.push('スポット 1 件以上');
   if (!coverImageUrl.trim()) missing.push('カバー画像');
   if (isItinerary && itineraryBlocks.length < 2)
@@ -620,19 +643,17 @@ export function WizardShell({
         />
       ) : null}
 
-      {/* カテゴリ選択（#4） */}
+      {/* 入口 2 択（Phase C: モデルコース / ブログ） */}
       {step === 'category' ? (
         <Step0CategorySelect
           value={basic.articleType}
           onSelect={(t) => {
             setBasic({ ...basic, articleType: t });
-            // 選択した articleType の先頭ステップへ抜ける
+            // 選択した入口の先頭ステップへ抜ける（どちらも spots 始まり）
             const nextSeq: StepKind[] =
               t === 'itinerary'
                 ? ['spots', 'itinerary', 'photos', 'titleBody', 'publish']
-                : t === 'expat_info'
-                  ? ['photos', 'titleBody', 'publish']
-                  : ['spots', 'photos', 'titleBody', 'publish'];
+                : ['spots', 'photos', 'titleBody', 'publish'];
             setStep(nextSeq[0]!);
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
@@ -646,7 +667,7 @@ export function WizardShell({
           initial={spots}
           googleMapsApiKey={googleMapsApiKey}
           onChange={handleSpotsChange}
-          isOptional={isExpatInfo}
+          isOptional={isBlog}
           stepNumber={currentStepIdx + 1}
         />
       ) : null}
@@ -681,10 +702,8 @@ export function WizardShell({
         <Step4TitleBody
           title={title}
           onChangeTitle={setTitle}
-          body={body}
-          bodyPaid={bodyPaid}
-          onChangeBody={setBody}
-          onChangeBodyPaid={setBodyPaid}
+          body={combinedBody}
+          onChangeBody={setCombinedBody}
           stepNumber={currentStepIdx + 1}
         />
       ) : null}
@@ -1030,8 +1049,9 @@ function StepProgress({
 //
 // 仕様:
 //   - タイトル入力欄 (大きい)
-//   - 本文 RichTextEditor (BodySplitSection 経由で無料 / 有料 2 段)
-//     → BodyEditorSection 内の TipTap RichTextEditor で `/` メニューが使える
+//   - 本文 RichTextEditor は 1 本（Phase C で無料/有料の 2 段エディタを廃止）。
+//     本文中の「ここから下を有料に」境界（/paid・ボタン）で無料/有料を分ける。
+//     保存時に WizardShell が splitBodyByPaywall で body / body_paid に振り分ける。
 //   - 写真や旅程の編集 UI は出さない (既に前ステップで済んでいる)
 //   - bodyStyle='photo_journal' の旧記事も、ここでは本文エディタとして編集できる
 //     ( 写真キャプションは「写真」ステップ側で編集する )
@@ -1041,17 +1061,14 @@ function Step4TitleBody({
   title,
   onChangeTitle,
   body,
-  bodyPaid,
   onChangeBody,
-  onChangeBodyPaid,
   stepNumber,
 }: {
   title: string;
   onChangeTitle: (v: string) => void;
+  /** 無料 + 境界 + 有料 を 1 本にまとめた combined HTML */
   body: string;
-  bodyPaid: string;
   onChangeBody: (v: string) => void;
-  onChangeBodyPaid: (v: string) => void;
   /** StepProgress と揃えた表示用ステップ番号 */
   stepNumber: number;
 }) {
@@ -1093,13 +1110,8 @@ function Step4TitleBody({
         </div>
       </section>
 
-      {/* 本文エディタ (無料 / 有料 2 段の RichTextEditor。slash command 対応) */}
-      <TitleBodySection
-        bodyFree={body}
-        bodyPaid={bodyPaid}
-        onChangeBodyFree={onChangeBody}
-        onChangeBodyPaid={onChangeBodyPaid}
-      />
+      {/* 本文エディタ (1 本の RichTextEditor。/paid で有料境界を挿入できる) */}
+      <TitleBodySection body={body} onChangeBody={onChangeBody} />
     </div>
   );
 }
@@ -1119,7 +1131,7 @@ function Step1Spots({
   initial: SpotRow[];
   googleMapsApiKey?: string;
   onChange: (next: SpotRow[]) => void;
-  /** expat_info 記事のときに true。「任意」表示に切り替える */
+  /** ブログ記事のときに true。「任意」表示に切り替える */
   isOptional?: boolean;
   /** StepProgress と揃えた表示用ステップ番号 */
   stepNumber: number;
@@ -1139,7 +1151,7 @@ function Step1Spots({
         </h2>
         <p className="text-[12px] text-foreground/65">
           {isOptional
-            ? '駐在者情報の記事ではスポットの登録は任意です。「ここで買えた」など具体的な店舗を紹介したい場合のみ追加してください。'
+            ? 'ブログではスポットの登録は任意です。スポットを 1 つでも追加すると、記事末尾に地図とスポット一覧が付く「場所紹介」レイアウトに自動で切り替わります。追加しなければ文章主体の読み物として表示されます。'
             : '記事で紹介する場所をここで登録します。1 件目に追加したスポットは、写真・旅程ブロックの場所欄にも自動で入ります。'}
         </p>
       </header>
@@ -1199,8 +1211,22 @@ function StepItinerary({
 }
 
 // =============================================================================
-// Step 0: カテゴリ選択（#4 改修で追加）
+// 入口 2 択（Phase C: モデルコース / ブログ）
 // =============================================================================
+/**
+ * 書き手が最初に選ぶのは「モデルコース」「ブログ」の 2 つだけ（docs/editor-spec.md §1）。
+ *
+ * 内部マッピング（DB の article_type enum は非変更）:
+ *   - モデルコース → article_type='itinerary'
+ *   - ブログ       → article_type='spot_guide'（新規ブログのデフォルト）
+ *
+ * 既存記事の復元は呼び出し側の `value` で行う。value が 'itinerary' ならモデルコース、
+ * それ以外（spot_guide / expat_info / 旧 photo_journal は page.tsx で spot_guide に
+ * 正規化済み）ならブログがハイライトされる。
+ *
+ * place-guide / essay の出し分けは表示側 classify.ts がスポット有無で自動判定するため、
+ * 書き手はここで意識しない。
+ */
 function Step0CategorySelect({
   value,
   onSelect,
@@ -1208,49 +1234,47 @@ function Step0CategorySelect({
   value: 'spot_guide' | 'itinerary' | 'expat_info';
   onSelect: (t: 'spot_guide' | 'itinerary' | 'expat_info') => void;
 }) {
-  // 「その他」= expat_info にマップ（DB schema 非変更）
+  // 入口 2 択。ブログは spot_guide にマップ（既存 expat_info もブログ側に寄せる）。
   const options: Array<{
-    type: 'spot_guide' | 'itinerary' | 'expat_info';
-    title: string;
+    /** 選択時にセットする article_type */
+    type: 'itinerary' | 'spot_guide';
+    /** この選択肢がハイライトされる判定 */
+    selected: boolean;
+    label: string;
     desc: string;
     recommended?: boolean;
   }> = [
     {
       type: 'itinerary',
-      title: '旅程プラン',
-      desc: '半日 / 1 日の歩き方ルート。\nスポットを順番に巡る時間軸付きの記事。',
+      selected: value === 'itinerary',
+      label: 'モデルコース',
+      desc: '半日 / 1 日の歩き方ルート。\nスポットを順番に巡る、時間軸つきの記事。',
       recommended: true,
     },
     {
       type: 'spot_guide',
-      title: 'スポット紹介',
-      desc: '一軒の店、一本の坂道、一つのスポットを\nじっくり紹介する記事。',
-    },
-    {
-      type: 'expat_info',
-      title: 'その他',
-      desc: '駐在者向け情報・お知らせ・コラムなど、\n地図に紐付かないテキスト主体の記事。',
+      selected: value !== 'itinerary',
+      label: 'ブログ',
+      desc: 'お店紹介でも読み物でも OK。\nスポットを足すと地図つきの「場所紹介」に、\n足さなければ文章主体の「読み物」に自動で整います。',
     },
   ];
   return (
     <div className="space-y-4 sm:space-y-6">
       <header className="space-y-1">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-          カテゴリ選択
+          記事の入口
         </p>
-        <h2
-          className="text-[22px] font-bold tracking-tight"
-        >
-          どんな記事を書きますか？
+        <h2 className="text-[22px] font-bold tracking-tight">
+          どちらで書きますか？
         </h2>
         <p className="text-[12px] text-foreground/65">
-          選んだカテゴリによって、このあとのウィザードの流れが変わります。あとから変更も可能です。
+          選ぶのは 2 つだけ。あとから変更もできます。表示レイアウトはスポットの有無から自動で決まるので、細かい種類は気にしなくて大丈夫です。
         </p>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {options.map((opt) => {
-          const on = value === opt.type;
+          const on = opt.selected;
           return (
             <button
               key={opt.type}
@@ -1270,13 +1294,13 @@ function Step0CategorySelect({
                 </span>
               ) : null}
               <span className="text-[16px] font-bold text-foreground">
-                {opt.title}
+                {opt.label}
               </span>
               <span className="whitespace-pre-line text-[12px] leading-relaxed text-foreground/65">
                 {opt.desc}
               </span>
               <span className="mt-auto pt-2 text-[11px] font-semibold text-primary-300 underline-offset-4 group-hover:underline">
-                このカテゴリで始める →
+                これで始める →
               </span>
             </button>
           );
@@ -1284,7 +1308,7 @@ function Step0CategorySelect({
       </div>
 
       <p className="rounded-md bg-muted px-3 py-2 text-[11px] text-foreground/55">
-        ヒント: 旅程プラン (⭐) はスポットの並び順 + 時間軸 + 移動手段がセットの記事で、読者の体験が組み立てやすく一番人気です。
+        ヒント: モデルコース (⭐) はスポットの並び順 + 時間軸 + 移動手段がセットの記事で、読者の体験が組み立てやすく一番人気です。ブログはまず文章から気軽に始められます。
       </p>
     </div>
   );

@@ -1,28 +1,28 @@
 'use client';
 
-import { BodySplitSection } from './BodySplitSection';
+import { BodyEditorSection } from './BodyEditorSection';
 
 /**
  * クラシックスタイル本文の編集セクション。
  *
- * 旧版ではタイトル入力欄も内包していたが、WizardShell 側のタイトル欄と
- * 二重に表示される UX の問題があったため 2026-05 にタイトルは削除。
- * いまは無料 / 有料の本文を `BodySplitSection` で 2 段表示するだけのラッパー。
+ * Phase C (2026-06) 改修:
+ *   旧版は「無料」「有料」の 2 つの RichTextEditor を縦に並べる方式だったが、
+ *   書き手が 2 つのボックスを行き来する分かりにくさがあった。本改修で
+ *   **1 本の本文エディタ + 本文中マーカー（ここから下を有料）** 方式へ統合。
+ *
+ *   - エディタは combined HTML（無料 + 境界 + 有料）を 1 本で編集する。
+ *   - 「ここから下を有料に」ボタン / スラッシュコマンド `/paid` で境界を 1 つ挿入する。
+ *   - 保存時に WizardShell 側で lib/editor/paywallMarker により body / body_paid へ分割する。
+ *   - 境界が無ければ全文が無料 body（＝従来どおり）。
  */
 
 type Props = {
-  bodyFree: string;
-  bodyPaid: string;
-  onChangeBodyFree: (markdown: string) => void;
-  onChangeBodyPaid: (markdown: string) => void;
+  /** 無料 + 境界 + 有料 を 1 本にまとめた combined HTML */
+  body: string;
+  onChangeBody: (html: string) => void;
 };
 
-export function TitleBodySection({
-  bodyFree,
-  bodyPaid,
-  onChangeBodyFree,
-  onChangeBodyPaid,
-}: Props) {
+export function TitleBodySection({ body, onChangeBody }: Props) {
   return (
     <section
       // 2026-05 改修: スマホで縦長になりすぎる問題への対応で外側余白を圧縮
@@ -37,16 +37,15 @@ export function TitleBodySection({
           本文を書く
         </h3>
         <p className="mt-1 text-[11px] text-foreground/60 sm:text-[12px]">
-          無料パートは購入前に読者が読める部分。有料パートは購入後に解放されます。
+          本文は 1 つのエディタで書きます。「ここから下を有料に」の区切りを 1
+          箇所入れると、その上が無料プレビュー、下が購入後に解放される有料パートになります。区切りを入れなければ全文が無料で表示されます。
         </p>
       </header>
 
-      {/* 本文（無料 / 有料） */}
-      <BodySplitSection
-        bodyFree={bodyFree}
-        bodyPaid={bodyPaid}
-        onChangeFree={onChangeBodyFree}
-        onChangePaid={onChangeBodyPaid}
+      <BodyEditorSection
+        value={body}
+        onChange={onChangeBody}
+        showPaywallControl
       />
     </section>
   );
