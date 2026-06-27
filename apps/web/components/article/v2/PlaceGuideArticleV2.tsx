@@ -1,13 +1,11 @@
 'use client';
 
 import { useMemo, useRef } from 'react';
-import type { Spot } from '@/lib/mock';
 import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
 import { ArticleSpotsMap } from '../../ArticleSpotsMap';
 import { ReviewFormToggle } from '../ReviewFormToggle';
-import { RouteMap } from './RouteMap';
 import { CSS } from './placeGuideCss';
 import {
   fmtDate,
@@ -80,26 +78,6 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
       article.bodyPaid?.trim() ? renderArticleBodyHtml(article.bodyPaid) : '',
     [article.bodyPaid],
   );
-
-  // 本物の Google マップ（RouteMap・pins モード）に渡す番号付き座標ポイント。
-  const mapPoints = useMemo(
-    () =>
-      spots
-        .filter((s) => hasCoords(s.lat, s.lng))
-        .map((s, i) => ({ lat: s.lat, lng: s.lng, name: s.name, label: i + 1 })),
-    [spots],
-  );
-  const hasMap = mapPoints.length > 0;
-  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-  // spot 説明の構造化フォールバック（description 未入力時のみ・Phase C-2 フォールバック維持）
-  const spotFallbackDesc = (s: Spot): string => {
-    const bits: string[] = [];
-    if (s.address) bits.push(s.address);
-    if (s.openingHours) bits.push(s.openingHours);
-    if (s.tags?.length) bits.push(s.tags.map((t) => `#${t}`).join(' '));
-    return bits.join(' / ');
-  };
 
   return (
     <div className="pg" ref={ref}>
@@ -198,7 +176,9 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
                           fallbackQuery: `${s.name} ${areaLabel}`,
                         })
                       : null;
-                  const desc = s.description?.trim() || spotFallbackDesc(s);
+                  // 説明は spot.description のみ。営業時間・tags の羅列ダンプは出さない
+                  // （住所は下の .pg-pplace に1行で別途表示）。
+                  const desc = s.description?.trim() || '';
                   return (
                     <article key={s.id} className="pg-prow pg-rev">
                       <div className="pg-pphoto">
@@ -284,32 +264,8 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
             </section>
           ) : null}
 
-          {/* ===== ピン集約マップ（自動生成・解放時のみ）===== */}
-          {hasMap ? (
-            <section className="pg-mapsec">
-              <div className="glow" />
-              <div className="pg-wide">
-                <div className="pg-maphead pg-rev">
-                  <span className="pg-kicker">— Map</span>
-                  <h2>全{mapPoints.length}か所のピン</h2>
-                  <p>
-                    各場所の位置から、ライムの番号ピンで散らした集約マップです（順路ではありません）。
-                  </p>
-                </div>
-                <div className="pg-mapframe pg-rev">
-                  <span className="pg-mapbadge">Google マップ連携</span>
-                  {mapsApiKey ? (
-                    <RouteMap points={mapPoints} mode="pins" height={520} />
-                  ) : (
-                    <div className="pg-mapfallback">
-                      地図はこの環境では表示できません。各場所の「地図で見る」から
-                      Google マップを開けます。
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
-          ) : null}
+          {/* ピン集約マップは廃止。各場所の「地図で見る」リンク＋末尾の
+              「この記事で紹介したスポット」リストで個別に地図導線を提供する。 */}
 
           {/* ===== 縦並び場所リスト（解放時のみ）===== */}
           <section className="pg-listsec">
