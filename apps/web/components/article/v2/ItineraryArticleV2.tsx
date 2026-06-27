@@ -41,7 +41,7 @@ import {
  * （Paywall）とインタラクション（いいね/保存・スポット保存・レビュー・著者・関連・
  * 地図）を新スタイルの中に織り込む。
  *
- * ゲート意味論（engagement.PaidBodyAndExtras 踏襲・収益直結）:
+ * ゲート意味論（旧 engagement.PaidBodyAndExtras 踏襲・収益直結）:
  *   - unlocked（購入/owner/無料記事アンロック/preview）時のみ、旅程の詳細
  *     （stop の notes / spot.description / spot.tip / 住所 / コスト）と body_paid・
  *     地図・レビューフォームを出す。
