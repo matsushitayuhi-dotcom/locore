@@ -50,11 +50,11 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .mmenu{position:fixed;inset:0;z-index:70;display:none}
 .mmenu.open{display:block}
 .mmenu-ov{position:absolute;inset:0;background:rgba(6,8,13,.55);backdrop-filter:blur(2px)}
-.mmenu-panel{position:absolute;top:0;right:0;width:min(78vw,320px);height:100%;background:rgba(11,13,19,.97);backdrop-filter:blur(14px);border-left:1px solid rgba(255,255,255,.09);padding:88px 26px 32px;display:flex;flex-direction:column;gap:6px}
-.mmenu-panel a{color:rgba(255,255,255,.88);font-size:17px;font-weight:600;padding:13px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
+.mmenu-panel{position:absolute;top:0;right:0;width:min(56vw,212px);height:100%;background:rgba(11,13,19,.97);backdrop-filter:blur(14px);border-left:1px solid rgba(255,255,255,.09);padding:70px 16px 22px;display:flex;flex-direction:column;gap:3px}
+.mmenu-panel a{color:rgba(255,255,255,.86);font-size:13.5px;font-weight:600;padding:9px 3px;border-bottom:1px solid rgba(255,255,255,.07)}
 .mmenu-panel a:hover{color:#fff}
-.mmenu-cta{margin-top:22px;display:flex;flex-direction:column;gap:12px}
-.mmenu-cta a{border-bottom:none;text-align:center;border-radius:999px;padding:13px 18px}
+.mmenu-cta{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.mmenu-cta a{border-bottom:none;text-align:center;border-radius:999px;padding:9px 14px;font-size:12.5px}
 .mmenu-cta .ml-login{border:1px solid rgba(255,255,255,.45);color:#fff}
 .mmenu-cta .ml-signup{background:var(--lime);color:#1c2a06;font-weight:700}
 
@@ -245,7 +245,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .fbot{display:flex;justify-content:space-between;border-top:1px solid var(--bd);padding-top:24px;color:var(--mu);font-size:13px}
 
 @media(max-width:880px){
-  .nlinks,.nlogin{display:none}
+  .nlinks{display:none}
   .nburger{display:flex}
   .frame{transform:none}
   .pgrid{grid-template-columns:1fr}
@@ -260,7 +260,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 const BODY = `<div class="navwrap"><div class="wrap"><nav>
   <div class="logo">Lo<b>core</b></div>
   <div class="nlinks"><a href="/articles">記事</a><a href="/services">サービス</a><a href="/community">コミュニティ</a><a href="/search">検索</a></div>
-  <div class="nright"><a class="nlogin" href="/auth/login?redirect_to=%2Farticles">ログイン</a><a class="btn pri" href="/auth/signup?redirect_to=%2Farticles" style="padding:9px 18px;font-size:14px">無料ではじめる</a>
+  <div class="nright">
     <button class="nburger" type="button" aria-label="メニュー" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </nav></div></div>
