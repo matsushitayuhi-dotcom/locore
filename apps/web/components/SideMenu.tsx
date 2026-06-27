@@ -173,10 +173,10 @@ const ACCOUNT_ITEMS: MenuItem[] = [
 
 const ABOUT_ITEMS: MenuItem[] = [
   {
-    href: '/about-service',
-    label: 'サービス概要',
+    href: '/about',
+    label: 'Locore について',
     icon: Info,
-    matchPrefix: '/about-service',
+    matchPrefix: '/about',
   },
 ];
 
