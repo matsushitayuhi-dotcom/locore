@@ -8,17 +8,10 @@ import { Logo } from './Logo';
 import {
   Menu,
   X,
-  Home as HomeIcon,
-  Compass,
   Map as MapIcon,
   Search,
   Briefcase,
-  Building2,
-  ShoppingCart,
   Users,
-  GraduationCap,
-  HandHelping,
-  Megaphone,
   Bookmark,
   ShoppingBag,
   PenSquare,
@@ -29,7 +22,6 @@ import {
   Bell,
   Settings,
   Info,
-  Heart,
 } from 'lucide-react';
 
 /**
@@ -62,53 +54,17 @@ type MenuItem = {
 //     (全国一覧)。PC ヘッダの PlaceMenu で drill-down する想定。
 // 駐在員: ホーム / 場所 (※ /world) / アパート / 売買 / 求人 / イベント / 習い事 / 助け合い / 検索
 
-const TRAVELER_NAV_ITEMS: (mode: 'traveler' | 'resident' | null) => MenuItem[] = (
-  mode,
-) => [
-  {
-    href: mode === 'resident' ? '/expat' : '/explore',
-    label: 'ホーム',
-    icon: HomeIcon,
-    matchPrefix: mode === 'resident' ? '/expat' : '/explore',
-  },
-  { href: '/world', label: '場所で探す', icon: Compass, matchPrefix: '/world' },
+// 2026-06: 旅行者/駐在員モードを撤去し、単一の統一ナビに集約。
+const NAV_ITEMS: MenuItem[] = [
+  { href: '/articles', label: '記事', icon: FileText, matchPrefix: '/articles' },
+  { href: '/community', label: 'コミュニティ', icon: MessageCircle, matchPrefix: '/community' },
+  { href: '/services', label: 'サービス', icon: Briefcase, matchPrefix: '/services' },
+  { href: '/users', label: 'ユーザー', icon: Users, matchPrefix: '/users' },
   { href: '/map', label: '地図から探す', icon: MapIcon, matchPrefix: '/map' },
   { href: '/search', label: '検索', icon: Search, matchPrefix: '/search' },
 ];
 
-const RESIDENT_NAV_ITEMS: MenuItem[] = [
-  { href: '/expat', label: 'ホーム', icon: HomeIcon, matchPrefix: '/expat' },
-  { href: '/world', label: '場所で探す', icon: Compass, matchPrefix: '/world' },
-  { href: '/apartments', label: 'アパート', icon: Building2, matchPrefix: '/apartments' },
-  { href: '/marketplace', label: '売買', icon: ShoppingCart, matchPrefix: '/marketplace' },
-  { href: '/jobs', label: '求人', icon: Briefcase, matchPrefix: '/jobs' },
-  { href: '/groups', label: 'イベント', icon: Users, matchPrefix: '/groups' },
-  { href: '/lessons', label: '習い事', icon: GraduationCap, matchPrefix: '/lessons' },
-  { href: '/help', label: '助け合い', icon: HandHelping, matchPrefix: '/help' },
-  { href: '/search', label: '検索', icon: Search, matchPrefix: '/search' },
-];
-
-// 旅行者モードのユーザー固有項目
-const TRAVELER_USER_ITEMS: MenuItem[] = [
-  {
-    href: '/library',
-    label: 'お気に入り',
-    icon: Bookmark,
-    matchPrefix: '/library',
-  },
-  { href: '/trips', label: '旅程', icon: Heart, matchPrefix: '/trips' },
-  {
-    href: '/purchases',
-    label: '購入した記事',
-    icon: ShoppingBag,
-    matchPrefix: '/purchases',
-  },
-];
-
-// 駐在員モードのユーザー固有項目。
-// コミュニティ掲示板 (アパート / 売買 / 求人 / イベント / 習い事 / 助け合い) は
-// 上部の「ナビゲーション」セクション (RESIDENT_NAV_ITEMS) に移したのでここには出さない。
-const RESIDENT_USER_ITEMS: MenuItem[] = [
+const USER_ITEMS: MenuItem[] = [
   {
     href: '/library',
     label: 'お気に入り',
@@ -185,15 +141,12 @@ type Props = {
   isWriter: boolean;
   /** 未読メッセージ件数（メッセージ項目横のバッジ用） */
   unreadChatCount?: number;
-  /** 現在のモード（splash 未選択なら null） */
-  currentMode?: 'traveler' | 'resident' | null;
 };
 
 export function SideMenu({
   viewerLoggedIn,
   isWriter,
   unreadChatCount = 0,
-  currentMode = null,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -255,7 +208,6 @@ export function SideMenu({
             isWriter={isWriter}
             unreadChatCount={unreadChatCount}
             pathname={pathname}
-            currentMode={currentMode}
           />,
           document.body,
         )}
@@ -273,7 +225,6 @@ function DrawerPanel({
   isWriter,
   unreadChatCount,
   pathname,
-  currentMode,
 }: {
   open: boolean;
   onClose: () => void;
@@ -281,7 +232,6 @@ function DrawerPanel({
   isWriter: boolean;
   unreadChatCount: number;
   pathname: string;
-  currentMode: 'traveler' | 'resident' | null;
 }) {
   return (
     <>
@@ -332,32 +282,21 @@ function DrawerPanel({
           aria-label="サイトナビゲーション"
           className="flex-1 overflow-y-auto px-2 py-3"
         >
-          {/* PC では SiteHeader 中央 nav と冗長だが、モバイルではここが唯一のナビ。
-              モードで内容を分岐 (新着ニュースは両モードとも撤去済み) */}
+          {/* PC では SiteHeader 中央 nav と冗長だが、モバイルではここが唯一のナビ。 */}
           <Section title="ナビゲーション">
-            {(currentMode === 'resident'
-              ? RESIDENT_NAV_ITEMS
-              : TRAVELER_NAV_ITEMS(currentMode)
-            ).map((it) => (
+            {NAV_ITEMS.map((it) => (
               <NavLink key={it.href} item={it} pathname={pathname} />
             ))}
           </Section>
 
-          <Section title={currentMode === 'resident' ? '駐在員のあなたへ' : 'あなたの本棚'}>
-            {(currentMode === 'resident'
-              ? RESIDENT_USER_ITEMS
-              : TRAVELER_USER_ITEMS
-            ).map((it) => (
-              <NavLink
-                key={it.href}
-                item={it}
-                pathname={pathname}
-              />
+          <Section title="あなたの本棚">
+            {USER_ITEMS.map((it) => (
+              <NavLink key={it.href} item={it} pathname={pathname} />
             ))}
           </Section>
 
           {viewerLoggedIn && isWriter ? (
-            <Section title="駐在員">
+            <Section title="投稿・販売">
               {WRITER_ITEMS.map((it) => (
                 <NavLink
                   key={it.href}

@@ -2,24 +2,20 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Users } from 'lucide-react';
+import { MessagesSquare } from 'lucide-react';
 
 /**
- * グローバルナビの「駐在員向け」タブ。
+ * グローバルナビの「コミュニティ」タブ。
  *
- * IA 3 領域モデル (2026-05) の ③ に対応。旅行者・駐在員いずれのモードでも
- * 表示し、コミュニティ系（求人 / 住居 / 売買 / 集まり / 習う / 助け）の入口である
- * /expat に飛ばす。
- *
- * active 判定: /expat, /board, /jobs, /apartments, /marketplace, /groups,
- * /lessons, /help, /community のいずれかに居れば駐在員領域とみなす。
+ * 2026-06: 旅行者/駐在員モードを撤去。コミュニティ系（求人 / 住居 / 売買 /
+ * 集まり / 習う / 助け / 掲示板 / カレンダー）の入口 /community に飛ばす。
  */
 export function ResidentsNavLink() {
   const pathname = usePathname() ?? '';
   const active =
-    pathname.startsWith('/expat') ||
-    pathname.startsWith('/board') ||
     pathname.startsWith('/community') ||
+    pathname.startsWith('/board') ||
+    pathname.startsWith('/calendar') ||
     pathname.startsWith('/jobs') ||
     pathname.startsWith('/apartments') ||
     pathname.startsWith('/marketplace') ||
@@ -28,7 +24,7 @@ export function ResidentsNavLink() {
     pathname.startsWith('/help');
   return (
     <Link
-      href="/expat"
+      href="/community"
       aria-current={active ? 'page' : undefined}
       className={
         'inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-medium transition ' +
@@ -37,8 +33,8 @@ export function ResidentsNavLink() {
           : 'text-foreground/70 hover:bg-primary-500/10 hover:text-foreground')
       }
     >
-      <Users className="h-3.5 w-3.5" aria-hidden />
-      駐在員向け
+      <MessagesSquare className="h-3.5 w-3.5" aria-hidden />
+      コミュニティ
     </Link>
   );
 }

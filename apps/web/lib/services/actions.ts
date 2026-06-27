@@ -123,8 +123,8 @@ export async function upsertUserService(
     revalidatePath('/settings/services');
     revalidatePath(`/users/${user.id}`);
     revalidatePath(`/users/${user.id}`);
-    revalidatePath('/explore');
-    revalidatePath('/expat');
+    revalidatePath('/services');
+    revalidatePath('/france');
     return { ok: true, data: { id: data.id } };
   }
 
@@ -158,8 +158,8 @@ export async function upsertUserService(
   revalidatePath('/settings/services');
   revalidatePath(`/users/${user.id}`);
   revalidatePath(`/users/${user.id}`);
-  revalidatePath('/explore');
-  revalidatePath('/expat');
+  revalidatePath('/services');
+  revalidatePath('/france');
   return { ok: true, data: { id: inserted[0]!.id } };
 }
 
@@ -185,7 +185,7 @@ export async function deleteUserService(
   revalidatePath('/settings/services');
   revalidatePath(`/users/${user.id}`);
   revalidatePath(`/users/${user.id}`);
-  revalidatePath('/explore');
-  revalidatePath('/expat');
+  revalidatePath('/services');
+  revalidatePath('/france');
   return { ok: true };
 }

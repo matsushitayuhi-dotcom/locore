@@ -17,7 +17,7 @@ import { useViewer } from './viewer/ViewerProvider';
  * ページ自体は誰に対しても同一 HTML となりキャッシュ可能。
  */
 export function HeaderUserArea() {
-  const { user, unreadChatCount, isWriter, mode } = useViewer();
+  const { user, unreadChatCount, isWriter } = useViewer();
 
   return (
     <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
@@ -40,7 +40,6 @@ export function HeaderUserArea() {
         viewerLoggedIn={!!user}
         isWriter={isWriter}
         unreadChatCount={unreadChatCount}
-        currentMode={mode}
       />
     </div>
   );

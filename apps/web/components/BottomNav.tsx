@@ -3,23 +3,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Compass,
   BookOpen,
+  MessagesSquare,
   Briefcase,
   Users,
   Search,
   type LucideIcon,
 } from 'lucide-react';
-import { useViewer } from './viewer/ViewerProvider';
 
 /**
  * モバイル下部タブナビゲーション (md 未満で固定表示)。
  *
- * 2026-05 IA 3 領域モデル改修で、5 タブ構成に統一:
- *   ホーム / 記事 / サービス / 駐在員向け / 検索
- *
- * 検索 Sheet は廃止し、検索タブはそのまま /search ページにリンクする
- * (めり込み Sheet が分かりにくいというフィードバックを受けて 2026-05 改修)。
+ * 2026-06 改修: 旅行者/駐在員モードを撤去し、モードに依存しない 5 タブに統一:
+ *   記事 / コミュニティ / サービス / ユーザー / 検索
+ * （ホームは「記事」に集約）。
  *
  * - 安全エリア対応 (env(safe-area-inset-bottom))
  * - 認証ページ・記事編集画面など、ナビを出したくない場所では非表示
@@ -37,67 +34,54 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => /^\/writer\/articles\/[^/]+\/edit$/.test(p),
   (p) => /^\/chat\/[^/]+$/.test(p),
   (p) => p === '/',
-  // 記事一覧はフルスクリーンの没入レイアウトなので下部メニューを隠す
-  // （/articles/[id] の記事詳細では残す）。
-  (p) => p === '/articles',
+];
+
+const TABS: Tab[] = [
+  {
+    href: '/articles',
+    label: '記事',
+    icon: BookOpen,
+    match: (p) => p === '/' || p.startsWith('/articles'),
+  },
+  {
+    href: '/community',
+    label: 'コミュニティ',
+    icon: MessagesSquare,
+    match: (p) =>
+      p.startsWith('/community') ||
+      p.startsWith('/board') ||
+      p.startsWith('/calendar') ||
+      p.startsWith('/jobs') ||
+      p.startsWith('/apartments') ||
+      p.startsWith('/marketplace') ||
+      p.startsWith('/groups') ||
+      p.startsWith('/lessons') ||
+      p.startsWith('/help'),
+  },
+  {
+    href: '/services',
+    label: 'サービス',
+    icon: Briefcase,
+    match: (p) => p.startsWith('/services'),
+  },
+  {
+    href: '/users',
+    label: 'ユーザー',
+    icon: Users,
+    match: (p) => p.startsWith('/users'),
+  },
+  {
+    href: '/search',
+    label: '検索',
+    icon: Search,
+    match: (p) => p.startsWith('/search'),
+  },
 ];
 
 export function BottomNav() {
   const pathname = usePathname() ?? '/';
-  const { mode } = useViewer();
-  // 駐在員モードなら /expat、旅行者モード（未選択含む）なら /explore。
-  // mode はクライアントの locore_mode cookie 由来（ViewerProvider が供給）。
-  const homeHref: '/explore' | '/expat' =
-    mode === 'resident' ? '/expat' : '/explore';
 
   if (HIDE_ON_ROUTES.some((fn) => fn(pathname))) return null;
-
-  const TABS: Tab[] = [
-    {
-      href: homeHref,
-      label: 'ホーム',
-      icon: Compass,
-      match: (p) =>
-        p === '/' ||
-        p.startsWith('/explore') ||
-        p.startsWith('/expat') ||
-        p.startsWith('/region/') ||
-        p.startsWith('/country/'),
-    },
-    {
-      href: '/articles',
-      label: '記事',
-      icon: BookOpen,
-      match: (p) => p.startsWith('/articles'),
-    },
-    {
-      href: '/services',
-      label: 'サービス',
-      icon: Briefcase,
-      match: (p) => p.startsWith('/services'),
-    },
-    {
-      href: '/expat',
-      label: '駐在員向け',
-      icon: Users,
-      match: (p) =>
-        p.startsWith('/expat') ||
-        p.startsWith('/board') ||
-        p.startsWith('/community') ||
-        p.startsWith('/jobs') ||
-        p.startsWith('/apartments') ||
-        p.startsWith('/marketplace') ||
-        p.startsWith('/groups') ||
-        p.startsWith('/lessons') ||
-        p.startsWith('/help'),
-    },
-    {
-      href: '/search',
-      label: '検索',
-      icon: Search,
-      match: (p) => p.startsWith('/search'),
-    },
-  ];
 
   return (
     <nav

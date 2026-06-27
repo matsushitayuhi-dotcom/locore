@@ -17,7 +17,6 @@ import {
  *
  * - 初回は loading=true / user=null（＝未ログイン表示）でハイドレート
  * - マウント後に /api/me を叩いて実際の状態に差し替え
- * - mode は httpOnly=false の locore_mode cookie をクライアントから直接読む（即時）
  */
 
 type ViewerUser = {
@@ -27,15 +26,12 @@ type ViewerUser = {
   role: string;
 };
 
-export type ViewerMode = 'traveler' | 'resident' | null;
-
 export type ViewerState = {
   /** /api/me の取得が完了したか */
   loading: boolean;
   user: ViewerUser | null;
   unreadChatCount: number;
   isWriter: boolean;
-  mode: ViewerMode;
 };
 
 const DEFAULT_STATE: ViewerState = {
@@ -43,7 +39,6 @@ const DEFAULT_STATE: ViewerState = {
   user: null,
   unreadChatCount: 0,
   isWriter: false,
-  mode: null,
 };
 
 const ViewerContext = createContext<ViewerState>(DEFAULT_STATE);
@@ -52,27 +47,18 @@ export function useViewer(): ViewerState {
   return useContext(ViewerContext);
 }
 
-function readModeCookie(): ViewerMode {
-  if (typeof document === 'undefined') return null;
-  const m = document.cookie.match(
-    /(?:^|;\s*)locore_mode=(traveler|resident)\b/,
-  );
-  return m ? (m[1] as 'traveler' | 'resident') : null;
-}
-
 export function ViewerProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<ViewerState>(DEFAULT_STATE);
 
   useEffect(() => {
     let cancelled = false;
-    const mode = readModeCookie();
 
     fetch('/api/me', { credentials: 'include' })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (cancelled) return;
         if (!d) {
-          setState((s) => ({ ...s, loading: false, mode }));
+          setState((s) => ({ ...s, loading: false }));
           return;
         }
         setState({
@@ -80,11 +66,10 @@ export function ViewerProvider({ children }: { children: ReactNode }) {
           user: d.user ?? null,
           unreadChatCount: typeof d.unreadChatCount === 'number' ? d.unreadChatCount : 0,
           isWriter: !!d.isWriter,
-          mode,
         });
       })
       .catch(() => {
-        if (!cancelled) setState((s) => ({ ...s, loading: false, mode }));
+        if (!cancelled) setState((s) => ({ ...s, loading: false }));
       });
 
     return () => {

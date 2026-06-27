@@ -24,9 +24,9 @@ export function SiteFooter() {
         <FooterColumn
           title="サービス"
           links={[
-            { href: '/explore', label: '旅行者ホーム' },
-            { href: '/expat', label: '駐在員ホーム' },
             { href: '/articles', label: '記事を読む' },
+            { href: '/community', label: 'コミュニティ' },
+            { href: '/services', label: 'サービス' },
             { href: '/map', label: 'マップ' },
           ]}
         />
@@ -34,8 +34,8 @@ export function SiteFooter() {
           title="参加する"
           links={[
             { href: '/founders', label: 'Founders 枠（先着50人）' },
-            { href: '/become-writer', label: '駐在員として参加' },
-            { href: '/users', label: '駐在員を探す' },
+            { href: '/become-writer', label: '書き手として参加' },
+            { href: '/users', label: 'ユーザーを探す' },
             { href: '/board', label: '新着ニュース' },
           ]}
         />

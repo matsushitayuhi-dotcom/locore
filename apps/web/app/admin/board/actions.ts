@@ -214,8 +214,8 @@ export async function runAiParisEventsNow(): Promise<AiRealRunResult> {
 
     // 掲示板を出している場所をすべて再生成
     revalidatePath('/board');
-    revalidatePath('/expat');
-    revalidatePath('/explore');
+    revalidatePath('/community');
+    revalidatePath('/france');
     revalidatePath('/calendar');
     revalidatePath('/admin/board');
 
@@ -258,8 +258,8 @@ function revalidateBoardSurfaces() {
   revalidatePath('/admin/board');
   revalidatePath('/admin');
   revalidatePath('/board');
-  revalidatePath('/expat');
-  revalidatePath('/explore');
+  revalidatePath('/community');
+  revalidatePath('/france');
   revalidatePath('/calendar');
   // 個別詳細ページや region home は force-dynamic なので明示 revalidate は不要
 }

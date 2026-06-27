@@ -42,8 +42,8 @@ function revalidateCommunitySurfaces(postId: string, kind: CommunityKind) {
     revalidatePath(base);
     revalidatePath(`${base}/${postId}`);
   }
-  revalidatePath('/explore');
-  revalidatePath('/expat');
+  revalidatePath('/community');
+  revalidatePath('/france');
 }
 
 async function loadCommunityPost(id: string) {

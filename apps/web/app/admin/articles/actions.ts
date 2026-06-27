@@ -35,7 +35,6 @@ function revalidateArticleSurfaces(articleId: string, writerId?: string) {
   revalidatePath('/admin');
   revalidatePath(`/articles/${articleId}`);
   revalidatePath('/articles');
-  revalidatePath('/explore');
   // 該当 region/writer の一覧も更新が必要だが、slug を取得していないので
   // 包括的に / 経由でも対応 (/region/* は force-dynamic なのでキャッシュ無し)
   if (writerId) {

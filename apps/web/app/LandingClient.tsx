@@ -366,7 +366,7 @@ const BODY = `<div class="navwrap"><div class="wrap"><nav>
 <footer><div class="wrap">
   <div class="fcols">
     <div><div class="logo" style="font-size:22px">Lo<b>core</b></div><p class="mono" style="font-size:12.5px;color:var(--mu);margin-top:14px">現地に住む人と、つながる。<br>Local × Lore × Core</p></div>
-    <div><h4>サービス</h4><a href="/articles">ブログ</a><a href="/services">サービス</a><a href="/expat">コミュニティ</a></div>
+    <div><h4>サービス</h4><a href="/articles">ブログ</a><a href="/services">サービス</a><a href="/community">コミュニティ</a></div>
     <div><h4>会社</h4><a href="#">About</a><a href="#">採用</a><a href="#">お問い合わせ</a></div>
     <div><h4>規約</h4><a href="#">利用規約</a><a href="#">プライバシー</a><a href="#">特商法</a></div>
   </div>

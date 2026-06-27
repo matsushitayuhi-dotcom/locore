@@ -11,56 +11,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 const PUBLIC_PREFIXES = ['/auth'];
 
 /**
- * URL から「このページがどちらのモードに属するか」を推定。
- * ヘッダの ModeToggle と画面の不整合 (旅行者ボタン active なのに /expat 画面)
- * を防ぐため、middleware で cookie を自動同期する。
- *
- * - resident 系: /expat, /jobs, /apartments, /marketplace, /groups,
- *                /lessons, /help, /board
- * - traveler 系: /explore, /region, /world, /articles, /map, /trips, /search
- * - 中立: /, /settings, /admin, /writer, /chat, /auth, /legal, /residents,
- *         /writers, /purchases, /library, /calendar, /founders, /about,
- *         /contact, /become-writer, /preview, /report, /country
- *   → cookie の現在値を尊重 (上書きしない)
- */
-const RESIDENT_PREFIXES = [
-  '/expat',
-  '/jobs',
-  '/apartments',
-  '/marketplace',
-  '/groups',
-  '/lessons',
-  '/help',
-  '/board',
-];
-const TRAVELER_PREFIXES = [
-  '/explore',
-  '/region',
-  '/world',
-  '/articles',
-  '/map',
-  '/trips',
-];
-
-function inferModeFromPath(pathname: string): 'traveler' | 'resident' | null {
-  if (
-    RESIDENT_PREFIXES.some(
-      (p) => pathname === p || pathname.startsWith(`${p}/`),
-    )
-  ) {
-    return 'resident';
-  }
-  if (
-    TRAVELER_PREFIXES.some(
-      (p) => pathname === p || pathname.startsWith(`${p}/`),
-    )
-  ) {
-    return 'traveler';
-  }
-  return null;
-}
-
-/**
  * Supabase セッションを refresh しつつ、認証必須パスへのアクセスを保護する。
  * `middleware.ts` から呼ばれる。
  */
@@ -116,22 +66,6 @@ export async function updateSession(request: NextRequest) {
     loginUrl.pathname = '/auth/login';
     loginUrl.searchParams.set('redirect_to', pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // URL に応じてモード cookie を自動同期。
-  // /expat 系を開いたら resident、/explore 系を開いたら traveler に揃える。
-  // これでヘッダの ModeToggle と画面が常に一致する。
-  const inferredMode = inferModeFromPath(pathname);
-  if (inferredMode) {
-    const currentMode = request.cookies.get('locore_mode')?.value;
-    if (currentMode !== inferredMode) {
-      response.cookies.set('locore_mode', inferredMode, {
-        maxAge: 60 * 60 * 24 * 365, // 1 year
-        httpOnly: false, // SideMenu の Client から読みたい
-        sameSite: 'lax',
-        path: '/',
-      });
-    }
   }
 
   return response;
