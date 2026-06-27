@@ -102,6 +102,8 @@ export interface Article {
    * 記事の種別。`spot_guide`（場所紹介）/ `itinerary`（旅程プラン）/ `expat_info`。
    */
   articleType: ArticleType;
+  /** 記事の国コード（ISO alpha-2 lowercase, 例 'fr'）。一覧の国フィルタ用。 */
+  countryCode?: string | null;
   /**
    * 本文スタイル。'photo_journal' (default) or 'classic'。
    * articleType と独立。新規記事のデフォルトは photo_journal。

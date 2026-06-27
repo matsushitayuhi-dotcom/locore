@@ -26,6 +26,8 @@ export type FeaturedService = {
   externalUrl: string | null;
   cityNameJa: string | null;
   citySlug: string | null;
+  /** 都市の国コード（ISO alpha-2 lowercase）。一覧の国フィルタ用。任意。 */
+  countryCode?: string | null;
   audience: 'traveler' | 'resident' | 'both' | null;
   /** カバー画像 URL。NULL = 未設定 (カード側でプレースホルダーを描く) */
   coverImageUrl: string | null;

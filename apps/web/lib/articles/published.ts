@@ -142,6 +142,7 @@ export async function getPublishedDbArticles(
       tags: r.tags ?? [],
       durationType: durationMap[r.durationType ?? 'other'] ?? '半日',
       articleType: r.articleType,
+      countryCode: r.countryCode ?? null,
       createdAt: r.createdAt.toISOString(),
       publishedAt: (r.publishedAt ?? r.createdAt).toISOString(),
       // reviews テーブルから集計 (一括クエリ)。レビュー 0 件のときは

@@ -7,16 +7,27 @@ import {
   Sparkles,
   Users,
   MapPin,
+  Briefcase,
+  Home as HomeIcon,
+  ShoppingBag,
+  GraduationCap,
+  HandHelping,
+  Megaphone,
+  type LucideIcon,
 } from 'lucide-react';
 import { ArticleScrollSection } from '@/components/ArticleScrollSection';
 import { ServiceCarousel } from '@/components/services/ServiceCarousel';
-import { CommunityCard } from '@/components/community/CommunityCard';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { getArticleSocialCounts } from '@/lib/articleLikes/actions';
 import { getFeaturedServices } from '@/lib/services/featured';
-import { listCommunityPosts } from '@/lib/community/db';
 import { getCountryBySlug, SUPPORTED_COUNTRY_SLUGS } from '@/lib/geo/countrySlug';
-import { KIND_BASE_PATH } from '@/lib/community/constants';
+import {
+  COMMUNITY_KINDS,
+  KIND_LABEL,
+  KIND_DESCRIPTION,
+  KIND_BASE_PATH,
+  type CommunityKind,
+} from '@/lib/community/constants';
 import { TAG_LABEL } from '@/lib/services/tagLabels';
 
 export const revalidate = 300;
@@ -36,54 +47,38 @@ export async function generateMetadata({ params }: Props) {
   };
 }
 
-/** 国別ランディングのヒーロー背景（当面はパリ＝フランス固定）。 */
 const HERO_BG =
   "url('https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1700&q=78')";
 
+const KIND_ICON: Record<CommunityKind, LucideIcon> = {
+  job: Briefcase,
+  apartment: HomeIcon,
+  marketplace: ShoppingBag,
+  group: Users,
+  lesson: GraduationCap,
+  mutual_aid: HandHelping,
+};
+
 /**
- * 国別ランディング (/[country])。例: /france
+ * 国ハブ (/[country])。例: /france
  *
- * 上から:
- *   1. フルブリードのヒーロー（国名 + 記事 / サービス / コミュニティへの導線チップ）
- *   2. 記事       — Pickup 1 本 + カルーセル + 「すべて見る」
- *   3. サービス   — Pickup 1 件 + カルーセル + 「すべて見る」
- *   4. コミュニティ — Pickup 1 投稿 + カルーセル + 「すべて見る」
- *
- * 各セクションのデータは国コードで絞り込む（記事=countryCode, サービス=countryCode,
- * コミュニティ=city→country サブクエリ）。静的レンダリング (revalidate=300)。
+ * 役割（2026-06 集約後）:
+ *   - 記事 / サービスは「その国でフィルタした一覧」への導線（/articles?country=fr 等）
+ *   - コミュニティ機能（カテゴリ掲示板）はこのページに内包
+ *   旧 /[country]/articles・services・community は本ハブ／グローバル一覧へ集約しリダイレクト。
  */
-export default async function CountryLandingPage({ params }: Props) {
+export default async function CountryHubPage({ params }: Props) {
   const country = await getCountryBySlug(params.country);
   if (!country) notFound();
 
-  const base = `/${params.country}`;
+  const code = country.code;
+  const articlesHref = `/articles?country=${code}`;
+  const servicesHref = `/services?country=${code}`;
 
-  const [articles, services, jobPosts, apartmentPosts, marketplacePosts] =
-    await Promise.all([
-      getPublishedDbArticles(13, undefined, country.code),
-      getFeaturedServices({
-        audience: 'resident',
-        limit: 13,
-        countryCode: country.code,
-      }),
-      listCommunityPosts({ kind: 'job', limit: 6, countryCode: country.code }),
-      listCommunityPosts({
-        kind: 'apartment',
-        limit: 6,
-        countryCode: country.code,
-      }),
-      listCommunityPosts({
-        kind: 'marketplace',
-        limit: 6,
-        countryCode: country.code,
-      }),
-    ]);
-
-  // コミュニティは複数カテゴリを新着順にマージして 1 本のカルーセルに。
-  const communityPosts = [...jobPosts, ...apartmentPosts, ...marketplacePosts]
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-    .slice(0, 10);
-
+  const [articles, services] = await Promise.all([
+    getPublishedDbArticles(13, undefined, code),
+    getFeaturedServices({ audience: 'resident', limit: 13, countryCode: code }),
+  ]);
   const socialCounts = await getArticleSocialCounts(articles.map((a) => a.id));
 
   const pickupArticle = articles[0];
@@ -91,18 +86,16 @@ export default async function CountryLandingPage({ params }: Props) {
   const pickupService = services[0];
   const restServices = services.slice(1);
   const pickupServiceTag = pickupService?.tags[0];
-  const pickupPost = communityPosts[0];
-  const restPosts = communityPosts.slice(1);
 
   const nav = [
-    { href: `${base}/articles`, label: '記事', icon: Newspaper },
-    { href: `${base}/services`, label: 'サービス', icon: Sparkles },
-    { href: `${base}/community`, label: 'コミュニティ', icon: Users },
+    { href: articlesHref, label: '記事', icon: Newspaper },
+    { href: servicesHref, label: 'サービス', icon: Sparkles },
+    { href: '#community', label: 'コミュニティ', icon: Users },
   ];
 
   return (
     <main className="bg-background">
-      {/* 1. ヒーロー */}
+      {/* ヒーロー */}
       <header className="relative isolate overflow-hidden">
         <div
           aria-hidden
@@ -126,8 +119,6 @@ export default async function CountryLandingPage({ params }: Props) {
             ガイドブックにない一次情報。{country.nameJa}に住む人が書く記事、
             現地で頼れるサービス、同じ街の人とつながる掲示板を、ここにまとめました。
           </p>
-
-          {/* 導線チップ */}
           <nav
             aria-label={`${country.nameJa}のセクション`}
             className="mt-7 flex flex-wrap gap-2.5"
@@ -148,12 +139,8 @@ export default async function CountryLandingPage({ params }: Props) {
       </header>
 
       <div className="mx-auto max-w-screen-xl space-y-12 px-4 py-10 sm:space-y-16 sm:px-6 sm:py-14">
-        {/* 2. 記事 */}
-        <Section
-          label="記事"
-          title={`${country.nameJa}の暮らしを読む`}
-          allHref={`${base}/articles`}
-        >
+        {/* 記事プレビュー → フィルタ済み一覧へ */}
+        <Section label="記事" title={`${country.nameJa}の暮らしを読む`} allHref={articlesHref}>
           {pickupArticle ? (
             <PickupCard
               href={`/articles/${pickupArticle.id}`}
@@ -176,7 +163,7 @@ export default async function CountryLandingPage({ params }: Props) {
           {restArticles.length > 0 ? (
             <ArticleScrollSection
               articles={restArticles}
-              moreHref={`${base}/articles`}
+              moreHref={articlesHref}
               socialCounts={socialCounts}
             />
           ) : pickupArticle ? null : (
@@ -184,12 +171,8 @@ export default async function CountryLandingPage({ params }: Props) {
           )}
         </Section>
 
-        {/* 3. サービス */}
-        <Section
-          label="サービス"
-          title={`${country.nameJa}で頼れる人`}
-          allHref={`${base}/services`}
-        >
+        {/* サービスプレビュー → フィルタ済み一覧へ */}
+        <Section label="サービス" title={`${country.nameJa}で頼れる人`} allHref={servicesHref}>
           {pickupService ? (
             <PickupCard
               href={`/residents/${pickupService.ownerId}`}
@@ -221,55 +204,63 @@ export default async function CountryLandingPage({ params }: Props) {
           )}
         </Section>
 
-        {/* 4. コミュニティ */}
-        <Section
-          label="コミュニティ"
-          title={`${country.nameJa}の掲示板`}
-          allHref={`${base}/community`}
-        >
-          {pickupPost ? (
-            <PickupCard
-              href={`${KIND_BASE_PATH[pickupPost.kind]}/${pickupPost.id}`}
-              image={pickupPost.photos[0] ?? null}
-              eyebrow="Pickup 投稿"
-              title={pickupPost.title}
-              meta={
-                pickupPost.locationText ? (
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {pickupPost.locationText}
-                  </span>
-                ) : null
-              }
-            />
-          ) : null}
-          {restPosts.length > 0 ? (
-            <ul
-              className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-              style={{ scrollSnapStop: 'always' }}
-            >
-              {restPosts.map((p) => (
-                <li
-                  key={p.id}
-                  className="w-[62%] shrink-0 snap-start sm:w-[32%] lg:w-[23%]"
-                >
-                  <CommunityCard post={p} showKindBadge />
-                </li>
-              ))}
-              <li className="flex w-[62%] shrink-0 snap-start items-center justify-center rounded-xl bg-card text-center ring-1 ring-dashed ring-border sm:w-[32%] lg:w-[23%]">
+        {/* コミュニティ機能（カテゴリ掲示板）を内包 */}
+        <section id="community" className="scroll-mt-20 space-y-5">
+          <header className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-700">
+              {country.nameEn} · Community
+            </p>
+            <h2 className="mt-1 text-[20px] font-bold tracking-tight sm:text-[26px]">
+              {country.nameJa}のコミュニティ
+            </h2>
+            <p className="mt-2 text-[13px] leading-[1.85] text-foreground/65">
+              同じ街に住む日本人とつながり、求人・住居・暮らしの情報を交換できる掲示板。
+              渡航前の不安から、住んでからの困りごとまで。
+            </p>
+          </header>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
+            {COMMUNITY_KINDS.map((kind) => {
+              const Icon = KIND_ICON[kind];
+              return (
                 <Link
-                  href={`${base}/community`}
-                  aria-label="コミュニティをすべて見る"
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-full text-primary-700 hover:bg-primary-500/10"
+                  key={kind}
+                  href={KIND_BASE_PATH[kind]}
+                  className="group flex flex-col gap-2 rounded-2xl bg-card p-5 ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
                 >
-                  <ArrowRight className="h-5 w-5" />
+                  <div className="flex items-center gap-2.5">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-300">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span className="text-[17px] font-bold tracking-tight">
+                      {KIND_LABEL[kind]}
+                    </span>
+                    <ArrowRight className="ml-auto h-4 w-4 text-foreground/30 transition group-hover:translate-x-0.5 group-hover:text-primary-300" />
+                  </div>
+                  <p className="text-[12.5px] leading-[1.7] text-foreground/60">
+                    {KIND_DESCRIPTION[kind]}
+                  </p>
                 </Link>
-              </li>
-            </ul>
-          ) : pickupPost ? null : (
-            <EmptyNote>まだ投稿がありません。</EmptyNote>
-          )}
-        </Section>
+              );
+            })}
+
+            <Link
+              href="/board"
+              className="group flex flex-col gap-2 rounded-2xl bg-card p-5 ring-1 ring-border transition hover:-translate-y-0.5 hover:ring-primary-300"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-300">
+                  <Megaphone className="h-5 w-5" />
+                </span>
+                <span className="text-[17px] font-bold tracking-tight">掲示板</span>
+                <ArrowRight className="ml-auto h-4 w-4 text-foreground/30 transition group-hover:translate-x-0.5 group-hover:text-primary-300" />
+              </div>
+              <p className="text-[12.5px] leading-[1.7] text-foreground/60">
+                在住者どうしの新着ニュース・お知らせ・ちょっとした相談。
+              </p>
+            </Link>
+          </div>
+        </section>
       </div>
     </main>
   );
@@ -312,7 +303,6 @@ function Section({
   );
 }
 
-/** 各セクション先頭の大きな Pickup カード（写真左 / テキスト右）。 */
 function PickupCard({
   href,
   image,

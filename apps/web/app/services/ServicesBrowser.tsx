@@ -27,6 +27,8 @@ type Audience = 'all' | 'traveler' | 'resident';
 
 type FilterState = {
   audience: Audience;
+  /** 国コード (ISO alpha-2 lowercase)。国ハブからの ?country= で初期化。 */
+  country: string | undefined;
   city: string | undefined;
   tags: string[];
   q: string;
@@ -36,12 +38,15 @@ type FilterState = {
 
 const EMPTY: FilterState = {
   audience: 'all',
+  country: undefined,
   city: undefined,
   tags: [],
   q: '',
   min: null,
   max: null,
 };
+
+const COUNTRY_LABEL: Record<string, string> = { fr: 'フランス' };
 
 const AUDIENCE_TABS: Array<{ key: Audience; label: string }> = [
   { key: 'all', label: 'すべて' },
@@ -63,6 +68,7 @@ function parseNum(v: string | null): number | null {
 function initFromSearch(sp: URLSearchParams): FilterState {
   return {
     audience: parseAudience(sp.get('audience')),
+    country: sp.get('country')?.trim() || undefined,
     city: sp.get('city')?.trim() || undefined,
     tags: (sp.get('tags') ?? '')
       .split(',')
@@ -100,6 +106,7 @@ export function ServicesBrowser({
   useEffect(() => {
     const p = new URLSearchParams();
     if (filters.audience !== 'all') p.set('audience', filters.audience);
+    if (filters.country) p.set('country', filters.country);
     if (filters.city) p.set('city', filters.city);
     if (filters.tags.length) p.set('tags', filters.tags.join(','));
     if (filters.q) p.set('q', filters.q);
@@ -132,6 +139,7 @@ export function ServicesBrowser({
         if (s.audience && s.audience !== 'resident' && s.audience !== 'both')
           return false;
       }
+      if (filters.country && s.countryCode !== filters.country) return false;
       if (filters.city && s.citySlug !== filters.city) return false;
       if (filters.tags.length) {
         // overlap: どれか 1 つでも一致
@@ -172,7 +180,10 @@ export function ServicesBrowser({
     filters.tags.length;
 
   const anyActive =
-    advancedActiveCount > 0 || filters.audience !== 'all' || !!filters.q;
+    advancedActiveCount > 0 ||
+    filters.audience !== 'all' ||
+    !!filters.q ||
+    !!filters.country;
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,6 +193,20 @@ export function ServicesBrowser({
   return (
     <>
       <h1 className="sr-only">サービスから探す</h1>
+
+      {filters.country ? (
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary-500/10 px-3.5 py-1.5 text-[12.5px] font-semibold text-primary-700 ring-1 ring-primary-300">
+          📍 {COUNTRY_LABEL[filters.country] ?? filters.country} のサービス
+          <button
+            type="button"
+            onClick={() => set('country', undefined)}
+            aria-label="国フィルタを解除"
+            className="rounded-full px-1 text-primary-700/70 hover:text-primary-700"
+          >
+            ✕
+          </button>
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         {/* audience tabs + 検索 */}

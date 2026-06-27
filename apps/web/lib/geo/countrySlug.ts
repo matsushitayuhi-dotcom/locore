@@ -45,6 +45,22 @@ const FALLBACK_COUNTRY: Record<string, CountryDetail> = {
 export const SUPPORTED_COUNTRY_SLUGS = Object.keys(SLUG_TO_CODE);
 
 /**
+ * 一覧ページの国フィルタ用の軽量メタ（クライアントへ渡せる静的データ）。
+ * 国を増やすときは SLUG_TO_CODE とここに 1 行ずつ足す。
+ */
+export const SUPPORTED_COUNTRIES: {
+  slug: string;
+  code: string;
+  nameJa: string;
+  emoji: string;
+}[] = [{ slug: 'france', code: 'fr', nameJa: 'フランス', emoji: '🇫🇷' }];
+
+/** スラッグ → 国コード（リダイレクト等で使用）。未対応は null。 */
+export function codeFromSlug(slug: string): string | null {
+  return SLUG_TO_CODE[slug.toLowerCase()] ?? null;
+}
+
+/**
  * スラッグから国情報を解決。未対応スラッグなら null（= 正当な 404）。
  * 対応スラッグなら DB を優先し、DB 不通時は最小フォールバックを返す
  * （対応国を DB 都合で 404 にしないため）。
