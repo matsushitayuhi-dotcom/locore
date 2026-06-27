@@ -7,6 +7,7 @@ import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
 import { ArticleSpotsMap } from '../../ArticleSpotsMap';
 import { ReviewFormToggle } from '../ReviewFormToggle';
+import { RouteMap } from './RouteMap';
 import { CSS } from './placeGuideCss';
 import {
   fmtDate,
@@ -15,7 +16,6 @@ import {
   CostIcon,
   BulbIcon,
   hasCoords,
-  pinsEmbedUrl,
   useReveal,
   authorMeta,
 } from './shared';
@@ -81,14 +81,16 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
     [article.bodyPaid],
   );
 
-  const mapPts = useMemo(
+  // 本物の Google マップ（RouteMap・pins モード）に渡す番号付き座標ポイント。
+  const mapPoints = useMemo(
     () =>
       spots
         .filter((s) => hasCoords(s.lat, s.lng))
-        .map((s) => ({ lat: s.lat, lng: s.lng })),
+        .map((s, i) => ({ lat: s.lat, lng: s.lng, name: s.name, label: i + 1 })),
     [spots],
   );
-  const hasMap = mapPts.length > 0;
+  const hasMap = mapPoints.length > 0;
+  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   // spot 説明の構造化フォールバック（description 未入力時のみ・Phase C-2 フォールバック維持）
   const spotFallbackDesc = (s: Spot): string => {
@@ -289,19 +291,21 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
               <div className="pg-wide">
                 <div className="pg-maphead pg-rev">
                   <span className="pg-kicker">— Map</span>
-                  <h2>全{mapPts.length}か所のピン</h2>
+                  <h2>全{mapPoints.length}か所のピン</h2>
                   <p>
-                    各場所の位置から自動生成。順路ではなく、ピンとして散らした集約マップです。
+                    各場所の位置から、ライムの番号ピンで散らした集約マップです（順路ではありません）。
                   </p>
                 </div>
                 <div className="pg-mapframe pg-rev">
                   <span className="pg-mapbadge">Google マップ連携</span>
-                  <iframe
-                    title="場所紹介マップ"
-                    src={pinsEmbedUrl(mapPts)}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
+                  {mapsApiKey ? (
+                    <RouteMap points={mapPoints} mode="pins" height={520} />
+                  ) : (
+                    <div className="pg-mapfallback">
+                      地図はこの環境では表示できません。各場所の「地図で見る」から
+                      Google マップを開けます。
+                    </div>
+                  )}
                 </div>
               </div>
             </section>

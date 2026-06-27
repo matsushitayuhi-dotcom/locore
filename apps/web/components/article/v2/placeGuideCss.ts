@@ -85,6 +85,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-maphead p{color:rgba(255,255,255,.66);font-size:14px;margin-top:12px}
 .pg-mapframe{position:relative;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.14);height:clamp(360px,52vh,540px);background:#dfe4e8;box-shadow:0 24px 60px -30px rgba(0,0,0,.6)}
 .pg-mapframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.pg-mapframe .locore-map-canvas{position:absolute;inset:0}
+.pg-mapfallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:rgba(255,255,255,.7)}
 .pg-mapbadge{position:absolute;top:16px;left:16px;z-index:3;font-family:var(--mono);font-size:10.5px;font-weight:600;color:#0b0c09;background:var(--lime);padding:7px 13px;border-radius:999px;box-shadow:0 8px 20px -6px var(--glow)}
 
 .pg-listsec{padding:74px 0 30px}

@@ -104,6 +104,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-mapgrid{display:grid;grid-template-columns:1.3fr .7fr;gap:36px;align-items:stretch}
 .tj-mapframe{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--bd);min-height:420px;background:#dfe4e8;box-shadow:0 18px 44px -26px rgba(17,17,17,.3)}
 .tj-mapframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.tj-mapframe .locore-map-canvas{position:absolute;inset:0}
+.tj-mapfallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--mu)}
 .tj-mapbadge{position:absolute;top:14px;left:14px;z-index:3;font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;color:#0b0c09;background:var(--lime);padding:7px 13px;border-radius:999px;box-shadow:0 6px 16px -6px var(--glow)}
 .tj-maplist{display:flex;flex-direction:column;gap:0}
 .tj-maplist .lab{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--lime-d);margin-bottom:8px}
