@@ -4,7 +4,6 @@ import { useMemo, useRef } from 'react';
 import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
-import { ArticleSpotsMap } from '../../ArticleSpotsMap';
 import { ReviewFormToggle } from '../ReviewFormToggle';
 import { CSS } from './placeGuideCss';
 import {
@@ -317,21 +316,9 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
             </div>
           </section>
 
-          {/* ===== スポット地図（解放時のみ）===== */}
-          <section className="pg-mapsec" style={{ paddingTop: 8 }}>
-            <div className="pg-wide">
-              <div id="article-spots-map" className="scroll-mt-20 pg-rev">
-                <ArticleSpotsMap
-                  spots={spots}
-                  articleType={article.articleType}
-                  itineraryBlocks={article.itineraryBlocks ?? null}
-                  photoEntries={article.photoEntries ?? null}
-                  unlocked={unlocked}
-                  fallbackPhotoUrl={article.coverImageUrl ?? null}
-                />
-              </div>
-            </div>
-          </section>
+          {/* 詳細スポット地図（写真マーカーの ArticleSpotsMap）は廃止。
+              place-guide は地図を持たず、各場所カード／リストの「地図で見る」
+              リンクで個別に Google マップへ導線する。 */}
 
           {/* ===== レビュー投稿（購入読者のみ。preview / owner では出さない）===== */}
           {!previewMode && !isOwner ? (

@@ -9,7 +9,6 @@ import {
 } from '@/lib/maps/googleMapsUrls';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
-import { ArticleSpotsMap } from '../../ArticleSpotsMap';
 import { ReviewFormToggle } from '../ReviewFormToggle';
 import { RouteMap } from './RouteMap';
 import { CSS } from './itineraryCss';
@@ -487,21 +486,8 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
             </section>
           ) : null}
 
-          {/* ===== スポット地図（解放時のみ）===== */}
-          <section className="tj-mapsec" style={{ paddingTop: 8 }}>
-            <div className="tj-wide">
-              <div id="article-spots-map" className="scroll-mt-20 tj-rev">
-                <ArticleSpotsMap
-                  spots={spots}
-                  articleType={article.articleType}
-                  itineraryBlocks={article.itineraryBlocks ?? null}
-                  photoEntries={article.photoEntries ?? null}
-                  unlocked={unlocked}
-                  fallbackPhotoUrl={article.coverImageUrl ?? null}
-                />
-              </div>
-            </div>
-          </section>
+          {/* 詳細スポット地図（写真マーカーの ArticleSpotsMap）は廃止。
+              記事の地図は上部の RouteMap（ライムのルート線＋番号ピン）1つに統一。 */}
 
           {/* ===== レビュー投稿（購入読者のみ。preview / owner では出さない）===== */}
           {!previewMode && !isOwner ? (
