@@ -10,7 +10,6 @@ import {
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
 import { ReviewFormToggle } from '../ReviewFormToggle';
-import { RouteMap } from './RouteMap';
 import { CSS } from './itineraryCss';
 import {
   fmtDate,
@@ -22,6 +21,7 @@ import {
   hasCoords,
   useReveal,
   authorMeta,
+  routeEmbedUrl,
 } from './shared';
 import {
   AuthorCard,
@@ -192,7 +192,6 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
     [article.bodyPaid],
   );
   const showMap = coordStops.length >= 1;
-  const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   return (
     <div className="tj" ref={ref}>
@@ -290,14 +289,15 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
                 <div className="tj-mapgrid">
                   <div className="tj-mapframe tj-rev">
                     <span className="tj-mapbadge">Google マップ連携</span>
-                    {mapsApiKey ? (
-                      <RouteMap points={routePoints} mode="route" />
-                    ) : (
-                      <div className="tj-mapfallback">
-                        地図はこの環境では表示できません。下のリンクから
-                        Google マップでルートを開けます。
-                      </div>
-                    )}
+                    {/* モック（TripArticleMock）と同じ、APIキー不要の Google
+                        directions 埋め込み。本番で公式 Embed API（要キー）に
+                        差し替える場合も、まずはこのキー不要版で必ず表示する。 */}
+                    <iframe
+                      title="旅程ルートマップ"
+                      src={routeEmbedUrl(routePoints)}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
                   </div>
                   <div className="tj-maplist tj-rev">
                     <div className="lab">立ち寄り順</div>
