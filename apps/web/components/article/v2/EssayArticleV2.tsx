@@ -1,38 +1,65 @@
 'use client';
 
 import { useMemo, useRef, type ReactNode } from 'react';
-import type { Article, Writer } from '@/lib/mock';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
+import { Paywall } from '../../Paywall';
+import { ReviewFormToggle } from '../ReviewFormToggle';
 import { CSS } from './essayCss';
 import { fmtDate, HeroNetCanvas, useReveal, authorMeta } from './shared';
+import {
+  AuthorCard,
+  RelatedArticles,
+  ReviewsList,
+  type EngagementProps,
+} from './engagement';
 
 /**
  * ブログ・場所なし（essay）の v2 レイアウト。
  *
- * Phase B では「ブランドヒーロー＋本文(無料 body)＋写真(photo_entries)＋動画スロット」を
- * v2 デザインで描き、その下に engagement 層（Paywall で body_paid をゲート、レビュー、
- * 著者、関連）を children として差し込む。地図・スポットは持たない。
+ * Phase A の新デザイン本文（本文＋写真＋動画）を現行の実データで描画しつつ、Phase B の
+ * 課金（Paywall）とインタラクション（いいね/保存・レビュー・著者・関連）を新スタイルに
+ * 織り込む。地図・スポットは持たない。
+ *
+ * ゲート意味論（収益直結）:
+ *   - 無料部分（ヒーロー＋body＋photo_entries＋動画）は常時表示。
+ *   - body_paid は unlocked 時のみ表示。未解放時は <Paywall>（essay は spots 無し）。
  */
-export function EssayArticleV2({
-  article,
-  writer,
-  videosSlot,
-  children,
-  heroActions,
-}: {
-  article: Article;
-  writer: Writer | null;
+export type EssayArticleV2Props = EngagementProps & {
   /** article_videos を 16:9 で描く要素（engagement.EssayVideos）。本文末に流す。 */
   videosSlot?: ReactNode;
-  children?: ReactNode;
   heroActions?: ReactNode;
-}) {
+};
+
+export function EssayArticleV2(props: EssayArticleV2Props) {
+  const {
+    article,
+    writer,
+    reviews,
+    related,
+    unlocked,
+    purchasedOrOwner,
+    isOwner,
+    viewerLoggedIn,
+    folders,
+    bookmarkedSpotIds,
+    myReview,
+    previewMode,
+    authorServices,
+    videosSlot,
+    heroActions,
+  } = props;
+
   const ref = useRef<HTMLDivElement>(null);
   useReveal(ref, '.es-rev');
 
   const bodyHtml = useMemo(
     () => (article.body?.trim() ? renderArticleBodyHtml(article.body) : ''),
     [article.body],
+  );
+  const paidHtml = useMemo(
+    () =>
+      article.bodyPaid?.trim() ? renderArticleBodyHtml(article.bodyPaid) : '',
+    [article.bodyPaid],
   );
 
   const photoEntries = (article.photoEntries ?? [])
@@ -104,10 +131,75 @@ export function EssayArticleV2({
         {videosSlot}
       </article>
 
-      {/* ===== engagement 本体（有料 body ゲート / レビュー / 著者 / 関連）===== */}
+      {/* ===== 有料パート（body_paid）／ Paywall ===== */}
       <section className="es-body-extras">
-        <div className="es-read">{children}</div>
+        <div className="es-read">
+          {unlocked ? (
+            paidHtml ? (
+              <>
+                <div
+                  aria-hidden
+                  className="es-rev"
+                  style={{
+                    textAlign: 'center',
+                    letterSpacing: '.6em',
+                    color: '#cdd2c2',
+                    margin: '8px 0 26px',
+                  }}
+                >
+                  ◆ ◆ ◆
+                </div>
+                {previewMode ? (
+                  <div
+                    className="es-rev"
+                    style={{ textAlign: 'center', marginBottom: 18 }}
+                  >
+                    <span className="es-kicker">有料パート（プレビュー解除中）</span>
+                  </div>
+                ) : null}
+                <div
+                  className="es-body es-rev"
+                  dangerouslySetInnerHTML={{ __html: paidHtml }}
+                />
+              </>
+            ) : null
+          ) : (
+            <Paywall
+              article={article}
+              bodyAfter={paidHtml ? article.bodyPaid! : ''}
+              spots={[]}
+              folders={folders}
+              bookmarkedSpotIds={bookmarkedSpotIds}
+              viewerLoggedIn={viewerLoggedIn}
+              alreadyPurchased={purchasedOrOwner}
+            />
+          )}
+
+          {/* レビュー投稿（購入読者のみ。preview / owner では出さない）*/}
+          {!previewMode && unlocked && !isOwner ? (
+            <div style={{ marginTop: 28 }}>
+              <ReviewFormToggle articleId={article.id} initial={myReview} />
+            </div>
+          ) : null}
+        </div>
       </section>
+
+      {/* ===== 著者カード ＋ サービス ===== */}
+      <section className="es-foot">
+        <div className="es-read">
+          <AuthorCard writer={writer} authorServices={authorServices} />
+        </div>
+      </section>
+
+      {/* ===== レビュー一覧 ===== */}
+      <section className="es-foot" style={{ paddingTop: 0 }}>
+        <div className="es-read">
+          <ReviewsList reviews={reviews} />
+        </div>
+      </section>
+
+      {/* ===== 関連記事 ===== */}
+      <RelatedArticles related={related} />
 
       {/* ===== 日付フッター ===== */}
       <section className="es-dates">

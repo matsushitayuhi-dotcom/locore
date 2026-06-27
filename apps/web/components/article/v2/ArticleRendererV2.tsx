@@ -9,23 +9,19 @@ import { ItineraryArticleV2 } from './ItineraryArticleV2';
 import { PlaceGuideArticleV2 } from './PlaceGuideArticleV2';
 import { EssayArticleV2 } from './EssayArticleV2';
 import {
-  AuthorCard,
   EssayVideos,
   HeroActions,
-  PaidBodyAndExtras,
   PreviewBanner,
-  RelatedArticles,
-  ReviewsList,
   type EngagementProps,
 } from './engagement';
 
 /**
- * Phase B 完全置き換え版レンダラ。
+ * v2 レンダラ。
  *
  * 旧 `components/article/ArticleRenderer.tsx` と同じフルバンドル props を受け取り、
- * v2 のブランドレイアウト（モデルコース / 場所あり / 場所なし）に統合する。課金分岐・
- * いいね・保存・レビュー・スポット操作・著者・関連は engagement 層（既存コンポーネント
- * 再利用）が提供するため、機能は一切落とさない。
+ * v2 のブランドレイアウト（モデルコース / 場所あり / 場所なし）に振り分ける。各レイアウトは
+ * Phase A の新デザイン本文を実データで描きつつ、課金（Paywall）・いいね/保存・スポット保存・
+ * レビュー・著者・関連・地図を新スタイルの中に織り込む（機能は一切落とさない）。
  *
  * 振り分け（入口2択 / classify.ts）:
  *   - itinerary            → ItineraryArticleV2
@@ -40,50 +36,24 @@ export type ArticleRendererV2Props = EngagementProps & {
 };
 
 export function ArticleRendererV2(props: ArticleRendererV2Props) {
-  const {
-    article,
-    writer,
-    spots,
-    reviews,
-    related,
-    region,
-    country,
-    videos,
-    previewMode,
-    authorServices,
-  } = props;
+  const { article, spots, videos, previewMode, region, country } = props;
 
   const kind = classifyArticle(article, spots);
 
-  // engagement props（HeroActions 等が参照する全バンドル）
+  // 各レイアウトに渡す共通 props（EngagementProps の全バンドル）
   const eng: EngagementProps = props;
-
   const heroActions = <HeroActions {...eng} />;
-
-  // engagement 共通フッター（著者 → レビュー → 関連）
-  const footer = (
-    <>
-      <AuthorCard writer={writer} authorServices={authorServices} />
-      <ReviewsList reviews={reviews} />
-      <RelatedArticles related={related} />
-    </>
-  );
 
   if (kind === 'itinerary') {
     return (
       <>
         <PreviewBanner article={article} previewMode={previewMode} />
         <ItineraryArticleV2
-          article={article}
-          writer={writer}
-          spots={spots}
+          {...eng}
           region={region}
           country={country}
           heroActions={heroActions}
-        >
-          <PaidBodyAndExtras {...eng} />
-          {footer}
-        </ItineraryArticleV2>
+        />
       </>
     );
   }
@@ -93,16 +63,11 @@ export function ArticleRendererV2(props: ArticleRendererV2Props) {
       <>
         <PreviewBanner article={article} previewMode={previewMode} />
         <PlaceGuideArticleV2
-          article={article}
-          writer={writer}
-          spots={spots}
+          {...eng}
           region={region}
           country={country}
           heroActions={heroActions}
-        >
-          <PaidBodyAndExtras {...eng} />
-          {footer}
-        </PlaceGuideArticleV2>
+        />
       </>
     );
   }
@@ -112,14 +77,10 @@ export function ArticleRendererV2(props: ArticleRendererV2Props) {
     <>
       <PreviewBanner article={article} previewMode={previewMode} />
       <EssayArticleV2
-        article={article}
-        writer={writer}
+        {...eng}
         heroActions={heroActions}
         videosSlot={<EssayVideos videos={videos} />}
-      >
-        <PaidBodyAndExtras {...eng} />
-        {footer}
-      </EssayArticleV2>
+      />
     </>
   );
 }

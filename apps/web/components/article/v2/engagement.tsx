@@ -13,16 +13,9 @@ import {
   SatisfactionStars,
 } from '@locore/ui';
 import { ChevronRight } from '@locore/ui/icons';
-import { Paywall } from '../../Paywall';
-import { ItineraryTimeline } from '../../ItineraryTimeline';
-import { PhotoJournalView } from '../../PhotoJournalView';
-import { SpotsCardList } from '../../SpotsCardList';
-import { ArticleSpotsMap } from '../../ArticleSpotsMap';
-import { ReviewFormToggle } from '../ReviewFormToggle';
 import { ServiceCard } from '../../services/ServiceCard';
 import { LikeButton } from '../LikeButton';
 import { AddToTripButton } from '../../AddToTripButton';
-import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import type { Article, Writer, Spot, Review } from '@/lib/mock';
 import type { FolderSummary } from '@/lib/spotFavorites/actions';
 import type { getMyReviewForArticle } from '@/lib/reviews/actions';
@@ -31,19 +24,22 @@ import type { ArticleVideoRow } from './classify';
 import { toVideoEmbedSrc } from './classify';
 
 /**
- * Phase B エンゲージメント層（共通）。
+ * エンゲージメント層（共通の機能つき部品）。
  *
- * v2 の各タイプ別レイアウト（モデルコース / 場所あり / 場所なし）が、ブランド
- * ヒーローの下に共通で差し込む「機能つき本体」を提供する。旧 ArticleRenderer が
- * 出していた機能を一切落とさないため、既存コンポーネントをそのまま再利用する:
- *   - Paywall（課金分岐・body_paid ゲート）
- *   - ItineraryTimeline / SpotsCardList / ArticleSpotsMap / PhotoJournalView
- *   - ReviewFormToggle（レビュー投稿）/ レビュー一覧
- *   - 著者カード / 著者サービス / 関連記事
- *   - LikeButton / AddToTripButton（ヒーロー内に差すアクション）
+ * v2 の各タイプ別レイアウト（モデルコース / 場所あり / 場所なし）が、新スタイル本文の
+ * 適切な位置に埋め込んで使う共通部品を提供する。本文描画そのものは各レイアウトが
+ * Phase A の新デザインで自前に行い、ここでは横断的な「機能つき部品」だけを担う:
+ *   - HeroActions（いいね / 保存。ヒーロー内に差す）
+ *   - PreviewBanner（駐在員プレビュー帯）
+ *   - AuthorCard（著者カード ＋ 著者サービス）
+ *   - ReviewsList（レビュー一覧）
+ *   - RelatedArticles（関連記事）
+ *   - EssayVideos（essay の article_videos を 16:9 で描画）
+ *   - SpotTipBox（スポットの「コツ」ライム破線ボックス・Phase C-2）
  *
- * これらは旧 ArticleRenderer と同じ Tailwind スタイル（prose-locore 等）で描画し、
- * v2 ブランドヒーローの直下に、読みやすい 1 カラム幅で配置する。
+ * 課金（Paywall）・スポット保存（SpotFavoriteButton）・地図（ArticleSpotsMap）・
+ * レビュー投稿（ReviewFormToggle）は、各レイアウト側が新スタイルのゲート分岐の中で
+ * 直接 import して配置する（unlocked で paid を漏らさないゲート意味論を維持するため）。
  */
 
 export type MyReview = Awaited<ReturnType<typeof getMyReviewForArticle>>;
@@ -141,151 +137,26 @@ export function PreviewBanner({
   );
 }
 
-/* ===================== 課金・本体（旧 ArticleRenderer の §2-6 相当）===================== */
+/* ===================== スポットの「コツ」ボックス（Phase C-2）===================== */
 
 /**
- * 本文の続き（body_paid）・旅程/スポット・地図・レビューフォームを、課金分岐つきで
- * 描画する。無料プレビュー本文（body）はタイプ別レイアウト側が既に描いている前提で、
- * ここでは「ロック対象」だけを扱う。
+ * スポットの「コツ」を、本文中の callout (tip) と揃えたライムの破線ボックスで表示する。
+ * 仕様 §3「tip = place 内のミニ callout」/ §2「コツ・注意ボックス（ライム破線）」に準拠。
+ * 各タイプの新スタイル本文（場所カード / 旅程 stop）から共通で使う。
  */
-export function PaidBodyAndExtras(props: EngagementProps) {
-  const {
-    article,
-    spots,
-    unlocked,
-    purchasedOrOwner,
-    isOwner,
-    viewerLoggedIn,
-    folders,
-    bookmarkedSpotIds,
-    myReview,
-    previewMode,
-  } = props;
-
-  const hasPaid = !!article.bodyPaid && article.bodyPaid.trim().length > 0;
-  const after: string = hasPaid ? article.bodyPaid! : '';
-
+export function SpotTipBox({ tip }: { tip: string }) {
   return (
-    <div className="space-y-10">
-      {/* 旅程 or スポット情報（itinerary はタイムライン、spot_guide は解放時のみリスト）*/}
-      {article.articleType === 'itinerary' &&
-      article.itineraryBlocks &&
-      article.itineraryBlocks.length > 0 ? (
-        <ItineraryTimeline
-          articleId={article.id}
-          blocks={article.itineraryBlocks}
-          spots={spots}
-          defaultUnlocked={unlocked}
-          photoEntries={article.photoEntries ?? null}
-          fallbackCoverImageUrl={article.coverImageUrl}
-          folders={folders}
-          bookmarkedSpotIds={bookmarkedSpotIds}
-          viewerLoggedIn={viewerLoggedIn}
-          mapAnchorId="article-spots-map"
-        />
-      ) : article.articleType === 'spot_guide' && unlocked ? (
-        <SpotsCardList
-          spots={spots}
-          folders={folders}
-          bookmarkedSpotIds={bookmarkedSpotIds}
-          viewerLoggedIn={viewerLoggedIn}
-        />
-      ) : null}
-
-      {/* 有料パート本文 or Paywall */}
-      {unlocked ? (
-        hasPaid && after.trim().length > 0 ? (
-          <article className="prose-locore prose-locore--editorial prose-locore--continuation">
-            <div
-              aria-hidden
-              className="my-10 flex items-center justify-center text-[18px] tracking-[0.6em] text-foreground/30"
-            >
-              ◆ ◆ ◆
-            </div>
-            {previewMode ? (
-              <div className="mb-3 inline-flex rounded-full bg-primary-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                有料パート（プレビュー解除中）
-              </div>
-            ) : null}
-            <div
-              dangerouslySetInnerHTML={{ __html: renderArticleBodyHtml(after) }}
-            />
-          </article>
-        ) : null
-      ) : (
-        <Paywall
-          article={article}
-          bodyAfter={after}
-          spots={spots}
-          folders={folders}
-          bookmarkedSpotIds={bookmarkedSpotIds}
-          viewerLoggedIn={viewerLoggedIn}
-          alreadyPurchased={purchasedOrOwner}
-        />
-      )}
-
-      {/* 写真ギャラリー（フォト日記スタイル）。購入後のみ全部見せる。 */}
-      {article.bodyStyle === 'photo_journal' &&
-      article.photoEntries &&
-      article.photoEntries.length > 0 ? (
-        unlocked ? (
-          <PhotoJournalView
-            entries={article.photoEntries}
-            title={article.title}
-          />
-        ) : (
-          <section className="relative overflow-hidden rounded-2xl bg-neutral-950 text-white">
-            <div className="aspect-[4/5] w-full sm:aspect-[3/4]">
-              {article.photoEntries[0] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={article.photoEntries[0].imageUrl}
-                  alt=""
-                  className="h-full w-full object-cover opacity-60"
-                />
-              ) : null}
-            </div>
-            <div className="px-6 py-6 text-center">
-              <p className="text-[12px] font-bold uppercase tracking-[0.18em] text-primary-300">
-                フォト日記
-              </p>
-              <p className="mt-2 text-[16px] font-bold leading-snug">
-                残り{' '}
-                <span className="tabular">
-                  {article.photoEntries.length - 1}
-                </span>{' '}
-                枚は購入後
-              </p>
-            </div>
-          </section>
-        )
-      ) : null}
-
-      {/* スポット地図（解放時のみ。anchor: タイムラインの「地図」から jump）*/}
-      {unlocked ? (
-        <div id="article-spots-map" className="scroll-mt-20">
-          <ArticleSpotsMap
-            spots={spots}
-            articleType={article.articleType}
-            itineraryBlocks={article.itineraryBlocks ?? null}
-            photoEntries={article.photoEntries ?? null}
-            unlocked={unlocked}
-            fallbackPhotoUrl={article.coverImageUrl ?? null}
-          />
-        </div>
-      ) : (
-        <section
-          id="article-spots-map"
-          className="scroll-mt-20 rounded-md bg-primary-500/10 p-6 text-center text-[12px] text-primary-300 ring-1 ring-border"
-        >
-          <p className="font-semibold">地図は購入後</p>
-        </section>
-      )}
-
-      {/* レビュー投稿（購入済み読者にのみ。プレビュー / オーナーでは出さない）*/}
-      {!previewMode && unlocked && !isOwner ? (
-        <ReviewFormToggle articleId={article.id} initial={myReview} />
-      ) : null}
+    <div
+      className="rounded-md border border-dashed px-3 py-2"
+      style={{ borderColor: '#A8E01C', background: '#F3FBE0' }}
+    >
+      <p className="mb-0.5 flex items-center gap-1 text-[11px] font-bold tracking-wide text-[#5E8B0E]">
+        <span aria-hidden>✨</span>
+        コツ
+      </p>
+      <p className="whitespace-pre-line text-[13px] leading-relaxed text-[#2a2a28]">
+        {tip}
+      </p>
     </div>
   );
 }
