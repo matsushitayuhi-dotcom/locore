@@ -439,7 +439,7 @@ export function PlaceGuideMock() {
         <div className="pg-wrap">
           <div className="pg-listhead pg-rev">
             <span className="pg-kicker">— Index</span>
-            <h2>場所いちらん</h2>
+            <h2>この記事で紹介したスポット</h2>
           </div>
           <div className="pg-list">
             {PLACES.map((p, i) => (
