@@ -26,8 +26,10 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .btn.pri:hover{box-shadow:0 16px 36px -8px var(--glow)}
 .klabel{font-family:'JetBrains Mono';font-size:12px;letter-spacing:.16em;color:var(--lime-d);text-transform:uppercase}
 
-/* ヒーロー画像と融合する透明ナビ。hero 内に絶対配置し、スクロールで一緒に流れる。 */
-.navwrap{position:absolute;top:0;left:0;right:0;z-index:60;background:transparent}
+/* 上部固定ナビ。フローから外して (fixed) ヒーロー画像に重ね、トップでは透明で
+   融合。スクロールが始まると .scrolled で暗い背景＋ブラーを付けて読めるようにする。 */
+.navwrap{position:fixed;top:0;left:0;right:0;z-index:60;background:transparent;border-bottom:1px solid transparent;transition:background .35s ease,backdrop-filter .35s ease,border-color .35s ease}
+.navwrap.scrolled{background:rgba(11,13,19,.82);backdrop-filter:blur(14px);border-bottom-color:rgba(255,255,255,.09)}
 .lp nav{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:72px;padding:0 24px;background:transparent;border:none;border-radius:0;box-shadow:none}
 .logo{display:flex;align-items:center;gap:8px;font-family:'Space Grotesk';font-weight:700;font-size:22px}
 .logo b{color:var(--lime-d)}
@@ -237,12 +239,13 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 }
 `;
 
-const BODY = `<header class="hero">
-  <div class="navwrap"><div class="wrap"><nav>
-    <div class="logo">Lo<b>core</b></div>
-    <div class="nlinks"><a href="/articles">記事</a><a href="/services">サービス</a><a href="/community">コミュニティ</a><a href="/search">検索</a></div>
-    <div class="nright"><a class="nlogin" href="/auth/login?redirect_to=%2Farticles">ログイン</a><a class="btn pri" href="/auth/signup?redirect_to=%2Farticles" style="padding:9px 18px;font-size:14px">無料ではじめる</a></div>
-  </nav></div></div>
+const BODY = `<div class="navwrap"><div class="wrap"><nav>
+  <div class="logo">Lo<b>core</b></div>
+  <div class="nlinks"><a href="/articles">記事</a><a href="/services">サービス</a><a href="/community">コミュニティ</a><a href="/search">検索</a></div>
+  <div class="nright"><a class="nlogin" href="/auth/login?redirect_to=%2Farticles">ログイン</a><a class="btn pri" href="/auth/signup?redirect_to=%2Farticles" style="padding:9px 18px;font-size:14px">無料ではじめる</a></div>
+</nav></div></div>
+
+<header class="hero">
   <div class="hero-bg"></div>
   <canvas id="net"></canvas>
   <div class="hero-content">
