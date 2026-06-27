@@ -62,15 +62,18 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk
 .es-dropcap::first-letter{float:left;font-family:var(--disp);font-weight:700;font-size:clamp(72px,11vw,108px);line-height:.78;padding:6px 14px 0 0;color:var(--lime-d)}
 .es-p{font-size:16.5px;line-height:1.95;color:var(--ink2);margin-top:26px}
 .es-h2{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(24px,3vw,34px);letter-spacing:-.02em;line-height:1.25;margin-top:56px}
-/* image ブロック（読み幅をはみ出すフルブリード）*/
-.es-figure{position:relative;width:min(100vw,1100px);left:50%;transform:translateX(-50%);margin:48px auto;max-width:1100px}
-.es-figure .ph{aspect-ratio:21/9;overflow:hidden;border-radius:4px;background:var(--bg2)}
-@media(max-width:720px){.es-figure .ph{aspect-ratio:4/3;border-radius:0}}
-.es-figure img{width:100%;height:100%;object-fit:cover}
+/* image ブロック（記事より少し広い・中央寄せ）。
+   ※ left:50%+translateX と margin:auto の二重センタリングはずれの原因になるため使わない。
+   max-width＋margin-inline:auto＋左右paddingで、ビューポートを超えず中央に揃える。 */
+.es-figure{position:relative;width:100%;max-width:1000px;margin:48px auto;padding:0 24px}
+.es-figure .ph{aspect-ratio:21/9;overflow:hidden;border-radius:14px;background:var(--bg2)}
+@media(max-width:720px){.es-figure{padding:0}.es-figure .ph{aspect-ratio:4/3;border-radius:0}}
+.es-figure img{width:100%;height:100%;object-fit:cover;display:block}
 .es-figcap{max-width:720px;margin:12px auto 0;padding:0 24px;font-family:var(--mono);font-size:11.5px;color:var(--mu)}
-/* video ブロック（YouTube 埋め込み）*/
-.es-video{width:min(100vw,1000px);left:50%;transform:translateX(-50%);position:relative;margin:48px auto;max-width:1000px}
-.es-vframe{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 24px 60px -30px rgba(0,0,0,.5)}
+/* video ブロック（YouTube 埋め込み・16:9 レスポンシブ枠・中央寄せ）*/
+.es-video{position:relative;width:100%;max-width:1000px;margin:48px auto;padding:0 24px}
+@media(max-width:720px){.es-video{padding:0 24px}}
+.es-vframe{position:relative;aspect-ratio:16/9;width:100%;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 24px 60px -30px rgba(0,0,0,.5)}
 .es-vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .es-vbadge{position:absolute;top:12px;left:12px;z-index:3;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;color:#0b0c09;background:var(--lime);padding:6px 11px;border-radius:999px}
 .es-vcap{max-width:720px;margin:12px auto 0;padding:0 24px;font-family:var(--mono);font-size:11.5px;color:var(--mu)}
