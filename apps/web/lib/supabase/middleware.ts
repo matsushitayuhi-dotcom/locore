@@ -4,11 +4,18 @@ import { NextResponse, type NextRequest } from 'next/server';
 /**
  * 【改修中の全サイトゲート 2026-06】
  * サイト全体をログイン必須にしている。ログイン前にアクセスできる公開パスは
- * 認証画面 (/auth/*) のみ。一般公開を再開するときは、ここを元の限定リスト
- * （/settings, /writer, /admin, /library, /become-writer）に戻し、下の
- * isProtected 判定も「そのリストに含まれるか」に戻すこと。
+ * 認証画面 (/auth/*) と マーケティング用ランディング (/ ちょうど) のみ。
+ * ランディングは個人情報を含まない公開ページで、ここを公開にしておかないと
+ * 未ログイン訪問者がランディングを見られず（= /auth/login へ強制送り）、
+ * ランディング上の「ログイン / 無料ではじめる」導線が機能しない。
+ * 一般公開を再開するときは、ここを元の限定リスト（/settings, /writer, /admin,
+ * /library, /become-writer）に戻し、下の isProtected 判定も「そのリストに
+ * 含まれるか」に戻すこと。
  */
 const PUBLIC_PREFIXES = ['/auth'];
+
+/** プレフィックスではなく完全一致で公開するパス（ランディングのみ）。 */
+const PUBLIC_EXACT = ['/'];
 
 /**
  * Supabase セッションを refresh しつつ、認証必須パスへのアクセスを保護する。
@@ -56,9 +63,11 @@ export async function updateSession(request: NextRequest) {
 
   // 認証チェック（改修中は /auth 以外すべて要ログイン）
   const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-  );
+  const isPublic =
+    PUBLIC_EXACT.includes(pathname) ||
+    PUBLIC_PREFIXES.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
   const isProtected = !isPublic;
 
   if (isProtected && !user) {
