@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, asc, desc, eq, ilike, isNull, ne, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNull, ne, or, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import type { CommunityKind, CommunityStatus } from '@/lib/community/constants';
@@ -127,10 +127,14 @@ export type SearchCommunityHit = {
 export async function searchCommunityPosts(
   q: string,
   limit = 30,
+  opts: { kinds?: CommunityKind[]; countryCode?: string } = {},
 ): Promise<SearchCommunityHit[]> {
   const query = q.trim();
   if (!query) return [];
   const pat = toPattern(query);
+  const code = opts.countryCode?.trim().toLowerCase();
+  const kinds =
+    opts.kinds && opts.kinds.length > 0 ? opts.kinds : undefined;
 
   try {
     const db = getDb();
@@ -157,6 +161,15 @@ export async function searchCommunityPosts(
             ilike(schema.communityPosts.title, pat),
             ilike(schema.communityPosts.body, pat),
           )!,
+          kinds ? inArray(schema.communityPosts.kind, kinds) : undefined,
+          code
+            ? sql`${schema.communityPosts.cityId} IN (
+                SELECT ${schema.cities.id} FROM ${schema.cities}
+                JOIN ${schema.countries}
+                  ON ${schema.countries.id} = ${schema.cities.countryId}
+                WHERE ${schema.countries.code} = ${code}
+              )`
+            : undefined,
         ),
       )
       .orderBy(desc(schema.communityPosts.createdAt))

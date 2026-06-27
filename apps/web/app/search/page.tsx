@@ -5,41 +5,48 @@ import {
   MapPin,
   Briefcase,
   ImageIcon,
-  Search as SearchIcon,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import { ServiceCard } from '@/components/services/ServiceCard';
+import { SearchForm } from '@/components/search/SearchForm';
+import { SUPPORTED_COUNTRIES } from '@/lib/geo/countrySlug';
 import {
-  listCountriesForPicker,
-  listRegionsForPicker,
-} from '@/lib/geo/countries';
+  COMMUNITY_KINDS,
+  KIND_LABEL,
+  KIND_BASE_PATH,
+  STATUS_LABEL,
+  type CommunityKind,
+} from '@/lib/community/constants';
 import {
   searchArticles,
   searchServices,
   searchUsers,
+  searchCommunityPosts,
   type SearchArticleHit,
   type SearchServiceHit,
   type SearchUserHit,
+  type SearchCommunityHit,
 } from '@/lib/search/queries';
 import type { FeaturedService } from '@/lib/services/featured';
 
 /**
- * /search — 2026-05 改修で「検索 Sheet の中身」をそのまま本格ページ化したもの。
+ * /search — 横断検索ページ。
  *
- * 旧 /search は領域別 3 タブの切替式だったが、Sheet に揃えるため:
- *   - キーワード input
- *   - 領域チェック (記事 / サービス / 駐在員向け)
- *   - 国 + 地域 ドロップダウン
- *   - 検索する ボタン (GET form, submit で URL クエリに反映)
- * というシンプルな構成に置き換えた。結果はチェックされた領域だけを縦に積む。
+ * 2026-06 改修: 記事検索 (ArticleJournal) の UI に統一。
+ *   - 常時表示: 国セレクト + キーワード
+ *   - 「詳細設定」ドリルダウン: 検索対象チェック
+ *       種類      … 記事 / サービス / ユーザー
+ *       コミュニティ … 求人 / 住居 / 売買 / 集まり / 習う / 助け（community_posts の 6 kind）
+ *   - 地域 (region) フィルタは廃止（国のみ）
  *
  * クエリパラメータ:
  *   ?q=<text>
- *   ?areas=articles,services,residents   (カンマ区切り、省略時 = 全領域 ON)
- *   ?country=fr&region=paris
- *   ?tags=consulting,study_abroad        (サービス絞り込み専用、複数 OK)
+ *   ?country=fr
+ *   ?areas=articles,services,users,job,apartment,marketplace,group,lesson,mutual_aid
+ *          （カンマ区切り。省略時 = 全対象 ON）
+ *   ?tags=consulting,study_abroad  （/services のタグ絞り込みからの引き継ぎ専用）
  *
- * Server Component。Form は <form method="GET" action="/search">。
+ * Server Component。フォームは <SearchForm> (client) が GET submit する。
  */
 
 export const dynamic = 'force-dynamic';
@@ -50,26 +57,26 @@ type Search = {
   q?: string;
   areas?: string;
   country?: string;
-  region?: string;
   tags?: string;
 };
 
-const VALID_AREAS = ['articles', 'services', 'residents'] as const;
-type Area = (typeof VALID_AREAS)[number];
+const CONTENT_SCOPES = ['articles', 'services', 'users'] as const;
+const VALID_SCOPES = [...CONTENT_SCOPES, ...COMMUNITY_KINDS] as const;
+type Scope = (typeof VALID_SCOPES)[number];
 
-const AREA_LABEL: Record<Area, string> = {
+const CONTENT_SCOPE_LABEL: Record<(typeof CONTENT_SCOPES)[number], string> = {
   articles: '記事',
   services: 'サービス',
-  residents: '駐在員',
+  users: 'ユーザー',
 };
 
-function parseAreas(raw: string | undefined): Set<Area> {
-  if (!raw) return new Set(VALID_AREAS);
+function parseScopes(raw: string | undefined): Set<Scope> {
+  if (!raw) return new Set(VALID_SCOPES);
   const parts = raw
     .split(',')
     .map((s) => s.trim())
-    .filter((s): s is Area => (VALID_AREAS as readonly string[]).includes(s));
-  if (parts.length === 0) return new Set(VALID_AREAS);
+    .filter((s): s is Scope => (VALID_SCOPES as readonly string[]).includes(s));
+  if (parts.length === 0) return new Set(VALID_SCOPES);
   return new Set(parts);
 }
 
@@ -87,42 +94,70 @@ export default async function SearchPage({
   searchParams?: Search;
 }) {
   const rawQ = (searchParams?.q ?? '').trim();
-  const areas = parseAreas(searchParams?.areas);
-  const country = (searchParams?.country ?? '').trim().toLowerCase() || undefined;
-  const region = (searchParams?.region ?? '').trim() || undefined;
+  const scopes = parseScopes(searchParams?.areas);
+  const country =
+    (searchParams?.country ?? '').trim().toLowerCase() || undefined;
   const tags = parseTags(searchParams?.tags);
-  const scope = { countryCode: country, regionSlug: region };
+  const scope = { countryCode: country };
 
-  // 国 / 地域リスト (form の select 用) と検索結果を並列で fetch
-  const wantArticles = areas.has('articles');
-  const wantServices = areas.has('services');
-  const wantResidents = areas.has('residents');
+  const wantArticles = scopes.has('articles');
+  const wantServices = scopes.has('services');
+  const wantUsers = scopes.has('users');
+  const wantKinds = COMMUNITY_KINDS.filter((k) => scopes.has(k));
 
-  const [countries, regions, articleHits, serviceHits, userHits] =
-    await Promise.all([
-      listCountriesForPicker(),
-      listRegionsForPicker(),
+  const [articleHits, serviceHits, userHits, communityHits] = await Promise.all(
+    [
       rawQ && wantArticles
         ? searchArticles(rawQ, 30, scope)
         : Promise.resolve([] as SearchArticleHit[]),
       rawQ && wantServices
         ? searchServices(rawQ, 30, scope)
         : Promise.resolve([] as SearchServiceHit[]),
-      rawQ && wantResidents
+      rawQ && wantUsers
         ? searchUsers(rawQ, 30, scope)
         : Promise.resolve([] as SearchUserHit[]),
-    ]);
+      rawQ && wantKinds.length > 0
+        ? searchCommunityPosts(rawQ, 40, {
+            kinds: wantKinds,
+            countryCode: country,
+          })
+        : Promise.resolve([] as SearchCommunityHit[]),
+    ],
+  );
 
-  // サービス結果は tags フィルタがあれば追加で絞る (検索は ILIKE ベースのため
-  // tags overlap は SQL で書かず、in-memory で絞り込み。件数が小さいので OK)
+  // サービス結果は tags フィルタがあれば追加で絞る
   const filteredServiceHits =
     tags.length > 0
       ? serviceHits.filter((s) => (s.tags ?? []).some((t) => tags.includes(t)))
       : serviceHits;
 
-  const filteredRegions = country
-    ? regions.filter((r) => r.countryCode === country)
-    : [];
+  // コミュニティ結果を kind 別にまとめる
+  const communityByKind = new Map<CommunityKind, SearchCommunityHit[]>();
+  for (const hit of communityHits) {
+    const arr = communityByKind.get(hit.kind) ?? [];
+    arr.push(hit);
+    communityByKind.set(hit.kind, arr);
+  }
+
+  const selectedScopes = new Set<string>(scopes);
+  const scopeGroups = [
+    {
+      title: '種類',
+      options: CONTENT_SCOPES.map((s) => ({
+        value: s,
+        label: CONTENT_SCOPE_LABEL[s],
+      })),
+    },
+    {
+      title: 'コミュニティ',
+      options: COMMUNITY_KINDS.map((k) => ({
+        value: k,
+        label: KIND_LABEL[k],
+      })),
+    },
+  ];
+
+  const noScope = scopes.size === 0;
 
   return (
     <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10">
@@ -139,140 +174,27 @@ export default async function SearchPage({
           検索
         </h1>
         <p className="mt-1 text-[13px] text-foreground/65">
-          記事・サービス・駐在員プロフィールから、国 / 地域を絞って検索できます。
+          記事・サービス・ユーザー・コミュニティ投稿を、国を絞って横断検索できます。
         </p>
       </header>
 
-      {/* ============ 検索フォーム ============ */}
-      <form
-        method="get"
-        action="/search"
-        className="space-y-4 rounded-2xl bg-card p-4 ring-1 ring-border sm:p-5"
-      >
-        {/* 1 行目: キーワード */}
-        <label className="block">
-          <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/55">
-            キーワード
-          </span>
-          <div className="relative">
-            <SearchIcon
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40"
-              aria-hidden
-            />
-            <input
-              type="search"
-              name="q"
-              defaultValue={rawQ}
-              placeholder="例: マレ ビストロ / 翻訳 / 求人"
-              aria-label="キーワード"
-              className="h-11 w-full rounded-xl bg-background pl-9 pr-3 text-[14px] ring-1 ring-border placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-          </div>
-        </label>
-
-        {/* 2 行目: 領域チェック */}
-        <fieldset>
-          <legend className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/55">
-            検索する領域
-          </legend>
-          <div className="flex flex-wrap gap-2">
-            {VALID_AREAS.map((a) => {
-              const checked = areas.has(a);
-              return (
-                <label
-                  key={a}
-                  className={
-                    'inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-medium transition ' +
-                    (checked
-                      ? 'bg-primary-500/15 text-primary-300 ring-1 ring-primary-300/40'
-                      : 'bg-background text-foreground/65 ring-1 ring-border hover:bg-primary-500/10')
-                  }
-                >
-                  <input
-                    type="checkbox"
-                    name="areas"
-                    value={a}
-                    defaultChecked={checked}
-                    className="h-3.5 w-3.5 accent-primary-500"
-                  />
-                  {a === 'residents' ? '駐在員向け' : AREA_LABEL[a]}
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-
-        {/* 3 行目: 国 / 地域 */}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/55">
-              国
-            </span>
-            <select
-              name="country"
-              defaultValue={country ?? ''}
-              aria-label="国"
-              className="h-11 w-full rounded-xl bg-background px-3 text-[14px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="">すべての国</option>
-              {countries.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.nameJa}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.18em] text-foreground/55">
-              地域
-            </span>
-            <select
-              name="region"
-              defaultValue={region ?? ''}
-              aria-label="地域"
-              disabled={!country}
-              className="h-11 w-full rounded-xl bg-background px-3 text-[14px] ring-1 ring-border focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">
-                {country ? 'すべての地域' : '国を先に選んでください'}
-              </option>
-              {filteredRegions.map((r) => (
-                <option key={r.slug} value={r.slug}>
-                  {r.nameJa}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {/* tags は hidden で持ち越し (フォームには UI を出さないが、/services の
-            タグ絞り込みからリンクされた場合などに引き継ぐ) */}
-        {tags.length > 0 ? (
-          <input type="hidden" name="tags" value={tags.join(',')} />
-        ) : null}
-
-        <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
-          {rawQ || tags.length > 0 || country || region ? (
-            <Link
-              href="/search"
-              className="rounded-full px-3 py-2 text-[12px] font-semibold text-foreground/65 hover:text-foreground"
-            >
-              リセット
-            </Link>
-          ) : null}
-          <button
-            type="submit"
-            className="h-11 rounded-full bg-primary-500 px-6 text-[14px] font-bold text-neutral-950 transition active:scale-[0.98] hover:bg-primary-300"
-          >
-            検索する
-          </button>
-        </div>
-      </form>
+      <SearchForm
+        countries={SUPPORTED_COUNTRIES}
+        scopeGroups={scopeGroups}
+        initialQ={rawQ}
+        initialCountry={country ?? ''}
+        selectedScopes={selectedScopes}
+        tags={tags}
+      />
 
       {/* ============ 結果 ============ */}
       {!rawQ ? (
         <p className="mt-8 rounded-lg bg-primary-500/10 px-4 py-3 text-[13px] text-foreground/70">
-          検索したい言葉を入力して「検索する」を押してください。
+          検索したい言葉を入力して「この条件で検索」を押してください。
+        </p>
+      ) : noScope ? (
+        <p className="mt-8 rounded-lg bg-muted px-4 py-3 text-[13px] text-foreground/65">
+          検索する対象が 1 つも選ばれていません。「詳細設定」から対象を選んでください。
         </p>
       ) : (
         <div className="mt-8 space-y-10">
@@ -300,21 +222,32 @@ export default async function SearchPage({
               ) : null}
             </ResultSection>
           ) : null}
-          {wantResidents ? (
+          {wantUsers ? (
             <ResultSection
-              title="駐在員"
+              title="ユーザー"
               count={userHits.length}
               query={rawQ}
-              empty="該当する駐在員はいません"
+              empty="該当するユーザーはいません"
             >
               {userHits.length > 0 ? <UserHitGrid hits={userHits} /> : null}
             </ResultSection>
           ) : null}
-          {!wantArticles && !wantServices && !wantResidents ? (
-            <p className="rounded-lg bg-muted px-4 py-3 text-[13px] text-foreground/65">
-              検索する領域が 1 つも選ばれていません。上のチェックボックスで領域を選んでください。
-            </p>
-          ) : null}
+          {wantKinds.map((k) => {
+            const hits = communityByKind.get(k) ?? [];
+            return (
+              <ResultSection
+                key={k}
+                title={KIND_LABEL[k]}
+                count={hits.length}
+                query={rawQ}
+                empty={`該当する${KIND_LABEL[k]}の投稿はありません`}
+              >
+                {hits.length > 0 ? (
+                  <CommunityHitGrid kind={k} hits={hits} />
+                ) : null}
+              </ResultSection>
+            );
+          })}
         </div>
       )}
     </main>
@@ -415,7 +348,7 @@ function ArticleHitGrid({ hits }: { hits: SearchArticleHit[] }) {
 }
 
 // ============================================================================
-// 駐在員カード
+// ユーザーカード
 // ============================================================================
 
 function UserHitGrid({ hits }: { hits: SearchUserHit[] }) {
@@ -457,6 +390,58 @@ function UserHitGrid({ hits }: { hits: SearchUserHit[] }) {
                 <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-foreground/70">
                   {u.bio}
                 </p>
+              ) : null}
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ============================================================================
+// コミュニティ投稿カード
+// ============================================================================
+
+function CommunityHitGrid({
+  kind,
+  hits,
+}: {
+  kind: CommunityKind;
+  hits: SearchCommunityHit[];
+}) {
+  const base = KIND_BASE_PATH[kind];
+  return (
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {hits.map((c) => (
+        <li
+          key={c.id}
+          className="rounded-xl bg-card p-4 ring-1 ring-border transition hover:ring-primary-300"
+        >
+          <Link href={`${base}/${c.id}`} className="block">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-bold text-primary-300">
+                {KIND_LABEL[kind]}
+              </span>
+              <span className="text-[10px] font-semibold text-foreground/50">
+                {STATUS_LABEL[c.status]}
+              </span>
+            </div>
+            <h3 className="mt-2 line-clamp-2 text-[14px] font-semibold leading-snug text-foreground hover:text-primary-300">
+              {c.title}
+            </h3>
+            {c.bodyExcerpt ? (
+              <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-foreground/65">
+                {c.bodyExcerpt}
+              </p>
+            ) : null}
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/55">
+              {c.authorName ? <span>{c.authorName}</span> : null}
+              {c.locationText ? (
+                <span className="inline-flex items-center gap-0.5">
+                  <MapPin className="h-3 w-3" />
+                  {c.locationText}
+                </span>
               ) : null}
             </div>
           </Link>
