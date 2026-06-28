@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import {
   ArrowLeft,
@@ -9,11 +8,11 @@ import {
   AlertTriangle,
   User,
   Tag,
-  Camera,
   Truck,
   PackageCheck,
 } from 'lucide-react';
 import { getCommunityPost, incrementViewCount } from '@/lib/community/db';
+import { MarketplaceGallery } from './MarketplaceGallery';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { markdownToHtml } from '@/lib/markdown/toHtml';
 import { CommunityDisclaimer } from '@/components/community/CommunityDisclaimer';
@@ -94,8 +93,6 @@ export default async function MarketplaceDetailPage({ params }: Props) {
   const bodyHtml = markdownToHtml(post.body);
   const price = formatPrice(post);
   const closed = post.status === 'closed';
-  const hero = post.photos[0];
-  const rest = post.photos.slice(1);
 
   return (
     <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
@@ -120,43 +117,8 @@ export default async function MarketplaceDetailPage({ params }: Props) {
 
       <div className="mt-5 grid grid-cols-1 gap-8 sm:grid-cols-[1fr_280px]">
         <article className="min-w-0">
-          {/* 写真ヒーロー */}
-          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-muted">
-            {hero ? (
-              <Image
-                src={hero}
-                alt={post.title}
-                fill
-                sizes="(min-width: 640px) 60vw, 100vw"
-                className="object-cover"
-                priority
-                unoptimized
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-foreground/30">
-                <Camera className="h-10 w-10" />
-              </div>
-            )}
-          </div>
-          {rest.length > 0 ? (
-            <div className="mt-2 grid grid-cols-4 gap-2">
-              {rest.slice(0, 7).map((src, i) => (
-                <div
-                  key={i}
-                  className="relative aspect-square overflow-hidden rounded-md bg-muted"
-                >
-                  <Image
-                    src={src}
-                    alt={`${post.title} - 写真 ${i + 2}`}
-                    fill
-                    sizes="20vw"
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-              ))}
-            </div>
-          ) : null}
+          {/* 写真ギャラリー（メイン + サムネ切替 + ライトボックス） */}
+          <MarketplaceGallery photos={post.photos} title={post.title} />
 
           <header className="mt-5">
             <div className="flex flex-wrap items-center gap-1.5">
