@@ -127,6 +127,8 @@ export function ServicesShelves({
   const [query, setQuery] = useState('');
   // --- ジャンル複数選択 (category 値の集合。空 = すべて) ---
   const [genres, setGenres] = useState<string[]>([]);
+  // --- 結果画面の表示形式 (カードグリッド / リスト)。既定はカード。 ---
+  const [view, setView] = useState<'grid' | 'list'>('grid');
 
   useEffect(() => {
     const c = new URLSearchParams(sp.toString()).get('country')?.trim();
@@ -175,8 +177,7 @@ export function ServicesShelves({
 
     const out: Shelf[] = [
       { key: 'new', title: '新着のサービス', sub: 'New', items: byNew.slice(0, ROW_MAX) },
-      // 人気 = サーバが返した position/featured 順をそのまま
-      { key: 'popular', title: '人気のサービス', sub: 'Popular', items: scoped.slice(0, ROW_MAX) },
+      // 「人気」棚は現状データに適切な指標が無いため非表示 (新着 + カテゴリ別のみ)。
       ...catShelves,
     ];
     // items が空の棚は出さない
@@ -195,37 +196,39 @@ export function ServicesShelves({
       .map(([cat, n]) => ({ value: cat, label: tagLabel(cat), count: n }));
   }, [scoped]);
 
-  // 開いているリストの中身 (棚見出し「すべて見る」/「もっと見る」からの遷移)
-  const openList = useMemo(() => {
-    if (!openKey) return null;
+  // --- 結果画面 (もっと見る / 検索 / ジャンル絞り込み 共通) ---
+  // ベース集合: openKey が 'new' なら新着順全件 / 'cat:xxx' ならそのカテゴリ /
+  // それ以外 (検索・ジャンルのみ) は scoped 全件。これにキーワード + ジャンルを
+  // クライアント側で重ねて絞り込む。これにより結果画面でもジャンルで further 絞れる。
+  const resultsActive =
+    query.trim().length > 0 || genres.length > 0 || openKey != null;
+
+  const results = useMemo(() => {
+    if (!resultsActive) return null;
+
+    // ベース集合と既定タイトル
+    let base: FeaturedService[];
+    let baseTitle: string;
     if (openKey === 'new') {
-      const items = [...scoped].sort((a, b) => {
+      base = [...scoped].sort((a, b) => {
         const ta = a.createdAt ? Date.parse(a.createdAt) : -Infinity;
         const tb = b.createdAt ? Date.parse(b.createdAt) : -Infinity;
         return tb - ta;
       });
-      return { title: '新着のサービス', items: items.slice(0, LIST_MAX), total: items.length };
-    }
-    if (openKey === 'popular') {
-      return { title: '人気のサービス', items: scoped.slice(0, LIST_MAX), total: scoped.length };
-    }
-    if (openKey.startsWith('cat:')) {
+      baseTitle = '新着のサービス';
+    } else if (openKey && openKey.startsWith('cat:')) {
       const cat = openKey.slice(4);
-      const items = scoped.filter((s) => s.category === cat);
-      return { title: tagLabel(cat) + 'のサービス', items: items.slice(0, LIST_MAX), total: items.length };
+      base = scoped.filter((s) => s.category === cat);
+      baseTitle = tagLabel(cat) + 'のサービス';
+    } else {
+      base = scoped;
+      baseTitle = '絞り込み結果';
     }
-    return null;
-  }, [openKey, scoped]);
 
-  // --- 絞り込み (キーワード or ジャンル) の結果 ---
-  // キーワードは title / description / category / tags をクライアント側で部分一致
-  // (大文字小文字無視)。ジャンルは選択された category の OR。
-  const filterActive = query.trim().length > 0 || genres.length > 0;
-  const filtered = useMemo(() => {
-    if (!filterActive) return [];
+    // キーワード (title/description/category/tags 部分一致・大小無視) + ジャンル OR
     const q = query.trim().toLowerCase();
     const genreSet = new Set(genres);
-    return scoped.filter((s) => {
+    const items = base.filter((s) => {
       if (genreSet.size > 0 && (!s.category || !genreSet.has(s.category)))
         return false;
       if (q) {
@@ -242,7 +245,11 @@ export function ServicesShelves({
       }
       return true;
     });
-  }, [scoped, query, genres, filterActive]);
+
+    // 検索/ジャンルが効いているのに棚由来タイトルだと紛らわしいので、
+    // openKey が無い純粋な検索時のみ「絞り込み結果」にする。
+    return { title: baseTitle, items: items.slice(0, LIST_MAX), total: items.length };
+  }, [resultsActive, openKey, scoped, query, genres]);
 
   const toggleSave = (id: string) =>
     setSaved((m) => ({ ...m, [id]: !m[id] }));
@@ -251,7 +258,12 @@ export function ServicesShelves({
     setOpenKey(key);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
   };
-  const close = () => setOpenKey(null);
+  const close = () => {
+    setOpenKey(null);
+    setQuery('');
+    setQInput('');
+    setGenres([]);
+  };
 
   const toggleGenre = (value: string) => {
     setOpenKey(null);
@@ -262,22 +274,13 @@ export function ServicesShelves({
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setOpenKey(null);
     setQuery(qInput.trim());
-  };
-
-  const clearFilters = () => {
-    setQuery('');
-    setQInput('');
-    setGenres([]);
-    setOpenKey(null);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
   };
 
-  // 絞り込み or 棚見出しからのリスト遷移時はリスト表示。
-  const showFilteredList = filterActive;
-  const showOpenList = !filterActive && !!openKey && !!openList;
-  const showShelves = !filterActive && !openKey;
+  // 棚 (ブラウズ) か結果画面かの切り替え。
+  const showResults = resultsActive && !!results;
+  const showShelves = !resultsActive;
 
   const clearCountry = () => {
     setCountry(undefined);
@@ -348,19 +351,53 @@ export function ServicesShelves({
         )
       ) : null}
 
-      {/* 絞り込み結果リスト (キーワード or ジャンル) */}
-      {showFilteredList ? (
+      {/* 結果画面 (もっと見る / 検索 / ジャンル絞り込み 共通) */}
+      {showResults && results ? (
         <div className="list">
-          <button type="button" className="back" onClick={clearFilters}>
-            <BackSvg />
-            絞り込みを解除
-          </button>
+          <div className="lbar">
+            <button type="button" className="back" onClick={close}>
+              <BackSvg />
+              もどる
+            </button>
+            <div className="lbar-tools">
+              {genreOptions.length > 0 ? (
+                <GenreDropdown
+                  options={genreOptions}
+                  selected={genres}
+                  onToggle={toggleGenre}
+                  onClear={() => setGenres([])}
+                />
+              ) : null}
+              <div className="viewtoggle" role="group" aria-label="表示形式">
+                <button
+                  type="button"
+                  className={'vt' + (view === 'grid' ? ' on' : '')}
+                  aria-pressed={view === 'grid'}
+                  onClick={() => setView('grid')}
+                >
+                  <GridSvg />
+                  カード
+                </button>
+                <button
+                  type="button"
+                  className={'vt' + (view === 'list' ? ' on' : '')}
+                  aria-pressed={view === 'list'}
+                  onClick={() => setView('list')}
+                >
+                  <ListSvg />
+                  リスト
+                </button>
+              </div>
+            </div>
+          </div>
+
           <h2 className="lhead">
-            絞り込み結果
+            {results.title}
             <span className="count">
-              {filtered.length.toLocaleString('ja-JP')}件
+              {results.total.toLocaleString('ja-JP')}件
             </span>
           </h2>
+
           {(query.trim() || genres.length > 0) && (
             <div className="activef">
               {query.trim() ? (
@@ -392,12 +429,13 @@ export function ServicesShelves({
               ))}
             </div>
           )}
-          {filtered.length === 0 ? (
+
+          {results.items.length === 0 ? (
             <EmptyState />
-          ) : (
-            <div className="lrows">
-              {filtered.slice(0, LIST_MAX).map((s) => (
-                <ListRow
+          ) : view === 'grid' ? (
+            <div className="cgrid">
+              {results.items.map((s) => (
+                <Card
                   key={s.id}
                   service={s}
                   saved={!!saved[s.id]}
@@ -405,28 +443,9 @@ export function ServicesShelves({
                 />
               ))}
             </div>
-          )}
-        </div>
-      ) : null}
-
-      {/* 棚見出し「すべて見る / もっと見る」からのリスト表示 */}
-      {showOpenList && openList ? (
-        <div className="list">
-          <button type="button" className="back" onClick={close}>
-            <BackSvg />
-            もどる
-          </button>
-          <h2 className="lhead">
-            {openList.title}
-            <span className="count">
-              {openList.total.toLocaleString('ja-JP')}件
-            </span>
-          </h2>
-          {openList.items.length === 0 ? (
-            <EmptyState />
           ) : (
             <div className="lrows">
-              {openList.items.map((s) => (
+              {results.items.map((s) => (
                 <ListRow
                   key={s.id}
                   service={s}
@@ -910,13 +929,33 @@ function CheckSvg() {
     </svg>
   );
 }
+/** 標準的なハート (Airbnb 風)。塗り/白フチは CSS 側 (.heart) で制御。 */
 function HeartSvg() {
   return (
-    <svg viewBox="0 0 24 24">
-      <path
-        d="M12 21s-7.5-4.7-10-9.3C.6 8.9 2 5.5 5.2 5.5c2 0 3.3 1.2 3.8 2.3C9.5 6.7 10.8 5.5 12.8 5.5 16 5.5 17.4 8.9 16 11.7 13.5 16.3 12 21 12 21z"
-        transform="translate(0 -1)"
-      />
+    <svg viewBox="0 0 24 24" strokeLinejoin="round">
+      <path d="M12 20.6 4.3 13a4.8 4.8 0 0 1 0-6.8 4.8 4.8 0 0 1 6.8 0l.9.9.9-.9a4.8 4.8 0 0 1 6.8 0 4.8 4.8 0 0 1 0 6.8z" />
+    </svg>
+  );
+}
+function GridSvg() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" />
+      <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" />
+      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" />
+      <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" />
+    </svg>
+  );
+}
+function ListSvg() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6" />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <circle cx="3.5" cy="6" r="1.2" />
+      <circle cx="3.5" cy="12" r="1.2" />
+      <circle cx="3.5" cy="18" r="1.2" />
     </svg>
   );
 }
@@ -1828,9 +1867,9 @@ function ScopedStyle() {
           max-width: 210px;
           scroll-snap-align: start;
         }
-        /* 画像をやや低くして縦を節約 */
+        /* スマホは画像を正方形に（1:1）。半端な比率の気持ち悪さを解消。 */
         .ph {
-          aspect-ratio: 5 / 4;
+          aspect-ratio: 1 / 1;
           border-radius: 13px;
         }
         /* カード内テキストを詰める */
