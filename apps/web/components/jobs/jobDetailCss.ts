@@ -41,6 +41,26 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-head .acts button.on{color:var(--lime-d)}
 .job-head .acts svg{width:17px;height:17px}
 
+/* ===== hero (ドン！) ===== */
+.job-hero{display:block;position:relative;width:100%;margin:6px 0 0;padding:0;border:0;cursor:pointer;border-radius:20px;overflow:hidden;background:#e9e9e1;aspect-ratio:16/7}
+.job-hero img{width:100%;height:100%;object-fit:cover;transition:.4s}
+.job-hero:hover img{transform:scale(1.03)}
+.job-herocount{position:absolute;bottom:14px;right:14px;display:inline-flex;align-items:center;gap:7px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:8px 13px;font-size:12.5px;font-weight:700;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+.job-herocount svg{width:14px;height:14px}
+
+/* ===== gallery (仕事の様子: 1大+最大4小) ===== */
+.job-gallery{position:relative;display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;border-radius:18px;overflow:hidden;aspect-ratio:24/11;background:#e9e9e1}
+.job-gallery.one{grid-template-columns:1fr;grid-template-rows:1fr}
+.job-gallery.two{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+.job-gallery.three{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}
+.job-gallery .cell{position:relative;overflow:hidden;background:#e9e9e1;border:0;padding:0;cursor:pointer}
+.job-gallery .cell img{width:100%;height:100%;object-fit:cover;transition:.4s}
+.job-gallery .cell:hover img{transform:scale(1.04)}
+.job-gallery .cell.big{grid-row:1/3}
+.job-gallery.one .cell.big,.job-gallery.two .cell.big{grid-row:auto}
+.job-allphotos{position:absolute;bottom:16px;right:16px;display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+.job-allphotos svg{width:15px;height:15px}
+
 /* status banner */
 .job-banner{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin:4px 0 0}
 .job-banner svg{width:20px;height:20px;color:var(--mu);flex:none;margin-top:2px}
@@ -60,6 +80,11 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-band .c .v{font-weight:700;font-size:15px;margin-top:2px;line-height:1.5}
 .job-band .c .v small{font-weight:500;color:var(--mu);font-size:11.5px;display:block;margin-top:1px;font-family:var(--jp)}
 .job-band .c.ok .v{color:var(--lime-d)}
+/* 欠落枠: ミュートのプレースホルダ・バー */
+.job-band .c.empty .ic{color:var(--bd2)}
+.job-band .c .ph{margin-top:6px}
+.job-band .c .ph .bar{display:block;height:9px;width:64%;border-radius:5px;background:var(--bd)}
+.job-band .c .ph small{display:block;margin-top:6px;font-size:11px;color:var(--mu)}
 
 /* ===== two-column ===== */
 .job-cols{display:grid;grid-template-columns:1fr 372px;gap:54px;padding:30px 0 70px;align-items:start}
@@ -171,11 +196,28 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
   .job-band{grid-template-columns:1fr 1fr}
   .job-spec{grid-template-columns:1fr 1fr}
   .job-reqgrid{grid-template-columns:1fr;gap:22px}
+  /* gallery 圧縮 (大1+小2) */
+  .job-gallery{grid-template-columns:1fr 1fr;grid-template-rows:1fr;aspect-ratio:auto}
+  .job-gallery .cell{aspect-ratio:3/2}
+  .job-gallery .cell.big{grid-column:1/3;grid-row:auto;aspect-ratio:16/10}
+  .job-gallery .cell:nth-child(n+4){display:none}
+  .job-gallery.one .cell.big{grid-column:1/2}
 }
-@media(max-width:560px){
+/* スマホ: 条件バンドをコンパクトな 2 カラム・ひとまとまりカードに */
+@media(max-width:640px){
   .job-wrap{padding:0 16px}
   .job-head h1{font-size:22px}
-  .job-band{grid-template-columns:1fr}
+  .job-hero{aspect-ratio:16/9;border-radius:16px}
+  .job-band{grid-template-columns:1fr 1fr;border-radius:14px;gap:1px}
+  .job-band .c{padding:11px 12px;gap:8px;flex-direction:column}
+  .job-band .c .ic{width:18px;height:18px;margin-top:0}
+  .job-band .c .ic svg{width:18px;height:18px;stroke-width:1.8}
+  .job-band .c .k{font-size:9.5px;letter-spacing:.02em}
+  .job-band .c .v{font-size:13px;margin-top:1px}
+  .job-band .c .v small{font-size:10.5px}
+  .job-band .c .ph{margin-top:4px}
+  .job-band .c .ph .bar{height:7px}
+  .job-band .c .ph small{font-size:10px;margin-top:4px}
   .job-ben{grid-template-columns:1fr}
   .job-lang .lvl{width:auto}
 }

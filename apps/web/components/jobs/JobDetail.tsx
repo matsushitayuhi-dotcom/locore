@@ -46,6 +46,7 @@ export type JobDetailData = {
   title: string;
   body: string; // markdown → html 済み
   status: 'active' | 'closed' | 'expired';
+  photos: string[];
   locationText: string | null;
   cityNameJa: string | null;
   priceAmount: number | null;
@@ -94,6 +95,9 @@ const Ic = {
   ),
   chevron: (
     <svg viewBox="0 0 24 24" {...stroke} strokeWidth={2.5}><path d="M9 6l6 6-6 6" /></svg>
+  ),
+  grid: (
+    <svg viewBox="0 0 24 24" {...stroke} strokeWidth={2}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
   ),
   verified: (
     <svg viewBox="0 0 24 24" {...stroke} strokeWidth={2.4}><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 17.7l.9-5.4L4.2 8.5l5.4-.8z" /></svg>
@@ -186,6 +190,18 @@ function fmtDeadline(d: string): { label: string; soon: boolean } | null {
 
 export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
   const [saved, setSaved] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
+
+  const photos = post.photos ?? [];
+  const hasPhotos = photos.length > 0;
+  const galleryClass =
+    photos.length === 1
+      ? ' one'
+      : photos.length === 2
+        ? ' two'
+        : photos.length === 3
+          ? ' three'
+          : '';
 
   const meta: JobMetadata = post.metadata ?? ({} as JobMetadata);
   const sym = currencySymbol(post.priceCurrency);
@@ -243,51 +259,82 @@ export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
     langSummaryMain = JOB_JAPANESE_OK_LABEL[japaneseOk];
   }
 
-  // ===== band 6 枠 (データのある枠のみ) =====
-  type BandItem = { ic: keyof typeof Ic; k: string; v: string; sub?: string; ok?: boolean };
-  const band: BandItem[] = [];
-  if (salaryRange) {
-    band.push({
+  // ===== 条件バンド: 6 枠を固定でレンダリング =====
+  // データのある枠は値を表示。無い枠はミュートのプレースホルダ・バー（「未設定」）。
+  // これにより欠落枠数に関係なくグリッドが常に揃う（レイアウトが崩れない）。
+  // 偽の値は入れない。
+  type BandItem = {
+    ic: keyof typeof Ic;
+    k: string;
+    v?: string;
+    sub?: string;
+    ok?: boolean;
+  };
+  const band: BandItem[] = [
+    {
       ic: 'salary',
       k: '給与',
-      v: salaryRange === '応相談' ? '応相談' : `${periodLabel} ${salaryRange}`.trim(),
-      sub: salaryRange !== '応相談' ? `${JOB_SALARY_KIND_LABEL[salaryKind]}・経験により決定` : undefined,
-    });
-  }
-  if (employmentType || contractType) {
-    band.push({
+      v: salaryRange
+        ? salaryRange === '応相談'
+          ? '応相談'
+          : `${periodLabel} ${salaryRange}`.trim()
+        : undefined,
+      sub:
+        salaryRange && salaryRange !== '応相談'
+          ? `${JOB_SALARY_KIND_LABEL[salaryKind]}・経験により決定`
+          : undefined,
+    },
+    {
       ic: 'briefcase',
       k: '雇用形態',
-      v: employmentType ? JOB_EMPLOYMENT_TYPE_LABEL[employmentType] : JOB_CONTRACT_TYPE_LABEL[contractType!],
-      sub: contractType
-        ? employmentType
-          ? JOB_CONTRACT_TYPE_LABEL[contractType]
-          : meta.trial_period || undefined
-        : meta.trial_period || undefined,
-    });
-  }
-  if (locLabel) {
-    band.push({
+      v:
+        employmentType || contractType
+          ? employmentType
+            ? JOB_EMPLOYMENT_TYPE_LABEL[employmentType]
+            : JOB_CONTRACT_TYPE_LABEL[contractType!]
+          : undefined,
+      sub:
+        employmentType || contractType
+          ? contractType
+            ? employmentType
+              ? JOB_CONTRACT_TYPE_LABEL[contractType]
+              : meta.trial_period || undefined
+            : meta.trial_period || undefined
+          : undefined,
+    },
+    {
       ic: 'mapPin',
       k: '勤務地',
-      v: locLabel,
-      sub: remoteLabel ? `${remoteLabel}（リモート対応）` : meta.remote_ok ? 'リモート可' : undefined,
-    });
-  }
-  if (meta.hours_per_week) {
-    band.push({
+      v: locLabel ?? undefined,
+      sub: locLabel
+        ? remoteLabel
+          ? `${remoteLabel}（リモート対応）`
+          : meta.remote_ok
+            ? 'リモート可'
+            : undefined
+        : undefined,
+    },
+    {
       ic: 'clock',
       k: '勤務時間',
-      v: `週${meta.hours_per_week}時間`,
-      sub: meta.overtime || undefined,
-    });
-  }
-  if (langSummaryMain) {
-    band.push({ ic: 'lang', k: '語学', v: langSummaryMain, sub: langSummarySub ?? undefined, ok: true });
-  }
-  if (meta.visa_sponsorship) {
-    band.push({ ic: 'shield', k: '就労資格', v: 'ビザサポートあり', sub: '就労ビザ・更新の手続き支援', ok: true });
-  }
+      v: meta.hours_per_week ? `週${meta.hours_per_week}時間` : undefined,
+      sub: meta.hours_per_week ? meta.overtime || undefined : undefined,
+    },
+    {
+      ic: 'lang',
+      k: '語学',
+      v: langSummaryMain ?? undefined,
+      sub: langSummaryMain ? langSummarySub ?? undefined : undefined,
+      ok: !!langSummaryMain,
+    },
+    {
+      ic: 'shield',
+      k: '就労資格',
+      v: meta.visa_sponsorship ? 'ビザサポートあり' : undefined,
+      sub: meta.visa_sponsorship ? '就労ビザ・更新の手続き支援' : undefined,
+      ok: !!meta.visa_sponsorship,
+    },
+  ];
 
   // ===== 勤務条件 spec (値のある項目のみ) =====
   const specRows: { k: string; v: string; icon?: JSX.Element }[] = [];
@@ -411,6 +458,25 @@ export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
           </div>
         </div>
 
+        {/* ===== hero (ドン！) — 写真がある時だけ ===== */}
+        {hasPhotos ? (
+          <button
+            type="button"
+            className="job-hero"
+            onClick={() => setLightbox(true)}
+            aria-label="写真を拡大"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photos[0]} alt={`${post.title} の写真`} />
+            {photos.length > 1 ? (
+              <span className="job-herocount">
+                {Ic.grid}
+                {photos.length}枚
+              </span>
+            ) : null}
+          </button>
+        ) : null}
+
         {/* status banner */}
         {closed ? (
           <div className="job-banner">
@@ -430,23 +496,34 @@ export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
           </div>
         ) : null}
 
-        {/* ===== key conditions band ===== */}
-        {band.length > 0 ? (
-          <div className="job-band">
-            {band.map((b, i) => (
-              <div className={`c${b.ok ? ' ok' : ''}`} key={i}>
+        {/* ===== key conditions band (6 枠固定・欠落はプレースホルダ) ===== */}
+        <div className="job-band">
+          {band.map((b, i) => {
+            const empty = !b.v;
+            return (
+              <div
+                className={`c${b.ok ? ' ok' : ''}${empty ? ' empty' : ''}`}
+                key={i}
+              >
                 <span className="ic">{Ic[b.ic]}</span>
                 <div>
                   <div className="k">{b.k}</div>
-                  <div className="v">
-                    {b.v}
-                    {b.sub ? <small>{b.sub}</small> : null}
-                  </div>
+                  {empty ? (
+                    <div className="ph">
+                      <span className="bar" />
+                      <small>未設定</small>
+                    </div>
+                  ) : (
+                    <div className="v">
+                      {b.v}
+                      {b.sub ? <small>{b.sub}</small> : null}
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        ) : null}
+            );
+          })}
+        </div>
 
         {/* ===== two-column ===== */}
         <div className="job-cols">
@@ -595,6 +672,36 @@ export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            ) : null}
+
+            {/* 仕事の様子 (ギャラリー) — 会社概要の直前。写真0枚なら非表示 */}
+            {hasPhotos ? (
+              <div className="job-sec">
+                <h2>仕事の様子</h2>
+                <div className={`job-gallery${galleryClass}`}>
+                  {photos.slice(0, 5).map((url, i) => (
+                    <button
+                      key={url + i}
+                      type="button"
+                      className={`cell${i === 0 ? ' big' : ''}`}
+                      onClick={() => setLightbox(true)}
+                      aria-label={`写真 ${i + 1} を拡大`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt={`${post.title} の写真 ${i + 1}`} />
+                    </button>
+                  ))}
+                  {photos.length > 4 ? (
+                    <button
+                      type="button"
+                      className="job-allphotos"
+                      onClick={() => setLightbox(true)}
+                    >
+                      {Ic.grid}すべての写真を表示（{photos.length}枚）
+                    </button>
+                  ) : null}
                 </div>
               </div>
             ) : null}
@@ -771,6 +878,64 @@ export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
           </p>
         </div>
       </div>
+
+      {/* ===== lightbox (ヒーロー・ギャラリー共有) ===== */}
+      {lightbox && hasPhotos ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="写真一覧"
+          onClick={() => setLightbox(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 60,
+            background: 'rgba(15,15,12,.92)',
+            overflowY: 'auto',
+            padding: '48px 16px',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(false)}
+            aria-label="閉じる"
+            style={{
+              position: 'fixed',
+              top: 16,
+              right: 16,
+              background: '#fff',
+              border: 0,
+              borderRadius: 10,
+              padding: '8px 14px',
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: 'pointer',
+            }}
+          >
+            閉じる ✕
+          </button>
+          <div
+            style={{
+              maxWidth: 880,
+              margin: '0 auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {photos.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={url + i}
+                src={url}
+                alt={`${post.title} の写真 ${i + 1}`}
+                style={{ width: '100%', borderRadius: 14 }}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

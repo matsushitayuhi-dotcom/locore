@@ -57,6 +57,7 @@ export default async function JobDetailPage({ params }: Props) {
     title: post.title,
     body: markdownToHtml(post.body),
     status: post.status,
+    photos: post.photos ?? [],
     locationText: post.locationText,
     cityNameJa: post.cityNameJa,
     priceAmount: post.priceAmount,
