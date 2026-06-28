@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { FeaturedService } from '@/lib/services/featured';
 import { tagLabel } from '@/lib/services/tagLabels';
@@ -30,6 +30,18 @@ import { tagLabel } from '@/lib/services/tagLabels';
  */
 
 const COUNTRY_LABEL: Record<string, string> = { fr: 'フランス' };
+
+/**
+ * 国セレクタの選択肢。記事検索 / コミュニティと同じトーンで、フランスのみ有効・
+ * 他国は「近日」。将来データが増えたら enabled を true にするだけで切り替わる。
+ */
+const COUNTRY_OPTIONS: { code: string; label: string; enabled: boolean }[] = [
+  { code: 'fr', label: 'フランス', enabled: true },
+  { code: 'it', label: 'イタリア（近日）', enabled: false },
+  { code: 'de', label: 'ドイツ（近日）', enabled: false },
+  { code: 'es', label: 'スペイン（近日）', enabled: false },
+  { code: 'gb', label: 'イギリス（近日）', enabled: false },
+];
 
 /** 棚 / リストの最大表示件数 */
 const ROW_MAX = 10;
@@ -83,6 +95,13 @@ export function ServicesShelves({
   // ♡保存 (見た目のみ。永続化しない)
   const [saved, setSaved] = useState<Record<string, boolean>>({});
 
+  // --- 検索 (キーワード) ---
+  // qInput = 入力中の値 / query = 検索実行で確定した値 (空なら未検索)
+  const [qInput, setQInput] = useState('');
+  const [query, setQuery] = useState('');
+  // --- ジャンル複数選択 (category 値の集合。空 = すべて) ---
+  const [genres, setGenres] = useState<string[]>([]);
+
   useEffect(() => {
     const c = new URLSearchParams(sp.toString()).get('country')?.trim();
     if (c) setCountry(c);
@@ -90,7 +109,7 @@ export function ServicesShelves({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 国フィルタ済みサービス
+  // 国フィルタ済みサービス (棚・検索すべての母集合)
   const scoped = useMemo(
     () =>
       country
@@ -138,8 +157,8 @@ export function ServicesShelves({
     return out.filter((s) => s.items.length > 0);
   }, [scoped]);
 
-  // カテゴリチップ (件数多い順)
-  const chips = useMemo(() => {
+  // ジャンル選択肢 (category 値 + 件数。件数多い順)
+  const genreOptions = useMemo(() => {
     const count = new Map<string, number>();
     for (const s of scoped) {
       if (!s.category) continue;
@@ -147,10 +166,10 @@ export function ServicesShelves({
     }
     return [...count.entries()]
       .sort((a, b) => b[1] - a[1])
-      .map(([cat]) => ({ key: 'cat:' + cat, label: tagLabel(cat) }));
+      .map(([cat, n]) => ({ value: cat, label: tagLabel(cat), count: n }));
   }, [scoped]);
 
-  // 開いているリストの中身
+  // 開いているリストの中身 (棚見出し「すべて見る」/「もっと見る」からの遷移)
   const openList = useMemo(() => {
     if (!openKey) return null;
     if (openKey === 'new') {
@@ -172,6 +191,33 @@ export function ServicesShelves({
     return null;
   }, [openKey, scoped]);
 
+  // --- 絞り込み (キーワード or ジャンル) の結果 ---
+  // キーワードは title / description / category / tags をクライアント側で部分一致
+  // (大文字小文字無視)。ジャンルは選択された category の OR。
+  const filterActive = query.trim().length > 0 || genres.length > 0;
+  const filtered = useMemo(() => {
+    if (!filterActive) return [];
+    const q = query.trim().toLowerCase();
+    const genreSet = new Set(genres);
+    return scoped.filter((s) => {
+      if (genreSet.size > 0 && (!s.category || !genreSet.has(s.category)))
+        return false;
+      if (q) {
+        const hay = [
+          s.title,
+          s.description ?? '',
+          s.category ? tagLabel(s.category) : '',
+          s.category ?? '',
+          s.tags.join(' '),
+        ]
+          .join(' ')
+          .toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [scoped, query, genres, filterActive]);
+
   const toggleSave = (id: string) =>
     setSaved((m) => ({ ...m, [id]: !m[id] }));
 
@@ -181,6 +227,32 @@ export function ServicesShelves({
   };
   const close = () => setOpenKey(null);
 
+  const toggleGenre = (value: string) => {
+    setOpenKey(null);
+    setGenres((g) =>
+      g.includes(value) ? g.filter((v) => v !== value) : [...g, value],
+    );
+  };
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setOpenKey(null);
+    setQuery(qInput.trim());
+  };
+
+  const clearFilters = () => {
+    setQuery('');
+    setQInput('');
+    setGenres([]);
+    setOpenKey(null);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
+  };
+
+  // 絞り込み or 棚見出しからのリスト遷移時はリスト表示。
+  const showFilteredList = filterActive;
+  const showOpenList = !filterActive && !!openKey && !!openList;
+  const showShelves = !filterActive && !openKey;
+
   const clearCountry = () => {
     setCountry(undefined);
     const p = new URLSearchParams(sp.toString());
@@ -189,49 +261,38 @@ export function ServicesShelves({
     router.replace(qs ? `/services?${qs}` : '/services', { scroll: false });
   };
 
+  const changeCountry = (code: string) => {
+    const next = code || undefined;
+    setCountry(next);
+    const p = new URLSearchParams(sp.toString());
+    if (next) p.set('country', next);
+    else p.delete('country');
+    const qs = p.toString();
+    router.replace(qs ? `/services?${qs}` : '/services', { scroll: false });
+  };
+
   return (
     <div className="svc-root">
       <h1 className="sr-only">サービスを探す</h1>
 
-      {/* 国フィルタのバッジ (既存挙動踏襲) */}
-      {country ? (
-        <div className="svc-countrybar">
-          <span className="svc-countrybadge">
-            📍 {COUNTRY_LABEL[country] ?? country} のサービス
-            <button type="button" onClick={clearCountry} aria-label="国フィルタを解除">
-              ✕
-            </button>
-          </span>
-        </div>
-      ) : null}
+      {/* 上部: 国 + キーワード検索 + ジャンル複数選択 */}
+      <SearchBar
+        country={country}
+        onChangeCountry={changeCountry}
+        qInput={qInput}
+        onChangeQ={setQInput}
+        onSubmit={submitSearch}
+        genreOptions={genreOptions}
+        genres={genres}
+        onToggleGenre={toggleGenre}
+        onClearGenres={() => {
+          setGenres([]);
+          setOpenKey(null);
+        }}
+      />
 
-      {/* カテゴリ クイックチップ行 (横スクロール) */}
-      {chips.length > 0 && !openKey ? (
-        <div className="cats">
-          <div className="catsin">
-            <button
-              type="button"
-              className={'chip' + (openKey === null ? ' on' : '')}
-              onClick={close}
-            >
-              すべて
-            </button>
-            {chips.map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                className="chip"
-                onClick={() => open(c.key)}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {/* 棚 (横スクロール) */}
-      {!openKey ? (
+      {/* 棚 (横スクロール + スライド矢印) */}
+      {showShelves ? (
         scoped.length === 0 ? (
           <EmptyState />
         ) : (
@@ -249,34 +310,81 @@ export function ServicesShelves({
                     すべて見る <ArrowSvg />
                   </button>
                 </div>
-                <div className="row">
-                  {shelf.items.map((s) => (
-                    <Card
-                      key={shelf.key + ':' + s.id}
-                      service={s}
-                      saved={!!saved[s.id]}
-                      onSave={() => toggleSave(s.id)}
-                    />
-                  ))}
-                  <button
-                    type="button"
-                    className="more"
-                    onClick={() => open(shelf.key)}
-                  >
-                    <span className="circ">
-                      <ArrowSvg />
-                    </span>
-                    <b>もっと見る</b>
-                  </button>
-                </div>
+                <ShelfRow
+                  shelf={shelf}
+                  saved={saved}
+                  onSave={toggleSave}
+                  onMore={() => open(shelf.key)}
+                />
               </section>
             ))}
           </div>
         )
       ) : null}
 
-      {/* リスト表示 */}
-      {openKey && openList ? (
+      {/* 絞り込み結果リスト (キーワード or ジャンル) */}
+      {showFilteredList ? (
+        <div className="list">
+          <button type="button" className="back" onClick={clearFilters}>
+            <BackSvg />
+            絞り込みを解除
+          </button>
+          <h2 className="lhead">
+            絞り込み結果
+            <span className="count">
+              {filtered.length.toLocaleString('ja-JP')}件
+            </span>
+          </h2>
+          {(query.trim() || genres.length > 0) && (
+            <div className="activef">
+              {query.trim() ? (
+                <span className="afchip">
+                  「{query.trim()}」
+                  <button
+                    type="button"
+                    aria-label="キーワードを解除"
+                    onClick={() => {
+                      setQuery('');
+                      setQInput('');
+                    }}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ) : null}
+              {genres.map((g) => (
+                <span className="afchip" key={g}>
+                  {tagLabel(g)}
+                  <button
+                    type="button"
+                    aria-label={`${tagLabel(g)} を解除`}
+                    onClick={() => toggleGenre(g)}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          {filtered.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <div className="lrows">
+              {filtered.slice(0, LIST_MAX).map((s) => (
+                <ListRow
+                  key={s.id}
+                  service={s}
+                  saved={!!saved[s.id]}
+                  onSave={() => toggleSave(s.id)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {/* 棚見出し「すべて見る / もっと見る」からのリスト表示 */}
+      {showOpenList && openList ? (
         <div className="list">
           <button type="button" className="back" onClick={close}>
             <BackSvg />
@@ -306,6 +414,248 @@ export function ServicesShelves({
       ) : null}
 
       <ScopedStyle />
+    </div>
+  );
+}
+
+/* ====================== 上部検索バー ====================== */
+
+function SearchBar({
+  country,
+  onChangeCountry,
+  qInput,
+  onChangeQ,
+  onSubmit,
+  genreOptions,
+  genres,
+  onToggleGenre,
+  onClearGenres,
+}: {
+  country: string | undefined;
+  onChangeCountry: (code: string) => void;
+  qInput: string;
+  onChangeQ: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  genreOptions: { value: string; label: string; count: number }[];
+  genres: string[];
+  onToggleGenre: (v: string) => void;
+  onClearGenres: () => void;
+}) {
+  return (
+    <form className="searchbar" onSubmit={onSubmit}>
+      <label className="sb-country">
+        <span className="sr-only">国を選ぶ</span>
+        <select
+          value={country ?? 'fr'}
+          onChange={(e) => onChangeCountry(e.target.value)}
+          aria-label="国を選ぶ"
+        >
+          {COUNTRY_OPTIONS.map((o) => (
+            <option key={o.code} value={o.code} disabled={!o.enabled}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="sb-q">
+        <span className="sr-only">キーワードで探す</span>
+        <SearchSvg />
+        <input
+          type="search"
+          value={qInput}
+          onChange={(e) => onChangeQ(e.target.value)}
+          placeholder="サービス名・内容で探す…"
+          aria-label="キーワードで探す"
+        />
+      </label>
+
+      {genreOptions.length > 0 ? (
+        <GenreDropdown
+          options={genreOptions}
+          selected={genres}
+          onToggle={onToggleGenre}
+          onClear={onClearGenres}
+        />
+      ) : null}
+
+      <button type="submit" className="sb-submit">
+        検索
+      </button>
+    </form>
+  );
+}
+
+/* ====================== ジャンル複数選択ドロップダウン ====================== */
+
+function GenreDropdown({
+  options,
+  selected,
+  onToggle,
+  onClear,
+}: {
+  options: { value: string; label: string; count: number }[];
+  selected: string[];
+  onToggle: (v: string) => void;
+  onClear: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // 外側クリック / Esc で閉じる
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const label =
+    selected.length === 0
+      ? 'ジャンル'
+      : `ジャンル・${selected.length}`;
+
+  return (
+    <div className="gd" ref={ref}>
+      <button
+        type="button"
+        className={'gd-btn' + (selected.length > 0 ? ' on' : '')}
+        aria-haspopup="true"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {label}
+        <ChevSvg dir="d" />
+      </button>
+      {open ? (
+        <div className="gd-menu" role="menu">
+          <div className="gd-menu-head">
+            <span>ジャンルで絞り込み</span>
+            {selected.length > 0 ? (
+              <button type="button" onClick={onClear}>
+                クリア
+              </button>
+            ) : null}
+          </div>
+          <div className="gd-list">
+            {options.map((o) => {
+              const on = selected.includes(o.value);
+              return (
+                <label key={o.value} className="gd-item">
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={() => onToggle(o.value)}
+                  />
+                  <span className="gd-box" aria-hidden>
+                    {on ? <CheckSvg /> : null}
+                  </span>
+                  <span className="gd-label">{o.label}</span>
+                  <span className="gd-count">{o.count}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/* ====================== 棚の行 (左右スライド矢印つき) ====================== */
+
+function ShelfRow({
+  shelf,
+  saved,
+  onSave,
+  onMore,
+}: {
+  shelf: Shelf;
+  saved: Record<string, boolean>;
+  onSave: (id: string) => void;
+  onMore: () => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [atStart, setAtStart] = useState(true);
+  const [atEnd, setAtEnd] = useState(false);
+
+  // スクロール位置で端を判定し、矢印の出し分けを行う。
+  const sync = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setAtStart(el.scrollLeft <= 2);
+    setAtEnd(el.scrollLeft >= max - 2);
+  };
+
+  useEffect(() => {
+    sync();
+    const el = trackRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    return () => {
+      el.removeEventListener('scroll', sync);
+      window.removeEventListener('resize', sync);
+    };
+    // shelf が変わったら再計測
+  }, [shelf.key]);
+
+  const slide = (dir: 1 | -1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    // 1画面分ずつ (端のカードが半端に切れないよう clientWidth の約9割)
+    const amount = Math.max(el.clientWidth * 0.9, 240);
+    el.scrollBy({ left: dir * amount, behavior: 'smooth' });
+  };
+
+  return (
+    <div className="rowwrap">
+      {!atStart ? (
+        <button
+          type="button"
+          className="slide prev"
+          aria-label="前へ"
+          onClick={() => slide(-1)}
+        >
+          <ChevSvg dir="l" />
+        </button>
+      ) : null}
+      {!atEnd ? (
+        <button
+          type="button"
+          className="slide next"
+          aria-label="次へ"
+          onClick={() => slide(1)}
+        >
+          <ChevSvg dir="r" />
+        </button>
+      ) : null}
+      <div className="row" ref={trackRef}>
+        {shelf.items.map((s) => (
+          <Card
+            key={shelf.key + ':' + s.id}
+            service={s}
+            saved={!!saved[s.id]}
+            onSave={() => onSave(s.id)}
+          />
+        ))}
+        <button type="button" className="more" onClick={onMore}>
+          <span className="circ">
+            <ArrowSvg />
+          </span>
+          <b>もっと見る</b>
+        </button>
+      </div>
     </div>
   );
 }
@@ -510,14 +860,31 @@ function BackSvg() {
     </svg>
   );
 }
-function ChevSvg({ dir }: { dir: 'l' | 'r' }) {
+function ChevSvg({ dir }: { dir: 'l' | 'r' | 'd' }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
       {dir === 'l' ? (
         <polyline points="15 6 9 12 15 18" />
-      ) : (
+      ) : dir === 'r' ? (
         <polyline points="9 6 15 12 9 18" />
+      ) : (
+        <polyline points="6 9 12 15 18 9" />
       )}
+    </svg>
+  );
+}
+function SearchSvg() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.5" y2="16.5" />
+    </svg>
+  );
+}
+function CheckSvg() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }
@@ -573,72 +940,233 @@ function ScopedStyle() {
         max-width: 100%;
       }
 
-      .svc-countrybar {
-        margin: 4px 0 14px;
+      /* 上部検索バー */
+      .searchbar {
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 2px 0 18px;
       }
-      .svc-countrybadge {
+      .searchbar .sb-country select {
+        height: 46px;
+        border-radius: 999px;
+        border: 1px solid var(--bd2);
+        background: var(--card);
+        color: var(--ink);
+        font-family: var(--jp);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 0 38px 0 18px;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235e8b0e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        background-size: 15px;
+      }
+      .searchbar .sb-country select:focus {
+        outline: none;
+        border-color: var(--lime);
+      }
+      .searchbar .sb-q {
+        position: relative;
+        flex: 1 1 240px;
+        min-width: 180px;
+        display: flex;
+        align-items: center;
+      }
+      .searchbar .sb-q svg {
+        position: absolute;
+        left: 16px;
+        width: 17px;
+        height: 17px;
+        color: var(--mu);
+        pointer-events: none;
+      }
+      .searchbar .sb-q input {
+        width: 100%;
+        height: 46px;
+        border-radius: 999px;
+        border: 1px solid var(--bd2);
+        background: var(--card);
+        color: var(--ink);
+        font-family: var(--jp);
+        font-size: 14px;
+        padding: 0 18px 0 42px;
+      }
+      .searchbar .sb-q input::placeholder {
+        color: var(--mu);
+      }
+      .searchbar .sb-q input:focus {
+        outline: none;
+        border-color: var(--lime);
+      }
+      .searchbar .sb-submit {
+        height: 46px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--lime);
+        color: #1c2a06;
+        font-family: var(--jp);
+        font-weight: 700;
+        font-size: 14px;
+        padding: 0 24px;
+        cursor: pointer;
+        transition: 0.14s;
+      }
+      .searchbar .sb-submit:hover {
+        filter: brightness(0.96);
+      }
+
+      /* ジャンル複数選択ドロップダウン */
+      .gd {
+        position: relative;
+      }
+      .gd-btn {
+        height: 46px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: rgba(168, 224, 28, 0.13);
+        border-radius: 999px;
+        border: 1px solid var(--bd2);
+        background: var(--card);
+        color: var(--ink2);
+        font-family: var(--jp);
+        font-size: 14px;
+        font-weight: 700;
+        padding: 0 18px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: 0.14s;
+      }
+      .gd-btn:hover {
+        border-color: var(--ink);
+      }
+      .gd-btn.on {
+        background: var(--lime);
+        border-color: var(--lime);
+        color: #1c2a06;
+      }
+      .gd-btn svg {
+        width: 14px;
+        height: 14px;
+      }
+      .gd-menu {
+        position: absolute;
+        z-index: 40;
+        top: calc(100% + 8px);
+        right: 0;
+        width: 260px;
+        max-width: 80vw;
+        background: var(--card);
+        border: 1px solid var(--bd);
+        border-radius: 16px;
+        box-shadow: 0 24px 60px -28px rgba(20, 20, 15, 0.45);
+        padding: 8px;
+      }
+      .gd-menu-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 8px 8px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--mu);
+      }
+      .gd-menu-head button {
+        border: 0;
+        background: transparent;
         color: var(--lime-d);
+        font-weight: 700;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .gd-list {
+        display: flex;
+        flex-direction: column;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+      .gd-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 8px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--ink);
+      }
+      .gd-item:hover {
+        background: rgba(168, 224, 28, 0.1);
+      }
+      .gd-item input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .gd-box {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 1.5px solid var(--bd2);
+        background: var(--bg);
+        display: grid;
+        place-items: center;
+        color: #1c2a06;
+      }
+      .gd-box svg {
+        width: 13px;
+        height: 13px;
+      }
+      .gd-item input:checked + .gd-box {
+        background: var(--lime);
+        border-color: var(--lime);
+      }
+      .gd-label {
+        flex: 1;
+        min-width: 0;
+      }
+      .gd-count {
+        flex: none;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--mu);
+      }
+
+      /* アクティブな絞り込み条件チップ */
+      .activef {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0 2px;
+      }
+      .afchip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(168, 224, 28, 0.14);
+        color: var(--lime-d);
+        border: 1px solid rgba(168, 224, 28, 0.4);
+        border-radius: 999px;
+        padding: 5px 12px;
         font-size: 12.5px;
         font-weight: 700;
-        border-radius: 999px;
-        padding: 6px 14px;
-        border: 1px solid rgba(168, 224, 28, 0.4);
       }
-      .svc-countrybadge button {
+      .afchip button {
         border: 0;
         background: transparent;
         color: var(--lime-d);
         cursor: pointer;
-        font-size: 13px;
         opacity: 0.7;
+        font-size: 12px;
       }
-      .svc-countrybadge button:hover {
+      .afchip button:hover {
         opacity: 1;
-      }
-
-      /* カテゴリ クイックチップ */
-      .cats {
-        margin: 0 -4px 4px;
-      }
-      .catsin {
-        display: flex;
-        gap: 10px;
-        padding: 4px 4px 14px;
-        overflow-x: auto;
-        scrollbar-width: none;
-      }
-      .catsin::-webkit-scrollbar {
-        display: none;
-      }
-      .chip {
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        background: var(--card);
-        border: 1px solid var(--bd2);
-        border-radius: 999px;
-        padding: 9px 16px;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--ink2);
-        cursor: pointer;
-        white-space: nowrap;
-        transition: 0.14s;
-        font-family: var(--jp);
-      }
-      .chip:hover {
-        border-color: var(--ink);
-      }
-      .chip.on {
-        background: var(--lime);
-        color: #1c2a06;
-        border-color: var(--lime);
-        font-weight: 700;
       }
 
       /* 棚 */
@@ -681,16 +1209,61 @@ function ScopedStyle() {
         width: 15px;
         height: 15px;
       }
+      /* 棚の行ラッパ (左右スライド矢印の位置基準) */
+      .rowwrap {
+        position: relative;
+      }
       .row {
         display: flex;
         gap: 18px;
         overflow-x: auto;
         scroll-snap-type: x proximity;
+        scroll-behavior: smooth;
         padding-bottom: 10px;
         scrollbar-width: none;
       }
       .row::-webkit-scrollbar {
         display: none;
+      }
+      /* 棚スライド矢印 (.navbtn=カード内写真切替とは別物) */
+      .slide {
+        position: absolute;
+        top: calc(50% - 24px);
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--bd);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        color: var(--ink);
+        box-shadow: 0 6px 18px -6px rgba(20, 20, 15, 0.4);
+        z-index: 6;
+        transition: transform 0.14s, opacity 0.16s;
+        opacity: 0;
+      }
+      .rowwrap:hover .slide {
+        opacity: 1;
+      }
+      .slide:hover {
+        transform: translateY(-50%) scale(1.08);
+      }
+      .slide svg {
+        width: 18px;
+        height: 18px;
+      }
+      .slide.prev {
+        left: -8px;
+      }
+      .slide.next {
+        right: -8px;
+      }
+      @media (hover: none) {
+        .slide {
+          opacity: 1;
+        }
       }
 
       /* カード */
