@@ -505,23 +505,122 @@ export const marketplaceMetadataSchema = z.object({
 export type MarketplaceMetadata = z.infer<typeof marketplaceMetadataSchema>;
 
 // =============================================================================
-// イベント (group) — DB の kind は 'group' のまま、UI 表記のみ「イベント」
+// 集まり (group) — DB の kind は 'group' のまま、UI 表記は「集まり」
 // =============================================================================
 
+// --- カテゴリ / 頻度 / レベルのラベル（詳細ページ・フォーム・一覧で共用） ---
+export const GROUP_CATEGORIES = [
+  'sport',
+  'study',
+  'hobby',
+  'parenting',
+  'language',
+  'other',
+] as const;
+export type GroupCategory = (typeof GROUP_CATEGORIES)[number];
+export const GROUP_CATEGORY_LABEL: Record<GroupCategory, string> = {
+  sport: 'スポーツ',
+  study: '勉強会',
+  hobby: '趣味',
+  parenting: '子育て',
+  language: '言語交換・交流',
+  other: 'その他',
+};
+
+export const GROUP_FREQUENCIES = [
+  'weekly',
+  'biweekly',
+  'monthly',
+  'one_off',
+  'flexible',
+] as const;
+export type GroupFrequency = (typeof GROUP_FREQUENCIES)[number];
+export const FREQUENCY_LABEL: Record<GroupFrequency, string> = {
+  weekly: '毎週',
+  biweekly: '隔週',
+  monthly: '月 1 回',
+  one_off: '単発',
+  flexible: '随時',
+};
+
+export const GROUP_LEVELS = [
+  'any',
+  'beginner',
+  'intermediate',
+  'advanced',
+] as const;
+export type GroupLevel = (typeof GROUP_LEVELS)[number];
+export const LEVEL_LABEL: Record<GroupLevel, string> = {
+  any: 'レベル問わず',
+  beginner: '初心者歓迎',
+  intermediate: '中級',
+  advanced: '上級',
+};
+
+/** 対面 / オンライン / ハイブリッド */
+export const GROUP_LOCATION_FORMATS = ['in_person', 'online', 'hybrid'] as const;
+export type GroupLocationFormat = (typeof GROUP_LOCATION_FORMATS)[number];
+export const GROUP_LOCATION_FORMAT_LABEL: Record<GroupLocationFormat, string> = {
+  in_person: '対面',
+  online: 'オンライン',
+  hybrid: 'ハイブリッド',
+};
+
+/** 開催言語 */
+export const GROUP_LANGUAGES = ['ja', 'fr', 'en'] as const;
+export type GroupLanguage = (typeof GROUP_LANGUAGES)[number];
+export const GROUP_LANGUAGE_LABEL: Record<GroupLanguage, string> = {
+  ja: '日本語',
+  fr: 'フランス語',
+  en: '英語',
+};
+
+const groupScheduleStepSchema = z.object({
+  time: z.string().max(20),
+  title: z.string().max(120),
+  detail: z.string().max(200).optional(),
+});
+
 export const groupMetadataSchema = z.object({
-  meeting_frequency: z
-    .enum(['weekly', 'biweekly', 'monthly', 'one_off', 'flexible'])
-    .optional(),
-  skill_level: z.enum(['beginner', 'intermediate', 'advanced', 'any']).optional(),
+  // --- 既存（不変） ---
+  meeting_frequency: z.enum(GROUP_FREQUENCIES).optional(),
+  skill_level: z.enum(GROUP_LEVELS).optional(),
   group_size: z.number().int().min(1).max(500).optional(),
   age_range: z.string().max(60).optional(),
-  category: z
-    .enum(['sport', 'study', 'hobby', 'parenting', 'language', 'other'])
-    .optional(),
+  category: z.enum(GROUP_CATEGORIES).optional(),
   /** 対象者 (旅行者 / 駐在員 / 両方) */
   audience: audienceSchema,
+
+  // --- 拡張（すべて任意。旧データ・写真0枚でも崩れない） ---
+  /** 開催日（YYYY-MM-DD）。次回開催日を表す */
+  event_start_date: z.string().max(20).optional(),
+  /** 終了日（複数日開催の場合）。YYYY-MM-DD */
+  event_end_date: z.string().max(20).optional(),
+  /** 開始時刻（HH:MM） */
+  event_time_start: z.string().max(10).optional(),
+  /** 終了時刻（HH:MM） */
+  event_time_end: z.string().max(10).optional(),
+  /** 対面 / オンライン / ハイブリッド */
+  location_format: z.enum(GROUP_LOCATION_FORMATS).optional(),
+  /** 定員（残り枠の計算に使う） */
+  capacity: z.number().int().min(1).max(999).optional(),
+  /** 開催言語 */
+  languages: z.array(z.enum(GROUP_LANGUAGES)).max(3).optional(),
+  /** こんな方におすすめ */
+  recommended_for: z.array(z.string().max(160)).max(10).optional(),
+  /** 持ち物・注意 */
+  what_to_bring: z.array(z.string().max(160)).max(10).optional(),
+  /** 当日の流れ（時刻つきタイムライン） */
+  schedule: z.array(groupScheduleStepSchema).max(12).optional(),
+  /** 申込締切（YYYY-MM-DD） */
+  application_deadline: z.string().max(20).optional(),
+  /** 参加費の補足（例 "ドリンク代は各自"） */
+  fee_note: z.string().max(120).optional(),
+  /** 自由タグ */
+  tags: z.array(z.string().max(40)).max(6).optional(),
 });
 export type GroupMetadata = z.infer<typeof groupMetadataSchema>;
+export type GroupScheduleStep = z.infer<typeof groupScheduleStepSchema>;
 
 // =============================================================================
 // 教えます・習います (lesson)

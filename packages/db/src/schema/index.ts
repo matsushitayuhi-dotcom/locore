@@ -37,6 +37,7 @@ export * from './trip_collaborators';
 export * from './light_diaries';
 export * from './board_posts';
 export * from './community_posts';
+export * from './community_event_rsvps';
 
 // Library / Bookmarks
 export * from './bookmarks';
