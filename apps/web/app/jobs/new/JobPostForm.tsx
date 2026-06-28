@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AlertTriangle } from 'lucide-react';
 import { createCommunityPost } from '@/lib/community/actions';
 import { ContactEmailField } from '@/components/community/ContactEmailField';
+import { PhotoUploader } from '@/components/community/PhotoUploader';
 import {
   JOB_EMPLOYMENT_TYPES,
   JOB_EMPLOYMENT_TYPE_LABEL,
@@ -81,6 +82,7 @@ export function JobPostForm() {
     useState<JobEmploymentType>('part_time');
   const [category, setCategory] = useState<JobCategory>('office');
   const [industry, setIndustry] = useState<JobIndustry | ''>('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [locationText, setLocationText] = useState('');
   const [remoteType, setRemoteType] = useState<JobRemoteType | ''>('');
 
@@ -223,7 +225,7 @@ export function JobPostForm() {
         priceAmount: amountNum ?? null,
         priceCurrency: currency,
         priceUnit,
-        photos: [],
+        photos,
         contactEmail: contactEmail.trim() || undefined,
         metadata: {
           // 既存
@@ -410,6 +412,17 @@ export function JobPostForm() {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* 写真（仕事の様子） */}
+        <div>
+          <label className={LABEL_CLS}>
+            写真（仕事の様子） <span className="font-normal text-foreground/55">（任意・最大 12 枚）</span>
+          </label>
+          <p className="mb-2 mt-0.5 text-[11px] text-foreground/55">
+            職場やチーム、店舗の雰囲気が伝わる写真を添えると応募が集まりやすくなります。1 枚目が詳細ページのヒーロー画像になります。
+          </p>
+          <PhotoUploader photos={photos} onChange={setPhotos} maxPhotos={12} />
         </div>
       </fieldset>
 
