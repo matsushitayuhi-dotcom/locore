@@ -9,9 +9,9 @@
  * 固有プレフィックスは .sd-。承認済みモック service-detail.html のレイアウト/世界観を再現。
  * ブランド配色 (--bg/--card/--lime/--ink 等) と Google Fonts を維持。
  */
-export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700;800&display=swap');
 
-.sd{--bg:#F4F4EF;--bg2:#FBFBF8;--card:#fff;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;--ink:#14140f;--ink2:#3a3a34;--mu:#7a7a72;--bd:#E6E6DE;--bd2:#D8D8CF;--disp:'Space Grotesk','Zen Kaku Gothic New',sans-serif;--jp:'Zen Kaku Gothic New',sans-serif;--mono:'JetBrains Mono',monospace;background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1;line-height:1.8;overflow-x:clip}
+.sd{--bg:#F4F4EF;--bg2:#FBFBF8;--card:#fff;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;--ink:#14140f;--ink2:#3a3a34;--mu:#7a7a72;--bd:#E6E6DE;--bd2:#D8D8CF;--jp:'Noto Sans JP','Space Grotesk',sans-serif;--disp:'Space Grotesk','Noto Sans JP',sans-serif;--mono:'JetBrains Mono',monospace;background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1;line-height:1.8;overflow-x:clip}
 .sd *{box-sizing:border-box}
 .sd a{color:inherit;text-decoration:none}
 .sd img{display:block;max-width:100%}
