@@ -33,6 +33,20 @@ export type FeaturedService = {
   coverImageUrl: string | null;
   /** 0055 で追加。複数指定可のタグ。空配列もあり得る (カード/詳細で考慮)。 */
   tags: string[];
+  /** ===== 0058 で追加: 体験詳細ページ用フィールド群 =====
+   *  一覧/カード系クエリでは取得しないため、すべて任意 (undefined あり得る)。
+   *  詳細ページ (getServiceById) のみ実値を返す。未適用カラムは null/空配列。 */
+  galleryImages?: string[];
+  durationLabel?: string | null;
+  minParticipants?: number | null;
+  maxParticipants?: number | null;
+  languages?: string[];
+  highlights?: string[];
+  inclusions?: string[];
+  meetingPointName?: string | null;
+  meetingPointLat?: number | null;
+  meetingPointLng?: number | null;
+  cancellationPolicy?: string | null;
   /**
    * 出品作成日時の ISO 文字列。/services の「新着」棚でクライアント側ソートに使う。
    * 取得元クエリによっては未設定 (undefined) のことがあるため任意フィールド。

@@ -31,6 +31,21 @@ export default async function ServicesSettingsPage() {
     audience: string | null;
     coverImageUrl: string | null;
   };
+  // 0058 体験詳細カラム。base クエリと分離して取得 (未適用なら空にフォールバック)。
+  type DetailRow = {
+    id: string;
+    galleryImages: string[] | null;
+    durationLabel: string | null;
+    minParticipants: number | null;
+    maxParticipants: number | null;
+    languages: string[] | null;
+    highlights: string[] | null;
+    inclusions: string[] | null;
+    meetingPointName: string | null;
+    meetingPointLat: number | null;
+    meetingPointLng: number | null;
+    cancellationPolicy: string | null;
+  };
   let rows: Row[] = [];
   try {
     rows = await db
@@ -107,6 +122,38 @@ export default async function ServicesSettingsPage() {
     }
   }
 
+  // 0058 体験詳細カラムを別クエリで取得 (未適用環境では空 Map)。
+  const detailById = new Map<string, DetailRow>();
+  try {
+    const detailRows = await db
+      .select({
+        id: schema.userServices.id,
+        galleryImages: schema.userServices.galleryImages,
+        durationLabel: schema.userServices.durationLabel,
+        minParticipants: schema.userServices.minParticipants,
+        maxParticipants: schema.userServices.maxParticipants,
+        languages: schema.userServices.languages,
+        highlights: schema.userServices.highlights,
+        inclusions: schema.userServices.inclusions,
+        meetingPointName: schema.userServices.meetingPointName,
+        meetingPointLat: schema.userServices.meetingPointLat,
+        meetingPointLng: schema.userServices.meetingPointLng,
+        cancellationPolicy: schema.userServices.cancellationPolicy,
+      })
+      .from(schema.userServices)
+      .where(eq(schema.userServices.userId, user.id));
+    for (const d of detailRows) detailById.set(d.id, d as DetailRow);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[settings/services] 体験詳細カラム未適用。manual/0058_user_services_detail.sql を適用してください。',
+      );
+    } else {
+      throw err;
+    }
+  }
+
   const cityOptions = await getActiveCitiesForPicker();
 
   return (
@@ -120,22 +167,37 @@ export default async function ServicesSettingsPage() {
 
       <ServicesEditor
         cityOptions={cityOptions}
-        initial={rows.map((r) => ({
-          id: r.id,
-          title: r.title,
-          description: r.description ?? '',
-          category: r.category ?? '',
-          priceJpy: r.priceJpy ?? '',
-          priceUnit: r.priceUnit ?? '1時間あたり',
-          contactMethod:
-            (r.contactMethod as 'chat' | 'external_url') ?? 'chat',
-          externalUrl: r.externalUrl ?? '',
-          isActive: r.isActive,
-          coverImageUrl: r.coverImageUrl ?? '',
-          cityId: r.cityId ?? '',
-          audience:
-            (r.audience as '' | 'traveler' | 'resident' | 'both' | null) ?? '',
-        }))}
+        initial={rows.map((r) => {
+          const d = detailById.get(r.id);
+          return {
+            id: r.id,
+            title: r.title,
+            description: r.description ?? '',
+            category: r.category ?? '',
+            priceJpy: r.priceJpy ?? '',
+            priceUnit: r.priceUnit ?? '1時間あたり',
+            contactMethod:
+              (r.contactMethod as 'chat' | 'external_url') ?? 'chat',
+            externalUrl: r.externalUrl ?? '',
+            isActive: r.isActive,
+            coverImageUrl: r.coverImageUrl ?? '',
+            cityId: r.cityId ?? '',
+            audience:
+              (r.audience as '' | 'traveler' | 'resident' | 'both' | null) ??
+              '',
+            galleryImages: d?.galleryImages ?? [],
+            durationLabel: d?.durationLabel ?? '',
+            minParticipants: d?.minParticipants ?? '',
+            maxParticipants: d?.maxParticipants ?? '',
+            languages: d?.languages ?? [],
+            highlights: (d?.highlights ?? []).join('\n'),
+            inclusions: (d?.inclusions ?? []).join('\n'),
+            meetingPointName: d?.meetingPointName ?? '',
+            meetingPointLat: d?.meetingPointLat ?? '',
+            meetingPointLng: d?.meetingPointLng ?? '',
+            cancellationPolicy: d?.cancellationPolicy ?? '',
+          };
+        })}
       />
     </div>
   );

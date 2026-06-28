@@ -122,6 +122,54 @@ export async function getServiceById(id: string): Promise<ServiceBundle | null> 
 
   if (!service) return null;
 
+  // ----- 0058 体験詳細カラム (未適用環境では別 try/catch でフォールバック) -----
+  // base クエリと分離することで、カラム未適用でも詳細ページ自体は落ちない。
+  try {
+    const rows = await db
+      .select({
+        galleryImages: schema.userServices.galleryImages,
+        durationLabel: schema.userServices.durationLabel,
+        minParticipants: schema.userServices.minParticipants,
+        maxParticipants: schema.userServices.maxParticipants,
+        languages: schema.userServices.languages,
+        highlights: schema.userServices.highlights,
+        inclusions: schema.userServices.inclusions,
+        meetingPointName: schema.userServices.meetingPointName,
+        meetingPointLat: schema.userServices.meetingPointLat,
+        meetingPointLng: schema.userServices.meetingPointLng,
+        cancellationPolicy: schema.userServices.cancellationPolicy,
+      })
+      .from(schema.userServices)
+      .where(eq(schema.userServices.id, id))
+      .limit(1);
+    const d = rows[0];
+    if (d) {
+      service.galleryImages = Array.isArray(d.galleryImages)
+        ? d.galleryImages
+        : [];
+      service.durationLabel = d.durationLabel ?? null;
+      service.minParticipants = d.minParticipants ?? null;
+      service.maxParticipants = d.maxParticipants ?? null;
+      service.languages = Array.isArray(d.languages) ? d.languages : [];
+      service.highlights = Array.isArray(d.highlights) ? d.highlights : [];
+      service.inclusions = Array.isArray(d.inclusions) ? d.inclusions : [];
+      service.meetingPointName = d.meetingPointName ?? null;
+      service.meetingPointLat = d.meetingPointLat ?? null;
+      service.meetingPointLng = d.meetingPointLng ?? null;
+      service.cancellationPolicy = d.cancellationPolicy ?? null;
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[getServiceById] user_services 体験詳細カラム未適用。manual/0058_user_services_detail.sql を Supabase で適用してください。',
+      );
+    } else {
+      console.error('[getServiceById] detail columns failed:', msg);
+    }
+    // 詳細カラムが取れなくても base service は返す
+  }
+
   const ownerId = service.ownerId;
 
   // ----- provider info (bio + residencyYears + tier) -----

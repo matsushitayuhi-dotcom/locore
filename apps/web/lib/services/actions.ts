@@ -59,6 +59,18 @@ const upsertSchema = z
       .optional()
       .nullable()
       .or(z.literal('').transform(() => null)),
+    /** ===== 0058 体験詳細フィールド (すべて任意) ===== */
+    galleryImages: z.array(z.string().url().max(2048)).max(20).optional(),
+    durationLabel: z.string().trim().max(60).optional().nullable(),
+    minParticipants: z.number().int().min(0).max(1000).optional().nullable(),
+    maxParticipants: z.number().int().min(0).max(1000).optional().nullable(),
+    languages: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+    highlights: z.array(z.string().trim().min(1).max(200)).max(20).optional(),
+    inclusions: z.array(z.string().trim().min(1).max(200)).max(30).optional(),
+    meetingPointName: z.string().trim().max(120).optional().nullable(),
+    meetingPointLat: z.number().min(-90).max(90).optional().nullable(),
+    meetingPointLng: z.number().min(-180).max(180).optional().nullable(),
+    cancellationPolicy: z.string().trim().max(1000).optional().nullable(),
   })
   .refine(
     (v) => v.contactMethod !== 'external_url' || !!v.externalUrl,
@@ -87,6 +99,24 @@ export async function upsertUserService(
   const user = await requireUser();
   const db = getDb();
 
+  // 0058 体験詳細カラム。未適用環境では UPDATE/INSERT が落ちるため、
+  // base カラムのみの再試行 (フォールバック) を後段で行う。
+  const detailCols = {
+    galleryImages: data.galleryImages ?? [],
+    durationLabel: data.durationLabel ?? null,
+    minParticipants: data.minParticipants ?? null,
+    maxParticipants: data.maxParticipants ?? null,
+    languages: data.languages ?? [],
+    highlights: data.highlights ?? [],
+    inclusions: data.inclusions ?? [],
+    meetingPointName: data.meetingPointName ?? null,
+    meetingPointLat: data.meetingPointLat ?? null,
+    meetingPointLng: data.meetingPointLng ?? null,
+    cancellationPolicy: data.cancellationPolicy ?? null,
+  };
+  const isMissingColumn = (err: unknown) =>
+    /does not exist/i.test(err instanceof Error ? err.message : String(err));
+
   if (data.id) {
     // 既存更新（所有者一致）
     const existing = await db
@@ -102,24 +132,34 @@ export async function upsertUserService(
     if (existing.length === 0) {
       return { ok: false, error: 'サービスが見つかりません' };
     }
-    await db
-      .update(schema.userServices)
-      .set({
-        title: data.title,
-        description: data.description ?? null,
-        category: data.category ?? null,
-        priceJpy: data.priceJpy ?? null,
-        priceUnit: data.priceUnit ?? null,
-        contactMethod: data.contactMethod,
-        externalUrl: data.externalUrl ?? null,
-        cityId: data.cityId ?? null,
-        audience: data.audience ?? null,
-        coverImageUrl: data.coverImageUrl ?? null,
-        isActive: data.isActive,
-        position: data.position,
-        updatedAt: new Date(),
-      })
-      .where(eq(schema.userServices.id, data.id));
+    const baseSet = {
+      title: data.title,
+      description: data.description ?? null,
+      category: data.category ?? null,
+      priceJpy: data.priceJpy ?? null,
+      priceUnit: data.priceUnit ?? null,
+      contactMethod: data.contactMethod,
+      externalUrl: data.externalUrl ?? null,
+      cityId: data.cityId ?? null,
+      audience: data.audience ?? null,
+      coverImageUrl: data.coverImageUrl ?? null,
+      isActive: data.isActive,
+      position: data.position,
+      updatedAt: new Date(),
+    };
+    try {
+      await db
+        .update(schema.userServices)
+        .set({ ...baseSet, ...detailCols })
+        .where(eq(schema.userServices.id, data.id));
+    } catch (err) {
+      if (!isMissingColumn(err)) throw err;
+      // 0058 未適用環境: 体験詳細カラムを除いて再試行
+      await db
+        .update(schema.userServices)
+        .set(baseSet)
+        .where(eq(schema.userServices.id, data.id));
+    }
     revalidatePath('/settings/services');
     revalidatePath(`/users/${user.id}`);
     revalidatePath(`/users/${user.id}`);
@@ -136,24 +176,35 @@ export async function upsertUserService(
     .orderBy(asc(schema.userServices.position));
   const nextPos = (existing[existing.length - 1]?.position ?? -1) + 1;
 
-  const inserted = await db
-    .insert(schema.userServices)
-    .values({
-      userId: user.id,
-      title: data.title,
-      description: data.description ?? null,
-      category: data.category ?? null,
-      priceJpy: data.priceJpy ?? null,
-      priceUnit: data.priceUnit ?? null,
-      contactMethod: data.contactMethod,
-      externalUrl: data.externalUrl ?? null,
-      cityId: data.cityId ?? null,
-      audience: data.audience ?? null,
-      coverImageUrl: data.coverImageUrl ?? null,
-      isActive: data.isActive,
-      position: nextPos,
-    })
-    .returning({ id: schema.userServices.id });
+  const baseValues = {
+    userId: user.id,
+    title: data.title,
+    description: data.description ?? null,
+    category: data.category ?? null,
+    priceJpy: data.priceJpy ?? null,
+    priceUnit: data.priceUnit ?? null,
+    contactMethod: data.contactMethod,
+    externalUrl: data.externalUrl ?? null,
+    cityId: data.cityId ?? null,
+    audience: data.audience ?? null,
+    coverImageUrl: data.coverImageUrl ?? null,
+    isActive: data.isActive,
+    position: nextPos,
+  };
+  let inserted: { id: string }[];
+  try {
+    inserted = await db
+      .insert(schema.userServices)
+      .values({ ...baseValues, ...detailCols })
+      .returning({ id: schema.userServices.id });
+  } catch (err) {
+    if (!isMissingColumn(err)) throw err;
+    // 0058 未適用環境: 体験詳細カラムを除いて再試行
+    inserted = await db
+      .insert(schema.userServices)
+      .values(baseValues)
+      .returning({ id: schema.userServices.id });
+  }
 
   revalidatePath('/settings/services');
   revalidatePath(`/users/${user.id}`);
