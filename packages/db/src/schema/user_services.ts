@@ -5,6 +5,7 @@ import {
   integer,
   boolean,
   timestamp,
+  doublePrecision,
   index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
@@ -52,6 +53,27 @@ export const userServices = pgTable(
      *  フィルタは ?tags=consulting,study_abroad のように複数指定可。
      *  クエリは postgres array && (overlap) を Drizzle の sql テンプレートで組む。 */
     tags: text('tags').array().notNull().default([]),
+    /** ===== 0058 で追加: Airbnb 風 体験詳細ページ用のフィールド群 =====
+     *  すべて additive・nullable / default。未適用環境でもコード側 try/catch で安全。 */
+    /** 追加写真 URL の配列（cover とは別。表示時は cover を先頭に連結） */
+    galleryImages: text('gallery_images').array().default([]),
+    /** 所要時間ラベル（例 "約2時間"） */
+    durationLabel: text('duration_label'),
+    /** 最少 / 最多人数 */
+    minParticipants: integer('min_participants'),
+    maxParticipants: integer('max_participants'),
+    /** 対応言語（例 ['日本語','フランス語']） */
+    languages: text('languages').array().default([]),
+    /** 体験の特徴（ライムチェックで表示） */
+    highlights: text('highlights').array().default([]),
+    /** 含まれるもの（ライムチェックで表示） */
+    inclusions: text('inclusions').array().default([]),
+    /** 集合場所名 + 緯度経度（キーレス Google Maps embed 用） */
+    meetingPointName: text('meeting_point_name'),
+    meetingPointLat: doublePrecision('meeting_point_lat'),
+    meetingPointLng: doublePrecision('meeting_point_lng'),
+    /** キャンセルポリシー（安心注記で表示） */
+    cancellationPolicy: text('cancellation_policy'),
     isActive: boolean('is_active').notNull().default(true),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true })
