@@ -78,6 +78,32 @@ function metaParts(s: FeaturedService): { cat: string | null; rest: string[] } {
   return { cat, rest };
 }
 
+/**
+ * カテゴリ別のプレースホルダ色味 (淡いライム〜クリームのトーン違い)。
+ * coverImageUrl 未設定時に、無地グレーや壊れ画像箱ではなくブランドに合った
+ * きれいなデフォルトを描くための CSS クラス名を返す。
+ */
+function placeholderTint(category: string | null | undefined): string {
+  switch (category) {
+    case 'tourism':
+      return 'ph-t1';
+    case 'consulting':
+      return 'ph-t2';
+    case 'study_abroad':
+      return 'ph-t3';
+    case 'translation':
+      return 'ph-t4';
+    case 'attend':
+      return 'ph-t5';
+    case 'shooting':
+      return 'ph-t6';
+    case 'shipping':
+      return 'ph-t7';
+    default:
+      return 'ph-t0';
+  }
+}
+
 export function ServicesShelves({
   services,
   initialCountry,
@@ -694,9 +720,7 @@ function Card({
             ))}
           </div>
         ) : (
-          <div className="phph" aria-hidden>
-            <ImageSvg />
-          </div>
+          <Placeholder category={s.category} />
         )}
 
         {multi && idx > 0 ? (
@@ -787,9 +811,7 @@ function ListRow({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={s.coverImageUrl} alt="" loading="lazy" />
         ) : (
-          <div className="phph" aria-hidden>
-            <ImageSvg />
-          </div>
+          <Placeholder category={s.category} />
         )}
         <button
           type="button"
@@ -898,13 +920,95 @@ function HeartSvg() {
     </svg>
   );
 }
-function ImageSvg() {
+/** カテゴリ別の線アイコン (プレースホルダ中央に描く)。未知カテゴリは羅針盤。 */
+function CategoryIcon({ category }: { category: string | null | undefined }) {
+  const common = {
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.5,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  };
+  switch (category) {
+    case 'tourism': // 観光・現地アテンド → 地図ピン
+      return (
+        <svg {...common}>
+          <path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" />
+          <circle cx="12" cy="10" r="2.6" />
+        </svg>
+      );
+    case 'consulting': // コンサル・相談 → 吹き出し
+      return (
+        <svg {...common}>
+          <path d="M21 11.5a8.5 8.5 0 0 1-11.9 7.8L3 21l1.7-6.1A8.5 8.5 0 1 1 21 11.5z" />
+          <line x1="8.5" y1="11.5" x2="15.5" y2="11.5" />
+          <line x1="8.5" y1="14.5" x2="13" y2="14.5" />
+        </svg>
+      );
+    case 'study_abroad': // 留学サポート → 卒業帽
+      return (
+        <svg {...common}>
+          <path d="M22 9 12 4 2 9l10 5 10-5z" />
+          <path d="M6 11v4c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6v-4" />
+        </svg>
+      );
+    case 'translation': // 翻訳・通訳 → 言語
+      return (
+        <svg {...common}>
+          <path d="M4 5h7" />
+          <path d="M7.5 5c0 4.5-2 7.5-5 9" />
+          <path d="M4.5 9c0 2 2.5 4 5.5 5" />
+          <path d="m12 20 4-9 4 9" />
+          <path d="M13.5 17h5" />
+        </svg>
+      );
+    case 'attend': // 同行・代行 → 二人
+      return (
+        <svg {...common}>
+          <circle cx="9" cy="8" r="3" />
+          <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
+          <path d="M16 6.2a3 3 0 0 1 0 5.6" />
+          <path d="M16.5 14.4A5.5 5.5 0 0 1 20.5 19" />
+        </svg>
+      );
+    case 'shooting': // 撮影 → カメラ
+      return (
+        <svg {...common}>
+          <path d="M3 8.5h3.2l1.4-2h7.8l1.4 2H21a1 1 0 0 1 1 1V18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V9.5a1 1 0 0 1 1-1z" />
+          <circle cx="12" cy="13" r="3.2" />
+        </svg>
+      );
+    case 'shipping': // 買付・発送 → 箱
+      return (
+        <svg {...common}>
+          <path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z" />
+          <path d="M3.5 7.5 12 12l8.5-4.5" />
+          <path d="M12 12v9" />
+        </svg>
+      );
+    default: // その他 → 羅針盤 (Locore らしさ)
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <polygon points="15.5 8.5 11 11 8.5 15.5 13 13" />
+        </svg>
+      );
+  }
+}
+
+/**
+ * 画像なしのプレースホルダ。ライム×クリームの淡いグラデ地に、カテゴリ別の
+ * 線アイコンと控えめな「Locore」ワードマークを置く。カード・リスト両用。
+ */
+function Placeholder({ category }: { category: string | null | undefined }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
+    <div className={'phph ' + placeholderTint(category)} aria-hidden>
+      <span className="phph-ico">
+        <CategoryIcon category={category} />
+      </span>
+      <span className="phph-mark">Locore</span>
+    </div>
   );
 }
 
@@ -1291,16 +1395,85 @@ function ScopedStyle() {
         height: 100%;
         object-fit: cover;
       }
+      /* 画像なしプレースホルダ (ブランド配色) */
       .phph {
-        display: grid;
-        place-items: center;
+        position: relative;
         width: 100%;
         height: 100%;
-        color: rgba(20, 20, 15, 0.28);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        /* 既定: 淡いライム→クリームのグラデ */
+        background:
+          radial-gradient(
+            120% 120% at 50% 18%,
+            rgba(168, 224, 28, 0.22),
+            rgba(168, 224, 28, 0.06) 55%,
+            rgba(251, 251, 248, 0.9)
+          ),
+          #f3f5e9;
+        color: var(--lime-d);
       }
-      .phph :global(svg) {
-        width: 34px;
-        height: 34px;
+      .phph-ico {
+        display: grid;
+        place-items: center;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(168, 224, 28, 0.45);
+        color: var(--lime-d);
+      }
+      .phph-ico :global(svg) {
+        width: 26px;
+        height: 26px;
+      }
+      .phph-mark {
+        font-family: var(--disp);
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: rgba(94, 139, 14, 0.7);
+      }
+      /* カテゴリ別の淡い色味の出し分け (地のティント差) */
+      .phph.ph-t0 {
+      }
+      .phph.ph-t1 {
+        background:
+          radial-gradient(120% 120% at 50% 18%, rgba(168, 224, 28, 0.26), rgba(251, 251, 248, 0.92) 60%),
+          #f1f5e4;
+      }
+      .phph.ph-t2 {
+        background:
+          radial-gradient(120% 120% at 50% 18%, rgba(205, 240, 136, 0.4), rgba(251, 251, 248, 0.92) 60%),
+          #eef3e6;
+      }
+      .phph.ph-t3 {
+        background:
+          radial-gradient(120% 120% at 50% 18%, rgba(168, 224, 28, 0.18), rgba(227, 247, 184, 0.5) 60%),
+          #f4f6ea;
+      }
+      .phph.ph-t4 {
+        background:
+          radial-gradient(120% 120% at 50% 18%, rgba(182, 232, 78, 0.32), rgba(251, 251, 248, 0.92) 60%),
+          #f0f4e7;
+      }
+      .phph.ph-t5 {
+        background:
+          radial-gradient(120% 120% at 50% 18%, rgba(168, 224, 28, 0.3), rgba(244, 244, 239, 0.95) 62%),
+          #eef3e3;
+      }
+      .phph.ph-t6 {
+        background:
+          radial-gradient(120% 120% at 50% 18%, rgba(205, 240, 136, 0.34), rgba(251, 251, 248, 0.9) 60%),
+          #f2f4ea;
+      }
+      .phph.ph-t7 {
+        background:
+          radial-gradient(120% 120% at 50% 18%, rgba(182, 232, 78, 0.26), rgba(244, 244, 239, 0.94) 60%),
+          #f1f4e6;
       }
       .navbtn {
         position: absolute;
@@ -1637,6 +1810,120 @@ function ScopedStyle() {
         .lph {
           width: 100%;
           aspect-ratio: 16 / 9;
+        }
+      }
+
+      /* ===== モバイル: Airbnb 風コンパクト配置 =====
+         縦に約2棚が見え、横は2枚フル + 3枚目が少し覗く。
+         カード幅をビューポート基準に縮小し、テキスト・余白・画像縦を詰める。 */
+      @media (max-width: 640px) {
+        /* 行: gap を詰め、左右に少しスクロール余白 */
+        .row {
+          gap: 12px;
+          scroll-snap-type: x mandatory;
+        }
+        /* カード幅 ≒ 43vw → 2枚フル + 3枚目がちょい見え */
+        .card {
+          width: 43vw;
+          max-width: 210px;
+          scroll-snap-align: start;
+        }
+        /* 画像をやや低くして縦を節約 */
+        .ph {
+          aspect-ratio: 5 / 4;
+          border-radius: 13px;
+        }
+        /* カード内テキストを詰める */
+        .cbody {
+          padding: 8px 1px 0;
+        }
+        .title {
+          font-size: 13.5px;
+          line-height: 1.34;
+        }
+        .meta {
+          font-size: 11px;
+          margin-top: 3px;
+        }
+        .price {
+          margin-top: 2px;
+        }
+        .price :global(b) {
+          font-size: 12.5px;
+        }
+        /* もっと見るタイルも幅・余白を縮小 */
+        .more {
+          width: 120px;
+          gap: 8px;
+          margin-bottom: 22px;
+        }
+        .more .circ {
+          width: 38px;
+          height: 38px;
+        }
+        .more b {
+          font-size: 12.5px;
+        }
+        /* 棚の上下余白・見出しを詰めて 2 棚を視野に収める */
+        .shelf {
+          padding: 12px 0 2px;
+        }
+        .shead {
+          margin-bottom: 10px;
+          gap: 8px;
+        }
+        .shead h2 {
+          font-size: 17px;
+        }
+        .shead .sub {
+          font-size: 11px;
+        }
+        .shead .seeall {
+          font-size: 12px;
+        }
+        /* スライド矢印はスワイプ運用なので非表示 (タッチ前提) */
+        .slide {
+          display: none;
+        }
+        /* プレースホルダのアイコンも少し小さく */
+        .phph-ico {
+          width: 44px;
+          height: 44px;
+        }
+        .phph-ico :global(svg) {
+          width: 22px;
+          height: 22px;
+        }
+        .phph-mark {
+          font-size: 10px;
+        }
+        /* 検索バーはモバイルで縦積みにして詰める */
+        .searchbar {
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+        .searchbar .sb-country select,
+        .searchbar .sb-q input,
+        .searchbar .gd-btn,
+        .searchbar .sb-submit {
+          height: 42px;
+        }
+        .searchbar .sb-country {
+          flex: 1 1 44%;
+        }
+        .searchbar .gd {
+          flex: 1 1 44%;
+        }
+        .searchbar .gd-btn {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .searchbar .sb-q {
+          flex: 1 1 100%;
+          order: -1;
+        }
+        .searchbar .sb-submit {
+          flex: 1 1 100%;
         }
       }
     `}</style>
