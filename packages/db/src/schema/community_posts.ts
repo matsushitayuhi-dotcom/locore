@@ -6,6 +6,7 @@ import {
   timestamp,
   boolean,
   jsonb,
+  doublePrecision,
   pgEnum,
   index,
 } from 'drizzle-orm/pg-core';
@@ -68,6 +69,17 @@ export const communityPosts = pgTable(
 
     /** kind 固有のメタ。アプリ側で型付けする */
     metadata: jsonb('metadata').notNull().default({}),
+
+    /**
+     * 住居 (apartment) の設備キー配列。例 ['wifi','kitchen','washer']。
+     * ラベル写像は apps/web/lib/community/constants.ts の APARTMENT_AMENITIES。
+     * manual/0059_community_amenities_geo.sql
+     */
+    amenities: text('amenities').array().default([]),
+    /** 物件のおおよその緯度（表示時に約100mグリッドへ丸める）。0059 */
+    latitude: doublePrecision('latitude'),
+    /** 物件のおおよその経度（表示時に約100mグリッドへ丸める）。0059 */
+    longitude: doublePrecision('longitude'),
 
     status: communityPostStatusEnum('status').notNull().default('active'),
     expiresAt: timestamp('expires_at', { withTimezone: true }),

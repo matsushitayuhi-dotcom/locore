@@ -26,6 +26,14 @@ export type CommunityPostListItem = {
   updatedAt: string;
   /** 投稿者が公開しているメールアドレス。応募側は mailto: でも連絡可能 */
   contactEmail: string | null;
+  /** 都市の日本語名（city_id → cities.name_ja）。地図フォールバック等に使う */
+  cityNameJa: string | null;
+  /** 住居の設備キー配列。manual/0059 未適用なら空配列 */
+  amenities: string[];
+  /** 物件のおおよその緯度。manual/0059 未適用なら null */
+  latitude: number | null;
+  /** 物件のおおよその経度。manual/0059 未適用なら null */
+  longitude: number | null;
 };
 
 export type ListOpts = {
@@ -194,6 +202,11 @@ export async function listCommunityPosts(
       closedAt: r.closedAt ? r.closedAt.toISOString() : null,
       viewCount: r.viewCount,
       contactEmail: r.contactEmail ?? null,
+      // 一覧では新カラムは不要なのでデフォルトのみ（詳細取得時に補完）
+      cityNameJa: null,
+      amenities: [],
+      latitude: null,
+      longitude: null,
       createdAt: r.createdAt.toISOString(),
       updatedAt: r.updatedAt.toISOString(),
     }),
@@ -305,6 +318,63 @@ export async function getCommunityPost(
 
   if (!r) return null;
 
+  // ----- 0059 設備 / 座標 + 都市名 (未適用環境では別 try/catch でフォールバック) -----
+  // base クエリと分離することで、カラム未適用でも詳細ページ自体は落ちない。
+  let amenities: string[] = [];
+  let latitude: number | null = null;
+  let longitude: number | null = null;
+  let cityNameJa: string | null = null;
+  try {
+    const rows = (await db
+      .select({
+        amenities: schema.communityPosts.amenities,
+        latitude: schema.communityPosts.latitude,
+        longitude: schema.communityPosts.longitude,
+        cityNameJa: schema.cities.nameJa,
+      })
+      .from(schema.communityPosts)
+      .leftJoin(schema.cities, eq(schema.cities.id, schema.communityPosts.cityId))
+      .where(eq(schema.communityPosts.id, id))
+      .limit(1)) as {
+      amenities: string[] | null;
+      latitude: number | null;
+      longitude: number | null;
+      cityNameJa: string | null;
+    }[];
+    const d = rows[0];
+    if (d) {
+      amenities = Array.isArray(d.amenities) ? d.amenities : [];
+      latitude = d.latitude ?? null;
+      longitude = d.longitude ?? null;
+      cityNameJa = d.cityNameJa ?? null;
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[getCommunityPost] amenities/latitude/longitude 列が未作成です。' +
+          'manual/0059_community_amenities_geo.sql を Supabase で適用してください。',
+      );
+      // 都市名だけでも別途取得を試みる（cities 側は既存テーブルのため落ちない想定）
+      try {
+        const crows = await db
+          .select({ cityNameJa: schema.cities.nameJa })
+          .from(schema.communityPosts)
+          .leftJoin(
+            schema.cities,
+            eq(schema.cities.id, schema.communityPosts.cityId),
+          )
+          .where(eq(schema.communityPosts.id, id))
+          .limit(1);
+        cityNameJa = crows[0]?.cityNameJa ?? null;
+      } catch {
+        /* noop */
+      }
+    } else {
+      console.error('[getCommunityPost] detail columns failed:', msg);
+    }
+  }
+
   return {
     id: r.id,
     kind: r.kind as CommunityKind,
@@ -324,6 +394,10 @@ export async function getCommunityPost(
     closedAt: r.closedAt ? r.closedAt.toISOString() : null,
     viewCount: r.viewCount,
     contactEmail: r.contactEmail ?? null,
+    cityNameJa,
+    amenities,
+    latitude,
+    longitude,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };

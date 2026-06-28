@@ -61,6 +61,11 @@ const createBaseSchema = z.object({
   priceCurrency: z.string().trim().max(8).optional().nullable(),
   priceUnit: z.enum(PRICE_UNITS).optional().nullable(),
   photos: z.array(z.string().url()).max(12).optional(),
+  /** 住居の設備キー配列（manual/0059）。他 kind では空でよい */
+  amenities: z.array(z.string().trim().max(40)).max(40).optional(),
+  /** 物件のおおよその緯度 / 経度（manual/0059）。任意 */
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
   contactMethod: z.enum(['locore_message']).optional(),
   /** 任意。投稿者が公開してよいメールアドレス。応募側が mailto: で連絡可能 */
   contactEmail: z
@@ -116,28 +121,59 @@ export async function createCommunityPost(
     Date.now() + DEFAULT_EXPIRY_DAYS[kind] * 24 * 60 * 60 * 1000,
   );
 
-  const inserted = await db
-    .insert(schema.communityPosts)
-    .values({
-      kind,
-      authorId: me.id,
-      title,
-      body,
-      cityId: parsed.data.cityId ?? null,
-      locationText: parsed.data.locationText ?? null,
-      priceAmount: parsed.data.priceAmount ?? null,
-      priceCurrency: parsed.data.priceCurrency ?? 'EUR',
-      priceUnit: parsed.data.priceUnit ?? null,
-      photos: parsed.data.photos ?? [],
-      contactMethod: parsed.data.contactMethod ?? 'locore_message',
-      contactEmail: parsed.data.contactEmail ?? null,
-      metadata: metaParsed.data,
-      status: 'active',
-      expiresAt,
-    })
-    .returning({ id: schema.communityPosts.id });
+  // 共通の値。amenities / latitude / longitude は manual/0059 のカラムなので
+  // 未適用環境では insert が「column does not exist」になる。その場合だけ
+  // 新カラムを外して再試行する（安全フォールバック）。
+  const baseValues = {
+    kind,
+    authorId: me.id,
+    title,
+    body,
+    cityId: parsed.data.cityId ?? null,
+    locationText: parsed.data.locationText ?? null,
+    priceAmount: parsed.data.priceAmount ?? null,
+    priceCurrency: parsed.data.priceCurrency ?? 'EUR',
+    priceUnit: parsed.data.priceUnit ?? null,
+    photos: parsed.data.photos ?? [],
+    contactMethod: parsed.data.contactMethod ?? 'locore_message',
+    contactEmail: parsed.data.contactEmail ?? null,
+    metadata: metaParsed.data,
+    status: 'active' as const,
+    expiresAt,
+  };
+  const geoValues = {
+    amenities: parsed.data.amenities ?? [],
+    latitude: parsed.data.latitude ?? null,
+    longitude: parsed.data.longitude ?? null,
+  };
 
-  const id = inserted[0]!.id;
+  let id: string;
+  try {
+    const inserted = await db
+      .insert(schema.communityPosts)
+      .values({ ...baseValues, ...geoValues })
+      .returning({ id: schema.communityPosts.id });
+    id = inserted[0]!.id;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (
+      /does not exist/i.test(msg) &&
+      /(amenities|latitude|longitude)/i.test(msg)
+    ) {
+      console.warn(
+        '[createCommunityPost] amenities/latitude/longitude 列が未作成です。' +
+          'manual/0059_community_amenities_geo.sql を適用してください。新カラムを除外して保存します。',
+      );
+      const inserted = await db
+        .insert(schema.communityPosts)
+        .values(baseValues)
+        .returning({ id: schema.communityPosts.id });
+      id = inserted[0]!.id;
+    } else {
+      throw err;
+    }
+  }
+
   const path = `${KIND_BASE_PATH[kind]}/${id}`;
   revalidatePath(KIND_BASE_PATH[kind]);
   revalidatePath(path);

@@ -9,6 +9,7 @@ import { ContactEmailField } from '@/components/community/ContactEmailField';
 import {
   APARTMENT_LISTING_TYPES,
   APARTMENT_LISTING_TYPE_LABEL,
+  APARTMENT_AMENITIES,
   type ApartmentListingType,
   type CommunityAudience,
 } from '@/lib/community/constants';
@@ -46,7 +47,16 @@ export function ApartmentForm() {
   const [body, setBody] = useState('');
   const [notes, setNotes] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [latitude, setLatitude] = useState<string>('');
+  const [longitude, setLongitude] = useState<string>('');
   const [contactEmail, setContactEmail] = useState('');
+
+  const toggleAmenity = (key: string) => {
+    setAmenities((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  };
 
   const numOrNull = (v: string): number | null => {
     if (!v.trim()) return null;
@@ -108,6 +118,18 @@ export function ApartmentForm() {
       .filter(Boolean)
       .join(' / ') || null;
 
+    // 座標は両方そろって有効なときのみ送る
+    const latNum = latitude.trim() ? Number(latitude) : null;
+    const lngNum = longitude.trim() ? Number(longitude) : null;
+    const latValid =
+      latNum != null && isFinite(latNum) && latNum >= -90 && latNum <= 90;
+    const lngValid =
+      lngNum != null && isFinite(lngNum) && lngNum >= -180 && lngNum <= 180;
+    if ((latitude.trim() || longitude.trim()) && !(latValid && lngValid)) {
+      toast.error('緯度・経度は両方を正しい範囲で入力してください');
+      return;
+    }
+
     startTransition(async () => {
       const res = await createCommunityPost({
         kind: 'apartment',
@@ -118,6 +140,9 @@ export function ApartmentForm() {
         priceCurrency: 'EUR',
         priceUnit: 'monthly',
         photos,
+        amenities,
+        latitude: latValid && lngValid ? latNum : null,
+        longitude: latValid && lngValid ? lngNum : null,
         contactEmail: contactEmail.trim() || undefined,
         metadata,
       });
@@ -338,6 +363,69 @@ export function ApartmentForm() {
         </div>
       </fieldset>
 
+      {/* 設備 */}
+      <fieldset>
+        <legend className="mb-2 text-[12px] font-bold text-foreground/75">
+          設備
+          <span className="ml-2 text-[10px] font-normal text-foreground/45">
+            該当するものを選択（詳細ページに一覧表示されます）
+          </span>
+        </legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {APARTMENT_AMENITIES.map((a) => {
+            const on = amenities.includes(a.key);
+            return (
+              <label
+                key={a.key}
+                className={
+                  'inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-[12px] font-medium transition ' +
+                  (on
+                    ? 'border-primary-500 bg-primary-500/10 text-foreground'
+                    : 'border-border bg-background text-foreground/75 hover:border-foreground/30')
+                }
+              >
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => toggleAmenity(a.key)}
+                  className="h-4 w-4 rounded border-border accent-primary-500"
+                />
+                {a.label}
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
+
+      {/* 地図位置（任意） */}
+      <fieldset>
+        <legend className="mb-2 text-[12px] font-bold text-foreground/75">
+          地図位置（任意）
+        </legend>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <NumberField
+            id="latitude"
+            label="緯度 (latitude)"
+            value={latitude}
+            onChange={setLatitude}
+            placeholder="48.853"
+            allowDecimal
+          />
+          <NumberField
+            id="longitude"
+            label="経度 (longitude)"
+            value={longitude}
+            onChange={setLongitude}
+            placeholder="2.369"
+            allowDecimal
+          />
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-foreground/55">
+          正確な番地は公開されません。地図は半径約 100m
+          のおおよそのエリアとして表示されます。未入力の場合は都市名のエリア地図にフォールバックします。
+        </p>
+      </fieldset>
+
       {/* 入居可能日 */}
       <fieldset>
         <legend className="mb-2 text-[12px] font-bold text-foreground/75">期間</legend>
@@ -460,12 +548,15 @@ function NumberField({
   value,
   onChange,
   placeholder,
+  allowDecimal = false,
 }: {
   id: string;
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
+  /** 小数（緯度・経度など）を許可する。既定は 0 以上の整数入力 */
+  allowDecimal?: boolean;
 }) {
   return (
     <div>
@@ -478,8 +569,8 @@ function NumberField({
       <input
         id={id}
         type="number"
-        inputMode="numeric"
-        min={0}
+        inputMode={allowDecimal ? 'decimal' : 'numeric'}
+        {...(allowDecimal ? { step: 'any' } : { min: 0 })}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

@@ -193,6 +193,43 @@ export const APARTMENT_LISTING_TYPE_LABEL: Record<ApartmentListingType, string> 
   sublet: 'サブレ',
 };
 
+/**
+ * 住居の設備一覧。詳細ページ・エディタで共用する「キー ⇔ 日本語ラベル」の写像。
+ *
+ * - DB では community_posts.amenities (text[]) に key 文字列の配列として保存する
+ *   (manual/0059_community_amenities_geo.sql)。
+ * - icon はインライン SVG のパスを参照するためのキー（ApartmentDetail.tsx の AmenIc に対応）。
+ *   未定義 / 該当なしの場合は汎用チェックアイコンにフォールバックする。
+ *
+ * 配列順がそのまま詳細ページ・チェックリストの表示順になる。
+ */
+export const APARTMENT_AMENITIES = [
+  { key: 'wifi', label: 'Wi‑Fi（無線LAN）', icon: 'wifi' },
+  { key: 'kitchen', label: 'フル装備キッチン', icon: 'kitchen' },
+  { key: 'washer', label: '洗濯機', icon: 'washer' },
+  { key: 'dryer', label: '乾燥機', icon: 'dryer' },
+  { key: 'heating', label: '暖房', icon: 'heating' },
+  { key: 'aircon', label: 'エアコン', icon: 'aircon' },
+  { key: 'fridge', label: '冷蔵庫', icon: 'fridge' },
+  { key: 'microwave', label: '電子レンジ', icon: 'microwave' },
+  { key: 'dishwasher', label: '食洗機', icon: 'dishwasher' },
+  { key: 'elevator', label: 'エレベーター', icon: 'elevator' },
+  { key: 'bathtub', label: 'バスタブ', icon: 'bathtub' },
+  { key: 'shower', label: 'シャワー', icon: 'shower' },
+  { key: 'balcony', label: 'バルコニー', icon: 'balcony' },
+  { key: 'bike_parking', label: '駐輪場', icon: 'bike' },
+  { key: 'bath_dryer', label: '浴室乾燥', icon: 'bath_dryer' },
+  { key: 'trash_24h', label: '24時間ゴミ出し', icon: 'trash' },
+  { key: 'tv', label: 'テレビ', icon: 'tv' },
+  { key: 'workspace', label: 'ワークスペース', icon: 'workspace' },
+] as const;
+
+export type ApartmentAmenityKey = (typeof APARTMENT_AMENITIES)[number]['key'];
+
+export const APARTMENT_AMENITY_LABEL: Record<string, string> = Object.fromEntries(
+  APARTMENT_AMENITIES.map((a) => [a.key, a.label]),
+);
+
 export const apartmentMetadataSchema = z.object({
   listing_type: z.enum(APARTMENT_LISTING_TYPES),
   rent_monthly: z.number().int().min(0).optional(),
