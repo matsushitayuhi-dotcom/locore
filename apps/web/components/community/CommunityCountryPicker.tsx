@@ -185,7 +185,7 @@ export function CommunityCountryPicker() {
       <div className="ccp-stage">
         <span className="ccp-kick ccp-rise ccp-d1">Community</span>
         <h1 className="ccp-rise ccp-d2">
-          訪れる国を、<em>選ぶ。</em>
+          訪れる国を<em>選ぶ。</em>
         </h1>
         <p className="ccp-lead ccp-rise ccp-d2">
           現地に暮らす日本人のコミュニティに、飛び込みましょう！
@@ -249,6 +249,15 @@ export function CommunityCountryPicker() {
           className={'ccp-cta' + (selected ? ' show' : '')}
           aria-hidden={!selected}
           tabIndex={selected ? 0 : -1}
+          onClick={() => {
+            // 選んだ国を記憶。次に「コミュニティ」を押すとこの国のページへ直行する。
+            if (selected?.href) {
+              const slug = selected.href.replace(/^\//, '');
+              document.cookie = `locore_community_country=${encodeURIComponent(
+                slug,
+              )}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+            }
+          }}
         >
           {selected ? `${selected.name}のコミュニティへ` : 'コミュニティへ'}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

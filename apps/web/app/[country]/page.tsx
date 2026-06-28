@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
+  ArrowLeft,
   ArrowRight,
   ArrowUpRight,
   Newspaper,
@@ -127,8 +128,15 @@ export default async function CountryHubPage({ params }: Props) {
           aria-hidden
           className="absolute inset-0 -z-10 bg-gradient-to-b from-neutral-950/55 via-neutral-950/45 to-neutral-950/75"
         />
-        <div className="mx-auto max-w-screen-xl px-4 pb-10 pt-16 sm:px-6 sm:pb-14 sm:pt-24">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary-300">
+        <div className="mx-auto max-w-screen-xl px-4 pb-10 pt-12 sm:px-6 sm:pb-14 sm:pt-20">
+          <Link
+            href="/community"
+            className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-white/85 ring-1 ring-white/25 backdrop-blur transition hover:bg-white/20 hover:text-white"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            国を選び直す
+          </Link>
+          <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.22em] text-primary-300">
             {country.nameEn}
           </p>
           <h1 className="mt-3 text-[32px] font-bold leading-[1.12] tracking-tight text-white sm:text-[46px]">

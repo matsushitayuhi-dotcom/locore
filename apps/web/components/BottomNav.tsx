@@ -9,6 +9,7 @@ import {
   Search,
   type LucideIcon,
 } from 'lucide-react';
+import { useCommunityHref } from './community/useCommunityHref';
 
 /**
  * モバイル下部タブナビゲーション (md 未満で固定表示)。
@@ -73,6 +74,8 @@ const TABS: Tab[] = [
 
 export function BottomNav() {
   const pathname = usePathname() ?? '/';
+  // 「コミュニティ」は国を選択済みならその国ページへ（cookie 記憶）。
+  const communityHref = useCommunityHref();
 
   if (HIDE_ON_ROUTES.some((fn) => fn(pathname))) return null;
 
@@ -86,7 +89,13 @@ export function BottomNav() {
     >
       <ul className="flex items-stretch justify-around px-1 pt-1">
         {TABS.map((t, i) => {
-          const isActive = t.match(pathname);
+          const isCommunity = t.href === '/community';
+          const href = isCommunity ? communityHref : t.href;
+          const isActive =
+            t.match(pathname) ||
+            (isCommunity &&
+              communityHref !== '/community' &&
+              pathname.startsWith(communityHref));
           const Icon = t.icon;
           const className =
             'group relative flex h-14 min-h-[56px] w-full flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast active:scale-[0.94] ' +
@@ -97,7 +106,7 @@ export function BottomNav() {
           return (
             <li key={i} className="flex-1">
               <Link
-                href={t.href}
+                href={href}
                 aria-current={isActive ? 'page' : undefined}
                 className={className}
               >

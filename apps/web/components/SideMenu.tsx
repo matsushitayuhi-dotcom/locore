@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
+import { useCommunityHref } from './community/useCommunityHref';
 import { Logo } from './Logo';
 import {
   Menu,
@@ -233,6 +234,8 @@ function DrawerPanel({
   unreadChatCount: number;
   pathname: string;
 }) {
+  // 「コミュニティ」は国を選択済みならその国ページへ（cookie 記憶）。
+  const communityHref = useCommunityHref();
   return (
     <>
       {open ? (
@@ -285,7 +288,15 @@ function DrawerPanel({
           {/* PC では SiteHeader 中央 nav と冗長だが、モバイルではここが唯一のナビ。 */}
           <Section title="ナビゲーション">
             {NAV_ITEMS.map((it) => (
-              <NavLink key={it.href} item={it} pathname={pathname} />
+              <NavLink
+                key={it.href}
+                item={
+                  it.href === '/community'
+                    ? { ...it, href: communityHref }
+                    : it
+                }
+                pathname={pathname}
+              />
             ))}
           </Section>
 
