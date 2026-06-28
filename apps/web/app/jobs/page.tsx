@@ -45,7 +45,7 @@ const CANDIDATE_REGIONS: JobRegion[] = [
   { slug: 'rennes', label: 'レンヌ' },
 ];
 
-// メタデータからカードで使うキーだけ抜き出す（payload 最小化）。
+// メタデータからカード/フィルタで使うキーだけ抜き出す（payload 最小化）。
 const META_KEYS = [
   'employment_type',
   'category',
@@ -54,6 +54,16 @@ const META_KEYS = [
   'audience',
   'salary_period',
   'region_slug',
+  // 拡張: 一覧の絞り込み / カード表示に必要な最小限
+  'contract_type',
+  'industry',
+  'visa_sponsorship',
+  'urgent',
+  'salary_max',
+  'salary_kind',
+  'remote_type',
+  'japanese_language_ok',
+  'benefits',
 ] as const;
 
 export default async function JobsIndexPage({
@@ -76,6 +86,15 @@ export default async function JobsIndexPage({
     for (const k of META_KEYS) {
       if (m[k] !== undefined) meta[k] = m[k];
     }
+    // キーワード検索用に本文・スキルを小さなテキストへ畳む（payload 最小化のため
+    // 先頭 280 文字 + スキルのみ）。カード表示には使わない。
+    const skills = [
+      ...((m.essential_skills as string[] | undefined) ?? []),
+      ...((m.preferred_skills as string[] | undefined) ?? []),
+    ].join(' ');
+    const searchText = `${p.title} ${p.body.slice(0, 280)} ${skills}`
+      .toLowerCase()
+      .slice(0, 400);
     return {
       id: p.id,
       title: p.title,
@@ -86,6 +105,7 @@ export default async function JobsIndexPage({
       priceUnit: p.priceUnit,
       createdAt: p.createdAt,
       expiresAt: p.expiresAt,
+      searchText,
       meta: meta as JobListPost['meta'],
     };
   });

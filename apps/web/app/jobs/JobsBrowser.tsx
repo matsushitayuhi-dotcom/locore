@@ -16,6 +16,10 @@ import {
   LayoutGrid,
   SlidersHorizontal,
   X,
+  Search,
+  ShieldCheck,
+  Flame,
+  Languages,
 } from 'lucide-react';
 import { PostFab } from '@/components/community/PostFab';
 import {
@@ -23,9 +27,16 @@ import {
   JOB_EMPLOYMENT_TYPE_LABEL,
   JOB_CATEGORIES,
   JOB_CATEGORY_LABEL,
+  JOB_CONTRACT_TYPES,
+  JOB_CONTRACT_TYPE_LABEL,
+  JOB_INDUSTRIES,
+  JOB_INDUSTRY_LABEL,
+  JOB_BENEFIT_LABEL,
   PRICE_UNIT_LABEL,
   type JobEmploymentType,
   type JobCategory,
+  type JobContractType,
+  type JobIndustry,
   type CommunityAudience,
 } from '@/lib/community/constants';
 
@@ -33,17 +44,15 @@ import {
  * /jobs のクライアント側フィルタ + 一覧描画。
  *
  * 【2026-06 キャッシュ改修】
- * 以前はサーバーコンポーネントが searchParams を読んでサーバー側でフィルタして
- * いたが、searchParams を読むと Next.js が強制的に動的レンダリング (no-store) に
- * するため、/jobs が一切エッジキャッシュされず Origin Data Transfer が暴騰していた。
+ * サーバーは「最新の求人を全件 (最大 30)」だけ取得して静的レンダリングし、フィルタは
+ * このクライアントコンポーネントが担う。/jobs は誰に対しても同一の静的 HTML となり、
+ * ?type=... 等のクエリが付いても CDN が同一キャッシュを返す。
  *
- * 対策: サーバーは「最新の求人を全件 (最大 100)」だけ取得して静的レンダリングし、
- * フィルタはこのクライアントコンポーネントが担う。これで /jobs は誰に対しても
- * 同一の静的 HTML となり、?type=... 等のクエリが付いても CDN が同一キャッシュを
- * 返す (= クローラの URL 総当たりも Origin に到達しない)。
- *
- * - 初期フィルタ状態は URL の searchParams から 1 度だけ復元 (ディープリンク対応)
- * - 以降はクライアント state のみ。サーバーには二度と問い合わせない
+ * 【絞り込み再設計】
+ * - クイックチップ（ワンタップ）: ビザサポート / リモート / 急募 / 日本語OK
+ * - キーワード検索（title / body 先頭 / skills を対象。クライアントで部分一致）
+ * - エリア（都市）・対象者（既存）
+ * - 詳細シート: 雇用形態 / 契約形態 / 職種 / 業種 / 給与レンジ min–max / 語学 / 並び順
  */
 
 type Lang = 'ja' | 'fr' | 'en';
@@ -67,12 +76,22 @@ type JobMeta = {
   audience?: CommunityAudience;
   salary_period?: string;
   region_slug?: string;
+  // 拡張
+  contract_type?: JobContractType;
+  industry?: JobIndustry;
+  visa_sponsorship?: boolean;
+  urgent?: boolean;
+  salary_max?: number;
+  salary_kind?: 'gross' | 'net';
+  remote_type?: 'onsite' | 'hybrid' | 'remote';
+  japanese_language_ok?: 'required' | 'preferred' | 'not_required';
+  benefits?: string[];
 };
 
 /**
  * クライアントへ渡す求人 1 件のスリム表現。
- * カードに表示しない body / author / contactEmail / viewCount 等は含めず、
- * payload を最小化する（Fast Data Transfer 課金対策）。
+ * カードに表示しない author / contactEmail / viewCount 等は含めず payload を最小化。
+ * searchText はキーワード検索用に本文先頭+スキルを畳んだ小さな文字列。
  */
 export type JobListPost = {
   id: string;
@@ -84,6 +103,7 @@ export type JobListPost = {
   priceUnit: string | null;
   createdAt: string;
   expiresAt: string | null;
+  searchText: string;
   meta: JobMeta;
 };
 
@@ -103,6 +123,10 @@ function annualizedSalary(post: JobListPost): number | null {
   }
 }
 
+function currencySym(cur: string): string {
+  return cur === 'JPY' ? '¥' : '€';
+}
+
 function formatSalary(post: JobListPost): string | null {
   const meta = post.meta;
   if (!post.priceAmount) {
@@ -118,9 +142,14 @@ function formatSalary(post: JobListPost): string | null {
         : period === 'hourly'
           ? '時給'
           : '';
-  const currencySym = post.priceCurrency === 'JPY' ? '¥' : '€';
-  const num = new Intl.NumberFormat('fr-FR').format(post.priceAmount);
-  return `${unitLabel} ${currencySym}${num}`;
+  const sym = currencySym(post.priceCurrency);
+  const min = new Intl.NumberFormat('fr-FR').format(post.priceAmount);
+  // レンジ表示 (salary_max が下限超過時のみ)
+  if (meta.salary_max && meta.salary_max > post.priceAmount) {
+    const max = new Intl.NumberFormat('fr-FR').format(meta.salary_max);
+    return `${unitLabel} ${sym}${min}〜${sym}${max}`;
+  }
+  return `${unitLabel} ${sym}${min}`;
 }
 
 function formatPostedAt(d: string): string {
@@ -143,14 +172,26 @@ function daysUntil(iso: string | null): number | null {
   return Math.ceil((d.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
+function isRemote(meta: JobMeta): boolean {
+  return Boolean(meta.remote_ok) || (meta.remote_type != null && meta.remote_type !== 'onsite');
+}
+
 type FilterState = {
   region: string | undefined;
   audience: CommunityAudience | undefined;
+  q: string;
   type: JobEmploymentType | undefined;
+  contract: JobContractType | undefined;
   cat: JobCategory | undefined;
+  industry: JobIndustry | undefined;
   lang: Lang | undefined;
-  remote: boolean;
   min: number | null;
+  max: number | null;
+  // クイックチップ
+  visa: boolean;
+  remote: boolean;
+  urgent: boolean;
+  jpok: boolean;
   sort: Sort;
   view: View;
 };
@@ -158,11 +199,18 @@ type FilterState = {
 const EMPTY_FILTERS: FilterState = {
   region: undefined,
   audience: undefined,
+  q: '',
   type: undefined,
+  contract: undefined,
   cat: undefined,
+  industry: undefined,
   lang: undefined,
-  remote: false,
   min: null,
+  max: null,
+  visa: false,
+  remote: false,
+  urgent: false,
+  jpok: false,
   sort: 'new',
   view: 'card',
 };
@@ -172,10 +220,20 @@ function initFromSearch(sp: URLSearchParams): FilterState {
   const type = (JOB_EMPLOYMENT_TYPES as readonly string[]).includes(typeRaw ?? '')
     ? (typeRaw as JobEmploymentType)
     : undefined;
+  const contractRaw = sp.get('contract') ?? undefined;
+  const contract =
+    contractRaw && (JOB_CONTRACT_TYPES as readonly string[]).includes(contractRaw)
+      ? (contractRaw as JobContractType)
+      : undefined;
   const catRaw = sp.get('cat') ?? undefined;
   const cat = catRaw && (JOB_CATEGORIES as readonly string[]).includes(catRaw)
     ? (catRaw as JobCategory)
     : undefined;
+  const indRaw = sp.get('industry') ?? undefined;
+  const industry =
+    indRaw && (JOB_INDUSTRIES as readonly string[]).includes(indRaw)
+      ? (indRaw as JobIndustry)
+      : undefined;
   const langRaw = sp.get('lang')?.split(',')[0];
   const lang = (ALL_LANGS as readonly string[]).includes(langRaw ?? '')
     ? (langRaw as Lang)
@@ -186,14 +244,22 @@ function initFromSearch(sp: URLSearchParams): FilterState {
       ? (audRaw as CommunityAudience)
       : undefined;
   const minN = Number(sp.get('min'));
+  const maxN = Number(sp.get('max'));
   return {
     region: sp.get('region') ?? undefined,
     audience,
+    q: sp.get('q') ?? '',
     type,
+    contract,
     cat,
+    industry,
     lang,
-    remote: sp.get('remote') === '1',
     min: Number.isFinite(minN) && minN > 0 ? minN : null,
+    max: Number.isFinite(maxN) && maxN > 0 ? maxN : null,
+    visa: sp.get('visa') === '1',
+    remote: sp.get('remote') === '1',
+    urgent: sp.get('urgent') === '1',
+    jpok: sp.get('jpok') === '1',
     sort: sp.get('sort') === 'salary' ? 'salary' : 'new',
     view: sp.get('view') === 'list' ? 'list' : 'card',
   };
@@ -223,11 +289,18 @@ export function JobsBrowser({
     const params = new URLSearchParams();
     if (filters.region) params.set('region', filters.region);
     if (filters.audience) params.set('audience', filters.audience);
+    if (filters.q.trim()) params.set('q', filters.q.trim());
     if (filters.type) params.set('type', filters.type);
+    if (filters.contract) params.set('contract', filters.contract);
     if (filters.cat) params.set('cat', filters.cat);
+    if (filters.industry) params.set('industry', filters.industry);
     if (filters.lang) params.set('lang', filters.lang);
-    if (filters.remote) params.set('remote', '1');
     if (filters.min) params.set('min', String(filters.min));
+    if (filters.max) params.set('max', String(filters.max));
+    if (filters.visa) params.set('visa', '1');
+    if (filters.remote) params.set('remote', '1');
+    if (filters.urgent) params.set('urgent', '1');
+    if (filters.jpok) params.set('jpok', '1');
     if (filters.sort !== 'new') params.set('sort', filters.sort);
     if (filters.view !== 'card') params.set('view', filters.view);
     const qs = params.toString();
@@ -239,26 +312,35 @@ export function JobsBrowser({
     setFilters((f) => ({ ...f, [key]: value }));
 
   const filtered = useMemo(() => {
+    const q = filters.q.trim().toLowerCase();
     const out = posts.filter((p) => {
       const meta = p.meta;
       if (filters.region) {
         const rs = meta.region_slug;
         if (rs && rs !== filters.region) return false;
-        // region_slug が無いデータは都市不明として、特定都市選択時は除外しない
-        // （MOC 段階ではデータが少ないため緩める）
       }
+      if (q && !p.searchText.includes(q)) return false;
       if (filters.type) {
         if (!meta.employment_type || meta.employment_type !== filters.type) return false;
       }
+      if (filters.contract && meta.contract_type !== filters.contract) return false;
       if (filters.cat && meta.category !== filters.cat) return false;
+      if (filters.industry && meta.industry !== filters.industry) return false;
       if (filters.lang) {
         const langs = meta.language_requirements ?? [];
         if (!langs.includes(filters.lang)) return false;
       }
-      if (filters.remote && !meta.remote_ok) return false;
-      if (filters.min) {
+      // クイックチップ
+      if (filters.visa && !meta.visa_sponsorship) return false;
+      if (filters.remote && !isRemote(meta)) return false;
+      if (filters.urgent && !meta.urgent) return false;
+      if (filters.jpok && meta.japanese_language_ok === 'required') return false;
+      // 給与レンジ (annualized で両側)
+      if (filters.min || filters.max) {
         const annual = annualizedSalary(p);
-        if (annual === null || annual < filters.min) return false;
+        if (annual === null) return false;
+        if (filters.min && annual < filters.min) return false;
+        if (filters.max && annual > filters.max) return false;
       }
       if (filters.audience) {
         if (
@@ -281,10 +363,11 @@ export function JobsBrowser({
 
   const sheetCount =
     (filters.type ? 1 : 0) +
+    (filters.contract ? 1 : 0) +
     (filters.cat ? 1 : 0) +
+    (filters.industry ? 1 : 0) +
     (filters.lang ? 1 : 0) +
-    (filters.remote ? 1 : 0) +
-    (filters.min ? 1 : 0) +
+    (filters.min || filters.max ? 1 : 0) +
     (filters.sort !== 'new' ? 1 : 0);
 
   const activeRegionLabel =
@@ -298,9 +381,59 @@ export function JobsBrowser({
 
   return (
     <>
+      {/* ===== キーワード検索 ===== */}
+      <div className="relative mt-1">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+        <input
+          type="search"
+          value={filters.q}
+          onChange={(e) => set('q', e.target.value)}
+          placeholder="キーワードで検索（職種・スキル・会社など）"
+          className="h-10 w-full rounded-full border border-border bg-card pl-9 pr-9 text-[13px] focus:border-2 focus:border-primary-500 focus:pl-[35px] focus:outline-none"
+        />
+        {filters.q ? (
+          <button
+            type="button"
+            aria-label="検索をクリア"
+            onClick={() => set('q', '')}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-foreground/45 hover:bg-muted"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </div>
+
+      {/* ===== クイックチップ ===== */}
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <QuickChip
+          icon={<ShieldCheck className="h-3.5 w-3.5" />}
+          label="ビザサポート"
+          active={filters.visa}
+          onClick={() => set('visa', !filters.visa)}
+        />
+        <QuickChip
+          icon={<Wifi className="h-3.5 w-3.5" />}
+          label="リモート"
+          active={filters.remote}
+          onClick={() => set('remote', !filters.remote)}
+        />
+        <QuickChip
+          icon={<Flame className="h-3.5 w-3.5" />}
+          label="急募"
+          active={filters.urgent}
+          onClick={() => set('urgent', !filters.urgent)}
+        />
+        <QuickChip
+          icon={<Languages className="h-3.5 w-3.5" />}
+          label="日本語OK"
+          active={filters.jpok}
+          onClick={() => set('jpok', !filters.jpok)}
+        />
+      </div>
+
       {/* ===== コンパクトフィルタバー ===== */}
       <div
-        className="sticky top-[100px] z-10 -mx-4 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0"
+        className="sticky top-[100px] z-10 -mx-4 mt-2 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0"
         data-community-filterbar
       >
         <div className="flex flex-wrap items-center gap-1.5">
@@ -326,11 +459,7 @@ export function JobsBrowser({
           </Dropdown>
 
           {/* 対象者 */}
-          <Dropdown
-            icon={null}
-            label={audienceLabel}
-            active={!!filters.audience}
-          >
+          <Dropdown icon={null} label={audienceLabel} active={!!filters.audience}>
             <DropItem
               label="すべて"
               active={!filters.audience}
@@ -479,6 +608,20 @@ export function JobsBrowser({
                 ]}
               />
               <SelectField
+                label="契約形態"
+                value={filters.contract ?? ''}
+                onChange={(v) =>
+                  set('contract', (v || undefined) as JobContractType | undefined)
+                }
+                options={[
+                  { value: '', label: 'すべて' },
+                  ...JOB_CONTRACT_TYPES.map((t) => ({
+                    value: t,
+                    label: JOB_CONTRACT_TYPE_LABEL[t],
+                  })),
+                ]}
+              />
+              <SelectField
                 label="職種"
                 value={filters.cat ?? ''}
                 onChange={(v) =>
@@ -493,6 +636,20 @@ export function JobsBrowser({
                 ]}
               />
               <SelectField
+                label="業種"
+                value={filters.industry ?? ''}
+                onChange={(v) =>
+                  set('industry', (v || undefined) as JobIndustry | undefined)
+                }
+                options={[
+                  { value: '', label: 'すべて' },
+                  ...JOB_INDUSTRIES.map((c) => ({
+                    value: c,
+                    label: JOB_INDUSTRY_LABEL[c],
+                  })),
+                ]}
+              />
+              <SelectField
                 label="言語要件"
                 value={filters.lang ?? ''}
                 onChange={(v) => set('lang', (v || undefined) as Lang | undefined)}
@@ -503,31 +660,36 @@ export function JobsBrowser({
               />
               <div>
                 <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-foreground/55">
-                  年収下限（€）
+                  年収レンジ（€・年額換算）
                 </label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={filters.min ?? ''}
-                  onChange={(e) => {
-                    const n = Number(e.target.value);
-                    set('min', Number.isFinite(n) && n > 0 ? n : null);
-                  }}
-                  placeholder="35000"
-                  className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={filters.min ?? ''}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      set('min', Number.isFinite(n) && n > 0 ? n : null);
+                    }}
+                    placeholder="下限 35000"
+                    className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
+                  />
+                  <span className="text-foreground/40">〜</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={filters.max ?? ''}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      set('max', Number.isFinite(n) && n > 0 ? n : null);
+                    }}
+                    placeholder="上限 60000"
+                    className="h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] tabular focus:border-2 focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
               </div>
-              <label className="inline-flex items-center gap-2 text-[13px] text-foreground/80">
-                <input
-                  type="checkbox"
-                  checked={filters.remote}
-                  onChange={(e) => set('remote', e.target.checked)}
-                  className="h-4 w-4 rounded border-border"
-                />
-                <Wifi className="h-3.5 w-3.5" />
-                リモート OK のみ
-              </label>
               <SelectField
                 label="並び順"
                 value={filters.sort}
@@ -547,6 +709,11 @@ export function JobsBrowser({
                     ...EMPTY_FILTERS,
                     region: f.region,
                     audience: f.audience,
+                    q: f.q,
+                    visa: f.visa,
+                    remote: f.remote,
+                    urgent: f.urgent,
+                    jpok: f.jpok,
                     view: f.view,
                   }))
                 }
@@ -570,6 +737,35 @@ export function JobsBrowser({
 }
 
 /* ───────────────────── サブコンポーネント ───────────────────── */
+
+function QuickChip({
+  icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={
+        'inline-flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition ' +
+        (active
+          ? 'border-primary-500 bg-primary-500 text-neutral-950'
+          : 'border-border bg-card text-foreground/70 hover:border-primary-300 hover:text-foreground')
+      }
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
 
 function Dropdown({
   icon,
@@ -617,7 +813,6 @@ function DropItem({
       type="button"
       onClick={(e) => {
         onClick();
-        // 親 <details> を閉じる
         const d = (e.currentTarget.closest('details') as HTMLDetailsElement) ?? null;
         if (d) d.open = false;
       }}
@@ -664,6 +859,40 @@ function SelectField({
   );
 }
 
+/** カード/リスト共通のタグ群 (急募・契約形態・ビザ・リモート) */
+function JobTags({ meta, small }: { meta: JobMeta; small?: boolean }) {
+  const sz = small ? 'text-[9px]' : 'text-[9px]';
+  return (
+    <>
+      {meta.urgent ? (
+        <span className={`inline-flex items-center gap-0.5 rounded-sm bg-warning-500 px-1.5 py-0.5 ${sz} font-bold uppercase tracking-wider text-white shadow-sm`}>
+          急募
+        </span>
+      ) : null}
+      {meta.contract_type ? (
+        <span className={`rounded-sm bg-primary-500/90 px-1.5 py-0.5 ${sz} font-bold uppercase tracking-wider text-neutral-950 shadow-sm`}>
+          {JOB_CONTRACT_TYPE_LABEL[meta.contract_type].split('（')[0]}
+        </span>
+      ) : meta.employment_type ? (
+        <span className={`rounded-sm bg-primary-500/90 px-1.5 py-0.5 ${sz} font-bold uppercase tracking-wider text-neutral-950 shadow-sm`}>
+          {JOB_EMPLOYMENT_TYPE_LABEL[meta.employment_type]}
+        </span>
+      ) : null}
+      {meta.visa_sponsorship ? (
+        <span className={`rounded-sm bg-card/95 px-1.5 py-0.5 ${sz} font-bold uppercase tracking-wider text-primary-700 shadow-sm ring-1 ring-border/60 backdrop-blur`}>
+          ビザ支援
+        </span>
+      ) : null}
+      {isRemote(meta) ? (
+        <span className={`inline-flex items-center gap-0.5 rounded-sm bg-accent-500/90 px-1.5 py-0.5 ${sz} font-bold uppercase tracking-wider text-neutral-950 shadow-sm`}>
+          <Wifi className="h-2.5 w-2.5" />
+          Remote
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 function JobListItem({ post }: { post: JobListPost }) {
   const meta = post.meta;
   const salary = formatSalary(post);
@@ -694,20 +923,10 @@ function JobListItem({ post }: { post: JobListPost }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
-            {meta.employment_type ? (
-              <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
-                {JOB_EMPLOYMENT_TYPE_LABEL[meta.employment_type]}
-              </span>
-            ) : null}
+            <JobTags meta={meta} small />
             {meta.category ? (
               <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
                 {JOB_CATEGORY_LABEL[meta.category]}
-              </span>
-            ) : null}
-            {meta.remote_ok ? (
-              <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
-                <Wifi className="h-2.5 w-2.5" />
-                Remote
               </span>
             ) : null}
           </div>
@@ -744,6 +963,11 @@ function JobCard({ post }: { post: JobListPost }) {
   const expiringSoon = expDays !== null && expDays >= 0 && expDays <= 3;
   const cover = post.photo;
 
+  // 福利厚生のミニ表示 (最大 2 件)
+  const benefitLabels = (meta.benefits ?? [])
+    .slice(0, 2)
+    .map((k) => JOB_BENEFIT_LABEL[k] ?? k);
+
   return (
     <li>
       <Link
@@ -770,20 +994,10 @@ function JobCard({ post }: { post: JobListPost }) {
           )}
 
           <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
-            {meta.employment_type ? (
-              <span className="rounded-sm bg-primary-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
-                {JOB_EMPLOYMENT_TYPE_LABEL[meta.employment_type]}
-              </span>
-            ) : null}
+            <JobTags meta={meta} />
             {meta.category ? (
               <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
                 {JOB_CATEGORY_LABEL[meta.category]}
-              </span>
-            ) : null}
-            {meta.remote_ok ? (
-              <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
-                <Wifi className="h-2.5 w-2.5" />
-                Remote
               </span>
             ) : null}
           </div>
@@ -829,6 +1043,20 @@ function JobCard({ post }: { post: JobListPost }) {
               </li>
             ) : null}
           </ul>
+
+          {/* 福利厚生ミニ表示 */}
+          {benefitLabels.length > 0 ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {benefitLabels.map((b) => (
+                <span
+                  key={b}
+                  className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium text-primary-700"
+                >
+                  {b}
+                </span>
+              ))}
+            </div>
+          ) : null}
 
           <div className="mt-2 flex items-center justify-between gap-1">
             <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
