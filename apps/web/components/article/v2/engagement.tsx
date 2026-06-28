@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Heart, Bookmark, BookmarkCheck } from 'lucide-react';
-import { LocalTierBadge, SatisfactionStars } from '@locore/ui';
 import { toggleArticleLike } from '@/lib/articleLikes/actions';
 import { addBookmark, removeBookmark } from '@/lib/bookmarks/actions';
+import { ReviewForm } from '../../ReviewForm';
 import { authorMeta } from './shared';
 import type { Article, Writer, Spot, Review } from '@/lib/mock';
 import type { FolderSummary } from '@/lib/spotFavorites/actions';
@@ -379,48 +379,143 @@ export function AuthorCard({
   );
 }
 
-/* ===================== レビュー一覧 ===================== */
+/* ===================== レビュー（一覧・投稿）===================== */
 
-export function ReviewsList({ reviews }: { reviews: Review[] }) {
+/** ライム/アンバーの上品な星評価（満足度）。塗り＋半端は floor 表示。 */
+function StarRow({ rating }: { rating: number }) {
+  const full = Math.round(rating);
   return (
-    <section>
-      <h3 className="mb-4 text-[18px] font-semibold tracking-tight">
-        レビュー
-        <span className="ml-2 text-[12px] font-normal text-foreground/50 tabular">
-          {reviews.length}
-        </span>
-      </h3>
-      <div className="space-y-4">
-        {reviews.slice(0, 6).map((r) => (
-          <article
-            key={r.id}
-            className="rounded-md border border-border bg-card p-4 text-[14px]"
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="font-medium">{r.authorName}</p>
-              <p className="text-[11px] text-foreground/40 tabular">
-                訪問 {new Date(r.visitedAt).toLocaleDateString('ja-JP')}
-              </p>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <LocalTierBadge score={r.localScore} size="sm" />
-              <SatisfactionStars rating={r.satisfaction} size="sm" showStars />
-            </div>
-            <p className="mt-3 leading-relaxed text-foreground/80">{r.body}</p>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {r.tags.map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] text-foreground/60"
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
-          </article>
-        ))}
+    <span className="stars" aria-label={`満足度 ${rating} / 5`}>
+      {[1, 2, 3, 4, 5].map((n) => (
+        <svg
+          key={n}
+          className={n <= full ? 'on' : ''}
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
+          <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17.4l-5.8 3.05 1.1-6.47L2.6 9.35l6.5-.95L12 2.5z" />
+        </svg>
+      ))}
+    </span>
+  );
+}
+
+/** 名前のイニシャルを使ったアバター丸（写真が無いレビュアー用）。 */
+function ReviewAvatar({ name }: { name: string }) {
+  const initial = name?.trim()?.[0] ?? '・';
+  return <span className="av" aria-hidden>{initial}</span>;
+}
+
+/**
+ * レビュー一覧。ランディング/ブランド調（白カード・角丸・ライムアクセント・
+ * JetBrains Mono ラベル・上品な星）で作り直す。variant で scoped class を当てる。
+ * 各レビュー = アバター＋名前＋日付＋スコア（満足度の星・ローカル度）＋本文＋タグ。
+ */
+export function ReviewsList({
+  reviews,
+  variant = 'tj',
+}: {
+  reviews: Review[];
+  variant?: V2Variant;
+}) {
+  return (
+    <section className={`${variant}-revsec`}>
+      <div className="rvhead">
+        <span className="rvk">— Reviews</span>
+        <h3>
+          みんなのレビュー
+          <span className="ct">{reviews.length}</span>
+        </h3>
       </div>
+
+      {reviews.length === 0 ? (
+        <div className="rvempty">
+          まだレビューはありません。最初の一人になりましょう。
+        </div>
+      ) : (
+        <div className="rvlist">
+          {reviews.slice(0, 6).map((r) => (
+            <article key={r.id} className="rvcard">
+              <div className="rvtop">
+                <ReviewAvatar name={r.authorName} />
+                <div className="who">
+                  <div className="nm">{r.authorName}</div>
+                  <div className="dt">
+                    訪問 {new Date(r.visitedAt).toLocaleDateString('ja-JP')}
+                  </div>
+                </div>
+                <div className="sc">
+                  <StarRow rating={r.satisfaction} />
+                  <span className="local">
+                    ローカル度 <b>{r.localScore}</b>
+                  </span>
+                </div>
+              </div>
+              {r.body ? <p className="rvbody">{r.body}</p> : null}
+              {r.tags.length > 0 ? (
+                <div className="rvtags">
+                  {r.tags.map((t) => (
+                    <span key={t} className="rvtag">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      )}
     </section>
+  );
+}
+
+/**
+ * v2 記事フッターのレビュー投稿ブロック（ブランド調）。
+ *
+ * 共有 ReviewForm（lime トークンで配色済み・他画面でも使用）はそのまま再利用し、
+ * 「レビューを書く」トグルだけをブランド調（ライムCTA）に。レイアウト側からは
+ * このコンポーネントを使う（共有 ReviewFormToggle のニュートラル配色を v2 では使わない）。
+ * 機能・投稿フローは不変。
+ */
+export function ReviewBlock({
+  articleId,
+  myReview,
+  variant = 'tj',
+}: {
+  articleId: string;
+  myReview: MyReview;
+  variant?: V2Variant;
+}) {
+  const [open, setOpen] = useState(false);
+  const isEditing = !!myReview;
+
+  if (open) {
+    return (
+      <div className={`${variant}-revform`}>
+        <ReviewForm articleId={articleId} initial={myReview} />
+        <div className="closeRow">
+          <button type="button" onClick={() => setOpen(false)}>
+            閉じる
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className={`${variant}-revcta`}
+    >
+      <span className="left">
+        <svg viewBox="0 0 24 24" aria-hidden>
+          <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17.4l-5.8 3.05 1.1-6.47L2.6 9.35l6.5-.95L12 2.5z" />
+        </svg>
+        {isEditing ? '自分のレビューを編集' : 'レビューを書く'}
+      </span>
+      <span className="right">{isEditing ? 'タップで開く' : 'タップで開く ・ 1分'}</span>
+    </button>
   );
 }
 

@@ -4,7 +4,6 @@ import { useMemo, useRef } from 'react';
 import { buildSpotGoogleMapsUrl } from '@/lib/maps/googleMapsUrls';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
-import { ReviewFormToggle } from '../ReviewFormToggle';
 import { CSS } from './placeGuideCss';
 import {
   fmtDate,
@@ -20,6 +19,7 @@ import {
   AuthorCard,
   RelatedArticles,
   ReviewsList,
+  ReviewBlock,
   type EngagementProps,
 } from './engagement';
 
@@ -324,7 +324,11 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
           {!previewMode && !isOwner ? (
             <section className="pg-listsec" style={{ padding: '8px 0 0' }}>
               <div className="pg-wrap">
-                <ReviewFormToggle articleId={article.id} initial={myReview} />
+                <ReviewBlock
+                  articleId={article.id}
+                  myReview={myReview}
+                  variant="pg"
+                />
               </div>
             </section>
           ) : null}
@@ -345,7 +349,7 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
       {/* ===== レビュー一覧 ===== */}
       <section className="pg-listsec" style={{ padding: '0 0 8px' }}>
         <div className="pg-wrap">
-          <ReviewsList reviews={reviews} />
+          <ReviewsList reviews={reviews} variant="pg" />
         </div>
       </section>
 

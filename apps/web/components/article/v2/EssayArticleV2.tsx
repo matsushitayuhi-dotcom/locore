@@ -3,13 +3,13 @@
 import { useMemo, useRef, type ReactNode } from 'react';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
-import { ReviewFormToggle } from '../ReviewFormToggle';
 import { CSS } from './essayCss';
 import { fmtDate, HeroNetCanvas, useReveal, authorMeta } from './shared';
 import {
   AuthorCard,
   RelatedArticles,
   ReviewsList,
+  ReviewBlock,
   type EngagementProps,
 } from './engagement';
 
@@ -178,7 +178,11 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
           {/* レビュー投稿（購入読者のみ。preview / owner では出さない）*/}
           {!previewMode && unlocked && !isOwner ? (
             <div style={{ marginTop: 28 }}>
-              <ReviewFormToggle articleId={article.id} initial={myReview} />
+              <ReviewBlock
+                articleId={article.id}
+                myReview={myReview}
+                variant="es"
+              />
             </div>
           ) : null}
         </div>
@@ -198,7 +202,7 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
       {/* ===== レビュー一覧 ===== */}
       <section className="es-foot" style={{ paddingTop: 0 }}>
         <div className="es-read">
-          <ReviewsList reviews={reviews} />
+          <ReviewsList reviews={reviews} variant="es" />
         </div>
       </section>
 

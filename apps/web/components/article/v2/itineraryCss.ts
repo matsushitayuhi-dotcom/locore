@@ -162,6 +162,41 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-bodywrap{max-width:760px;margin:0 auto;padding:0 24px}
 @media(max-width:720px){.tj-body{padding:32px 0 12px}}
 
+/* ===== レビュー（一覧・投稿）= ブランド調 ===== */
+.tj-revsec .rvhead{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.tj-revsec .rvk{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--lime-d)}
+.tj-revsec h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-.015em;display:flex;align-items:baseline;gap:10px}
+.tj-revsec h3 .ct{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--mu)}
+.tj-revsec .rvempty{background:var(--white);border:1px dashed var(--bd2);border-radius:14px;padding:22px;text-align:center;font-size:13px;color:var(--mu)}
+.tj-revsec .rvlist{display:flex;flex-direction:column;gap:14px}
+.tj-revsec .rvcard{background:var(--white);border:1px solid var(--bd);border-radius:16px;padding:18px 20px;box-shadow:0 10px 26px -20px rgba(17,17,17,.2)}
+.tj-revsec .rvtop{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+.tj-revsec .av{flex:none;width:42px;height:42px;border-radius:50%;background:var(--lime-l);color:var(--lime-d);font-family:var(--disp);font-weight:800;font-size:17px;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(168,224,28,.5)}
+.tj-revsec .who{flex:1;min-width:0}
+.tj-revsec .who .nm{font-weight:700;font-size:14px;color:var(--ink);line-height:1.2}
+.tj-revsec .who .dt{font-family:var(--mono);font-size:11px;color:var(--mu);margin-top:3px}
+.tj-revsec .sc{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.tj-revsec .stars{display:inline-flex;gap:2px}
+.tj-revsec .stars svg{width:16px;height:16px;fill:var(--bd2)}
+.tj-revsec .stars svg.on{fill:var(--lime)}
+.tj-revsec .local{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--mu)}
+.tj-revsec .local b{color:var(--lime-d);font-weight:700}
+.tj-revsec .rvbody{margin-top:13px;font-size:14px;line-height:1.85;color:var(--ink2);white-space:pre-line}
+.tj-revsec .rvtags{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px}
+.tj-revsec .rvtag{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--lime-d);background:var(--lime-l);border:1px solid rgba(168,224,28,.4);padding:4px 10px;border-radius:999px}
+@media(max-width:600px){.tj-revsec .sc{align-items:flex-start;flex-basis:100%;flex-direction:row;gap:12px;margin-top:2px}}
+/* 投稿トグル CTA（ライム） */
+.tj-revcta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--lime-l);border:1px solid rgba(168,224,28,.5);border-radius:14px;padding:15px 18px;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 10px 26px -18px var(--glow)}
+.tj-revcta:hover{background:#d6f29a;transform:translateY(-1px)}
+.tj-revcta .left{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:14.5px;color:var(--lime-d)}
+.tj-revcta .left svg{width:18px;height:18px;fill:var(--lime-d)}
+.tj-revcta .right{font-family:var(--mono);font-size:11px;color:var(--mu)}
+.tj-revform{display:flex;flex-direction:column;gap:8px}
+.tj-revform .closeRow{display:flex;justify-content:flex-end}
+.tj-revform .closeRow button{font-family:var(--mono);font-size:12px;color:var(--mu);background:none;border:none;cursor:pointer;padding:4px 2px}
+.tj-revform .closeRow button:hover{color:var(--ink);text-decoration:underline}
+@media(max-width:600px){.tj-revcta{flex-wrap:wrap}.tj-revcta .right{flex-basis:100%}}
+
 .tj-dates{padding:0 0 70px}
 .tj-dateline{display:flex;flex-wrap:wrap;gap:8px 22px;justify-content:center;align-items:center;font-family:var(--mono);font-size:12px;color:var(--mu);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:20px 0}
 .tj-dateline span{display:inline-flex;align-items:center;gap:8px}

@@ -9,7 +9,6 @@ import {
 } from '@/lib/maps/googleMapsUrls';
 import { renderArticleBodyHtml } from '@/lib/markdown/render';
 import { Paywall } from '../../Paywall';
-import { ReviewFormToggle } from '../ReviewFormToggle';
 import { CSS } from './itineraryCss';
 import {
   fmtDate,
@@ -27,6 +26,7 @@ import {
   AuthorCard,
   RelatedArticles,
   ReviewsList,
+  ReviewBlock,
   type EngagementProps,
 } from './engagement';
 
@@ -493,7 +493,11 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
           {!previewMode && !isOwner ? (
             <section className="tj-body" style={{ padding: '8px 0 0' }}>
               <div className="tj-bodywrap">
-                <ReviewFormToggle articleId={article.id} initial={myReview} />
+                <ReviewBlock
+                  articleId={article.id}
+                  myReview={myReview}
+                  variant="tj"
+                />
               </div>
             </section>
           ) : null}
@@ -514,7 +518,7 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
       {/* ===== レビュー一覧 ===== */}
       <section className="tj-body" style={{ padding: '0 0 8px' }}>
         <div className="tj-bodywrap">
-          <ReviewsList reviews={reviews} />
+          <ReviewsList reviews={reviews} variant="tj" />
         </div>
       </section>
 
