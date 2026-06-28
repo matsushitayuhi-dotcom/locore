@@ -545,7 +545,7 @@ function ImageSvg() {
 
 function ScopedStyle() {
   return (
-    <style jsx>{`
+    <style jsx global>{`
       /* モックの CSS 変数をサイトのブランドトークンへマッピング。
          ライム×クリームの配色・スケールはランディングと一致している。 */
       .svc-root {
