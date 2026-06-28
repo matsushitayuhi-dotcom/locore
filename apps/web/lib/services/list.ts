@@ -149,6 +149,7 @@ export async function listServices(
         audience: schema.userServices.audience,
         coverImageUrl: schema.userServices.coverImageUrl,
         tags: schema.userServices.tags,
+        createdAt: schema.userServices.createdAt,
         cityNameJa: schema.cities.nameJa,
         citySlug: schema.cities.slug,
         countryCode: schema.countries.code,
@@ -209,6 +210,10 @@ export async function listServices(
       audience: (r.audience as FeaturedService['audience']) ?? null,
       coverImageUrl: r.coverImageUrl ?? null,
       tags: Array.isArray(r.tags) ? r.tags : [],
+      createdAt:
+        r.createdAt instanceof Date
+          ? r.createdAt.toISOString()
+          : (r.createdAt as string | null) ?? null,
       ownerId: r.ownerId,
       ownerDisplayName: r.ownerDisplayName,
       ownerAvatarUrl: r.ownerAvatarUrl,

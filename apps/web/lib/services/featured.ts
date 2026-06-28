@@ -33,6 +33,11 @@ export type FeaturedService = {
   coverImageUrl: string | null;
   /** 0055 で追加。複数指定可のタグ。空配列もあり得る (カード/詳細で考慮)。 */
   tags: string[];
+  /**
+   * 出品作成日時の ISO 文字列。/services の「新着」棚でクライアント側ソートに使う。
+   * 取得元クエリによっては未設定 (undefined) のことがあるため任意フィールド。
+   */
+  createdAt?: string | null;
   ownerId: string;
   ownerDisplayName: string;
   ownerAvatarUrl: string | null;
