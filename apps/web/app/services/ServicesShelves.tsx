@@ -1016,7 +1016,7 @@ function Placeholder({ category }: { category: string | null | undefined }) {
 
 function ScopedStyle() {
   return (
-    <style jsx global>{`
+    <style dangerouslySetInnerHTML={{ __html: `
       /* モックの CSS 変数をサイトのブランドトークンへマッピング。
          ライム×クリームの配色・スケールはランディングと一致している。 */
       .svc-root {
@@ -1035,11 +1035,11 @@ function ScopedStyle() {
         color: var(--ink);
         font-family: var(--jp);
       }
-      .svc-root :global(a) {
+      .svc-root a {
         color: inherit;
         text-decoration: none;
       }
-      .svc-root :global(img) {
+      .svc-root img {
         display: block;
         max-width: 100%;
       }
@@ -1309,7 +1309,7 @@ function ScopedStyle() {
         border: 0;
         font-family: var(--jp);
       }
-      .shead .seeall :global(svg) {
+      .shead .seeall svg {
         width: 15px;
         height: 15px;
       }
@@ -1389,7 +1389,7 @@ function ScopedStyle() {
         height: 100%;
         transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
       }
-      .track :global(img) {
+      .track img {
         flex: none;
         width: 100%;
         height: 100%;
@@ -1426,7 +1426,7 @@ function ScopedStyle() {
         border: 1px solid rgba(168, 224, 28, 0.45);
         color: var(--lime-d);
       }
-      .phph-ico :global(svg) {
+      .phph-ico svg {
         width: 26px;
         height: 26px;
       }
@@ -1505,7 +1505,7 @@ function ScopedStyle() {
       .navbtn.next {
         right: 10px;
       }
-      .navbtn :global(svg) {
+      .navbtn svg {
         width: 15px;
         height: 15px;
       }
@@ -1519,14 +1519,14 @@ function ScopedStyle() {
         gap: 5px;
         z-index: 2;
       }
-      .dots :global(i) {
+      .dots i {
         width: 6px;
         height: 6px;
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.6);
         transition: 0.16s;
       }
-      .dots :global(i.on) {
+      .dots i.on {
         background: #fff;
         transform: scale(1.18);
       }
@@ -1543,7 +1543,7 @@ function ScopedStyle() {
         place-items: center;
         z-index: 3;
       }
-      .heart :global(svg) {
+      .heart svg {
         width: 23px;
         height: 23px;
         fill: rgba(0, 0, 0, 0.3);
@@ -1552,10 +1552,10 @@ function ScopedStyle() {
         filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
         transition: 0.15s;
       }
-      .heart:hover :global(svg) {
+      .heart:hover svg {
         transform: scale(1.12);
       }
-      .heart.on :global(svg) {
+      .heart.on svg {
         fill: var(--lime);
         stroke: var(--lime);
       }
@@ -1583,7 +1583,7 @@ function ScopedStyle() {
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
-      .meta :global(.mcat) {
+      .meta .mcat {
         color: var(--lime-d);
         font-weight: 700;
       }
@@ -1592,7 +1592,7 @@ function ScopedStyle() {
         font-size: 12px;
         color: var(--mu);
       }
-      .price :global(b) {
+      .price b {
         font-family: var(--disp);
         font-weight: 700;
         font-size: 13px;
@@ -1634,7 +1634,7 @@ function ScopedStyle() {
         display: grid;
         place-items: center;
       }
-      .more .circ :global(svg) {
+      .more .circ svg {
         width: 22px;
         height: 22px;
       }
@@ -1661,7 +1661,7 @@ function ScopedStyle() {
         margin: 6px 0 6px;
         font-family: var(--jp);
       }
-      .back :global(svg) {
+      .back svg {
         width: 15px;
         height: 15px;
       }
@@ -1708,7 +1708,7 @@ function ScopedStyle() {
         overflow: hidden;
         background: #e9e9e1;
       }
-      .lph :global(img) {
+      .lph img {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -1730,7 +1730,7 @@ function ScopedStyle() {
         font-size: 13px;
         margin-top: 5px;
       }
-      .lbody .lmeta-top :global(.mcat) {
+      .lbody .lmeta-top .mcat {
         color: var(--lime-d);
         font-weight: 700;
       }
@@ -1756,7 +1756,7 @@ function ScopedStyle() {
         margin-left: auto;
         text-align: right;
       }
-      .lprice :global(b) {
+      .lprice b {
         font-family: var(--disp);
         font-weight: 700;
         font-size: 20px;
@@ -1848,7 +1848,7 @@ function ScopedStyle() {
         .price {
           margin-top: 2px;
         }
-        .price :global(b) {
+        .price b {
           font-size: 12.5px;
         }
         /* もっと見るタイルも幅・余白を縮小 */
@@ -1890,7 +1890,7 @@ function ScopedStyle() {
           width: 44px;
           height: 44px;
         }
-        .phph-ico :global(svg) {
+        .phph-ico svg {
           width: 22px;
           height: 22px;
         }
@@ -1926,6 +1926,6 @@ function ScopedStyle() {
           flex: 1 1 100%;
         }
       }
-    `}</style>
+    ` }} />
   );
 }
