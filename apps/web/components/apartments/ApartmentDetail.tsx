@@ -108,6 +108,9 @@ const Ic = {
   zap: (
     <svg viewBox="0 0 24 24" {...stroke}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
   ),
+  mapPin: (
+    <svg viewBox="0 0 24 24" {...stroke}><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>
+  ),
 };
 
 // ----- 設備アイコン -----
@@ -203,25 +206,29 @@ export function ApartmentDetail({ post, viewerUserId, isOwner }: Props) {
     highlights.push({ ic: 'zap', b: '光熱費込み', p: '水道・電気・ガス等が家賃に含まれます' });
   const topHighlights = highlights.slice(0, 4);
 
-  // 物件概要テーブル (値のある項目のみ)
-  const specRows: { k: string; v: string; small?: string }[] = [];
+  // 物件概要テーブル (値のある項目のみ) — 元の compact な dl 形式で描画
+  const specRows: { k: string; v: string; small?: string; icon?: JSX.Element }[] = [];
   if (rent != null)
     specRows.push({ k: '家賃', v: `${sym}${rent.toLocaleString()}`, small: '/ 月' });
   if (charges != null)
     specRows.push({ k: '管理費', v: `${sym}${charges.toLocaleString()}`, small: '/ 月' });
   if (deposit != null)
     specRows.push({ k: '敷金', v: `${sym}${deposit.toLocaleString()}`, small: '（退去時精算）' });
-  if (availFrom) specRows.push({ k: '入居可能日', v: `${availFrom}〜` });
+  if (availFrom) specRows.push({ k: '入居可能日', v: `${availFrom}〜`, icon: Ic.calendar });
   if (layoutLabel || typeof meta.size_sqm === 'number')
     specRows.push({
       k: '間取り / 広さ',
       v: layoutLabel ?? '—',
       small: typeof meta.size_sqm === 'number' ? `/ ${meta.size_sqm}㎡` : undefined,
+      icon: Ic.home,
     });
-  if (meta.nearest_station) specRows.push({ k: '最寄駅', v: meta.nearest_station });
+  if (meta.nearest_station)
+    specRows.push({ k: '最寄駅', v: meta.nearest_station, icon: Ic.train });
   if (lt) specRows.push({ k: '契約形態', v: APARTMENT_LISTING_TYPE_LABEL[lt] });
-  if (meta.arrondissement) specRows.push({ k: 'エリア', v: meta.arrondissement });
-  else if (post.cityNameJa) specRows.push({ k: 'エリア', v: post.cityNameJa });
+  if (meta.arrondissement)
+    specRows.push({ k: 'エリア', v: meta.arrondissement, icon: Ic.mapPin });
+  else if (post.cityNameJa)
+    specRows.push({ k: 'エリア', v: post.cityNameJa, icon: Ic.mapPin });
 
   // 設備一覧: amenities (キー) を APARTMENT_AMENITIES でラベル+アイコン化
   const amenityItems = APARTMENT_AMENITIES.filter((a) =>
@@ -457,21 +464,28 @@ export function ApartmentDetail({ post, viewerUserId, isOwner }: Props) {
               </div>
             ) : null}
 
-            {/* spec table */}
+            {/* spec table — 元のフォーマット (compact dl) */}
             {specRows.length > 0 ? (
               <div className="apt-sec">
                 <h2>物件の概要</h2>
-                <div className="apt-spec">
+                <dl className="grid grid-cols-2 gap-y-3 rounded-xl bg-card p-4 text-[12px] ring-1 ring-border sm:grid-cols-3">
                   {specRows.map((r, i) => (
                     <div key={i}>
-                      <div className="k">{r.k}</div>
-                      <div className="v">
+                      <dt className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/50">
+                        {r.icon ? (
+                          <span className="inline-flex [&>svg]:h-3 [&>svg]:w-3">{r.icon}</span>
+                        ) : null}
+                        {r.k}
+                      </dt>
+                      <dd className="mt-0.5 text-[13px] font-medium text-foreground/85">
                         {r.v}
-                        {r.small ? <small>{r.small}</small> : null}
-                      </div>
+                        {r.small ? (
+                          <span className="ml-1 font-normal text-foreground/55">{r.small}</span>
+                        ) : null}
+                      </dd>
                     </div>
                   ))}
-                </div>
+                </dl>
               </div>
             ) : null}
 

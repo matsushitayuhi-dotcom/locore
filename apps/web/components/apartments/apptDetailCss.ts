@@ -95,12 +95,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Ka
 .apt-morebtn{display:inline-flex;align-items:center;gap:7px;margin-top:14px;background:transparent;border:0;cursor:pointer;font-size:14px;font-weight:800;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
 .apt-morebtn svg{width:14px;height:14px}
 
-/* spec table */
-.apt-spec{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:16px;overflow:hidden}
-.apt-spec div{background:var(--card);padding:15px 18px}
-.apt-spec .k{font-size:12px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
-.apt-spec .v{font-weight:700;font-size:15.5px;margin-top:3px;color:var(--ink)}
-.apt-spec .v small{font-weight:500;color:var(--mu);font-size:12px;margin-left:3px}
+/* spec table は「物件の概要」セクションで Tailwind の compact dl (元フォーマット) を使用 */
 
 /* amenities */
 .apt-amen{display:grid;grid-template-columns:1fr 1fr;gap:15px 22px}
@@ -173,7 +168,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Ka
   .apt-gallery .cell.big{grid-column:1/3;grid-row:auto;aspect-ratio:16/10}
   .apt-gallery .cell:nth-child(n+4){display:none}
   .apt-gallery.one .cell.big{grid-column:1/2}
-  .apt-spec,.apt-amen{grid-template-columns:1fr 1fr}
+  .apt-amen{grid-template-columns:1fr 1fr}
 }
 @media(max-width:560px){
   .apt-head h1{font-size:22px}
