@@ -87,9 +87,14 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-band .c .ph small{display:block;margin-top:6px;font-size:11px;color:var(--mu)}
 
 /* ===== two-column ===== */
-.job-cols{display:grid;grid-template-columns:1fr 372px;gap:54px;padding:30px 0 70px;align-items:start}
+.job-cols{display:grid;grid-template-columns:1fr 372px;gap:0 54px;padding:30px 0 70px;align-items:start}
 .job-sec{padding:26px 0;border-top:1px solid var(--bd)}
 .job-sec:first-child{border-top:0;padding-top:8px}
+
+/* 待遇以降は 2 カラムをまたいで全幅 (中央 枠いっぱい)。カードが短くても左に張り付かない。 */
+.job-below{grid-column:1/-1;margin-top:30px;border-top:1px solid var(--bd)}
+.job-below .job-sec:first-child{border-top:0;padding-top:30px}
+.job-below .job-ben{grid-template-columns:repeat(3,1fr)}
 .job-sec h2{font-family:var(--jp);font-weight:900;font-size:20px;margin-bottom:14px}
 .job-sec h2 .note{font-weight:500;font-size:12.5px;color:var(--mu);margin-left:10px}
 
@@ -192,6 +197,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 /* responsive */
 @media(max-width:860px){
   .job-cols{grid-template-columns:1fr;gap:0}
+  .job-below{margin-top:0}
+  .job-below .job-ben{grid-template-columns:1fr 1fr}
   .job-apply{position:static;margin-top:8px;box-shadow:none}
   .job-band{grid-template-columns:1fr 1fr}
   .job-spec{grid-template-columns:1fr 1fr}

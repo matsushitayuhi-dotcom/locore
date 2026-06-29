@@ -78,9 +78,14 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .gr-band .c .ph small{display:block;margin-top:6px;font-size:11px;color:var(--mu)}
 
 /* ===== two-column ===== */
-.gr-cols{display:grid;grid-template-columns:1fr 360px;gap:54px;padding:30px 0 70px;align-items:start}
+.gr-cols{display:grid;grid-template-columns:1fr 360px;gap:0 54px;padding:30px 0 70px;align-items:start}
 .gr-sec{padding:26px 0;border-top:1px solid var(--bd)}
 .gr-sec:first-child{border-top:0;padding-top:8px}
+
+/* 参加者・場所・主催者は 2 カラムをまたいで全幅 (中央 枠いっぱい)。 */
+.gr-below{grid-column:1/-1;margin-top:30px;border-top:1px solid var(--bd)}
+.gr-below .gr-sec:first-child{border-top:0;padding-top:30px}
+.gr-below .gr-mapframe{aspect-ratio:16/6}
 .gr-sec h2{font-family:var(--jp);font-weight:800;font-size:20px;margin-bottom:14px}
 
 .gr-lead{font-size:15px;line-height:2.05;color:var(--ink2)}
@@ -181,6 +186,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 /* responsive */
 @media(max-width:860px){
   .gr-cols{grid-template-columns:1fr;gap:0}
+  .gr-below{margin-top:0}
+  .gr-below .gr-mapframe{aspect-ratio:16/9}
   .gr-join{position:static;margin-top:8px;box-shadow:none}
   .gr-band{grid-template-columns:1fr 1fr}
   .gr-gallery{grid-template-columns:1fr 1fr;grid-template-rows:1fr;aspect-ratio:auto}

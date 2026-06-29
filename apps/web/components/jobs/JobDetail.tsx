@@ -619,6 +619,110 @@ export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
               </div>
             ) : null}
 
+          </div>
+
+          {/* RIGHT: apply card (sticky) */}
+          <aside>
+            <div className="job-apply">
+              <div className="pay">
+                給与{periodLabel ? `（${periodLabel}・${JOB_SALARY_KIND_LABEL[salaryKind]}）` : ''}
+              </div>
+              <div className="payv">
+                {salaryRange ? (
+                  salaryRange === '応相談' ? (
+                    <b>応相談</b>
+                  ) : (
+                    <>
+                      <b>{salaryRange}</b>
+                      <span>{salaryUnitSuffix}</span>
+                    </>
+                  )
+                ) : (
+                  <b>応相談</b>
+                )}
+              </div>
+              {salaryKind === 'gross' && salaryRange && salaryRange !== '応相談' ? (
+                <div className="gross">
+                  ※ 額面（社会保険料・税の控除前）。
+                  {meta.salary_net_note ? `手取り目安は ${meta.salary_net_note}。` : ''}
+                </div>
+              ) : meta.salary_net_note ? (
+                <div className="gross">手取り目安：{meta.salary_net_note}</div>
+              ) : null}
+
+              <div className="facts">
+                {employmentType ? (
+                  <div className="row">
+                    <span>雇用形態</span>
+                    <span>{JOB_EMPLOYMENT_TYPE_LABEL[employmentType]}</span>
+                  </div>
+                ) : null}
+                {locLabel ? (
+                  <div className="row">
+                    <span>勤務地</span>
+                    <span>{remoteLabel ? `${locLabel} / ${remoteLabel}` : locLabel}</span>
+                  </div>
+                ) : null}
+                <div className="row">
+                  <span>就労資格</span>
+                  <span>{meta.visa_sponsorship ? 'ビザサポートあり' : '要・就労可能な資格'}</span>
+                </div>
+                {meta.open_positions ? (
+                  <div className="row">
+                    <span>募集人数</span>
+                    <span>{meta.open_positions}名</span>
+                  </div>
+                ) : null}
+                {deadline ? (
+                  <div className="row">
+                    <span>応募締切</span>
+                    <span className={deadline.soon ? 'hot' : ''}>{deadline.label}</span>
+                  </div>
+                ) : null}
+              </div>
+
+              {closed ? (
+                <div className="closed">この求人は現在募集していません</div>
+              ) : (
+                <div className="ctawrap">
+                  <ApplyButton
+                    postId={post.id}
+                    postTitle={post.title}
+                    applyLabel="この求人に応募する"
+                    viewerLoggedIn={viewerLoggedIn}
+                    isOwnPost={isOwner}
+                    closed={closed}
+                    contactEmail={post.contactEmail}
+                  />
+                </div>
+              )}
+
+              <button
+                type="button"
+                className={`save${saved ? ' on' : ''}`}
+                onClick={toggleSaved}
+              >
+                {saved ? '♥ 保存済み' : '♡ 保存する'}
+              </button>
+
+              <div className="docs">
+                <b>提出書類：</b>
+                履歴書（和文）または CV（仏文）。職務経歴があれば添えてください。
+                応募メッセージから直接やり取りできます。
+              </div>
+
+              <div className="note">
+                {Ic.alert}
+                <span>
+                  選考前に保証金・手数料を求める求人は詐欺です。金銭の支払いや Locore
+                  外への誘導には応じないでください。
+                </span>
+              </div>
+            </div>
+          </aside>
+
+          {/* ===== 全幅セクション（待遇以降は2カラムをまたいで中央・全幅） ===== */}
+          <div className="job-below">
             {/* 待遇・福利厚生 */}
             {benefitItems.length > 0 || extraBenefits.length > 0 ? (
               <div className="job-sec">
@@ -753,106 +857,6 @@ export function JobDetail({ post, viewerLoggedIn, isOwner }: Props) {
               </div>
             </div>
           </div>
-
-          {/* RIGHT: apply card (sticky) */}
-          <aside>
-            <div className="job-apply">
-              <div className="pay">
-                給与{periodLabel ? `（${periodLabel}・${JOB_SALARY_KIND_LABEL[salaryKind]}）` : ''}
-              </div>
-              <div className="payv">
-                {salaryRange ? (
-                  salaryRange === '応相談' ? (
-                    <b>応相談</b>
-                  ) : (
-                    <>
-                      <b>{salaryRange}</b>
-                      <span>{salaryUnitSuffix}</span>
-                    </>
-                  )
-                ) : (
-                  <b>応相談</b>
-                )}
-              </div>
-              {salaryKind === 'gross' && salaryRange && salaryRange !== '応相談' ? (
-                <div className="gross">
-                  ※ 額面（社会保険料・税の控除前）。
-                  {meta.salary_net_note ? `手取り目安は ${meta.salary_net_note}。` : ''}
-                </div>
-              ) : meta.salary_net_note ? (
-                <div className="gross">手取り目安：{meta.salary_net_note}</div>
-              ) : null}
-
-              <div className="facts">
-                {employmentType ? (
-                  <div className="row">
-                    <span>雇用形態</span>
-                    <span>{JOB_EMPLOYMENT_TYPE_LABEL[employmentType]}</span>
-                  </div>
-                ) : null}
-                {locLabel ? (
-                  <div className="row">
-                    <span>勤務地</span>
-                    <span>{remoteLabel ? `${locLabel} / ${remoteLabel}` : locLabel}</span>
-                  </div>
-                ) : null}
-                <div className="row">
-                  <span>就労資格</span>
-                  <span>{meta.visa_sponsorship ? 'ビザサポートあり' : '要・就労可能な資格'}</span>
-                </div>
-                {meta.open_positions ? (
-                  <div className="row">
-                    <span>募集人数</span>
-                    <span>{meta.open_positions}名</span>
-                  </div>
-                ) : null}
-                {deadline ? (
-                  <div className="row">
-                    <span>応募締切</span>
-                    <span className={deadline.soon ? 'hot' : ''}>{deadline.label}</span>
-                  </div>
-                ) : null}
-              </div>
-
-              {closed ? (
-                <div className="closed">この求人は現在募集していません</div>
-              ) : (
-                <div className="ctawrap">
-                  <ApplyButton
-                    postId={post.id}
-                    postTitle={post.title}
-                    applyLabel="この求人に応募する"
-                    viewerLoggedIn={viewerLoggedIn}
-                    isOwnPost={isOwner}
-                    closed={closed}
-                    contactEmail={post.contactEmail}
-                  />
-                </div>
-              )}
-
-              <button
-                type="button"
-                className={`save${saved ? ' on' : ''}`}
-                onClick={toggleSaved}
-              >
-                {saved ? '♥ 保存済み' : '♡ 保存する'}
-              </button>
-
-              <div className="docs">
-                <b>提出書類：</b>
-                履歴書（和文）または CV（仏文）。職務経歴があれば添えてください。
-                応募メッセージから直接やり取りできます。
-              </div>
-
-              <div className="note">
-                {Ic.alert}
-                <span>
-                  選考前に保証金・手数料を求める求人は詐欺です。金銭の支払いや Locore
-                  外への誘導には応じないでください。
-                </span>
-              </div>
-            </div>
-          </aside>
         </div>
 
         {/* fraud notice */}

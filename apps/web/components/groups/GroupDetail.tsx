@@ -493,94 +493,6 @@ export function GroupDetail({ post, viewerLoggedIn, isOwner, rsvp }: Props) {
               </div>
             ) : null}
 
-            {/* 参加予定のメンバー（実データのみ） */}
-            <div className="gr-sec">
-              <h2>参加予定のメンバー</h2>
-              {rsvp.unavailable || going === 0 ? (
-                <div className="gr-empty">
-                  まだ参加表明がありません。最初の参加者になりましょう。
-                </div>
-              ) : (
-                <div className="gr-parts">
-                  <div className="gr-ava-stack">
-                    {avatars.map((a, i) =>
-                      a.avatarUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={i} src={a.avatarUrl} alt={a.name ?? ''} />
-                      ) : (
-                        <span className="ava-f" key={i}>
-                          {(a.name?.[0] ?? 'L').toUpperCase()}
-                        </span>
-                      ),
-                    )}
-                    {avatarExtra > 0 ? <span className="more">+{avatarExtra}</span> : null}
-                  </div>
-                  <div className="ptxt">
-                    <b>{going}人が参加予定</b>
-                    {rsvp.interested > 0 ? <span>興味あり {rsvp.interested}人</span> : null}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 場所 */}
-            {locationFormat === 'online' ? (
-              <div className="gr-sec">
-                <h2>場所</h2>
-                <div className="gr-online">
-                  {Ic.monitor}
-                  <div>
-                    <b>オンライン開催</b>
-                    <p>参加用のリンクは申込後にメッセージでお知らせします。</p>
-                  </div>
-                </div>
-              </div>
-            ) : mapSrc ? (
-              <div className="gr-sec">
-                <h2>場所</h2>
-                <div className="gr-mapframe">
-                  <iframe
-                    title="開催エリア"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    src={mapSrc}
-                  />
-                </div>
-                {post.locationText || post.cityNameJa ? (
-                  <div className="gr-maploc">
-                    <b>{post.locationText || post.cityNameJa}</b>
-                    <p>正確な会場・住所は参加申込後にメッセージでお知らせすることがあります。</p>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {/* 主催者について */}
-            <div className="gr-sec">
-              <h2>主催者について</h2>
-              <div className="gr-hostcard">
-                {post.authorAvatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="ava" src={post.authorAvatarUrl} alt="" />
-                ) : (
-                  <div className="avaf">{initial}</div>
-                )}
-                <div>
-                  <div className="nm">
-                    {hostName}
-                    {post.authorVerified ? (
-                      <span className="badge">{Ic.verified}本人確認済み</span>
-                    ) : null}
-                  </div>
-                  {post.locationText ? <div className="meta">{post.locationText}</div> : null}
-                  {post.authorId ? (
-                    <Link href={`/users/${post.authorId}`} className="link">
-                      主催者のプロフィールを見る{Ic.chevron}
-                    </Link>
-                  ) : null}
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* RIGHT: join card (sticky) */}
@@ -674,6 +586,98 @@ export function GroupDetail({ post, viewerLoggedIn, isOwner, rsvp }: Props) {
               </div>
             </div>
           </aside>
+
+          {/* ===== 全幅セクション（参加者・場所・主催者は2カラムをまたいで中央・全幅） ===== */}
+          <div className="gr-below">
+            {/* 参加予定のメンバー（実データのみ） */}
+            <div className="gr-sec">
+              <h2>参加予定のメンバー</h2>
+              {rsvp.unavailable || going === 0 ? (
+                <div className="gr-empty">
+                  まだ参加表明がありません。最初の参加者になりましょう。
+                </div>
+              ) : (
+                <div className="gr-parts">
+                  <div className="gr-ava-stack">
+                    {avatars.map((a, i) =>
+                      a.avatarUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={i} src={a.avatarUrl} alt={a.name ?? ''} />
+                      ) : (
+                        <span className="ava-f" key={i}>
+                          {(a.name?.[0] ?? 'L').toUpperCase()}
+                        </span>
+                      ),
+                    )}
+                    {avatarExtra > 0 ? <span className="more">+{avatarExtra}</span> : null}
+                  </div>
+                  <div className="ptxt">
+                    <b>{going}人が参加予定</b>
+                    {rsvp.interested > 0 ? <span>興味あり {rsvp.interested}人</span> : null}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 場所 */}
+            {locationFormat === 'online' ? (
+              <div className="gr-sec">
+                <h2>場所</h2>
+                <div className="gr-online">
+                  {Ic.monitor}
+                  <div>
+                    <b>オンライン開催</b>
+                    <p>参加用のリンクは申込後にメッセージでお知らせします。</p>
+                  </div>
+                </div>
+              </div>
+            ) : mapSrc ? (
+              <div className="gr-sec">
+                <h2>場所</h2>
+                <div className="gr-mapframe">
+                  <iframe
+                    title="開催エリア"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={mapSrc}
+                  />
+                </div>
+                {post.locationText || post.cityNameJa ? (
+                  <div className="gr-maploc">
+                    <b>{post.locationText || post.cityNameJa}</b>
+                    <p>正確な会場・住所は参加申込後にメッセージでお知らせすることがあります。</p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {/* 主催者について */}
+            <div className="gr-sec">
+              <h2>主催者について</h2>
+              <div className="gr-hostcard">
+                {post.authorAvatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img className="ava" src={post.authorAvatarUrl} alt="" />
+                ) : (
+                  <div className="avaf">{initial}</div>
+                )}
+                <div>
+                  <div className="nm">
+                    {hostName}
+                    {post.authorVerified ? (
+                      <span className="badge">{Ic.verified}本人確認済み</span>
+                    ) : null}
+                  </div>
+                  {post.locationText ? <div className="meta">{post.locationText}</div> : null}
+                  {post.authorId ? (
+                    <Link href={`/users/${post.authorId}`} className="link">
+                      主催者のプロフィールを見る{Ic.chevron}
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="gr-foot">
