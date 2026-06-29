@@ -397,7 +397,7 @@ export function ApartmentDetail({ post, viewerUserId, isOwner }: Props) {
           </div>
         ) : null}
 
-        {/* ===== two-column ===== */}
+        {/* ===== two-column (概要・ハイライト・説明 ＋ 右の問い合わせカード) ===== */}
         <div className="apt-cols">
           {/* LEFT */}
           <div>
@@ -464,6 +464,117 @@ export function ApartmentDetail({ post, viewerUserId, isOwner }: Props) {
               </div>
             ) : null}
 
+          </div>
+
+          {/* RIGHT: inquiry card (sticky) */}
+          <aside>
+            <div className="apt-book">
+              <div className="price">
+                {rent != null && rent > 0 ? (
+                  <>
+                    <b>
+                      {sym}
+                      {rent.toLocaleString()}
+                    </b>
+                    <span>/ 月</span>
+                  </>
+                ) : rent === 0 ? (
+                  <b className="free">無料</b>
+                ) : (
+                  <b className="free">応相談</b>
+                )}
+              </div>
+
+              {availFrom ? (
+                <div className="avail">
+                  {Ic.check}
+                  {availFrom}から入居可能
+                </div>
+              ) : null}
+
+              {/* 内訳 (家賃 + 管理費 = 月額合計。偽の手数料計算はしない) */}
+              {rent != null && rent > 0 ? (
+                <div className="brk">
+                  <div className="row">
+                    <span>
+                      家賃 <span className="mu">月額</span>
+                    </span>
+                    <span>
+                      {sym}
+                      {rent.toLocaleString()}
+                    </span>
+                  </div>
+                  {charges != null ? (
+                    <div className="row">
+                      <span>
+                        管理費 <span className="mu">月額</span>
+                      </span>
+                      <span>
+                        {sym}
+                        {charges.toLocaleString()}
+                      </span>
+                    </div>
+                  ) : null}
+                  {deposit != null ? (
+                    <div className="row">
+                      <span>
+                        敷金 <span className="mu">退去時精算</span>
+                      </span>
+                      <span>
+                        {sym}
+                        {deposit.toLocaleString()}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="row sum">
+                    <span>月額合計</span>
+                    <span>
+                      {sym}
+                      {(total ?? rent).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
+
+              {closed ? (
+                <div className="closed">この物件は現在募集していません</div>
+              ) : (
+                <div className="ctawrap">
+                  <ApplyButton
+                    postId={post.id}
+                    postTitle={post.title}
+                    applyLabel="この物件について問い合わせる"
+                    viewerLoggedIn={!!viewerUserId}
+                    isOwnPost={isOwner}
+                    closed={closed}
+                    contactEmail={post.contactEmail}
+                  />
+                </div>
+              )}
+
+              <button
+                type="button"
+                className={`save${saved ? ' on' : ''}`}
+                onClick={() => {
+                  setSaved((v) => !v);
+                  toast.success(saved ? '保存を解除しました' : '保存しました');
+                }}
+              >
+                {saved ? '♥ 保存済み' : '♡ 保存する'}
+              </button>
+
+              <div className="note">
+                {Ic.shield}
+                <span>
+                  送金前に必ず内見または本人確認を。Locore
+                  外での前払い要求は詐欺の可能性があります。
+                </span>
+              </div>
+            </div>
+          </aside>
+
+          {/* ===== 全幅セクション（概要以降は2カラムをまたいで中央・全幅） ===== */}
+          <div className="apt-below">
             {/* spec table — 元のフォーマット (compact dl) */}
             {specRows.length > 0 ? (
               <div className="apt-sec">
@@ -582,113 +693,6 @@ export function ApartmentDetail({ post, viewerUserId, isOwner }: Props) {
               </div>
             </div>
           </div>
-
-          {/* RIGHT: inquiry card (sticky) */}
-          <aside>
-            <div className="apt-book">
-              <div className="price">
-                {rent != null && rent > 0 ? (
-                  <>
-                    <b>
-                      {sym}
-                      {rent.toLocaleString()}
-                    </b>
-                    <span>/ 月</span>
-                  </>
-                ) : rent === 0 ? (
-                  <b className="free">無料</b>
-                ) : (
-                  <b className="free">応相談</b>
-                )}
-              </div>
-
-              {availFrom ? (
-                <div className="avail">
-                  {Ic.check}
-                  {availFrom}から入居可能
-                </div>
-              ) : null}
-
-              {/* 内訳 (家賃 + 管理費 = 月額合計。偽の手数料計算はしない) */}
-              {rent != null && rent > 0 ? (
-                <div className="brk">
-                  <div className="row">
-                    <span>
-                      家賃 <span className="mu">月額</span>
-                    </span>
-                    <span>
-                      {sym}
-                      {rent.toLocaleString()}
-                    </span>
-                  </div>
-                  {charges != null ? (
-                    <div className="row">
-                      <span>
-                        管理費 <span className="mu">月額</span>
-                      </span>
-                      <span>
-                        {sym}
-                        {charges.toLocaleString()}
-                      </span>
-                    </div>
-                  ) : null}
-                  {deposit != null ? (
-                    <div className="row">
-                      <span>
-                        敷金 <span className="mu">退去時精算</span>
-                      </span>
-                      <span>
-                        {sym}
-                        {deposit.toLocaleString()}
-                      </span>
-                    </div>
-                  ) : null}
-                  <div className="row sum">
-                    <span>月額合計</span>
-                    <span>
-                      {sym}
-                      {(total ?? rent).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              ) : null}
-
-              {closed ? (
-                <div className="closed">この物件は現在募集していません</div>
-              ) : (
-                <div className="ctawrap">
-                  <ApplyButton
-                    postId={post.id}
-                    postTitle={post.title}
-                    applyLabel="この物件について問い合わせる"
-                    viewerLoggedIn={!!viewerUserId}
-                    isOwnPost={isOwner}
-                    closed={closed}
-                    contactEmail={post.contactEmail}
-                  />
-                </div>
-              )}
-
-              <button
-                type="button"
-                className={`save${saved ? ' on' : ''}`}
-                onClick={() => {
-                  setSaved((v) => !v);
-                  toast.success(saved ? '保存を解除しました' : '保存しました');
-                }}
-              >
-                {saved ? '♥ 保存済み' : '♡ 保存する'}
-              </button>
-
-              <div className="note">
-                {Ic.shield}
-                <span>
-                  送金前に必ず内見または本人確認を。Locore
-                  外での前払い要求は詐欺の可能性があります。
-                </span>
-              </div>
-            </div>
-          </aside>
         </div>
 
         {/* fraud notice */}

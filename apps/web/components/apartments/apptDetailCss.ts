@@ -56,9 +56,16 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .apt-allphotos svg{width:15px;height:15px}
 
 /* ===== two-column ===== */
-.apt-cols{display:grid;grid-template-columns:1fr 372px;gap:54px;padding:30px 0 70px;align-items:start}
+.apt-cols{display:grid;grid-template-columns:1fr 372px;gap:0 54px;padding:30px 0 70px;align-items:start}
 .apt-sec{padding:26px 0;border-top:1px solid var(--bd)}
 .apt-sec:first-child{border-top:0;padding-top:6px}
+
+/* 概要以降は 2 カラムをまたいで全幅 (中央 1120px 枠いっぱい)。
+   価格カードが短くても下のセクションが左に張り付かず、ゆったり中央に並ぶ。 */
+.apt-below{grid-column:1/-1;margin-top:30px;border-top:1px solid var(--bd)}
+.apt-below .apt-sec:first-child{border-top:0;padding-top:30px}
+.apt-below .apt-amen{grid-template-columns:repeat(3,1fr)}
+.apt-below .apt-mapframe{aspect-ratio:16/6}
 .apt-sec h2{font-family:var(--jp);font-weight:900;font-size:20px;margin-bottom:14px;color:var(--ink)}
 
 /* status banner (closed/expired) */
@@ -168,9 +175,11 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
   .apt-gallery .cell.big{grid-column:1/3;grid-row:auto;aspect-ratio:16/10}
   .apt-gallery .cell:nth-child(n+4){display:none}
   .apt-gallery.one .cell.big{grid-column:1/2}
-  .apt-amen{grid-template-columns:1fr 1fr}
+  .apt-amen,.apt-below .apt-amen{grid-template-columns:1fr 1fr}
+  .apt-below{margin-top:0}
+  .apt-below .apt-mapframe{aspect-ratio:16/8}
 }
 @media(max-width:560px){
   .apt-head h1{font-size:22px}
-  .apt-amen{grid-template-columns:1fr}
+  .apt-amen,.apt-below .apt-amen{grid-template-columns:1fr}
 }`;
