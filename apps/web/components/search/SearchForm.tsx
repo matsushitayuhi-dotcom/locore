@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 /**
@@ -8,16 +8,22 @@ import Link from 'next/link';
  * 同じミニマルな世界観に統一した。
  *
  *   - mode="hero"    … 検索前。回転する点描の地球を背景に、中央に
- *                       キーワード入力（＋国セレクト）と検索 CTA だけを置く。
+ *                       キーワード入力（＋国セレクト）と検索 CTA を置く。
  *   - mode="compact" … 検索後（結果あり）。スリムな検索バーを結果の上に置く。
+ *
+ * どちらのモードでも「カテゴリで絞り込む」トグルを備える。開くと検索対象
+ * （記事 / サービス / ユーザー / コミュニティ 6 種）をピルで選べる。チェックを
+ * areas=... として GET 送信し、page.tsx 側が対象を絞る。折りたたみ中も
+ * チェックボックスは DOM に残す（display:none でも submit される）ため、
+ * パネルを閉じたまま検索しても選択は保持される。
  *
  * GET フォーム (`method="get" action="/search"`) なので JS 無効でも submit でき、
  * 結果は Server Component 側 (page.tsx) が searchParams から描画する。
- * 旧 UI の「詳細設定（検索対象チェック）」は廃止。areas を送らないことで
- * page.tsx 側は全対象を検索する（= シンプルに全部から探す）。
  */
 
 type CountryOption = { slug: string; code: string; nameJa: string; emoji: string };
+type ScopeOption = { value: string; label: string };
+type ScopeGroup = { title: string; options: ScopeOption[] };
 
 const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -44,9 +50,31 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Goth
 .srch-rise{opacity:0;transform:translateY(14px);animation:srchrise .9s cubic-bezier(.2,.7,.2,1) forwards}
 .srch-d1{animation-delay:.04s}.srch-d2{animation-delay:.15s}.srch-d3{animation-delay:.3s}
 
+/* カテゴリ絞り込み（共通）。色はライム基調で hero / compact 両方で使う */
+.srch-filt{font-family:'Zen Kaku Gothic New',sans-serif}
+.srch-filt-toggle{display:inline-flex;align-items:center;gap:7px;background:none;border:0;cursor:pointer;font-family:inherit;font-weight:700;font-size:13px;color:#5E8B0E;padding:4px 2px}
+.srch-filt-toggle .chev{width:15px;height:15px;transition:.2s}
+.srch-filt.open .srch-filt-toggle .chev{transform:rotate(180deg)}
+.srch-filt-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#A8E01C;color:#14140f;font-size:10px;font-weight:700;line-height:1}
+.srch-filt-panel{display:none;margin-top:12px;background:#fff;border:1px solid #E6E6DE;border-radius:14px;padding:14px 16px;box-shadow:0 18px 46px -34px rgba(20,20,15,.4);text-align:left}
+.srch-filt.open .srch-filt-panel{display:block}
+.srch-grp+.srch-grp{margin-top:12px}
+.srch-grp-h{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#b0b0a6;margin:0 0 8px}
+.srch-pills{display:flex;flex-wrap:wrap;gap:7px}
+.srch-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid #E6E6DE;background:#fff;color:#7a7a72;border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;transition:.12s;user-select:none}
+.srch-pill:hover{border-color:#cfe79a;background:#f9fcf0}
+.srch-pill:has(input:checked){background:#A8E01C;border-color:#A8E01C;color:#14140f}
+.srch-pill input{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.srch-pill .dot{width:6px;height:6px;border-radius:999px;background:#cfcfc6;transition:.12s}
+.srch-pill:has(input:checked) .dot{background:#14140f}
+.srch-filt-acts{display:flex;gap:14px;margin-top:12px;padding-top:11px;border-top:1px solid #f0f0e9}
+.srch-filt-act{background:none;border:0;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;color:#7a7a72}
+.srch-filt-act:hover{color:#14140f}
+
 /* compact（検索結果ページ上部のスリムバー） */
+.srch-c-wrap{font-family:'Zen Kaku Gothic New',sans-serif}
 .srch-c{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.srch-c-bar{flex:1;min-width:240px;display:flex;align-items:stretch;gap:8px;background:var(--card,#fff);border:1px solid #E6E6DE;border-radius:12px;padding:6px;font-family:'Zen Kaku Gothic New',sans-serif}
+.srch-c-bar{flex:1;min-width:240px;display:flex;align-items:stretch;gap:8px;background:#fff;border:1px solid #E6E6DE;border-radius:12px;padding:6px}
 .srch-c-bar:focus-within{border-color:#A8E01C}
 .srch-c-country{flex:none;border:0;background:#f6f9ee;border-radius:9px;padding:0 9px;font-weight:700;font-size:13px;color:#5E8B0E;cursor:pointer;outline:none;max-width:120px}
 .srch-c-input{flex:1;min-width:0;border:0;background:none;font-size:15px;color:#14140f;padding:9px 6px;outline:none}
@@ -145,11 +173,91 @@ function DotGlobe() {
   return <canvas className="srch-globe" ref={canvasRef} aria-hidden />;
 }
 
+/**
+ * 「カテゴリで絞り込む」トグル＋ピル群。hero / compact 共通。
+ * チェックボックス (name="areas") は折りたたみ中も DOM に残す。
+ */
+function CategoryFilter({
+  scopeGroups,
+  selectedScopes,
+  filterActive,
+}: {
+  scopeGroups: ScopeGroup[];
+  selectedScopes: Set<string>;
+  filterActive: boolean;
+}) {
+  const [open, setOpen] = useState(filterActive);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  const setAll = (checked: boolean) => {
+    rootRef.current
+      ?.querySelectorAll<HTMLInputElement>('input[name="areas"]')
+      .forEach((el) => {
+        el.checked = checked;
+      });
+  };
+
+  const selectedCount = scopeGroups.reduce(
+    (n, g) => n + g.options.filter((o) => selectedScopes.has(o.value)).length,
+    0,
+  );
+
+  return (
+    <div className={'srch-filt' + (open ? ' open' : '')} ref={rootRef}>
+      <button
+        type="button"
+        className="srch-filt-toggle"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        カテゴリで絞り込む
+        {filterActive ? <span className="srch-filt-badge">{selectedCount}</span> : null}
+        <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      <div className="srch-filt-panel">
+        {scopeGroups.map((group) => (
+          <div className="srch-grp" key={group.title}>
+            <p className="srch-grp-h">{group.title}</p>
+            <div className="srch-pills">
+              {group.options.map((o) => (
+                <label className="srch-pill" key={o.value}>
+                  <input
+                    type="checkbox"
+                    name="areas"
+                    value={o.value}
+                    defaultChecked={selectedScopes.has(o.value)}
+                  />
+                  <span className="dot" aria-hidden />
+                  {o.label}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="srch-filt-acts">
+          <button type="button" className="srch-filt-act" onClick={() => setAll(true)}>
+            すべて選択
+          </button>
+          <button type="button" className="srch-filt-act" onClick={() => setAll(false)}>
+            選択を解除
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SearchForm({
   countries,
   initialQ,
   initialCountry,
   tags = [],
+  scopeGroups,
+  selectedScopes,
+  filterActive = false,
   mode = 'hero',
 }: {
   countries: CountryOption[];
@@ -157,6 +265,12 @@ export function SearchForm({
   initialCountry: string;
   /** /services のタグ絞り込みからの引き継ぎ（hidden で submit に持ち越す） */
   tags?: string[];
+  /** 詳細フィルターのピル定義（見出し付き） */
+  scopeGroups: ScopeGroup[];
+  /** 現在 ON になっている scope value の集合 */
+  selectedScopes: Set<string>;
+  /** areas を明示指定して一部に絞っている状態か（初期展開とバッジに使う） */
+  filterActive?: boolean;
   /** hero = 検索前のフルスクリーン入口 / compact = 結果ページ上部のスリムバー */
   mode?: 'hero' | 'compact';
 }) {
@@ -165,42 +279,53 @@ export function SearchForm({
       <input type="hidden" name="tags" value={tags.join(',')} />
     ) : null;
 
+  const filter = (
+    <CategoryFilter
+      scopeGroups={scopeGroups}
+      selectedScopes={selectedScopes}
+      filterActive={filterActive}
+    />
+  );
+
   // ── 結果ページ上部のスリムバー ──
   if (mode === 'compact') {
     return (
-      <form method="get" action="/search" className="srch-c">
+      <form method="get" action="/search" className="srch-c-wrap">
         <style dangerouslySetInnerHTML={{ __html: CSS }} />
         {tagsInput}
-        <div className="srch-c-bar">
-          <select
-            name="country"
-            defaultValue={initialCountry}
-            aria-label="国"
-            className="srch-c-country"
-          >
-            <option value="">すべて</option>
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.emoji} {c.nameJa}
-              </option>
-            ))}
-          </select>
-          <input
-            type="search"
-            name="q"
-            defaultValue={initialQ}
-            placeholder="キーワードで検索"
-            aria-label="キーワード"
-            className="srch-c-input"
-          />
+        <div className="srch-c">
+          <div className="srch-c-bar">
+            <select
+              name="country"
+              defaultValue={initialCountry}
+              aria-label="国"
+              className="srch-c-country"
+            >
+              <option value="">すべて</option>
+              {countries.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.emoji} {c.nameJa}
+                </option>
+              ))}
+            </select>
+            <input
+              type="search"
+              name="q"
+              defaultValue={initialQ}
+              placeholder="キーワードで検索"
+              aria-label="キーワード"
+              className="srch-c-input"
+            />
+          </div>
+          <button type="submit" className="srch-c-cta">
+            検索
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.5" y2="16.5" />
+            </svg>
+          </button>
         </div>
-        <button type="submit" className="srch-c-cta">
-          検索
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="7" />
-            <line x1="21" y1="21" x2="16.5" y2="16.5" />
-          </svg>
-        </button>
+        <div className="mt-3">{filter}</div>
       </form>
     );
   }
@@ -251,6 +376,9 @@ export function SearchForm({
               className="srch-input"
             />
           </div>
+
+          {filter}
+
           <button type="submit" className="srch-cta">
             検索する
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

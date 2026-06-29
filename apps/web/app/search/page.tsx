@@ -58,6 +58,12 @@ const CONTENT_SCOPES = ['articles', 'services', 'users'] as const;
 const VALID_SCOPES = [...CONTENT_SCOPES, ...COMMUNITY_KINDS] as const;
 type Scope = (typeof VALID_SCOPES)[number];
 
+const CONTENT_SCOPE_LABEL: Record<(typeof CONTENT_SCOPES)[number], string> = {
+  articles: '記事',
+  services: 'サービス',
+  users: 'ユーザー',
+};
+
 function parseScopes(raw: string | undefined): Set<Scope> {
   if (!raw) return new Set(VALID_SCOPES);
   const parts = raw
@@ -127,6 +133,25 @@ export default async function SearchPage({
     communityByKind.set(hit.kind, arr);
   }
 
+  // 詳細フィルター（検索対象カテゴリ）のピル定義と現在の選択状態。
+  // areas 未指定なら parseScopes が全 scope を返すので、初期は全カテゴリ ON。
+  const scopeGroups = [
+    {
+      title: '種類',
+      options: CONTENT_SCOPES.map((s) => ({
+        value: s,
+        label: CONTENT_SCOPE_LABEL[s],
+      })),
+    },
+    {
+      title: 'コミュニティ',
+      options: COMMUNITY_KINDS.map((k) => ({ value: k, label: KIND_LABEL[k] })),
+    },
+  ];
+  const selectedScopes = new Set<string>(scopes);
+  // areas を明示指定して一部だけに絞っている状態か（トグルのバッジ表示用）。
+  const filterActive = scopes.size < VALID_SCOPES.length;
+
   // 検索前は /community トップと同じミニマルなフルスクリーン入口を出す。
   if (!rawQ) {
     return (
@@ -135,6 +160,9 @@ export default async function SearchPage({
         initialQ=""
         initialCountry={country ?? ''}
         tags={tags}
+        scopeGroups={scopeGroups}
+        selectedScopes={selectedScopes}
+        filterActive={filterActive}
         mode="hero"
       />
     );
@@ -156,6 +184,9 @@ export default async function SearchPage({
           initialQ={rawQ}
           initialCountry={country ?? ''}
           tags={tags}
+          scopeGroups={scopeGroups}
+          selectedScopes={selectedScopes}
+          filterActive={filterActive}
           mode="compact"
         />
       </div>
