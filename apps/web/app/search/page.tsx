@@ -1,11 +1,5 @@
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  SearchX,
-  MapPin,
-  Briefcase,
-  ImageIcon,
-} from 'lucide-react';
+import { ArrowLeft, SearchX, MapPin, Briefcase, ImageIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@locore/ui';
 import { ServiceCard } from '@/components/services/ServiceCard';
 import { SearchForm } from '@/components/search/SearchForm';
@@ -63,12 +57,6 @@ type Search = {
 const CONTENT_SCOPES = ['articles', 'services', 'users'] as const;
 const VALID_SCOPES = [...CONTENT_SCOPES, ...COMMUNITY_KINDS] as const;
 type Scope = (typeof VALID_SCOPES)[number];
-
-const CONTENT_SCOPE_LABEL: Record<(typeof CONTENT_SCOPES)[number], string> = {
-  articles: '記事',
-  services: 'サービス',
-  users: 'ユーザー',
-};
 
 function parseScopes(raw: string | undefined): Set<Scope> {
   if (!raw) return new Set(VALID_SCOPES);
@@ -139,25 +127,18 @@ export default async function SearchPage({
     communityByKind.set(hit.kind, arr);
   }
 
-  const selectedScopes = new Set<string>(scopes);
-  const scopeGroups = [
-    {
-      title: '種類',
-      options: CONTENT_SCOPES.map((s) => ({
-        value: s,
-        label: CONTENT_SCOPE_LABEL[s],
-      })),
-    },
-    {
-      title: 'コミュニティ',
-      options: COMMUNITY_KINDS.map((k) => ({
-        value: k,
-        label: KIND_LABEL[k],
-      })),
-    },
-  ];
-
-  const noScope = scopes.size === 0;
+  // 検索前は /community トップと同じミニマルなフルスクリーン入口を出す。
+  if (!rawQ) {
+    return (
+      <SearchForm
+        countries={SUPPORTED_COUNTRIES}
+        initialQ=""
+        initialCountry={country ?? ''}
+        tags={tags}
+        mode="hero"
+      />
+    );
+  }
 
   return (
     <main className="mx-auto max-w-screen-xl px-4 py-6 sm:px-6 sm:py-10">
@@ -169,35 +150,18 @@ export default async function SearchPage({
         ホームに戻る
       </Link>
 
-      <header className="mt-4 mb-6">
-        <h1 className="text-[24px] font-bold tracking-tight text-foreground sm:text-[28px]">
-          検索
-        </h1>
-        <p className="mt-1 text-[13px] text-foreground/65">
-          記事・サービス・ユーザー・コミュニティ投稿を、国を絞って横断検索できます。
-        </p>
-      </header>
-
-      <SearchForm
-        countries={SUPPORTED_COUNTRIES}
-        scopeGroups={scopeGroups}
-        initialQ={rawQ}
-        initialCountry={country ?? ''}
-        selectedScopes={selectedScopes}
-        tags={tags}
-      />
+      <div className="mt-4">
+        <SearchForm
+          countries={SUPPORTED_COUNTRIES}
+          initialQ={rawQ}
+          initialCountry={country ?? ''}
+          tags={tags}
+          mode="compact"
+        />
+      </div>
 
       {/* ============ 結果 ============ */}
-      {!rawQ ? (
-        <p className="mt-8 rounded-lg bg-primary-500/10 px-4 py-3 text-[13px] text-foreground/70">
-          検索したい言葉を入力して「この条件で検索」を押してください。
-        </p>
-      ) : noScope ? (
-        <p className="mt-8 rounded-lg bg-muted px-4 py-3 text-[13px] text-foreground/65">
-          検索する対象が 1 つも選ばれていません。「詳細設定」から対象を選んでください。
-        </p>
-      ) : (
-        <div className="mt-8 space-y-10">
+      <div className="mt-8 space-y-10">
           {wantArticles ? (
             <ResultSection
               title="記事"
@@ -248,8 +212,7 @@ export default async function SearchPage({
               </ResultSection>
             );
           })}
-        </div>
-      )}
+      </div>
     </main>
   );
 }
