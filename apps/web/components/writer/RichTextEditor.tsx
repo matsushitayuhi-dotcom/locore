@@ -968,13 +968,13 @@ export function RichTextEditor({
     content: initialHtml,
     editorProps: {
       attributes: {
-        // 2026-05 Notion ライク改修:
-        //  - prose の文字サイズは globals.css の `.locore-editor` で上書き (15px)
+        // 2026-07 改修: 編集中の見た目を公開記事に合わせるため `prose-locore` を付与
+        //  （見出し・表・引用・コード等は globals.css の .prose-locore が担当）。
         //  - スマホは min-h を 60vh、PC 70vh に拡張して書くスペースを広く取る
         //  - キーボード追従ツールバー (h≈48px) と被らないように padding-bottom を厚めに
         //  - padding は px-3 py-2 で詰めて画面横幅を活かす
         class:
-          'locore-editor prose max-w-none rounded-md border border-border bg-card px-3 py-2 pb-16 min-h-[60vh] sm:min-h-[70vh] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1',
+          'locore-editor prose-locore max-w-none rounded-md border border-border bg-card px-3 py-2 pb-16 min-h-[60vh] sm:min-h-[70vh] focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1',
       },
       // クリップボード画像ペースト：cmd/ctrl+V で貼り付けた image を Supabase に上げて挿入
       handlePaste(view, event) {

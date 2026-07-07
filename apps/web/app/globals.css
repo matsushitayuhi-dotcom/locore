@@ -653,115 +653,30 @@
 }
 
 /*
- * Notion ライク本文エディタ (2026-05 改修)
+ * 本文エディタ (TipTap) の見た目 (2026-07 改修)
  * ----------------------------------------------------------------
- * `.locore-editor` クラスを付けた TipTap エディタ内部の ProseMirror に対し、
- * 既存の `prose` クラスの大きすぎる文字サイズを上書きしてコンパクトに整える。
- * 仕上がりの記事閲覧側 (`.prose-locore`) は触らない。
- *
- * - 本文 (p / li / blockquote): 15px
- * - 行間: 1.75
- * - 見出し H1=22 / H2=18 / H3=16
- * - 余計な top/bottom margin を縮める
+ * エディタ要素には `prose-locore` クラスを付与しているので、見出し・表・引用・
+ * コード・リスト・区切り線などは公開記事とまったく同じ .prose-locore スタイルで
+ * 描画される（＝編集中の見た目が本番の記事と一致する）。
+ * ここではエディタ固有の最小限（本文の基準サイズ／段落余白／セル選択ハイライト）
+ * だけを足す。公開記事側の雑誌演出（drop cap・フルブリード）はエディタには付けない。
  */
-.locore-editor .ProseMirror {
+.locore-editor.ProseMirror {
   font-size: 15px;
-  line-height: 1.75;
-  color: var(--color-neutral-900);
+  line-height: 1.85;
+  color: var(--color-neutral-800);
 }
-.locore-editor .ProseMirror > * + * {
-  margin-top: 0.6em;
+/* base .prose-locore は p に余白を定義していないため、記事の editorial 変種に
+   近い段落間隔をエディタ側で補う。 */
+.locore-editor.ProseMirror p {
+  margin: 0 0 1.2em;
 }
-.locore-editor .ProseMirror p,
-.locore-editor .ProseMirror li,
-.locore-editor .ProseMirror blockquote {
-  font-size: 15px;
-  line-height: 1.75;
-  margin-top: 0;
-  margin-bottom: 0.4em;
-}
-/* 見出しは本文(15px)とはっきり差がつくよう、サイズ・太さ・色で階層化する。
-   H3 はオリーブ色、H2 は下線付き、H1 は極太。編集中に「見出しかどうか」が
-   一目で分かるようにするのが狙い。*/
-.locore-editor .ProseMirror h1 {
-  font-size: 30px;
-  font-weight: 800;
-  line-height: 1.3;
-  margin-top: 1.1em;
-  margin-bottom: 0.4em;
-  letter-spacing: -0.02em;
-  color: var(--color-neutral-900);
-}
-.locore-editor .ProseMirror h2 {
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.35;
-  margin-top: 1em;
-  margin-bottom: 0.35em;
-  letter-spacing: -0.01em;
-  padding-bottom: 0.15em;
-  border-bottom: 1px solid var(--color-border-strong);
-  color: var(--color-neutral-900);
-}
-.locore-editor .ProseMirror h3 {
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.4;
-  margin-top: 0.9em;
-  margin-bottom: 0.3em;
-  color: var(--color-accent-300);
-}
-.locore-editor .ProseMirror ul,
-.locore-editor .ProseMirror ol {
-  margin: 0.3em 0 0.4em 1.25em;
-  padding-left: 0.4em;
-}
-.locore-editor .ProseMirror li { margin-bottom: 0.15em; }
-.locore-editor .ProseMirror blockquote {
-  padding: 0.5em 0.8em;
-  margin: 0.5em 0;
-}
-.locore-editor .ProseMirror pre {
-  font-size: 13px;
-  padding: 0.7em 0.9em;
-  margin: 0.6em 0;
-}
-.locore-editor .ProseMirror code { font-size: 0.92em; }
-.locore-editor .ProseMirror img {
-  margin: 0.6em 0;
-  border-radius: 6px;
-}
-.locore-editor .ProseMirror hr {
-  margin: 1.2em 0;
-  border: 0;
-  border-top: 2px solid var(--color-border-strong);
-}
-
-/* 表: セルの罫線・ヘッダ行の背景を明示し、編集中も「表」だと一目で分かるように。 */
-.locore-editor .ProseMirror table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 14px;
-  margin: 0.9em 0;
-  table-layout: fixed;
-  border: 1px solid var(--color-border-strong);
-  overflow: hidden;
-}
-.locore-editor .ProseMirror th,
-.locore-editor .ProseMirror td {
-  border: 1px solid var(--color-border-strong);
-  padding: 7px 10px;
-  vertical-align: top;
-  text-align: left;
-  min-width: 3em;
+/* テーブルセルを relative にして、選択中セルのハイライトを乗せる（編集補助）。 */
+.locore-editor.ProseMirror th,
+.locore-editor.ProseMirror td {
   position: relative;
 }
-.locore-editor .ProseMirror th {
-  background: var(--color-neutral-100);
-  font-weight: 700;
-}
-/* TipTap: 選択中セルのハイライト */
-.locore-editor .ProseMirror .selectedCell::after {
+.locore-editor.ProseMirror .selectedCell::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -769,35 +684,18 @@
   pointer-events: none;
 }
 
-/* 引用・インラインコード・リンクも本文と区別が付くように強調する。 */
-.locore-editor .ProseMirror blockquote {
-  border-left: 3px solid var(--color-primary-300);
-  background: var(--color-accent-50);
-  border-radius: 0 4px 4px 0;
-}
-.locore-editor .ProseMirror :not(pre) > code {
-  background: var(--color-neutral-100);
-  padding: 0.1em 0.35em;
-  border-radius: 4px;
-}
-.locore-editor .ProseMirror a {
-  color: var(--color-accent-300);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 /*
  * Phase C: 本文中「ここから下を有料」境界（<hr data-paywall="true">）を、
  * 通常の区切り線と区別して目立たせる。この線より下が購入後に解放される有料パート。
  */
-.locore-editor .ProseMirror hr[data-paywall='true'] {
+.locore-editor.ProseMirror hr[data-paywall='true'] {
   position: relative;
   border: 0;
   border-top: 2px dashed var(--color-secondary-700, #b45309);
   margin: 1.75em 0;
   overflow: visible;
 }
-.locore-editor .ProseMirror hr[data-paywall='true']::after {
+.locore-editor.ProseMirror hr[data-paywall='true']::after {
   content: '🔒 ここから下は有料（購入後に表示）';
   position: absolute;
   top: -0.85em;
