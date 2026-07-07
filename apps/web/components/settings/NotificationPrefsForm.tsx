@@ -1,32 +1,19 @@
-﻿'use client';
+'use client';
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@locore/ui';
 import type { NotificationPreferences } from '@locore/db';
-import {
-  updateNotificationPreferences,
-  registerPushSubscriptionMock,
-} from '@/app/settings/notifications/actions';
+import { updateNotificationPreferences } from '@/app/settings/notifications/actions';
 
-type Channel = 'web_push' | 'email';
-type Topic = 'article_published' | 'trip_reminder' | 'crisis_alert' | 'purchase_completed';
+type Topic = 'article_published' | 'purchase_completed';
 
+// β版はメール通知のみ対応。旅程リマインダー / クライシス情報は今後提供予定のため非表示。
 const TOPICS: { key: Topic; label: string; description: string }[] = [
   {
     key: 'article_published',
     label: '記事の新着',
     description: 'フォロー中の駐在員や注目都市の新しい記事',
-  },
-  {
-    key: 'trip_reminder',
-    label: '旅程リマインダー',
-    description: '出発前日 / 当日 / 帰国前のリマインド',
-  },
-  {
-    key: 'crisis_alert',
-    label: 'クライシス情報',
-    description: '訪問中・予定の街でのストや事件・気象警報',
   },
   {
     key: 'purchase_completed',
@@ -40,15 +27,17 @@ type Props = {
 };
 
 export function NotificationPrefsForm({ initial }: Props) {
+  // web_push など非表示のチャンネル/トピックも initial の値を保持したまま送信する
+  // （actions 側の zod スキーマは全項目を要求するため）。
   const [prefs, setPrefs] = useState<NotificationPreferences>(initial);
   const [isPending, startTransition] = useTransition();
 
-  const toggle = (channel: Channel, topic: Topic) => {
+  const toggleEmail = (topic: Topic) => {
     setPrefs((prev) => ({
       ...prev,
-      [channel]: {
-        ...prev[channel],
-        [topic]: !prev[channel][topic],
+      email: {
+        ...prev.email,
+        [topic]: !prev.email[topic],
       },
     }));
   };
@@ -65,27 +54,16 @@ export function NotificationPrefsForm({ initial }: Props) {
     });
   };
 
-  const onEnablePush = () => {
-    startTransition(async () => {
-      // TODO: 実 ServiceWorker / VAPID 連携
-      const res = await registerPushSubscriptionMock();
-      if (res.ok) {
-        toast.success('（モック）Push 購読を登録しました');
-      }
-    });
-  };
-
   return (
     <form
       onSubmit={onSubmit}
       className="space-y-6 rounded-md border border-border bg-card p-5 sm:p-6"
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[480px] text-left text-[13px]">
+        <table className="w-full min-w-[360px] text-left text-[13px]">
           <thead>
             <tr className="border-b border-border text-[11px] uppercase tracking-wider text-foreground/50">
               <th className="py-2 pr-4 font-medium">通知タイプ</th>
-              <th className="px-2 py-2 text-center font-medium">Web Push</th>
               <th className="pl-2 py-2 text-center font-medium">Email</th>
             </tr>
           </thead>
@@ -98,18 +76,11 @@ export function NotificationPrefsForm({ initial }: Props) {
                     {t.description}
                   </div>
                 </td>
-                <td className="px-2 py-3 text-center">
-                  <Toggle
-                    checked={prefs.web_push[t.key]}
-                    onChange={() => toggle('web_push', t.key)}
-                    label={`${t.label} の Web Push`}
-                  />
-                </td>
                 <td className="pl-2 py-3 text-center">
                   <Toggle
                     checked={prefs.email[t.key]}
-                    onChange={() => toggle('email', t.key)}
-                    label={`${t.label} の Email`}
+                    onChange={() => toggleEmail(t.key)}
+                    label={`${t.label} のメール通知`}
                   />
                 </td>
               </tr>
@@ -120,25 +91,11 @@ export function NotificationPrefsForm({ initial }: Props) {
 
       <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-[12px] text-foreground/60">
-          ブラウザ通知を初めて使う場合は、ブラウザに購読登録してください。
-          <br />
-          <span className="text-foreground/45">
-            ※ VAPID 連携は今後実装予定（現在はモック）。
-          </span>
+          β版では通知はメールのみ対応しています。
         </div>
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onEnablePush}
-            disabled={isPending}
-          >
-            ブラウザ通知を有効化
-          </Button>
-          <Button type="submit" variant="primary" disabled={isPending}>
-            {isPending ? '保存中…' : '保存する'}
-          </Button>
-        </div>
+        <Button type="submit" variant="primary" disabled={isPending}>
+          {isPending ? '保存中…' : '保存する'}
+        </Button>
       </div>
     </form>
   );

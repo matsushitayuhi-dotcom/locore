@@ -43,13 +43,3 @@ export async function updateNotificationPreferences(
   revalidatePath('/settings/notifications');
   return { ok: true };
 }
-
-/**
- * Web Push 購読登録（モック）。VAPID 連携は今回スコープ外。
- * TODO: ServiceWorker 経由の `pushManager.subscribe()` 結果を受け取って
- *       push_subscriptions に upsert する。
- */
-export async function registerPushSubscriptionMock(): Promise<UpdatePrefsResult> {
-  // 何もしない（UI 側のフィードバックのみ）
-  return { ok: true };
-}

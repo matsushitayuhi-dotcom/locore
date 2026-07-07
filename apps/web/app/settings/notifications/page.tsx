@@ -34,7 +34,7 @@ export default async function NotificationsSettingsPage() {
           通知
         </h2>
         <p className="mt-1 text-[12px] text-foreground/60">
-          各通知タイプごとに、Web Push とメールの ON/OFF を切り替えられます。
+          各通知タイプごとに、メール通知の ON/OFF を切り替えられます。
         </p>
       </header>
 

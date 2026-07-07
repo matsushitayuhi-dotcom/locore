@@ -12,7 +12,6 @@ import {
   Map as MapIcon,
   Search,
   Briefcase,
-  Users,
   Bookmark,
   ShoppingBag,
   PenSquare,
@@ -44,6 +43,8 @@ type MenuItem = {
   icon: any;
   /** active 判定用の prefix（match）*/
   matchPrefix?: string;
+  /** β版では未提供。リンクにせず「準備中」バッジ付きのグレー表示にする */
+  disabled?: boolean;
 };
 
 // グローバルナビは SiteHeader 側でも出している（PC は中央 nav、モバイルは
@@ -60,7 +61,6 @@ const NAV_ITEMS: MenuItem[] = [
   { href: '/articles', label: '記事', icon: FileText, matchPrefix: '/articles' },
   { href: '/community', label: 'コミュニティ', icon: MessageCircle, matchPrefix: '/community' },
   { href: '/services', label: 'サービス', icon: Briefcase, matchPrefix: '/services' },
-  { href: '/users', label: 'ユーザー', icon: Users, matchPrefix: '/users' },
   { href: '/map', label: '地図から探す', icon: MapIcon, matchPrefix: '/map' },
   { href: '/search', label: '検索', icon: Search, matchPrefix: '/search' },
 ];
@@ -98,6 +98,7 @@ const WRITER_ITEMS: MenuItem[] = [
     label: '売上レポート',
     icon: BarChart3,
     matchPrefix: '/writer/dashboard',
+    disabled: true, // β版では未提供
   },
   {
     href: '/chat',
@@ -409,6 +410,25 @@ function NavLink({
 }) {
   const Icon = item.icon;
   const active = isActive(pathname, item);
+
+  // β版では未提供の項目はリンクにせず、グレー表示＋「準備中」バッジで示す。
+  if (item.disabled) {
+    return (
+      <li>
+        <div
+          aria-disabled
+          className="flex min-h-[44px] cursor-not-allowed items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-foreground/35"
+        >
+          <Icon className="h-4 w-4 shrink-0 text-foreground/30" />
+          <span className="flex-1">{item.label}</span>
+          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/45">
+            β版準備中
+          </span>
+        </div>
+      </li>
+    );
+  }
+
   return (
     <li>
       <Link
