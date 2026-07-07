@@ -341,6 +341,15 @@ export function WizardShell({
   const isBlog = !isItinerary;
 
   /**
+   * 2026-07 改修: 旅程記事（モデルコース）はステップ制をやめ 1 画面に集約する。
+   * 「タイトル・本文 → スポット（写真・並び替え）→ 旅程ブロック → 公開設定」を
+   * 縦に積んで一気に編集できる。写真ステップは廃止（写真は本文中とスポットに貼る）。
+   * カテゴリ選択直後（新規 pristine）だけは従来どおり 2 択を先に出す。
+   * ブログ側は当面ステップ制のまま。
+   */
+  const singlePage = isItinerary && step !== 'category';
+
+  /**
    * #1 / #3: ステップ順を articleType に応じて動的に算出する。
    * 'category' は前後ナビゲーション対象外（カテゴリを選ぶと自動で次へ抜ける）。
    *
@@ -473,7 +482,9 @@ export function WizardShell({
   if (!title.trim()) missing.push('タイトル');
   if (bodyStyle === 'classic' && totalBodyLength < 100)
     missing.push('本文 100 字以上');
-  if (bodyStyle === 'photo_journal' && !photoEntriesValid)
+  // 旅程記事は 1 画面化で写真ステップを廃止（写真は本文・スポットに貼る）ため、
+  // 写真必須チェックの対象外にする（ブログの photo_journal のみ対象）。
+  if (!isItinerary && bodyStyle === 'photo_journal' && !photoEntriesValid)
     missing.push('写真 1 枚以上');
   // Phase C: スポット必須はモデルコース (itinerary) のみ。ブログは任意。
   if (isItinerary && spotsForDropdown.length === 0)
@@ -617,6 +628,69 @@ export function WizardShell({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 各セクション要素は 1 回だけ組み立て、ステップ制 / 1 画面の両方で使い回す。
+  const titleBodySection = (
+    <Step4TitleBody
+      title={title}
+      onChangeTitle={setTitle}
+      body={combinedBody}
+      onChangeBody={setCombinedBody}
+      stepNumber={singlePage ? 1 : currentStepIdx + 1}
+    />
+  );
+  const spotsSection = (
+    <Step1Spots
+      articleId={article.id}
+      initial={spots}
+      googleMapsApiKey={googleMapsApiKey}
+      onChange={handleSpotsChange}
+      isOptional={isBlog}
+      stepNumber={singlePage ? 2 : currentStepIdx + 1}
+    />
+  );
+  const itinerarySection = (
+    <StepItinerary
+      blocks={itineraryBlocks}
+      onChange={setItineraryBlocks}
+      spots={spotsForDropdown}
+      googleMapsApiKey={googleMapsApiKey}
+      stepNumber={singlePage ? 3 : currentStepIdx + 1}
+    />
+  );
+  const publishSection = (
+    <Step4Publish
+      basic={basic}
+      onChangeBasic={setBasic}
+      cities={cities}
+      coverImageUrl={coverImageUrl}
+      onChangeCover={setCoverImageUrl}
+      articleId={article.id}
+      isPublished={article.status === 'published'}
+      missing={missing}
+      modScore={modScore}
+      // ----- SEO チェック用の入力 -----
+      title={title}
+      body={body}
+      bodyPaid={bodyPaid}
+      bodyStyleForSeo={bodyStyle}
+      photoEntries={photoEntries}
+      tags={tags}
+      articleType={basic.articleType}
+      // ----- 共有プレビュー link 用 -----
+      initialPreviewToken={article.previewToken}
+      initialPreviewExpiresAt={article.previewTokenExpiresAt}
+      onJumpToMissing={jumpToMissing}
+      // ----- 公開タイミング (#16) -----
+      publishMode={publishMode}
+      onChangePublishMode={setPublishMode}
+      scheduledAtLocal={scheduledAtLocal}
+      onChangeScheduledAt={setScheduledAtLocal}
+      // ----- 価格変更 (#17) -----
+      articleStatus={article.status}
+      articleInitialPriceJpy={article.priceJpy}
+    />
+  );
+
   return (
     <div className="space-y-6">
       <Header
@@ -634,7 +708,7 @@ export function WizardShell({
         status={article.status}
       />
 
-      {step !== 'category' ? (
+      {!singlePage && step !== 'category' ? (
         <StepProgress
           current={visibleStepIndex}
           total={totalSteps}
@@ -660,31 +734,25 @@ export function WizardShell({
         />
       ) : null}
 
-      {/* スポット追加 */}
-      {step === 'spots' ? (
-        <Step1Spots
-          articleId={article.id}
-          initial={spots}
-          googleMapsApiKey={googleMapsApiKey}
-          onChange={handleSpotsChange}
-          isOptional={isBlog}
-          stepNumber={currentStepIdx + 1}
-        />
+      {/* 旅程記事: 1 画面に集約（タイトル・本文 → スポット → 旅程 → 公開） */}
+      {singlePage ? (
+        <div className="space-y-8 sm:space-y-12">
+          {titleBodySection}
+          <hr className="border-border" />
+          {spotsSection}
+          <hr className="border-border" />
+          {itinerarySection}
+          <hr className="border-border" />
+          {publishSection}
+        </div>
       ) : null}
 
-      {/* 旅程ブロック（itinerary のみ） */}
-      {step === 'itinerary' && isItinerary ? (
-        <StepItinerary
-          blocks={itineraryBlocks}
-          onChange={setItineraryBlocks}
-          spots={spotsForDropdown}
-          googleMapsApiKey={googleMapsApiKey}
-          stepNumber={currentStepIdx + 1}
-        />
-      ) : null}
-
-      {/* 写真追加（省略可） */}
-      {step === 'photos' ? (
+      {/* ブログ等: 従来のステップ制 */}
+      {!singlePage && step === 'spots' ? spotsSection : null}
+      {!singlePage && step === 'itinerary' && isItinerary
+        ? itinerarySection
+        : null}
+      {!singlePage && step === 'photos' ? (
         <Step2Photos
           photoEntries={photoEntries}
           onChangePhotoEntries={setPhotoEntries}
@@ -696,54 +764,31 @@ export function WizardShell({
           stepNumber={currentStepIdx + 1}
         />
       ) : null}
+      {!singlePage && step === 'titleBody' ? titleBodySection : null}
+      {!singlePage && step === 'publish' ? publishSection : null}
 
-      {/* タイトル + 本文（#3: 写真や旅程の編集 UI は出さない） */}
-      {step === 'titleBody' ? (
-        <Step4TitleBody
-          title={title}
-          onChangeTitle={setTitle}
-          body={combinedBody}
-          onChangeBody={setCombinedBody}
-          stepNumber={currentStepIdx + 1}
-        />
-      ) : null}
-
-      {step === 'publish' ? (
-        <Step4Publish
-          basic={basic}
-          onChangeBasic={setBasic}
-          cities={cities}
-          coverImageUrl={coverImageUrl}
-          onChangeCover={setCoverImageUrl}
-          articleId={article.id}
-          isPublished={article.status === 'published'}
-          missing={missing}
-          modScore={modScore}
-          // ----- SEO チェック用の入力 -----
-          title={title}
-          body={body}
-          bodyPaid={bodyPaid}
-          bodyStyleForSeo={bodyStyle}
-          photoEntries={photoEntries}
-          tags={tags}
-          articleType={basic.articleType}
-          // ----- 共有プレビュー link 用 -----
-          initialPreviewToken={article.previewToken}
-          initialPreviewExpiresAt={article.previewTokenExpiresAt}
-          onJumpToMissing={jumpToMissing}
-          // ----- 公開タイミング (#16) -----
-          publishMode={publishMode}
-          onChangePublishMode={setPublishMode}
-          scheduledAtLocal={scheduledAtLocal}
-          onChangeScheduledAt={setScheduledAtLocal}
-          // ----- 価格変更 (#17) -----
-          articleStatus={article.status}
-          articleInitialPriceJpy={article.priceJpy}
-        />
-      ) : null}
-
-      {/* ナビゲーションフッタ — カテゴリ選択画面では非表示 */}
-      {step !== 'category' ? (
+      {/* 旅程記事（1 画面）: 保存はヘッダ、フッタは公開ボタンのみ */}
+      {singlePage ? (
+        <nav
+          aria-label="公開バー"
+          className="sticky bottom-2 z-50 flex items-center justify-between gap-2 rounded-2xl bg-card/95 p-2 shadow-xl ring-1 ring-border backdrop-blur sm:bottom-4 sm:p-3"
+          style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <p className="pl-1 text-[10px] text-foreground/55 sm:text-[11px]">
+            {isSavingDraft ? (
+              <span className="text-primary-300">保存しています…</span>
+            ) : (
+              '下書きは上部の「下書き保存」から保存できます'
+            )}
+          </p>
+          <PublishButton
+            disabled={missing.length > 0 || isPublishing || isSavingDraft}
+            missing={missing}
+            onClick={() => setConfirmOpen(true)}
+            label={publishMode === 'scheduled' ? '公開を予約する' : '今すぐ公開'}
+          />
+        </nav>
+      ) : step !== 'category' ? (
         <nav
           aria-label="ウィザードナビゲーション"
           className="sticky bottom-2 z-50 flex items-center justify-between gap-2 rounded-2xl bg-card/95 p-2 shadow-xl ring-1 ring-border backdrop-blur sm:bottom-4 sm:p-3"
