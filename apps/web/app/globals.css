@@ -680,28 +680,36 @@
   margin-top: 0;
   margin-bottom: 0.4em;
 }
+/* 見出しは本文(15px)とはっきり差がつくよう、サイズ・太さ・色で階層化する。
+   H3 はオリーブ色、H2 は下線付き、H1 は極太。編集中に「見出しかどうか」が
+   一目で分かるようにするのが狙い。*/
 .locore-editor .ProseMirror h1 {
-  font-size: 22px;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-top: 1.1em;
+  margin-bottom: 0.4em;
+  letter-spacing: -0.02em;
+  color: var(--color-neutral-900);
+}
+.locore-editor .ProseMirror h2 {
+  font-size: 24px;
   font-weight: 700;
   line-height: 1.35;
   margin-top: 1em;
   margin-bottom: 0.35em;
   letter-spacing: -0.01em;
+  padding-bottom: 0.15em;
+  border-bottom: 1px solid var(--color-border-strong);
+  color: var(--color-neutral-900);
 }
-.locore-editor .ProseMirror h2 {
-  font-size: 18px;
+.locore-editor .ProseMirror h3 {
+  font-size: 19px;
   font-weight: 700;
   line-height: 1.4;
   margin-top: 0.9em;
   margin-bottom: 0.3em;
-  letter-spacing: -0.005em;
-}
-.locore-editor .ProseMirror h3 {
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.45;
-  margin-top: 0.8em;
-  margin-bottom: 0.25em;
+  color: var(--color-accent-300);
 }
 .locore-editor .ProseMirror ul,
 .locore-editor .ProseMirror ol {
@@ -723,8 +731,60 @@
   margin: 0.6em 0;
   border-radius: 6px;
 }
-.locore-editor .ProseMirror hr { margin: 1em 0; }
-.locore-editor .ProseMirror table { font-size: 14px; }
+.locore-editor .ProseMirror hr {
+  margin: 1.2em 0;
+  border: 0;
+  border-top: 2px solid var(--color-border-strong);
+}
+
+/* 表: セルの罫線・ヘッダ行の背景を明示し、編集中も「表」だと一目で分かるように。 */
+.locore-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+  margin: 0.9em 0;
+  table-layout: fixed;
+  border: 1px solid var(--color-border-strong);
+  overflow: hidden;
+}
+.locore-editor .ProseMirror th,
+.locore-editor .ProseMirror td {
+  border: 1px solid var(--color-border-strong);
+  padding: 7px 10px;
+  vertical-align: top;
+  text-align: left;
+  min-width: 3em;
+  position: relative;
+}
+.locore-editor .ProseMirror th {
+  background: var(--color-neutral-100);
+  font-weight: 700;
+}
+/* TipTap: 選択中セルのハイライト */
+.locore-editor .ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(168, 224, 28, 0.18);
+  pointer-events: none;
+}
+
+/* 引用・インラインコード・リンクも本文と区別が付くように強調する。 */
+.locore-editor .ProseMirror blockquote {
+  border-left: 3px solid var(--color-primary-300);
+  background: var(--color-accent-50);
+  border-radius: 0 4px 4px 0;
+}
+.locore-editor .ProseMirror :not(pre) > code {
+  background: var(--color-neutral-100);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+.locore-editor .ProseMirror a {
+  color: var(--color-accent-300);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
 
 /*
  * Phase C: 本文中「ここから下を有料」境界（<hr data-paywall="true">）を、
