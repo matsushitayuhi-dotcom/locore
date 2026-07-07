@@ -599,9 +599,10 @@ const upsertSpotSchema = z.object({
   googleUserRatingsTotal: z.number().int().min(0).optional().nullable(),
   googlePriceLevel: z.number().int().min(0).max(4).optional().nullable(),
   googleTypes: z.array(z.string()).optional().nullable(),
+  // Google 取得写真＋ライターがアップした写真を同じ配列で扱うため上限を緩めに。
   googlePhotoUrls: z
     .array(z.string().url().max(2048))
-    .max(10)
+    .max(20)
     .optional()
     .nullable(),
 });

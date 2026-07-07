@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { Loader2, Upload } from 'lucide-react';
 import { Button, Input } from '@locore/ui';
 import { upsertSpot, deleteSpot } from '@/app/writer/articles/[id]/edit/actions';
+import { uploadImage } from '@/lib/storage/uploadImage';
 import { SpotPlacesPicker, type PickedPlace } from './SpotPlacesPicker';
 import { TagsInput } from './TagsInput';
 
@@ -261,46 +263,6 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
               ))}
             </p>
           ) : null}
-          {v.googlePhotoUrls && v.googlePhotoUrls.length > 0 ? (
-            <div>
-              <p className="mb-1 text-[11px] font-medium text-foreground/70">
-                取得した写真（{v.googlePhotoUrls.length} 枚） ・
-                変な写真は ✕ で外してください
-              </p>
-              <div className="flex gap-2 overflow-x-auto">
-                {v.googlePhotoUrls.map((url, i) => (
-                  <div key={i} className="relative shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt=""
-                      className="h-16 w-24 rounded-sm object-cover ring-1 ring-border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        set(
-                          'googlePhotoUrls',
-                          (v.googlePhotoUrls ?? []).filter(
-                            (_, idx) => idx !== i,
-                          ),
-                        )
-                      }
-                      aria-label="この写真を外す"
-                      className="absolute right-0 top-0 -translate-y-1 translate-x-1 rounded-full bg-card/95 px-1.5 py-0.5 text-[11px] font-bold text-danger-500 shadow-sm ring-1 ring-border hover:bg-card"
-                    >
-                      ✕
-                    </button>
-                    {i === 0 ? (
-                      <span className="absolute bottom-0 left-0 rounded-tr-sm bg-primary-700/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
-                        代表
-                      </span>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
           <p className="text-[11px] text-foreground/60">
             place_id: <code className="font-mono">{v.googlePlaceId}</code>
           </p>
@@ -437,6 +399,13 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
         </div>
       </div>
 
+      {/* スポットの写真（複数・並び替え可）。Google 取得分と自分でアップした分を
+          同じギャラリーで管理する。先頭が「代表（サムネイル）」になる。 */}
+      <SpotPhotos
+        value={v.googlePhotoUrls ?? []}
+        onChange={(next) => set('googlePhotoUrls', next.length > 0 ? next : null)}
+      />
+
       <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
         {v.id ? (
           <Button type="button" variant="destructive" size="sm" onClick={onDelete} disabled={isPending}>
@@ -451,6 +420,171 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
           {isPending ? '保存中…' : v.id ? '更新' : 'スポットを追加'}
         </Button>
       </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// スポット写真ギャラリー（複数アップロード・並び替え・削除）
+// =============================================================================
+/**
+ * スポット単位の写真を管理する。URL 配列（先頭が代表＝サムネイル）を
+ * article-images バケットへアップロードして貯める。Google Places から
+ * 取得した写真 URL も同じ配列に入っているので、まとめて扱える。
+ */
+const SPOT_MAX_PHOTOS = 12;
+
+function SpotPhotos({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, startUpload] = useTransition();
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(
+    null,
+  );
+
+  const onFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (files.length === 0) return;
+    const remaining = SPOT_MAX_PHOTOS - value.length;
+    if (remaining <= 0) {
+      toast.error(`写真は最大 ${SPOT_MAX_PHOTOS} 枚までです`);
+      return;
+    }
+    const toUpload = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.warning(
+        `${SPOT_MAX_PHOTOS} 枚を超えるため、最初の ${remaining} 枚だけアップロードします`,
+      );
+    }
+    startUpload(async () => {
+      setProgress({ done: 0, total: toUpload.length });
+      const uploaded: string[] = [];
+      let failures = 0;
+      for (let i = 0; i < toUpload.length; i += 1) {
+        const fd = new FormData();
+        fd.set('file', toUpload[i]!);
+        try {
+          const res = await uploadImage(fd);
+          if (res.ok) uploaded.push(res.url);
+          else {
+            failures += 1;
+            toast.error(res.error);
+          }
+        } catch {
+          failures += 1;
+        }
+        setProgress({ done: i + 1, total: toUpload.length });
+      }
+      setProgress(null);
+      if (uploaded.length > 0) {
+        onChange([...value, ...uploaded]);
+        toast.success(`${uploaded.length} 枚の写真を追加しました`);
+      }
+      if (failures > 0) toast.error(`${failures} 枚のアップロードに失敗しました`);
+    });
+  };
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= value.length) return;
+    const next = [...value];
+    [next[idx], next[target]] = [next[target]!, next[idx]!];
+    onChange(next);
+  };
+
+  const remove = (idx: number) => onChange(value.filter((_, i) => i !== idx));
+
+  return (
+    <div>
+      <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+        写真（複数可・先頭が代表）
+      </label>
+      <p className="mb-2 text-[11px] text-foreground/50">
+        このスポットの写真をアップロードできます（最大 {SPOT_MAX_PHOTOS} 枚）。
+        矢印で並び替え、先頭の写真が場所カード・旅程のサムネイルになります。
+      </p>
+
+      {value.length > 0 ? (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {value.map((url, i) => (
+            <div key={url + i} className="relative shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt=""
+                className="h-20 w-28 rounded-sm object-cover ring-1 ring-border"
+              />
+              {i === 0 ? (
+                <span className="absolute bottom-0 left-0 rounded-tr-sm bg-primary-700/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                  代表
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                aria-label="この写真を削除"
+                className="absolute right-0 top-0 -translate-y-1 translate-x-1 rounded-full bg-card/95 px-1.5 py-0.5 text-[11px] font-bold text-danger-500 shadow-sm ring-1 ring-border hover:bg-card"
+              >
+                ✕
+              </button>
+              <div className="absolute bottom-0 right-0 flex">
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  aria-label="前へ"
+                  className="bg-card/90 px-1 text-[11px] font-bold text-foreground/70 disabled:opacity-30"
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === value.length - 1}
+                  aria-label="後ろへ"
+                  className="bg-card/90 px-1 text-[11px] font-bold text-foreground/70 disabled:opacity-30"
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        multiple
+        onChange={onFilesChange}
+        className="hidden"
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isUploading || value.length >= SPOT_MAX_PHOTOS}
+      >
+        {isUploading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {progress ? `アップロード中 ${progress.done}/${progress.total}` : 'アップロード中…'}
+          </>
+        ) : (
+          <>
+            <Upload className="h-4 w-4" />
+            写真をアップロード
+          </>
+        )}
+      </Button>
     </div>
   );
 }
