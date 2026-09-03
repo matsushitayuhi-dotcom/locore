@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — サービス一覧（Airbnb風カード・モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#F4F4EF;--bg2:#FBFBF8;--card:#fff;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;
+    --ink:#14140f;--ink2:#3a3a34;--mu:#7a7a72;--bd:#E6E6DE;--bd2:#D8D8CF;
+    --disp:'Space Grotesk','Zen Kaku Gothic New',sans-serif;--jp:'Zen Kaku Gothic New',sans-serif;--mono:'JetBrains Mono',monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1}
+  a{color:inherit;text-decoration:none}img{display:block;max-width:100%}
+  .wrap{max-width:1280px;margin:0 auto;padding:0 28px}
+
+  .top{position:sticky;top:0;z-index:30;background:rgba(244,244,239,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:15px 28px}
+  .logo{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.5px;flex:none}
+  .logo b{color:var(--lime-d)}
+  .searchpill{margin:0 auto;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--bd);
+    border-radius:999px;padding:8px 8px 8px 20px;box-shadow:0 8px 24px -16px rgba(20,20,15,.4);min-width:330px;cursor:pointer}
+  .searchpill .t{font-weight:700;font-size:14px}
+  .searchpill .s{color:var(--mu);font-size:13px;border-left:1px solid var(--bd);padding-left:12px}
+  .searchpill .mag{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--lime);display:grid;place-items:center;color:#1c2a06}
+  .searchpill .mag svg{width:15px;height:15px}
+  .nav{display:flex;gap:22px;font-size:14px;color:var(--mu);font-weight:500;flex:none}
+  .nav a.on{color:var(--ink)}
+
+  .cats{position:sticky;top:64px;z-index:20;background:var(--bg);border-bottom:1px solid var(--bd)}
+  .catsin{max-width:1280px;margin:0 auto;display:flex;gap:10px;padding:13px 28px;overflow-x:auto;scrollbar-width:none}
+  .catsin::-webkit-scrollbar{display:none}
+  .chip{flex:none;display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--bd2);
+    border-radius:999px;padding:9px 16px;font-size:13px;font-weight:500;color:var(--ink2);cursor:pointer;white-space:nowrap;transition:.14s}
+  .chip:hover{border-color:var(--ink)}
+  .chip.on{background:var(--lime);color:#1c2a06;border-color:var(--lime);font-weight:700}
+
+  .shelf{padding:34px 0 6px}
+  .shead{display:flex;align-items:baseline;gap:12px;margin-bottom:16px}
+  .shead h2{font-family:var(--jp);font-weight:900;font-size:23px;letter-spacing:.01em}
+  .shead .sub{color:var(--lime-d);font-size:12.5px;font-family:var(--mono);font-weight:500}
+  .shead .seeall{margin-left:auto;font-size:13px;font-weight:700;color:var(--lime-d);cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .shead .seeall svg{width:15px;height:15px}
+  .row{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:10px;scrollbar-width:none}
+  .row::-webkit-scrollbar{display:none}
+
+  .card{flex:none;width:258px;scroll-snap-align:start;cursor:pointer}
+  /* ===== image carousel (Airbnb風・ホバーで切替) ===== */
+  .ph{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:20/19;background:#e9e9e1}
+  .track{display:flex;height:100%;transition:transform .35s cubic-bezier(.2,.7,.2,1)}
+  .track img{flex:none;width:100%;height:100%;object-fit:cover}
+  .navbtn{position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;
+    background:rgba(255,255,255,.94);border:0;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .16s;
+    box-shadow:0 2px 6px rgba(0,0,0,.28);color:#222;z-index:3}
+  .card:hover .navbtn{opacity:1}
+  .navbtn:hover{transform:translateY(-50%) scale(1.08)}
+  .navbtn.prev{left:10px}.navbtn.next{right:10px}
+  .navbtn svg{width:15px;height:15px}
+  .dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:5px;z-index:2}
+  .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.6);transition:.16s}
+  .dots i.on{background:#fff;transform:scale(1.18)}
+  .heart{position:absolute;top:11px;right:11px;width:32px;height:32px;border:0;background:transparent;cursor:pointer;display:grid;place-items:center;z-index:3}
+  .heart svg{width:23px;height:23px;fill:rgba(0,0,0,.3);stroke:#fff;stroke-width:2;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));transition:.15s}
+  .heart:hover svg{transform:scale(1.12)}.heart.on svg{fill:var(--lime);stroke:var(--lime)}
+  .badge{position:absolute;top:11px;left:11px;display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--ink);
+    font-size:11.5px;font-weight:700;border-radius:999px;padding:5px 11px 5px 9px;box-shadow:0 2px 8px -2px rgba(0,0,0,.3);z-index:3}
+  .badge svg{width:13px;height:13px;fill:var(--lime-d)}
+
+  /* ===== text: title と他情報を分離（Airbnb風）===== */
+  .cbody{padding:12px 2px 0}
+  .title{font-size:16px;font-weight:700;line-height:1.42;color:var(--ink);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .meta{color:var(--mu);font-size:12px;margin-top:5px;line-height:1.5;
+    display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .meta .mcat{color:var(--lime-d);font-weight:700}
+  .price{margin-top:3px;font-size:12px;color:var(--mu)}
+  .price b{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--ink);text-decoration:underline;text-underline-offset:2px}
+  .price .st{color:var(--lime-d)}
+  .price .rev{color:var(--mu)}
+
+  .more{flex:none;width:172px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border-radius:16px;border:1px dashed var(--bd2);background:rgba(168,224,28,.06);color:var(--lime-d);cursor:pointer;gap:12px;transition:.16s;align-self:stretch;margin-bottom:34px}
+  .more:hover{background:rgba(168,224,28,.13);border-color:var(--lime)}
+  .more .circ{width:48px;height:48px;border-radius:50%;background:var(--lime);color:#1c2a06;display:grid;place-items:center}
+  .more .circ svg{width:22px;height:22px}
+  .more b{font-size:14px}
+
+  .list{display:none;padding:8px 0 70px}.list.show{display:block}.shelves.hide{display:none}
+  .back{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink2);background:var(--card);
+    border:1px solid var(--bd2);border-radius:999px;padding:9px 16px;cursor:pointer;margin:22px 0 6px}
+  .back svg{width:15px;height:15px}
+  .lhead{font-family:var(--jp);font-weight:900;font-size:26px;margin:10px 0 2px}
+  .lhead .count{color:var(--mu);font-family:var(--mono);font-size:13px;font-weight:400;margin-left:8px}
+  .lrows{margin-top:20px;display:flex;flex-direction:column;gap:18px}
+  .lrow{display:flex;gap:20px;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:14px;cursor:pointer;transition:.16s}
+  .lrow:hover{border-color:var(--lime);box-shadow:0 18px 40px -28px rgba(94,139,14,.45)}
+  .lrow .lph{flex:none;width:236px;aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#e9e9e1}
+  .lrow .lph img{width:100%;height:100%;object-fit:cover}
+  .lbody{flex:1;min-width:0;display:flex;flex-direction:column}
+  .lbody h3{font-size:18px;font-weight:700;line-height:1.4}
+  .lbody .lmeta-top{color:var(--mu);font-size:13px;margin-top:5px}
+  .lbody .lmeta-top .mcat{color:var(--lime-d);font-weight:700}
+  .lbody .ldesc{color:var(--mu);font-size:13px;line-height:1.75;margin-top:9px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .lfoot{margin-top:auto;display:flex;align-items:flex-end;gap:14px;padding-top:12px}
+  .lfoot .st{color:var(--lime-d);font-weight:700;font-size:14px}.lfoot .rev{color:var(--mu);font-size:13px}
+  .lprice{margin-left:auto;text-align:right}
+  .lprice b{font-family:var(--disp);font-weight:700;font-size:20px}.lprice span{color:var(--mu);font-size:12.5px;display:block}
+
+  @media(max-width:760px){
+    .nav,.searchpill{display:none}
+    .wrap,.topin,.catsin{padding-left:18px;padding-right:18px}
+    .lrow{flex-direction:column}.lrow .lph{width:100%;aspect-ratio:16/9}
+  }
+</style>
+</head>
+<body>
+  <div class="top"><div class="topin">
+    <div class="logo">Lo<b>core</b></div>
+    <div class="searchpill"><span class="t">フランス</span><span class="s">サービスを探す</span>
+      <span class="mag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span></div>
+    <nav class="nav"><a href="#">記事</a><a href="#">コミュニティ</a><a href="#" class="on">サービス</a></nav>
+  </div></div>
+
+  <div class="cats"><div class="catsin" id="chips"></div></div>
+
+  <div class="wrap">
+    <div class="shelves" id="shelves"></div>
+    <div class="list" id="list">
+      <button class="back" id="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 18 5 12 11 6"/></svg>もどる</button>
+      <h2 class="lhead" id="lhead"></h2>
+      <div class="lrows" id="lrows"></div>
+    </div>
+  </div>
+
+<script>
+  var DATA=[
+    {t:"リヨン 自転車ハーフデイツアー（ローヌ→ソーヌ）",cat:"現地アテンド",city:"リヨン",dur:"半日",unit:"/人",rate:"4.9",n:"38",price:"¥14,500",orig:true,desc:"私の工房のレンタル自転車で、川沿いを半日かけて。観光地を外した路地と、地元のカフェに寄りながら。",img:"https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=600&q=80"},
+    {t:"自家焙煎コーヒー ワークショップ（個人開催）",cat:"料理・体験",city:"リヨン",dur:"2時間",unit:"/人",rate:"5.0",n:"21",price:"¥9,800",desc:"生豆の選び方から焙煎、抽出まで。お土産に焼きたての豆をお渡しします。",img:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80"},
+    {t:"パリ マレ地区 フォトウォーク（作例お渡し）",cat:"撮影",city:"パリ",dur:"2時間",unit:"/人",rate:"4.8",n:"54",price:"¥12,000",desc:"路地と光のいい時間帯に、ポートレートとスナップを。データは当日中に納品します。",img:"https://images.unsplash.com/photo-1452587925148-ce544e77e70d?auto=format&fit=crop&w=600&q=80"},
+    {t:"ルーヴル プライベートガイド（日本語）",cat:"現地アテンド",city:"パリ",dur:"半日",unit:"/グループ",rate:"4.9",n:"112",price:"¥18,000",badge:"予約多数",desc:"見るべき作品を効率よく。混雑を避けるルートと、背景の物語を日本語で。",img:"https://images.unsplash.com/photo-1499856871958-5b9627545d1a?auto=format&fit=crop&w=600&q=80"},
+    {t:"フランス語 オンライン会話レッスン",cat:"留学サポート",city:"ナント",dur:"1時間",unit:"/回",rate:"4.7",n:"86",price:"¥3,500",desc:"日常会話から発音矯正まで。初回はレベルチェックと学習プランの相談を。",img:"https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80"},
+    {t:"賃貸の内見同行＋契約まわりの通訳",cat:"通訳・翻訳",city:"マルセイユ",dur:"半日",unit:"/件",rate:"4.9",n:"29",price:"¥8,000",desc:"物件探しの同行と、不動産屋との交渉・契約書の確認。だまされない契約を一緒に。",img:"https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=600&q=80"},
+    {t:"留学・ビザ・銀行口座の相談（オンライン）",cat:"相談",city:"ボルドー",dur:"1時間",unit:"/回",rate:"5.0",n:"47",price:"¥5,000",desc:"渡仏前後の手続きをまとめて相談。実体験ベースで、つまずきやすい所を先回りで。",img:"https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80"},
+    {t:"朝市マルシェ案内＋家庭料理レッスン",cat:"料理・体験",city:"ストラスブール",dur:"3時間",unit:"/人",rate:"4.9",n:"33",price:"¥11,000",orig:true,desc:"朝のマルシェで旬を選んで、自宅で定番の家庭料理を一緒に。レシピ付き。",img:"https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=600&q=80"},
+    {t:"空港送迎＋市内ひとまわりアテンド",cat:"送迎",city:"リール",dur:"半日",unit:"/台",rate:"4.8",n:"61",price:"¥16,000",desc:"到着後そのまま市内へ。荷物を置いて、最初の一日に必要な買い物まで付き添います。",img:"https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=600&q=80"}
+  ];
+  var EXTRAS=[
+    "https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1444084316824-dc26d6657664?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1493707553966-283afac8c358?auto=format&fit=crop&w=600&q=80"
+  ];
+  var CATS=["現地アテンド","通訳・翻訳","撮影","料理・体験","留学サポート","相談","送迎"];
+  var heart='<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.7-10-9.3C.6 8.9 2 5.5 5.2 5.5c2 0 3.3 1.2 3.8 2.3C9.5 6.7 10.8 5.5 12.8 5.5 16 5.5 17.4 8.9 16 11.7 13.5 16.3 12 21 12 21z" transform="translate(0 -1)"/></svg>';
+  var feather='<svg viewBox="0 0 24 24"><path d="M21 3C9 3 4 11 4 18c0 1 0 2 .3 3 .8-3.6 3.4-7.4 9.2-9.4-4.3 2.9-6.3 6.4-7 9.8C12.5 22 21 17 21 3z"/></svg>';
+  var arr='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg>';
+  var chevL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>';
+  var chevR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>';
+
+  function pick(filter,count){
+    var base=filter?DATA.filter(function(d){return d.cat===filter}):DATA.slice();
+    if(base.length===0)base=DATA.slice();
+    var out=[];for(var i=0;i<count;i++)out.push(base[i%base.length]);return out;
+  }
+  function imgsFor(d,seed){
+    return [d.img, EXTRAS[seed%EXTRAS.length], EXTRAS[(seed+2)%EXTRAS.length]];
+  }
+  function metaLine(d){
+    return '<span class="mcat">'+d.cat+'</span> ・ '+d.city+' ・ '+d.dur;
+  }
+  function priceLine(d){
+    return '<b>'+d.price+'</b> ・ <span class="st">★ '+d.rate+'</span> ・ <span class="rev">レビュー'+d.n+'件</span>';
+  }
+  function card(d,seed){
+    var imgs=imgsFor(d,seed);
+    var dots='';for(var k=0;k<imgs.length;k++)dots+='<i'+(k===0?' class="on"':'')+'></i>';
+    var badge=d.orig?'<span class="badge">'+feather+'オリジナル</span>':(d.badge?'<span class="badge">'+d.badge+'</span>':'');
+    return '<a class="card">'
+      +'<div class="ph" data-idx="0">'
+        +'<div class="track">'+imgs.map(function(u){return '<img src="'+u+'" loading="lazy" alt="">'}).join('')+'</div>'
+        +'<button class="navbtn prev" aria-label="前の写真" style="display:none">'+chevL+'</button>'
+        +'<button class="navbtn next" aria-label="次の写真">'+chevR+'</button>'
+        +'<button class="heart'+(d.fav?' on':'')+'" aria-label="保存">'+heart+'</button>'
+        +badge
+        +'<div class="dots">'+dots+'</div>'
+      +'</div>'
+      +'<div class="cbody">'
+        +'<div class="title">'+d.t+'</div>'
+        +'<div class="meta">'+metaLine(d)+'</div>'
+        +'<div class="price">'+priceLine(d)+'</div>'
+      +'</div></a>';
+  }
+  function moreTile(key){return '<div class="more" data-more="'+key+'"><span class="circ">'+arr+'</span><b>もっと見る</b></div>';}
+  function shelf(title,sub,key,items){
+    return '<section class="shelf"><div class="shead"><h2>'+title+'</h2><span class="sub">'+sub+'</span>'
+      +'<span class="seeall" data-more="'+key+'">すべて見る '+arr+'</span></div>'
+      +'<div class="row">'+items.map(function(d,i){return card(d,i)}).join('')+moreTile(key)+'</div></section>';
+  }
+
+  var html='';
+  html+=shelf('新着のサービス','New','新着',pick(null,7));
+  html+=shelf('人気のサービス','Popular',' 人気',pick(null,7));
+  CATS.slice(0,4).forEach(function(c){ html+=shelf(c,'Category','cat:'+c,pick(c,7)); });
+  document.getElementById('shelves').innerHTML=html;
+  document.getElementById('chips').innerHTML='<button class="chip on">すべて</button>'+CATS.map(function(c){return '<button class="chip" data-more="cat:'+c+'">'+c+'</button>'}).join('');
+
+  function lrow(d,seed){
+    return '<a class="lrow"><div class="lph"><img src="'+d.img+'" alt=""></div>'
+      +'<div class="lbody"><h3>'+d.t+'</h3>'
+      +'<div class="lmeta-top">'+metaLine(d)+'</div>'
+      +'<p class="ldesc">'+(d.desc||'')+'</p>'
+      +'<div class="lfoot"><span class="st">★ '+d.rate+'</span><span class="rev">レビュー'+d.n+'件</span>'
+      +'<span class="lprice"><b>'+d.price+'</b></span></div></div></a>';
+  }
+  function openList(key){
+    var title,items;
+    if(key==='新着'){title='新着のサービス';items=pick(null,8);}
+    else if(key.trim()==='人気'){title='人気のサービス';items=pick(null,8);}
+    else if(key.indexOf('cat:')===0){var c=key.slice(4);title=c+'のサービス';items=pick(c,8);}
+    else{title='サービス';items=pick(null,8);}
+    document.getElementById('lhead').innerHTML=title+'<span class="count">128件</span>';
+    document.getElementById('lrows').innerHTML=items.map(function(d,i){return lrow(d,i)}).join('');
+    document.getElementById('shelves').classList.add('hide');
+    document.querySelector('.cats').style.display='none';
+    document.getElementById('list').classList.add('show');
+    window.scrollTo({top:0});
+  }
+  function closeList(){
+    document.getElementById('list').classList.remove('show');
+    document.getElementById('shelves').classList.remove('hide');
+    document.querySelector('.cats').style.display='';
+  }
+  document.body.addEventListener('click',function(e){
+    var nb=e.target.closest('.navbtn');
+    if(nb){
+      e.preventDefault();e.stopPropagation();
+      var ph=nb.closest('.ph'),track=ph.querySelector('.track'),count=track.children.length;
+      var idx=+(ph.getAttribute('data-idx')||0);
+      idx+=nb.classList.contains('next')?1:-1;
+      if(idx<0)idx=0;if(idx>count-1)idx=count-1;
+      ph.setAttribute('data-idx',idx);
+      track.style.transform='translateX(-'+(idx*100)+'%)';
+      ph.querySelectorAll('.dots i').forEach(function(d,k){d.classList.toggle('on',k===idx);});
+      ph.querySelector('.navbtn.prev').style.display=idx===0?'none':'';
+      ph.querySelector('.navbtn.next').style.display=idx===count-1?'none':'';
+      return;
+    }
+    var m=e.target.closest('[data-more]');if(m){e.preventDefault();openList(m.getAttribute('data-more'));return;}
+    var h=e.target.closest('.heart');if(h){e.preventDefault();e.stopPropagation();h.classList.toggle('on');return;}
+  });
+  document.getElementById('back').addEventListener('click',closeList);
+</script>
+</body>
+</html>

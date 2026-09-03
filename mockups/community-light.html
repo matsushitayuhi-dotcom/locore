@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — コミュニティ（白背景・国セレクト）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#F4F4EF; --bg2:#FBFBF8; --card:#fff;
+    --lime:#A8E01C; --lime-d:#5E8B0E; --lime-l:#E3F7B8;
+    --ink:#14140f; --mu:#7a7a72; --bd:#E6E6DE;
+    --disp:'Space Grotesk','Zen Kaku Gothic New',sans-serif;
+    --jp:'Zen Kaku Gothic New',sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(120% 95% at 50% 12%, #ffffff 0%, var(--bg2) 40%, var(--bg) 100%);
+    color:var(--ink);font-family:var(--jp);overflow:hidden;-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;
+  }
+  #globe{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;opacity:.85}
+  .fade{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(56% 50% at 50% 50%, rgba(244,244,239,0) 34%, rgba(247,247,243,.72) 100%)}
+
+  .brand{position:fixed;top:26px;left:32px;z-index:5;font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.4px}
+  .brand b{color:var(--lime-d)}
+  .nav{position:fixed;top:25px;right:32px;z-index:5;display:flex;gap:24px;font-size:13.5px;color:var(--mu);font-weight:500}
+  .nav a{color:inherit;text-decoration:none}.nav a:hover{color:var(--ink)}.nav a.on{color:var(--ink)}
+
+  .stage{position:relative;z-index:3;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px}
+  .rise{opacity:0;transform:translateY(14px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  .d1{animation-delay:.04s}.d2{animation-delay:.15s}.d3{animation-delay:.3s}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  .kick{font-family:var(--mono);font-size:12px;letter-spacing:.30em;text-transform:uppercase;color:var(--lime-d)}
+  .kick::before{content:"";display:inline-block;width:26px;height:1.5px;background:var(--lime-d);vertical-align:middle;margin-right:11px}
+  h1{font-family:var(--jp);font-weight:900;color:var(--ink);font-size:clamp(30px,5.6vw,56px);
+    line-height:1.16;letter-spacing:.01em;margin:18px 0 0}
+  h1 em{font-style:normal;color:var(--lime-d)}
+  .lead{color:var(--mu);font-size:clamp(13px,1.55vw,15.5px);line-height:1.85;margin-top:15px;font-weight:500}
+
+  /* ---- country picker（国を選ばせる・国旗なし）---- */
+  .picker{position:relative;margin-top:36px;width:min(380px,90vw)}
+  .pbtn{width:100%;display:flex;align-items:center;gap:12px;background:var(--card);
+    border:1px solid var(--bd);border-radius:14px;padding:16px 18px;cursor:pointer;font-family:var(--jp);
+    box-shadow:0 18px 46px -30px rgba(20,20,15,.4);transition:.16s}
+  .pbtn:hover{border-color:var(--lime);box-shadow:0 22px 50px -28px rgba(94,139,14,.4)}
+  .pbtn .pin{flex:none;color:var(--lime-d);display:flex}
+  .pbtn .val{flex:1;text-align:left;font-weight:700;font-size:18px;color:var(--ink);letter-spacing:.02em}
+  .pbtn .val.ph{color:#b6b6ad;font-weight:500}
+  .pbtn .chev{flex:none;color:var(--mu);transition:.2s}
+  .picker.open .pbtn .chev{transform:rotate(180deg)}
+  .picker.open .pbtn{border-color:var(--lime)}
+
+  .menu{position:absolute;left:0;right:0;top:calc(100% + 10px);background:var(--card);border:1px solid var(--bd);
+    border-radius:16px;box-shadow:0 34px 80px -30px rgba(20,20,15,.5);overflow:hidden;z-index:6;
+    opacity:0;transform:translateY(-8px);pointer-events:none;transition:.16s;text-align:left}
+  .picker.open .menu{opacity:1;transform:none;pointer-events:auto}
+  .mscroll{max-height:300px;overflow-y:auto}
+  .mhead{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#b0b0a6;padding:13px 18px 6px;position:sticky;top:0;background:var(--card)}
+  .mrow{display:flex;align-items:center;padding:12px 18px;cursor:pointer;transition:.1s;font-weight:500;font-size:15px;color:var(--ink)}
+  .mrow:hover{background:#f6f9ee}
+  .mrow .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--lime-d)}
+  .mrow.soon{color:#b6b6ad;cursor:default}
+  .mrow.soon:hover{background:var(--card)}
+  .mrow.soon .tag{color:#c8c8bf}
+
+  .cta{margin-top:28px;display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--lime);
+    font-family:var(--jp);font-weight:700;font-size:15px;border-radius:999px;padding:14px 28px;text-decoration:none;
+    box-shadow:0 16px 34px -16px rgba(20,20,15,.55);
+    opacity:0;transform:translateY(8px);pointer-events:none;transition:.28s cubic-bezier(.2,.7,.2,1)}
+  .cta.show{opacity:1;transform:none;pointer-events:auto}
+  .cta:hover{transform:translateY(-2px)}
+  .cta svg{width:18px;height:18px}
+
+  @media(max-width:560px){.nav{display:none}h1{font-size:31px}}
+</style>
+</head>
+<body>
+  <canvas id="globe"></canvas>
+  <div class="fade"></div>
+
+  <div class="brand">Lo<b>core</b></div>
+  <nav class="nav"><a href="#">記事</a><a href="#" class="on">コミュニティ</a><a href="#">サービス</a></nav>
+
+  <main class="stage">
+    <span class="kick rise d1">Community</span>
+    <h1 class="rise d2">訪れる国を、<em>選ぶ。</em></h1>
+    <p class="lead rise d2">現地に暮らす日本人のコミュニティに、飛び込みましょう！</p>
+
+    <div class="picker rise d3" id="picker">
+      <button class="pbtn" id="pbtn" aria-haspopup="listbox" aria-expanded="false">
+        <span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+        <span class="val ph" id="pval">国を選ぶ</span>
+        <svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="menu" id="menu" role="listbox">
+        <div class="mscroll">
+          <div class="mhead">国を選ぶ（50音順）</div>
+          <div class="mrow soon">アメリカ<span class="tag">近日</span></div>
+          <div class="mrow soon">イギリス<span class="tag">近日</span></div>
+          <div class="mrow soon">イタリア<span class="tag">近日</span></div>
+          <div class="mrow soon">オーストラリア<span class="tag">近日</span></div>
+          <div class="mrow soon">カナダ<span class="tag">近日</span></div>
+          <div class="mrow soon">韓国<span class="tag">近日</span></div>
+          <div class="mrow soon">シンガポール<span class="tag">近日</span></div>
+          <div class="mrow soon">タイ<span class="tag">近日</span></div>
+          <div class="mrow soon">ドイツ<span class="tag">近日</span></div>
+          <div class="mrow" data-name="フランス">フランス<span class="tag">選ぶ →</span></div>
+          <div class="mrow soon">ベトナム<span class="tag">近日</span></div>
+          <div class="mrow soon">マレーシア<span class="tag">近日</span></div>
+        </div>
+      </div>
+    </div>
+
+    <a class="cta" id="cta" href="#"><span id="cta-label">コミュニティへ</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+  </main>
+
+<script>
+  // rotating dotted globe (white-bg tuned)
+  (function(){
+    var cv=document.getElementById('globe'),ctx=cv.getContext('2d');
+    var DPR=Math.min(2,window.devicePixelRatio||1),W=0,H=0,N=200,pts=[];
+    var GA=Math.PI*(3-Math.sqrt(5));
+    for(var i=0;i<N;i++){var y=1-(i/(N-1))*2,r=Math.sqrt(Math.max(0,1-y*y)),t=i*GA;pts.push({x:Math.cos(t)*r,y:y,z:Math.sin(t)*r});}
+    function rs(){DPR=Math.min(2,window.devicePixelRatio||1);W=cv.width=Math.floor(cv.clientWidth*DPR);H=cv.height=Math.floor(cv.clientHeight*DPR);}
+    var ang=0;
+    function frame(){
+      ctx.clearRect(0,0,W,H);ang+=0.0015;
+      var cx=W/2,cy=H/2,R=Math.min(W,H)*0.34;
+      var ca=Math.cos(ang),sa=Math.sin(ang),tl=0.42,ct=Math.cos(tl),st=Math.sin(tl);
+      var P=pts.map(function(p){var x=p.x*ca-p.z*sa,z=p.x*sa+p.z*ca,yy=p.y;var y2=yy*ct-z*st,z2=yy*st+z*ct;return{sx:cx+x*R,sy:cy+y2*R,z:z2};});
+      var TH=R*0.40;ctx.lineWidth=DPR;
+      for(var a=0;a<P.length;a++){var A=P[a];for(var b=a+1;b<P.length;b++){var B=P[b];
+        var dx=A.sx-B.sx,dy=A.sy-B.sy,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<TH){var dep=(A.z+B.z)*0.5,al=(1-d/TH)*0.20*(0.35+0.65*(dep+1)/2);
+          ctx.strokeStyle='rgba(94,139,14,'+al.toFixed(3)+')';ctx.beginPath();ctx.moveTo(A.sx,A.sy);ctx.lineTo(B.sx,B.sy);ctx.stroke();}}}
+      P.forEach(function(p){var dep=(p.z+1)/2,s=(1.0+dep*1.8)*DPR;
+        ctx.fillStyle=dep>0.8?'rgba(94,139,14,'+(0.42+dep*0.45).toFixed(3)+')':'rgba(120,170,30,'+(0.18+dep*0.55).toFixed(3)+')';
+        ctx.beginPath();ctx.arc(p.sx,p.sy,0.95*s,0,7);ctx.fill();});
+      requestAnimationFrame(frame);
+    }
+    rs();frame();window.addEventListener('resize',rs);
+  })();
+
+  // picker open/close + select (initial = nothing selected)
+  (function(){
+    var picker=document.getElementById('picker'),btn=document.getElementById('pbtn'),menu=document.getElementById('menu');
+    var val=document.getElementById('pval'),cta=document.getElementById('cta'),ctaLabel=document.getElementById('cta-label');
+    function open(){picker.classList.add('open');btn.setAttribute('aria-expanded','true');}
+    function close(){picker.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+    btn.addEventListener('click',function(e){e.stopPropagation();picker.classList.contains('open')?close():open();});
+    document.addEventListener('click',function(e){if(!picker.contains(e.target))close();});
+    menu.querySelectorAll('.mrow[data-name]').forEach(function(row){
+      row.addEventListener('click',function(){
+        var name=row.dataset.name;
+        val.textContent=name;val.classList.remove('ph');
+        ctaLabel.textContent=name+'のコミュニティへ';
+        cta.classList.add('show');
+        close();
+      });
+    });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — サービス詳細（Airbnb風・モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#F4F4EF;--bg2:#FBFBF8;--card:#fff;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;
+    --ink:#14140f;--ink2:#3a3a34;--mu:#7a7a72;--bd:#E6E6DE;--bd2:#D8D8CF;
+    --disp:'Space Grotesk','Zen Kaku Gothic New',sans-serif;--jp:'Zen Kaku Gothic New',sans-serif;--mono:'JetBrains Mono',monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1;line-height:1.8}
+  a{color:inherit;text-decoration:none}img{display:block;max-width:100%}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  .st{color:var(--lime-d)}
+
+  .top{position:sticky;top:0;z-index:40;background:rgba(244,244,239,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:14px 28px}
+  .logo{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.5px}.logo b{color:var(--lime-d)}
+  .nav{margin-left:auto;display:flex;gap:22px;font-size:14px;color:var(--mu);font-weight:500}.nav a.on{color:var(--ink)}
+
+  /* ===== title block ===== */
+  .head{padding:26px 0 14px}
+  .head h1{font-family:var(--jp);font-weight:900;font-size:clamp(24px,3.2vw,33px);line-height:1.3;letter-spacing:.01em}
+  .head .sub{display:flex;align-items:center;flex-wrap:wrap;gap:8px 14px;margin-top:11px;font-size:13.5px;color:var(--ink2)}
+  .head .sub .rate{font-weight:700}.head .sub .rate .st{font-weight:700}
+  .head .sub .dot{color:var(--bd2)}
+  .head .sub .loc{color:var(--ink2);text-decoration:underline;text-underline-offset:2px}
+  .head .sub .tag{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--lime-d);background:var(--lime-l);border-radius:999px;padding:3px 11px;text-transform:uppercase}
+  .head .acts{margin-left:auto;display:flex;gap:6px}
+  .head .acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;
+    font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px}
+  .head .acts button:hover{background:rgba(0,0,0,.05)}
+  .head .acts svg{width:17px;height:17px}
+
+  /* ===== gallery (Airbnb 1+4) ===== */
+  .gallery{position:relative;display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;
+    border-radius:20px;overflow:hidden;aspect-ratio:24/11;background:#e9e9e1}
+  .gallery a{position:relative;overflow:hidden}
+  .gallery a img{width:100%;height:100%;object-fit:cover;transition:.4s}
+  .gallery a:hover img{transform:scale(1.04)}
+  .gallery a.big{grid-row:1/3}
+  .allphotos{position:absolute;bottom:16px;right:16px;display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);
+    border:1px solid var(--bd2);border-radius:11px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+  .allphotos svg{width:15px;height:15px}
+
+  /* ===== two-column ===== */
+  .cols{display:grid;grid-template-columns:1fr 360px;gap:54px;padding:34px 0 70px;align-items:start}
+  .sec{padding:26px 0;border-top:1px solid var(--bd)}
+  .sec:first-child{border-top:0;padding-top:30px}
+  .sec h2{font-family:var(--jp);font-weight:900;font-size:20px;margin-bottom:14px}
+
+  /* host row under title */
+  .hostrow{display:flex;align-items:center;gap:14px;padding:24px 0 4px}
+  .hostrow .ava{width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid var(--lime)}
+  .hostrow .t{font-weight:700;font-size:16px}
+  .hostrow .t span{font-weight:500;color:var(--mu);font-size:13px;font-family:var(--mono);margin-left:6px}
+  .hostrow .s{color:var(--mu);font-size:13px;margin-top:2px}
+
+  /* quick facts */
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .fact{display:flex;gap:12px;align-items:flex-start}
+  .fact .ic{flex:none;width:30px;height:30px;color:var(--lime-d)}
+  .fact .ic svg{width:26px;height:26px;stroke-width:1.6}
+  .fact b{font-weight:700;font-size:14.5px}
+  .fact span{display:block;color:var(--mu);font-size:12.5px;margin-top:1px}
+
+  .lead{font-size:15px;line-height:2;color:var(--ink2)}
+  .lead p+p{margin-top:14px}
+
+  /* highlight bullets */
+  .hl{display:flex;flex-direction:column;gap:13px}
+  .hl li{display:flex;gap:12px;list-style:none;align-items:flex-start}
+  .hl .ck{flex:none;width:24px;height:24px;border-radius:50%;background:var(--lime-l);color:var(--lime-d);display:grid;place-items:center;margin-top:1px}
+  .hl .ck svg{width:14px;height:14px}
+  .hl b{font-weight:700}.hl p{color:var(--mu);font-size:13px;margin-top:2px}
+
+  /* included */
+  .inc{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+  .inc div{display:flex;gap:10px;align-items:center;font-size:14px}
+  .inc svg{width:18px;height:18px;color:var(--lime-d);flex:none}
+
+  /* host card */
+  .hostcard{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:20px}
+  .hostcard .ava{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--lime)}
+  .hostcard .nm{font-weight:700;font-size:17px}
+  .hostcard .badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--lime-d);margin-left:8px}
+  .hostcard .meta{color:var(--mu);font-size:12.5px;font-family:var(--mono);margin:2px 0 9px}
+  .hostcard .bio{font-size:13.5px;color:var(--ink2);line-height:1.9}
+  .hostcard .link{display:inline-flex;align-items:center;gap:6px;margin-top:11px;font-size:13px;font-weight:700;color:var(--lime-d)}
+
+  /* reviews */
+  .revtop{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .revtop .big{font-family:var(--disp);font-size:24px;font-weight:700}
+  .revtop .big .st{color:var(--lime-d)}
+  .bars{display:grid;grid-template-columns:1fr 1fr;gap:8px 36px;margin-bottom:24px}
+  .bar{display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .bar span{width:64px;color:var(--ink2)}
+  .bar .tr{flex:1;height:4px;border-radius:3px;background:var(--bd)}
+  .bar .tr i{display:block;height:100%;border-radius:3px;background:var(--lime)}
+  .bar b{width:26px;text-align:right;font-family:var(--mono);color:var(--mu)}
+  .revs{display:grid;grid-template-columns:1fr 1fr;gap:22px 30px}
+  .rev .rh{display:flex;align-items:center;gap:11px}
+  .rev .rh img{width:42px;height:42px;border-radius:50%;object-fit:cover}
+  .rev .rh .n{font-weight:700;font-size:14px}.rev .rh .d{color:var(--mu);font-size:11.5px;font-family:var(--mono)}
+  .rev .rstar{color:var(--lime-d);font-size:12px;margin:7px 0 5px}
+  .rev p{font-size:13.5px;color:var(--ink2);line-height:1.85;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* map */
+  .mapframe{border-radius:18px;overflow:hidden;border:1px solid var(--bd);aspect-ratio:16/8;background:#dfe4e8;position:relative}
+  .mapframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;filter:grayscale(.15)}
+
+  /* ===== booking card (sticky) ===== */
+  .book{position:sticky;top:88px;background:var(--card);border:1px solid var(--bd);border-radius:20px;
+    padding:22px;box-shadow:0 26px 60px -34px rgba(20,20,15,.5)}
+  .book .price{display:flex;align-items:baseline;gap:7px}
+  .book .price b{font-family:var(--disp);font-size:26px;font-weight:700}
+  .book .price span{color:var(--mu);font-size:13px}
+  .book .price .rate{margin-left:auto;font-size:13px;font-weight:700}.book .price .rate .st{color:var(--lime-d)}
+  .book .grid2{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--bd2);border-radius:13px;overflow:hidden;margin:16px 0 0}
+  .book .fld{padding:11px 14px;cursor:pointer}
+  .book .fld+.fld{border-left:1px solid var(--bd2)}
+  .book .fld .lab{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--mu)}
+  .book .fld .val{font-size:14px;font-weight:700;margin-top:2px;display:flex;align-items:center;justify-content:space-between}
+  .book .fld .val svg{width:14px;height:14px;color:var(--mu)}
+  .book .cta{display:block;width:100%;margin-top:16px;background:var(--lime);color:#1c2a06;border:0;border-radius:13px;
+    padding:15px;font-family:var(--jp);font-weight:700;font-size:16px;cursor:pointer;transition:.16s}
+  .book .cta:hover{background:#b7ec33}
+  .book .note{text-align:center;color:var(--mu);font-size:12px;margin-top:11px}
+  .book .brk{margin-top:18px;padding-top:16px;border-top:1px solid var(--bd)}
+  .book .brk div{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);margin-bottom:9px}
+  .book .brk .tot{font-weight:700;color:var(--ink);padding-top:11px;border-top:1px solid var(--bd);font-size:14.5px}
+  .book .safe{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:12px;color:var(--lime-d);font-weight:700}
+  .book .safe svg{width:15px;height:15px}
+
+  @media(max-width:900px){
+    .cols{grid-template-columns:1fr;gap:0}
+    .book{position:static;margin-top:24px}
+    .gallery{grid-template-columns:1fr 1fr;aspect-ratio:16/12}
+    .gallery a.big{grid-row:1/2;grid-column:1/3;aspect-ratio:16/9}
+    .gallery a:nth-child(n+4){display:none}
+    .facts,.inc,.revs,.bars{grid-template-columns:1fr}
+    .nav{display:none}
+  }
+</style>
+</head>
+<body>
+  <div class="top"><div class="topin">
+    <div class="logo">Lo<b>core</b></div>
+    <nav class="nav"><a href="#">記事</a><a href="#">コミュニティ</a><a href="#" class="on">サービス</a></nav>
+  </div></div>
+
+  <div class="wrap">
+    <!-- title -->
+    <div class="head">
+      <h1>リヨン 自転車ハーフデイツアー（ローヌ → ソーヌ）</h1>
+      <div class="sub">
+        <span class="rate"><span class="st">★ 4.9</span></span>
+        <span>・</span><span>レビュー 38件</span>
+        <span class="dot">・</span><a class="loc">リヨン、フランス</a>
+        <span class="tag">現地アテンド</span>
+        <div class="acts">
+          <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>共有</button>
+          <button><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7.5-4.7-10-9.3C.6 8.9 2 5.5 5.2 5.5c2 0 3.3 1.2 3.8 2.3C9.5 6.7 10.8 5.5 12.8 5.5 16 5.5 17.4 8.9 16 11.7 13.5 16.3 12 21 12 21z"/></svg>保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- gallery -->
+    <div class="gallery">
+      <a class="big"><img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=1100&q=80" alt=""></a>
+      <a><img src="https://images.unsplash.com/photo-1431274172761-fca41d930114?auto=format&fit=crop&w=600&q=80" alt=""></a>
+      <a><img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=600&q=80" alt=""></a>
+      <a><img src="https://images.unsplash.com/photo-1444084316824-dc26d6657664?auto=format&fit=crop&w=600&q=80" alt=""></a>
+      <a><img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=600&q=80" alt=""></a>
+      <button class="allphotos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>すべての写真（24枚）</button>
+    </div>
+
+    <div class="cols">
+      <!-- LEFT -->
+      <div class="main">
+        <div class="hostrow">
+          <img class="ava" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80" alt="">
+          <div>
+            <div class="t">森田 ゆうきが案内する半日ツアー <span>在住5年</span></div>
+            <div class="s">所要 約4時間 ・ 日本語/フランス語 ・ 最大4名</div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="facts">
+            <div class="fact"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg></span><div><b>所要 約4時間</b><span>半日・午前/午後から選択</span></div></div>
+            <div class="fact"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3 19a6 6 0 0 1 12 0"/><path d="M16 6a3 3 0 0 1 0 6M21 19a5 5 0 0 0-4-4.9"/></svg></span><div><b>最大4名まで</b><span>少人数・貸切</span></div></div>
+            <div class="fact"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.5" cy="16" r="3.2"/><circle cx="17.5" cy="16" r="3.2"/><path d="M6.5 16l3.5-7h4l2.5 7M10 9l-1.5-3H6"/></svg></span><div><b>レンタル自転車込み</b><span>ヘルメット・保険付き</span></div></div>
+            <div class="fact"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11l-1.5-3M19 16H8l1.5 3"/><path d="M3 6h4M17 18h4"/></svg></span><div><b>日本語・フランス語</b><span>初めての方も安心</span></div></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2>この体験について</h2>
+          <div class="lead">
+            <p>観光地のリヨンとは少し違う、地元の人が走る川沿いの道を半日かけて。私の工房のレンタル自転車で、ローヌ川からソーヌ川へ、橋を渡りながらゆっくり進みます。</p>
+            <p>途中、観光客のいない朝のカフェに寄って一息。写真に残したくなる路地や、地元のパン屋にも案内します。ペースは合わせるので、自転車に久しぶりの方でも大丈夫です。</p>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2>この体験の特徴</h2>
+          <ul class="hl">
+            <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div><b>地元目線の裏道ルート</b><p>観光地を外した、住む人だけが知る川沿いの道。</p></div></li>
+            <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div><b>朝のカフェに立ち寄り</b><p>観光客のいない時間に、地元の一杯を。</p></div></li>
+            <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div><b>写真スポット案内＋撮影</b><p>映える場所で、スマホでお撮りします。</p></div></li>
+          </ul>
+        </div>
+
+        <div class="sec">
+          <h2>含まれるもの</h2>
+          <div class="inc">
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>レンタル自転車</div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>ヘルメット・保険</div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>カフェ1杯</div>
+            <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>写真データ（当日納品）</div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2>ホスト紹介</h2>
+          <div class="hostcard">
+            <img class="ava" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80" alt="">
+            <div>
+              <div><span class="nm">森田 ゆうき</span><span class="badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>本人確認済み</span></div>
+              <div class="meta">リヨン在住5年 ・ ホスト評価 4.9 ・ レビュー 124件</div>
+              <p class="bio">リヨン Vieux Lyon 在住5年目。Croix-Rousse の丘で小さな自転車工房＋コーヒー焙煎所を併設運営。週末はローヌ川沿いを走ってクライミング。京都から来て、パリは経由せず最初からリヨン。</p>
+              <a class="link">プロフィールを見る →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2><span class="st">★ 4.9</span> ・ レビュー 38件</h2>
+          <div class="bars">
+            <div class="bar"><span>満足度</span><div class="tr"><i style="width:98%"></i></div><b>4.9</b></div>
+            <div class="bar"><span>ローカル度</span><div class="tr"><i style="width:100%"></i></div><b>5.0</b></div>
+            <div class="bar"><span>安全性</span><div class="tr"><i style="width:96%"></i></div><b>4.8</b></div>
+            <div class="bar"><span>コスパ</span><div class="tr"><i style="width:94%"></i></div><b>4.7</b></div>
+          </div>
+          <div class="revs">
+            <div class="rev"><div class="rh"><img src="https://randomuser.me/api/portraits/women/68.jpg" alt=""><div><div class="n">田中 美咲</div><div class="d">2026年5月</div></div></div><div class="rstar">★★★★★</div><p>観光では絶対に通らない道ばかりで感動しました。森田さんのカフェの選び方が最高。自転車も久しぶりでしたが全然平気でした。</p></div>
+            <div class="rev"><div class="rh"><img src="https://randomuser.me/api/portraits/men/32.jpg" alt=""><div><div class="n">佐藤 健</div><div class="d">2026年4月</div></div></div><div class="rstar">★★★★★</div><p>写真もたくさん撮ってもらえて、データもその日のうちに。地元の話が面白くて、リヨンが一気に好きになりました。</p></div>
+            <div class="rev"><div class="rh"><img src="https://randomuser.me/api/portraits/women/44.jpg" alt=""><div><div class="n">山本 彩</div><div class="d">2026年4月</div></div></div><div class="rstar">★★★★★</div><p>少人数でゆっくり。子連れでも対応してくれて助かりました。パン屋さんのおすすめが本当に美味しかった。</p></div>
+            <div class="rev"><div class="rh"><img src="https://randomuser.me/api/portraits/men/52.jpg" alt=""><div><div class="n">鈴木 大輔</div><div class="d">2026年3月</div></div></div><div class="rstar">★★★★☆</div><p>朝の川沿いが最高に気持ちよかった。雨の日プランも用意してくれていて安心感がありました。</p></div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <h2>集合場所</h2>
+          <p class="lead" style="margin-bottom:16px">リヨン2区、Place Bellecour の噴水前に集合。当日は地図と連絡先をメッセージでお送りします。</p>
+          <div class="mapframe"><iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=Place%20Bellecour%20Lyon&z=14&output=embed"></iframe></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: booking -->
+      <aside>
+        <div class="book">
+          <div class="price"><b>¥14,500</b><span>/人</span><span class="rate"><span class="st">★ 4.9</span> ・ 38</span></div>
+          <div class="grid2">
+            <div class="fld"><div class="lab">日付</div><div class="val">6/15（日）<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+            <div class="fld"><div class="lab">人数</div><div class="val">2名<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+          </div>
+          <button class="cta">予約をリクエスト</button>
+          <div class="note">いますぐ予約は確定しません</div>
+          <div class="brk">
+            <div><span>¥14,500 × 2名</span><span>¥29,000</span></div>
+            <div><span>Locore サービス料</span><span>¥2,030</span></div>
+            <div class="tot"><span>合計</span><span>¥31,030</span></div>
+          </div>
+          <div class="safe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>本人確認済みホスト ・ 開催3日前まで全額返金</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

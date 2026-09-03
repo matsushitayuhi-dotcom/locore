@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — 求人詳細（応募者目線・モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#F4F4EF;--bg2:#FBFBF8;--card:#fff;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;
+    --ink:#14140f;--ink2:#3a3a34;--mu:#7a7a72;--bd:#E6E6DE;--bd2:#D8D8CF;--warn:#C2410C;--warn-l:#FBEAE0;
+    --disp:'Space Grotesk','Zen Kaku Gothic New',sans-serif;--jp:'Zen Kaku Gothic New',sans-serif;--mono:'JetBrains Mono',monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1;line-height:1.8}
+  a{color:inherit;text-decoration:none}img{display:block;max-width:100%}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  .st{color:var(--lime-d)}
+
+  .top{position:sticky;top:0;z-index:40;background:rgba(244,244,239,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:14px 28px}
+  .logo{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.5px}.logo b{color:var(--lime-d)}
+  .nav{margin-left:auto;display:flex;gap:22px;font-size:14px;color:var(--mu);font-weight:500}.nav a.on{color:var(--ink)}
+
+  .crumb{font-size:12.5px;color:var(--mu);font-family:var(--mono);padding:18px 0 0}
+  .crumb a{text-decoration:underline;text-underline-offset:2px}
+
+  /* ===== title block ===== */
+  .head{padding:14px 0 18px}
+  .head .badges{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:11px}
+  .head .status{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--lime-d);display:inline-flex;align-items:center;gap:5px}
+  .head .status i{width:7px;height:7px;border-radius:50%;background:var(--lime);display:inline-block;box-shadow:0 0 0 3px rgba(168,224,28,.25)}
+  .head .tag{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--lime-d);background:var(--lime-l);border-radius:999px;padding:3px 11px}
+  .head .urgent{font-family:var(--mono);font-size:11.5px;font-weight:700;color:#fff;background:var(--warn);border-radius:999px;padding:3px 11px}
+  .head h1{font-family:var(--jp);font-weight:900;font-size:clamp(23px,3vw,32px);line-height:1.3;letter-spacing:.01em}
+  .head .sub{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:11px;font-size:13.5px;color:var(--ink2)}
+  .head .sub .co{font-weight:700}
+  .head .sub .loc{text-decoration:underline;text-underline-offset:2px}
+  .head .sub .dot{color:var(--bd2)}
+  .head .sub .posted{font-family:var(--mono);font-size:12px;color:var(--mu)}
+  .head .acts{margin-left:auto;display:flex;gap:6px}
+  .head .acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;
+    font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px}
+  .head .acts button:hover{background:rgba(0,0,0,.05)}
+  .head .acts svg{width:17px;height:17px}
+
+  /* ===== key conditions band (応募者が最初に見る) ===== */
+  .band{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:18px;overflow:hidden}
+  .band .c{background:var(--card);padding:16px 18px;display:flex;gap:12px;align-items:flex-start}
+  .band .c .ic{flex:none;width:26px;height:26px;color:var(--lime-d);margin-top:1px}
+  .band .c .ic svg{width:26px;height:26px;stroke-width:1.6}
+  .band .c .k{font-size:11px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
+  .band .c .v{font-weight:700;font-size:15px;margin-top:2px;line-height:1.5}
+  .band .c .v small{font-weight:500;color:var(--mu);font-size:11.5px;display:block;margin-top:1px;font-family:var(--jp)}
+  .band .c.ok .v{color:var(--lime-d)}
+
+  /* ===== two-column ===== */
+  .cols{display:grid;grid-template-columns:1fr 372px;gap:54px;padding:30px 0 70px;align-items:start}
+  .sec{padding:26px 0;border-top:1px solid var(--bd)}
+  .sec:first-child{border-top:0;padding-top:8px}
+  .sec h2{font-family:var(--jp);font-weight:900;font-size:20px;margin-bottom:14px}
+  .sec h2 .note{font-weight:500;font-size:12.5px;color:var(--mu);margin-left:10px}
+
+  .lead{font-size:15px;line-height:2.05;color:var(--ink2)}
+  .lead p+p{margin-top:14px}
+
+  /* lime check bullets */
+  .checks{display:flex;flex-direction:column;gap:12px}
+  .checks li{display:flex;gap:12px;list-style:none;align-items:flex-start;font-size:14.5px;color:var(--ink2)}
+  .checks .ck{flex:none;width:23px;height:23px;border-radius:50%;background:var(--lime-l);color:var(--lime-d);display:grid;place-items:center;margin-top:1px}
+  .checks .ck svg{width:13px;height:13px}
+
+  /* required / preferred two groups */
+  .reqgrid{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  .reqgrid .label{font-family:var(--mono);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:13px}
+  .reqgrid .must .label{color:var(--lime-d)}
+  .reqgrid .pref .label{color:var(--mu)}
+  .reqgrid .pref .ck{background:#eef0ea;color:var(--mu)}
+
+  /* language requirement */
+  .langs{display:flex;flex-direction:column;gap:14px}
+  .lang{display:flex;align-items:center;gap:16px}
+  .lang .nm{width:96px;font-weight:700;font-size:14.5px;flex:none}
+  .lang .meter{flex:1;display:flex;gap:5px}
+  .lang .meter i{flex:1;height:7px;border-radius:4px;background:var(--bd)}
+  .lang .meter i.on{background:var(--lime)}
+  .lang .lvl{width:130px;text-align:right;font-size:12.5px;color:var(--ink2);flex:none}
+  .lang .lvl b{font-weight:700}
+  .langnote{margin-top:14px;font-size:13px;color:var(--mu);display:flex;gap:8px;align-items:flex-start}
+  .langnote svg{width:16px;height:16px;color:var(--lime-d);flex:none;margin-top:2px}
+
+  /* benefits 2-col */
+  .ben{display:grid;grid-template-columns:1fr 1fr;gap:11px 22px}
+  .ben div{display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink2)}
+  .ben svg{width:18px;height:18px;color:var(--lime-d);flex:none}
+
+  /* spec table (元フォーマット踏襲) */
+  .spec{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 18px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px}
+  .spec .k{font-size:10px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:5px}
+  .spec .k svg{width:12px;height:12px}
+  .spec .v{font-size:13.5px;font-weight:500;color:var(--ink);margin-top:3px}
+
+  /* selection steps */
+  .steps{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:16px;position:relative;padding-bottom:22px}
+  .step:last-child{padding-bottom:0}
+  .step .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--lime);color:var(--ink);font-family:var(--disp);font-weight:700;font-size:14px;display:grid;place-items:center;z-index:1}
+  .step:not(:last-child)::before{content:"";position:absolute;left:14.5px;top:30px;bottom:0;width:2px;background:var(--bd)}
+  .step .t{font-weight:700;font-size:14.5px}
+  .step .d{color:var(--mu);font-size:13px;margin-top:2px}
+
+  /* company card */
+  .cocard{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:22px}
+  .cocard .lg{width:62px;height:62px;border-radius:14px;object-fit:cover;flex:none;border:1px solid var(--bd)}
+  .cocard .nm{font-weight:700;font-size:17px}
+  .cocard .badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--lime-d);margin-left:8px}
+  .cocard .badge svg{width:13px;height:13px}
+  .cocard .meta{color:var(--mu);font-size:12.5px;font-family:var(--mono);margin:3px 0 6px}
+  .cocard .chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+  .cocard .chips span{font-size:11.5px;font-weight:700;color:var(--lime-d);background:var(--lime-l);border-radius:999px;padding:3px 10px}
+  .cocard .bio{font-size:13.5px;color:var(--ink2);line-height:1.9}
+  .cocard .link{display:inline-flex;align-items:center;gap:6px;margin-top:11px;font-size:13px;font-weight:700;color:var(--lime-d)}
+
+  /* ===== apply card (sticky) ===== */
+  .apply{position:sticky;top:86px;background:var(--card);border:1px solid var(--bd);border-radius:20px;
+    padding:24px;box-shadow:0 26px 60px -34px rgba(20,20,15,.5)}
+  .apply .pay{font-size:12px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+  .apply .payv{display:flex;align-items:baseline;gap:7px;margin-top:3px}
+  .apply .payv b{font-family:var(--disp);font-size:27px;font-weight:700}
+  .apply .payv span{color:var(--mu);font-size:14px}
+  .apply .gross{margin-top:4px;font-size:11.5px;color:var(--mu)}
+  .apply .facts{margin:18px 0;border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+  .apply .facts .row{display:flex;justify-content:space-between;gap:12px;padding:11px 16px;font-size:13px;color:var(--ink2);border-bottom:1px solid var(--bd)}
+  .apply .facts .row:last-child{border-bottom:0}
+  .apply .facts .row span:first-child{color:var(--mu)}
+  .apply .facts .row span:last-child{font-weight:700;color:var(--ink);text-align:right}
+  .apply .facts .row .hot{color:var(--warn)}
+  .apply .cta{display:block;width:100%;text-align:center;background:var(--lime);color:var(--ink);font-weight:900;font-size:15.5px;
+    border:0;border-radius:13px;padding:15px;cursor:pointer;box-shadow:0 10px 22px -10px rgba(94,139,14,.6)}
+  .apply .cta:hover{filter:brightness(1.03)}
+  .apply .save{display:block;width:100%;text-align:center;margin-top:10px;background:#fff;border:1px solid var(--bd2);
+    border-radius:13px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;color:var(--ink)}
+  .apply .save:hover{background:var(--bg2)}
+  .apply .docs{margin-top:16px;font-size:12px;color:var(--ink2);background:var(--bg2);border:1px solid var(--bd);border-radius:11px;padding:11px 13px;line-height:1.7}
+  .apply .docs b{font-weight:700}
+  .apply .note{margin-top:14px;font-size:11.5px;color:var(--mu);line-height:1.7;display:flex;gap:8px}
+  .apply .note svg{width:15px;height:15px;color:var(--warn);flex:none;margin-top:1px}
+
+  .foot{border-top:1px solid var(--bd);padding:30px 0 60px;color:var(--mu);font-size:12px;font-family:var(--mono)}
+
+  /* responsive */
+  @media(max-width:860px){
+    .cols{grid-template-columns:1fr;gap:0}
+    .apply{position:static;margin-top:8px;box-shadow:none}
+    .band{grid-template-columns:1fr 1fr}
+    .spec{grid-template-columns:1fr 1fr}
+    .reqgrid{grid-template-columns:1fr;gap:22px}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 16px}.topin{padding:12px 16px}
+    .head h1{font-size:22px}
+    .band{grid-template-columns:1fr}
+    .ben{grid-template-columns:1fr}
+    .lang .lvl{width:auto}
+  }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="topin">
+  <div class="logo">Lo<b>core</b></div>
+  <nav class="nav"><a>記事</a><a>サービス</a><a class="on">コミュニティ</a><a>検索</a></nav>
+</div></header>
+
+<div class="wrap">
+
+  <div class="crumb"><a>コミュニティ</a> ／ <a>フランス</a> ／ <a>求人</a></div>
+
+  <!-- title -->
+  <div class="head">
+    <div class="badges">
+      <span class="status"><i></i>募集中</span>
+      <span class="tag">正社員 / CDI</span>
+      <span class="tag">ビザサポートあり</span>
+      <span class="urgent">急募</span>
+    </div>
+    <h1>日仏バイリンガル 営業アシスタント（パリ・日系メーカー現地法人）</h1>
+    <div class="sub">
+      <span class="co">Nakamura France S.A.S.</span>
+      <span class="dot">·</span>
+      <span class="loc">Paris 8e（ハイブリッド可）</span>
+      <span class="dot">·</span>
+      <span class="posted">3日前に掲載</span>
+      <div class="acts">
+        <button><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>共有</button>
+        <button><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.4-8.5C1 9.6 2.4 6 6 6c2 0 3.2 1.2 4 2.3C10.8 7.2 12 6 14 6c3.6 0 5 3.6 3.4 6.5C19 16.4 12 21 12 21z"/></svg>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- key conditions band -->
+  <div class="band">
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+      <div><div class="k">給与</div><div class="v">月給 €2,400〜2,900<small>額面・経験により決定</small></div></div></div>
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
+      <div><div class="k">雇用形態</div><div class="v">正社員（CDI）<small>無期雇用・試用期間3ヶ月</small></div></div></div>
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+      <div><div class="k">勤務地</div><div class="v">パリ8区<small>週2リモート可（ハイブリッド）</small></div></div></div>
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <div><div class="k">勤務時間</div><div class="v">週35時間<small>平日 9:30–17:30 / 残業少なめ</small></div></div></div>
+    <div class="c ok"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h12"/></svg></span>
+      <div><div class="k">語学</div><div class="v">日本語ネイティブ<small>＋仏語 中級（B1〜）</small></div></div></div>
+    <div class="c ok"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.4 8-8 9-4.6-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg></span>
+      <div><div class="k">就労資格</div><div class="v">ビザサポートあり<small>就労ビザ・更新の手続き支援</small></div></div></div>
+  </div>
+
+  <!-- columns -->
+  <div class="cols">
+    <div>
+
+      <!-- about -->
+      <div class="sec">
+        <h2>仕事内容</h2>
+        <div class="lead">
+          <p>日系メーカーのフランス現地法人で、日本本社とフランス・欧州の顧客をつなぐ営業アシスタントを募集します。受発注・見積もり・納期調整などの営業事務を中心に、日仏間のメール・電話のやり取り、展示会のサポートなどをお任せします。チームは日本人3名・フランス人4名。社内の主要なやり取りは日本語でも進められる環境です。</p>
+          <p>「フランスで腰を据えて働きたい」「日本語を活かしながら現地でキャリアを積みたい」という方にぴったりのポジションです。未経験でも、丁寧な引き継ぎとOJTがあります。</p>
+        </div>
+      </div>
+
+      <!-- responsibilities -->
+      <div class="sec">
+        <h2>主な業務</h2>
+        <ul class="checks">
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>受発注・見積書作成・納期調整などの営業事務</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>日本本社／欧州顧客との日仏メール・電話対応</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>請求・在庫・出荷データの入力と管理（SAP）</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>展示会・出張のアレンジ、資料の翻訳サポート</li>
+        </ul>
+      </div>
+
+      <!-- required / preferred -->
+      <div class="sec">
+        <h2>応募資格</h2>
+        <div class="reqgrid">
+          <div class="must">
+            <div class="label">必須</div>
+            <ul class="checks">
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>日本語ネイティブレベル</li>
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>フランス語 中級以上（社内外でのやり取りが可能）</li>
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>基本的なPCスキル（Excel／メール）</li>
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>フランスでの就労に前向きな方</li>
+            </ul>
+          </div>
+          <div class="pref">
+            <div class="label">歓迎</div>
+            <ul class="checks">
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>営業事務・貿易事務の経験</li>
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>英語でのコミュニケーション</li>
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>SAP等のERP使用経験</li>
+              <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>すでに就労可能なビザ／資格を保有</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- language requirement -->
+      <div class="sec">
+        <h2>語学要件 <span class="note">職場の共通語は日本語＆フランス語</span></h2>
+        <div class="langs">
+          <div class="lang"><span class="nm">日本語</span><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div><span class="lvl"><b>ネイティブ</b></span></div>
+          <div class="lang"><span class="nm">フランス語</span><div class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><span class="lvl"><b>中級（B1〜）</b>必須</span></div>
+          <div class="lang"><span class="nm">英語</span><div class="meter"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div><span class="lvl"><b>初級</b>あれば尚可</span></div>
+        </div>
+        <div class="langnote">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+          <span>フランス語が完璧でなくても応募可。入社後の語学サポート（週1のレッスン費補助）あり。</span>
+        </div>
+      </div>
+
+      <!-- benefits -->
+      <div class="sec">
+        <h2>待遇・福利厚生</h2>
+        <div class="ben">
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.4 8-8 9-4.6-1-8-4-8-9V7z"/></svg><span>社会保険完備（Sécurité sociale）</span></div>
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg><span>交通費 50%補助（Navigo）</span></div>
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg><span>有給25日＋RTT（年間休日多め）</span></div>
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7M6 10v9h12v-9"/></svg><span>食事補助（Tickets Restaurant）</span></div>
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v20M5 9l7-7 7 7"/></svg><span>賞与（業績連動・年1回）</span></div>
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>ビザ・更新手続きの会社サポート</span></div>
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 12h6"/></svg><span>語学レッスン費補助</span></div>
+          <div><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg><span>健康診断（年1回）</span></div>
+        </div>
+      </div>
+
+      <!-- conditions spec -->
+      <div class="sec">
+        <h2>勤務条件</h2>
+        <div class="spec">
+          <div><div class="k"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>雇用形態</div><div class="v">正社員（CDI・無期）</div></div>
+          <div><div class="k">契約・試用期間</div><div class="v">試用期間 3ヶ月</div></div>
+          <div><div class="k">給与</div><div class="v">月給 €2,400〜2,900（額面）</div></div>
+          <div><div class="k"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>勤務時間</div><div class="v">週35時間 9:30–17:30</div></div>
+          <div><div class="k">休日</div><div class="v">土日祝・有給25日＋RTT</div></div>
+          <div><div class="k">残業</div><div class="v">月平均10時間程度</div></div>
+          <div><div class="k"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>勤務地</div><div class="v">Paris 8e（週2在宅可）</div></div>
+          <div><div class="k">受動喫煙対策</div><div class="v">屋内禁煙</div></div>
+          <div><div class="k">入社時期</div><div class="v">2026年9月以降・相談可</div></div>
+        </div>
+      </div>
+
+      <!-- selection process -->
+      <div class="sec">
+        <h2>選考の流れ</h2>
+        <div class="steps">
+          <div class="step"><span class="n">1</span><div><div class="t">応募・書類選考</div><div class="d">履歴書（和文）またはCV（仏文）を送付。3営業日以内に返信します。</div></div></div>
+          <div class="step"><span class="n">2</span><div><div class="t">一次面接（オンライン・日本語）</div><div class="d">人事担当と。仕事内容・条件のすり合わせ。</div></div></div>
+          <div class="step"><span class="n">3</span><div><div class="t">二次面接（対面／オンライン・日仏）</div><div class="d">配属チームと。簡単な実務確認あり。</div></div></div>
+          <div class="step"><span class="n">4</span><div><div class="t">内定・条件提示</div><div class="d">就労ビザが必要な方は、ここから会社が手続きをサポートします。</div></div></div>
+        </div>
+      </div>
+
+      <!-- company -->
+      <div class="sec">
+        <h2>募集している会社について</h2>
+        <div class="cocard">
+          <img class="lg" src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&q=80" alt="">
+          <div>
+            <div class="nm">Nakamura France S.A.S.<span class="badge"><svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 17.7l.9-5.4L4.2 8.5l5.4-.8z"/></svg>本人確認済み</span></div>
+            <div class="meta">製造業（精密機器）· 従業員 7名 · 設立 2014年</div>
+            <div class="chips"><span>日本語OK</span><span>日本人在籍</span><span>定着率◎</span></div>
+            <div class="bio">日本本社の欧州拠点として、フランス・ベネルクスの顧客を担当しています。少人数でフラットな職場。担当者の松井がメッセージにも丁寧に対応します。</div>
+            <a class="link">投稿者のプロフィールを見る<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT sticky apply card -->
+    <aside>
+      <div class="apply">
+        <div class="pay">給与（月給・額面）</div>
+        <div class="payv"><b>€2,400</b><span>〜 €2,900 / 月</span></div>
+        <div class="gross">※ 額面（社会保険料・税の控除前）。手取りはおおよそ €1,900〜2,300。</div>
+
+        <div class="facts">
+          <div class="row"><span>雇用形態</span><span>正社員（CDI）</span></div>
+          <div class="row"><span>勤務地</span><span>パリ8区 / 週2在宅</span></div>
+          <div class="row"><span>就労資格</span><span>ビザサポートあり</span></div>
+          <div class="row"><span>募集人数</span><span>1名</span></div>
+          <div class="row"><span>応募締切</span><span class="hot">2026年7月31日</span></div>
+        </div>
+
+        <button class="cta">この求人に応募する</button>
+        <button class="save">♡ 保存する</button>
+
+        <div class="docs">
+          <b>提出書類：</b>履歴書（和文）または CV（仏文）。職務経歴があれば添えてください。<br>応募メッセージから直接やり取りできます。
+        </div>
+
+        <div class="note">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>選考前に保証金・手数料を求める求人は詐欺です。金銭の支払いやLocore外への誘導には応じないでください。</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="foot">Locore — モック（求人詳細 / 応募者目線）· 評価・口コミは実データ実装後に追加</div>
+</div>
+
+</body>
+</html>

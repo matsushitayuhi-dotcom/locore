@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — 集まり詳細（参加者目線・モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{--bg:#F4F4EF;--bg2:#FBFBF8;--card:#fff;--lime:#A8E01C;--lime-d:#5E8B0E;--lime-l:#E3F7B8;
+    --ink:#14140f;--ink2:#3a3a34;--mu:#7a7a72;--bd:#E6E6DE;--bd2:#D8D8CF;--warn:#C2410C;
+    --disp:'Space Grotesk','Noto Sans JP',sans-serif;--jp:'Noto Sans JP','Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1;line-height:1.8}
+  a{color:inherit;text-decoration:none}img{display:block;max-width:100%}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px}
+  .st{color:var(--lime-d)}
+
+  .top{position:sticky;top:0;z-index:40;background:rgba(244,244,239,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:20px;padding:14px 28px}
+  .logo{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.5px}.logo b{color:var(--lime-d)}
+  .nav{margin-left:auto;display:flex;gap:22px;font-size:14px;color:var(--mu);font-weight:500}.nav a.on{color:var(--ink)}
+
+  .crumb{font-size:12.5px;color:var(--mu);font-family:var(--mono);padding:18px 0 0}
+  .crumb a{text-decoration:underline;text-underline-offset:2px}
+
+  /* ===== title ===== */
+  .head{padding:14px 0 18px}
+  .head .badges{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:11px}
+  .head .status{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--lime-d);display:inline-flex;align-items:center;gap:5px}
+  .head .status i{width:7px;height:7px;border-radius:50%;background:var(--lime);display:inline-block;box-shadow:0 0 0 3px rgba(168,224,28,.25)}
+  .head .tag{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--lime-d);background:var(--lime-l);border-radius:999px;padding:3px 11px}
+  .head .tag.dk{color:var(--ink2);background:rgba(0,0,0,.05)}
+  .head h1{font-family:var(--jp);font-weight:800;font-size:clamp(23px,3vw,32px);line-height:1.3;letter-spacing:.01em}
+  .head .sub{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:11px;font-size:13.5px;color:var(--ink2)}
+  .head .sub .org{font-weight:700}
+  .head .sub .loc{text-decoration:underline;text-underline-offset:2px}
+  .head .sub .dot{color:var(--bd2)}
+  .head .acts{margin-left:auto;display:flex;gap:6px}
+  .head .acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px}
+  .head .acts button:hover{background:rgba(0,0,0,.05)}
+  .head .acts svg{width:17px;height:17px}
+
+  /* ===== gallery 1+4 ===== */
+  .gallery{position:relative;display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;border-radius:20px;overflow:hidden;aspect-ratio:24/11;background:#e9e9e1}
+  .gallery a{position:relative;overflow:hidden;background:#e9e9e1}
+  .gallery a img{width:100%;height:100%;object-fit:cover;transition:.4s}
+  .gallery a:hover img{transform:scale(1.04)}
+  .gallery a.big{grid-row:1/3}
+  .allphotos{position:absolute;bottom:16px;right:16px;display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+  .allphotos svg{width:15px;height:15px}
+
+  /* ===== key facts band ===== */
+  .band{margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:18px;overflow:hidden}
+  .band .c{background:var(--card);padding:16px 18px;display:flex;gap:12px;align-items:flex-start}
+  .band .c .ic{flex:none;width:26px;height:26px;color:var(--lime-d);margin-top:1px}
+  .band .c .ic svg{width:26px;height:26px;stroke-width:1.6}
+  .band .c .k{font-size:11px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
+  .band .c .v{font-weight:700;font-size:15px;margin-top:2px;line-height:1.5}
+  .band .c .v small{font-weight:500;color:var(--mu);font-size:11.5px;display:block;margin-top:1px}
+  .band .c.ok .v{color:var(--lime-d)}
+
+  /* ===== two-column ===== */
+  .cols{display:grid;grid-template-columns:1fr 360px;gap:54px;padding:30px 0 70px;align-items:start}
+  .sec{padding:26px 0;border-top:1px solid var(--bd)}
+  .sec:first-child{border-top:0;padding-top:8px}
+  .sec h2{font-family:var(--jp);font-weight:800;font-size:20px;margin-bottom:14px}
+
+  .lead{font-size:15px;line-height:2.05;color:var(--ink2)}
+  .lead p+p{margin-top:14px}
+
+  /* lime checks */
+  .checks{display:flex;flex-direction:column;gap:12px}
+  .checks li{display:flex;gap:12px;list-style:none;align-items:flex-start;font-size:14.5px;color:var(--ink2)}
+  .checks .ck{flex:none;width:23px;height:23px;border-radius:50%;background:var(--lime-l);color:var(--lime-d);display:grid;place-items:center;margin-top:1px}
+  .checks .ck svg{width:13px;height:13px}
+
+  /* timeline (当日の流れ) */
+  .steps{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:16px;position:relative;padding-bottom:20px}
+  .step:last-child{padding-bottom:0}
+  .step .tm{flex:none;width:56px;font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--lime-d);padding-top:2px}
+  .step .dot{position:relative;flex:none;width:12px}
+  .step .dot i{position:absolute;left:2px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--lime);z-index:1}
+  .step:not(:last-child) .dot::before{content:"";position:absolute;left:6px;top:6px;bottom:-14px;width:2px;background:var(--bd)}
+  .step .t{font-weight:700;font-size:14.5px}
+  .step .d{color:var(--mu);font-size:13px;margin-top:1px}
+
+  /* participants */
+  .parts{display:flex;align-items:center;gap:14px}
+  .ava-stack{display:flex}
+  .ava-stack img,.ava-stack .more{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--bg);object-fit:cover;margin-left:-10px}
+  .ava-stack img:first-child{margin-left:0}
+  .ava-stack .more{display:grid;place-items:center;background:var(--lime-l);color:var(--lime-d);font-family:var(--mono);font-weight:700;font-size:12px}
+  .parts .ptxt b{font-weight:700;font-size:15px}
+  .parts .ptxt span{display:block;color:var(--mu);font-size:12.5px}
+
+  /* map */
+  .mapframe{border-radius:18px;overflow:hidden;border:1px solid var(--bd);aspect-ratio:16/8;background:#dfe4e8;position:relative}
+  .mapframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;filter:grayscale(.12)}
+  .maploc{margin-top:13px;font-size:14px;color:var(--ink2)}.maploc b{font-weight:700}
+  .maploc p{color:var(--mu);font-size:13px;margin-top:4px}
+
+  /* host card */
+  .hostcard{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:22px}
+  .hostcard .ava{width:66px;height:66px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--lime)}
+  .hostcard .nm{font-weight:700;font-size:17px}
+  .hostcard .badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--lime-d);margin-left:8px}
+  .hostcard .badge svg{width:13px;height:13px}
+  .hostcard .meta{color:var(--mu);font-size:12.5px;font-family:var(--mono);margin:3px 0 9px}
+  .hostcard .bio{font-size:13.5px;color:var(--ink2);line-height:1.9}
+  .hostcard .link{display:inline-flex;align-items:center;gap:6px;margin-top:11px;font-size:13px;font-weight:700;color:var(--lime-d)}
+
+  /* ===== join card (sticky) ===== */
+  .join{position:sticky;top:86px;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:24px;box-shadow:0 26px 60px -34px rgba(20,20,15,.5)}
+  .join .fee{font-size:12px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+  .join .feev{display:flex;align-items:baseline;gap:7px;margin-top:3px}
+  .join .feev b{font-family:var(--disp);font-size:27px;font-weight:700}
+  .join .feev span{color:var(--mu);font-size:13px}
+  .join .when{margin-top:16px;display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--bd);border-radius:14px;background:var(--bg2)}
+  .join .when .cal{flex:none;width:46px;text-align:center;border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+  .join .when .cal .m{background:var(--lime);color:var(--ink);font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 0}
+  .join .when .cal .d{font-family:var(--disp);font-weight:700;font-size:20px;padding:3px 0 4px}
+  .join .when .wt b{font-weight:700;font-size:14.5px}
+  .join .when .wt span{display:block;color:var(--mu);font-size:12.5px;margin-top:2px}
+  .join .when .wt .rec{color:var(--lime-d);font-weight:700;font-family:var(--mono);font-size:11px;margin-top:4px}
+  .join .seats{margin:14px 0;display:flex;align-items:center;gap:10px;font-size:13px}
+  .join .seats .trk{flex:1;height:7px;border-radius:4px;background:var(--bd);overflow:hidden}
+  .join .seats .trk i{display:block;height:100%;background:var(--lime);border-radius:4px}
+  .join .seats b{font-weight:700}.join .seats .left{color:var(--lime-d);font-weight:700;white-space:nowrap}
+  .join .cta{display:block;width:100%;text-align:center;background:var(--lime);color:var(--ink);font-weight:800;font-size:15.5px;border:0;border-radius:13px;padding:15px;cursor:pointer;box-shadow:0 10px 22px -10px rgba(94,139,14,.6)}
+  .join .cta:hover{filter:brightness(1.03)}
+  .join .save{display:block;width:100%;text-align:center;margin-top:10px;background:#fff;border:1px solid var(--bd2);border-radius:13px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;color:var(--ink)}
+  .join .save:hover{background:var(--bg2)}
+  .join .ddl{margin-top:13px;text-align:center;font-size:12px;color:var(--mu)}
+  .join .ddl b{color:var(--warn);font-weight:700}
+  .join .note{margin-top:14px;font-size:11.5px;color:var(--mu);line-height:1.7;display:flex;gap:8px}
+  .join .note svg{width:15px;height:15px;color:var(--lime-d);flex:none;margin-top:1px}
+
+  .foot{border-top:1px solid var(--bd);padding:30px 0 60px;color:var(--mu);font-size:12px;font-family:var(--mono)}
+
+  @media(max-width:860px){
+    .cols{grid-template-columns:1fr;gap:0}
+    .join{position:static;margin-top:8px;box-shadow:none}
+    .band{grid-template-columns:1fr 1fr}
+    .gallery{grid-template-columns:1fr 1fr;grid-template-rows:1fr;aspect-ratio:auto}
+    .gallery a{aspect-ratio:3/2}
+    .gallery a.big{grid-column:1/3;aspect-ratio:16/10}
+    .gallery a.hideMob{display:none}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 16px}.topin{padding:12px 16px}
+    .head h1{font-size:22px}.band{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="topin">
+  <div class="logo">Lo<b>core</b></div>
+  <nav class="nav"><a>記事</a><a>サービス</a><a class="on">コミュニティ</a><a>検索</a></nav>
+</div></header>
+
+<div class="wrap">
+  <div class="crumb"><a>コミュニティ</a> ／ <a>フランス</a> ／ <a>集まり</a></div>
+
+  <!-- title -->
+  <div class="head">
+    <div class="badges">
+      <span class="status"><i></i>受付中</span>
+      <span class="tag">言語交換・交流</span>
+      <span class="tag dk">対面</span>
+      <span class="tag">参加無料</span>
+      <span class="tag dk">毎週水曜</span>
+    </div>
+    <h1>パリ 日仏ランゲージエクスチェンジ・カフェ会（初心者歓迎・一人参加OK）</h1>
+    <div class="sub">
+      <span class="org">主催：Yuki / Tokyo⇄Paris Lang Café</span>
+      <span class="dot">·</span>
+      <span class="loc">Paris 4e — Le Marais のカフェ</span>
+      <span class="dot">·</span>
+      <span>次回 6月10日(水)</span>
+      <div class="acts">
+        <button><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13"/></svg>共有</button>
+        <button><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 21s-7-4.6-9.4-8.5C1 9.6 2.4 6 6 6c2 0 3.2 1.2 4 2.3C10.8 7.2 12 6 14 6c3.6 0 5 3.6 3.4 6.5C19 16.4 12 21 12 21z"/></svg>保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- gallery -->
+  <div class="gallery">
+    <a class="big" href="#"><img src="https://images.unsplash.com/photo-1543007630-9710e4a00a20?w=1100&q=80" alt=""></a>
+    <a href="#"><img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=600&q=80" alt=""></a>
+    <a href="#"><img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80" alt=""></a>
+    <a href="#"><img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&q=80" alt=""></a>
+    <a href="#"><img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=600&q=80" alt="">
+      <button class="allphotos"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>すべての写真（12枚）</button>
+    </a>
+  </div>
+
+  <!-- key facts band -->
+  <div class="band">
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>
+      <div><div class="k">開催日時</div><div class="v">6/10(水) 19:00–21:00<small>毎週水曜・出入り自由</small></div></div></div>
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 21s-7-6-7-11a7 7 0 0114 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span>
+      <div><div class="k">場所</div><div class="v">Le Marais のカフェ<small>Paris 4区・駅徒歩3分</small></div></div></div>
+    <div class="c ok"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+      <div><div class="k">参加費</div><div class="v">無料<small>※ドリンク代は各自</small></div></div></div>
+    <div class="c ok"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 19a4 4 0 00-8 0M12 11a3 3 0 100-6 3 3 0 000 6M5 19a3 3 0 014-2.8M19 19a3 3 0 00-4-2.8"/></svg></span>
+      <div><div class="k">定員</div><div class="v">残り3枠<small>定員12名・9名参加予定</small></div></div></div>
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 17.7l.9-5.4L4.2 8.5l5.4-.8z"/></svg></span>
+      <div><div class="k">対象</div><div class="v">初心者歓迎<small>一人参加・日仏どちらも</small></div></div></div>
+    <div class="c"><span class="ic"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h12"/></svg></span>
+      <div><div class="k">言語</div><div class="v">日本語 / フランス語<small>英語も少しOK</small></div></div></div>
+  </div>
+
+  <!-- columns -->
+  <div class="cols">
+    <div>
+
+      <div class="sec">
+        <h2>この集まりについて</h2>
+        <div class="lead">
+          <p>パリで日本語とフランス語を学び合う、ゆるい交流カフェ会です。前半は日本語、後半はフランス語、と時間で言語を切り替えながら、少人数のテーブルでおしゃべりします。語学の上達はもちろん、現地での暮らしの情報交換や友達づくりの場としても使ってください。</p>
+          <p>「フランス語を話す相手がいない」「日本人/日本に興味のあるフランス人と知り合いたい」という方にぴったり。一人での参加がほとんどなので、初めてでも気軽にどうぞ。途中参加・途中退出も自由です。</p>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>当日の流れ</h2>
+        <div class="steps">
+          <div class="step"><div class="tm">19:00</div><div class="dot"><i></i></div><div><div class="t">受付・ドリンクオーダー</div><div class="d">名札を受け取って、好きな席へ。</div></div></div>
+          <div class="step"><div class="tm">19:15</div><div class="dot"><i></i></div><div><div class="t">かんたん自己紹介（日本語）</div><div class="d">2〜3人の小グループで。</div></div></div>
+          <div class="step"><div class="tm">19:40</div><div class="dot"><i></i></div><div><div class="t">フリートーク（前半 日本語）</div><div class="d">テーブルを移動しながら自由に。</div></div></div>
+          <div class="step"><div class="tm">20:15</div><div class="dot"><i></i></div><div><div class="t">言語チェンジ（後半 フランス語）</div><div class="d">同じテーマをフランス語で。</div></div></div>
+          <div class="step"><div class="tm">21:00</div><div class="dot"><i></i></div><div><div class="t">解散（希望者は二次会へ）</div><div class="d">近くのバーへ流れることも。</div></div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>こんな方におすすめ</h2>
+        <ul class="checks">
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>フランス語を実際に話して練習したい方（レベル不問）</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>日本語を学ぶフランス人と交流したい方</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>パリに来たばかりで友達・知り合いを増やしたい方</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>一人で参加してみたい方（半数以上が初参加）</li>
+        </ul>
+      </div>
+
+      <div class="sec">
+        <h2>持ち物・注意</h2>
+        <ul class="checks">
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>ドリンク1杯（5〜7€程度）を各自オーダーしてください</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>名刺やSNSなど、連絡先交換できるものがあれば便利</li>
+          <li><span class="ck"><svg fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></svg></span>満席時は早めに来た方を優先します（予約推奨）</li>
+        </ul>
+      </div>
+
+      <div class="sec">
+        <h2>参加予定のメンバー</h2>
+        <div class="parts">
+          <div class="ava-stack">
+            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80" alt="">
+            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80" alt="">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&q=80" alt="">
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&q=80" alt="">
+            <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&q=80" alt="">
+            <span class="more">+4</span>
+          </div>
+          <div class="ptxt"><b>9人が参加予定</b><span>うち初参加 5人 · 日本人 6 / フランス人 3</span></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>場所</h2>
+        <div class="mapframe">
+          <iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Le%20Marais%20Paris&output=embed"></iframe>
+        </div>
+        <div class="maploc">
+          <b>Le Marais のカフェ（Paris 4e）</b>
+          <p>詳しい店名・住所は参加申込後にメッセージでお知らせします。メトロ Saint-Paul 駅から徒歩3分。</p>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h2>主催者について</h2>
+        <div class="hostcard">
+          <img class="ava" src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=200&q=80" alt="">
+          <div>
+            <div class="nm">Yuki<span class="badge"><svg fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4L12 15.9 7.2 17.7l.9-5.4L4.2 8.5l5.4-.8z"/></svg>本人確認済み</span></div>
+            <div class="meta">パリ在住5年 · この集まいを32回開催 · 平均満足度◎</div>
+            <div class="bio">語学学校の元スタッフ。「気負わず話せる場所」をモットーに、毎週ゆるく開催しています。初参加の方には最初に声をかけるので安心してお越しください。</div>
+            <a class="link">主催者のプロフィールを見る<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT sticky join card -->
+    <aside>
+      <div class="join">
+        <div class="fee">参加費</div>
+        <div class="feev"><b>無料</b><span>ドリンク代は各自</span></div>
+
+        <div class="when">
+          <div class="cal"><div class="m">6月</div><div class="d">10</div></div>
+          <div class="wt"><b>水曜 19:00 – 21:00</b><span>出入り自由・途中参加OK</span><div class="rec">毎週水曜に開催</div></div>
+        </div>
+
+        <div class="seats">
+          <span class="trk"><i style="width:75%"></i></span>
+          <b>9/12</b><span class="left">残り3枠</span>
+        </div>
+
+        <button class="cta">参加する</button>
+        <button class="save">♡ 興味あり / 保存</button>
+
+        <div class="ddl">申込締切：<b>6月10日 12:00</b>（先着順）</div>
+
+        <div class="note">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 5-3.4 8-8 9-4.6-1-8-4-8-9V7z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span>初対面の集まりです。公共の場で・無理のない範囲で。金銭の事前送金を求められたら運営に通報してください。</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <div class="foot">Locore — モック（集まり詳細 / 参加者目線）· 参加者数・満足度は実データ実装後に表示</div>
+</div>
+
+</body>
+</html>

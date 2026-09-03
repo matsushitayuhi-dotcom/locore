@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — コミュニティ（モックアップ）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070a10; --bg2:#0b0e15;
+    --lime:#A8E01C; --lime-d:#5E8B0E; --lime-l:#E3F7B8;
+    --ink:#0d0f14; --mu:#9aa0ac;
+    --glow:rgba(168,224,28,.45);
+    --disp:'Space Grotesk','Noto Sans JP',sans-serif;
+    --jp:'Noto Sans JP',sans-serif;
+    --mono:'JetBrains Mono',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(120% 90% at 50% 18%, #11151f 0%, var(--bg2) 42%, var(--bg) 100%);
+    color:#fff;font-family:var(--jp);overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* rotating globe canvas — full viewport, behind content */
+  #globe{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block}
+  .vign{position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(60% 55% at 50% 50%, transparent 40%, rgba(5,7,12,.55) 100%)}
+
+  /* top-left wordmark */
+  .brand{position:fixed;top:26px;left:30px;z-index:5;
+    font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.4px;color:#fff}
+  .brand b{color:var(--lime)}
+  .nav{position:fixed;top:24px;right:30px;z-index:5;display:flex;gap:22px;
+    font-size:13.5px;color:rgba(255,255,255,.55);font-weight:500}
+  .nav a{color:inherit;text-decoration:none;transition:.15s}
+  .nav a:hover{color:#fff}
+
+  /* centered minimal content */
+  .stage{position:relative;z-index:3;height:100%;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:0 24px}
+  .rise{opacity:0;transform:translateY(14px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  .rise.d1{animation-delay:.05s}.rise.d2{animation-delay:.16s}.rise.d3{animation-delay:.28s}.rise.d4{animation-delay:.42s}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  .kick{font-family:var(--mono);font-size:12px;letter-spacing:.30em;
+    text-transform:uppercase;color:var(--lime)}
+  .kick::before{content:"";display:inline-block;width:26px;height:1.5px;background:var(--lime);
+    vertical-align:middle;margin-right:11px}
+  h1{font-family:var(--disp);font-weight:700;color:#fff;
+    font-size:clamp(30px,5.4vw,54px);line-height:1.1;letter-spacing:-.022em;margin:18px 0 4px}
+  h1 em{font-style:normal;color:var(--lime)}
+  .lead{color:rgba(255,255,255,.62);font-size:clamp(13px,1.5vw,15.5px);
+    line-height:1.85;margin-top:14px;max-width:34ch}
+
+  /* the single search window */
+  .search{margin-top:34px;width:min(540px,90vw);position:relative}
+  .search-glow{position:absolute;inset:-14px;border-radius:999px;
+    background:var(--glow);filter:blur(34px);opacity:.5;z-index:-1}
+  .bar{display:flex;align-items:center;gap:12px;background:#fff;border-radius:999px;
+    padding:9px 9px 9px 22px;box-shadow:0 24px 70px -26px rgba(0,0,0,.7);transition:.2s}
+  .bar:focus-within{box-shadow:0 28px 80px -24px var(--glow),0 0 0 3px rgba(168,224,28,.4)}
+  .bar svg.mag{width:21px;height:21px;flex:none;color:#9a9a92}
+  .bar input{flex:1;border:0;outline:0;background:transparent;min-width:0;
+    font-family:var(--jp);font-size:16px;color:#111;padding:10px 0}
+  .bar input::placeholder{color:#a9a9a2}
+  .go{flex:none;width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;
+    background:var(--lime);color:#1c2a06;display:grid;place-items:center;transition:.16s}
+  .go:hover{background:#b7ec33;transform:scale(1.05)}
+  .go svg{width:21px;height:21px}
+
+  /* country suggestions (shown on focus / typing) */
+  .sugg{position:absolute;left:0;right:0;top:calc(100% + 12px);background:#fff;border-radius:18px;
+    box-shadow:0 30px 80px -28px rgba(0,0,0,.6);overflow:hidden;text-align:left;
+    opacity:0;transform:translateY(-8px);pointer-events:none;transition:.18s;z-index:6}
+  .search.open .sugg{opacity:1;transform:none;pointer-events:auto}
+  .srow{display:flex;align-items:center;gap:13px;padding:13px 18px;cursor:pointer;transition:.12s}
+  .srow+.srow{border-top:1px solid #f0f0ea}
+  .srow:hover{background:#f6f9ee}
+  .srow .flag{width:30px;height:21px;border-radius:4px;overflow:hidden;display:flex;flex:none;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.07)}
+  .srow .flag i{flex:1}
+  .srow .nm{font-weight:700;font-size:15px;color:#111}
+  .srow .nm small{font-family:var(--mono);font-weight:500;font-size:11.5px;color:#9a9a92;margin-left:7px}
+  .srow .meta{margin-left:auto;font-size:12px;color:#8a8f80;font-family:var(--mono)}
+  .srow.soon{cursor:default;opacity:.6}
+  .srow.soon:hover{background:#fff}
+  .srow.soon .meta{color:#b4b2a9}
+  .srow .arr{margin-left:auto;color:var(--lime-d)}
+  .srow.soon .arr{display:none}
+
+  .hint{margin-top:20px;font-family:var(--mono);font-size:12px;letter-spacing:.04em;
+    color:rgba(255,255,255,.38)}
+  .hint b{color:rgba(255,255,255,.7);font-weight:500}
+
+  @media(max-width:560px){
+    .nav{display:none}
+    h1{font-size:30px}
+    .search{margin-top:26px}
+  }
+</style>
+</head>
+<body>
+  <canvas id="globe"></canvas>
+  <div class="vign"></div>
+
+  <div class="brand">Lo<b>core</b></div>
+  <nav class="nav"><a href="#">記事</a><a href="#" style="color:#fff">コミュニティ</a><a href="#">サービス</a></nav>
+
+  <main class="stage">
+    <span class="kick rise d1">Community</span>
+    <h1 class="rise d2">どこの国で、<em>暮らす？</em></h1>
+    <p class="lead rise d2">同じ街に暮らす日本人と、つながる。<br>まずは、あなたの国から。</p>
+
+    <div class="search rise d3" id="search">
+      <div class="search-glow"></div>
+      <div class="bar">
+        <svg class="mag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input id="q" type="text" placeholder="国や都市で探す — フランス、パリ…" aria-label="国や都市を検索" autocomplete="off" />
+        <button class="go" aria-label="検索"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></button>
+      </div>
+
+      <div class="sugg" id="sugg">
+        <div class="srow" data-active>
+          <span class="flag"><i style="background:#0055A4"></i><i style="background:#fff"></i><i style="background:#EF4135"></i></span>
+          <span class="nm">フランス <small>France</small></span>
+          <span class="arr">→</span>
+        </div>
+        <div class="srow soon">
+          <span class="flag"><i style="background:#000"></i><i style="background:#DD0000"></i><i style="background:#FFCE00"></i></span>
+          <span class="nm">ドイツ <small>Germany</small></span>
+          <span class="meta">近日</span>
+        </div>
+        <div class="srow soon">
+          <span class="flag"><i style="background:#012169"></i><i style="background:#fff"></i><i style="background:#C8102E"></i></span>
+          <span class="nm">イギリス <small>UK</small></span>
+          <span class="meta">近日</span>
+        </div>
+        <div class="srow soon">
+          <span class="flag"><i style="background:#3C3B6E"></i><i style="background:#fff"></i><i style="background:#B22234"></i></span>
+          <span class="nm">アメリカ <small>USA</small></span>
+          <span class="meta">近日</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hint rise d4">いま入れる国：<b>フランス</b> ・ ほか続々</div>
+  </main>
+
+<script>
+  // ---- rotating dotted globe (Fibonacci sphere) ----
+  (function(){
+    var cv = document.getElementById('globe');
+    var ctx = cv.getContext('2d');
+    var DPR = Math.min(2, window.devicePixelRatio || 1);
+    var W = 0, H = 0;
+    var N = 200, pts = [];
+    var GA = Math.PI * (3 - Math.sqrt(5));
+    for (var i = 0; i < N; i++){
+      var y = 1 - (i / (N - 1)) * 2;
+      var r = Math.sqrt(Math.max(0, 1 - y * y));
+      var t = i * GA;
+      pts.push({ x: Math.cos(t) * r, y: y, z: Math.sin(t) * r });
+    }
+    function rs(){
+      DPR = Math.min(2, window.devicePixelRatio || 1);
+      W = cv.width = Math.floor(cv.clientWidth * DPR);
+      H = cv.height = Math.floor(cv.clientHeight * DPR);
+    }
+    var ang = 0;
+    function frame(){
+      ctx.clearRect(0, 0, W, H);
+      ang += 0.0016;
+      var cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.34;
+      var ca = Math.cos(ang), sa = Math.sin(ang), tl = 0.42, ct = Math.cos(tl), st = Math.sin(tl);
+      var P = pts.map(function(p){
+        var x = p.x * ca - p.z * sa, z = p.x * sa + p.z * ca, yy = p.y;
+        var y2 = yy * ct - z * st, z2 = yy * st + z * ct;
+        return { sx: cx + x * R, sy: cy + y2 * R, z: z2 };
+      });
+      var TH = R * 0.40; ctx.lineWidth = DPR;
+      for (var a = 0; a < P.length; a++){
+        var A = P[a];
+        for (var b = a + 1; b < P.length; b++){
+          var B = P[b];
+          var dx = A.sx - B.sx, dy = A.sy - B.sy;
+          var d = Math.sqrt(dx * dx + dy * dy);
+          if (d < TH){
+            var dep = (A.z + B.z) * 0.5;
+            var al = (1 - d / TH) * 0.30 * (0.3 + 0.7 * (dep + 1) / 2);
+            ctx.strokeStyle = 'rgba(168,224,28,' + al.toFixed(3) + ')';
+            ctx.beginPath(); ctx.moveTo(A.sx, A.sy); ctx.lineTo(B.sx, B.sy); ctx.stroke();
+          }
+        }
+      }
+      P.forEach(function(p){
+        var dep = (p.z + 1) / 2;
+        var s = (1.0 + dep * 2.0) * DPR;
+        ctx.fillStyle = dep > 0.85
+          ? 'rgba(226,248,180,' + (0.5 + dep * 0.5).toFixed(3) + ')'
+          : 'rgba(168,224,28,' + (0.18 + dep * 0.7).toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(p.sx, p.sy, 0.95 * s, 0, 7); ctx.fill();
+      });
+      requestAnimationFrame(frame);
+    }
+    rs(); frame();
+    window.addEventListener('resize', rs);
+  })();
+
+  // ---- search: show suggestions on focus / typing ----
+  (function(){
+    var s = document.getElementById('search');
+    var q = document.getElementById('q');
+    function open(){ s.classList.add('open'); }
+    function close(){ s.classList.remove('open'); }
+    q.addEventListener('focus', open);
+    q.addEventListener('input', open);
+    document.addEventListener('click', function(e){ if(!s.contains(e.target)) close(); });
+  })();
+</script>
+</body>
+</html>
