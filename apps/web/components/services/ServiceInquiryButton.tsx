@@ -66,8 +66,9 @@ export function ServiceInquiryButton({
       return;
     }
     if (!viewerUserId) {
+      // /auth/login が読むクエリは redirect_to（旧 redirectTo は読まれない）
       router.push(
-        `/auth/login?redirectTo=${encodeURIComponent(
+        `/auth/login?redirect_to=${encodeURIComponent(
           redirectPath ?? `/services/${serviceId}`,
         )}`,
       );

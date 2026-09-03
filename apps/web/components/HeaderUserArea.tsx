@@ -38,7 +38,7 @@ export function HeaderUserArea() {
             ログイン
           </Link>
           <Link
-            href="/auth/signup?redirect_to=%2Farticles"
+            href="/auth/signup?redirect_to=%2Fexperts"
             className="inline-flex items-center rounded-full bg-primary-500 px-3.5 py-1.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-400 active:scale-[0.98]"
           >
             無料ではじめる

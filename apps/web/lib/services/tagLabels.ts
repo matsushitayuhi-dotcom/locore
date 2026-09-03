@@ -12,7 +12,8 @@
 export const TAG_LABEL: Record<string, string> = {
   tourism: '観光・現地アテンド',
   consulting: 'コンサル・相談',
-  study_abroad: '留学サポート',
+  // v2 で TOPIC_TAGS('留学') と表記統一（旧: 留学サポート）
+  study_abroad: '留学',
   translation: '翻訳・通訳',
   attend: '同行・代行',
   shipping: '買付・発送',
