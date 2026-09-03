@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { ServicesEditor } from '@/components/settings/ServicesEditor';
 import { getActiveCitiesForPicker } from '@/lib/geo/countries';
+import { CONSULTATION_TAG, TOPIC_TAG_VALUES } from '@/lib/experts/constants';
 
 export const metadata = {
   title: '提供サービス編集',
@@ -31,9 +32,11 @@ export default async function ServicesSettingsPage() {
     audience: string | null;
     coverImageUrl: string | null;
   };
-  // 0058 体験詳細カラム。base クエリと分離して取得 (未適用なら空にフォールバック)。
+  // 0058 体験詳細カラム + 0055 tags。base クエリと分離して取得
+  // (未適用なら空にフォールバック)。
   type DetailRow = {
     id: string;
+    tags: string[] | null;
     galleryImages: string[] | null;
     durationLabel: string | null;
     minParticipants: number | null;
@@ -128,6 +131,7 @@ export default async function ServicesSettingsPage() {
     const detailRows = await db
       .select({
         id: schema.userServices.id,
+        tags: schema.userServices.tags,
         galleryImages: schema.userServices.galleryImages,
         durationLabel: schema.userServices.durationLabel,
         minParticipants: schema.userServices.minParticipants,
@@ -159,9 +163,12 @@ export default async function ServicesSettingsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h2 className="text-[20px] font-semibold tracking-tight">提供サービス</h2>
+        <h2 className="text-[20px] font-semibold tracking-tight">
+          相談メニュー・提供サービス
+        </h2>
         <p className="mt-1 text-[12px] text-foreground/60">
-          現地ガイド・翻訳・コンサルなど、あなたの強みを公開できます。
+          30分・60分の相談メニューを作成し「相談メニューとして公開」にチェックすると、
+          エキスパート一覧（/experts）に掲載されます。
         </p>
       </header>
 
@@ -169,6 +176,7 @@ export default async function ServicesSettingsPage() {
         cityOptions={cityOptions}
         initial={rows.map((r) => {
           const d = detailById.get(r.id);
+          const tags = Array.isArray(d?.tags) ? d!.tags! : [];
           return {
             id: r.id,
             title: r.title,
@@ -196,6 +204,8 @@ export default async function ServicesSettingsPage() {
             meetingPointLat: d?.meetingPointLat ?? '',
             meetingPointLng: d?.meetingPointLng ?? '',
             cancellationPolicy: d?.cancellationPolicy ?? '',
+            consultation: tags.includes(CONSULTATION_TAG),
+            topics: tags.filter((t) => TOPIC_TAG_VALUES.includes(t)),
           };
         })}
       />

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
+import { CONSULTATION_TAG, TOPIC_TAG_VALUES } from '@/lib/experts/constants';
 
 const SERVICE_CATEGORIES = [
   'tourism',
@@ -71,6 +72,14 @@ const upsertSchema = z
     meetingPointLat: z.number().min(-90).max(90).optional().nullable(),
     meetingPointLng: z.number().min(-180).max(180).optional().nullable(),
     cancellationPolicy: z.string().trim().max(1000).optional().nullable(),
+    /** ===== v2 相談メニュー =====
+     *  true なら tags に 'consultation' を付与して /experts に掲載する。 */
+    consultation: z.boolean().default(false),
+    /** 相談テーマ（TOPIC_TAGS の value）。consultation=true のときだけ保存 */
+    consultationTopics: z
+      .array(z.string().trim().min(1).max(40))
+      .max(8)
+      .default([]),
   })
   .refine(
     (v) => v.contactMethod !== 'external_url' || !!v.externalUrl,
@@ -117,21 +126,58 @@ export async function upsertUserService(
   const isMissingColumn = (err: unknown) =>
     /does not exist/i.test(err instanceof Error ? err.message : String(err));
 
+  /**
+   * v2 相談メニュー: 'consultation' + テーマタグはこのアクションが管理し、
+   * それ以外の既存タグ（フリーキーワード等）は温存する。
+   * tags 列は 0055 追加なので、未適用環境では tags 抜きで再試行する。
+   */
+  const MANAGED_TAGS = new Set<string>([CONSULTATION_TAG, ...TOPIC_TAG_VALUES]);
+  const buildTags = (existingTags: string[]): string[] => {
+    const kept = existingTags.filter((t) => !MANAGED_TAGS.has(t));
+    if (!data.consultation) return kept;
+    const topics = data.consultationTopics.filter((t) =>
+      TOPIC_TAG_VALUES.includes(t),
+    );
+    return [CONSULTATION_TAG, ...topics, ...kept];
+  };
+
   if (data.id) {
-    // 既存更新（所有者一致）
-    const existing = await db
-      .select({ id: schema.userServices.id })
-      .from(schema.userServices)
-      .where(
-        and(
-          eq(schema.userServices.id, data.id),
-          eq(schema.userServices.userId, user.id),
-        ),
-      )
-      .limit(1);
+    // 既存更新（所有者一致）。既存 tags も読んで管理外タグを温存する
+    // （tags 列 = 0055 が未適用の環境では id のみで再試行）。
+    let existing: Array<{ id: string; tags?: string[] | null }>;
+    try {
+      existing = await db
+        .select({
+          id: schema.userServices.id,
+          tags: schema.userServices.tags,
+        })
+        .from(schema.userServices)
+        .where(
+          and(
+            eq(schema.userServices.id, data.id),
+            eq(schema.userServices.userId, user.id),
+          ),
+        )
+        .limit(1);
+    } catch (err) {
+      if (!isMissingColumn(err)) throw err;
+      existing = await db
+        .select({ id: schema.userServices.id })
+        .from(schema.userServices)
+        .where(
+          and(
+            eq(schema.userServices.id, data.id),
+            eq(schema.userServices.userId, user.id),
+          ),
+        )
+        .limit(1);
+    }
     if (existing.length === 0) {
       return { ok: false, error: 'サービスが見つかりません' };
     }
+    const tags = buildTags(
+      Array.isArray(existing[0]?.tags) ? existing[0]!.tags! : [],
+    );
     const baseSet = {
       title: data.title,
       description: data.description ?? null,
@@ -150,21 +196,26 @@ export async function upsertUserService(
     try {
       await db
         .update(schema.userServices)
-        .set({ ...baseSet, ...detailCols })
+        .set({ ...baseSet, ...detailCols, tags })
         .where(eq(schema.userServices.id, data.id));
     } catch (err) {
       if (!isMissingColumn(err)) throw err;
       // 0058 未適用環境: 体験詳細カラムを除いて再試行
-      await db
-        .update(schema.userServices)
-        .set(baseSet)
-        .where(eq(schema.userServices.id, data.id));
+      try {
+        await db
+          .update(schema.userServices)
+          .set({ ...baseSet, tags })
+          .where(eq(schema.userServices.id, data.id));
+      } catch (err2) {
+        if (!isMissingColumn(err2)) throw err2;
+        // 0055 (tags) ごと未適用な最古環境
+        await db
+          .update(schema.userServices)
+          .set(baseSet)
+          .where(eq(schema.userServices.id, data.id));
+      }
     }
-    revalidatePath('/settings/services');
-    revalidatePath(`/users/${user.id}`);
-    revalidatePath(`/users/${user.id}`);
-    revalidatePath('/services');
-    revalidatePath('/france');
+    revalidateServicePaths(user.id);
     return { ok: true, data: { id: data.id } };
   }
 
@@ -191,27 +242,44 @@ export async function upsertUserService(
     isActive: data.isActive,
     position: nextPos,
   };
+  const tags = buildTags([]);
   let inserted: { id: string }[];
   try {
     inserted = await db
       .insert(schema.userServices)
-      .values({ ...baseValues, ...detailCols })
+      .values({ ...baseValues, ...detailCols, tags })
       .returning({ id: schema.userServices.id });
   } catch (err) {
     if (!isMissingColumn(err)) throw err;
     // 0058 未適用環境: 体験詳細カラムを除いて再試行
-    inserted = await db
-      .insert(schema.userServices)
-      .values(baseValues)
-      .returning({ id: schema.userServices.id });
+    try {
+      inserted = await db
+        .insert(schema.userServices)
+        .values({ ...baseValues, tags })
+        .returning({ id: schema.userServices.id });
+    } catch (err2) {
+      if (!isMissingColumn(err2)) throw err2;
+      // 0055 (tags) ごと未適用な最古環境
+      inserted = await db
+        .insert(schema.userServices)
+        .values(baseValues)
+        .returning({ id: schema.userServices.id });
+    }
   }
 
+  revalidateServicePaths(user.id);
+  return { ok: true, data: { id: inserted[0]!.id } };
+}
+
+/** サービス変更で影響するページの再検証。v2 の /experts・トップ (ISR) も含む。 */
+function revalidateServicePaths(userId: string): void {
   revalidatePath('/settings/services');
-  revalidatePath(`/users/${user.id}`);
-  revalidatePath(`/users/${user.id}`);
+  revalidatePath(`/users/${userId}`);
   revalidatePath('/services');
   revalidatePath('/france');
-  return { ok: true, data: { id: inserted[0]!.id } };
+  revalidatePath('/experts');
+  revalidatePath(`/experts/${userId}`);
+  revalidatePath('/');
 }
 
 const deleteSchema = z.object({ id: z.string().uuid() });
@@ -233,10 +301,6 @@ export async function deleteUserService(
       ),
     );
 
-  revalidatePath('/settings/services');
-  revalidatePath(`/users/${user.id}`);
-  revalidatePath(`/users/${user.id}`);
-  revalidatePath('/services');
-  revalidatePath('/france');
+  revalidateServicePaths(user.id);
   return { ok: true };
 }

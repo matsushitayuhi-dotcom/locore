@@ -46,8 +46,8 @@ export async function becomeWriter(formData: FormData): Promise<void> {
   const user = await requireUser('/become-writer');
 
   if (user.role === 'resident_writer' || user.role === 'editor') {
-    // 既に駐在員 → ダッシュボードへ
-    redirect('/writer/articles');
+    // 既にエキスパート → 相談メニュー作成へ
+    redirect('/settings/services');
   }
 
   const data = Object.fromEntries(formData.entries());
@@ -95,5 +95,6 @@ export async function becomeWriter(formData: FormData): Promise<void> {
   });
 
   revalidatePath('/', 'layout');
-  redirect('/writer/articles');
+  // v2: 登録後は相談メニュー作成へ（旧記事ダッシュボードはナビから撤去済み）
+  redirect('/settings/services');
 }

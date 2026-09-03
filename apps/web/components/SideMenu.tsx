@@ -10,6 +10,7 @@ import {
   X,
   Search,
   Bookmark,
+  Briefcase,
   PenSquare,
   MessageCircle,
   User,
@@ -83,6 +84,12 @@ const USER_ITEMS: MenuItem[] = [
 ];
 
 const WRITER_ITEMS: MenuItem[] = [
+  {
+    href: '/settings/services',
+    label: '相談メニュー管理',
+    icon: Briefcase,
+    matchPrefix: '/settings/services',
+  },
   {
     href: '/chat',
     label: 'メッセージ',

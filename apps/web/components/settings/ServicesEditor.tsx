@@ -9,6 +9,7 @@ import {
   deleteUserService,
 } from '@/lib/services/actions';
 import { uploadImage } from '@/lib/storage/uploadImage';
+import { TOPIC_TAGS } from '@/lib/experts/constants';
 
 /**
  * 自分のサービス一覧 編集 UI。
@@ -66,6 +67,11 @@ type Service = {
   meetingPointLat: number | '';
   meetingPointLng: number | '';
   cancellationPolicy: string;
+  /** ===== v2 相談メニュー ===== */
+  /** true なら tags に 'consultation' が付与され /experts に掲載される */
+  consultation: boolean;
+  /** 相談テーマ（TOPIC_TAGS の value） */
+  topics: string[];
 };
 
 const empty = (): Service => ({
@@ -91,6 +97,8 @@ const empty = (): Service => ({
   meetingPointLat: '',
   meetingPointLng: '',
   cancellationPolicy: '',
+  consultation: false,
+  topics: [],
 });
 
 /** 改行区切りテキスト → トリム済み配列 (空行は除去) */
@@ -149,6 +157,9 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
     meetingPointLat: r.meetingPointLat === '' ? null : Number(r.meetingPointLat),
     meetingPointLng: r.meetingPointLng === '' ? null : Number(r.meetingPointLng),
     cancellationPolicy: r.cancellationPolicy.trim() || null,
+    // v2 相談メニュー
+    consultation: r.consultation,
+    consultationTopics: r.topics,
   });
 
   const onSave = (idx: number) => {
@@ -210,10 +221,12 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
   return (
     <section className="space-y-4 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
       <header>
-        <h3 className="text-[16px] font-semibold tracking-tight">提供サービス</h3>
+        <h3 className="text-[16px] font-semibold tracking-tight">
+          相談メニュー・提供サービス
+        </h3>
         <p className="mt-1 text-[12px] text-foreground/60">
-          現地でのコンサル・アテンド・翻訳など、あなたの強みを公開できます。
-          公開するとプロフィールにカードが表示され、訪問者から問い合わせを受けられます。
+          30分・60分のスポット相談や、現地でのアテンド・翻訳など、あなたの強みを公開できます。
+          「相談メニューとして公開」にチェックすると、エキスパート一覧に掲載されます。
         </p>
       </header>
 
@@ -363,6 +376,17 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
               </div>
             </div>
 
+            <ConsultationFields
+              value={r}
+              onPatch={(patch) =>
+                setRows((prev) =>
+                  prev.map((row, i) =>
+                    i === idx ? { ...row, ...patch } : row,
+                  ),
+                )
+              }
+            />
+
             <DetailFields
               value={r}
               onPatch={(patch) =>
@@ -508,6 +532,11 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
               placeholder="外部 URL https://…"
             />
           ) : null}
+
+          <ConsultationFields
+            value={draft}
+            onPatch={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+          />
 
           <DetailFields
             value={draft}
@@ -658,6 +687,72 @@ function CoverImageField({
         onChange={(e) => handleFiles(e.target.files)}
         className="hidden"
       />
+    </div>
+  );
+}
+
+/**
+ * v2 相談メニュー設定。チェックすると保存時に tags へ 'consultation' が
+ * 自動付与され、エキスパート一覧 (/experts) に掲載される。
+ * 相談テーマは TOPIC_TAGS からの複数選択で、同じく tags に保存される。
+ */
+function ConsultationFields({
+  value,
+  onPatch,
+}: {
+  value: Service;
+  onPatch: (patch: Partial<Service>) => void;
+}) {
+  const toggleTopic = (t: string) => {
+    onPatch({
+      topics: value.topics.includes(t)
+        ? value.topics.filter((x) => x !== t)
+        : [...value.topics, t],
+    });
+  };
+  return (
+    <div className="space-y-2.5 rounded-md bg-primary-500/10 p-3 ring-1 ring-border">
+      <label className="inline-flex items-center gap-2 text-[12.5px] font-medium text-foreground/85">
+        <input
+          type="checkbox"
+          checked={value.consultation}
+          onChange={(e) => onPatch({ consultation: e.target.checked })}
+          className="h-4 w-4 accent-primary-700"
+        />
+        相談メニューとして公開する（エキスパート一覧 /experts に掲載）
+      </label>
+      {value.consultation ? (
+        <div>
+          <p className="mb-1.5 text-[11px] font-medium text-foreground/70">
+            相談テーマ（複数選択可・一覧の絞り込みに使われます）
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {TOPIC_TAGS.map((t) => {
+              const on = value.topics.includes(t.value);
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => toggleTopic(t.value)}
+                  aria-pressed={on}
+                  className={
+                    'rounded-full px-3 py-1 text-[12px] font-medium ring-1 transition ' +
+                    (on
+                      ? 'bg-primary-500/20 text-primary-300 ring-primary-500/50'
+                      : 'bg-card text-foreground/65 ring-border hover:text-foreground')
+                  }
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-1.5 text-[10.5px] text-foreground/50">
+            タイトルは「30分相談」など時間がわかる形、単位は「30分・税込」の形が
+            一覧で見やすくおすすめです。
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
