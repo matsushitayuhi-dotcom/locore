@@ -1,16 +1,14 @@
 import Link from 'next/link';
 import { HeaderUserArea } from './HeaderUserArea';
-import { ServicesNavLink } from './nav/ServicesNavLink';
-import { ArticlesNavLink } from './nav/ArticlesNavLink';
-import { ResidentsNavLink } from './nav/ResidentsNavLink';
-import { SearchNavLink } from './nav/SearchNavLink';
+import { ExpertsNavLink } from './nav/ExpertsNavLink';
 
 /**
  * グローバルトップバー。
  *
- * 2026-06: ランディング (/) のダークナビとデザインを統一。
- *   - 背景はダーク (#0b0d13)、ロゴは "Lo<span>core</span>"（core がライム）
- *   - 中央ナビ: 記事 / サービス / コミュニティ / 検索（ランディングと同一の導線）
+ * 2026-09 (v2): 中央ナビをエキスパート相談の導線に刷新。
+ *   - エキスパートを探す (/experts) / 使い方 (/about-service) のみ
+ *   - 旧コンセプトの記事 / サービス / ユーザー / 検索リンクは撤去
+ *     （ページ・コンポーネント自体は残す。ナビから外して非表示にするだけ）
  *   - 高さは h-14 (56px) を維持（CommunityNav 等の sticky オフセットが依存）
  *
  * 認証依存パーツは HeaderUserArea (client, /api/me) に切り出し、本体は cookie を
@@ -29,10 +27,13 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden flex-1 items-center justify-center gap-7 md:flex">
-          <ArticlesNavLink />
-          <ServicesNavLink />
-          <ResidentsNavLink />
-          <SearchNavLink />
+          <ExpertsNavLink />
+          <Link
+            href="/about-service"
+            className="text-[14px] font-medium text-white/80 transition hover:text-white"
+          >
+            使い方
+          </Link>
         </nav>
 
         <HeaderUserArea />

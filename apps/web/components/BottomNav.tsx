@@ -3,23 +3,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BookOpen,
-  MessagesSquare,
-  Briefcase,
+  Home,
   Search,
+  MessageCircle,
+  User,
   type LucideIcon,
 } from 'lucide-react';
-import { useCommunityHref } from './community/useCommunityHref';
 
 /**
  * モバイル下部タブナビゲーション (md 未満で固定表示)。
  *
- * 2026-06 改修: 旅行者/駐在員モードを撤去し、モードに依存しない 4 タブに統一:
- *   記事 / コミュニティ / サービス / 検索
- * （ホームは「記事」に集約）。
+ * 2026-09 (v2) 改修: エキスパート相談の 4 タブに刷新:
+ *   ホーム / エキスパート / メッセージ / マイページ
+ * 旧コンセプト（記事 / コミュニティ / サービス / 検索）はナビから撤去。
  *
  * - 安全エリア対応 (env(safe-area-inset-bottom))
- * - 認証ページ・記事編集画面など、ナビを出したくない場所では非表示
+ * - 認証ページ・チャット個別画面など、ナビを出したくない場所では非表示
+ * - /experts/[id] は独自の固定 CTA バーを持つため非表示
  */
 
 type Tab = {
@@ -33,49 +33,39 @@ const HIDE_ON_ROUTES: Array<(p: string) => boolean> = [
   (p) => p.startsWith('/auth/'),
   (p) => /^\/writer\/articles\/[^/]+\/edit$/.test(p),
   (p) => /^\/chat\/[^/]+$/.test(p),
-  (p) => p === '/',
+  // エキスパート詳細は独自の固定 CTA バー（チャットで相談する）を出す
+  (p) => /^\/experts\/[^/]+$/.test(p),
 ];
 
 const TABS: Tab[] = [
   {
-    href: '/articles',
-    label: '記事',
-    icon: BookOpen,
-    match: (p) => p === '/' || p.startsWith('/articles'),
+    href: '/',
+    label: 'ホーム',
+    icon: Home,
+    match: (p) => p === '/',
   },
   {
-    href: '/community',
-    label: 'コミュニティ',
-    icon: MessagesSquare,
-    match: (p) =>
-      p.startsWith('/community') ||
-      p.startsWith('/board') ||
-      p.startsWith('/calendar') ||
-      p.startsWith('/jobs') ||
-      p.startsWith('/apartments') ||
-      p.startsWith('/marketplace') ||
-      p.startsWith('/groups') ||
-      p.startsWith('/lessons') ||
-      p.startsWith('/help'),
-  },
-  {
-    href: '/services',
-    label: 'サービス',
-    icon: Briefcase,
-    match: (p) => p.startsWith('/services'),
-  },
-  {
-    href: '/search',
-    label: '検索',
+    href: '/experts',
+    label: 'エキスパート',
     icon: Search,
-    match: (p) => p.startsWith('/search'),
+    match: (p) => p.startsWith('/experts'),
+  },
+  {
+    href: '/chat',
+    label: 'メッセージ',
+    icon: MessageCircle,
+    match: (p) => p.startsWith('/chat'),
+  },
+  {
+    href: '/settings/profile',
+    label: 'マイページ',
+    icon: User,
+    match: (p) => p.startsWith('/settings'),
   },
 ];
 
 export function BottomNav() {
   const pathname = usePathname() ?? '/';
-  // 「コミュニティ」は国を選択済みならその国ページへ（cookie 記憶）。
-  const communityHref = useCommunityHref();
 
   if (HIDE_ON_ROUTES.some((fn) => fn(pathname))) return null;
 
@@ -89,13 +79,8 @@ export function BottomNav() {
     >
       <ul className="flex items-stretch justify-around px-1 pt-1">
         {TABS.map((t, i) => {
-          const isCommunity = t.href === '/community';
-          const href = isCommunity ? communityHref : t.href;
-          const isActive =
-            t.match(pathname) ||
-            (isCommunity &&
-              communityHref !== '/community' &&
-              pathname.startsWith(communityHref));
+          const href = t.href;
+          const isActive = t.match(pathname);
           const Icon = t.icon;
           const className =
             'group relative flex h-14 min-h-[56px] w-full flex-col items-center justify-center gap-0.5 rounded-md transition-colors duration-fast active:scale-[0.94] ' +

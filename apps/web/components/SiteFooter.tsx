@@ -4,9 +4,9 @@ import { Logo } from './Logo';
 /**
  * サイト全体のフッター。
  *
- * リンク先は全て実在ページにつながっている (旧版にあった
- * /writers/wr_junko モック直書きや href="#" は廃止)。
- * 法務 4 文書は /legal/* 配下に新設。
+ * 2026-09 (v2): エキスパート相談の導線に刷新。旧コンセプト
+ * （記事 / コミュニティ / マップ等）へのリンクは撤去（ページは残す）。
+ * 法務 4 文書は /legal/* 配下。
  */
 export function SiteFooter() {
   return (
@@ -17,26 +17,21 @@ export function SiteFooter() {
             <Logo variant="wordmark" height={26} />
           </Link>
           <p className="mt-3 text-[13px] leading-relaxed text-foreground/60">
-            在外邦人がつくる、もう一段深い旅。<br />
-            Quiet Premium / Editorial First / Map as Stage.
+            海外に住む日本人の「現地で暮らしているからこそ知っていること」を、
+            30分から相談できるサービスです。
           </p>
         </div>
         <FooterColumn
-          title="サービス"
+          title="相談する"
           links={[
-            { href: '/articles', label: '記事を読む' },
-            { href: '/community', label: 'コミュニティ' },
-            { href: '/services', label: 'サービス' },
-            { href: '/map', label: 'マップ' },
+            { href: '/experts', label: 'エキスパートを探す' },
+            { href: '/about-service', label: '使い方' },
           ]}
         />
         <FooterColumn
-          title="参加する"
+          title="教える"
           links={[
-            { href: '/founders', label: 'Founders 枠（先着50人）' },
-            { href: '/become-writer', label: '書き手として参加' },
-            { href: '/users', label: 'ユーザーを探す' },
-            { href: '/board', label: '新着ニュース' },
+            { href: '/become-writer', label: 'エキスパート登録' },
           ]}
         />
         <FooterColumn

@@ -4,19 +4,13 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
-import { useCommunityHref } from './community/useCommunityHref';
 import { Logo } from './Logo';
 import {
   Menu,
   X,
-  Map as MapIcon,
   Search,
-  Briefcase,
   Bookmark,
-  ShoppingBag,
   PenSquare,
-  FileText,
-  BarChart3,
   MessageCircle,
   User,
   Bell,
@@ -56,13 +50,27 @@ type MenuItem = {
 //     (全国一覧)。PC ヘッダの PlaceMenu で drill-down する想定。
 // 駐在員: ホーム / 場所 (※ /world) / アパート / 売買 / 求人 / イベント / 習い事 / 助け合い / 検索
 
-// 2026-06: 旅行者/駐在員モードを撤去し、単一の統一ナビに集約。
+// 2026-09 (v2): エキスパート相談のナビに刷新。旧コンセプト（記事 / コミュニティ /
+// サービス / 地図）はナビから外して非表示にする（ページ自体は残す）。
 const NAV_ITEMS: MenuItem[] = [
-  { href: '/articles', label: '記事', icon: FileText, matchPrefix: '/articles' },
-  { href: '/community', label: 'コミュニティ', icon: MessageCircle, matchPrefix: '/community' },
-  { href: '/services', label: 'サービス', icon: Briefcase, matchPrefix: '/services' },
-  { href: '/map', label: '地図から探す', icon: MapIcon, matchPrefix: '/map' },
-  { href: '/search', label: '検索', icon: Search, matchPrefix: '/search' },
+  {
+    href: '/experts',
+    label: 'エキスパートを探す',
+    icon: Search,
+    matchPrefix: '/experts',
+  },
+  {
+    href: '/chat',
+    label: 'メッセージ',
+    icon: MessageCircle,
+    matchPrefix: '/chat',
+  },
+  {
+    href: '/about-service',
+    label: '使い方',
+    icon: Info,
+    matchPrefix: '/about-service',
+  },
 ];
 
 const USER_ITEMS: MenuItem[] = [
@@ -72,39 +80,20 @@ const USER_ITEMS: MenuItem[] = [
     icon: Bookmark,
     matchPrefix: '/library',
   },
-  {
-    href: '/purchases',
-    label: '購入した記事',
-    icon: ShoppingBag,
-    matchPrefix: '/purchases',
-  },
 ];
 
 const WRITER_ITEMS: MenuItem[] = [
-  {
-    href: '/writer/articles/new',
-    label: '新規投稿',
-    icon: PenSquare,
-    matchPrefix: '/writer/articles/new',
-  },
-  {
-    href: '/writer/articles',
-    label: '投稿記事一覧',
-    icon: FileText,
-    matchPrefix: '/writer/articles',
-  },
-  {
-    href: '/writer/dashboard',
-    label: '売上レポート',
-    icon: BarChart3,
-    matchPrefix: '/writer/dashboard',
-    disabled: true, // β版では未提供
-  },
   {
     href: '/chat',
     label: 'メッセージ',
     icon: MessageCircle,
     matchPrefix: '/chat',
+  },
+  {
+    href: '/settings/profile',
+    label: 'プロフィール編集',
+    icon: User,
+    matchPrefix: '/settings/profile',
   },
 ];
 
@@ -235,8 +224,6 @@ function DrawerPanel({
   unreadChatCount: number;
   pathname: string;
 }) {
-  // 「コミュニティ」は国を選択済みならその国ページへ（cookie 記憶）。
-  const communityHref = useCommunityHref();
   return (
     <>
       {open ? (
@@ -291,12 +278,9 @@ function DrawerPanel({
             {NAV_ITEMS.map((it) => (
               <NavLink
                 key={it.href}
-                item={
-                  it.href === '/community'
-                    ? { ...it, href: communityHref }
-                    : it
-                }
+                item={it}
                 pathname={pathname}
+                badge={it.href === '/chat' ? unreadChatCount : 0}
               />
             ))}
           </Section>
@@ -308,7 +292,7 @@ function DrawerPanel({
           </Section>
 
           {viewerLoggedIn && isWriter ? (
-            <Section title="投稿・販売">
+            <Section title="エキスパート向け">
               {WRITER_ITEMS.map((it) => (
                 <NavLink
                   key={it.href}
@@ -319,13 +303,13 @@ function DrawerPanel({
               ))}
             </Section>
           ) : viewerLoggedIn ? (
-            <Section title="駐在員">
+            <Section title="エキスパート">
               <Link
                 href="/become-writer"
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
               >
                 <PenSquare className="h-4 w-4" />
-                駐在員として参加
+                エキスパートとして参加
               </Link>
             </Section>
           ) : null}
