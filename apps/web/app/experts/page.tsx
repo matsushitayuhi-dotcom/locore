@@ -22,19 +22,24 @@ export const metadata = {
 };
 
 type Search = {
-  city?: string;
-  topic?: string;
-  price?: string;
+  city?: string | string[];
+  topic?: string | string[];
+  price?: string | string[];
 };
+
+/** searchParams は同名キー複数指定で string[] になり得る。先頭値に正規化。 */
+function firstParam(v: string | string[] | undefined): string {
+  return (Array.isArray(v) ? v[0] ?? '' : v ?? '').trim();
+}
 
 export default async function ExpertsPage({
   searchParams,
 }: {
   searchParams?: Search;
 }) {
-  const city = (searchParams?.city ?? '').trim();
-  const topic = (searchParams?.topic ?? '').trim();
-  const price = (searchParams?.price ?? '').trim();
+  const city = firstParam(searchParams?.city);
+  const topic = firstParam(searchParams?.topic);
+  const price = firstParam(searchParams?.price);
 
   const range = PRICE_RANGES.find((r) => r.value === price);
 

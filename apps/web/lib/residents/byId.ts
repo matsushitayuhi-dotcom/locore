@@ -82,9 +82,19 @@ export type ResidentProfileBundle = {
 const uuidPat =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+export type GetResidentProfileOptions = {
+  /** false で記事 (+ articleCategories) の取得をスキップ（/experts/[id] 用）。
+   *  スキップ時は空配列が入る。既定 true = 従来どおり。 */
+  includeArticles?: boolean;
+  /** false でソーシャルリンクの取得をスキップ。既定 true = 従来どおり。 */
+  includeSns?: boolean;
+};
+
 export async function getResidentProfile(
   userId: string,
+  opts: GetResidentProfileOptions = {},
 ): Promise<ResidentProfileBundle | null> {
+  const { includeArticles = true, includeSns = true } = opts;
   if (!uuidPat.test(userId)) return null;
 
   const db = getDb();
@@ -218,60 +228,64 @@ export async function getResidentProfile(
 
   // ----- 2.5 ソーシャルリンク (sns_links) -----
   let socialLinks: Array<{ platform: string; url: string }> = [];
-  try {
-    const rows = await db
-      .select({
-        platform: schema.snsLinks.platform,
-        url: schema.snsLinks.url,
-        createdAt: schema.snsLinks.createdAt,
-      })
-      .from(schema.snsLinks)
-      .where(eq(schema.snsLinks.userId, userId))
-      .orderBy(asc(schema.snsLinks.createdAt));
-    socialLinks = rows
-      .filter((r) => r.url)
-      .map((r) => ({ platform: r.platform as string, url: r.url }));
-  } catch {
-    socialLinks = [];
+  if (includeSns) {
+    try {
+      const rows = await db
+        .select({
+          platform: schema.snsLinks.platform,
+          url: schema.snsLinks.url,
+          createdAt: schema.snsLinks.createdAt,
+        })
+        .from(schema.snsLinks)
+        .where(eq(schema.snsLinks.userId, userId))
+        .orderBy(asc(schema.snsLinks.createdAt));
+      socialLinks = rows
+        .filter((r) => r.url)
+        .map((r) => ({ platform: r.platform as string, url: r.url }));
+    } catch {
+      socialLinks = [];
+    }
   }
 
   // ----- 3. 公開記事 -----
   let articles: ResidentArticleCard[] = [];
   let articleCategories: string[] = [];
-  try {
-    const rows = await db
-      .select({
-        id: schema.articles.id,
-        title: schema.articles.title,
-        coverImageUrl: schema.articles.coverImageUrl,
-        articleType: schema.articles.articleType,
-        priceJpy: schema.articles.priceJpy,
-        publishedAt: schema.articles.publishedAt,
-        createdAt: schema.articles.createdAt,
-      })
-      .from(schema.articles)
-      .where(
-        and(
-          eq(schema.articles.writerId, userId),
-          eq(schema.articles.status, 'published'),
-          isNull(schema.articles.deletedAt),
-        ),
-      )
-      .orderBy(desc(schema.articles.publishedAt));
-    articles = rows.map((a) => ({
-      id: a.id,
-      title: a.title,
-      coverImageUrl: a.coverImageUrl ?? null,
-      articleType: a.articleType,
-      priceJpy: a.priceJpy ?? 0,
-      publishedAt: (a.publishedAt ?? a.createdAt).toISOString(),
-    }));
-    articleCategories = Array.from(
-      new Set(rows.map((a) => a.articleType as string).filter(Boolean)),
-    );
-  } catch {
-    articles = [];
-    articleCategories = [];
+  if (includeArticles) {
+    try {
+      const rows = await db
+        .select({
+          id: schema.articles.id,
+          title: schema.articles.title,
+          coverImageUrl: schema.articles.coverImageUrl,
+          articleType: schema.articles.articleType,
+          priceJpy: schema.articles.priceJpy,
+          publishedAt: schema.articles.publishedAt,
+          createdAt: schema.articles.createdAt,
+        })
+        .from(schema.articles)
+        .where(
+          and(
+            eq(schema.articles.writerId, userId),
+            eq(schema.articles.status, 'published'),
+            isNull(schema.articles.deletedAt),
+          ),
+        )
+        .orderBy(desc(schema.articles.publishedAt));
+      articles = rows.map((a) => ({
+        id: a.id,
+        title: a.title,
+        coverImageUrl: a.coverImageUrl ?? null,
+        articleType: a.articleType,
+        priceJpy: a.priceJpy ?? 0,
+        publishedAt: (a.publishedAt ?? a.createdAt).toISOString(),
+      }));
+      articleCategories = Array.from(
+        new Set(rows.map((a) => a.articleType as string).filter(Boolean)),
+      );
+    } catch {
+      articles = [];
+      articleCategories = [];
+    }
   }
 
   // ----- 4. 出品サービス -----

@@ -27,7 +27,8 @@ export default async function ExpertDetailPage({
   params: { id: string };
 }) {
   const [profile, me] = await Promise.all([
-    getResidentProfile(params.id),
+    // 記事・SNSリンクはこのページでは使わないので取得をスキップ
+    getResidentProfile(params.id, { includeArticles: false, includeSns: false }),
     getCurrentUser(),
   ]);
   if (!profile) notFound();

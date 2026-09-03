@@ -65,13 +65,16 @@ export async function listExperts(
 ): Promise<ExpertCard[]> {
   const { citySlug, topic, minPrice, maxPrice } = opts;
 
-  // 1. 相談メニューを全部引いて ownerId でグルーピング
+  // 1. 相談メニューを全部引いて ownerId でグルーピング。
+  //    価格フィルタは listServices に渡さない: メニュー単位で絞ると
+  //    最低価格・メニュー数・テーマ集合が「フィルタ後の部分集合」に歪むため、
+  //    集計は全メニューで行い、レンジ内メニューを 1 つでも持つ人だけを残す。
+  //    limit=500 は既知のキャップ (メニュー 500 件超で後半のエキスパートが
+  //    欠けうる)。MVP スケールでは十分で、超えたらページング化する。
   const { services } = await listServices({
     tags: [CONSULTATION_TAG],
     citySlug,
-    minPrice,
-    maxPrice,
-    limit: 200,
+    limit: 500,
     sort: 'price_asc',
   });
 
@@ -84,6 +87,15 @@ export async function listExperts(
     minPriceJpy: number | null;
     menuCount: number;
     topics: Set<string>;
+    /** 価格レンジ指定時: レンジ内のメニューを 1 つでも持つか */
+    hasPriceInRange: boolean;
+  };
+  const hasPriceFilter = minPrice != null || maxPrice != null;
+  const inRange = (price: number | null): boolean => {
+    if (price == null) return false;
+    if (minPrice != null && price < minPrice) return false;
+    if (maxPrice != null && price > maxPrice) return false;
+    return true;
   };
   const groups = new Map<string, Group>();
   for (const s of services) {
@@ -98,6 +110,7 @@ export async function listExperts(
         minPriceJpy: null,
         menuCount: 0,
         topics: new Set(),
+        hasPriceInRange: false,
       };
       groups.set(s.ownerId, g);
     }
@@ -108,6 +121,7 @@ export async function listExperts(
     ) {
       g.minPriceJpy = s.priceJpy;
     }
+    if (inRange(s.priceJpy)) g.hasPriceInRange = true;
     g.cityNameJa = g.cityNameJa ?? s.cityNameJa;
     g.citySlug = g.citySlug ?? s.citySlug;
     for (const t of s.tags) {
@@ -115,17 +129,21 @@ export async function listExperts(
     }
   }
 
-  // テーマフィルタ（tags overlap は OR なのでここで AND 条件をかける）
+  // テーマ・価格フィルタ（tags overlap は OR なのでここで AND 条件をかける）
   let list = Array.from(groups.values());
   if (topic) {
     list = list.filter((g) => g.topics.has(topic));
+  }
+  if (hasPriceFilter) {
+    list = list.filter((g) => g.hasPriceInRange);
   }
   if (list.length === 0) return [];
 
   const ownerIds = list.map((g) => g.ownerId);
   const db = getDb();
 
-  // 2. プロフィール（bio / 在住情報 / 言語）
+  // 2+3. プロフィール（bio / 在住情報 / 言語）と居住認証は独立なので並列取得。
+  //      居住認証は最新申請が approved かどうか（getResidentProfile と同じ思想）。
   type ProfileRow = {
     id: string;
     bio: string | null;
@@ -135,45 +153,53 @@ export async function listExperts(
     occupation: string | null;
     languages: unknown;
   };
-  const profileById = new Map<string, ProfileRow>();
-  try {
-    const rows = await db
-      .select({
-        id: schema.users.id,
-        bio: schema.users.bio,
-        residencyCountry: schema.users.residencyCountry,
-        residencyCity: schema.users.residencyCity,
-        arrivalYear: schema.users.arrivalYear,
-        occupation: schema.users.occupation,
-        languages: schema.users.languages,
-      })
-      .from(schema.users)
-      .where(inArray(schema.users.id, ownerIds));
-    for (const r of rows) profileById.set(r.id, r as ProfileRow);
-  } catch (err) {
-    console.warn('[listExperts] users profile fetch failed:', err);
-  }
-
-  // 3. 居住認証（最新申請が approved かどうか。getResidentProfile と同じ思想）
-  const verifiedIds = new Set<string>();
-  try {
-    const rows = await db
-      .selectDistinctOn([schema.residencyVerifications.userId], {
-        userId: schema.residencyVerifications.userId,
-        status: schema.residencyVerifications.status,
-      })
-      .from(schema.residencyVerifications)
-      .where(inArray(schema.residencyVerifications.userId, ownerIds))
-      .orderBy(
-        schema.residencyVerifications.userId,
-        desc(schema.residencyVerifications.submittedAt),
-      );
-    for (const r of rows) {
-      if (r.status === 'approved') verifiedIds.add(r.userId);
+  const fetchProfiles = async (): Promise<Map<string, ProfileRow>> => {
+    const map = new Map<string, ProfileRow>();
+    try {
+      const rows = await db
+        .select({
+          id: schema.users.id,
+          bio: schema.users.bio,
+          residencyCountry: schema.users.residencyCountry,
+          residencyCity: schema.users.residencyCity,
+          arrivalYear: schema.users.arrivalYear,
+          occupation: schema.users.occupation,
+          languages: schema.users.languages,
+        })
+        .from(schema.users)
+        .where(inArray(schema.users.id, ownerIds));
+      for (const r of rows) map.set(r.id, r as ProfileRow);
+    } catch (err) {
+      console.warn('[listExperts] users profile fetch failed:', err);
     }
-  } catch (err) {
-    console.warn('[listExperts] residency_verifications fetch failed:', err);
-  }
+    return map;
+  };
+  const fetchVerifiedIds = async (): Promise<Set<string>> => {
+    const set = new Set<string>();
+    try {
+      const rows = await db
+        .selectDistinctOn([schema.residencyVerifications.userId], {
+          userId: schema.residencyVerifications.userId,
+          status: schema.residencyVerifications.status,
+        })
+        .from(schema.residencyVerifications)
+        .where(inArray(schema.residencyVerifications.userId, ownerIds))
+        .orderBy(
+          schema.residencyVerifications.userId,
+          desc(schema.residencyVerifications.submittedAt),
+        );
+      for (const r of rows) {
+        if (r.status === 'approved') set.add(r.userId);
+      }
+    } catch (err) {
+      console.warn('[listExperts] residency_verifications fetch failed:', err);
+    }
+    return set;
+  };
+  const [profileById, verifiedIds] = await Promise.all([
+    fetchProfiles(),
+    fetchVerifiedIds(),
+  ]);
 
   const cards: ExpertCard[] = list.map((g) => {
     const p = profileById.get(g.ownerId);
