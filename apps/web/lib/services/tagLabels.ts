@@ -19,6 +19,15 @@ export const TAG_LABEL: Record<string, string> = {
   shooting: '撮影',
   access: '限定アクセス',
   other: 'その他',
+  // v2 エキスパート相談（/experts）: 予約タグ + 相談テーマタクソノミー
+  consultation: 'スポット相談',
+  immigration: '移住',
+  expat_prep: '駐在準備',
+  travel: '旅行',
+  childcare: '子育て・教育',
+  housing: '住まい',
+  work: '仕事・起業',
+  procedures: '生活手続き',
 };
 
 /** タグ表示用ラベル取得。マップに無い値は raw のまま返す。 */
