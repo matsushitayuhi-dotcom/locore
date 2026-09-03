@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — 佐々木 彩（パリ在住8年）エキスパート詳細・モック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --terra:#D4634A;--terra-700:#A84A35;--terra-900:#6E2F1F;
+    --tint-50:#FAF1ED;--tint-100:#F4DACE;--tint-200:#EBC0AD;--tint-300:#DD9477;
+    --cream:#FAFAF7;--card:#FFFFFF;--muted-s:#F4F2EC;
+    --ink:#18181B;--ink-2:#3F3F46;--mu:#71717A;--mu-2:#837F78;
+    --bd:#E7E5E0;--bd-2:#C9C5BB;
+    --blue-50:#DCEAF5;--blue-700:#1C5384;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--cream);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.85}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .wrap{max-width:1024px;margin:0 auto;padding:0 24px}
+  .num{font-family:var(--num)}
+
+  /* ===== header ===== */
+  .top{position:sticky;top:0;z-index:50;background:rgba(250,250,247,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1024px;margin:0 auto;display:flex;align-items:center;gap:26px;padding:14px 24px}
+  .logo{font-weight:700;font-size:21px;letter-spacing:-.02em;color:var(--terra);flex:none;display:inline-flex;align-items:center;gap:8px}
+  .logo .mark{width:26px;height:26px;border-radius:50%;background:var(--terra);color:var(--cream);display:grid;place-items:center;flex:none}
+  .logo .mark svg{width:14px;height:14px}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:24px;font-size:14px;font-weight:500;color:var(--ink-2)}
+  .nav a:hover{color:var(--terra)}
+  .nav a.on{color:var(--ink);font-weight:700}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;font-weight:700;
+    cursor:pointer;border:1px solid transparent;transition:.16s;white-space:nowrap}
+  .btn svg{width:16px;height:16px}
+  .btn-p{background:var(--terra);color:#fff;box-shadow:var(--sh-sm);font-size:14.5px;padding:12px 24px}
+  .btn-p:hover{background:var(--terra-700)}
+  .btn-o{background:transparent;color:var(--ink-2);border-color:var(--bd-2);padding:7px 16px;font-size:13.5px}
+  .btn-o:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ===== breadcrumb ===== */
+  .crumb{padding:20px 0 0;font-size:12.5px;color:var(--mu)}
+  .crumb a{color:var(--mu)}
+  .crumb a:hover{color:var(--terra)}
+  .crumb .sep{margin:0 8px;color:var(--bd-2)}
+
+  /* ===== hero ===== */
+  .hero{padding:26px 0 30px;border-bottom:1px solid var(--bd)}
+  .heroin{display:flex;gap:26px;align-items:flex-start}
+  .ava{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none}
+  .ava.t1{background:var(--tint-100);color:var(--terra-900)}
+  .hero .ava{width:104px;height:104px;font-size:36px;border:3px solid var(--card);box-shadow:var(--sh-sm)}
+  .hero h1{font-size:clamp(23px,3vw,29px);font-weight:700;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .vbadge{display:inline-flex;align-items:center;gap:5px;background:var(--tint-50);border:1px solid var(--tint-100);
+    color:var(--terra-700);font-size:12px;font-weight:700;border-radius:9999px;padding:4px 12px;white-space:nowrap}
+  .vbadge svg{width:13px;height:13px;flex:none}
+  .hero .sub{margin-top:6px;font-size:14px;color:var(--ink-2)}
+  .hero .sub b{font-weight:700}
+  .hero .facts{margin-top:14px;display:flex;gap:8px 22px;flex-wrap:wrap;font-size:13px;color:var(--mu)}
+  .hero .facts span{display:inline-flex;align-items:center;gap:7px}
+  .hero .facts svg{width:15px;height:15px;color:var(--mu-2);flex:none}
+  .hero .rate{margin-top:14px;font-size:14px;font-weight:700;color:var(--ink-2)}
+  .hero .rate i{font-style:normal;color:var(--terra)}
+  .hero .rate a{color:var(--mu);font-weight:400;font-size:12.5px;text-decoration:underline;text-underline-offset:3px;margin-left:6px}
+
+  /* ===== layout ===== */
+  .cols{display:grid;grid-template-columns:1fr 356px;gap:52px;padding:36px 0 96px;align-items:start}
+  .sec{padding:30px 0;border-bottom:1px solid var(--bd)}
+  .sec:first-child{padding-top:0}
+  .sec:last-child{border-bottom:0}
+  .sec h2{font-size:19px;font-weight:700;margin-bottom:18px;display:flex;align-items:baseline;gap:10px}
+  .sec h2 .en{font-family:var(--num);font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--terra)}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip-s{font-size:12.5px;font-weight:500;color:var(--ink-2);background:var(--muted-s);border-radius:9999px;padding:6px 15px}
+
+  /* できます list */
+  .can{list-style:none;display:flex;flex-direction:column;gap:13px}
+  .can li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ink-2)}
+  .can .ck{flex:none;width:22px;height:22px;border-radius:50%;background:var(--tint-50);color:var(--terra);display:grid;place-items:center;margin-top:4px}
+  .can .ck svg{width:12px;height:12px}
+
+  /* bio */
+  .bio p{font-size:14px;color:var(--ink-2);line-height:2.05}
+  .bio p+p{margin-top:14px}
+  .cred{margin-top:20px;background:var(--muted-s);border-radius:12px;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+  .cred div{display:flex;gap:12px;font-size:12.5px}
+  .cred .y{flex:none;width:74px;font-family:var(--num);font-weight:600;color:var(--mu)}
+  .cred .t{color:var(--ink-2)}
+
+  /* reviews */
+  .revtop{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .revtop .big{font-family:var(--num);font-size:25px;font-weight:700}
+  .revtop .big i{font-style:normal;color:var(--terra);font-size:20px;margin-right:4px}
+  .revtop span{color:var(--mu);font-size:13px}
+  .rev{padding:18px 0;border-top:1px solid var(--bd)}
+  .rev .rh{display:flex;align-items:center;gap:12px}
+  .rev .rh .ava{width:40px;height:40px;font-size:14px}
+  .ava.g1{background:var(--blue-50);color:var(--blue-700)}
+  .ava.g2{background:var(--muted-s);color:var(--ink-2);border:1px solid var(--bd)}
+  .ava.g3{background:#F0EAD8;color:#6B5A22}
+  .rev .rh .n{font-weight:700;font-size:13.5px}
+  .rev .rh .d{color:var(--mu);font-size:11.5px}
+  .rev .rh .st{margin-left:auto;font-size:12px;font-weight:700;color:var(--ink-2)}
+  .rev .rh .st i{font-style:normal;color:var(--terra)}
+  .rev .tag{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;color:var(--mu);background:var(--muted-s);border-radius:9999px;padding:3px 11px}
+  .rev p{margin-top:8px;font-size:13.5px;color:var(--ink-2);line-height:1.95}
+
+  /* ===== sidebar: menus ===== */
+  .side{position:sticky;top:86px;display:flex;flex-direction:column;gap:14px}
+  .side .cap{font-size:13px;font-weight:700;color:var(--ink-2);display:flex;align-items:baseline;gap:8px}
+  .side .cap .en{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--terra)}
+  .menu{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:22px;box-shadow:var(--sh-xs);transition:.16s}
+  .menu.hot{border-color:var(--tint-200);box-shadow:var(--sh-md)}
+  .menu .mh{display:flex;align-items:baseline;gap:8px}
+  .menu .mh b{font-size:15.5px;font-weight:700}
+  .menu .mh .rec{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--terra-700);background:var(--tint-50);border:1px solid var(--tint-100);border-radius:9999px;padding:3px 10px}
+  .menu .pr{margin-top:8px;display:flex;align-items:baseline;gap:5px}
+  .menu .pr b{font-family:var(--num);font-size:26px;font-weight:700}
+  .menu .pr span{font-size:12px;color:var(--mu)}
+  .menu p{margin-top:10px;font-size:12.5px;color:var(--mu);line-height:1.9}
+  .menu .btn-p{width:100%;margin-top:16px;padding:12px 0}
+  .menu .btn-p svg{width:16px;height:16px}
+  .sidenote{display:flex;gap:9px;align-items:flex-start;background:var(--blue-50);border-radius:12px;padding:12px 15px;font-size:11.5px;color:var(--blue-700);line-height:1.8}
+  .sidenote svg{width:14px;height:14px;flex:none;margin-top:3px}
+  .safety{font-size:11px;color:var(--mu-2);text-align:center;line-height:1.8}
+
+  /* ===== mobile bottom CTA ===== */
+  .mcta{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,255,255,.96);
+    backdrop-filter:blur(12px);border-top:1px solid var(--bd);padding:12px 18px calc(12px + env(safe-area-inset-bottom))}
+  .mcta .in{display:flex;align-items:center;gap:14px;max-width:560px;margin:0 auto}
+  .mcta .pr{line-height:1.35}
+  .mcta .pr b{font-family:var(--num);font-size:19px;font-weight:700;display:block}
+  .mcta .pr span{font-size:10.5px;color:var(--mu)}
+  .mcta .btn-p{flex:1;padding:13px 0;font-size:15px}
+
+  /* ===== footer ===== */
+  footer{border-top:1px solid var(--bd);background:var(--card)}
+  .footin{max-width:1024px;margin:0 auto;padding:44px 24px 34px;display:flex;gap:40px;flex-wrap:wrap}
+  .footin .fl{margin-right:auto;max-width:300px}
+  .footin .logo{color:var(--terra-900);font-size:19px}
+  .footin .logo .mark{background:var(--terra-900);width:24px;height:24px}
+  .footin .fl p{margin-top:12px;font-size:12.5px;color:var(--mu);line-height:1.9}
+  .fcol{min-width:140px}
+  .fcol b{font-size:12.5px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:12px}
+  .fcol a{display:block;font-size:13px;color:var(--mu);padding:4px 0}
+  .fcol a:hover{color:var(--terra)}
+  .fbottom{border-top:1px solid var(--bd)}
+  .fbottomin{max-width:1024px;margin:0 auto;padding:16px 24px;display:flex;gap:20px;align-items:center;font-size:11.5px;color:var(--mu-2)}
+  .fbottomin .r{margin-left:auto;display:flex;gap:18px}
+
+  @media(max-width:900px){
+    .cols{grid-template-columns:1fr;gap:8px;padding-bottom:120px}
+    .side{position:static;order:-1;margin-bottom:22px}
+    .mcta{display:block}
+    footer{padding-bottom:76px}
+  }
+  @media(max-width:640px){
+    .nav a.navlink{display:none}
+    .heroin{gap:18px}
+    .hero .ava{width:76px;height:76px;font-size:28px}
+    .fbottomin{flex-direction:column;align-items:flex-start;gap:8px}
+    .fbottomin .r{margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== header ===================== -->
+<header class="top"><div class="topin">
+  <a class="logo" href="top.html"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+  <nav class="nav">
+    <a class="navlink on" href="experts-list.html">エキスパートを探す</a>
+    <a class="navlink" href="top.html#how">使い方</a>
+    <a class="btn btn-o" href="#">ログイン</a>
+  </nav>
+</div></header>
+
+<div class="wrap crumb">
+  <a href="experts-list.html">エキスパート一覧</a><span class="sep">/</span><a href="#">🇫🇷 パリ</a><span class="sep">/</span>佐々木 彩
+</div>
+
+<!-- ===================== hero ===================== -->
+<section class="hero"><div class="wrap heroin">
+  <span class="ava t1">彩</span>
+  <div>
+    <h1>佐々木 彩<span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span></h1>
+    <div class="sub">🇫🇷 パリ在住 <b>8年</b> ・ 輸入雑貨会社 経営（元日系商社 パリ駐在）</div>
+    <div class="facts">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></svg>日本語・フランス語・英語</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2.5"/><path d="M16 10.5 21 7.5v9l-5-3z"/></svg>オンライン相談（Google Meet）</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>平日夜・週末（日本時間）対応</span>
+    </div>
+    <div class="rate"><i>★</i> 4.9<a href="#reviews">レビュー 12件を読む</a></div>
+  </div>
+</div></section>
+
+<div class="wrap cols">
+  <!-- ===================== main ===================== -->
+  <main>
+    <section class="sec">
+      <h2><span class="en">Topics</span>得意分野</h2>
+      <div class="chips">
+        <span class="chip-s">移住</span><span class="chip-s">仕事・起業</span><span class="chip-s">生活手続き</span><span class="chip-s">住まい</span><span class="chip-s">駐在準備</span>
+      </div>
+    </section>
+
+    <section class="sec">
+      <h2><span class="en">Consultations</span>こんな相談に乗れます</h2>
+      <ul class="can">
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>渡仏前に決めるべきこと・日本でしかできない手続きの整理（ビザ申請の実際の流れ、必要書類のつまずきポイント）</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>パリのエリア選び — 治安・家賃相場・日本人コミュニティとの距離感を、あなたの職場と予算に合わせて</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>アパート探しと契約の注意点（保証人問題、ドシエの作り方、内見で見るべき箇所）</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>フランスでの起業・フリーランス登録（会社形態の選び方、会計士の探し方、実際にかかったお金）</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>銀行口座・保険・携帯など、着いてから最初の1か月にやることの段取り</li>
+      </ul>
+    </section>
+
+    <section class="sec bio">
+      <h2><span class="en">About</span>自己紹介</h2>
+      <p>はじめまして。日系商社のパリ駐在をきっかけに渡仏し、任期後に退職して現地で輸入雑貨の会社を立ち上げました。パリ生活は8年目になります。</p>
+      <p>駐在員として「会社に守られた海外生活」と、起業してからの「すべて自分で手続きする生活」の両方を経験しているのが私の強みです。ビザの更新窓口で門前払いされたことも、アパートの契約を保証人問題で断られたことも、一通り自分で乗り越えてきました。だからこそ、これから来る方が同じところでつまずかないよう、具体的な段取りでお話しできます。</p>
+      <p>「調べても情報が古い」「人によって言うことが違う」と感じたら、その30分が私の出番です。ご事情を伺って、いま・あなたの場合はどうか、を一緒に整理しましょう。</p>
+      <div class="cred">
+        <div><span class="y">2018</span><span class="t">日系商社のパリ駐在として渡仏</span></div>
+        <div><span class="y">2021</span><span class="t">退職し、輸入雑貨の会社をパリで設立</span></div>
+        <div><span class="y">2023—</span><span class="t">渡仏準備の相談・生活立ち上げサポートを開始</span></div>
+      </div>
+    </section>
+
+    <section class="sec" id="reviews">
+      <h2><span class="en">Reviews</span>レビュー</h2>
+      <div class="revtop"><span class="big"><i>★</i>4.9</span><span>12件の相談レビュー</span></div>
+
+      <div class="rev" style="border-top:0">
+        <div class="rh"><span class="ava g1">M</span>
+          <div><div class="n">M.K さん</div><div class="d">2026年8月 ・ 60分相談</div></div>
+          <span class="st"><i>★</i> 5.0</span></div>
+        <span class="tag">移住準備</span>
+        <p>来春からのパリ移住を控えて相談しました。ネットで1か月調べても分からなかったビザ書類の疑問が、開始10分で解消。エリア選びも「その予算ならこの3択」と具体的で、話が早かったです。移住前にもう一度お願いする予定です。</p>
+      </div>
+      <div class="rev">
+        <div class="rh"><span class="ava g2">T</span>
+          <div><div class="n">T.S さん</div><div class="d">2026年7月 ・ 30分相談</div></div>
+          <span class="st"><i>★</i> 5.0</span></div>
+        <span class="tag">駐在準備</span>
+        <p>妻と子供を連れての駐在が決まり、家族帯同まわりを質問しました。駐在と起業の両方を知っている方なので「会社がやってくれること／自分で動くべきこと」の切り分けが明確。事前チャットの返信も丁寧で安心できました。</p>
+      </div>
+      <div class="rev">
+        <div class="rh"><span class="ava g3">Y</span>
+          <div><div class="n">Y.A さん</div><div class="d">2026年6月 ・ 30分相談</div></div>
+          <span class="st"><i>★</i> 4.5</span></div>
+        <span class="tag">仕事・起業</span>
+        <p>フランスでのフリーランス登録について相談。制度の説明だけでなく「実際にいくらかかったか」「会計士はどう探したか」まで聞けたのが収穫でした。30分だと少し足りなかったので、次は60分にします。</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== sidebar ===================== -->
+  <aside class="side">
+    <div class="cap"><span class="en">Menu</span>相談メニュー</div>
+
+    <div class="menu hot">
+      <div class="mh"><b>30分相談</b><span class="rec">はじめての方に</span></div>
+      <div class="pr"><b>¥4,000</b><span>/ 30分・税込</span></div>
+      <p>ピンポイントの疑問に。ビザ・エリア選び・手続きなど、テーマを1〜2個に絞ってじっくりお答えします。</p>
+      <a class="btn btn-p" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg>チャットで相談する</a>
+    </div>
+
+    <div class="menu">
+      <div class="mh"><b>60分相談</b></div>
+      <div class="pr"><b>¥7,000</b><span>/ 60分・税込</span></div>
+      <p>移住・駐在の全体設計に。現状を伺ってから、渡仏までのやることを時系列で一緒に整理します。相談後に要点メモをお送りします。</p>
+      <a class="btn btn-p" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg>チャットで相談する</a>
+    </div>
+
+    <div class="sidenote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.8" r=".4" fill="currentColor"/></svg>予約・決済機能は準備中です。まずはチャットで相談内容と日程をすり合わせてください。</div>
+    <div class="safety">やり取りはすべてLocore内のチャットで行われます。<br />個人連絡先の交換は相談成立後まで不要です。</div>
+  </aside>
+</div>
+
+<!-- ===================== mobile bottom CTA ===================== -->
+<div class="mcta"><div class="in">
+  <div class="pr"><b class="num">¥4,000<span style="font-size:12px;color:var(--mu);font-weight:400"> /30分〜</span></b><span>★4.9 ・ レビュー12件</span></div>
+  <a class="btn btn-p" href="#">チャットで相談する</a>
+</div></div>
+
+<!-- ===================== footer ===================== -->
+<footer>
+  <div class="footin">
+    <div class="fl">
+      <a class="logo" href="top.html"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+      <p>海外に住む日本人の「現地で暮らしているからこそ知っていること」を、30分から相談できるサービスです。</p>
+    </div>
+    <div class="fcol"><b>相談する</b>
+      <a href="experts-list.html">エキスパートを探す</a>
+      <a href="top.html#how">使い方</a>
+      <a href="#">よくある質問</a>
+    </div>
+    <div class="fcol"><b>教える</b>
+      <a href="#">エキスパート登録</a>
+      <a href="#">居住認証について</a>
+    </div>
+    <div class="fcol"><b>Locore</b>
+      <a href="#">運営会社</a>
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+  <div class="fbottom"><div class="fbottomin">
+    <span>© 2026 Locore</span>
+    <div class="r"><a href="#">特定商取引法に基づく表記</a><a href="#">お問い合わせ</a></div>
+  </div></div>
+</footer>
+
+</body>
+</html>

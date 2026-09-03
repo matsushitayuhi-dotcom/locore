@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — 現地に住む日本人に、30分だけ相談できる（トップ・モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --terra:#D4634A;--terra-700:#A84A35;--terra-900:#6E2F1F;
+    --tint-50:#FAF1ED;--tint-100:#F4DACE;--tint-200:#EBC0AD;--tint-300:#DD9477;
+    --cream:#FAFAF7;--card:#FFFFFF;--muted-s:#F4F2EC;
+    --ink:#18181B;--ink-2:#3F3F46;--mu:#71717A;--mu-2:#837F78;
+    --bd:#E7E5E0;--bd-2:#C9C5BB;
+    --blue-50:#DCEAF5;--blue-700:#1C5384;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--cream);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.85}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .num{font-family:var(--num)}
+
+  /* ===== header ===== */
+  .top{position:sticky;top:0;z-index:50;background:rgba(250,250,247,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:26px;padding:14px 24px}
+  .logo{font-weight:700;font-size:21px;letter-spacing:-.02em;color:var(--terra);flex:none;display:inline-flex;align-items:center;gap:8px}
+  .logo .mark{width:26px;height:26px;border-radius:50%;background:var(--terra);color:var(--cream);display:grid;place-items:center;flex:none}
+  .logo .mark svg{width:14px;height:14px}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:24px;font-size:14px;font-weight:500;color:var(--ink-2)}
+  .nav a:hover{color:var(--terra)}
+  .nav a.on{color:var(--ink);font-weight:700}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;font-weight:700;
+    cursor:pointer;border:1px solid transparent;transition:.16s;white-space:nowrap}
+  .btn svg{width:16px;height:16px}
+  .btn-p{background:var(--terra);color:#fff;padding:11px 24px;font-size:14.5px;box-shadow:var(--sh-sm)}
+  .btn-p:hover{background:var(--terra-700)}
+  .btn-o{background:transparent;color:var(--ink-2);border-color:var(--bd-2);padding:8px 18px;font-size:13.5px}
+  .btn-o:hover{border-color:var(--ink);color:var(--ink)}
+  .nav .btn-o{padding:7px 16px}
+
+  /* ===== hero ===== */
+  .hero{padding:72px 0 64px;position:relative;overflow:hidden}
+  .heroin{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+  .kicker{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd);
+    border-radius:9999px;padding:6px 16px;font-size:12.5px;font-weight:700;color:var(--terra-700);margin-bottom:22px;box-shadow:var(--sh-xs)}
+  .kicker .dot{width:7px;height:7px;border-radius:50%;background:var(--terra)}
+  .hero h1{font-size:clamp(30px,4.6vw,46px);font-weight:700;line-height:1.36}
+  .hero h1 .em{color:var(--terra)}
+  .hero .lead{margin-top:20px;font-size:15.5px;color:var(--ink-2);max-width:33em}
+  .hero .lead b{font-weight:700}
+  .heroctas{margin-top:30px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .heroctas .btn-p{padding:14px 30px;font-size:15.5px}
+  .heronote{margin-top:22px;display:flex;gap:8px 22px;flex-wrap:wrap;font-size:12.5px;color:var(--mu)}
+  .heronote span{display:inline-flex;align-items:center;gap:6px}
+  .heronote svg{width:14px;height:14px;color:var(--terra);flex:none}
+
+  /* hero visual: floating expert card + chat */
+  .stage{position:relative;min-height:420px}
+  .stage .paper{position:absolute;inset:8% 4% 6% 2%;background:var(--muted-s);border-radius:24px;border:1px solid var(--bd)}
+  .fcard{position:absolute;background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh-md)}
+  .fcard.main{top:6%;left:8%;width:63%;padding:20px}
+  .fcard.ghost{top:13%;left:16%;width:63%;transform:rotate(3deg);z-index:-0;opacity:.55;height:190px}
+  .fcard .frow{display:flex;gap:14px;align-items:center}
+  .ava{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;letter-spacing:0}
+  .ava.a1{background:var(--tint-100);color:var(--terra-900)}
+  .fcard .ava{width:52px;height:52px;font-size:19px}
+  .fcard .nm{font-weight:700;font-size:15.5px;line-height:1.3}
+  .fcard .ct{font-size:12px;color:var(--mu);margin-top:3px}
+  .vbadge{display:inline-flex;align-items:center;gap:5px;background:var(--tint-50);border:1px solid var(--tint-100);
+    color:var(--terra-700);font-size:11px;font-weight:700;border-radius:9999px;padding:3px 10px;white-space:nowrap}
+  .vbadge svg{width:12px;height:12px;flex:none}
+  .fcard .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}
+  .chip-s{font-size:11px;font-weight:500;color:var(--ink-2);background:var(--muted-s);border-radius:9999px;padding:4px 11px}
+  .fcard .pr{margin-top:14px;padding-top:13px;border-top:1px solid var(--bd);display:flex;align-items:baseline;gap:6px}
+  .fcard .pr b{font-family:var(--num);font-size:19px;font-weight:700}
+  .fcard .pr span{font-size:12px;color:var(--mu)}
+  .fcard .pr .rt{margin-left:auto;font-size:12px;color:var(--ink-2);font-weight:700}
+  .fcard .pr .rt i{font-style:normal;color:var(--terra)}
+  .bub{position:absolute;border-radius:16px;padding:12px 16px;font-size:12.5px;line-height:1.7;box-shadow:var(--sh-md);max-width:66%}
+  .bub.q{right:0;bottom:24%;background:var(--ink);color:var(--cream);border-bottom-right-radius:6px}
+  .bub.a{left:4%;bottom:4%;background:var(--card);border:1px solid var(--bd);border-bottom-left-radius:6px;display:flex;gap:10px;align-items:flex-start}
+  .bub.a .ava{width:30px;height:30px;font-size:12px;margin-top:2px}
+  .bub .who{font-size:10.5px;color:var(--mu);display:block;margin-bottom:2px}
+
+  /* ===== section base ===== */
+  .sec{padding:72px 0}
+  .shead{max-width:640px;margin-bottom:40px}
+  .shead .sk{font-family:var(--num);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--terra);display:block;margin-bottom:10px}
+  .shead h2{font-size:clamp(23px,3vw,30px);font-weight:700}
+  .shead p{margin-top:12px;font-size:14.5px;color:var(--mu)}
+  .shead.center{margin-left:auto;margin-right:auto;text-align:center}
+
+  /* ===== how it works ===== */
+  .how{background:var(--card);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .step{position:relative;background:var(--cream);border:1px solid var(--bd);border-radius:16px;padding:28px 26px 26px}
+  .step .no{font-family:var(--num);font-weight:700;font-size:13px;color:var(--terra);display:inline-flex;align-items:center;gap:10px;margin-bottom:16px}
+  .step .no::after{content:"";width:28px;height:1px;background:var(--tint-200)}
+  .step .ic{width:44px;height:44px;border-radius:12px;background:var(--tint-50);color:var(--terra-700);display:grid;place-items:center;margin-bottom:16px}
+  .step .ic svg{width:22px;height:22px}
+  .step h3{font-size:16.5px;font-weight:700}
+  .step p{margin-top:8px;font-size:13.5px;color:var(--mu);line-height:1.9}
+  .soon{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:var(--blue-50);color:var(--blue-700);
+    font-size:11.5px;font-weight:700;border-radius:9999px;padding:4px 12px}
+  .soon svg{width:12px;height:12px}
+
+  /* ===== expert cards ===== */
+  .exhead{display:flex;align-items:flex-end;gap:20px;margin-bottom:36px}
+  .exhead .shead{margin-bottom:0}
+  .exhead .seeall{margin-left:auto;flex:none}
+  .exgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .ex{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:22px;display:flex;flex-direction:column;
+    transition:.18s;box-shadow:var(--sh-xs)}
+  .ex:hover{border-color:var(--tint-300);box-shadow:var(--sh-md);transform:translateY(-2px)}
+  .ex .h{display:flex;gap:14px;align-items:center}
+  .ex .ava{width:56px;height:56px;font-size:20px}
+  .ava.t1{background:var(--tint-100);color:var(--terra-900)}
+  .ava.t2{background:var(--blue-50);color:var(--blue-700)}
+  .ava.t3{background:var(--muted-s);color:var(--ink-2);border:1px solid var(--bd)}
+  .ava.t4{background:#F0EAD8;color:#6B5A22}
+  .ex .nm{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.3}
+  .ex .ct{font-size:12.5px;color:var(--mu);margin-top:4px}
+  .ex .ct b{color:var(--ink-2);font-weight:500}
+  .ex .bio{margin-top:14px;font-size:13px;color:var(--ink-2);line-height:1.85;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ex .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+  .ex .ft{margin-top:16px;padding-top:14px;border-top:1px solid var(--bd);display:flex;align-items:baseline;gap:6px}
+  .ex .ft .yen{font-family:var(--num);font-weight:700;font-size:18px}
+  .ex .ft .per{font-size:11.5px;color:var(--mu)}
+  .ex .ft .rt{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--ink-2)}
+  .ex .ft .rt i{font-style:normal;color:var(--terra)}
+  .ex .ft .rt span{color:var(--mu);font-weight:400;font-size:11.5px}
+
+  /* ===== trust ===== */
+  .trust{background:linear-gradient(180deg,var(--tint-50),var(--cream) 88%);border-top:1px solid var(--tint-100)}
+  .trustin{display:grid;grid-template-columns:1fr .92fr;gap:64px;align-items:center}
+  .tsteps{margin-top:28px;display:flex;flex-direction:column;gap:0}
+  .tstep{display:flex;gap:18px;position:relative;padding-bottom:26px}
+  .tstep:last-child{padding-bottom:0}
+  .tstep::before{content:"";position:absolute;left:17px;top:38px;bottom:2px;width:1px;background:var(--tint-200)}
+  .tstep:last-child::before{display:none}
+  .tstep .n{flex:none;width:35px;height:35px;border-radius:50%;background:var(--card);border:1px solid var(--tint-200);
+    color:var(--terra);display:grid;place-items:center;font-family:var(--num);font-weight:700;font-size:14px;z-index:1}
+  .tstep b{font-size:15px;font-weight:700;display:block}
+  .tstep p{font-size:13.5px;color:var(--mu);margin-top:4px;line-height:1.9}
+  .tvisual{background:var(--card);border:1px solid var(--bd);border-radius:24px;padding:36px;box-shadow:var(--sh-md);text-align:center}
+  .tvisual .shield{width:84px;height:84px;margin:0 auto 20px;border-radius:50%;background:var(--tint-50);
+    border:1px solid var(--tint-100);display:grid;place-items:center;color:var(--terra)}
+  .tvisual .shield svg{width:40px;height:40px}
+  .tvisual .bb{display:inline-flex;align-items:center;gap:7px;background:var(--tint-50);border:1px solid var(--tint-100);
+    color:var(--terra-700);font-size:13.5px;font-weight:700;border-radius:9999px;padding:7px 18px}
+  .tvisual .bb svg{width:15px;height:15px}
+  .tvisual p{margin-top:16px;font-size:13px;color:var(--mu);line-height:1.95}
+  .tvisual .divline{margin:22px 0;height:1px;background:var(--bd)}
+  .tstats{display:flex;justify-content:center;gap:36px}
+  .tstats .st b{display:block;font-family:var(--num);font-size:22px;font-weight:700;color:var(--ink)}
+  .tstats .st span{font-size:11.5px;color:var(--mu)}
+
+  /* ===== final CTA ===== */
+  .fin{padding:88px 0 96px}
+  .fincard{background:var(--card);border:1px solid var(--bd);border-radius:24px;padding:64px 40px;text-align:center;
+    position:relative;overflow:hidden;box-shadow:var(--sh-sm)}
+  .fincard::before{content:"";position:absolute;top:-90px;right:-70px;width:240px;height:240px;border-radius:50%;background:var(--tint-50)}
+  .fincard::after{content:"";position:absolute;bottom:-110px;left:-80px;width:260px;height:260px;border-radius:50%;background:var(--muted-s)}
+  .fincard>*{position:relative;z-index:1}
+  .fincard h2{font-size:clamp(24px,3.4vw,34px);font-weight:700}
+  .fincard h2 .em{color:var(--terra)}
+  .fincard p{margin-top:14px;font-size:14.5px;color:var(--mu)}
+  .fincard .btn-p{margin-top:30px;padding:15px 36px;font-size:15.5px}
+  .fincard .mini{margin-top:16px;font-size:12px;color:var(--mu-2)}
+
+  /* ===== footer ===== */
+  footer{border-top:1px solid var(--bd);background:var(--card)}
+  .footin{max-width:1120px;margin:0 auto;padding:44px 24px 34px;display:flex;gap:40px;flex-wrap:wrap}
+  .footin .fl{margin-right:auto;max-width:300px}
+  .footin .logo{color:var(--terra-900);font-size:19px}
+  .footin .logo .mark{background:var(--terra-900);width:24px;height:24px}
+  .footin .fl p{margin-top:12px;font-size:12.5px;color:var(--mu);line-height:1.9}
+  .fcol{min-width:140px}
+  .fcol b{font-size:12.5px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:12px}
+  .fcol a{display:block;font-size:13px;color:var(--mu);padding:4px 0}
+  .fcol a:hover{color:var(--terra)}
+  .fbottom{border-top:1px solid var(--bd)}
+  .fbottomin{max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;gap:20px;align-items:center;font-size:11.5px;color:var(--mu-2)}
+  .fbottomin .r{margin-left:auto;display:flex;gap:18px}
+
+  /* ===== responsive ===== */
+  @media(max-width:960px){
+    .heroin{grid-template-columns:1fr;gap:48px}
+    .stage{min-height:400px;max-width:520px}
+    .steps{grid-template-columns:1fr}
+    .exgrid{grid-template-columns:1fr 1fr}
+    .trustin{grid-template-columns:1fr;gap:44px}
+  }
+  @media(max-width:640px){
+    .nav a.navlink{display:none}
+    .hero{padding:48px 0 48px}
+    .hero .lead{font-size:14.5px}
+    .heroctas .btn-p{width:100%;justify-content:center}
+    .heroctas .btn-o{width:100%;justify-content:center}
+    .stage{min-height:360px}
+    .fcard.main{width:76%;left:2%}
+    .fcard.ghost{width:76%;left:10%}
+    .bub.q{max-width:78%}
+    .sec{padding:56px 0}
+    .exgrid{grid-template-columns:1fr}
+    .exhead{flex-direction:column;align-items:flex-start;gap:14px}
+    .exhead .seeall{margin-left:0}
+    .fincard{padding:48px 24px}
+    .fbottomin{flex-direction:column;align-items:flex-start;gap:8px}
+    .fbottomin .r{margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== header ===================== -->
+<header class="top"><div class="topin">
+  <a class="logo" href="top.html"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+  <nav class="nav">
+    <a class="navlink on" href="experts-list.html">エキスパートを探す</a>
+    <a class="navlink" href="#how">使い方</a>
+    <a class="btn btn-o" href="#">ログイン</a>
+  </nav>
+</div></header>
+
+<!-- ===================== hero ===================== -->
+<section class="hero"><div class="wrap heroin">
+  <div>
+    <span class="kicker"><span class="dot"></span>居住認証つき・海外在住日本人への相談サービス</span>
+    <h1>現地に住む日本人に、<br /><span class="em">30分だけ</span>相談できる。</h1>
+    <p class="lead">移住、留学、駐在準備、こだわりの旅行——。ガイドブックにも検索にも出てこない「実際のところ」を、<b>いま現地で暮らす日本人</b>にオンラインで直接聞けます。</p>
+    <div class="heroctas">
+      <a class="btn btn-p" href="experts-list.html">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+      <a class="btn btn-o" href="#how">使い方を見る</a>
+    </div>
+    <div class="heronote">
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>全員、居住認証済み</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>30分 ¥3,000〜</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2.5"/><path d="M16 10.5 21 7.5v9l-5-3z"/></svg>オンラインで完結</span>
+    </div>
+  </div>
+
+  <div class="stage" aria-hidden="true">
+    <div class="paper"></div>
+    <div class="fcard ghost"></div>
+    <div class="fcard main">
+      <div class="frow">
+        <span class="ava a1">彩</span>
+        <div>
+          <div class="nm">佐々木 彩</div>
+          <div class="ct">🇫🇷 パリ在住8年・現地で起業</div>
+        </div>
+        <span class="vbadge" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+      </div>
+      <div class="chips">
+        <span class="chip-s">移住</span><span class="chip-s">仕事・起業</span><span class="chip-s">生活手続き</span>
+      </div>
+      <div class="pr"><b>¥4,000</b><span>/ 30分〜</span><span class="rt"><i>★</i> 4.9 <span style="color:var(--mu);font-weight:400">(12)</span></span></div>
+    </div>
+    <div class="bub q"><span class="who" style="color:rgba(250,250,247,.6)">相談者</span>来月からパリ駐在が決まりました。子連れで住むエリアの「実際のところ」を教えてほしいです…!</div>
+    <div class="bub a"><span class="ava a1">彩</span><div><span class="who">佐々木さん</span>もちろんです。お子さんの年齢と職場の場所を教えてください。候補を3つに絞りましょう。</div></div>
+  </div>
+</div></section>
+
+<!-- ===================== how it works ===================== -->
+<section class="sec how" id="how"><div class="wrap">
+  <div class="shead center">
+    <span class="sk">How it works</span>
+    <h2>使い方は、3ステップ。</h2>
+    <p>知りたい街のエキスパートを見つけて、話すだけ。準備も移動もいりません。</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <span class="no num">01</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg></span>
+      <h3>探す</h3>
+      <p>都市と相談したいテーマで検索。プロフィールと相談メニュー、レビューを見て、自分に合う人を選びます。</p>
+    </div>
+    <div class="step">
+      <span class="no num">02</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg></span>
+      <h3>チャットで相談</h3>
+      <p>気になることをまず気軽に質問。相談内容のすり合わせをしてから、日程を決められます。</p>
+    </div>
+    <div class="step">
+      <span class="no num">03</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2.5"/><path d="M16 10.5 21 7.5v9l-5-3z"/></svg></span>
+      <h3>オンラインで話す</h3>
+      <p>30分または60分、ビデオ通話でじっくり。あなたの事情に合わせた「現地のリアル」が聞けます。</p>
+      <span class="soon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>予約・決済機能は準備中</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== featured experts ===================== -->
+<section class="sec"><div class="wrap">
+  <div class="exhead">
+    <div class="shead">
+      <span class="sk">Experts</span>
+      <h2>この街の「先輩」に聞く。</h2>
+      <p>全員が書類審査による居住認証済み。いま、本当にその街で暮らしている人たちです。</p>
+    </div>
+    <a class="btn btn-o seeall" href="experts-list.html">すべてのエキスパート<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+  </div>
+  <div class="exgrid" id="exgrid"></div>
+</div></section>
+
+<!-- ===================== trust ===================== -->
+<section class="sec trust"><div class="wrap trustin">
+  <div>
+    <div class="shead" style="margin-bottom:0">
+      <span class="sk">Trust</span>
+      <h2>「本当に現地在住」だけが、<br />答えられることがある。</h2>
+      <p>SNSで見つけた相談相手は、本当にその街に住んでいるでしょうか。Locoreのエキスパートは全員、書類審査で現地の居住実態を確認しています。</p>
+    </div>
+    <div class="tsteps">
+      <div class="tstep"><span class="n">1</span><div><b>居住を証明する書類の提出</b><p>現地の滞在許可証・公共料金の請求書・賃貸契約書などを提出してもらいます。</p></div></div>
+      <div class="tstep"><span class="n">2</span><div><b>運営による審査</b><p>書類と申告内容（都市・在住年数）を運営が照合。基準を満たした人だけが登録されます。</p></div></div>
+      <div class="tstep"><span class="n">3</span><div><b>認証バッジの付与</b><p>審査を通過したエキスパートに「居住認証済み」バッジを表示。相談後のレビューと合わせて、信頼の目印になります。</p></div></div>
+    </div>
+  </div>
+  <div class="tvisual">
+    <div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="8.6 11.6 11.1 14.1 15.6 9.4"/></svg></div>
+    <span class="bb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+    <p>このバッジは、運営が書類で居住実態を確認したエキスパートだけに表示されます。「行ったことがある」ではなく「いま住んでいる」人の言葉です。</p>
+    <div class="divline"></div>
+    <div class="tstats">
+      <div class="st"><b class="num">100%</b><span>掲載者の認証率</span></div>
+      <div class="st"><b class="num">14<span style="font-size:13px">都市</span></b><span>世界のエキスパート</span></div>
+      <div class="st"><b class="num">★4.8</b><span>相談の平均評価</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== final CTA ===================== -->
+<section class="fin"><div class="wrap">
+  <div class="fincard">
+    <h2>その疑問、<span class="em">現地の30分</span>で解決するかもしれない。</h2>
+    <p>検索を3時間続けるより、住んでいる人にひとこと聞いてみませんか。</p>
+    <a class="btn btn-p" href="experts-list.html">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+    <div class="mini">会員登録は無料。チャットでの事前相談から始められます。</div>
+  </div>
+</div></section>
+
+<!-- ===================== footer ===================== -->
+<footer>
+  <div class="footin">
+    <div class="fl">
+      <a class="logo" href="top.html"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+      <p>海外に住む日本人の「現地で暮らしているからこそ知っていること」を、30分から相談できるサービスです。</p>
+    </div>
+    <div class="fcol"><b>相談する</b>
+      <a href="experts-list.html">エキスパートを探す</a>
+      <a href="#how">使い方</a>
+      <a href="#">よくある質問</a>
+    </div>
+    <div class="fcol"><b>教える</b>
+      <a href="#">エキスパート登録</a>
+      <a href="#">居住認証について</a>
+    </div>
+    <div class="fcol"><b>Locore</b>
+      <a href="#">運営会社</a>
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+  <div class="fbottom"><div class="fbottomin">
+    <span>© 2026 Locore</span>
+    <div class="r"><a href="#">特定商取引法に基づく表記</a><a href="#">お問い合わせ</a></div>
+  </div></div>
+</footer>
+
+<script>
+  var EXPERTS=[
+    {i:"彩",tone:"t1",name:"佐々木 彩",flag:"🇫🇷",city:"パリ",years:8,bio:"元日系商社の駐在から現地で起業。ビザ・会社設立・アパート探しまで、渡仏まわりは一通り経験しています。",tags:["移住","仕事・起業","生活手続き"],price:"4,000",rate:"4.9",n:12},
+    {i:"健",tone:"t2",name:"高橋 健太郎",flag:"🇬🇧",city:"ロンドン",years:5,bio:"金融系の駐在で渡英し、現地採用に切替。子供2人が現地の小学校に通っており、学校選びと教育事情が得意です。",tags:["駐在準備","子育て・教育","住まい"],price:"3,500",rate:"4.8",n:23},
+    {i:"実",tone:"t4",name:"山本 実咲",flag:"🇩🇪",city:"ベルリン",years:6,bio:"フリーランスビザで働くデザイナー。ドイツの役所手続き・保険・住民登録のつまずきポイントを先回りできます。",tags:["移住","仕事・起業","生活手続き"],price:"3,000",rate:"5.0",n:9},
+    {i:"大",tone:"t3",name:"中村 大輔",flag:"🇹🇭",city:"バンコク",years:10,bio:"現地法人を経営して10年。駐在の立ち上げ、コンドミニアム選び、タイ移住の生活コスト感覚まで具体的に話せます。",tags:["移住","駐在準備","住まい"],price:"3,000",rate:"4.7",n:31},
+    {i:"絵",tone:"t2",name:"藤田 絵里",flag:"🇺🇸",city:"ニューヨーク",years:7,bio:"美大留学からそのまま現地企業のデザイナーに。ポートフォリオ・学校選び・OPT後の就職のリアルを話せます。",tags:["留学","仕事・起業","住まい"],price:"5,000",rate:"4.9",n:17},
+    {i:"千",tone:"t1",name:"森本 千夏",flag:"🇨🇦",city:"バンクーバー",years:6,bio:"元留学エージェント勤務で、現地カレッジ卒。学校の「パンフレットに載らない評判」とホームステイ事情に詳しいです。",tags:["留学","生活手続き","住まい"],price:"3,500",rate:"4.8",n:26}
+  ];
+  var shield='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>';
+  document.getElementById('exgrid').innerHTML=EXPERTS.map(function(e){
+    return '<a class="ex" href="expert-detail.html">'
+      +'<div class="h"><span class="ava '+e.tone+'">'+e.i+'</span>'
+      +'<div><div class="nm">'+e.name+'<span class="vbadge">'+shield+'認証済み</span></div>'
+      +'<div class="ct">'+e.flag+' '+e.city+'在住 <b>'+e.years+'年</b></div></div></div>'
+      +'<p class="bio">'+e.bio+'</p>'
+      +'<div class="chips">'+e.tags.map(function(t){return '<span class="chip-s">'+t+'</span>'}).join('')+'</div>'
+      +'<div class="ft"><span class="yen">¥'+e.price+'</span><span class="per">/ 30分〜</span>'
+      +'<span class="rt"><i>★</i> '+e.rate+' <span>('+e.n+')</span></span></div></a>';
+  }).join('');
+</script>
+</body>
+</html>

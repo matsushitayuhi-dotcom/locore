@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — エキスパートを探す（一覧・モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --terra:#D4634A;--terra-700:#A84A35;--terra-900:#6E2F1F;
+    --tint-50:#FAF1ED;--tint-100:#F4DACE;--tint-200:#EBC0AD;--tint-300:#DD9477;
+    --cream:#FAFAF7;--card:#FFFFFF;--muted-s:#F4F2EC;
+    --ink:#18181B;--ink-2:#3F3F46;--mu:#71717A;--mu-2:#837F78;
+    --bd:#E7E5E0;--bd-2:#C9C5BB;
+    --blue-50:#DCEAF5;--blue-700:#1C5384;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--cream);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.85}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .num{font-family:var(--num)}
+
+  /* ===== header ===== */
+  .top{position:sticky;top:0;z-index:50;background:rgba(250,250,247,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1120px;margin:0 auto;display:flex;align-items:center;gap:26px;padding:14px 24px}
+  .logo{font-weight:700;font-size:21px;letter-spacing:-.02em;color:var(--terra);flex:none;display:inline-flex;align-items:center;gap:8px}
+  .logo .mark{width:26px;height:26px;border-radius:50%;background:var(--terra);color:var(--cream);display:grid;place-items:center;flex:none}
+  .logo .mark svg{width:14px;height:14px}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:24px;font-size:14px;font-weight:500;color:var(--ink-2)}
+  .nav a:hover{color:var(--terra)}
+  .nav a.on{color:var(--ink);font-weight:700}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;font-weight:700;
+    cursor:pointer;border:1px solid transparent;transition:.16s;white-space:nowrap}
+  .btn-o{background:transparent;color:var(--ink-2);border-color:var(--bd-2);padding:7px 16px;font-size:13.5px}
+  .btn-o:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* ===== page head ===== */
+  .phead{padding:44px 0 8px}
+  .phead .sk{font-family:var(--num);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--terra);display:block;margin-bottom:8px}
+  .phead h1{font-size:clamp(24px,3.4vw,32px);font-weight:700}
+  .phead p{margin-top:8px;font-size:14px;color:var(--mu);max-width:40em}
+
+  /* ===== filter bar ===== */
+  .filters{position:sticky;top:61px;z-index:40;background:rgba(250,250,247,.92);backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--bd);margin-top:26px}
+  .filtin{max-width:1120px;margin:0 auto;padding:14px 24px 16px}
+  .frow1{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .sel{position:relative}
+  .sel select{appearance:none;-webkit-appearance:none;background:var(--card);border:1px solid var(--bd-2);border-radius:9999px;
+    padding:9px 38px 9px 16px;font-size:13.5px;font-weight:700;font-family:var(--jp);color:var(--ink);cursor:pointer;outline:none}
+  .sel select:focus{border-color:var(--terra)}
+  .sel::after{content:"";position:absolute;right:15px;top:50%;width:7px;height:7px;margin-top:-6px;
+    border-right:2px solid var(--mu);border-bottom:2px solid var(--mu);transform:rotate(45deg);pointer-events:none}
+  .count{margin-left:auto;font-size:13px;color:var(--mu)}
+  .count b{font-family:var(--num);color:var(--ink);font-size:15px}
+  .chiprow{display:flex;gap:8px;margin-top:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .chiprow::-webkit-scrollbar{display:none}
+  .fchip{flex:none;background:var(--card);border:1px solid var(--bd-2);border-radius:9999px;padding:7px 16px;
+    font-size:13px;font-weight:500;font-family:var(--jp);color:var(--ink-2);cursor:pointer;transition:.14s;white-space:nowrap}
+  .fchip:hover{border-color:var(--terra-700);color:var(--terra-700)}
+  .fchip.on{background:var(--terra);border-color:var(--terra);color:#fff;font-weight:700}
+
+  /* ===== grid ===== */
+  .gridarea{padding:30px 0 80px}
+  .exgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .ex{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:22px;display:flex;flex-direction:column;
+    transition:.18s;box-shadow:var(--sh-xs)}
+  .ex:hover{border-color:var(--tint-300);box-shadow:var(--sh-md);transform:translateY(-2px)}
+  .ex .h{display:flex;gap:14px;align-items:center}
+  .ava{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;letter-spacing:0}
+  .ex .ava{width:56px;height:56px;font-size:20px}
+  .ava.t1{background:var(--tint-100);color:var(--terra-900)}
+  .ava.t2{background:var(--blue-50);color:var(--blue-700)}
+  .ava.t3{background:var(--muted-s);color:var(--ink-2);border:1px solid var(--bd)}
+  .ava.t4{background:#F0EAD8;color:#6B5A22}
+  .vbadge{display:inline-flex;align-items:center;gap:5px;background:var(--tint-50);border:1px solid var(--tint-100);
+    color:var(--terra-700);font-size:11px;font-weight:700;border-radius:9999px;padding:3px 10px;white-space:nowrap}
+  .vbadge svg{width:12px;height:12px;flex:none}
+  .ex .nm{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.3}
+  .ex .ct{font-size:12.5px;color:var(--mu);margin-top:4px}
+  .ex .ct b{color:var(--ink-2);font-weight:500}
+  .ex .bio{margin-top:14px;font-size:13px;color:var(--ink-2);line-height:1.85;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ex .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+  .chip-s{font-size:11px;font-weight:500;color:var(--ink-2);background:var(--muted-s);border-radius:9999px;padding:4px 11px}
+  .ex .langs{margin-top:12px;font-size:12px;color:var(--mu);display:flex;align-items:center;gap:6px}
+  .ex .langs svg{width:14px;height:14px;flex:none;color:var(--mu-2)}
+  .ex .ft{margin-top:16px;padding-top:14px;border-top:1px solid var(--bd);display:flex;align-items:baseline;gap:6px}
+  .ex .ft .yen{font-family:var(--num);font-weight:700;font-size:18px}
+  .ex .ft .per{font-size:11.5px;color:var(--mu)}
+  .ex .ft .menus{margin-left:auto;font-size:11.5px;color:var(--mu)}
+  .ex .ft .menus b{font-family:var(--num);color:var(--ink-2)}
+  .ex .ft .rt{font-size:12.5px;font-weight:700;color:var(--ink-2);margin-left:12px}
+  .ex .ft .rt i{font-style:normal;color:var(--terra)}
+  .ex .ft .rt span{color:var(--mu);font-weight:400;font-size:11.5px}
+
+  .empty{display:none;text-align:center;padding:70px 20px;color:var(--mu)}
+  .empty.show{display:block}
+  .empty .big{font-size:34px;margin-bottom:10px}
+  .empty b{display:block;font-size:16px;color:var(--ink-2);margin-bottom:6px}
+  .empty button{margin-top:18px;background:var(--card);border:1px solid var(--bd-2);border-radius:9999px;
+    padding:9px 20px;font-size:13.5px;font-weight:700;font-family:var(--jp);color:var(--ink-2);cursor:pointer}
+  .empty button:hover{border-color:var(--ink);color:var(--ink)}
+
+  /* register strip */
+  .reg{border:1px dashed var(--bd-2);border-radius:16px;background:var(--muted-s);margin-top:44px;
+    padding:26px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+  .reg .ic{width:46px;height:46px;border-radius:50%;background:var(--tint-50);border:1px solid var(--tint-100);
+    color:var(--terra);display:grid;place-items:center;flex:none}
+  .reg .ic svg{width:22px;height:22px}
+  .reg b{font-size:15px;display:block}
+  .reg p{font-size:12.5px;color:var(--mu);margin-top:2px}
+  .reg .btn-o{margin-left:auto;background:var(--card)}
+
+  /* ===== footer ===== */
+  footer{border-top:1px solid var(--bd);background:var(--card)}
+  .footin{max-width:1120px;margin:0 auto;padding:44px 24px 34px;display:flex;gap:40px;flex-wrap:wrap}
+  .footin .fl{margin-right:auto;max-width:300px}
+  .footin .logo{color:var(--terra-900);font-size:19px}
+  .footin .logo .mark{background:var(--terra-900);width:24px;height:24px}
+  .footin .fl p{margin-top:12px;font-size:12.5px;color:var(--mu);line-height:1.9}
+  .fcol{min-width:140px}
+  .fcol b{font-size:12.5px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:12px}
+  .fcol a{display:block;font-size:13px;color:var(--mu);padding:4px 0}
+  .fcol a:hover{color:var(--terra)}
+  .fbottom{border-top:1px solid var(--bd)}
+  .fbottomin{max-width:1120px;margin:0 auto;padding:16px 24px;display:flex;gap:20px;align-items:center;font-size:11.5px;color:var(--mu-2)}
+  .fbottomin .r{margin-left:auto;display:flex;gap:18px}
+
+  @media(max-width:960px){
+    .exgrid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:640px){
+    .nav a.navlink{display:none}
+    .phead{padding-top:30px}
+    .exgrid{grid-template-columns:1fr}
+    .count{width:100%;margin-left:0;order:9}
+    .reg .btn-o{margin-left:0}
+    .fbottomin{flex-direction:column;align-items:flex-start;gap:8px}
+    .fbottomin .r{margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== header ===================== -->
+<header class="top"><div class="topin">
+  <a class="logo" href="top.html"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+  <nav class="nav">
+    <a class="navlink on" href="experts-list.html">エキスパートを探す</a>
+    <a class="navlink" href="top.html#how">使い方</a>
+    <a class="btn btn-o" href="#">ログイン</a>
+  </nav>
+</div></header>
+
+<!-- ===================== page head ===================== -->
+<div class="wrap phead">
+  <span class="sk">Experts</span>
+  <h1>エキスパートを探す</h1>
+  <p>全員、書類審査による居住認証済み。都市とテーマで絞り込んで、あなたの相談に合う人を見つけてください。</p>
+</div>
+
+<!-- ===================== filters ===================== -->
+<div class="filters"><div class="filtin">
+  <div class="frow1">
+    <span class="sel"><select id="fcity" aria-label="都市で絞り込む">
+      <option value="">すべての都市</option>
+      <option>パリ</option><option>ロンドン</option><option>ニューヨーク</option><option>ベルリン</option>
+      <option>バンコク</option><option>バンクーバー</option><option>メルボルン</option><option>アムステルダム</option><option>デュッセルドルフ</option>
+    </select></span>
+    <span class="sel"><select id="fprice" aria-label="料金で絞り込む">
+      <option value="">料金（30分〜）</option>
+      <option value="0-3000">〜 ¥3,000</option>
+      <option value="3001-4000">¥3,001 〜 ¥4,000</option>
+      <option value="4001-99999">¥4,001 〜</option>
+    </select></span>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="chiprow" id="chips"></div>
+</div></div>
+
+<!-- ===================== grid ===================== -->
+<div class="wrap gridarea">
+  <div class="exgrid" id="grid"></div>
+  <div class="empty" id="empty">
+    <div class="big">🧭</div>
+    <b>この条件のエキスパートは、まだいません</b>
+    条件を少しゆるめてみてください。新しいエキスパートは毎月増えています。
+    <div><button id="reset">絞り込みをリセット</button></div>
+  </div>
+
+  <div class="reg">
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg></span>
+    <div>
+      <b>海外在住のあなたへ — エキスパートとして登録しませんか</b>
+      <p>居住認証を通過すると、あなたの「暮らしの知識」が誰かの30分になります。</p>
+    </div>
+    <a class="btn btn-o" href="#">登録について見る</a>
+  </div>
+</div>
+
+<!-- ===================== footer ===================== -->
+<footer>
+  <div class="footin">
+    <div class="fl">
+      <a class="logo" href="top.html"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+      <p>海外に住む日本人の「現地で暮らしているからこそ知っていること」を、30分から相談できるサービスです。</p>
+    </div>
+    <div class="fcol"><b>相談する</b>
+      <a href="experts-list.html">エキスパートを探す</a>
+      <a href="top.html#how">使い方</a>
+      <a href="#">よくある質問</a>
+    </div>
+    <div class="fcol"><b>教える</b>
+      <a href="#">エキスパート登録</a>
+      <a href="#">居住認証について</a>
+    </div>
+    <div class="fcol"><b>Locore</b>
+      <a href="#">運営会社</a>
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+  <div class="fbottom"><div class="fbottomin">
+    <span>© 2026 Locore</span>
+    <div class="r"><a href="#">特定商取引法に基づく表記</a><a href="#">お問い合わせ</a></div>
+  </div></div>
+</footer>
+
+<script>
+  var CATS=["移住","留学","駐在準備","旅行","子育て・教育","住まい","仕事・起業","生活手続き"];
+  var EXPERTS=[
+    {i:"彩",tone:"t1",name:"佐々木 彩",flag:"🇫🇷",city:"パリ",years:8,
+      bio:"元日系商社の駐在から現地で起業。ビザ・会社設立・アパート探しまで、渡仏まわりは一通り経験しています。",
+      tags:["移住","仕事・起業","生活手続き"],langs:"日本語・フランス語・英語",price:4000,menus:3,rate:"4.9",n:12},
+    {i:"健",tone:"t2",name:"高橋 健太郎",flag:"🇬🇧",city:"ロンドン",years:5,
+      bio:"金融系の駐在で渡英し、現地採用に切替。子供2人が現地の小学校に通っており、学校選びと教育事情が得意です。",
+      tags:["駐在準備","子育て・教育","住まい"],langs:"日本語・英語",price:3500,menus:2,rate:"4.8",n:23},
+    {i:"実",tone:"t4",name:"山本 実咲",flag:"🇩🇪",city:"ベルリン",years:6,
+      bio:"フリーランスビザで働くデザイナー。ドイツの役所手続き・保険・住民登録のつまずきポイントを先回りできます。",
+      tags:["移住","仕事・起業","生活手続き"],langs:"日本語・ドイツ語・英語",price:3000,menus:2,rate:"5.0",n:9},
+    {i:"大",tone:"t3",name:"中村 大輔",flag:"🇹🇭",city:"バンコク",years:10,
+      bio:"現地法人を経営して10年。駐在の立ち上げ、コンドミニアム選び、タイ移住の生活コスト感覚まで具体的に話せます。",
+      tags:["移住","駐在準備","住まい"],langs:"日本語・タイ語・英語",price:3000,menus:3,rate:"4.7",n:31},
+    {i:"絵",tone:"t2",name:"藤田 絵里",flag:"🇺🇸",city:"ニューヨーク",years:7,
+      bio:"美大留学からそのまま現地企業のデザイナーに。ポートフォリオ・学校選び・OPT後の就職のリアルを話せます。",
+      tags:["留学","仕事・起業","住まい"],langs:"日本語・英語",price:5000,menus:2,rate:"4.9",n:17},
+    {i:"遥",tone:"t1",name:"小川 遥",flag:"🇦🇺",city:"メルボルン",years:4,
+      bio:"ワーキングホリデーから現地就職（カフェマネージャー）。語学学校選び、仕事探し、シェアハウスの探し方が得意です。",
+      tags:["留学","旅行","仕事・起業"],langs:"日本語・英語",price:3000,menus:2,rate:"4.8",n:14},
+    {i:"亮",tone:"t3",name:"石井 亮",flag:"🇳🇱",city:"アムステルダム",years:9,
+      bio:"ITエンジニアとして家族帯同で移住。高度人材ビザ、英語だけで暮らす生活、インターナショナルスクール事情に詳しいです。",
+      tags:["移住","仕事・起業","子育て・教育"],langs:"日本語・英語",price:4500,menus:2,rate:"4.9",n:21},
+    {i:"千",tone:"t1",name:"森本 千夏",flag:"🇨🇦",city:"バンクーバー",years:6,
+      bio:"元留学エージェント勤務で、現地カレッジ卒。学校の「パンフレットに載らない評判」とホームステイ事情に詳しいです。",
+      tags:["留学","生活手続き","住まい"],langs:"日本語・英語",price:3500,menus:3,rate:"4.8",n:26},
+    {i:"直",tone:"t2",name:"渡辺 直人",flag:"🇩🇪",city:"デュッセルドルフ",years:12,
+      bio:"メーカー駐在から永住に切替えて12年。帯同家族の生活立ち上げ、住宅契約、日本人コミュニティとの距離感まで話せます。",
+      tags:["駐在準備","住まい","生活手続き"],langs:"日本語・ドイツ語",price:4000,menus:2,rate:"4.9",n:18}
+  ];
+  var shield='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>';
+  var globe='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></svg>';
+
+  var state={cat:"",city:"",price:""};
+
+  document.getElementById('chips').innerHTML=
+    '<button class="fchip on" data-cat="">すべて</button>'
+    +CATS.map(function(c){return '<button class="fchip" data-cat="'+c+'">'+c+'</button>'}).join('');
+
+  function card(e){
+    return '<a class="ex" href="expert-detail.html">'
+      +'<div class="h"><span class="ava '+e.tone+'">'+e.i+'</span>'
+      +'<div><div class="nm">'+e.name+'<span class="vbadge">'+shield+'認証済み</span></div>'
+      +'<div class="ct">'+e.flag+' '+e.city+'在住 <b>'+e.years+'年</b></div></div></div>'
+      +'<p class="bio">'+e.bio+'</p>'
+      +'<div class="chips">'+e.tags.map(function(t){return '<span class="chip-s">'+t+'</span>'}).join('')+'</div>'
+      +'<div class="langs">'+globe+e.langs+'</div>'
+      +'<div class="ft"><span class="yen num">¥'+e.price.toLocaleString()+'</span><span class="per">/ 30分〜</span>'
+      +'<span class="menus">メニュー <b>'+e.menus+'</b>件</span>'
+      +'<span class="rt"><i>★</i> '+e.rate+' <span>('+e.n+')</span></span></div></a>';
+  }
+  function render(){
+    var list=EXPERTS.filter(function(e){
+      if(state.cat && e.tags.indexOf(state.cat)<0)return false;
+      if(state.city && e.city!==state.city)return false;
+      if(state.price){
+        var p=state.price.split('-');
+        if(e.price<+p[0]||e.price>+p[1])return false;
+      }
+      return true;
+    });
+    document.getElementById('grid').innerHTML=list.map(card).join('');
+    document.getElementById('count').innerHTML='<b>'+list.length+'</b> 名のエキスパート';
+    document.getElementById('empty').classList.toggle('show',list.length===0);
+  }
+  document.getElementById('chips').addEventListener('click',function(ev){
+    var b=ev.target.closest('.fchip');if(!b)return;
+    state.cat=b.getAttribute('data-cat');
+    this.querySelectorAll('.fchip').forEach(function(x){x.classList.toggle('on',x===b)});
+    render();
+  });
+  document.getElementById('fcity').addEventListener('change',function(){state.city=this.value;render();});
+  document.getElementById('fprice').addEventListener('change',function(){state.price=this.value;render();});
+  document.getElementById('reset').addEventListener('click',function(){
+    state={cat:"",city:"",price:""};
+    document.getElementById('fcity').value="";document.getElementById('fprice').value="";
+    var chips=document.querySelectorAll('#chips .fchip');
+    chips.forEach(function(x,i){x.classList.toggle('on',i===0)});
+    render();
+  });
+  render();
+</script>
+</body>
+</html>
