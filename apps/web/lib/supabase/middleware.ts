@@ -12,7 +12,10 @@ import { NextResponse, type NextRequest } from 'next/server';
  * /library, /become-writer）に戻し、下の isProtected 判定も「そのリストに
  * 含まれるか」に戻すこと。
  */
-const PUBLIC_PREFIXES = ['/auth'];
+// 2026-09 (v2): エキスパート相談の表側 (/experts, /experts/[id]) と使い方は
+// ランディングと同じ理由で公開。未ログイン訪問者が一覧・詳細を見られないと
+// トップの「エキスパートを探す」導線が機能しない（相談開始時にログインを課す）。
+const PUBLIC_PREFIXES = ['/auth', '/experts', '/about-service'];
 
 /** プレフィックスではなく完全一致で公開するパス（ランディングのみ）。 */
 const PUBLIC_EXACT = ['/'];

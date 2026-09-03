@@ -29,6 +29,12 @@ type Props = {
   externalUrl: string | null;
   /** primary | full-width | secondary 等の見せ方を切替 */
   variant?: 'hero' | 'footer';
+  /** CTA 文言の差し替え（例: /experts の「チャットで相談する」）。未指定は従来どおり */
+  ctaLabel?: string;
+  /** ボタンの className を丸ごと差し替え（/experts のテラコッタ配色用）。未指定は従来どおり */
+  buttonClassName?: string;
+  /** 未ログイン時のログイン後リダイレクト先。未指定は従来どおり /services/[id] */
+  redirectPath?: string;
 };
 
 export function ServiceInquiryButton({
@@ -40,6 +46,9 @@ export function ServiceInquiryButton({
   contactMethod,
   externalUrl,
   variant = 'hero',
+  ctaLabel: ctaLabelProp,
+  buttonClassName,
+  redirectPath,
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -58,7 +67,9 @@ export function ServiceInquiryButton({
     }
     if (!viewerUserId) {
       router.push(
-        `/auth/login?redirectTo=${encodeURIComponent(`/services/${serviceId}`)}`,
+        `/auth/login?redirectTo=${encodeURIComponent(
+          redirectPath ?? `/services/${serviceId}`,
+        )}`,
       );
       return;
     }
@@ -90,16 +101,19 @@ export function ServiceInquiryButton({
     });
   };
 
-  const ctaLabel = isExternal ? '外部サイトで確認' : '問い合わせる';
+  const ctaLabel = isExternal
+    ? '外部サイトで確認'
+    : ctaLabelProp ?? '問い合わせる';
   const ctaAria = isExternal
     ? `${serviceTitle} の外部詳細ページを開く`
     : `${serviceTitle} について ${ownerName} さんに問い合わせる`;
 
   // 「ヒーロー」用は強いプライマリ。「フッター」用は同じだが幅 100%
   const className =
-    variant === 'footer'
+    buttonClassName ??
+    (variant === 'footer'
       ? 'inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-500 px-5 py-3 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300'
-      : 'inline-flex items-center justify-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300';
+      : 'inline-flex items-center justify-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300');
 
   return (
     <>
