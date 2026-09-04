@@ -59,7 +59,6 @@ export default async function BookingRequestPage({
       priceJpy: schema.userServices.priceJpy,
       priceUnit: schema.userServices.priceUnit,
       durationMinutes: schema.userServices.durationMinutes,
-      durationLabel: schema.userServices.durationLabel,
       ownerName: schema.users.displayName,
       ownerAvatarUrl: schema.users.avatarUrl,
       ownerCountry: schema.users.residencyCountry,
@@ -72,6 +71,8 @@ export default async function BookingRequestPage({
         eq(schema.userServices.id, serviceId),
         eq(schema.userServices.userId, params.id),
         eq(schema.userServices.isActive, true),
+        // 外部サイト申し込みのメニューは内部予約の対象外（requestBooking と同一ルール）
+        eq(schema.userServices.contactMethod, 'chat'),
         sql`${schema.userServices.tags} && ARRAY[${CONSULTATION_TAG}]::text[]`,
       ),
     )
@@ -79,11 +80,12 @@ export default async function BookingRequestPage({
   const service = svcRows[0];
   if (!service) redirect(`/experts/${params.id}`);
 
-  const duration =
-    service.durationMinutes ??
-    (service.durationLabel?.match(/^(\d+)分$/)
-      ? Number(service.durationLabel.match(/^(\d+)分$/)![1])
-      : 30);
+  // 所要時間・価格が確定していないメニューは予約不可（チャットで相談のフロー。
+  // 30 分フォールバックは実所要より短くカレンダーを塞ぎ二重予約を生むため廃止）
+  if (service.durationMinutes == null || service.priceJpy == null) {
+    redirect(`/experts/${params.id}`);
+  }
+  const duration = service.durationMinutes;
 
   const openStarts = await listOpenStartTimes(params.id, duration);
 

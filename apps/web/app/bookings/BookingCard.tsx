@@ -11,11 +11,7 @@ import {
   cancelBooking,
   declineBooking,
 } from '@/lib/bookings/actions';
-import {
-  RESPONSE_DEADLINE_HOURS,
-  STATUS_LABELS,
-  tzShortLabel,
-} from '@/lib/bookings/constants';
+import { STATUS_LABELS, tzShortLabel } from '@/lib/bookings/constants';
 import {
   formatDateShortInTz,
   formatSlotInTz,
@@ -71,9 +67,6 @@ export function BookingCard({
 
   const mainTz = side === 'received' && viewerTz ? viewerTz : JST;
   const showJstSub = mainTz !== JST;
-  const deadline = new Date(
-    start.getTime() - RESPONSE_DEADLINE_HOURS * 3_600_000,
-  );
 
   const run = (
     fn: () => Promise<{ ok: boolean; error?: string }>,
@@ -83,10 +76,12 @@ export function BookingCard({
       const res = await fn();
       if (!res.ok) {
         toast.error(res.error ?? '操作に失敗しました');
-      } else {
-        toast.success(okMsg);
+        // 失敗（レース等）はサーバー側 revalidate が走らないことがあるので明示更新
+        router.refresh();
+        return;
       }
-      router.refresh();
+      // 成功時はアクション内の revalidatePath('/bookings') が反映してくれる
+      toast.success(okMsg);
     });
   };
 
@@ -197,7 +192,7 @@ export function BookingCard({
               辞退
             </button>
             <span className="ml-auto text-[11px] text-neutral-400">
-              返答期限: {formatSlotInTz(deadline, mainTz)} {tzShortLabel(mainTz)}
+              返答期限: 開始時刻（{formatSlotInTz(start, mainTz)} {tzShortLabel(mainTz)}）まで
             </span>
           </>
         ) : null}
@@ -218,7 +213,7 @@ export function BookingCard({
               リクエストを取り消す
             </button>
             <span className="ml-auto text-[11px] text-neutral-400">
-              返答期限: {formatSlotInTz(deadline, JST)} まで
+              開始時刻（{formatSlotInTz(start, JST)}）までに返答がないと期限切れ
             </span>
           </>
         ) : null}

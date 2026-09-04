@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Check, Globe, Plus, Trash2 } from 'lucide-react';
 import {
@@ -68,7 +67,6 @@ export function AvailabilityManager({
   initialTimezone: string;
   slots: SlotView[];
 }) {
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [timezone, setTimezone] = useState(initialTimezone);
   const [weekdays, setWeekdays] = useState<number[]>([]);
@@ -103,6 +101,7 @@ export function AvailabilityManager({
       ds.includes(dow) ? ds.filter((d) => d !== dow) : [...ds, dow],
     );
 
+  // 一覧の更新はアクション内の revalidatePath('/settings/availability') に任せる
   const runAdd = (input: Parameters<typeof addAvailabilityBulk>[0]) => {
     startTransition(async () => {
       const res = await addAvailabilityBulk(input);
@@ -110,11 +109,19 @@ export function AvailabilityManager({
         toast.error(res.error);
         return;
       }
-      const { added = 0, skipped = 0 } = res.data ?? {};
-      toast.success(`空き枠を ${added} 件追加しました`, {
-        description: skipped > 0 ? `${skipped} 件は登録済みのためスキップ` : undefined,
+      const { added = 0, extended = 0, skipped = 0 } = res.data ?? {};
+      const parts = [
+        added > 0 ? `${added} 件追加` : null,
+        extended > 0 ? `${extended} 件を延長` : null,
+      ].filter(Boolean);
+      if (parts.length === 0) {
+        toast(`すべて登録済みの枠でした（${skipped} 件スキップ）`);
+        return;
+      }
+      toast.success(`空き枠を${parts.join('・')}しました`, {
+        description:
+          skipped > 0 ? `${skipped} 件は登録済みのためスキップ` : undefined,
       });
-      router.refresh();
     });
   };
 
@@ -126,7 +133,6 @@ export function AvailabilityManager({
         return;
       }
       toast('空き枠を削除しました');
-      router.refresh();
     });
   };
 

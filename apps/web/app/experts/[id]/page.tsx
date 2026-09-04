@@ -9,8 +9,12 @@ import {
   ShieldCheck,
   Video,
 } from 'lucide-react';
+import { eq } from 'drizzle-orm';
+import { schema } from '@locore/db';
+import { getDb } from '@/lib/db/client';
 import { listOpenStartTimes } from '@/lib/bookings/availability';
 import { formatSlotJst } from '@/lib/bookings/time';
+import type { FeaturedService } from '@/lib/services/featured';
 import { personJsonLd, jsonLdScriptText } from '@/lib/seo/jsonld';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
 import { getResidentProfile } from '@/lib/residents/byId';
@@ -81,13 +85,60 @@ export default async function ExpertDetailPage({
   const { avgStars, count: reviewCount, recent } = profile.reviewSummary;
   const articles = profile.articles.slice(0, 4);
 
-  // 予約スライス: 直近の開始時刻候補（30 分刻みの最小粒度で判定）。
-  // 1 件でもあれば各メニューの主CTAが「空き枠から予約リクエスト」に昇格する。
-  const openStarts = await listOpenStartTimes(profile.id, 30);
-  const hasSlots = openStarts.length > 0;
-  const nextSlots = openStarts.slice(0, 3);
-  const requestHrefFor = (serviceId: string) =>
-    hasSlots ? `/experts/${profile.id}/request?service=${serviceId}` : null;
+  // 予約スライス: メニューごとの所要時間（0061 の duration_minutes）。
+  // 未適用環境は空 Map → 予約 CTA なし（従来チャット導線のみ）で動作継続。
+  const durationByServiceId = new Map<string, number | null>();
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        id: schema.userServices.id,
+        durationMinutes: schema.userServices.durationMinutes,
+      })
+      .from(schema.userServices)
+      .where(eq(schema.userServices.userId, profile.id));
+    for (const r of rows) durationByServiceId.set(r.id, r.durationMinutes);
+  } catch (err) {
+    console.warn('[experts/[id]] duration_minutes fetch failed (0061 未適用?):', err);
+  }
+
+  // 予約可能なメニューの条件（requestBooking のサーバー検証と同一ルール）:
+  //   chat メニュー × 価格確定 × 所要時間確定 × その duration で空き候補あり。
+  //   duration 不明のメニューを 30 分でフォールバックすると、実所要より短く
+  //   カレンダーを塞いで実二重予約が通るため、予約 CTA 自体を出さない。
+  const menuDuration = (s: FeaturedService): number | null =>
+    s.contactMethod === 'chat' && s.priceJpy != null
+      ? (durationByServiceId.get(s.id) ?? null)
+      : null;
+  const neededDurations = Array.from(
+    new Set(
+      sortedMenus
+        .map(menuDuration)
+        .filter((d): d is number => d != null),
+    ),
+  );
+  const openByDuration = new Map<number, Date[]>();
+  await Promise.all(
+    neededDurations.map(async (d) => {
+      openByDuration.set(d, await listOpenStartTimes(profile.id, d));
+    }),
+  );
+  const requestHrefFor = (s: FeaturedService): string | null => {
+    const d = menuDuration(s);
+    if (d == null) return null;
+    return (openByDuration.get(d)?.length ?? 0) > 0
+      ? `/experts/${profile.id}/request?service=${s.id}`
+      : null;
+  };
+  const bookableMenus = sortedMenus.filter((s) => requestHrefFor(s) !== null);
+  const hasSlots = bookableMenus.length > 0;
+  // プレビューは最短 duration の候補から 3 件（最も細かい粒度の空き）
+  const nextSlots = (() => {
+    const withSlots = Array.from(openByDuration.entries())
+      .filter(([, v]) => v.length > 0)
+      .sort(([a], [b]) => a - b);
+    return withSlots[0]?.[1].slice(0, 3) ?? [];
+  })();
 
   // Person JSON-LD（SEO: 記事の著者 = エキスパート本人を検索エンジンに伝える）
   const siteUrl = getSiteUrl();
@@ -218,7 +269,7 @@ export default async function ExpertDetailPage({
                 viewerUserId={me?.id ?? null}
                 expertId={profile.id}
                 recommended={i === 0 && sortedMenus.length > 1}
-                requestHref={requestHrefFor(s.id)}
+                requestHref={requestHrefFor(s)}
               />
             ))}
 
@@ -242,9 +293,9 @@ export default async function ExpertDetailPage({
                     </li>
                   ))}
                 </ul>
-                {sortedMenus[0] ? (
+                {bookableMenus[0] ? (
                   <Link
-                    href={`/experts/${profile.id}/request?service=${sortedMenus[0].id}`}
+                    href={`/experts/${profile.id}/request?service=${bookableMenus[0].id}`}
                     className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-primary-700 hover:underline hover:underline-offset-4"
                   >
                     すべての空き枠を見る

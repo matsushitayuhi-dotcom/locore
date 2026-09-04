@@ -39,7 +39,6 @@ export default async function ServicesSettingsPage() {
     tags: string[] | null;
     galleryImages: string[] | null;
     durationLabel: string | null;
-    durationMinutes: number | null;
     minParticipants: number | null;
     maxParticipants: number | null;
     languages: string[] | null;
@@ -135,7 +134,6 @@ export default async function ServicesSettingsPage() {
         tags: schema.userServices.tags,
         galleryImages: schema.userServices.galleryImages,
         durationLabel: schema.userServices.durationLabel,
-        durationMinutes: schema.userServices.durationMinutes,
         minParticipants: schema.userServices.minParticipants,
         maxParticipants: schema.userServices.maxParticipants,
         languages: schema.userServices.languages,
@@ -154,6 +152,30 @@ export default async function ServicesSettingsPage() {
     if (/does not exist/i.test(msg)) {
       console.warn(
         '[settings/services] 体験詳細カラム未適用。manual/0058_user_services_detail.sql を適用してください。',
+      );
+    } else {
+      throw err;
+    }
+  }
+
+  // duration_minutes（0061）は detail クエリと分離して取得。未適用環境で detail
+  // クエリごと落とすと tags が空になり、保存時に consultation タグが剥がれて
+  // /experts から消えてしまうため（availability.ts と同じフォールバック思想）。
+  const durationById = new Map<string, number | null>();
+  try {
+    const durationRows = await db
+      .select({
+        id: schema.userServices.id,
+        durationMinutes: schema.userServices.durationMinutes,
+      })
+      .from(schema.userServices)
+      .where(eq(schema.userServices.userId, user.id));
+    for (const d of durationRows) durationById.set(d.id, d.durationMinutes);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[settings/services] duration_minutes 未適用。manual/0061_booking_availability.sql を適用してください。',
       );
     } else {
       throw err;
@@ -197,7 +219,7 @@ export default async function ServicesSettingsPage() {
               '',
             galleryImages: d?.galleryImages ?? [],
             durationLabel: d?.durationLabel ?? '',
-            durationMinutes: d?.durationMinutes ?? '',
+            durationMinutes: durationById.get(r.id) ?? '',
             minParticipants: d?.minParticipants ?? '',
             maxParticipants: d?.maxParticipants ?? '',
             languages: d?.languages ?? [],
