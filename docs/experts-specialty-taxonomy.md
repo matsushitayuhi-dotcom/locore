@@ -111,11 +111,10 @@
 - `/experts` … 第 1 階層の列・チップ、カードのホバーで第 2 階層を表示
 - `/experts/[id]` … 「得意分野」セクション（第 1 階層ごとに並べ、※ 付きは体験談注記）
 
-team-lead 側で settings/profile に接続する手順（/settings はこのブランチのスコープ外）
-1. `app/settings/profile/page.tsx` の select に `specialties: schema.users.specialties` を足し、`ResidentProfileForm` の `initial` に渡す。
-2. `components/settings/ResidentProfileForm.tsx` に state を 1 つ足して `<SpecialtyPicker value={specialties} onChange={setSpecialties} />` を「こんな相談に乗れます」の直前に置く。送信 payload に `specialties` を含める。
-3. `app/settings/profile/actions.ts` の `updateResidentProfileSchema` に
-   `specialties: z.array(z.string()).max(20).default([]).transform(normalizeSpecialties)` を足し、update の set に `specialties` を追加。
+settings/profile への接続（team-lead 許可のうえ同ブランチで実施済み）
+- `app/settings/profile/page.tsx` … select と `initial` に `specialties`
+- `components/settings/ResidentProfileForm.tsx` … 「ヘッダー画像」と「こんな相談に乗れます」の間に `<SpecialtyPicker>`。送信 payload に `specialties`
+- `app/settings/profile/actions.ts` … zod に `specialties`（`normalizeSpecialties` で再検証）、update の set に追加、`/experts` を revalidate
 
 ## 4. 未確認・注意
 - 外務省の滞在目的別（民間 / 留学 / 政府）内訳は 2022 年以降の公開データに無く未確認。

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
+import { normalizeSpecialties } from '@/lib/experts/specialties';
 
 /**
  * プロフィール / SNS リンク 編集 Server Actions。
@@ -200,6 +201,12 @@ const updateResidentProfileSchema = z.object({
     .or(z.literal('').transform(() => undefined))
     .or(z.null().transform(() => undefined)),
   offerings: z.array(z.string().trim().min(1).max(120)).max(8).default([]),
+  // 得意分野（0080）: 統制リスト外の code と上限超えは normalizeSpecialties で落とす
+  specialties: z
+    .array(z.string().trim().min(1).max(40))
+    .max(30)
+    .default([])
+    .transform((v) => normalizeSpecialties(v)),
   education: z.array(educationEntrySchema).max(10).default([]),
   workHistory: z.array(workEntrySchema).max(10).default([]),
   languages: z.array(languageSchema).max(8).default([]),
@@ -235,6 +242,7 @@ export async function updateResidentProfile(
       occupation: data.occupation ?? null,
       coverImageUrl: data.coverImageUrl ?? null,
       offerings: data.offerings,
+      specialties: data.specialties,
       education: data.education,
       workHistory: data.workHistory,
       languages: data.languages,
@@ -249,6 +257,9 @@ export async function updateResidentProfile(
   revalidatePath(`/users/${user.id}`);
   revalidatePath(`/users/${user.id}`);
   revalidatePath('/users');
+  // 得意分野は /experts の列・カードにも出る
+  revalidatePath('/experts');
+  revalidatePath(`/experts/${user.id}`);
   return { ok: true };
 }
 
