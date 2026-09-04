@@ -7,6 +7,7 @@ import {
 } from '@/lib/experts/list';
 import { PRICE_RANGES, TOPIC_TAGS } from '@/lib/experts/constants';
 import { ExpertCard } from '@/components/experts/ExpertCard';
+import { CountryCitySelects } from './FilterSelects';
 
 /**
  * /experts — エキスパート一覧（v2 表側）。
@@ -103,39 +104,21 @@ export default async function ExpertsPage({
             className="flex flex-wrap items-center gap-2.5"
           >
             {topic ? <input type="hidden" name="topic" value={topic} /> : null}
-            {/* 国ファースト: 移住検討者の頭の中は「国」が先、「都市」は後 */}
-            <select
-              name="country"
-              defaultValue={country}
-              aria-label="国で絞り込む"
-              className={
-                'appearance-none rounded-full border bg-card px-4 py-2 pr-8 text-[13.5px] font-bold text-foreground outline-none focus:border-primary-500 ' +
-                (country
-                  ? 'border-primary-500 ring-[3px] ring-primary-50'
-                  : 'border-border-strong')
-              }
-            >
-              <option value="">🌍 すべての国</option>
-              {countryOptions.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.emoji ? `${c.emoji} ` : ''}
-                  {c.nameJa}（{c.expertCount}名）
-                </option>
-              ))}
-            </select>
-            <select
-              name="city"
-              defaultValue={city}
-              aria-label="都市で絞り込む"
-              className="appearance-none rounded-full border border-border-strong bg-card px-4 py-2 pr-8 text-[13.5px] font-bold text-foreground outline-none focus:border-primary-500"
-            >
-              <option value="">すべての都市</option>
-              {cityOptions.map((c) => (
-                <option key={c.slug} value={c.slug}>
-                  {c.nameJa}
-                </option>
-              ))}
-            </select>
+            {/* 国→都市の連動は Client（国変更で都市クリア + 即時送信）。
+                defaultValue は非制御なので、フィルタ状態が変わったら key で作り直す */}
+            <CountryCitySelects
+              key={`${country}:${city}`}
+              country={country}
+              city={city}
+              countryOptions={countryOptions.map((c) => ({
+                value: c.code,
+                label: `${c.emoji ? `${c.emoji} ` : ''}${c.nameJa}（${c.expertCount}名）`,
+              }))}
+              cityOptions={cityOptions.map((c) => ({
+                value: c.slug,
+                label: c.nameJa,
+              }))}
+            />
             <select
               name="price"
               defaultValue={price}
