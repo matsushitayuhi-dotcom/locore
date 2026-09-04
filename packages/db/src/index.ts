@@ -5,6 +5,8 @@ export * as schema from './schema';
 export {
   DEFAULT_NOTIFICATION_PREFERENCES,
   type NotificationPreferences,
+  type EducationEntry,
+  type WorkEntry,
 } from './schema/users';
 
 // 予約ステータスはアプリ側のラベル・分岐で使うので個別に再エクスポート

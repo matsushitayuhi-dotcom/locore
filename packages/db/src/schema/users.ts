@@ -51,6 +51,30 @@ export type NotificationPreferences = {
   };
 };
 
+/**
+ * 学歴 1 件（manual/0062_user_career_history.sql）。本人申告・すべて任意項目。
+ * 年は西暦。null / undefined = 未記入（表示側は期間を出さない）。
+ */
+export type EducationEntry = {
+  school: string;
+  degree?: string | null;
+  field?: string | null;
+  startYear?: number | null;
+  endYear?: number | null;
+};
+
+/**
+ * 職歴 1 件（manual/0062_user_career_history.sql）。
+ * current=true は在職中（endYear は無視して「現在」表示）。
+ */
+export type WorkEntry = {
+  company: string;
+  title?: string | null;
+  startYear?: number | null;
+  endYear?: number | null;
+  current?: boolean;
+};
+
 export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
   web_push: {
     article_published: true,
@@ -136,6 +160,16 @@ export const users = pgTable(
      * manual/0052_marketplace_schema.sql。
      */
     stripeConnectAccountId: text('stripe_connect_account_id'),
+
+    /**
+     * 学歴・職歴（manual/0062_user_career_history.sql）。本人申告の配列。
+     * /experts/[id] の「経歴」セクションと settings/profile で使う。
+     */
+    education: jsonb('education').$type<EducationEntry[]>().notNull().default([]),
+    workHistory: jsonb('work_history')
+      .$type<WorkEntry[]>()
+      .notNull()
+      .default([]),
 
     /**
      * サンプルデータ識別用フラグ。

@@ -31,6 +31,8 @@ import {
   userServices,
   expertAvailability,
   consultationBookings,
+  type EducationEntry,
+  type WorkEntry,
   type NewCity,
   type NewUser,
   type NewWriterProfile,
@@ -194,6 +196,9 @@ type ExpertSeed = {
   /** メニュー名（内容が伝わる名前 + 末尾に所要時間）。30分/60分で重複させない */
   title30: string;
   title60: string;
+  /** 経歴（0062）。/experts/[id] の「経歴」セクションに表示 */
+  education: EducationEntry[];
+  workHistory: WorkEntry[];
   price30: number;
   price60: number;
   desc30: string;
@@ -226,6 +231,14 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['immigration', 'work'],
     title30: 'パリ移住のビザ・エリア選び相談（30分）',
     title60: '渡仏プランをまるごと設計（60分）',
+    education: [
+      { school: '早稲田大学', degree: '学士', field: '商学', startYear: 2010, endYear: 2014 },
+    ],
+    workHistory: [
+      { company: '輸入雑貨会社（パリで創業）', title: '代表', startYear: 2021, current: true },
+      { company: '日系総合商社 パリ駐在', title: '消費財部門', startYear: 2018, endYear: 2021 },
+      { company: '日系総合商社（東京本社）', title: '総合職', startYear: 2014, endYear: 2018 },
+    ],
     price30: 4000,
     price60: 7000,
     desc30:
@@ -256,6 +269,14 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['expat_prep', 'childcare'],
     title30: 'ロンドンの学校選び・教育相談（30分）',
     title60: '駐在帯同の準備をまるごと整理（60分）',
+    education: [
+      { school: '慶應義塾大学', degree: '学士', field: '経済学', startYear: 2009, endYear: 2013 },
+    ],
+    workHistory: [
+      { company: '英系資産運用会社（ロンドン）', title: '現地採用・クライアントサービス', startYear: 2023, current: true },
+      { company: '邦銀 ロンドン支店', title: '駐在', startYear: 2021, endYear: 2023 },
+      { company: '邦銀（東京）', title: '法人営業', startYear: 2013, endYear: 2021 },
+    ],
     price30: 3500,
     price60: 6500,
     desc30:
@@ -287,6 +308,13 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['immigration', 'procedures'],
     title30: 'ドイツのビザ・役所手続き相談（30分）',
     title60: 'ベルリン移住の段取りを一緒に設計（60分）',
+    education: [
+      { school: '多摩美術大学', degree: '学士', field: 'グラフィックデザイン', startYear: 2011, endYear: 2015 },
+    ],
+    workHistory: [
+      { company: 'フリーランス（ベルリン）', title: 'デザイナー', startYear: 2020, current: true },
+      { company: '東京のデザイン事務所', title: 'グラフィックデザイナー', startYear: 2015, endYear: 2020 },
+    ],
     price30: 3000,
     price60: 6000,
     desc30:
@@ -317,6 +345,14 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['immigration', 'housing'],
     title30: 'バンコクの住まい・生活コスト相談（30分）',
     title60: 'タイ移住・駐在立ち上げの全体設計（60分）',
+    education: [
+      { school: '大阪大学', degree: '学士', field: '経済学', startYear: 2004, endYear: 2008 },
+    ],
+    workHistory: [
+      { company: '現地法人（バンコク・物流コンサル）', title: '代表', startYear: 2019, current: true },
+      { company: '日系物流会社 バンコク駐在', title: '現地拠点立ち上げ', startYear: 2016, endYear: 2019 },
+      { company: '日系物流会社（東京）', title: '海外事業部', startYear: 2008, endYear: 2016 },
+    ],
     price30: 3000,
     price60: 6000,
     desc30:
@@ -347,6 +383,13 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['study_abroad', 'work'],
     title30: 'アメリカ美大留学・ポートフォリオ相談（30分）',
     title60: '留学から現地就職までのプラン設計（60分）',
+    education: [
+      { school: 'School of Visual Arts（ニューヨーク）', degree: 'BFA', field: 'グラフィックデザイン', startYear: 2019, endYear: 2023 },
+    ],
+    workHistory: [
+      { company: 'NYのブランディングエージェンシー', title: 'デザイナー', startYear: 2023, current: true },
+      { company: '東京の制作会社', title: 'アシスタントデザイナー', startYear: 2017, endYear: 2019 },
+    ],
     price30: 5000,
     price60: 9000,
     desc30:
@@ -377,6 +420,14 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['study_abroad', 'travel'],
     title30: 'ワーホリの学校・仕事・家さがし相談（30分）',
     title60: 'ワーホリ1年のロードマップ作り（60分）',
+    education: [
+      { school: '製菓専門学校（東京）', degree: '専門士', field: 'カフェ・製菓', startYear: 2016, endYear: 2018 },
+    ],
+    workHistory: [
+      { company: 'メルボルンのスペシャルティカフェ', title: 'マネージャー', startYear: 2023, current: true },
+      { company: '同カフェ', title: 'バリスタ（ワーホリ）', startYear: 2022, endYear: 2023 },
+      { company: '都内ホテルのラウンジ', title: 'カフェスタッフ', startYear: 2018, endYear: 2022 },
+    ],
     price30: 3000,
     price60: 5500,
     desc30:
@@ -407,6 +458,14 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['study_abroad', 'procedures'],
     title30: 'カナダ留学の学校選び相談（30分）',
     title60: 'カナダ留学の全体設計と出願段取り（60分）',
+    education: [
+      { school: 'バンクーバーのカレッジ', degree: 'Diploma', field: 'ビジネス（Co-op）', startYear: 2020, endYear: 2022 },
+      { school: '青山学院大学', degree: '学士', field: '国際政治経済', startYear: 2011, endYear: 2015 },
+    ],
+    workHistory: [
+      { company: 'バンクーバーの人材会社', title: 'コーディネーター', startYear: 2022, current: true },
+      { company: '留学エージェント（東京）', title: 'カウンセラー', startYear: 2015, endYear: 2020 },
+    ],
     price30: 3500,
     price60: 6500,
     desc30:
@@ -437,6 +496,13 @@ const EXPERTS: ExpertSeed[] = [
     topics: ['childcare', 'travel'],
     title30: 'パリの保育園・子育て相談（30分）',
     title60: '子連れ移住・帯同準備をまるごと相談（60分）',
+    education: [
+      { school: '上智大学', degree: '学士', field: 'フランス文学', startYear: 2007, endYear: 2011 },
+    ],
+    workHistory: [
+      { company: 'パリの語学学校', title: '日本人サポート担当', startYear: 2015, endYear: 2020 },
+      { company: '語学学校（東京）', title: 'スクールスタッフ', startYear: 2011, endYear: 2015 },
+    ],
     price30: 3500,
     price60: 6000,
     desc30:
@@ -509,6 +575,8 @@ async function main() {
     occupation: e.occupation,
     offerings: e.offerings,
     languages: e.languages,
+    education: e.education,
+    workHistory: e.workHistory,
     timezone: CITY_TZ[e.citySlug] ?? null,
     isSample: true,
   }));
@@ -530,6 +598,8 @@ async function main() {
         occupation: sql`excluded.occupation`,
         offerings: sql`excluded.offerings`,
         languages: sql`excluded.languages`,
+        education: sql`excluded.education`,
+        workHistory: sql`excluded.work_history`,
         timezone: sql`excluded.timezone`,
         isSample: sql`excluded.is_sample`,
       },
