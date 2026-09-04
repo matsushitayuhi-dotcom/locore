@@ -76,7 +76,7 @@ function eduToDraft(e: EducationEntry): CareerDraft {
     sub2: e.field ?? '',
     startYear: e.startYear ?? '',
     endYear: e.endYear ?? '',
-    current: false,
+    current: !!e.current,
   };
 }
 function draftToWork(d: CareerDraft): WorkEntry {
@@ -94,7 +94,8 @@ function draftToEdu(d: CareerDraft): EducationEntry {
     degree: d.sub1.trim() || null,
     field: d.sub2.trim() || null,
     startYear: d.startYear === '' ? null : d.startYear,
-    endYear: d.endYear === '' ? null : d.endYear,
+    endYear: d.current || d.endYear === '' ? null : d.endYear,
+    current: d.current,
   };
 }
 

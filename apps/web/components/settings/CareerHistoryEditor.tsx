@@ -8,8 +8,9 @@ import { Plus, X } from 'lucide-react';
  *
  * 行の形は共通（CareerDraft）にして kind でラベルと表示項目を切り替える:
  *   - work:      name=会社・組織* / sub1=役職 / 開始年〜終了年 or「現在」
- *   - education: name=学校* / sub1=学位 / sub2=専攻 / 開始年〜終了年
+ *   - education: name=学校* / sub1=学位 / sub2=専攻 / 開始年〜終了年 or「在学中」
  * 年は任意（'' = 未記入）。上限 10 行。保存時の payload 変換は親側で行う。
+ * education の「在学中」は留学特化の在学生/アルムナイ判定（EducationEntry.current）。
  */
 
 export type CareerDraft = {
@@ -21,7 +22,7 @@ export type CareerDraft = {
   sub2: string;
   startYear: number | '';
   endYear: number | '';
-  /** 在職中（work のみ使用）。true のとき endYear は無効化 */
+  /** 在職中（work）/ 在学中（education）。true のとき endYear は無効化 */
   current: boolean;
 };
 
@@ -158,19 +159,17 @@ export function CareerHistoryEditor({
                   value={r.endYear}
                   onChange={(v) => patch(i, { endYear: v })}
                   ariaLabel="終了年"
-                  disabled={kind === 'work' && r.current}
+                  disabled={r.current}
                 />
-                {kind === 'work' ? (
-                  <label className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] text-foreground/70">
-                    <input
-                      type="checkbox"
-                      checked={r.current}
-                      onChange={(e) => patch(i, { current: e.target.checked })}
-                      className="h-3.5 w-3.5"
-                    />
-                    現在
-                  </label>
-                ) : null}
+                <label className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] text-foreground/70">
+                  <input
+                    type="checkbox"
+                    checked={r.current}
+                    onChange={(e) => patch(i, { current: e.target.checked })}
+                    className="h-3.5 w-3.5"
+                  />
+                  {kind === 'work' ? '現在' : '在学中'}
+                </label>
               </div>
             </li>
           ))}

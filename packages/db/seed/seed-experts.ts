@@ -1,12 +1,16 @@
 /**
  * v2 エキスパート相談（/experts）用のサンプルデータを投入するシード（is_sample=true）。
+ * 2026-09 留学特化リポジショニング: 8 名を海外大学の在学生・アルムナイに全面差し替え
+ * （大学院/MBA 4・学部 2・語学交換 1・博士 1）。大学名は実名のサンプル
+ * （is_sample・本番前に実エキスパートへ差し替え前提）。
  *
  * 使い方:
  *   DATABASE_URL=postgres://... pnpm --filter @locore/db db:seed-experts
  *
  * 投入内容:
- *   - cities: london / nyc を active 化 + berlin / bangkok / melbourne / vancouver を追加
- *   - users: エキスパート 8 名（residency_city / arrival_year / occupation / offerings / languages 入り）
+ *   - cities: london / nyc を active 化 + berlin / bangkok / melbourne / vancouver / boston を追加
+ *   - users: エキスパート 8 名（residency_city / arrival_year / occupation / offerings /
+ *     languages / education(current 付き) / work_history / avatar 入り）
  *   - residency_verifications: 各エキスパートに approved 1 行（居住認証済みバッジ用）
  *   - user_services: 各エキスパートに 30分 / 60分 の相談メニュー 2 行
  *     （tags = ['consultation', テーマ1, テーマ2] — 'consultation' 予約タグで相談メニュー判定）
@@ -162,6 +166,16 @@ const expertCities: NewCity[] = [
     timezone: 'America/Vancouver',
     isActive: true,
   },
+  // 留学特化で追加（MBA / 米大学院の定番）
+  {
+    slug: 'boston',
+    nameJa: 'ボストン',
+    country: 'US',
+    lat: 42.3601,
+    lng: -71.0589,
+    timezone: 'America/New_York',
+    isActive: true,
+  },
 ];
 
 /** citySlug → IANA タイムゾーン（users.timezone と空き枠生成に使う） */
@@ -169,6 +183,7 @@ const CITY_TZ: Record<string, string> = {
   paris: 'Europe/Paris',
   london: 'Europe/London',
   nyc: 'America/New_York',
+  boston: 'America/New_York',
   berlin: 'Europe/Berlin',
   bangkok: 'Asia/Bangkok',
   melbourne: 'Australia/Melbourne',
@@ -176,7 +191,8 @@ const CITY_TZ: Record<string, string> = {
 };
 
 // =============================================================================
-// エキスパート定義（mockups/v2 のカードコピーに準拠）
+// エキスパート定義（留学特化: 在学生・アルムナイ 8 名）
+// key は写真ファイル名（/experts/<key>.jpg）と決定論的 UUID に対応 — 変更しない
 // =============================================================================
 
 type ExpertSeed = {
@@ -196,9 +212,11 @@ type ExpertSeed = {
   /** メニュー名（内容が伝わる名前 + 末尾に所要時間）。30分/60分で重複させない */
   title30: string;
   title60: string;
-  /** 経歴（0062）。/experts/[id] の「経歴」セクションに表示 */
+  /** 経歴（0062）。current=true は在学中（在学生/アルムナイ判定に使用） */
   education: EducationEntry[];
   workHistory: WorkEntry[];
+  /** 実写アバター（/experts/<key>.jpg・デモ用プレースホルダ） */
+  avatar: string;
   price30: number;
   price60: number;
   desc30: string;
@@ -206,21 +224,139 @@ type ExpertSeed = {
 };
 
 const EXPERTS: ExpertSeed[] = [
+  // ---- 大学院 / MBA（4名） ----
   {
     key: 'aya',
-    displayName: '佐々木 彩',
+    displayName: '高村 里奈',
+    citySlug: 'boston',
+    cityJa: 'ボストン',
+    country: 'US',
+    arrivalYear: 2025,
+    occupation: 'MBA留学中（ハーバード・ビジネス・スクール）',
+    bio: '2024年秋に出願し、HBS と Wharton に合格。2025年からハーバード・ビジネス・スクール（HBS）に在学中です。元総合商社で、社費ではなく私費×奨学金での挑戦でした。エッセイ・推薦状・面接まで、つい先日くぐり抜けたばかりの出願のリアルを話せます。',
+    offerings: [
+      'MBA出願全体のスケジュール設計（GMAT/GRE・レジュメ・エッセイ）',
+      'エッセイの構成と「自分の物語」の掘り起こし',
+      '推薦者の選び方と依頼の段取り',
+      '私費・奨学金の現実的な資金戦略',
+      'ボストンでの生活立ち上げ・家探し',
+    ],
+    languages: [
+      { code: 'ja', level: 'native' },
+      { code: 'en', level: 'business' },
+    ],
+    languageLabels: ['日本語', '英語'],
+    topics: ['mba', 'application_docs'],
+    title30: 'MBA出願の作戦会議（30分）',
+    title60: 'MBAエッセイ骨子レビュー（60分）',
+    education: [
+      { school: 'ハーバード・ビジネス・スクール', degree: 'MBA', field: '経営学', startYear: 2025, current: true },
+      { school: '慶應義塾大学', degree: '学士', field: '商学', startYear: 2013, endYear: 2017 },
+    ],
+    workHistory: [
+      { company: '総合商社（東京）', title: '海外営業', startYear: 2017, endYear: 2024 },
+    ],
+    avatar: '/experts/aya.jpg',
+    price30: 6000,
+    price60: 12000,
+    desc30:
+      '出願校選び・スケジュール・スコアメイクなど、いま詰まっているポイントを30分で整理します。',
+    desc60:
+      'エッセイのドラフトか骨子を事前に共有いただき、構成と「刺さる軸」を一緒に作り直します。',
+  },
+  {
+    key: 'kentaro',
+    displayName: '伊藤 蓮',
+    citySlug: 'nyc',
+    cityJa: 'ニューヨーク',
+    country: 'US',
+    arrivalYear: 2024,
+    occupation: '大学院留学中（コロンビア大学 コンピュータサイエンス修士）',
+    bio: '2023年出願でコロンビア大学と Georgia Tech に合格し、2024年からコロンビア大学の CS 修士に在学中。日本の事業会社エンジニアからの私費留学です。SoP・推薦状・職務経歴の見せ方など、社会人からの米大学院出願を実体験で話せます。',
+    offerings: [
+      '米大学院（CS系）の出願校リストづくり',
+      'SoP（志望理由書）の構成と差別化',
+      '社会人経験の見せ方・推薦状の依頼',
+      'TOEFL / GRE のスコア戦略',
+      'ニューヨークの家探しと生活費のリアル',
+    ],
+    languages: [
+      { code: 'ja', level: 'native' },
+      { code: 'en', level: 'business' },
+    ],
+    languageLabels: ['日本語', '英語'],
+    topics: ['grad_school', 'majors_labs'],
+    title30: '米大学院出願の作戦会議（30分）',
+    title60: 'SoP・研究計画の壁打ち（60分）',
+    education: [
+      { school: 'コロンビア大学', degree: '修士', field: 'コンピュータサイエンス', startYear: 2024, current: true },
+      { school: '東京工業大学', degree: '学士', field: '情報工学', startYear: 2015, endYear: 2019 },
+    ],
+    workHistory: [
+      { company: '事業会社（東京）', title: 'ソフトウェアエンジニア', startYear: 2019, endYear: 2024 },
+    ],
+    avatar: '/experts/kentaro.jpg',
+    price30: 5000,
+    price60: 9000,
+    desc30:
+      '出願校の選び方・スコア計画・スケジュールなど、社会人からの米大学院出願の疑問を30分で。',
+    desc60:
+      'SoP や研究計画のドラフトを事前共有いただき、審査側に伝わる構成へ一緒に組み直します。',
+  },
+  {
+    key: 'misaki',
+    displayName: '千葉 美月',
+    citySlug: 'london',
+    cityJa: 'ロンドン',
+    country: 'GB',
+    arrivalYear: 2024,
+    occupation: '大学院留学中（LSE 公共政策修士）',
+    bio: '2023年出願で LSE と UCL に合格し、2024年から LSE の公共政策修士（MPP）に在学中。官庁勤務からの私費+奨学金留学です。英国式の出願プロセスと、奨学金エッセイ・パーソナルステートメントの両立に詳しいです。',
+    offerings: [
+      '英大学院の出願プロセスと出願校リストづくり',
+      'チーヴニング等・奨学金エッセイの書き方',
+      'パーソナルステートメントの構成レビュー',
+      'IELTS のスコア計画',
+      'ロンドンでの生活立ち上げ・学生寮事情',
+    ],
+    languages: [
+      { code: 'ja', level: 'native' },
+      { code: 'en', level: 'business' },
+    ],
+    languageLabels: ['日本語', '英語'],
+    topics: ['grad_school', 'funding'],
+    title30: '英大学院出願の作戦会議（30分）',
+    title60: '出願書類と奨学金の段取り整理（60分）',
+    education: [
+      { school: 'LSE（ロンドン・スクール・オブ・エコノミクス）', degree: '修士', field: '公共政策', startYear: 2024, current: true },
+      { school: '東京大学', degree: '学士', field: '法学', startYear: 2012, endYear: 2016 },
+    ],
+    workHistory: [
+      { company: '中央官庁（東京）', title: '総合職', startYear: 2016, endYear: 2024 },
+    ],
+    avatar: '/experts/misaki.jpg',
+    price30: 4500,
+    price60: 8500,
+    desc30:
+      '英国大学院の出願・奨学金など、いま気になっているポイントを30分で整理します。',
+    desc60:
+      '出願書類と奨学金エッセイの段取りを時系列で一緒に設計。ドラフトがあればレビューします。',
+  },
+  {
+    key: 'chinatsu',
+    displayName: '三宅 楓',
     citySlug: 'paris',
     cityJa: 'パリ',
     country: 'FR',
-    arrivalYear: 2018,
-    occupation: '輸入雑貨会社 経営（元日系商社 パリ駐在）',
-    bio: '元日系商社の駐在から現地で起業。ビザ・会社設立・アパート探しまで、渡仏まわりは一通り経験しています。駐在員として「会社に守られた海外生活」と、起業してからの「すべて自分で手続きする生活」の両方を知っているのが強みです。',
+    arrivalYear: 2019,
+    occupation: '大学院アルムナイ（シアンスポ修了）・現地企業勤務',
+    bio: '2019年に渡仏し、2021年にシアンスポ（パリ政治学院）の国際関係修士を修了。現在はパリの国際機関系企業で働いています。英語プログラムでの出願、面接、フランス特有の書類まわりのコツを、アルムナイの立場から話せます。',
     offerings: [
-      '渡仏前に決めるべきこと・日本でしかできない手続きの整理',
-      'パリのエリア選び — 治安・家賃相場・日本人コミュニティとの距離感',
-      'アパート探しと契約の注意点（保証人問題、ドシエの作り方）',
-      'フランスでの起業・フリーランス登録の実際',
-      '銀行口座・保険・携帯など、最初の1か月の段取り',
+      '仏大学院（英語プログラム）の出願プロセス',
+      'CV・motivation letter の書き方',
+      '面接対策（英語・想定問答づくり）',
+      '修了後の現地就職のリアル',
+      'パリでの学生生活・住まい事情',
     ],
     languages: [
       { code: 'ja', level: 'native' },
@@ -228,287 +364,180 @@ const EXPERTS: ExpertSeed[] = [
       { code: 'en', level: 'business' },
     ],
     languageLabels: ['日本語', 'フランス語', '英語'],
-    topics: ['immigration', 'work'],
-    title30: 'パリ移住のビザ・エリア選び相談（30分）',
-    title60: '渡仏プランをまるごと設計（60分）',
+    topics: ['grad_school', 'interview'],
+    title30: '仏大学院（英語プログラム）出願相談（30分）',
+    title60: '面接対策の模擬セッション（60分）',
     education: [
-      { school: '早稲田大学', degree: '学士', field: '商学', startYear: 2010, endYear: 2014 },
+      { school: 'シアンスポ（パリ政治学院）', degree: '修士', field: '国際関係', startYear: 2019, endYear: 2021 },
+      { school: '上智大学', degree: '学士', field: '外国語学部', startYear: 2013, endYear: 2017 },
     ],
     workHistory: [
-      { company: '輸入雑貨会社（パリで創業）', title: '代表', startYear: 2021, current: true },
-      { company: '日系総合商社 パリ駐在', title: '消費財部門', startYear: 2018, endYear: 2021 },
-      { company: '日系総合商社（東京本社）', title: '総合職', startYear: 2014, endYear: 2018 },
+      { company: 'パリの国際機関系企業', title: 'プログラムオフィサー', startYear: 2021, current: true },
     ],
+    avatar: '/experts/chinatsu.jpg',
     price30: 4000,
-    price60: 7000,
+    price60: 8000,
     desc30:
-      'ピンポイントの疑問に。ビザ・エリア選び・手続きなど、テーマを1〜2個に絞ってじっくりお答えします。',
+      '英語プログラムでの仏大学院出願について、出願校選びから書類まで30分で相談できます。',
     desc60:
-      '移住・駐在の全体設計に。現状を伺ってから、渡仏までのやることを時系列で一緒に整理します。相談後に要点メモをお送りします。',
+      '本番形式の模擬面接+フィードバック。想定問答を事前に共有いただくとさらに濃くなります。',
   },
+  // ---- 博士（1名） ----
   {
-    key: 'kentaro',
-    displayName: '高橋 健太郎',
-    citySlug: 'london',
-    cityJa: 'ロンドン',
-    country: 'GB',
-    arrivalYear: 2021,
-    occupation: '金融系 現地採用（元駐在）',
-    bio: '金融系の駐在で渡英し、現地採用に切替。子供2人が現地の小学校に通っており、学校選びと教育事情が得意です。帯同家族の生活立ち上げも自分ごととして経験してきました。',
+    key: 'daisuke',
+    displayName: '森 悠斗',
+    citySlug: 'berlin',
+    cityJa: 'ベルリン',
+    country: 'DE',
+    arrivalYear: 2022,
+    occupation: '博士課程在学中（ベルリン工科大学 機械学習）',
+    bio: '2021年に出願し、2022年からベルリン工科大学の博士課程（機械学習）に在学中。日本で修士まで出てからの欧州 PhD です。研究室とのコンタクトの取り方、研究計画書、給与付きポジションの探し方まで、欧州博士留学の実務を話せます。',
     offerings: [
-      'ロンドンの学校選び（州立・私立・日本人学校の実際）',
-      '駐在帯同家族の生活立ち上げの段取り',
-      'エリア別の治安・家賃感覚と通学圏の考え方',
-      'NHS・保険など医療まわりの基本',
+      '研究室選びと教授への最初のコンタクトの取り方',
+      '研究計画書（Research Proposal）の構成レビュー',
+      '欧州の給与付き PhD ポジションの探し方',
+      '奨学金（DAAD 等）と資金計画',
+      'ベルリンでの研究生活・住まい事情',
+    ],
+    languages: [
+      { code: 'ja', level: 'native' },
+      { code: 'en', level: 'business' },
+      { code: 'de', level: 'conversation' },
+    ],
+    languageLabels: ['日本語', '英語', 'ドイツ語'],
+    topics: ['majors_labs', 'funding'],
+    title30: '博士留学・研究室選び相談（30分）',
+    title60: '研究計画書の壁打ち（60分）',
+    education: [
+      { school: 'ベルリン工科大学', degree: '博士課程', field: '機械学習', startYear: 2022, current: true },
+      { school: '東北大学', degree: '修士', field: '情報科学', startYear: 2019, endYear: 2021 },
+      { school: '東北大学', degree: '学士', field: '工学', startYear: 2015, endYear: 2019 },
+    ],
+    workHistory: [
+      { company: '研究所（東京）', title: 'リサーチアシスタント', startYear: 2021, endYear: 2022 },
+    ],
+    avatar: '/experts/daisuke.jpg',
+    price30: 4500,
+    price60: 8500,
+    desc30:
+      '研究室の探し方・教授コンタクト・ポジションの種類など、博士留学の入口の疑問を30分で。',
+    desc60:
+      '研究計画書のドラフトを事前共有いただき、審査に耐える構成へ一緒にブラッシュアップします。',
+  },
+  // ---- 学部（2名） ----
+  {
+    key: 'eri',
+    displayName: '岡部 咲',
+    citySlug: 'vancouver',
+    cityJa: 'バンクーバー',
+    country: 'CA',
+    arrivalYear: 2023,
+    occupation: '学部留学中（ブリティッシュコロンビア大学）',
+    bio: '2022年出願で UBC とトロント大学に合格し、2023年からブリティッシュコロンビア大学（UBC）の学部に在学中。日本の高校からの直接出願です。英語スコアと課外活動の見せ方、寮とホームステイのリアルを、いままさに現地から話せます。',
+    offerings: [
+      'カナダ学部出願のスケジュールと必要書類',
+      '英語スコア（IELTS/TOEFL）の計画づくり',
+      '課外活動・自己アピールの見せ方',
+      '寮・ホームステイの選び方と実際',
+      'キャンパス生活と1年目の授業のリアル',
     ],
     languages: [
       { code: 'ja', level: 'native' },
       { code: 'en', level: 'business' },
     ],
     languageLabels: ['日本語', '英語'],
-    topics: ['expat_prep', 'childcare'],
-    title30: 'ロンドンの学校選び・教育相談（30分）',
-    title60: '駐在帯同の準備をまるごと整理（60分）',
+    topics: ['undergrad', 'campus_life'],
+    title30: 'カナダ学部出願の作戦会議（30分）',
+    title60: '出願からキャンパス生活まで相談（60分）',
     education: [
-      { school: '慶應義塾大学', degree: '学士', field: '経済学', startYear: 2009, endYear: 2013 },
+      { school: 'ブリティッシュコロンビア大学', degree: '学士課程', field: '経済学', startYear: 2023, current: true },
     ],
-    workHistory: [
-      { company: '英系資産運用会社（ロンドン）', title: '現地採用・クライアントサービス', startYear: 2023, current: true },
-      { company: '邦銀 ロンドン支店', title: '駐在', startYear: 2021, endYear: 2023 },
-      { company: '邦銀（東京）', title: '法人営業', startYear: 2013, endYear: 2021 },
-    ],
+    workHistory: [],
+    avatar: '/experts/eri.jpg',
     price30: 3500,
     price60: 6500,
     desc30:
-      '学校選び・エリア選びなど、テーマを絞ったピンポイント相談に。まず気になっていることからどうぞ。',
+      '高校からの直接出願・英語スコア・出願書類など、カナダ学部留学の疑問を30分で。',
     desc60:
-      '駐在帯同の全体準備に。ご家族の状況を伺って、渡英までのやることリストを一緒に作ります。',
+      '出願準備から渡航後の生活まで、時系列のやることリストを一緒に作ります。',
   },
   {
-    key: 'misaki',
-    displayName: '山本 実咲',
-    citySlug: 'berlin',
-    cityJa: 'ベルリン',
-    country: 'DE',
-    arrivalYear: 2020,
-    occupation: 'フリーランスデザイナー',
-    bio: 'フリーランスビザで働くデザイナー。ドイツの役所手続き・保険・住民登録のつまずきポイントを先回りできます。「調べても人によって言うことが違う」ドイツの手続きを、実体験ベースで整理します。',
-    offerings: [
-      'フリーランスビザの申請準備と必要書類',
-      'Anmeldung（住民登録）・税番号などの役所手続き',
-      '公的保険・民間保険の選び方',
-      'ベルリンの部屋探しとWG事情',
-    ],
-    languages: [
-      { code: 'ja', level: 'native' },
-      { code: 'de', level: 'business' },
-      { code: 'en', level: 'business' },
-    ],
-    languageLabels: ['日本語', 'ドイツ語', '英語'],
-    topics: ['immigration', 'procedures'],
-    title30: 'ドイツのビザ・役所手続き相談（30分）',
-    title60: 'ベルリン移住の段取りを一緒に設計（60分）',
-    education: [
-      { school: '多摩美術大学', degree: '学士', field: 'グラフィックデザイン', startYear: 2011, endYear: 2015 },
-    ],
-    workHistory: [
-      { company: 'フリーランス（ベルリン）', title: 'デザイナー', startYear: 2020, current: true },
-      { company: '東京のデザイン事務所', title: 'グラフィックデザイナー', startYear: 2015, endYear: 2020 },
-    ],
-    price30: 3000,
-    price60: 6000,
-    desc30:
-      'ビザ・役所手続き・保険など、いま詰まっているポイントをピンポイントで解消します。',
-    desc60:
-      'ドイツ移住の全体像を整理したい方に。渡独前後のやることを時系列で一緒に組み立てます。',
-  },
-  {
-    key: 'daisuke',
-    displayName: '中村 大輔',
-    citySlug: 'bangkok',
-    cityJa: 'バンコク',
-    country: 'TH',
-    arrivalYear: 2016,
-    occupation: '現地法人 経営',
-    bio: '現地法人を経営して10年。駐在の立ち上げ、コンドミニアム選び、タイ移住の生活コスト感覚まで具体的に話せます。数字ベースで「実際いくらかかるか」をお伝えするのが得意です。',
-    offerings: [
-      'バンコクのコンドミニアム選びと賃貸契約の注意点',
-      '駐在立ち上げ・現地法人設立の実務',
-      'タイ移住の生活コストシミュレーション',
-      'ビザ・ワークパーミットの基本',
-    ],
-    languages: [
-      { code: 'ja', level: 'native' },
-      { code: 'en', level: 'business' },
-    ],
-    languageLabels: ['日本語', 'タイ語', '英語'],
-    topics: ['immigration', 'housing'],
-    title30: 'バンコクの住まい・生活コスト相談（30分）',
-    title60: 'タイ移住・駐在立ち上げの全体設計（60分）',
-    education: [
-      { school: '大阪大学', degree: '学士', field: '経済学', startYear: 2004, endYear: 2008 },
-    ],
-    workHistory: [
-      { company: '現地法人（バンコク・物流コンサル）', title: '代表', startYear: 2019, current: true },
-      { company: '日系物流会社 バンコク駐在', title: '現地拠点立ち上げ', startYear: 2016, endYear: 2019 },
-      { company: '日系物流会社（東京）', title: '海外事業部', startYear: 2008, endYear: 2016 },
-    ],
-    price30: 3000,
-    price60: 6000,
-    desc30:
-      '住まい選び・生活コストなど、気になるテーマを1つ選んでご相談ください。',
-    desc60:
-      '移住・駐在立ち上げの全体設計に。ご予算とご家族構成を伺って具体的なプランに落とします。',
-  },
-  {
-    key: 'eri',
-    displayName: '藤田 絵里',
+    key: 'mayu',
+    displayName: '児玉 真央',
     citySlug: 'nyc',
     cityJa: 'ニューヨーク',
     country: 'US',
     arrivalYear: 2019,
-    occupation: '現地企業デザイナー（美大留学出身）',
-    bio: '美大留学からそのまま現地企業のデザイナーに。ポートフォリオ・学校選び・OPT後の就職のリアルを話せます。留学を「就職につなげる」視点でアドバイスできるのが強みです。',
+    occupation: '学部アルムナイ（ニューヨーク大学卒）・現地企業勤務',
+    bio: '2019年にニューヨーク大学（NYU）へ学部進学し、2023年に卒業。現在は NY のマーケティング企業で働いています。Common App のエッセイ、Financial Aid の申請、日本の高校からの直接出願を、経験者として一通り話せます。',
     offerings: [
-      'アメリカ美大・アート系留学の学校選び',
-      'ポートフォリオの作り方と出願準備',
-      'OPT・就労ビザまわりの実体験ベースの流れ',
-      'ニューヨークの家探しとルームシェア事情',
+      '米学部出願（Common App）の全体像と段取り',
+      '出願エッセイのテーマ選びと構成レビュー',
+      'Financial Aid・奨学金の申請の実際',
+      'OPT・卒業後の現地就職のリアル',
+      'ニューヨークの学生生活・家探し',
     ],
     languages: [
       { code: 'ja', level: 'native' },
       { code: 'en', level: 'business' },
     ],
     languageLabels: ['日本語', '英語'],
-    topics: ['study_abroad', 'work'],
-    title30: 'アメリカ美大留学・ポートフォリオ相談（30分）',
-    title60: '留学から現地就職までのプラン設計（60分）',
+    topics: ['undergrad', 'application_docs'],
+    title30: '米学部出願エッセイ相談（30分）',
+    title60: '学部出願の全体設計（60分）',
     education: [
-      { school: 'School of Visual Arts（ニューヨーク）', degree: 'BFA', field: 'グラフィックデザイン', startYear: 2019, endYear: 2023 },
+      { school: 'ニューヨーク大学', degree: '学士', field: 'マーケティング', startYear: 2019, endYear: 2023 },
     ],
     workHistory: [
-      { company: 'NYのブランディングエージェンシー', title: 'デザイナー', startYear: 2023, current: true },
-      { company: '東京の制作会社', title: 'アシスタントデザイナー', startYear: 2017, endYear: 2019 },
+      { company: 'NYのマーケティング企業', title: 'アナリスト', startYear: 2023, current: true },
     ],
-    price30: 5000,
-    price60: 9000,
-    desc30:
-      '留学準備・ポートフォリオ・就職など、いま一番聞きたいことをピンポイントで。',
-    desc60:
-      '留学から就職までの全体設計に。ご希望の分野を伺って、学校リストと準備スケジュールを一緒に考えます。',
-  },
-  {
-    key: 'haruka',
-    displayName: '小川 遥',
-    citySlug: 'melbourne',
-    cityJa: 'メルボルン',
-    country: 'AU',
-    arrivalYear: 2022,
-    occupation: 'カフェマネージャー（ワーホリ→現地就職）',
-    bio: 'ワーキングホリデーから現地就職（カフェマネージャー）。語学学校選び、仕事探し、シェアハウスの探し方が得意です。ワーホリの「最初の3か月」をどう設計するかで、その後が大きく変わります。',
-    offerings: [
-      'ワーホリ渡航前の準備と最初の3か月の設計',
-      '語学学校の選び方（値段と質の見極め）',
-      'ローカルジョブの探し方・応募のコツ',
-      'シェアハウスの探し方と契約トラブル回避',
-    ],
-    languages: [
-      { code: 'ja', level: 'native' },
-      { code: 'en', level: 'business' },
-    ],
-    languageLabels: ['日本語', '英語'],
-    topics: ['study_abroad', 'travel'],
-    title30: 'ワーホリの学校・仕事・家さがし相談（30分）',
-    title60: 'ワーホリ1年のロードマップ作り（60分）',
-    education: [
-      { school: '製菓専門学校（東京）', degree: '専門士', field: 'カフェ・製菓', startYear: 2016, endYear: 2018 },
-    ],
-    workHistory: [
-      { company: 'メルボルンのスペシャルティカフェ', title: 'マネージャー', startYear: 2023, current: true },
-      { company: '同カフェ', title: 'バリスタ（ワーホリ）', startYear: 2022, endYear: 2023 },
-      { company: '都内ホテルのラウンジ', title: 'カフェスタッフ', startYear: 2018, endYear: 2022 },
-    ],
-    price30: 3000,
-    price60: 5500,
-    desc30:
-      'ワーホリ・留学準備のピンポイント相談に。学校・仕事・家、どれからでもどうぞ。',
-    desc60:
-      'ワーホリ1年の全体プランを一緒に。ご予算と目的を伺って、渡航後のロードマップを作ります。',
-  },
-  {
-    key: 'chinatsu',
-    displayName: '森本 千夏',
-    citySlug: 'vancouver',
-    cityJa: 'バンクーバー',
-    country: 'CA',
-    arrivalYear: 2020,
-    occupation: '現地企業勤務（元留学エージェント）',
-    bio: '元留学エージェント勤務で、現地カレッジ卒。学校の「パンフレットに載らない評判」とホームステイ事情に詳しいです。エージェント側と留学生側の両方を知っているので、営業トーク抜きでお話しできます。',
-    offerings: [
-      'カレッジ・語学学校の「実際の評判」ベースの選び方',
-      'ホームステイ・シェアハウスの探し方と注意点',
-      'Co-op留学の実際（働きながら学ぶリアル）',
-      '留学エージェントとの付き合い方・見積もりの見方',
-    ],
-    languages: [
-      { code: 'ja', level: 'native' },
-      { code: 'en', level: 'business' },
-    ],
-    languageLabels: ['日本語', '英語'],
-    topics: ['study_abroad', 'procedures'],
-    title30: 'カナダ留学の学校選び相談（30分）',
-    title60: 'カナダ留学の全体設計と出願段取り（60分）',
-    education: [
-      { school: 'バンクーバーのカレッジ', degree: 'Diploma', field: 'ビジネス（Co-op）', startYear: 2020, endYear: 2022 },
-      { school: '青山学院大学', degree: '学士', field: '国際政治経済', startYear: 2011, endYear: 2015 },
-    ],
-    workHistory: [
-      { company: 'バンクーバーの人材会社', title: 'コーディネーター', startYear: 2022, current: true },
-      { company: '留学エージェント（東京）', title: 'カウンセラー', startYear: 2015, endYear: 2020 },
-    ],
+    avatar: '/experts/mayu.jpg',
     price30: 3500,
     price60: 6500,
     desc30:
-      '学校選び・滞在先など、留学準備のピンポイント相談に。候補があればお持ちください。',
+      'Common App エッセイのテーマ選び・書き出しの悩みを30分で壁打ちします。',
     desc60:
-      '留学の全体設計に。目的とご予算から、学校の候補出しと出願までの段取りを一緒に整理します。',
+      '出願校リスト・エッセイ・Financial Aid まで、米学部出願の全体を時系列で設計します。',
   },
+  // ---- 語学・交換留学（1名） ----
   {
-    key: 'mayu',
-    displayName: '岡田 真由',
-    citySlug: 'paris',
-    cityJa: 'パリ',
-    country: 'FR',
-    arrivalYear: 2015,
-    occupation: '日仏家庭の子育て中（元語学学校スタッフ）',
-    bio: 'パリで2人の子供を育てる日仏家庭。保育園（クレッシュ）から現地小学校まで、フランスの子育て・教育制度を実体験で語れます。子連れ旅行のリアルな段取りもお任せください。',
+    key: 'haruka',
+    displayName: '南 陽菜',
+    citySlug: 'melbourne',
+    cityJa: 'メルボルン',
+    country: 'AU',
+    arrivalYear: 2023,
+    occupation: '交換留学アルムナイ（メルボルン大学）・現地企業勤務',
+    bio: '2023年にメルボルン大学へ交換留学し、そのまま現地企業に就職して滞在中。交換留学の学内選考、語学学校の選び方、費用計画、シェアハウス探しなど、「はじめての留学」の段取りに伴走します。',
     offerings: [
-      'クレッシュ・保育ママなどフランスの保育制度の実際',
-      '現地校・バイリンガル教育のリアル',
-      '子連れパリ旅行の段取り（ベビーカー事情・小児科など）',
-      '出産・子育てまわりの行政手続き',
+      '交換留学の学内選考・応募書類の準備',
+      '語学学校の選び方（値段と質の見極め）',
+      '留学費用の現実的な計画づくり',
+      'シェアハウスの探し方と契約トラブル回避',
+      'メルボルンの学生生活・アルバイト事情',
     ],
     languages: [
       { code: 'ja', level: 'native' },
-      { code: 'fr', level: 'business' },
+      { code: 'en', level: 'business' },
     ],
-    languageLabels: ['日本語', 'フランス語'],
-    topics: ['childcare', 'travel'],
-    title30: 'パリの保育園・子育て相談（30分）',
-    title60: '子連れ移住・帯同準備をまるごと相談（60分）',
+    languageLabels: ['日本語', '英語'],
+    topics: ['language_exchange', 'campus_life'],
+    title30: '語学・交換留学のはじめ方相談（30分）',
+    title60: '交換留学1年のプラン設計（60分）',
     education: [
-      { school: '上智大学', degree: '学士', field: 'フランス文学', startYear: 2007, endYear: 2011 },
+      { school: 'メルボルン大学（交換留学）', degree: null, field: '国際関係', startYear: 2023, endYear: 2023 },
+      { school: '明治大学', degree: '学士', field: '国際日本学', startYear: 2020, endYear: 2024 },
     ],
     workHistory: [
-      { company: 'パリの語学学校', title: '日本人サポート担当', startYear: 2015, endYear: 2020 },
-      { company: '語学学校（東京）', title: 'スクールスタッフ', startYear: 2011, endYear: 2015 },
+      { company: 'メルボルンの人材系企業', title: 'コーディネーター', startYear: 2024, current: true },
     ],
-    price30: 3500,
-    price60: 6000,
+    avatar: '/experts/haruka.jpg',
+    price30: 3000,
+    price60: 5500,
     desc30:
-      '保育園・学校・子連れ旅行など、子育てまわりの疑問をピンポイントで。',
+      '語学留学・交換留学の準備で気になっていることを、経験者に30分で聞けます。',
     desc60:
-      '子連れ移住・帯同の全体準備に。お子さんの年齢に合わせて、渡仏後の選択肢を一緒に整理します。',
+      '学内選考から渡航後の生活まで、交換留学1年のロードマップを一緒に作ります。',
   },
 ];
 
@@ -566,7 +595,8 @@ async function main() {
     id: expertUuid(e.key),
     email: `expert-${e.key}@sample.locore.test`,
     displayName: e.displayName,
-    avatarUrl: null,
+    // 実写アバター（デモ用プレースホルダ。public/experts/ 配置済み）
+    avatarUrl: e.avatar,
     bio: e.bio,
     role: 'resident_writer',
     residencyCountry: e.country,
@@ -629,19 +659,20 @@ async function main() {
     });
 
   // ---- articles（ブログ再位置付け: エキスパートのブランディング記事） ------
+  // id は旧シードの stable id を継承して上書き（記事の中身は留学テーマに刷新）
   console.log('[seed-experts] articles (blog repositioning samples) ...');
   const articleRows: NewArticle[] = [
     {
       id: stableUuid('expert-art:aya-guarantor'),
       writerId: expertUuid('aya'),
-      cityId: cityIdBySlug['paris']!,
-      title: 'パリのアパート探し、保証人がいない人のための現実的な選択肢3つ',
+      cityId: cityIdBySlug['boston']!,
+      title: 'MBAエッセイ、日本人がいちばん最初につまずく3つの罠',
       body:
-        '渡仏してすぐの部屋探しで一番の壁になるのが保証人（garant）です。フランスの賃貸は日本以上に保証人を重視していて、収入があっても「フランス国内の保証人」がいないと門前払いされることが珍しくありません。\n\nこの記事では、私自身と、これまで相談に乗ってきた方々の経験から、保証人がいない人が実際に部屋を借りられた3つのルートを紹介します。\n\n1つ目は Visale（ヴィザル）。国が保証人代わりになってくれる制度で、30歳以下または転職直後の人なら使えます。オーナーによっては嫌がる人もいますが、対応物件は年々増えています。\n\n2つ目は保証会社（GarantMe など）。年間家賃の3〜4%程度の費用はかかりますが、書類が揃えば早いです。\n\n3つ目は銀行保証（caution bancaire）。家賃1年分程度を凍結口座に預ける方法で、資金に余裕がある駐在準備の方に向いています。\n\nどれを選ぶべきかはビザの種類と収入証明の形で変わります。個別の事情は相談で一緒に整理しましょう。',
+        'MBA出願のエッセイで、日本人受験者が最初につまずくポイントはだいたい共通しています。私自身が2024年の出願でハマりかけ、合格者仲間と答え合わせをして見えてきた「3つの罠」を書きます。\n\n1つ目は「実績の列挙」。日本の職務経歴書の感覚でプロジェクトを並べると、審査側には何も残りません。エッセイで見られているのは実績の大きさではなく、意思決定の理由と、そこからの変化です。\n\n2つ目は「謙遜」。文化的にどうしても「チームのおかげ」と書きたくなりますが、adcom が知りたいのはあなた個人が何を判断し、何を動かしたか。主語を I に戻す作業が最初のドラフトの半分を占めました。\n\n3つ目は「Why this school の浅さ」。ランキングやブランドではなく、その学校の具体的な授業・クラブ・プログラムと自分のゴールを接続できているか。ここは在校生に聞くのが一番早いです。\n\n自分の職歴でどう書くべきかは人によって全く違います。ドラフト前の構成段階で一度壁打ちするのがおすすめです。',
       coverImageUrl: null,
       priceJpy: 0,
       status: 'published' as const,
-      tags: ['住まい', 'パリ', '手続き'],
+      tags: ['MBA', 'エッセイ', '出願'],
       durationType: 'other' as const,
       articleType: 'expat_info' as const,
       publishedAt: new Date('2026-07-14T09:00:00Z'),
@@ -649,15 +680,15 @@ async function main() {
     },
     {
       id: stableUuid('expert-art:aya-first-month'),
-      writerId: expertUuid('aya'),
-      cityId: cityIdBySlug['paris']!,
-      title: '渡仏1か月目にやること — 銀行口座・保険・携帯の順番を間違えると詰む話',
+      writerId: expertUuid('kentaro'),
+      cityId: cityIdBySlug['nyc']!,
+      title: '米大学院のSoP、「研究がしたい」だけでは落ちる — 社会人出願の書き方',
       body:
-        'フランスの生活立ち上げは「順番」がすべてです。銀行口座を開くには住所証明が要り、住所証明には携帯番号が要り、携帯契約には銀行口座が要る——という循環参照に、渡仏したばかりの人は必ずぶつかります。\n\n私が8年前につまずき、その後たくさんの相談者と一緒に検証してきた「詰まない順番」はこうです。\n\nまず日本にいるうちに、国際対応のオンライン銀行（Wise など）とプリペイドSIMを用意しておく。到着後は仮住まいの宿泊証明で携帯（Free など書類が緩い会社）を契約し、その番号でフランスの銀行の口座開設予約を取る。住居が決まったら電気（EDF）の契約書を住所証明として各所に提出——。\n\nこの順番なら、最初の1か月で生活インフラが一通り揃います。逆にどこか1つでも順番を飛ばすと、2〜3か月は平気で溶けます。\n\nあなたのビザと滞在形態によって細部は変わるので、渡仏日が決まっている方は一度相談で段取りを確認するのがおすすめです。',
+        '社会人から米大学院（CS系）に出願するとき、SoP（Statement of Purpose）で一番やりがちな失敗は「学び直したい気持ち」を書いてしまうことです。私も最初のドラフトはそうでした。\n\nSoPは志望動機の作文ではなく、「この人は入学後に成果を出せるか」を判断させる証拠書類です。審査側が知りたいのは、(1) どの分野の何に取り組みたいか、(2) そのための準備（職務経験・スキル・成果物）がどこまであるか、(3) なぜこのプログラムでなければならないか、の3点だけ。\n\n社会人の強みは (2) を実務で語れることです。私の場合、業務で作った推薦システムの改善プロジェクトを「研究的な問い」に翻訳し直すことで、職務経歴がそのまま研究準備の証拠になりました。\n\n逆に、仕事の実績をそのまま並べるだけだと「で、研究では何を？」で終わります。実務→研究の翻訳が、社会人SoPの核心です。\n\nあなたの職務経歴をどう翻訳できるかは、30分話せばだいたい方向が出ます。ドラフトを書き始める前にどうぞ。',
       coverImageUrl: null,
       priceJpy: 0,
       status: 'published' as const,
-      tags: ['生活手続き', 'パリ', '移住'],
+      tags: ['大学院', 'SoP', '出願'],
       durationType: 'other' as const,
       articleType: 'expat_info' as const,
       publishedAt: new Date('2026-03-21T09:00:00Z'),
@@ -670,6 +701,8 @@ async function main() {
     .onConflictDoUpdate({
       target: articles.id,
       set: {
+        writerId: sql`excluded.writer_id`,
+        cityId: sql`excluded.city_id`,
         title: sql`excluded.title`,
         body: sql`excluded.body`,
         priceJpy: sql`excluded.price_jpy`,
@@ -725,6 +758,7 @@ async function main() {
       audience: 'both',
       tags: ['consultation', e.topics[0], e.topics[1]],
       durationLabel: '30分',
+      durationMinutes: 30,
       languages: e.languageLabels,
       isActive: true,
       position: 0,
@@ -742,6 +776,7 @@ async function main() {
       audience: 'both',
       tags: ['consultation', e.topics[0], e.topics[1]],
       durationLabel: '60分',
+      durationMinutes: 60,
       languages: e.languageLabels,
       isActive: true,
       position: 1,
@@ -764,6 +799,7 @@ async function main() {
         audience: sql`excluded.audience`,
         tags: sql`excluded.tags`,
         durationLabel: sql`excluded.duration_label`,
+        durationMinutes: sql`excluded.duration_minutes`,
         languages: sql`excluded.languages`,
         isActive: sql`excluded.is_active`,
         position: sql`excluded.position`,
@@ -818,8 +854,8 @@ async function main() {
     });
 
   // ---- consultation_bookings（requested 状態のサンプル 1 件） --------------
-  // is_sample ユーザー間: 高橋（ロンドン）→ 佐々木 彩（パリ）の 30 分相談。
-  // 佐々木の最初の空き枠冒頭 30 分をリクエスト中にして、受信箱 UI を確認できるようにする。
+  // is_sample ユーザー間: 伊藤（NYC）→ 高村（ボストン・MBA）の 30 分相談。
+  // 高村の最初の空き枠冒頭 30 分をリクエスト中にして、受信箱 UI を確認できるようにする。
   console.log('[seed-experts] consultation_bookings (sample requested) ...');
   const ayaFirstSlot = availRows.find(
     (r) => r.userId === expertUuid('aya'),
@@ -841,7 +877,7 @@ async function main() {
     commissionRate: '0.20',
     platformFeeJpy: Math.round(aya.price30 * 0.2),
     requestMessage:
-      '来年4月にパリ移住予定です。ビザ申請の書類と、11区・20区あたりのエリア選びについて相談したいです。',
+      '来年秋入学でMBA出願を予定しています。出願校の絞り込みとエッセイの方向性を30分で壁打ちさせてください。',
   };
   await db
     .insert(consultationBookings)

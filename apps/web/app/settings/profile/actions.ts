@@ -141,11 +141,18 @@ const educationEntrySchema = z
     field: careerText,
     startYear: careerYear,
     endYear: careerYear,
+    /** 在学中（留学特化の在学生/アルムナイ判定）。true 時は endYear を無視 */
+    current: z.boolean().optional().default(false),
   })
   .refine(
-    (e) => e.startYear == null || e.endYear == null || e.startYear <= e.endYear,
+    (e) =>
+      e.current ||
+      e.startYear == null ||
+      e.endYear == null ||
+      e.startYear <= e.endYear,
     { message: '開始年は終了年以前にしてください', path: ['startYear'] },
-  );
+  )
+  .transform((e) => (e.current ? { ...e, endYear: null } : e));
 
 const workEntrySchema = z
   .object({
