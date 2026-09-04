@@ -84,7 +84,11 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
 .aj-eyebrow::before{content:"";width:26px;height:1.5px;background:var(--lime)}
 .aj-hero h1{font-weight:900;letter-spacing:-.03em;line-height:1.0;font-size:clamp(40px,8.4vw,104px);margin-top:22px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6),0 4px 34px rgba(0,0,0,.5)}
 .aj-hero h1 em{font-style:normal;color:var(--lime)}
-.aj-hero .sub{margin-top:22px;max-width:540px;font-size:15px;line-height:1.95;color:rgba(255,255,255,.82)}
+.aj-hero .sub{margin-top:22px;max-width:560px;font-size:15px;line-height:1.95;color:rgba(255,255,255,.82)}
+.aj-hero .sub b{color:#fff;font-weight:700}
+.aj-lexp{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--lime)}
+.aj-lexp:hover{text-decoration:underline;text-underline-offset:4px}
+.aj-lexp svg{width:14px;height:14px}
 .aj-controls{margin-top:34px;max-width:780px}
 .aj-srow{display:flex;gap:10px;align-items:stretch}
 .aj-glass{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);color:#fff}
@@ -559,19 +563,21 @@ export function ArticleJournal({
         <canvas className="aj-hnet" ref={canvasRef} />
         <div className="aj-hshade" />
         <div className="wrap inner">
-          <div className="aj-eyebrow">Journal — 在外邦人がつくる、街の物語</div>
+          <div className="aj-eyebrow">Journal</div>
           <h1>
-            住む人が見ている、
-            <br />
-            街の<em>素顔</em>。
+            現地からの、<em>読みもの</em>。
           </h1>
           <p className="sub">
-            SNSやAIには載らない一次情報。
-            <br />
-            路地裏のパン屋や子連れで行ける公園など、
-            <br />
-            現地で暮らす書き手が発信します。
+            <b>住んでいる人にしか書けない話</b>を、世界の街から。
+            書いているのは、居住認証済みのエキスパートたち。
+            読んで気になったら、そのまま本人に相談できます。
           </p>
+          <Link className="aj-lexp" href="/experts">
+            エキスパートに相談する
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </Link>
 
           <div className="aj-controls">
             <div className="aj-srow">
@@ -656,7 +662,7 @@ export function ArticleJournal({
                 <circle cx="11" cy="11" r="7" />
                 <path d="m20 20-3.2-3.2" />
               </svg>
-              この条件で検索
+              読む
             </button>
           </div>
         </div>

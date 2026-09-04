@@ -257,7 +257,8 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
         </section>
       ) : null}
 
-      {!unlocked ? (
+      {/* 有料パート（body_paid）が無い記事は Paywall を出さず全文表示（v2 ブログ再位置付け） */}
+      {!unlocked && paidHtml ? (
         /* ===== 未解放: Paywall（ここから先は一切の有料詳細を出さない）===== */
         <section className="tj-body">
           <div className="tj-bodywrap">
@@ -511,6 +512,9 @@ export function ItineraryArticleV2(props: ItineraryArticleV2Props) {
             writer={writer}
             authorServices={authorServices}
             variant="tj"
+            isExpert={props.authorIsExpert}
+            expertHref={props.authorExpertHref}
+            isVerified={props.authorIsVerified}
           />
         </div>
       </section>

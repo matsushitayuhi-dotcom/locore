@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Check, Clock, Globe, Info, ShieldCheck, Video } from 'lucide-react';
+import { ArrowRight, Check, Clock, Globe, Info, ShieldCheck, Video } from 'lucide-react';
+import { personJsonLd } from '@/lib/seo/jsonld';
 import { getResidentProfile } from '@/lib/residents/byId';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { countryFlagEmoji } from '@/lib/experts/list';
@@ -27,8 +28,8 @@ export default async function ExpertDetailPage({
   params: { id: string };
 }) {
   const [profile, me] = await Promise.all([
-    // 記事・SNSリンクはこのページでは使わないので取得をスキップ
-    getResidentProfile(params.id, { includeArticles: false, includeSns: false }),
+    // 記事は「◯◯さんの記事」セクションで使う（ブログ再位置付け）。SNS は不使用
+    getResidentProfile(params.id, { includeSns: false }),
     getCurrentUser(),
   ]);
   if (!profile) notFound();
@@ -67,9 +68,26 @@ export default async function ExpertDetailPage({
     .map((p) => p.trim())
     .filter(Boolean);
   const { avgStars, count: reviewCount, recent } = profile.reviewSummary;
+  const articles = profile.articles.slice(0, 4);
+
+  // Person JSON-LD（SEO: 記事の著者 = エキスパート本人を検索エンジンに伝える）
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://locore.app';
+  const jsonLd = personJsonLd({
+    url: `${siteUrl}/experts/${profile.id}`,
+    name: profile.displayName,
+    description: profile.bio,
+    imageUrl: profile.avatarUrl,
+    jobTitle: profile.occupation,
+    homeLocation: cityName,
+  });
 
   return (
     <main className="bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="mx-auto max-w-[1024px] px-6">
         {/* breadcrumb */}
         <div className="pt-5 text-[12.5px] text-neutral-500">
@@ -248,6 +266,66 @@ export default async function ExpertDetailPage({
               </section>
             ) : null}
 
+            {/* ブログ再位置付け: 記事は「この人は本当に詳しい」の裏付け。価格・購入UIなし */}
+            {articles.length > 0 ? (
+              <section className="border-b border-border py-7">
+                <SectionHeading en="Articles">
+                  {profile.displayName}さんの記事
+                </SectionHeading>
+                <p className="-mt-2 mb-[18px] max-w-[46em] text-[13px] text-neutral-500">
+                  現地での暮らしについて、実体験をもとに書いています。相談の前の予習にどうぞ。
+                </p>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {articles.map((a) => (
+                    <Link
+                      key={a.id}
+                      href={`/articles/${a.id}`}
+                      className="block overflow-hidden rounded-2xl border border-border bg-card shadow-xs transition duration-300 hover:-translate-y-[3px] hover:border-primary-300 hover:shadow-md"
+                    >
+                      <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+                        {a.coverImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={a.coverImageUrl}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span
+                            className="grid h-full w-full place-items-center text-[38px]"
+                            aria-hidden
+                          >
+                            📝
+                          </span>
+                        )}
+                        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-[11px] py-1 text-[10px] font-medium text-foreground backdrop-blur-sm">
+                          {ARTICLE_TYPE_LABEL[a.articleType] ?? a.articleType}
+                        </span>
+                      </div>
+                      <div className="px-[18px] pb-[17px] pt-[15px]">
+                        <h3 className="line-clamp-2 text-[15px] font-bold leading-relaxed">
+                          {a.title}
+                        </h3>
+                        <div className="mt-1.5 text-[11px] tabular-nums text-neutral-500">
+                          {fmtDateDot(a.publishedAt)}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-5">
+                  <Link
+                    href={`/users/${profile.id}?tab=articles`}
+                    className="inline-flex items-center gap-1.5 text-[13px] font-bold text-primary-700 hover:underline hover:underline-offset-4"
+                  >
+                    {profile.displayName}さんの記事をすべて見る
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                  </Link>
+                </div>
+              </section>
+            ) : null}
+
             {reviewCount > 0 ? (
               <section className="py-7" id="reviews">
                 <SectionHeading en="Reviews">レビュー</SectionHeading>
@@ -364,4 +442,19 @@ function formatMonthJa(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+}
+
+const ARTICLE_TYPE_LABEL: Record<string, string> = {
+  spot_guide: 'スポット紹介',
+  itinerary: 'モデルコース',
+  expat_info: 'お役立ち情報',
+};
+
+/** 記事カードの公開日（2026.07.14 形式） */
+function fmtDateDot(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}.${mm}.${dd}`;
 }

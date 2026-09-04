@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Heart, Bookmark, BookmarkCheck } from 'lucide-react';
+import { Heart, Bookmark, BookmarkCheck, ShieldCheck } from 'lucide-react';
 import { toggleArticleLike } from '@/lib/articleLikes/actions';
 import { addBookmark, removeBookmark } from '@/lib/bookmarks/actions';
 import { ReviewForm } from '../../ReviewForm';
@@ -15,6 +15,7 @@ import type { getMyReviewForArticle } from '@/lib/reviews/actions';
 import type { FeaturedService } from '@/lib/services/featured';
 import type { ArticleVideoRow } from './classify';
 import { toVideoEmbedSrc } from './classify';
+import { CONSULTATION_TAG } from '@/lib/experts/constants';
 
 /** v2 各タイプの scoped class 接頭辞（tj=モデルコース / pg=場所あり / es=場所なし）。 */
 export type V2Variant = 'tj' | 'pg' | 'es';
@@ -60,6 +61,12 @@ export type EngagementProps = {
   previewMode: boolean;
   authorServices: FeaturedService[];
   videos: ArticleVideoRow[];
+  /** v2 ブログ再位置付け: 著者が consultation メニューを持つエキスパートか */
+  authorIsExpert?: boolean;
+  /** エキスパートなら /experts/[authorId]。CTA と著者リンクの飛び先 */
+  authorExpertHref?: string;
+  /** 著者の居住認証（最新申請 approved）。名前横のバッジ表示用 */
+  authorIsVerified?: boolean;
 };
 
 /* ===================== ヒーロー内アクション ===================== */
@@ -283,8 +290,12 @@ function V2ServiceCard({
       : service.priceJpy === 0
         ? '無料'
         : '';
+  // 相談メニュー（consultation タグ）はエキスパート詳細へ。他は従来の /services/[id]
+  const href = service.tags.includes(CONSULTATION_TAG)
+    ? `/experts/${service.ownerId}`
+    : `/services/${service.id}`;
   return (
-    <Link className={`${variant}-svccard`} href={`/services/${service.id}`}>
+    <Link className={`${variant}-svccard`} href={href}>
       <div className="cover">
         {service.coverImageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -304,20 +315,38 @@ function V2ServiceCard({
   );
 }
 
+function ChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z" />
+    </svg>
+  );
+}
+
 /**
  * 「この記事を書いた人」フッター。ランディングのトーン（ライム×クリーム・角丸・余白広め・
  * クリーン）で著者カード＋他のサービスを再構成する。3タイプ共通。
- * 著者情報（アバター / 名前 / 在住地 / bio / プロフィールリンク / 他の記事 / 他のサービス）を
- * 保ちつつ、scoped class（variant）で描画。コピーは中立表現（「この書き手の…」）。
+ *
+ * v2 ブログ再位置付け（mockups/v2/blog-repositioning.html [2/3]）:
+ *   著者がエキスパート（isExpert）なら、プライマリ CTA を
+ *   「この記事を書いた人に相談する」→ /experts/[id]（expertHref）に差し替え、
+ *   「プロフィールを見る」はセカンダリのテキストリンクに降格。居住認証バッジを
+ *   名前の横に表示。非エキスパート著者は従来どおり /users/[id]（後方互換）。
  */
 export function AuthorCard({
   writer,
   authorServices,
   variant = 'tj',
+  isExpert = false,
+  expertHref,
+  isVerified = false,
 }: {
   writer: Writer | null;
   authorServices: FeaturedService[];
   variant?: V2Variant;
+  isExpert?: boolean;
+  expertHref?: string;
+  isVerified?: boolean;
 }) {
   if (!writer) return null;
 
@@ -330,22 +359,62 @@ export function AuthorCard({
     </>
   );
 
+  // エキスパートの著者ページは /experts/[id]、それ以外は従来の /users/[id]
+  const profileHref =
+    isExpert && expertHref ? expertHref : `/users/${writer.id}`;
+
+  const badge = isVerified ? (
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 align-middle text-[11px] font-bold text-primary-900">
+      <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden />
+      居住認証済み
+    </span>
+  ) : null;
+
   const body = (
     <div className="body">
       <div className="k">この記事を書いた人</div>
-      <h3>{writer.name}</h3>
+      <h3 className="flex flex-wrap items-center gap-3">
+        {writer.name}
+        {badge}
+      </h3>
       <div className="role">{meta}</div>
       {writer.bio ? <p className="bio">{writer.bio}</p> : null}
-      <Link className={`${variant}-authcta`} href={`/users/${writer.id}`}>
-        プロフィールを見る
-        <ArrowIcon />
-      </Link>
-      <div className={`${variant}-authlinks`}>
-        <Link className={`${variant}-authlink`} href={`/users/${writer.id}?tab=articles`}>
-          この書き手の他の記事
-          <ArrowIcon />
-        </Link>
-      </div>
+      {isExpert && expertHref ? (
+        <>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link className={`${variant}-authcta`} href={expertHref}>
+              <ChatIcon />
+              この記事を書いた人に相談する
+            </Link>
+            <span className="mt-2 text-[11.5px] leading-relaxed text-neutral-500">
+              30分から、チャットで気軽に。
+            </span>
+          </div>
+          <div className={`${variant}-authlinks`}>
+            <Link className={`${variant}-authlink`} href={expertHref}>
+              プロフィールを見る
+              <ArrowIcon />
+            </Link>
+            <Link className={`${variant}-authlink`} href={`/users/${writer.id}?tab=articles`}>
+              この書き手の他の記事
+              <ArrowIcon />
+            </Link>
+          </div>
+        </>
+      ) : (
+        <>
+          <Link className={`${variant}-authcta`} href={`/users/${writer.id}`}>
+            プロフィールを見る
+            <ArrowIcon />
+          </Link>
+          <div className={`${variant}-authlinks`}>
+            <Link className={`${variant}-authlink`} href={`/users/${writer.id}?tab=articles`}>
+              この書き手の他の記事
+              <ArrowIcon />
+            </Link>
+          </div>
+        </>
+      )}
     </div>
   );
 
@@ -354,7 +423,7 @@ export function AuthorCard({
   return (
     <>
       <div className={`${cardClass} ${variant}-rev`}>
-        <Link href={`/users/${writer.id}`} aria-label={`${writer.name} のプロフィールへ`}>
+        <Link href={profileHref} aria-label={`${writer.name} のプロフィールへ`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={writer.avatarUrl} alt={writer.name} />
         </Link>

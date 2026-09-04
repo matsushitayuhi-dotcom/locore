@@ -1,5 +1,12 @@
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { desc, eq, isNull } from 'drizzle-orm';
 import { getDbArticleBundle } from '../../../lib/articles/published';
+import {
+  articleJsonLd,
+  extractDescription,
+} from '@/lib/seo/jsonld';
+import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import { getArticleVideos } from '../../../lib/articles/v2';
 import { ArticleRendererV2 } from '../../../components/article/v2/ArticleRendererV2';
 import {
@@ -13,12 +20,66 @@ import {
 import { getMyBookmarkedIdSet } from '@/lib/bookmarks/actions';
 import { getMyReviewForArticle } from '@/lib/reviews/actions';
 import { getCurrentUser } from '@/lib/auth/current-user';
-import { eq, and } from 'drizzle-orm';
+import { and } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { listServicesByUserId } from '@/lib/services/list';
 
 export const dynamic = 'force-dynamic';
+
+const uuidPat =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * SEO 用メタデータ（v2 ブログ再位置付け）。
+ * バンドル全体（スポット・レビュー・関連）を引かず、記事 + 著者名だけの軽量クエリ。
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  if (!uuidPat.test(params.id)) return {};
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({
+        title: schema.articles.title,
+        body: schema.articles.body,
+        coverImageUrl: schema.articles.coverImageUrl,
+        status: schema.articles.status,
+      })
+      .from(schema.articles)
+      .where(
+        and(
+          eq(schema.articles.id, params.id),
+          isNull(schema.articles.deletedAt),
+        ),
+      )
+      .limit(1);
+    const a = rows[0];
+    if (!a || a.status !== 'published') return {};
+    const description = extractDescription(a.body, 120);
+    return {
+      title: a.title,
+      description,
+      openGraph: {
+        type: 'article',
+        title: a.title,
+        description,
+        ...(a.coverImageUrl ? { images: [{ url: a.coverImageUrl }] } : {}),
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: a.title,
+        description,
+        ...(a.coverImageUrl ? { images: [a.coverImageUrl] } : {}),
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 export default async function ArticleDetailPage({
   params,
@@ -36,13 +97,8 @@ export default async function ArticleDetailPage({
   const region = bundle.region;
   const country = bundle.country;
 
-  // 本文の分割：bodyPaid が空 → 全文無料記事として扱う。
-  // 2026-05 改修: 無料記事でも「アンロック」フローを通す方針 (便宜上の統一)。
-  //   - hasPaid: 有料本文の有無
-  //   - isFreeArticle: 価格 0 円の記事 (priceJpy === 0)。これも Paywall を
-  //     経由するが、CTA は「無料でアンロック」表記になる
-  const hasPaid = !!article.bodyPaid && article.bodyPaid.trim().length > 0;
-  const isFreeArticle = article.priceJpy === 0;
+  // 2026-09 (v2) ブログ再位置付け: bodyPaid が空の記事は Paywall を出さず
+  // 全文表示する（判定は各レイアウト側の paidHtml 条件）。
 
   // 関連記事は DB から取得済み
   const related = relatedDb.slice(0, 6);
@@ -96,8 +152,9 @@ export default async function ArticleDetailPage({
     listMyLikedArticleIds(),
     getMyBookmarkedIdSet(),
     getMyReviewForArticle(article.id),
-    // 著者カード末尾に「この駐在員の他のサービス」セクションを出す用
-    writer?.id ? listServicesByUserId(writer.id, 3) : Promise.resolve([]),
+    // 著者カード末尾の「他のサービス」+ エキスパート判定（consultation タグ）用。
+    // 判定漏れを減らすため 3 → 8 件引く（カード側は先頭 4 件だけ表示）
+    writer?.id ? listServicesByUserId(writer.id, 8) : Promise.resolve([]),
     // essay（ブログ・場所なし）v2 レンダラ用の外部動画
     getArticleVideos(article.id),
   ]);
@@ -109,8 +166,53 @@ export default async function ArticleDetailPage({
   };
   const initialLiked = likedSet.has(article.id);
 
+  // v2 ブログ再位置付け: 著者がエキスパート（consultation タグの相談メニューを
+  // 持つ）なら、著者カードの CTA を「この記事を書いた人に相談する」に切り替える。
+  const authorIsExpert = authorServices.some((s) =>
+    s.tags.includes(CONSULTATION_TAG),
+  );
+  const authorExpertHref =
+    authorIsExpert && writer ? `/experts/${writer.id}` : undefined;
+
+  // 居住認証バッジ（最新申請が approved。getResidentProfile と同じ判定）
+  let authorIsVerified = false;
+  if (writer?.id) {
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({ status: schema.residencyVerifications.status })
+        .from(schema.residencyVerifications)
+        .where(eq(schema.residencyVerifications.userId, writer.id))
+        .orderBy(desc(schema.residencyVerifications.submittedAt))
+        .limit(1);
+      authorIsVerified = rows[0]?.status === 'approved';
+    } catch {
+      authorIsVerified = false;
+    }
+  }
+
+  // Article JSON-LD（SEO）
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://locore.app';
+  const jsonLd = articleJsonLd({
+    url: `${siteUrl}/articles/${article.id}`,
+    title: article.title,
+    description: extractDescription(article.body, 120),
+    coverImageUrl: article.coverImageUrl,
+    publishedAt: article.publishedAt ?? null,
+    authorName: writer?.name ?? null,
+    authorUrl: writer
+      ? `${siteUrl}${authorIsExpert ? `/experts/${writer.id}` : `/users/${writer.id}`}`
+      : null,
+  });
+
   return (
-    <ArticleRendererV2
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ArticleRendererV2
       article={article}
       writer={writer}
       spots={spots}
@@ -132,6 +234,10 @@ export default async function ArticleDetailPage({
       authorServices={authorServices}
       videos={videos}
       previewMode={false}
+      authorIsExpert={authorIsExpert}
+      authorExpertHref={authorExpertHref}
+      authorIsVerified={authorIsVerified}
     />
+    </>
   );
 }

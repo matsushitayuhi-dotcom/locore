@@ -1,4 +1,3 @@
-import { FloatingMapButton } from '@/components/FloatingMapButton';
 import { ArticleJournal } from '@/components/articles/ArticleJournal';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { SUPPORTED_COUNTRIES } from '@/lib/geo/countrySlug';
@@ -10,7 +9,11 @@ type Props = {
   searchParams?: { type?: string; region?: string; country?: string };
 };
 
-export const metadata = { title: '記事一覧 — Locore' };
+export const metadata = {
+  title: '現地からの読みもの',
+  description:
+    '住んでいる人にしか書けない話を、世界の街から。書いているのは居住認証済みのエキスパートたち。読んで気になったら、そのまま本人に相談できます。',
+};
 
 const VALID_TYPES: ArticleType[] = ['spot_guide', 'itinerary', 'expat_info'];
 const VALID_COUNTRY_CODES = new Set(SUPPORTED_COUNTRIES.map((c) => c.code));
@@ -45,7 +48,6 @@ export default async function ArticlesIndexPage({ searchParams }: Props) {
         initialCountry={asCountry(searchParams?.country)}
         initialCat={asCat(searchParams?.type)}
       />
-      <FloatingMapButton />
     </main>
   );
 }

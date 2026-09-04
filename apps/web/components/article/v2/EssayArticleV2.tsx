@@ -163,7 +163,7 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
                 />
               </>
             ) : null
-          ) : (
+          ) : !paidHtml ? null : ( // 有料パートが無い記事は Paywall 自体を出さない（v2 ブログ再位置付け）
             <Paywall
               article={article}
               bodyAfter={paidHtml ? article.bodyPaid! : ''}
@@ -195,6 +195,9 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
             writer={writer}
             authorServices={authorServices}
             variant="es"
+            isExpert={props.authorIsExpert}
+            expertHref={props.authorExpertHref}
+            isVerified={props.authorIsVerified}
           />
         </div>
       </section>

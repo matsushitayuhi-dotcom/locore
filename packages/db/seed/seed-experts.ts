@@ -25,10 +25,14 @@ import { createDbClient } from '../src/client';
 import {
   cities,
   users,
+  writerProfiles,
+  articles,
   residencyVerifications,
   userServices,
   type NewCity,
   type NewUser,
+  type NewWriterProfile,
+  type NewArticle,
   type NewResidencyVerification,
   type NewUserService,
 } from '../src/schema';
@@ -436,6 +440,82 @@ async function main() {
         occupation: sql`excluded.occupation`,
         offerings: sql`excluded.offerings`,
         languages: sql`excluded.languages`,
+        isSample: sql`excluded.is_sample`,
+      },
+    });
+
+  // ---- writer_profiles（記事の著者情報。residency_years 表示用） -----------
+  console.log('[seed-experts] writer_profiles ...');
+  const wpRows: NewWriterProfile[] = EXPERTS.map((e) => ({
+    userId: expertUuid(e.key),
+    tier: 'B' as const,
+    residencyCountry: e.country,
+    residencyYears: 2026 - e.arrivalYear,
+    bio: e.bio,
+    isSample: true,
+  }));
+  await db
+    .insert(writerProfiles)
+    .values(wpRows)
+    .onConflictDoUpdate({
+      target: writerProfiles.userId,
+      set: {
+        residencyCountry: sql`excluded.residency_country`,
+        residencyYears: sql`excluded.residency_years`,
+        bio: sql`excluded.bio`,
+        isSample: sql`excluded.is_sample`,
+      },
+    });
+
+  // ---- articles（ブログ再位置付け: エキスパートのブランディング記事） ------
+  console.log('[seed-experts] articles (blog repositioning samples) ...');
+  const articleRows: NewArticle[] = [
+    {
+      id: stableUuid('expert-art:aya-guarantor'),
+      writerId: expertUuid('aya'),
+      cityId: cityIdBySlug['paris']!,
+      title: 'パリのアパート探し、保証人がいない人のための現実的な選択肢3つ',
+      body:
+        '渡仏してすぐの部屋探しで一番の壁になるのが保証人（garant）です。フランスの賃貸は日本以上に保証人を重視していて、収入があっても「フランス国内の保証人」がいないと門前払いされることが珍しくありません。\n\nこの記事では、私自身と、これまで相談に乗ってきた方々の経験から、保証人がいない人が実際に部屋を借りられた3つのルートを紹介します。\n\n1つ目は Visale（ヴィザル）。国が保証人代わりになってくれる制度で、30歳以下または転職直後の人なら使えます。オーナーによっては嫌がる人もいますが、対応物件は年々増えています。\n\n2つ目は保証会社（GarantMe など）。年間家賃の3〜4%程度の費用はかかりますが、書類が揃えば早いです。\n\n3つ目は銀行保証（caution bancaire）。家賃1年分程度を凍結口座に預ける方法で、資金に余裕がある駐在準備の方に向いています。\n\nどれを選ぶべきかはビザの種類と収入証明の形で変わります。個別の事情は相談で一緒に整理しましょう。',
+      coverImageUrl: null,
+      priceJpy: 0,
+      status: 'published' as const,
+      tags: ['住まい', 'パリ', '手続き'],
+      durationType: 'other' as const,
+      articleType: 'expat_info' as const,
+      publishedAt: new Date('2026-07-14T09:00:00Z'),
+      isSample: true,
+    },
+    {
+      id: stableUuid('expert-art:aya-first-month'),
+      writerId: expertUuid('aya'),
+      cityId: cityIdBySlug['paris']!,
+      title: '渡仏1か月目にやること — 銀行口座・保険・携帯の順番を間違えると詰む話',
+      body:
+        'フランスの生活立ち上げは「順番」がすべてです。銀行口座を開くには住所証明が要り、住所証明には携帯番号が要り、携帯契約には銀行口座が要る——という循環参照に、渡仏したばかりの人は必ずぶつかります。\n\n私が8年前につまずき、その後たくさんの相談者と一緒に検証してきた「詰まない順番」はこうです。\n\nまず日本にいるうちに、国際対応のオンライン銀行（Wise など）とプリペイドSIMを用意しておく。到着後は仮住まいの宿泊証明で携帯（Free など書類が緩い会社）を契約し、その番号でフランスの銀行の口座開設予約を取る。住居が決まったら電気（EDF）の契約書を住所証明として各所に提出——。\n\nこの順番なら、最初の1か月で生活インフラが一通り揃います。逆にどこか1つでも順番を飛ばすと、2〜3か月は平気で溶けます。\n\nあなたのビザと滞在形態によって細部は変わるので、渡仏日が決まっている方は一度相談で段取りを確認するのがおすすめです。',
+      coverImageUrl: null,
+      priceJpy: 0,
+      status: 'published' as const,
+      tags: ['生活手続き', 'パリ', '移住'],
+      durationType: 'other' as const,
+      articleType: 'expat_info' as const,
+      publishedAt: new Date('2026-03-21T09:00:00Z'),
+      isSample: true,
+    },
+  ];
+  await db
+    .insert(articles)
+    .values(articleRows)
+    .onConflictDoUpdate({
+      target: articles.id,
+      set: {
+        title: sql`excluded.title`,
+        body: sql`excluded.body`,
+        priceJpy: sql`excluded.price_jpy`,
+        status: sql`excluded.status`,
+        tags: sql`excluded.tags`,
+        articleType: sql`excluded.article_type`,
+        publishedAt: sql`excluded.published_at`,
         isSample: sql`excluded.is_sample`,
       },
     });

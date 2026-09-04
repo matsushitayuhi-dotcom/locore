@@ -91,6 +91,12 @@ const WRITER_ITEMS: MenuItem[] = [
     matchPrefix: '/settings/services',
   },
   {
+    href: '/writer/articles/new',
+    label: 'ブログを書く',
+    icon: PenSquare,
+    matchPrefix: '/writer/articles/new',
+  },
+  {
     href: '/chat',
     label: 'メッセージ',
     icon: MessageCircle,

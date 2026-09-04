@@ -25,6 +25,7 @@ export function SiteFooter() {
           title="相談する"
           links={[
             { href: '/experts', label: 'エキスパートを探す' },
+            { href: '/articles', label: '現地からの読みもの' },
             { href: '/about-service', label: '使い方' },
           ]}
         />

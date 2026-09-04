@@ -137,7 +137,8 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
         </section>
       ) : null}
 
-      {!unlocked ? (
+      {/* 有料パート（body_paid）が無い記事は Paywall を出さず全文表示（v2 ブログ再位置付け） */}
+      {!unlocked && paidHtml ? (
         /* ===== 未解放: Paywall（有料詳細は一切出さない）===== */
         <section className="pg-listsec">
           <div className="pg-wrap">
@@ -342,6 +343,9 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
             writer={writer}
             authorServices={authorServices}
             variant="pg"
+            isExpert={props.authorIsExpert}
+            expertHref={props.authorExpertHref}
+            isVerified={props.authorIsVerified}
           />
         </div>
       </section>
