@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { BadgeCheck, ShieldCheck } from 'lucide-react';
 import type { ExpertCard as ExpertCardData } from '@/lib/experts/list';
-import { specialtyLabel, type EnrollmentStatus } from '@/lib/experts/specialties';
+import { specialtyLabel } from '@/lib/experts/specialties';
+import type { Enrollment } from '@/lib/experts/enrollment';
 
 /**
  * /experts 一覧・トップの「注目エキスパート」で使う縦長カード（Intro 型）。
@@ -22,7 +23,7 @@ export type ExpertCardExtra = {
    * 在学中 / アルムナイ（留学特化）。写真左上のチップと、場所行の学校名に使う。
    * データは lib/experts/list.ts 側（team-lead）で付与される想定。無ければ出さない。
    */
-  enrollment?: EnrollmentStatus | null;
+  enrollment?: Enrollment | null;
 };
 
 export function ExpertCard({
@@ -176,7 +177,7 @@ export function EnrollmentChip({
   enrollment,
   size = 'sm',
 }: {
-  enrollment: EnrollmentStatus;
+  enrollment: Enrollment;
   size?: 'sm' | 'md';
 }) {
   const current = enrollment.status === 'current';

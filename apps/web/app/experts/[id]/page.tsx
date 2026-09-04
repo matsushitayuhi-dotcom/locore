@@ -22,12 +22,12 @@ import { getResidentProfile } from '@/lib/residents/byId';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { CONSULTATION_TAG, topicLabel } from '@/lib/experts/constants';
 import {
-  deriveEnrollment,
   isExperienceOnly,
   specialtyGroupOf,
   specialtyLabel,
 } from '@/lib/experts/specialties';
 import { EnrollmentChip } from '@/components/experts/ExpertCard';
+import { deriveEnrollment } from '@/lib/experts/enrollment';
 import { getSpecialtiesByUser } from '@/lib/experts/specialtiesByUser';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { ConsultMenuCard } from '@/components/experts/ConsultMenuCard';
@@ -111,7 +111,7 @@ export default async function ExpertDetailPage({
     return Array.from(rows.values());
   })();
   const hasExperienceOnly = specialties.some(isExperienceOnly);
-  // 在学中 / アルムナイ（留学特化）。EducationEntry.current は team-lead 側で追加予定
+  // 在学中 / アルムナイ（留学特化）。正式ヘルパ lib/experts/enrollment.ts
   const enrollment = deriveEnrollment(profile.education);
 
   // 予約可能なメニューの条件（requestBooking のサーバー検証と同一ルール）:

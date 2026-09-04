@@ -190,30 +190,3 @@ export function normalizeSpecialties(input: ReadonlyArray<string>): string[] {
   }
   return out;
 }
-
-/**
- * 在学 / アルムナイの導出（team-lead 側ヘルパが来るまでの暫定）。
- * EducationEntry に current フラグが付く予定なので、それがあれば「在学中」。
- * 無ければ最新の卒業年から「アルムナイ」。学歴が無ければ null。
- */
-export type EnrollmentStatus = {
-  status: 'current' | 'alumni';
-  school: string | null;
-  /** 卒業年（アルムナイのみ） */
-  year: number | null;
-};
-
-export function deriveEnrollment(
-  education: ReadonlyArray<{
-    school?: string | null;
-    endYear?: number | null;
-    current?: boolean | null;
-  }>,
-): EnrollmentStatus | null {
-  const rows = education.filter((e) => e.school?.trim());
-  if (rows.length === 0) return null;
-  const current = rows.find((e) => e.current);
-  if (current) return { status: 'current', school: current.school ?? null, year: null };
-  const latest = [...rows].sort((a, b) => (b.endYear ?? 0) - (a.endYear ?? 0))[0]!;
-  return { status: 'alumni', school: latest.school ?? null, year: latest.endYear ?? null };
-}

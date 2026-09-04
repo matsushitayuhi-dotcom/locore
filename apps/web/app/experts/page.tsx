@@ -120,6 +120,7 @@ export default async function ExpertsPage({
       key={e.userId}
       expert={e}
       specialties={specialtiesByUser.get(e.userId) ?? []}
+      enrollment={e.enrollment ?? null}
       countryNameJa={
         e.countryCode ? (countryNameByCode.get(e.countryCode.toLowerCase()) ?? null) : null
       }
