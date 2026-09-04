@@ -1071,7 +1071,6 @@ export default function AboutServicePage() {
               </div>
               <ul className="mt-[15px] flex flex-col gap-[9px] text-[13.5px] leading-[1.85] text-neutral-700">
                 <PriceLi>ピンポイントの疑問に。テーマ1〜2個をじっくり</PriceLi>
-                <PriceLi>料金はエキスパートごとに設定・事前に明示</PriceLi>
               </ul>
               <div className="mt-[15px] text-[11.5px] text-neutral-500">
                 料金はエキスパート設定の目安です
@@ -1095,7 +1094,7 @@ export default function AboutServicePage() {
               <div className="text-[15px] font-extrabold">継続プラン（月額）</div>
               <div className="mt-2.5 flex items-baseline gap-1.5">
                 <b className="text-[31px] font-extrabold tracking-[-0.02em]">月額</b>
-                <span className="text-[12.5px] text-neutral-500">エキスパートごとに設定</span>
+                <span className="text-[12.5px] text-neutral-500">サービス内容に応じて設定</span>
               </div>
               <ul className="mt-[15px] flex flex-col gap-[9px] text-[13.5px] leading-[1.85] text-neutral-700">
                 <PriceLi>渡航準備の数か月、同じ人に伴走してほしいときに</PriceLi>
