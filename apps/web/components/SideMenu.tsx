@@ -17,6 +17,9 @@ import {
   Bell,
   Settings,
   Info,
+  CalendarCheck,
+  CalendarClock,
+  Inbox,
 } from 'lucide-react';
 
 /**
@@ -76,6 +79,12 @@ const NAV_ITEMS: MenuItem[] = [
 
 const USER_ITEMS: MenuItem[] = [
   {
+    href: '/bookings',
+    label: 'マイ相談',
+    icon: CalendarCheck,
+    matchPrefix: '/bookings',
+  },
+  {
     href: '/library',
     label: 'お気に入り',
     icon: Bookmark,
@@ -89,6 +98,17 @@ const WRITER_ITEMS: MenuItem[] = [
     label: '相談メニュー管理',
     icon: Briefcase,
     matchPrefix: '/settings/services',
+  },
+  {
+    href: '/settings/availability',
+    label: '空き時間管理',
+    icon: CalendarClock,
+    matchPrefix: '/settings/availability',
+  },
+  {
+    href: '/bookings?tab=received',
+    label: '相談リクエスト',
+    icon: Inbox,
   },
   {
     href: '/writer/articles/new',

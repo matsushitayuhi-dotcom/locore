@@ -1,6 +1,16 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Check, Clock, Globe, Info, ShieldCheck, Video } from 'lucide-react';
+import {
+  ArrowRight,
+  Check,
+  Clock,
+  Globe,
+  Info,
+  ShieldCheck,
+  Video,
+} from 'lucide-react';
+import { listOpenStartTimes } from '@/lib/bookings/availability';
+import { formatSlotJst } from '@/lib/bookings/time';
 import { personJsonLd, jsonLdScriptText } from '@/lib/seo/jsonld';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
 import { getResidentProfile } from '@/lib/residents/byId';
@@ -70,6 +80,14 @@ export default async function ExpertDetailPage({
     .filter(Boolean);
   const { avgStars, count: reviewCount, recent } = profile.reviewSummary;
   const articles = profile.articles.slice(0, 4);
+
+  // 予約スライス: 直近の開始時刻候補（30 分刻みの最小粒度で判定）。
+  // 1 件でもあれば各メニューの主CTAが「空き枠から予約リクエスト」に昇格する。
+  const openStarts = await listOpenStartTimes(profile.id, 30);
+  const hasSlots = openStarts.length > 0;
+  const nextSlots = openStarts.slice(0, 3);
+  const requestHrefFor = (serviceId: string) =>
+    hasSlots ? `/experts/${profile.id}/request?service=${serviceId}` : null;
 
   // Person JSON-LD（SEO: 記事の著者 = エキスパート本人を検索エンジンに伝える）
   const siteUrl = getSiteUrl();
@@ -200,11 +218,47 @@ export default async function ExpertDetailPage({
                 viewerUserId={me?.id ?? null}
                 expertId={profile.id}
                 recommended={i === 0 && sortedMenus.length > 1}
+                requestHref={requestHrefFor(s.id)}
               />
             ))}
+
+            {/* 直近の空き枠プレビュー（日本時間）。「予約できる感」を先に見せる */}
+            {hasSlots ? (
+              <div className="rounded-2xl border border-border bg-card px-5 py-[18px] shadow-xs">
+                <div className="flex items-center gap-1.5 text-[12.5px] font-bold text-neutral-700">
+                  <Clock className="h-3.5 w-3.5 text-primary-700" aria-hidden />
+                  直近の空き枠
+                </div>
+                <ul className="mt-3 flex flex-col gap-1.5">
+                  {nextSlots.map((d) => (
+                    <li
+                      key={d.toISOString()}
+                      className="flex items-center gap-2.5 rounded-lg border border-border bg-background px-3 py-2 text-[13px] font-semibold tabular-nums"
+                    >
+                      {formatSlotJst(d)}〜
+                      <span className="ml-auto text-[10.5px] font-normal text-neutral-500">
+                        日本時間
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                {sortedMenus[0] ? (
+                  <Link
+                    href={`/experts/${profile.id}/request?service=${sortedMenus[0].id}`}
+                    className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-bold text-primary-700 hover:underline hover:underline-offset-4"
+                  >
+                    すべての空き枠を見る
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="flex items-start gap-2 rounded-xl bg-info-50 px-4 py-3 text-[11.5px] leading-relaxed text-info-500">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-              予約・決済機能は準備中です。まずはチャットで相談内容と日程をすり合わせてください。
+              {hasSlots
+                ? '承諾後の決済機能は準備中です。まずはリクエストを送ってみてください。'
+                : '空き枠は準備中です。まずはチャットで相談内容と日程をすり合わせてください。'}
             </div>
             <p className="text-center text-[11px] leading-relaxed text-neutral-400">
               やり取りはすべてLocore内のチャットで行われます。
