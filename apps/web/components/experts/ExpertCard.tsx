@@ -1,98 +1,154 @@
 import Link from 'next/link';
-import { Globe, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, ShieldCheck } from 'lucide-react';
 import type { ExpertCard as ExpertCardData } from '@/lib/experts/list';
-import { countryFlagEmoji } from '@/lib/experts/list';
-import { topicLabel } from '@/lib/experts/constants';
+import { specialtyLabel } from '@/lib/experts/specialties';
 
 /**
- * /experts 一覧・トップの「注目エキスパート」で使うカード。
- * mockups/v2/experts-list.html の .ex カードを再現（cream/terracotta トークン）。
+ * /experts 一覧・トップの「注目エキスパート」で使う縦長カード（Intro 型）。
+ * mockups/v2/experts-list-intro.html の .ex を実装。
+ *
+ * - 4:5 の写真（本人アップロードの avatarUrl）。未登録は黒地に大きなイニシャル。
+ * - ホバー / フォーカスで写真がズームし、下から「得意分野」チップ（users.specialties）が
+ *   せり上がる。タッチ端末（hover 不可）では写真の下に先頭 3 件をそのまま出す。
+ * - 写真の上: 左下に「居住認証済み」ピル、右上に都市名。
+ * - 写真の下: 名前 + 認証チェック / 料金 • 30分〜 / 在住・職業 / 自己紹介 3 行。
  */
-export function ExpertCard({ expert }: { expert: ExpertCardData }) {
-  const flag = countryFlagEmoji(expert.countryCode);
+export type ExpertCardExtra = {
+  /** 得意分野（第 2 階層 code）。無ければチップは出ない */
+  specialties?: ReadonlyArray<string>;
+  /** 国名（日本語）。無ければ国コードを出す */
+  countryNameJa?: string | null;
+};
+
+export function ExpertCard({
+  expert,
+  specialties = [],
+  countryNameJa = null,
+  priority = false,
+}: {
+  expert: ExpertCardData;
+  /** 画像の遅延読込を切る（最初の列など） */
+  priority?: boolean;
+} & ExpertCardExtra) {
+  const chips = specialties.map((c) => ({ code: c, label: specialtyLabel(c) }));
+  const place = [
+    countryNameJa ?? expert.countryCode?.toUpperCase() ?? null,
+    expert.cityNameJa ? `${expert.cityNameJa}在住` : null,
+  ]
+    .filter(Boolean)
+    .join('・');
+
   return (
     <Link
       href={`/experts/${expert.userId}`}
-      className="flex flex-col rounded-2xl border border-border bg-card p-[22px] shadow-xs transition duration-200 hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md"
+      className="group block outline-none"
+      aria-label={`${expert.displayName}のプロフィール`}
     >
-      <div className="flex items-center gap-3.5">
+      {/* ===== photo ===== */}
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[10px] bg-neutral-900 ring-0 transition duration-300 group-focus-visible:ring-[3px] group-focus-visible:ring-primary-500">
         {expert.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={expert.avatarUrl}
             alt=""
-            className="h-14 w-14 shrink-0 rounded-full object-cover"
+            loading={priority ? 'eager' : 'lazy'}
+            className="h-full w-full object-cover transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.06]"
           />
         ) : (
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-100 text-[20px] font-bold text-primary-900">
-            {expert.displayName.charAt(0)}
-          </span>
+          <div
+            className="grid h-full w-full place-items-center bg-[radial-gradient(120%_90%_at_20%_10%,#2b3a12_0%,#141513_55%,#0e0e0f_100%)] transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.06]"
+            aria-hidden
+          >
+            <span className="select-none text-[64px] font-bold leading-none text-primary-500 sm:text-[72px]">
+              {expert.displayName.charAt(0)}
+            </span>
+          </div>
         )}
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-[16px] font-bold leading-tight text-foreground">
-            {expert.displayName}
-            {expert.isVerified ? (
-              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
-                <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden />
-                認証済み
-              </span>
-            ) : null}
+
+        {/* 都市名（右上） */}
+        {expert.cityNameJa ? (
+          <span className="absolute right-2.5 top-2.5 rounded-md bg-black/45 px-2 py-0.5 text-[10.5px] font-bold tracking-[0.06em] text-white backdrop-blur-sm">
+            {expert.cityNameJa}
+          </span>
+        ) : null}
+
+        {/* 認証ピル（左下）。ホバー時は得意分野に譲って消える */}
+        {expert.isVerified ? (
+          <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 rounded-lg bg-neutral-900/95 px-2.5 py-1.5 text-[11.5px] font-bold text-white transition-opacity duration-200 group-hover:opacity-0">
+            <ShieldCheck className="h-3 w-3 text-primary-500" aria-hidden />
+            居住認証済み
+          </span>
+        ) : null}
+
+        {/* ホバー: 得意分野がせり上がる */}
+        {chips.length > 0 ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-2 flex-col justify-end bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-3 pt-14 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:transition-none">
+            <span className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-500">
+              得意分野
+            </span>
+            <ul className="flex flex-wrap gap-1">
+              {chips.map((c) => (
+                <li
+                  key={c.code}
+                  className="rounded-full bg-white/95 px-2 py-0.5 text-[11px] font-bold text-neutral-900"
+                >
+                  {c.label}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="mt-1 text-[12.5px] text-neutral-500">
-            {flag ? `${flag} ` : ''}
-            {expert.cityNameJa ?? '—'}在住{' '}
-            {expert.yearsInCity != null ? (
-              <b className="font-medium text-neutral-700">
-                {expert.yearsInCity}年
-              </b>
-            ) : null}
-          </div>
-        </div>
+        ) : null}
       </div>
 
+      {/* ===== text ===== */}
+      <div className="mt-2.5 flex items-center gap-1.5 text-[15px] font-bold leading-tight text-foreground">
+        <span className="truncate">{expert.displayName}</span>
+        {expert.isVerified ? (
+          <BadgeCheck
+            className="h-[15px] w-[15px] shrink-0 text-primary-700"
+            aria-label="居住認証済み"
+          />
+        ) : null}
+      </div>
+      <div className="mt-0.5 text-[13px] text-neutral-700">
+        {expert.minPriceJpy != null ? (
+          <>
+            <b className="font-semibold tabular-nums text-foreground">
+              ¥{expert.minPriceJpy.toLocaleString()}
+            </b>
+            <span className="mx-1.5 text-neutral-300">•</span>
+            30分〜
+          </>
+        ) : (
+          <b className="font-semibold text-foreground">応相談</b>
+        )}
+      </div>
+      {place || expert.occupation ? (
+        <div className="mt-0.5 line-clamp-1 text-[12px] text-neutral-500">
+          {place}
+          {expert.yearsInCity != null ? ` ${expert.yearsInCity}年` : ''}
+          {expert.occupation ? ` ・ ${expert.occupation}` : ''}
+        </div>
+      ) : null}
       {expert.bio ? (
-        <p className="mt-3.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-700">
+        <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-[1.6] text-neutral-500">
           {expert.bio}
         </p>
       ) : null}
 
-      {expert.topics.length > 0 ? (
-        <div className="mt-3.5 flex flex-wrap gap-1.5">
-          {expert.topics.map((t) => (
-            <span
-              key={t}
-              className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-neutral-700"
+      {/* タッチ端末（hover 不可）向け: 得意分野の先頭 3 件 */}
+      {chips.length > 0 ? (
+        <ul className="mt-2 flex flex-wrap gap-1 [@media(hover:hover)]:hidden">
+          {chips.slice(0, 3).map((c) => (
+            <li
+              key={c.code}
+              className="rounded-full bg-muted px-2 py-0.5 text-[10.5px] font-medium text-neutral-700"
             >
-              {topicLabel(t)}
-            </span>
+              {c.label}
+            </li>
           ))}
-        </div>
+        </ul>
       ) : null}
-
-      {expert.languages.length > 0 ? (
-        <div className="mt-3 flex items-center gap-1.5 text-[12px] text-neutral-500">
-          <Globe className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
-          {expert.languages.join('・')}
-        </div>
-      ) : null}
-
-      <div className="flex-1" aria-hidden />
-      <div className="mt-4 flex items-baseline gap-1.5 border-t border-border pt-3.5">
-        {expert.minPriceJpy != null ? (
-          <>
-            <span className="text-[18px] font-bold tabular-nums text-foreground">
-              ¥{expert.minPriceJpy.toLocaleString()}
-            </span>
-            <span className="text-[11.5px] text-neutral-500">/ 30分〜</span>
-          </>
-        ) : (
-          <span className="text-[13px] font-bold text-neutral-700">応相談</span>
-        )}
-        <span className="ml-auto text-[11.5px] text-neutral-500">
-          メニュー{' '}
-          <b className="tabular-nums text-neutral-700">{expert.menuCount}</b> 件
-        </span>
-      </div>
     </Link>
   );
 }

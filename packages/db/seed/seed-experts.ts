@@ -211,6 +211,8 @@ type ExpertSeed = {
   /** 先頭は必ずトラック（grad_school/mba/undergrad/language_exchange）。
    *  各メニューは最低 1 つトラックタグを持つ約束（/experts フィルタと連動）。 */
   topics: string[];
+  /** 得意分野（0080）。第 2 階層 code。apps/web/lib/experts/specialties.ts */
+  specialties: string[];
   /** メニュー名（内容が伝わる名前 + 末尾に所要時間）。30分/60分で重複させない */
   title30: string;
   title60: string;
@@ -229,6 +231,7 @@ const EXPERTS: ExpertSeed[] = [
   // ---- 大学院 / MBA（4名） ----
   {
     key: 'aya',
+    specialties: ['mba_essay', 'mba_career', 'mba_test', 'mba_scholarship', 'interview_practice'],
     displayName: '高村 里奈',
     citySlug: 'boston',
     cityJa: 'ボストン',
@@ -268,6 +271,7 @@ const EXPERTS: ExpertSeed[] = [
   },
   {
     key: 'kentaro',
+    specialties: ['sop_research_plan', 'school_list', 'professor_contact', 'lab_choice', 'career_path', 'student_housing'],
     displayName: '伊藤 蓮',
     citySlug: 'nyc',
     cityJa: 'ニューヨーク',
@@ -307,6 +311,7 @@ const EXPERTS: ExpertSeed[] = [
   },
   {
     key: 'misaki',
+    specialties: ['sop_research_plan', 'recommendation', 'scholarships', 'budget', 'english_test'],
     displayName: '千葉 美月',
     citySlug: 'london',
     cityJa: 'ロンドン',
@@ -346,6 +351,7 @@ const EXPERTS: ExpertSeed[] = [
   },
   {
     key: 'chinatsu',
+    specialties: ['sop_research_plan', 'motivation', 'interview_english', 'career_path'],
     displayName: '三宅 楓',
     citySlug: 'paris',
     cityJa: 'パリ',
@@ -387,6 +393,7 @@ const EXPERTS: ExpertSeed[] = [
   // ---- 博士（1名） ----
   {
     key: 'daisuke',
+    specialties: ['professor_contact', 'lab_choice', 'ta_ra', 'scholarships', 'student_visa'],
     displayName: '森 悠斗',
     citySlug: 'berlin',
     cityJa: 'ベルリン',
@@ -429,6 +436,7 @@ const EXPERTS: ExpertSeed[] = [
   // ---- 学部（2名） ----
   {
     key: 'eri',
+    specialties: ['college_list', 'common_app', 'campus_culture', 'student_housing', 'internship'],
     displayName: '岡部 咲',
     citySlug: 'vancouver',
     cityJa: 'バンクーバー',
@@ -465,6 +473,7 @@ const EXPERTS: ExpertSeed[] = [
   },
   {
     key: 'mayu',
+    specialties: ['sat_ib', 'extracurricular', 'essay_writing', 'cv_resume', 'safety_city'],
     displayName: '児玉 真央',
     citySlug: 'nyc',
     cityJa: 'ニューヨーク',
@@ -504,6 +513,7 @@ const EXPERTS: ExpertSeed[] = [
   // ---- 語学・交換留学（1名） ----
   {
     key: 'haruka',
+    specialties: ['exchange_credits', 'short_term', 'language_school_choice', 'budget', 'setup'],
     displayName: '南 陽菜',
     citySlug: 'melbourne',
     cityJa: 'メルボルン',
@@ -609,6 +619,7 @@ async function main() {
     languages: e.languages,
     education: e.education,
     workHistory: e.workHistory,
+    specialties: e.specialties,
     timezone: CITY_TZ[e.citySlug] ?? null,
     isSample: true,
   }));
@@ -632,6 +643,7 @@ async function main() {
         languages: sql`excluded.languages`,
         education: sql`excluded.education`,
         workHistory: sql`excluded.work_history`,
+        specialties: sql`excluded.specialties`,
         timezone: sql`excluded.timezone`,
         isSample: sql`excluded.is_sample`,
       },

@@ -100,6 +100,23 @@
 - 表示: カードのホバーで第 2 階層のラベルをチップ表示。列・フィルタは第 1 階層。
 - 相談メニュー（user_services.tags）は据え置き。一覧の絞り込みは「users.specialties ∪ メニューの tags」で判定する。
 
+## 3-1. 実装状況（worktree-experts-redesign）と settings/profile への接続手順
+
+実装済み
+- `apps/web/lib/experts/specialties.ts` … 定数と `normalizeSpecialties()`（未知 code・上限超えを落とす）
+- `packages/db/migrations/manual/0080_user_specialties.sql` … `users.specialties text[]`（dev DB 適用済み）
+- `packages/db/src/schema/users.ts` … `specialties` 列
+- `packages/db/seed/seed-experts.ts` … 8 名に得意分野を付与（再投入済み）
+- `apps/web/components/experts/SpecialtyPicker.tsx` … 選択 UI（制御 / hidden input の両対応）
+- `/experts` … 第 1 階層の列・チップ、カードのホバーで第 2 階層を表示
+- `/experts/[id]` … 「得意分野」セクション（第 1 階層ごとに並べ、※ 付きは体験談注記）
+
+team-lead 側で settings/profile に接続する手順（/settings はこのブランチのスコープ外）
+1. `app/settings/profile/page.tsx` の select に `specialties: schema.users.specialties` を足し、`ResidentProfileForm` の `initial` に渡す。
+2. `components/settings/ResidentProfileForm.tsx` に state を 1 つ足して `<SpecialtyPicker value={specialties} onChange={setSpecialties} />` を「こんな相談に乗れます」の直前に置く。送信 payload に `specialties` を含める。
+3. `app/settings/profile/actions.ts` の `updateResidentProfileSchema` に
+   `specialties: z.array(z.string()).max(20).default([]).transform(normalizeSpecialties)` を足し、update の set に `specialties` を追加。
+
 ## 4. 未確認・注意
 - 外務省の滞在目的別（民間 / 留学 / 政府）内訳は 2022 年以降の公開データに無く未確認。
 - 税金・資産・ビザは相談内容を「体験談」に限定する注記が必要（税理士法・弁護士法・金商法）。
