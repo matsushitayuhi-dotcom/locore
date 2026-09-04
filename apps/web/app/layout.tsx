@@ -113,8 +113,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  // Editorial Light のクリーム背景。スマホでアドレスバー色が揃う
-  themeColor: '#FAF5EB',
+  // 白基調化（2026-09）: 地色 #FFFFFF に合わせてアドレスバー色も白に
+  themeColor: '#FFFFFF',
   colorScheme: 'light',
   // iOS の safe-area inset を有効化する (BottomNav / ヘッダがノッチ / ホームバー
   // と被らないように env(safe-area-inset-*) を実際に値あり化する)

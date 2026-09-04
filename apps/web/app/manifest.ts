@@ -20,8 +20,8 @@ export default function manifest(): MetadataRoute.Manifest {
       '現地に住む駐在員が書く、観光ガイドにはない街の物語。短尺の有料旅行誌。',
     start_url: '/',
     display: 'standalone',
-    background_color: '#FAF5EB',
-    theme_color: '#FAF5EB',
+    background_color: '#FFFFFF',
+    theme_color: '#FFFFFF',
     lang: 'ja',
     orientation: 'portrait',
     icons: [

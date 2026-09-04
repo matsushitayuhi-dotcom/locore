@@ -67,7 +67,7 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== 相談者向け: 使い方ステップ ===== */}
-      <section className="border-b border-border bg-card px-6 py-14 sm:py-[72px]">
+      <section className="border-b border-border bg-muted px-6 py-14 sm:py-[72px]">
         <div className="mx-auto max-w-[1120px]">
           <div className="mx-auto mb-10 max-w-[640px] text-center">
             <span className="mb-2.5 block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">
@@ -187,7 +187,7 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== エキスパート向け ===== */}
-      <section className="border-b border-border bg-card px-6 py-14 sm:py-[72px]">
+      <section className="border-b border-border bg-muted px-6 py-14 sm:py-[72px]">
         <div className="mx-auto max-w-[1120px]">
           <div className="mx-auto mb-10 max-w-[640px] text-center">
             <span className="mb-2.5 block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">

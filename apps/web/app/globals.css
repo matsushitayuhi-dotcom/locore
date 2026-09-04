@@ -9,11 +9,15 @@
 
 @layer base {
   :root {
+    /* 2026-09 白基調化（mockups/v2/white-base.html）:
+       地を #FFFFFF に、旧地色 #F4F4EF は neutral-50（bg-muted）へ降格して
+       チップ地・入力地・セクション帯で温かみを残す。白地でカードが沈まないよう
+       罫線は半段強め。primary（ライム）・semantic 色は据え置き。 */
     --color-neutral-0:   #ffffff;
-    --color-neutral-25:  #F4F4EF;
-    --color-neutral-50:  #ECECE4;
-    --color-neutral-100: #E7E7E0;
-    --color-neutral-200: #D8D8CF;
+    --color-neutral-25:  #FFFFFF;
+    --color-neutral-50:  #F4F4EF;
+    --color-neutral-100: #E3E3DA;
+    --color-neutral-200: #CCCCC1;
     --color-neutral-300: #a5a09a;
     --color-neutral-400: #837f78;
     --color-neutral-500: #71717a;
@@ -225,6 +229,8 @@
     background-color: var(--color-surface);
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
+    /* 白基調化: 白地×白カードが平板にならないよう影を標準付与 */
+    box-shadow: var(--shadow-xs);
     overflow: hidden;
     transition: transform var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out);

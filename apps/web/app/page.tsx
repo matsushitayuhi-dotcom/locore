@@ -142,7 +142,7 @@ export default async function HomePage() {
 
       {/* ===== how it works ===== */}
       <section
-        className="border-y border-border bg-card px-6 py-14 sm:py-[72px]"
+        className="border-y border-border bg-muted px-6 py-14 sm:py-[72px]"
         id="how"
       >
         <div className="mx-auto max-w-[1120px]">
