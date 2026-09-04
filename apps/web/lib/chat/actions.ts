@@ -7,21 +7,19 @@ import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
+import { findOrCreateDirectThread } from '@/lib/chat/threads';
 
 /**
  * Locore のチャット Server Actions（最小実装）。
  *
  * 1:1 重複防止のため、`chat_threads.direct_pair_key` を sortedUUID.join(':') で持つ。
- * 「特定のユーザーと話を始める」 → findOrCreateDirectThread() で 1 行に絞れる。
+ * スレッドの確保は lib/chat/threads.ts の findOrCreateDirectThread() に集約
+ * （予約フローも同じ関数を使う）。
  */
 
 export type ChatActionResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; error: string };
-
-function pairKey(a: string, b: string): string {
-  return [a, b].sort().join(':');
-}
 
 /**
  * 相手ユーザー ID を渡すと、既存の 1:1 スレッドを返す or 新規作成して返す。
@@ -45,34 +43,10 @@ export async function startDirectThread(
     return { ok: false, error: '自分自身にメッセージを送ることはできません' };
   }
   const db = getDb();
-  const key = pairKey(me.id, withUserId);
 
-  // 既存？
-  let threadId: string | null = null;
+  let threadId: string;
   try {
-    const existing = await db
-      .select({ id: schema.chatThreads.id })
-      .from(schema.chatThreads)
-      .where(eq(schema.chatThreads.directPairKey, key))
-      .limit(1);
-    if (existing.length > 0) {
-      threadId = existing[0]!.id;
-    } else {
-      // 新規 thread + メンバー 2 人
-      const inserted = await db
-        .insert(schema.chatThreads)
-        .values({ directPairKey: key })
-        .returning({ id: schema.chatThreads.id });
-      threadId = inserted[0]!.id;
-
-      await db
-        .insert(schema.chatThreadMembers)
-        .values([
-          { threadId, userId: me.id },
-          { threadId, userId: withUserId },
-        ])
-        .onConflictDoNothing();
-    }
+    threadId = await findOrCreateDirectThread(me.id, withUserId);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[startDirectThread] DB error:', err);
