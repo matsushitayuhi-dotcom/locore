@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — 予約スライス（5画面・ショーケースモック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ================= tokens: apps/web/app/globals.css (Locore Lime) 準拠 ================= */
+  :root{
+    --lime:#A8E01C;         /* primary-500 */
+    --lime-300:#B6E84E;
+    --lime-200:#CDF088;
+    --lime-l:#E3F7B8;       /* primary-100 */
+    --lime-50:#F5FBE2;
+    --lime-d:#5E8B0E;       /* primary-700 */
+    --lime-900:#3D5E07;
+    --bg:#F4F4EF;           /* neutral-25 */
+    --muted:#ECECE4;        /* neutral-50 */
+    --card:#FFFFFF;
+    --bd:#E7E7E0;           /* border */
+    --bd2:#D8D8CF;          /* border-strong */
+    --ink:#18181B;--ink-2:#3F3F46;--mu:#71717A;--mu-2:#837F78;
+    --warn-50:#fef3c7;--warn-700:#92400e;--warn-bd:#fde68a;
+    --info-50:#dbeafe;--info-500:#2563eb;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.85}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .num{font-family:var(--num)}
+
+  /* ================= showcase chrome（モック説明用・実装対象外） ================= */
+  .intro{border-bottom:1px solid var(--bd);background:var(--card)}
+  .introin{max-width:1120px;margin:0 auto;padding:36px 24px 32px}
+  .intro .tag{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--lime-d)}
+  .intro h1{font-size:clamp(21px,2.8vw,27px);font-weight:700;margin-top:8px}
+  .intro p{margin-top:10px;font-size:13.5px;color:var(--mu);max-width:60em}
+  .intro p b{color:var(--ink-2)}
+  .showcase{padding:0 0 90px}
+  .slab{max-width:1120px;margin:64px auto 0;padding:0 24px}
+  .slabhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .slabhead .no{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);background:var(--lime-50);
+    border:1px solid var(--lime-l);border-radius:9999px;padding:3px 12px}
+  .slabhead h2{font-size:17px;font-weight:700}
+  .slabhead .where{font-family:var(--mono);font-size:11.5px;color:var(--mu)}
+  .slabnote{font-size:12.5px;color:var(--mu);margin-bottom:18px;max-width:64em}
+  .frame{background:var(--card);border:1px solid var(--bd);border-radius:16px;overflow:hidden;box-shadow:var(--sh-sm)}
+  .frame .bar{display:flex;align-items:center;gap:7px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--muted)}
+  .frame .bar i{width:9px;height:9px;border-radius:50%;background:var(--bd2)}
+  .frame .bar span{margin-left:8px;font-family:var(--mono);font-size:11px;color:var(--mu)}
+  .frame+.frame{margin-top:22px}
+  /* 差分注記タグ（モック説明用） */
+  .difftag{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;font-weight:600;
+    letter-spacing:.08em;color:var(--lime-900);background:var(--lime-l);border:1px solid var(--lime-300);
+    border-radius:9999px;padding:2px 9px;vertical-align:2px}
+  .difftag.new{color:#fff;background:var(--ink);border-color:var(--ink)}
+
+  /* ================= 共通部品（実装トーン準拠） ================= */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9999px;font-weight:700;
+    border:1px solid transparent;transition:.16s;white-space:nowrap;font-size:14px}
+  .btn svg{width:15px;height:15px;flex:none}
+  .btn-p{background:var(--lime);color:#0e0e0f;padding:12px 24px;box-shadow:0 10px 24px -10px rgba(168,224,28,.55)}
+  .btn-p:hover{background:var(--lime-300)}
+  .btn-o{background:var(--card);color:var(--ink-2);border-color:var(--bd2);padding:10px 22px;font-size:13.5px}
+  .btn-o:hover{border-color:var(--ink);color:var(--ink)}
+  .btn-t{background:transparent;color:var(--mu);padding:10px 14px;font-size:13px;font-weight:500}
+  .btn-t:hover{color:var(--ink)}
+  .vbadge{display:inline-flex;align-items:center;gap:6px;background:var(--lime-l);border:1px solid var(--lime-300);
+    color:var(--lime-900);font-size:12px;font-weight:700;border-radius:9999px;padding:4px 12px;white-space:nowrap}
+  .vbadge svg{width:13px;height:13px;flex:none}
+  .ava{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:var(--lime-l);color:var(--lime-900)}
+  .ava.g1{background:var(--info-50);color:var(--info-500)}
+  .ava.g2{background:var(--muted);color:var(--ink-2);border:1px solid var(--bd)}
+  .ava.g3{background:#F0EAD8;color:#6B5A22}
+  .status{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;border-radius:9999px;
+    padding:4px 12px;white-space:nowrap;border:1px solid transparent}
+  .status i{width:6px;height:6px;border-radius:50%;background:currentColor;font-style:normal}
+  .status.pend{background:var(--warn-50);border-color:var(--warn-bd);color:var(--warn-700)}
+  .status.ok{background:var(--lime-l);border-color:var(--lime-300);color:var(--lime-900)}
+  .status.off{background:var(--muted);border-color:var(--bd);color:var(--mu)}
+  .infonote{display:flex;gap:9px;align-items:flex-start;background:var(--info-50);border-radius:12px;padding:12px 15px;
+    font-size:11.5px;color:var(--info-500);line-height:1.8}
+  .infonote svg{width:14px;height:14px;flex:none;margin-top:3px}
+  .selectish{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--bd2);
+    border-radius:9999px;padding:8px 16px;font-size:13.5px;font-weight:700;color:var(--ink);white-space:nowrap}
+  .selectish .car{width:13px;height:13px;color:var(--mu);flex:none}
+
+  /* ================= [1] /settings/availability ================= */
+  .avmock{max-width:880px;margin:0 auto;padding:36px 28px 46px}
+  .settabs{display:flex;gap:24px;border-bottom:1px solid var(--bd);margin-bottom:28px;font-size:13.5px}
+  .settabs a{padding:0 2px 11px;color:var(--mu);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px}
+  .settabs a.on{color:var(--ink);font-weight:700;border-bottom-color:var(--lime)}
+  .avhead h3{font-size:21px;font-weight:700}
+  .avhead p{margin-top:6px;font-size:13px;color:var(--mu);max-width:52em}
+  .tzrow{margin-top:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--bg);
+    border:1px solid var(--bd);border-radius:14px;padding:14px 18px}
+  .tzrow .lbl{font-size:12.5px;font-weight:700;color:var(--ink-2);display:inline-flex;align-items:center;gap:7px}
+  .tzrow .lbl svg{width:15px;height:15px;color:var(--lime-d)}
+  .tzrow .hint{font-size:11.5px;color:var(--mu);line-height:1.7;flex:1 1 260px}
+  .tzrow .hint b{color:var(--ink-2)}
+  .addgrid{margin-top:22px;display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:stretch}
+  .addcard{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:20px 22px;box-shadow:var(--sh-xs)}
+  .addcard .cap{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .addcard .cap .en{font-family:var(--num);font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--lime-d)}
+  .addcard .sub{margin-top:3px;font-size:11.5px;color:var(--mu)}
+  .daychips{margin-top:14px;display:flex;gap:7px;flex-wrap:wrap}
+  .day{width:40px;height:40px;border-radius:9999px;border:1px solid var(--bd2);background:var(--card);
+    display:grid;place-items:center;font-size:13px;font-weight:500;color:var(--ink-2);transition:.15s}
+  .day:hover{border-color:var(--lime-d);color:var(--lime-d)}
+  .day.on{background:var(--lime);border-color:var(--lime);color:#0e0e0f;font-weight:700}
+  .timerow{margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .timerow .tilde{color:var(--mu);font-size:13px}
+  .timerow .selectish{font-family:var(--num);font-size:14px;padding:8px 14px}
+  .addcard .btn-p{margin-top:16px;width:100%;padding:11px 0;font-size:13.5px}
+  .addcard.single .btn-o{margin-top:16px;width:100%;padding:10px 0;font-size:13px}
+  .avlist{margin-top:30px}
+  .avlist .wk{font-family:var(--num);font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--mu);
+    display:flex;align-items:center;gap:12px;margin:22px 0 8px}
+  .avlist .wk::after{content:"";flex:1;height:1px;background:var(--bd)}
+  .slotrow{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--bd);
+    border-radius:12px;padding:12px 16px;box-shadow:var(--sh-xs)}
+  .slotrow+.slotrow{margin-top:8px}
+  .slotrow .dd{flex:none;width:64px;text-align:center;line-height:1.3}
+  .slotrow .dd b{display:block;font-size:14px}
+  .slotrow .dd span{font-family:var(--num);font-size:10.5px;color:var(--mu)}
+  .slotrow .tm{font-family:var(--num);font-size:14.5px;font-weight:600}
+  .slotrow .tm small{font-family:var(--jp);font-size:11px;color:var(--mu);font-weight:400;margin-left:4px}
+  .slotrow .jst{font-size:11.5px;color:var(--mu)}
+  .slotrow .sp{flex:1}
+  .slotrow .del{flex:none;width:32px;height:32px;border-radius:9999px;border:1px solid transparent;background:transparent;
+    display:grid;place-items:center;color:var(--mu-2);transition:.15s}
+  .slotrow .del:hover{background:#fee2e2;color:#dc2626}
+  .slotrow .del svg{width:15px;height:15px}
+  .slotrow.booked{background:var(--lime-50);border-color:var(--lime-l)}
+  .slotrow.booked .del{visibility:hidden}
+
+  /* ================= [2] /experts/[id] 差分 ================= */
+  .dtmock{max-width:1024px;margin:0 auto;padding:36px 28px 44px;display:grid;grid-template-columns:1fr 356px;gap:44px;align-items:start}
+  .dtmock .ghost{opacity:.45;pointer-events:none}
+  .ghosthead{display:flex;align-items:center;gap:16px;padding-bottom:22px;border-bottom:1px solid var(--bd)}
+  .ghosthead .ava{width:76px;height:76px;font-size:28px;border:3px solid var(--card);box-shadow:var(--sh-sm)}
+  .ghosthead h3{font-size:23px;font-weight:700;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .ghosthead .sub{font-size:13px;color:var(--ink-2);margin-top:4px}
+  .ph{height:9px;border-radius:5px;background:var(--muted)}
+  .phset{display:flex;flex-direction:column;gap:11px;margin-top:18px}
+  .sidecol{display:flex;flex-direction:column;gap:14px}
+  .sidecol .cap{font-size:13px;font-weight:700;color:var(--ink-2);display:flex;align-items:baseline;gap:8px}
+  .sidecol .cap .en{font-family:var(--num);font-size:10.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--lime-d)}
+  .menu{position:relative;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:22px;box-shadow:var(--sh-xs)}
+  .menu.hot{border-color:var(--lime-200);box-shadow:var(--sh-md)}
+  .menu .mh{display:flex;align-items:baseline;gap:8px}
+  .menu .mh b{font-size:15.5px;font-weight:700}
+  .menu .mh .rec{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--lime-900);background:var(--lime-50);
+    border:1px solid var(--lime-l);border-radius:9999px;padding:3px 10px}
+  .menu .pr{margin-top:8px;display:flex;align-items:baseline;gap:5px}
+  .menu .pr b{font-family:var(--num);font-size:26px;font-weight:700}
+  .menu .pr span{font-size:12px;color:var(--mu)}
+  .menu p{margin-top:10px;font-size:12.5px;color:var(--mu);line-height:1.9}
+  .menu .btn-p{width:100%;margin-top:16px;padding:12px 0;font-size:14px}
+  .menu .btn-o{width:100%;margin-top:9px;padding:10px 0}
+  .nextslots{position:relative;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px 20px;box-shadow:var(--sh-xs)}
+  .nextslots .cap2{font-size:12.5px;font-weight:700;color:var(--ink-2);display:flex;align-items:center;gap:7px}
+  .nextslots .cap2 svg{width:14px;height:14px;color:var(--lime-d)}
+  .nextslots ul{list-style:none;margin-top:12px;display:flex;flex-direction:column;gap:7px}
+  .nextslots li{display:flex;align-items:center;gap:10px;font-family:var(--num);font-size:13px;font-weight:600;
+    background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px 13px}
+  .nextslots li .jp{font-family:var(--jp);font-size:10.5px;color:var(--mu);font-weight:400;margin-left:auto}
+  .nextslots .more{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--lime-d)}
+  .nextslots .more:hover{text-decoration:underline;text-underline-offset:3px}
+  .nextslots .more svg{width:13px;height:13px}
+  .cornertag{position:absolute;top:-10px;right:14px}
+
+  /* ================= [3] /experts/[id]/request ================= */
+  .duo{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
+  .duo .frame.main{flex:1 1 560px}
+  .duo .frame.phone{flex:none;width:377px;max-width:100%}
+  .reqmock{max-width:640px;margin:0 auto;padding:34px 28px 44px}
+  .phone .reqmock{padding:24px 18px 34px}
+  .reqmock .bk{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mu);margin-bottom:14px}
+  .reqmock .bk svg{width:13px;height:13px}
+  .reqmock h3{font-size:20px;font-weight:700}
+  .reqmock .lead{margin-top:4px;font-size:12.5px;color:var(--mu)}
+  .menusum{margin-top:18px;display:flex;align-items:center;gap:14px;background:var(--bg);border:1px solid var(--bd);
+    border-radius:14px;padding:14px 18px}
+  .menusum .ava{width:44px;height:44px;font-size:16px}
+  .menusum .t b{font-size:14.5px;font-weight:700;display:block}
+  .menusum .t span{font-size:11.5px;color:var(--mu)}
+  .menusum .prc{margin-left:auto;text-align:right;line-height:1.4}
+  .menusum .prc b{font-family:var(--num);font-size:19px;font-weight:700;display:block}
+  .menusum .prc span{font-size:10.5px;color:var(--mu)}
+  .steplbl{margin-top:26px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:9px}
+  .steplbl .n{flex:none;width:22px;height:22px;border-radius:9999px;background:var(--lime);color:#0e0e0f;
+    display:grid;place-items:center;font-family:var(--num);font-size:12px;font-weight:700}
+  .steplbl .jstnote{margin-left:auto;font-size:10.5px;font-weight:500;color:var(--mu);display:inline-flex;align-items:center;gap:5px}
+  .steplbl .jstnote svg{width:12px;height:12px;color:var(--lime-d)}
+  .dgroup{margin-top:14px}
+  .dgroup+.dgroup{margin-top:16px}
+  .dgroup .dt{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+  .dgroup .dt span{font-family:var(--num);color:var(--mu);font-weight:400;font-size:11px;margin-left:6px}
+  .tchips{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .tchip{font-family:var(--num);font-size:13.5px;font-weight:600;border:1px solid var(--bd2);background:var(--card);
+    border-radius:9999px;padding:8px 18px;color:var(--ink-2);transition:.15s}
+  .tchip:hover{border-color:var(--lime-d);color:var(--lime-d)}
+  .tchip.on{background:var(--lime);border-color:var(--lime);color:#0e0e0f;font-weight:700;
+    box-shadow:0 6px 16px -6px rgba(168,224,28,.6)}
+  .tchip:disabled{color:var(--bd2);border-color:var(--bd);background:var(--bg);text-decoration:line-through;cursor:not-allowed}
+  .reqmock textarea{margin-top:12px;width:100%;min-height:120px;resize:vertical;border:1px solid var(--bd2);border-radius:12px;
+    background:var(--card);padding:13px 16px;font-family:var(--jp);font-size:13.5px;line-height:1.85;color:var(--ink)}
+  .reqmock textarea::placeholder{color:var(--mu-2)}
+  .reqmock textarea:focus{outline:2px solid var(--lime);outline-offset:0;border-color:var(--lime)}
+  .reqsum{margin-top:22px;background:var(--lime-50);border:1px solid var(--lime-l);border-radius:12px;
+    padding:12px 16px;font-size:12px;color:var(--ink-2);line-height:1.8}
+  .reqsum b{font-family:var(--num)}
+  .reqmock .btn-p.send{width:100%;margin-top:14px;padding:14px 0;font-size:15px}
+  .reqmock .foot{margin-top:10px;font-size:11px;color:var(--mu-2);text-align:center;line-height:1.8}
+
+  /* ================= [4] /bookings ================= */
+  .bkmock{max-width:760px;margin:0 auto;padding:34px 28px 44px}
+  .bkmock h3{font-size:21px;font-weight:700}
+  .bktabs{margin-top:18px;display:flex;gap:24px;border-bottom:1px solid var(--bd);font-size:14px}
+  .bktabs a{padding:0 2px 11px;color:var(--mu);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;
+    display:inline-flex;align-items:center;gap:7px}
+  .bktabs a.on{color:var(--ink);font-weight:700;border-bottom-color:var(--lime)}
+  .bktabs .cnt{font-family:var(--num);font-size:11px;font-weight:600;background:var(--muted);color:var(--mu);
+    border-radius:9999px;padding:1px 8px}
+  .bktabs a.on .cnt{background:var(--lime-l);color:var(--lime-900)}
+  .bcard{margin-top:14px;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px 20px;box-shadow:var(--sh-xs)}
+  .bcard.pending{border-color:var(--warn-bd)}
+  .bcard.confirmed{border-color:var(--lime-200)}
+  .bcard .row{display:flex;align-items:flex-start;gap:14px}
+  .bcard .ava{width:46px;height:46px;font-size:17px}
+  .bcard .who{min-width:0;flex:1}
+  .bcard .who .nm{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .bcard .who .mn{font-size:12px;color:var(--mu);margin-top:2px}
+  .bcard .who .mn b{color:var(--ink-2);font-weight:700}
+  .bcard .st{flex:none}
+  .bcard .when{margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:11px 15px}
+  .bcard .when svg{width:15px;height:15px;color:var(--lime-d);flex:none}
+  .bcard .when .d{font-size:13px;font-weight:700}
+  .bcard .when .t{font-family:var(--num);font-size:14px;font-weight:600}
+  .bcard .when .t small{font-family:var(--jp);font-size:10.5px;color:var(--mu);font-weight:400;margin-left:3px}
+  .bcard .when .t2{font-size:11px;color:var(--mu);line-height:1.5}
+  .bcard .when .pr{margin-left:auto;font-family:var(--num);font-size:14.5px;font-weight:700}
+  .bcard .msg{margin-top:11px;font-size:12.5px;color:var(--mu);line-height:1.85;background:var(--card);
+    border-left:3px solid var(--bd2);padding:4px 0 4px 13px}
+  .bcard .acts{margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .bcard .acts .btn-p{padding:10px 26px;font-size:13.5px}
+  .bcard .acts .exp{margin-left:auto;font-size:11px;color:var(--mu-2)}
+  .bcard.dim{opacity:.62}
+  .emptwo{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .empcell{padding:44px 28px 48px;text-align:center}
+  .empcell+.empcell{border-left:1px solid var(--bd)}
+  .empcell .tablbl{font-family:var(--mono);font-size:10.5px;color:var(--mu);letter-spacing:.08em;margin-bottom:18px}
+  .empcell .ico{width:64px;height:64px;border-radius:9999px;background:var(--lime-50);border:1px solid var(--lime-l);
+    display:grid;place-items:center;margin:0 auto;font-size:26px}
+  .empcell b{display:block;margin-top:14px;font-size:15px}
+  .empcell p{margin-top:6px;font-size:12.5px;color:var(--mu);line-height:1.9;max-width:30em;margin-left:auto;margin-right:auto}
+  .empcell .btn-p{margin-top:16px;padding:11px 26px;font-size:13.5px}
+
+  /* ================= [5] /experts 国ファーストフィルタ ================= */
+  .exmock{max-width:1024px;margin:0 auto;padding:36px 28px 40px}
+  .exmock .eyebrow{font-family:var(--num);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--lime-d)}
+  .exmock h3{margin-top:8px;font-size:clamp(22px,3vw,30px);font-weight:700}
+  .exmock .lead{margin-top:6px;font-size:13.5px;color:var(--mu);max-width:44em}
+  .fbar{margin-top:22px;border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:14px 0 13px;
+    background:linear-gradient(rgba(244,244,239,.5),rgba(244,244,239,.5))}
+  .fbar .row1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .fbar .selectish.hl{border-color:var(--lime);box-shadow:0 0 0 3px var(--lime-50)}
+  .fbar .selectish .flag{font-size:15px}
+  .fbar .go{margin-left:2px}
+  .fbar .cntr{margin-left:auto;font-size:13px;color:var(--mu)}
+  .fbar .cntr b{font-family:var(--num);font-size:15px;color:var(--ink)}
+  .fnote{margin-top:9px;display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--lime-900);
+    background:var(--lime-50);border:1px solid var(--lime-l);border-radius:9999px;padding:3px 12px}
+  .fnote svg{width:12px;height:12px;flex:none}
+  .fchips{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .fchip{white-space:nowrap;border-radius:9999px;border:1px solid var(--bd2);background:var(--card);
+    padding:6px 16px;font-size:13px;font-weight:500;color:var(--ink-2)}
+  .fchip.on{background:var(--lime);border-color:var(--lime);color:#0e0e0f;font-weight:700}
+  .ddpanel{position:relative;margin-top:16px;max-width:300px}
+  .ddpanel .lbl{font-family:var(--mono);font-size:10px;color:var(--mu);letter-spacing:.1em;margin-bottom:6px}
+  .dd-list{background:var(--card);border:1px solid var(--bd2);border-radius:14px;box-shadow:var(--sh-md);overflow:hidden;padding:6px}
+  .dd-list a{display:flex;align-items:center;gap:10px;border-radius:9px;padding:8px 12px;font-size:13.5px;color:var(--ink-2)}
+  .dd-list a:hover{background:var(--bg)}
+  .dd-list a.on{background:var(--lime-50);color:var(--lime-900);font-weight:700}
+  .dd-list a .n{margin-left:auto;font-family:var(--num);font-size:11px;color:var(--mu);font-weight:400}
+  .dd-list a.on .n{color:var(--lime-d)}
+
+  /* ================= responsive ================= */
+  @media(max-width:880px){
+    .addgrid{grid-template-columns:1fr}
+    .dtmock{grid-template-columns:1fr;gap:26px}
+    .emptwo{grid-template-columns:1fr}
+    .empcell+.empcell{border-left:0;border-top:1px solid var(--bd)}
+  }
+  @media(max-width:640px){
+    .avmock,.bkmock,.exmock{padding-left:18px;padding-right:18px}
+    .slotrow{flex-wrap:wrap;row-gap:4px}
+    .slotrow .jst{flex-basis:100%;padding-left:78px}
+    .bcard .when .pr{margin-left:0;flex-basis:100%}
+    .fbar .cntr{flex-basis:100%;margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ showcase intro（このページ自体は仕様書。以下5ブロックが実装対象） ============ -->
+<div class="intro"><div class="introin">
+  <span class="tag">Mock — Booking Slice</span>
+  <h1>予約スライス: 5画面の差分デザイン</h1>
+  <p>チャット任せだった日程調整を、<b>空き枠 → 予約リクエスト → 承諾</b>の型に載せる最初のスライス。エキスパートは自分の現地時間で空き枠を登録し、相談者にはすべて<b>日本時間</b>で見せる（時差の換算をユーザーにさせない）。決済は未実装のため、承諾までで止まる旨を正直に明記する。配色は現行実装（globals.css の Locore Lime パレット）に準拠。</p>
+</div></div>
+
+<div class="showcase">
+
+  <!-- ================================================================
+       [1/5] /settings/availability — 空き時間管理
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">1 / 5</span>
+      <h2>空き時間管理 — エキスパート向け設定タブ</h2>
+      <span class="where">/settings/availability ・ 設定に「空き時間」タブを新設</span>
+    </div>
+    <p class="slabnote">入力はエキスパートの現地時間、表示先（相談者）は日本時間 — この非対称をページ冒頭で1回だけ説明し、以降は各行に日本時間を併記して迷わせない。登録は「毎週◯曜のこの時間」の一括追加が主役、単発追加は従。予約が入った枠はライムで守られ、削除できない。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/settings/availability</span></div>
+      <div class="avmock">
+        <nav class="settabs">
+          <a href="#">プロフィール</a>
+          <a href="#">相談メニュー</a>
+          <a class="on" href="#">空き時間</a>
+          <a href="#">アカウント</a>
+        </nav>
+
+        <div class="avhead">
+          <h3>空き時間管理</h3>
+          <p>相談を受けられる時間帯を登録してください。空き枠があると、プロフィールに「予約リクエスト」ボタンが表示されます。</p>
+        </div>
+
+        <div class="tzrow">
+          <span class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></svg>タイムゾーン</span>
+          <span class="selectish">Europe/Paris（パリ）<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+          <span class="hint">時間は<b>あなたの現地時間</b>で入力します。相談者には<b>日本時間</b>で表示されます。</span>
+        </div>
+
+        <div class="addgrid">
+          <div class="addcard">
+            <div class="cap"><span class="en">Weekly</span>毎週の空き時間を一括追加</div>
+            <div class="sub">選んだ曜日・時間帯を、今後4週間分まとめて登録します。</div>
+            <div class="daychips">
+              <button class="day" type="button">月</button>
+              <button class="day" type="button">火</button>
+              <button class="day on" type="button">水</button>
+              <button class="day" type="button">木</button>
+              <button class="day on" type="button">金</button>
+              <button class="day" type="button">土</button>
+              <button class="day" type="button">日</button>
+            </div>
+            <div class="timerow">
+              <span class="selectish">13:00<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+              <span class="tilde">〜</span>
+              <span class="selectish">15:00<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+              <span style="font-size:11px;color:var(--mu)">パリ時間（日本時間 20:00〜22:00）</span>
+            </div>
+            <button class="btn btn-p" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>今後4週間分に追加</button>
+          </div>
+
+          <div class="addcard single">
+            <div class="cap"><span class="en">One-off</span>単発で追加</div>
+            <div class="sub">特定の日だけ空けたいときに。</div>
+            <div class="timerow" style="margin-top:14px">
+              <span class="selectish">9/21（月）<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+            </div>
+            <div class="timerow">
+              <span class="selectish">10:00<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+              <span class="tilde">〜</span>
+              <span class="selectish">11:00<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+            </div>
+            <button class="btn btn-o" type="button">この日だけ追加</button>
+          </div>
+        </div>
+
+        <div class="avlist">
+          <div class="wk">9/14の週</div>
+          <div class="slotrow">
+            <span class="dd"><b>水</b><span>9/16</span></span>
+            <span class="tm">13:00–15:00<small>パリ時間</small></span>
+            <span class="jst">日本時間 20:00–22:00</span>
+            <span class="sp"></span>
+            <button class="del" type="button" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+          </div>
+          <div class="slotrow booked">
+            <span class="dd"><b>金</b><span>9/18</span></span>
+            <span class="tm">13:00–15:00<small>パリ時間</small></span>
+            <span class="jst">日本時間 20:00–22:00</span>
+            <span class="vbadge" style="font-size:11px;padding:3px 10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg>予約あり</span>
+            <span class="sp"></span>
+            <button class="del" type="button" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+          </div>
+          <div class="slotrow">
+            <span class="dd"><b>土</b><span>9/19</span></span>
+            <span class="tm">09:00–11:00<small>パリ時間</small></span>
+            <span class="jst">日本時間 16:00–18:00</span>
+            <span class="sp"></span>
+            <button class="del" type="button" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+          </div>
+
+          <div class="wk">9/21の週</div>
+          <div class="slotrow">
+            <span class="dd"><b>水</b><span>9/23</span></span>
+            <span class="tm">13:00–15:00<small>パリ時間</small></span>
+            <span class="jst">日本時間 20:00–22:00</span>
+            <span class="sp"></span>
+            <button class="del" type="button" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+          </div>
+          <div class="slotrow">
+            <span class="dd"><b>金</b><span>9/25</span></span>
+            <span class="tm">19:00–21:00<small>パリ時間</small></span>
+            <span class="jst">日本時間 翌2:00–4:00</span>
+            <span class="sp"></span>
+            <button class="del" type="button" aria-label="削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [2/5] /experts/[id] — サイドバー差分
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">2 / 5</span>
+      <h2>エキスパート詳細 — 相談メニューの主導線を予約に</h2>
+      <span class="where">/experts/[id] ・ ConsultMenuCard と infoボックスの差し替え、空き枠プレビュー追加</span>
+    </div>
+    <p class="slabnote">空き枠を持つエキスパートでは、主CTAが「空き枠から予約リクエスト」（ライム）に昇格し、従来の「チャットで相談する」はアウトラインの副CTAに降格。サイドバー下に直近の空き枠3件をプレビューして「予約できる感」を先に見せる。空き枠ゼロのエキスパートは従来表示のまま（チャットが主CTA）。左カラムは既存のまま（薄表示は説明用）。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/experts/sasaki-aya</span></div>
+      <div class="dtmock">
+        <!-- 左: 既存メイン（変更なし・薄表示） -->
+        <div class="ghost">
+          <div class="ghosthead">
+            <span class="ava">彩</span>
+            <div>
+              <h3>佐々木 彩<span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span></h3>
+              <div class="sub">🇫🇷 パリ在住 8年 ・ 輸入雑貨会社 経営</div>
+            </div>
+          </div>
+          <div class="phset">
+            <div class="ph" style="width:34%"></div>
+            <div class="ph" style="width:96%"></div>
+            <div class="ph" style="width:90%"></div>
+            <div class="ph" style="width:64%"></div>
+            <div class="ph" style="width:30%;margin-top:16px"></div>
+            <div class="ph" style="width:93%"></div>
+            <div class="ph" style="width:88%"></div>
+            <div class="ph" style="width:52%"></div>
+          </div>
+        </div>
+
+        <!-- 右: サイドバー（今回の変更部分） -->
+        <aside class="sidecol">
+          <div class="cap"><span class="en">Menu</span>相談メニュー</div>
+
+          <div class="menu hot">
+            <span class="cornertag"><span class="difftag">CTA変更</span></span>
+            <div class="mh"><b>30分相談</b><span class="rec">はじめての方に</span></div>
+            <div class="pr"><b>¥4,000</b><span>/ 30分・税込</span></div>
+            <p>ピンポイントの疑問に。ビザ・エリア選び・手続きなど、テーマを1〜2個に絞ってじっくりお答えします。</p>
+            <a class="btn btn-p" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/><polyline points="9.5 15 11.5 17 15 13.5"/></svg>空き枠から予約リクエスト</a>
+            <a class="btn btn-o" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg>チャットで相談する</a>
+          </div>
+
+          <div class="menu">
+            <div class="mh"><b>60分相談</b></div>
+            <div class="pr"><b>¥7,000</b><span>/ 60分・税込</span></div>
+            <p>移住・駐在の全体設計に。渡仏までのやることを時系列で一緒に整理します。</p>
+            <a class="btn btn-p" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/><polyline points="9.5 15 11.5 17 15 13.5"/></svg>空き枠から予約リクエスト</a>
+            <a class="btn btn-o" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg>チャットで相談する</a>
+          </div>
+
+          <div class="nextslots">
+            <span class="cornertag"><span class="difftag new">NEW</span></span>
+            <div class="cap2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>直近の空き枠</div>
+            <ul>
+              <li>9/16(水) 20:00〜<span class="jp">日本時間</span></li>
+              <li>9/18(金) 20:00〜<span class="jp">日本時間</span></li>
+              <li>9/19(土) 16:00〜<span class="jp">日本時間</span></li>
+            </ul>
+            <a class="more" href="#">すべての空き枠を見る<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+          </div>
+
+          <div class="infonote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.8" r=".4" fill="currentColor"/></svg>承諾後の決済機能は準備中です。まずはリクエストを送ってみてください。</div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [3/5] /experts/[id]/request — 予約リクエスト
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">3 / 5</span>
+      <h2>予約リクエストページ — 枠を選んで、ひとこと添えて送る</h2>
+      <span class="where">/experts/[id]/request ・ 新規ページ（1カラム / 375px でもそのまま縦積み）</span>
+    </div>
+    <p class="slabnote">フォームは1カラム1本道: メニュー確認 → 時刻チップ選択（すべて日本時間・満枠は打ち消し表示） → 相談内容 → 送信。選択内容はライムのサマリーで復唱してから送らせる。右は同一マークアップの 375px 表示 — チップの折り返しだけで成立し、専用モバイルレイアウトは不要。</p>
+    <div class="duo">
+      <div class="frame main">
+        <div class="bar"><i></i><i></i><i></i><span>locore.app/experts/sasaki-aya/request</span></div>
+        <div class="reqmock">
+          <a class="bk" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 6 5 12 11 18"/></svg>佐々木 彩さんのページに戻る</a>
+          <h3>予約リクエスト</h3>
+          <p class="lead">希望の枠を選んで送信すると、エキスパートに承諾の依頼が届きます。</p>
+
+          <div class="menusum">
+            <span class="ava">彩</span>
+            <div class="t"><b>30分相談</b><span>佐々木 彩 ・ 🇫🇷 パリ</span></div>
+            <div class="prc"><b class="num">¥4,000</b><span>/ 30分・税込</span></div>
+          </div>
+
+          <div class="steplbl"><span class="n">1</span>日時をえらぶ<span class="jstnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>すべて日本時間</span></div>
+
+          <div class="dgroup">
+            <div class="dt">9月16日（水）<span>あと2枠</span></div>
+            <div class="tchips">
+              <button class="tchip" type="button">20:00</button>
+              <button class="tchip" type="button">21:00</button>
+              <button class="tchip" type="button" disabled>21:30</button>
+            </div>
+          </div>
+          <div class="dgroup">
+            <div class="dt">9月18日（金）<span>あと3枠</span></div>
+            <div class="tchips">
+              <button class="tchip on" type="button">20:00</button>
+              <button class="tchip" type="button">20:30</button>
+              <button class="tchip" type="button">21:00</button>
+              <button class="tchip" type="button" disabled>21:30</button>
+            </div>
+          </div>
+          <div class="dgroup">
+            <div class="dt">9月19日（土）<span>あと2枠</span></div>
+            <div class="tchips">
+              <button class="tchip" type="button">16:00</button>
+              <button class="tchip" type="button">17:00</button>
+            </div>
+          </div>
+
+          <div class="steplbl"><span class="n">2</span>相談したいこと</div>
+          <textarea placeholder="相談したいことを具体的にお書きください。例:「来年4月にパリ移住予定。ビザ申請の書類と、11区・20区あたりのエリア選びについて相談したいです」"></textarea>
+
+          <div class="reqsum">送信する内容: <b>9/18(金) 20:00〜20:30</b>（日本時間）の <b>30分相談 ¥4,000</b> — 佐々木 彩さんの承諾後に確定します。</div>
+          <button class="btn btn-p send" type="button">この内容でリクエストする<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+          <p class="foot">この時点では料金は発生しません。48時間以内に返答がない場合、リクエストは自動で期限切れになります。</p>
+        </div>
+      </div>
+
+      <!-- 同一マークアップの 375px 表示 -->
+      <div class="frame phone">
+        <div class="bar"><i></i><i></i><i></i><span>375px — モバイル表示（同一マークアップ）</span></div>
+        <div class="reqmock">
+          <a class="bk" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 6 5 12 11 18"/></svg>佐々木 彩さんのページに戻る</a>
+          <h3>予約リクエスト</h3>
+
+          <div class="menusum">
+            <span class="ava">彩</span>
+            <div class="t"><b>30分相談</b><span>佐々木 彩 ・ 🇫🇷 パリ</span></div>
+            <div class="prc"><b class="num">¥4,000</b><span>/ 30分</span></div>
+          </div>
+
+          <div class="steplbl"><span class="n">1</span>日時をえらぶ<span class="jstnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>日本時間</span></div>
+          <div class="dgroup">
+            <div class="dt">9月18日（金）</div>
+            <div class="tchips">
+              <button class="tchip on" type="button">20:00</button>
+              <button class="tchip" type="button">20:30</button>
+              <button class="tchip" type="button">21:00</button>
+              <button class="tchip" type="button" disabled>21:30</button>
+            </div>
+          </div>
+          <div class="dgroup">
+            <div class="dt">9月19日（土）</div>
+            <div class="tchips">
+              <button class="tchip" type="button">16:00</button>
+              <button class="tchip" type="button">17:00</button>
+            </div>
+          </div>
+
+          <div class="steplbl"><span class="n">2</span>相談したいこと</div>
+          <textarea placeholder="相談したいことを具体的にお書きください"></textarea>
+          <button class="btn btn-p send" type="button">この内容でリクエストする</button>
+          <p class="foot">この時点では料金は発生しません。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [4/5] /bookings — マイ相談（2タブ）
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">4 / 5</span>
+      <h2>マイ相談 — 依頼した相談 / 受けたリクエスト</h2>
+      <span class="where">/bookings ・ 新規ページ（タブ2枚 + 各空状態）</span>
+    </div>
+    <p class="slabnote">ステータスは3色に集約: リクエスト中＝warning（返答待ちの緊張感）、確定＝ライム（このサイトで唯一のポジティブ色）、辞退・キャンセル・期限切れ＝neutral（視界から退く）。受け側カードは日時をエキスパートの現地時間で主表示し、日本時間を添える — 空き時間管理と同じ非対称ルール。承諾がライムの主ボタン、辞退はテキストに降格して誤タップを防ぐ。</p>
+
+    <!-- 依頼した相談タブ -->
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/bookings — 依頼した相談</span></div>
+      <div class="bkmock">
+        <h3>マイ相談</h3>
+        <nav class="bktabs">
+          <a class="on" href="#">依頼した相談<span class="cnt">3</span></a>
+          <a href="#">受けたリクエスト<span class="cnt">2</span></a>
+        </nav>
+
+        <div class="bcard pending">
+          <div class="row">
+            <span class="ava">彩</span>
+            <div class="who">
+              <div class="nm">佐々木 彩</div>
+              <div class="mn"><b>30分相談</b> ・ ¥4,000</div>
+            </div>
+            <span class="st status pend"><i></i>リクエスト中</span>
+          </div>
+          <div class="when">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/></svg>
+            <span class="d">9/18（金）</span>
+            <span class="t">20:00–20:30<small>日本時間</small></span>
+            <span class="pr num">¥4,000</span>
+          </div>
+          <div class="acts">
+            <button class="btn btn-t" type="button">リクエストを取り消す</button>
+            <span class="exp">返答期限: 9/16(水) 20:00 まで</span>
+          </div>
+        </div>
+
+        <div class="bcard confirmed">
+          <div class="row">
+            <span class="ava g3">健</span>
+            <div class="who">
+              <div class="nm">高橋 健太郎</div>
+              <div class="mn"><b>60分相談</b> ・ ¥7,000 ・ 🇬🇧 ロンドン</div>
+            </div>
+            <span class="st status ok"><i></i>確定</span>
+          </div>
+          <div class="when">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/></svg>
+            <span class="d">9/23（水）</span>
+            <span class="t">21:00–22:00<small>日本時間</small></span>
+            <span class="pr num">¥7,000</span>
+          </div>
+          <div class="acts">
+            <button class="btn btn-o" type="button" style="padding:9px 22px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg>チャットを開く</button>
+            <span class="exp">当日の参加リンクはチャットで共有されます</span>
+          </div>
+        </div>
+
+        <div class="bcard dim">
+          <div class="row">
+            <span class="ava g2">実</span>
+            <div class="who">
+              <div class="nm">山本 実咲</div>
+              <div class="mn"><b>30分相談</b> ・ ¥3,500 ・ 🇩🇪 ベルリン</div>
+            </div>
+            <span class="st status off"><i></i>期限切れ</span>
+          </div>
+          <div class="when">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/></svg>
+            <span class="d">9/10（木）</span>
+            <span class="t">19:00–19:30<small>日本時間</small></span>
+            <span class="pr num">¥3,500</span>
+          </div>
+          <div class="acts">
+            <button class="btn btn-t" type="button">別の枠でもう一度リクエスト</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 受けたリクエストタブ -->
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/bookings — 受けたリクエスト（エキスパート視点: 佐々木 彩）</span></div>
+      <div class="bkmock">
+        <h3>マイ相談</h3>
+        <nav class="bktabs">
+          <a href="#">依頼した相談<span class="cnt">0</span></a>
+          <a class="on" href="#">受けたリクエスト<span class="cnt">2</span></a>
+        </nav>
+
+        <div class="bcard pending">
+          <div class="row">
+            <span class="ava g1">M</span>
+            <div class="who">
+              <div class="nm">M.K さん</div>
+              <div class="mn"><b>30分相談</b> ・ ¥4,000</div>
+            </div>
+            <span class="st status pend"><i></i>リクエスト中</span>
+          </div>
+          <div class="when">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/></svg>
+            <span class="d">9/18（金）</span>
+            <div>
+              <span class="t">13:00–13:30<small>パリ時間</small></span>
+              <div class="t2">（日本時間 20:00–20:30）</div>
+            </div>
+            <span class="pr num">¥4,000</span>
+          </div>
+          <div class="msg">来年4月にパリ移住予定です。ビザ申請の書類と、11区・20区あたりのエリア選びについて相談したいです。</div>
+          <div class="acts">
+            <button class="btn btn-p" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg>承諾する</button>
+            <button class="btn btn-t" type="button">辞退</button>
+            <span class="exp">返答期限: 9/16(水) 13:00 パリ時間</span>
+          </div>
+        </div>
+
+        <div class="bcard pending">
+          <div class="row">
+            <span class="ava g2">T</span>
+            <div class="who">
+              <div class="nm">T.S さん</div>
+              <div class="mn"><b>60分相談</b> ・ ¥7,000</div>
+            </div>
+            <span class="st status pend"><i></i>リクエスト中</span>
+          </div>
+          <div class="when">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/></svg>
+            <span class="d">9/25（金）</span>
+            <div>
+              <span class="t">19:00–20:00<small>パリ時間</small></span>
+              <div class="t2">（日本時間 翌2:00–3:00）</div>
+            </div>
+            <span class="pr num">¥7,000</span>
+          </div>
+          <div class="msg">家族帯同での駐在準備について。会社がやってくれること／自分で動くべきことの切り分けを教えてほしいです。</div>
+          <div class="acts">
+            <button class="btn btn-p" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg>承諾する</button>
+            <button class="btn btn-t" type="button">辞退</button>
+            <span class="exp">返答期限: 9/23(水) 19:00 パリ時間</span>
+          </div>
+        </div>
+
+        <div class="bcard confirmed">
+          <div class="row">
+            <span class="ava g3">Y</span>
+            <div class="who">
+              <div class="nm">Y.A さん</div>
+              <div class="mn"><b>30分相談</b> ・ ¥4,000</div>
+            </div>
+            <span class="st status ok"><i></i>確定</span>
+          </div>
+          <div class="when">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2.5"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6"/><line x1="16" y1="2.5" x2="16" y2="6"/></svg>
+            <span class="d">9/19（土）</span>
+            <div>
+              <span class="t">09:00–09:30<small>パリ時間</small></span>
+              <div class="t2">（日本時間 16:00–16:30）</div>
+            </div>
+            <span class="pr num">¥4,000</span>
+          </div>
+          <div class="acts">
+            <button class="btn btn-o" type="button" style="padding:9px 22px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg>チャットを開く</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 空状態（両タブ） -->
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/bookings — 空状態（左: 依頼した相談 / 右: 受けたリクエスト）</span></div>
+      <div class="emptwo">
+        <div class="empcell">
+          <div class="tablbl">TAB: 依頼した相談</div>
+          <span class="ico">🧭</span>
+          <b>まだ相談の予定はありません</b>
+          <p>気になる街に住んでいるエキスパートを見つけて、空き枠からリクエストしてみましょう。</p>
+          <a class="btn btn-p" href="#">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+        </div>
+        <div class="empcell">
+          <div class="tablbl">TAB: 受けたリクエスト（エキスパートのみ表示）</div>
+          <span class="ico">🗓️</span>
+          <b>空き時間を登録すると、リクエストが届きます</b>
+          <p>空き枠がないあいだ、あなたのページには予約ボタンが表示されません。まずは週1枠から。</p>
+          <a class="btn btn-p" href="#">空き時間を登録する<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [5/5] /experts — 国ファーストフィルタ
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">5 / 5</span>
+      <h2>エキスパート一覧 — 国ファーストのフィルタバー</h2>
+      <span class="where">/experts ・ フィルタ先頭に「国」を追加、都市は国に連動</span>
+    </div>
+    <p class="slabnote">移住検討者の頭の中は「フランスに行く」が先で「パリかリヨンか」は後 — フィルタの並びをそれに合わせる。国を選ぶと都市セレクトの選択肢がその国だけに絞られ、絞り込み中であることをライムのラベルで明示。テーマチップ・料金は既存のまま。下は国ドロップダウンを開いた状態。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/experts?country=fr</span></div>
+      <div class="exmock">
+        <span class="eyebrow">Experts</span>
+        <h3>エキスパートを探す</h3>
+        <p class="lead">全員、書類審査による居住認証済み。国とテーマで絞り込んで、あなたの相談に合う人を見つけてください。</p>
+
+        <div class="fbar">
+          <div class="row1">
+            <span class="selectish hl"><span class="flag">🇫🇷</span>フランス<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="selectish">すべての都市<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="selectish" style="font-weight:500;color:var(--mu)">料金（30分〜）<svg class="car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <button class="btn btn-p go" type="button" style="padding:9px 22px;font-size:13.5px">絞り込む</button>
+            <span class="cntr"><b>2</b> 名のエキスパート</span>
+          </div>
+          <span class="fnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg>フランス国内の都市だけを表示しています</span>
+          <div class="fchips">
+            <span class="fchip on">すべて</span>
+            <span class="fchip">移住</span>
+            <span class="fchip">駐在準備</span>
+            <span class="fchip">留学</span>
+            <span class="fchip">生活手続き</span>
+            <span class="fchip">仕事・起業</span>
+            <span class="fchip">旅行</span>
+          </div>
+        </div>
+
+        <div class="ddpanel">
+          <div class="lbl">▼ 国セレクト展開時（国旗＋国名＋人数）</div>
+          <div class="dd-list">
+            <a href="#">🌍 すべての国<span class="n">9名</span></a>
+            <a class="on" href="#">🇫🇷 フランス<span class="n">2名</span></a>
+            <a href="#">🇬🇧 イギリス<span class="n">1名</span></a>
+            <a href="#">🇩🇪 ドイツ<span class="n">2名</span></a>
+            <a href="#">🇺🇸 アメリカ<span class="n">1名</span></a>
+            <a href="#">🇹🇭 タイ<span class="n">1名</span></a>
+            <a href="#">🇦🇺 オーストラリア<span class="n">1名</span></a>
+            <a href="#">🇨🇦 カナダ<span class="n">1名</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
