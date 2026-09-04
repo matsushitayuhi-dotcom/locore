@@ -16,7 +16,6 @@ import {
 } from '@/lib/experts/list';
 import { PRICE_RANGES } from '@/lib/experts/constants';
 import {
-  LEGACY_TOPIC_TO_GROUP,
   SPECIALTY_GROUPS,
   groupsOf,
   specialtyGroup,
@@ -37,17 +36,21 @@ import { CityPriceSelects } from './FilterSelects';
  * URL クエリ（GET フォーム + リンク）:
  *   - country … 国コード（countries.code、lowercase alpha-2）
  *   - city    … 都市 slug（国選択時はその国の都市だけが選択肢に出る）
- *   - topic   … 得意分野の第 1 階層 code（旧 TOPIC_TAGS の値も LEGACY_TOPIC_TO_GROUP で受ける）
+ *   - topic   … 相談テーマ TOPIC_TAGS の value（= 得意分野の第 1 階層 code）
  *   - price   … 料金プリセット（PRICE_RANGES の value）
  *
- * テーマの判定は users.specialties（0080）∪ 相談メニューの tags。
+ * テーマの判定は users.specialties（0080）の親 ∪ 相談メニューの tags。
+ * テーマの列・チップは lib/experts/constants.ts の TOPIC_TAGS から描画（ハードコードしない）。
  * lib/experts/list.ts（共有）は触らず、topic はこのページ側で絞る。
+ *
+ * 2026-09 ビーチヘッド確定: 海外留学 超特化（在学生・アルムナイの LIVE 情報）。
+ * 文言は留学向け。国 = 留学先の国。
  */
 
 export const metadata = {
   title: 'エキスパートを探す',
   description:
-    '海外在住の日本人エキスパートに、30分からオンライン相談。全員、書類審査による居住認証済み。国とテーマで絞り込めます。',
+    '海外の大学・大学院に在学中／卒業した日本人に、30分からオンライン相談。全員、書類審査による居住認証済み。留学先の国とテーマで絞り込めます。',
 };
 
 type Search = {
@@ -71,10 +74,8 @@ export default async function ExpertsPage({
   const rawTopic = firstParam(searchParams?.topic);
   const price = firstParam(searchParams?.price);
 
-  // 旧タグ値（housing など）は第 1 階層へ読み替え。未知の値は無視
-  const topic = specialtyGroup(rawTopic)
-    ? rawTopic
-    : (LEGACY_TOPIC_TO_GROUP[rawTopic] ?? '');
+  // topic は TOPIC_TAGS の value（= 得意分野の第 1 階層 code）。未知の値は無視
+  const topic = specialtyGroup(rawTopic) ? rawTopic : '';
   const range = PRICE_RANGES.find((r) => r.value === price);
 
   const [countryOptions, cityOptions] = await Promise.all([
@@ -132,13 +133,13 @@ export default async function ExpertsPage({
         {/* ===== 1. lede ===== */}
         <section className="pb-6 pt-9 sm:pt-11">
           <h1 className="text-[clamp(22px,3.1vw,34px)] font-light leading-[1.45] tracking-[-0.005em] text-neutral-500">
-            <b className="font-bold text-foreground">エキスパートを選ぶ。</b>
-            日程を決める。現地の30分を、オンラインで聞く。
+            <b className="font-bold text-foreground">先輩を選ぶ。</b>
+            日程を決める。留学先のリアルを、30分オンラインで聞く。
           </h1>
           <p className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-neutral-700">
             <span className="inline-flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-primary-700" aria-hidden />
-              全員、書類審査による居住認証済み
+              全員、在学生またはアルムナイ。書類審査による居住認証済み
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-primary-700" aria-hidden />
@@ -282,8 +283,8 @@ export default async function ExpertsPage({
         <section className="mt-16 border-t border-border pt-10">
           <h2 className="text-[22px] font-medium">使い方</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <HowTile icon={<Search className="h-6 w-6" aria-hidden />} title="エキスパートを探す">
-              国とテーマで絞り込み、プロフィールと相談メニューを見て選びます
+            <HowTile icon={<Search className="h-6 w-6" aria-hidden />} title="先輩を探す">
+              留学先の国とテーマで絞り込み、学校・専攻・相談メニューを見て選びます
             </HowTile>
             <HowTile
               icon={<CalendarCheck className="h-6 w-6" aria-hidden />}
@@ -292,7 +293,7 @@ export default async function ExpertsPage({
               30分または60分。日本時間の空き枠から選んでリクエスト。チャットでの事前相談は無料です
             </HowTile>
             <HowTile icon={<Video className="h-6 w-6" aria-hidden />} title="オンラインで話す">
-              ビデオ通話で、あなたの事情に合わせた「現地のリアル」を聞けます
+              ビデオ通話で、出願・費用・現地生活の「いまのリアル」を聞けます
             </HowTile>
           </div>
         </section>
@@ -300,9 +301,9 @@ export default async function ExpertsPage({
         {/* ===== 6. 登録 CTA ===== */}
         <section className="mb-20 mt-14 flex flex-wrap items-center gap-7 rounded-[18px] bg-neutral-900 px-7 py-9 text-white sm:px-11">
           <h3 className="max-w-[22em] text-[20px] font-light leading-[1.45] sm:text-[22px]">
-            海外在住のあなたへ。
+            海外の大学・大学院で学ぶあなたへ。
             <br />
-            あなたの「暮らしの知識」が、
+            あなたの「留学のリアル」が、
             <b className="font-bold text-primary-500">誰かの30分</b>になります。
           </h3>
           <Link

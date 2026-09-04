@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { BadgeCheck, ShieldCheck } from 'lucide-react';
 import type { ExpertCard as ExpertCardData } from '@/lib/experts/list';
-import { specialtyLabel } from '@/lib/experts/specialties';
+import { specialtyLabel, type EnrollmentStatus } from '@/lib/experts/specialties';
 
 /**
  * /experts 一覧・トップの「注目エキスパート」で使う縦長カード（Intro 型）。
@@ -18,12 +18,18 @@ export type ExpertCardExtra = {
   specialties?: ReadonlyArray<string>;
   /** 国名（日本語）。無ければ国コードを出す */
   countryNameJa?: string | null;
+  /**
+   * 在学中 / アルムナイ（留学特化）。写真左上のチップと、場所行の学校名に使う。
+   * データは lib/experts/list.ts 側（team-lead）で付与される想定。無ければ出さない。
+   */
+  enrollment?: EnrollmentStatus | null;
 };
 
 export function ExpertCard({
   expert,
   specialties = [],
   countryNameJa = null,
+  enrollment = null,
   priority = false,
 }: {
   expert: ExpertCardData;
@@ -64,6 +70,9 @@ export function ExpertCard({
             </span>
           </div>
         )}
+
+        {/* 在学中 / アルムナイ（左上）。在学中はライム、アルムナイは白 */}
+        {enrollment ? <EnrollmentChip enrollment={enrollment} /> : null}
 
         {/* 都市名（右上） */}
         {expert.cityNameJa ? (
@@ -123,6 +132,11 @@ export function ExpertCard({
           <b className="font-semibold text-foreground">応相談</b>
         )}
       </div>
+      {enrollment?.school ? (
+        <div className="mt-0.5 line-clamp-1 text-[12.5px] font-medium text-neutral-700">
+          {enrollment.school}
+        </div>
+      ) : null}
       {place || expert.occupation ? (
         <div className="mt-0.5 line-clamp-1 text-[12px] text-neutral-500">
           {place}
@@ -150,5 +164,37 @@ export function ExpertCard({
         </ul>
       ) : null}
     </Link>
+  );
+}
+
+/**
+ * 在学中 / アルムナイのチップ。写真の上に置く前提（背景は不透明）。
+ * 在学中 = ライム地（「いま現地にいる」を最優先で伝える）、
+ * アルムナイ = 白地 + 卒業年（'24 のような 2 桁）。
+ */
+export function EnrollmentChip({
+  enrollment,
+  size = 'sm',
+}: {
+  enrollment: EnrollmentStatus;
+  size?: 'sm' | 'md';
+}) {
+  const current = enrollment.status === 'current';
+  const yy =
+    !current && enrollment.year != null ? `’${String(enrollment.year).slice(-2)}` : '';
+  return (
+    <span
+      className={
+        'absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-md font-bold shadow-sm ' +
+        (size === 'md' ? 'px-2.5 py-1 text-[12px]' : 'px-2 py-0.5 text-[10.5px]') +
+        (current ? ' bg-primary-500 text-neutral-950' : ' bg-white/95 text-neutral-900')
+      }
+    >
+      {current ? (
+        <span className="h-1.5 w-1.5 rounded-full bg-neutral-950" aria-hidden />
+      ) : null}
+      {current ? '在学中' : 'アルムナイ'}
+      {yy ? <span className="font-semibold tabular-nums text-neutral-500">{yy}</span> : null}
+    </span>
   );
 }

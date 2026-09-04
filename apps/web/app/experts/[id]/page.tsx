@@ -22,10 +22,12 @@ import { getResidentProfile } from '@/lib/residents/byId';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { CONSULTATION_TAG, topicLabel } from '@/lib/experts/constants';
 import {
+  deriveEnrollment,
   isExperienceOnly,
   specialtyGroupOf,
   specialtyLabel,
 } from '@/lib/experts/specialties';
+import { EnrollmentChip } from '@/components/experts/ExpertCard';
 import { getSpecialtiesByUser } from '@/lib/experts/specialtiesByUser';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { ConsultMenuCard } from '@/components/experts/ConsultMenuCard';
@@ -109,6 +111,8 @@ export default async function ExpertDetailPage({
     return Array.from(rows.values());
   })();
   const hasExperienceOnly = specialties.some(isExperienceOnly);
+  // 在学中 / アルムナイ（留学特化）。EducationEntry.current は team-lead 側で追加予定
+  const enrollment = deriveEnrollment(profile.education);
 
   // 予約可能なメニューの条件（requestBooking のサーバー検証と同一ルール）:
   //   chat メニュー × 価格確定 × 所要時間確定 × その duration で空き候補あり。
@@ -215,6 +219,7 @@ export default async function ExpertDetailPage({
                   </span>
                 </div>
               )}
+              {enrollment ? <EnrollmentChip enrollment={enrollment} size="md" /> : null}
               {cityName ? (
                 <span className="absolute right-3.5 top-3.5 rounded-md bg-black/45 px-2 py-0.5 text-[11px] font-bold tracking-[0.08em] text-white backdrop-blur-sm">
                   {cityName}
@@ -240,7 +245,17 @@ export default async function ExpertDetailPage({
                   />
                 ) : null}
               </h1>
-              <div className="mt-1 text-[16px] text-neutral-500">
+              {enrollment?.school ? (
+                <div className="mt-1 text-[16px] font-medium text-neutral-700">
+                  {enrollment.school}
+                  <span className="ml-2 text-[13px] font-normal text-neutral-500">
+                    {enrollment.status === 'current'
+                      ? '在学中'
+                      : `アルムナイ${enrollment.year != null ? `（${enrollment.year}年卒）` : ''}`}
+                  </span>
+                </div>
+              ) : null}
+              <div className="mt-1 text-[15px] text-neutral-500">
                 {[profile.occupation, placeLine ? `${placeLine}${years != null ? ` ${years}年` : ''}` : null]
                   .filter(Boolean)
                   .join(' ・ ')}

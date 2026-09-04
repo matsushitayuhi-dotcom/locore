@@ -1,138 +1,112 @@
+import { TOPIC_TAGS } from './constants';
+
 /**
- * エキスパートの「得意分野」統制リスト（2 階層）。
- * 根拠と設計ルールは docs/experts-specialty-taxonomy.md。
+ * エキスパートの「得意分野」統制リスト（2 階層）— 海外留学 超特化版。
  *
- * - 第 1 階層（group）= 相談者の状況・目的。/experts のテーマ列とフィルタチップに使う。
- * - 第 2 階層（specialty）= 具体テーマ。カードのホバーとプロフィールに表示。
- *   同じテーマは 1 つの group にだけ置く。国・都市は別軸（country / city フィルタ）。
+ * - 第 1 階層（group）= 相談テーマ TOPIC_TAGS（lib/experts/constants.ts）と **同じ code**。
+ *   相談メニューの tags と、プロフィールの得意分野の親が一致するので、
+ *   一覧の列・フィルタは「メニューの tags ∪ 得意分野の親」で判定できる。
+ *   ラベル・順序は constants.ts が正。ここではハードコードしない。
+ * - 第 2 階層（specialty）= 留学の具体テーマ。カードのホバーとプロフィールに表示。
+ *   同じテーマは 1 つの group にだけ置く。国・都市・学校は別軸。
  * - users.specialties には第 2 階層の code を配列で保存（manual/0080）。
- * - 税金・資産・ビザ系は「体験談」に限定する注記を UI 側で出す（資格規制）。
+ * - ビザ・お金まわりは「体験談」に限定する注記を UI 側で出す（資格規制）。
+ *
+ * 経緯: 当初は移住・駐在・旅行を含む 9×51 だったが、ビーチヘッドを「海外留学」に
+ * 確定したため（docs/experts-specialty-taxonomy.md 5 章）、留学に絞って再構成。
  */
+
+type Child = { code: string; label: string; note?: 'experience_only' };
+
+/** 第 1 階層（TOPIC_TAGS の value）→ 第 2 階層。TOPIC_TAGS に無い key は無視される */
+const CHILDREN_BY_GROUP: Record<string, ReadonlyArray<Child>> = {
+  grad_school: [
+    { code: 'sop_research_plan', label: '志望理由書・研究計画書' },
+    { code: 'recommendation', label: '推薦状の頼み方' },
+    { code: 'professor_contact', label: '教授へのコンタクト' },
+    { code: 'gre_gmat', label: 'GRE・GMAT 対策' },
+    { code: 'school_list', label: '学校リストの作り方' },
+  ],
+  mba: [
+    { code: 'mba_essay', label: 'MBA エッセイ' },
+    { code: 'mba_test', label: 'GMAT・GRE（MBA）' },
+    { code: 'mba_career', label: 'キャリア・職務経歴の整理' },
+    { code: 'mba_scholarship', label: 'MBA の費用・奨学金' },
+    { code: 'post_mba', label: 'ポスト MBA の就職' },
+  ],
+  undergrad: [
+    { code: 'sat_ib', label: 'SAT・ACT・IB' },
+    { code: 'extracurricular', label: '課外活動・アピール' },
+    { code: 'college_list', label: 'カレッジ選び・ランキングの読み方' },
+    { code: 'common_app', label: 'Common App・UCAS など出願手続き' },
+    { code: 'transfer', label: '編入・コミカレからの進学' },
+  ],
+  language_exchange: [
+    { code: 'language_school_choice', label: '語学学校選び' },
+    { code: 'exchange_credits', label: '交換留学の単位・手続き' },
+    { code: 'short_term', label: '短期・サマープログラム' },
+    { code: 'pathway', label: '語学→進学（進学準備コース）' },
+  ],
+  application_docs: [
+    { code: 'essay_writing', label: 'エッセイの書き方・添削' },
+    { code: 'cv_resume', label: 'CV・レジュメ' },
+    { code: 'portfolio', label: 'ポートフォリオ（芸術・デザイン）' },
+    { code: 'english_test', label: '英語試験（IELTS・TOEFL）' },
+  ],
+  interview: [
+    { code: 'interview_practice', label: '模擬面接' },
+    { code: 'interview_english', label: '英語面接のコツ' },
+    { code: 'motivation', label: '志望動機の組み立て' },
+  ],
+  funding: [
+    { code: 'scholarships', label: '奨学金（JASSO・大学奨学金など）', note: 'experience_only' },
+    { code: 'budget', label: '学費・生活費の実額' },
+    { code: 'loans', label: '教育ローン・資金計画', note: 'experience_only' },
+    { code: 'ta_ra', label: 'TA・RA・学内アルバイト' },
+  ],
+  campus_life: [
+    { code: 'student_housing', label: '住まい（寮・シェア）' },
+    { code: 'student_visa', label: '学生ビザ・入国', note: 'experience_only' },
+    { code: 'health_insurance', label: '医療・保険' },
+    { code: 'setup', label: '銀行・携帯・初期手続き' },
+    { code: 'campus_culture', label: 'キャンパス文化・友人づくり' },
+    { code: 'safety_city', label: '治安・都市の暮らし' },
+  ],
+  majors_labs: [
+    { code: 'major_choice', label: '専攻選び' },
+    { code: 'lab_choice', label: '研究室・指導教員選び' },
+    { code: 'career_path', label: '卒業後の進路（就職・博士）' },
+    { code: 'internship', label: 'インターン・Co-op' },
+  ],
+};
+
+/** 一覧の列見出しの「薄い続き」（Intro 型）。無い group は空文字 */
+const LEDE_BY_GROUP: Record<string, string> = {
+  grad_school: '研究計画書、推薦状、教授とのやり取り。合格した先輩に。',
+  mba: 'エッセイ、GMAT、その後のキャリア。在学生・卒業生に。',
+  undergrad: 'テスト、課外活動、カレッジ選び。学部で学んだ人に。',
+  language_exchange: '学校選び、単位、短期プログラム。行ってきた人に。',
+  application_docs: 'エッセイ、CV、ポートフォリオ。通った書類を知る人に。',
+  interview: '模擬面接、英語面接、志望動機。面接を越えた人に。',
+  funding: '奨学金、学費・生活費の実額、資金計画。体験談ベースで。',
+  campus_life: '住まい、ビザ、医療、キャンパスの空気。いま現地にいる人に。',
+  majors_labs: '専攻、研究室、卒業後の進路。中から見ている人に。',
+};
 
 export type SpecialtyGroup = {
   code: string;
   label: string;
-  /** Intro 型の列見出しの「薄い続き」。列にだけ使う */
   lede: string;
-  children: ReadonlyArray<{ code: string; label: string; note?: 'experience_only' }>;
+  children: ReadonlyArray<Child>;
 };
 
-export const SPECIALTY_GROUPS: ReadonlyArray<SpecialtyGroup> = [
-  {
-    code: 'immigration',
-    label: '移住・ビザ',
-    lede: 'ビザ、国選び、段取り。「実際のところ」を住んでいる人に。',
-    children: [
-      { code: 'visa', label: 'ビザ・永住権', note: 'experience_only' },
-      { code: 'country_choice', label: '国・都市選び' },
-      { code: 'relocation_plan', label: '移住の段取り・準備' },
-      { code: 'retirement', label: '老後移住・リタイア' },
-      { code: 'family_visa', label: '国際結婚・家族の呼び寄せ', note: 'experience_only' },
-      { code: 'returning', label: '本帰国の準備' },
-    ],
-  },
-  {
-    code: 'expat',
-    label: '駐在・帯同',
-    lede: '赴任準備から帯同家族の立ち上げ、帰任まで。経験者に。',
-    children: [
-      { code: 'assignment_prep', label: '赴任準備・引越し' },
-      { code: 'expat_work', label: '駐在員の働き方・現地マネジメント' },
-      { code: 'family_setup', label: '帯同家族の生活立ち上げ' },
-      { code: 'spouse_career', label: '帯同配偶者のキャリア・就労' },
-      { code: 'repatriation', label: '帰任・帰国後' },
-    ],
-  },
-  {
-    code: 'study_abroad',
-    label: '留学',
-    lede: '学校選びから費用、卒業後の進路まで。卒業した人に。',
-    children: [
-      { code: 'school_choice', label: '学校選び・出願' },
-      { code: 'tuition', label: '費用・奨学金' },
-      { code: 'language_school', label: '語学学校・英語力' },
-      { code: 'housing_student', label: '滞在先（寮・ホームステイ）' },
-      { code: 'post_grad', label: '卒業後の現地就職・ビザ' },
-      { code: 'after_return', label: '帰国後の進路' },
-    ],
-  },
-  {
-    code: 'working_holiday',
-    label: 'ワーホリ',
-    lede: '最初の 3 か月の設計、仕事探し、住まい。やり切った人に。',
-    children: [
-      { code: 'first_3_months', label: '渡航準備・最初の3か月' },
-      { code: 'job_hunt_wh', label: '仕事探し・レジュメ' },
-      { code: 'sharehouse', label: '住まい（シェアハウス）' },
-      { code: 'budget_wh', label: '資金計画' },
-      { code: 'wh_next', label: '2か国目・その後のキャリア' },
-    ],
-  },
-  {
-    code: 'work',
-    label: '仕事・起業',
-    lede: '現地就職、ビザ、起業、フリーランス。現地で働いている人に。',
-    children: [
-      { code: 'local_job', label: '現地就職・転職' },
-      { code: 'work_visa', label: '就労ビザ', note: 'experience_only' },
-      { code: 'local_hire', label: '現地採用の待遇・労働環境' },
-      { code: 'startup', label: '起業・現地法人' },
-      { code: 'freelance', label: 'フリーランス・リモート副業' },
-      { code: 'market_research', label: 'ビジネス視察・現地調査' },
-    ],
-  },
-  {
-    code: 'living',
-    label: '暮らし・手続き',
-    lede: '部屋探し、治安、役所・銀行。生活を立ち上げた人に。',
-    children: [
-      { code: 'rental', label: '部屋探し・賃貸契約' },
-      { code: 'area_safety', label: 'エリア・治安' },
-      { code: 'cost_of_living', label: '生活コスト' },
-      { code: 'setup_admin', label: '役所・銀行・保険の初期手続き' },
-      { code: 'car_license', label: '車・運転免許' },
-      { code: 'moving_pets', label: '引越し・荷物・ペット' },
-      { code: 'language_culture', label: '語学・文化適応' },
-    ],
-  },
-  {
-    code: 'childcare',
-    label: '子育て・教育',
-    lede: '出産、保育園、学校選び、日本語維持。いま子育て中の人に。',
-    children: [
-      { code: 'pregnancy', label: '妊娠・出産' },
-      { code: 'daycare', label: '保育園・幼稚園' },
-      { code: 'school_selection', label: '学校選び（現地校・日本人学校・インター）' },
-      { code: 'japanese_retention', label: '日本語維持・補習校' },
-      { code: 'returnee_exam', label: '帰国子女・受験' },
-      { code: 'kids_life', label: '子連れの暮らし・習い事' },
-    ],
-  },
-  {
-    code: 'health_money',
-    label: '医療・お金・こころ',
-    lede: '病院、保険、税金・年金、メンタル。体験談ベースで。',
-    children: [
-      { code: 'medical', label: '医療機関・保険' },
-      { code: 'tax_pension', label: '税金・年金・送金', note: 'experience_only' },
-      { code: 'property', label: '不動産・資産', note: 'experience_only' },
-      { code: 'mental', label: 'メンタル・孤独' },
-      { code: 'elder_care', label: '介護・終活' },
-    ],
-  },
-  {
-    code: 'travel',
-    label: '旅行',
-    lede: 'プラン、穴場、移動、子連れ・シニア。地元の人に。',
-    children: [
-      { code: 'itinerary', label: 'プラン作成' },
-      { code: 'local_tips', label: '穴場・ローカルの楽しみ方' },
-      { code: 'transport', label: '交通・移動' },
-      { code: 'family_senior_travel', label: '子連れ・シニア旅' },
-      { code: 'long_stay', label: '長期滞在・ロングステイ' },
-    ],
-  },
-];
+/** 第 1 階層は TOPIC_TAGS の順序・ラベルに従う */
+export const SPECIALTY_GROUPS: ReadonlyArray<SpecialtyGroup> = TOPIC_TAGS.map((t) => ({
+  code: t.value,
+  label: t.label,
+  lede: LEDE_BY_GROUP[t.value] ?? '',
+  children: CHILDREN_BY_GROUP[t.value] ?? [],
+}));
 
 /** プロフィールで選べる第 2 階層の上限 */
 export const MAX_SPECIALTIES = 6;
@@ -171,42 +145,27 @@ export function specialtyGroup(groupCode: string): SpecialtyGroup | null {
   return SPECIALTY_GROUPS.find((g) => g.code === groupCode) ?? null;
 }
 
-/** 「体験談ベース」の注記が要る code か（税務・法務・投資助言と誤認されないため） */
+/** 「体験談ベース」の注記が要る code か（法務・金融助言と誤認されないため） */
 export function isExperienceOnly(code: string): boolean {
   return noteByChild[code] === 'experience_only';
 }
 
 /**
- * 旧 TOPIC_TAGS（相談メニューの tags）→ 第 1 階層 code。
- * メニューにしか付いていないテーマも、一覧の列・フィルタで拾えるようにする。
- */
-export const LEGACY_TOPIC_TO_GROUP: Record<string, string> = {
-  immigration: 'immigration',
-  study_abroad: 'study_abroad',
-  expat_prep: 'expat',
-  travel: 'travel',
-  childcare: 'childcare',
-  housing: 'living',
-  work: 'work',
-  procedures: 'living',
-};
-
-/**
- * 第 2 階層 code の配列 + メニュー tags から、その人が属する第 1 階層 code の集合を返す。
- * 一覧の列振り分けと group フィルタで使う。
+ * 第 2 階層 code の配列 + 相談メニューの tags から、その人が属する第 1 階層 code の集合。
+ * メニューの tags は第 1 階層 code そのもの（TOPIC_TAGS）なので、そのまま採用する。
+ * 一覧の列振り分けと topic フィルタで使う。
  */
 export function groupsOf(
   specialties: ReadonlyArray<string>,
-  legacyTopics: ReadonlyArray<string> = [],
+  menuTags: ReadonlyArray<string> = [],
 ): Set<string> {
   const out = new Set<string>();
   for (const s of specialties) {
     const g = groupByChild[s];
     if (g) out.add(g.code);
   }
-  for (const t of legacyTopics) {
-    const g = LEGACY_TOPIC_TO_GROUP[t];
-    if (g) out.add(g);
+  for (const t of menuTags) {
+    if (SPECIALTY_GROUP_CODES.includes(t)) out.add(t);
   }
   return out;
 }
@@ -230,4 +189,31 @@ export function normalizeSpecialties(input: ReadonlyArray<string>): string[] {
     if (out.length >= MAX_SPECIALTIES) break;
   }
   return out;
+}
+
+/**
+ * 在学 / アルムナイの導出（team-lead 側ヘルパが来るまでの暫定）。
+ * EducationEntry に current フラグが付く予定なので、それがあれば「在学中」。
+ * 無ければ最新の卒業年から「アルムナイ」。学歴が無ければ null。
+ */
+export type EnrollmentStatus = {
+  status: 'current' | 'alumni';
+  school: string | null;
+  /** 卒業年（アルムナイのみ） */
+  year: number | null;
+};
+
+export function deriveEnrollment(
+  education: ReadonlyArray<{
+    school?: string | null;
+    endYear?: number | null;
+    current?: boolean | null;
+  }>,
+): EnrollmentStatus | null {
+  const rows = education.filter((e) => e.school?.trim());
+  if (rows.length === 0) return null;
+  const current = rows.find((e) => e.current);
+  if (current) return { status: 'current', school: current.school ?? null, year: null };
+  const latest = [...rows].sort((a, b) => (b.endYear ?? 0) - (a.endYear ?? 0))[0]!;
+  return { status: 'alumni', school: latest.school ?? null, year: latest.endYear ?? null };
 }

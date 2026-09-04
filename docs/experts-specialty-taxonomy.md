@@ -116,6 +116,20 @@ settings/profile への接続（team-lead 許可のうえ同ブランチで実�
 - `components/settings/ResidentProfileForm.tsx` … 「ヘッダー画像」と「こんな相談に乗れます」の間に `<SpecialtyPicker>`。送信 payload に `specialties`
 - `app/settings/profile/actions.ts` … zod に `specialties`（`normalizeSpecialties` で再検証）、update の set に追加、`/experts` を revalidate
 
+## 5. 2026-09-05 追記: ビーチヘッド「海外留学 超特化」への再構成
+
+別セッション（team-lead 側）からの仕様共有により、Locore のビーチヘッドは海外留学に確定
+（主力 = 大学院 / MBA、コア = 学部、間口 = 語学・交換。旅行 / 移住 / 駐在は落とす）。
+2 章の 9×51 は履歴として残し、実装（`apps/web/lib/experts/specialties.ts`）は次の構造に置き換えた。
+
+- **第 1 階層 = TOPIC_TAGS（`lib/experts/constants.ts`）と同一 code**。ラベル・順序は constants.ts が正で、specialties.ts は import して組む（ハードコードしない）。
+  grad_school 大学院出願 / mba MBA / undergrad 学部出願 / language_exchange 語学・交換留学 / application_docs エッセイ・出願書類 / interview 面接対策 / funding 奨学金・費用 / campus_life 現地生活・キャンパス / majors_labs 専攻・研究室選び
+- **第 2 階層（40）** は留学の具体テーマ。code 一覧は specialties.ts の `CHILDREN_BY_GROUP`。※（体験談限定）は scholarships / loans / student_visa。
+- メニューの tags と得意分野の親が同じ code なので、一覧の列・フィルタは「メニュー tags ∪ 得意分野の親」で判定できる。
+- 2 章の需要調査のうち留学セグメント（1-1 の留学・ワーホリ行、1-3 の留学 9.1 万人・海外子女）はそのまま根拠として有効。
+- 在学中 / アルムナイの出し分け: `deriveEnrollment(education)`（暫定。EducationEntry.current が付いたらそれを優先、無ければ最新 endYear からアルムナイ）。カードは写真左上のチップ（在学中 = ライム、アルムナイ = 白 + ’24）。
+- 役割分担: constants.ts と seed-experts.ts は team-lead 側が更新。この worktree は app/experts と components/experts のみ。seed には `specialties: string[]` フィールドと upsert 行が入っているので残す。
+
 ## 4. 未確認・注意
 - 外務省の滞在目的別（民間 / 留学 / 政府）内訳は 2022 年以降の公開データに無く未確認。
 - 税金・資産・ビザは相談内容を「体験談」に限定する注記が必要（税理士法・弁護士法・金商法）。
