@@ -16,8 +16,11 @@ export const BOOKING_WINDOW_DAYS = 28;
 /** 開始時刻候補の刻み（分） */
 export const SLOT_STEP_MINUTES = 30;
 
-/** 表示上の返答期限（開始の 48 時間前）。DB 遷移は start_at < now で expired */
-export const RESPONSE_DEADLINE_HOURS = 48;
+/**
+ * 空き枠・重複チェックで「枠を塞ぐ」扱いにするステータス。
+ * 返答期限は開始時刻そのもの（start_at < now で expired）— 別の期限定数は持たない。
+ */
+export const BLOCKING_STATUSES = ['requested', 'accepted', 'paid'] as const;
 
 /** 一括追加フォームの既定週数（「今後4週間分に追加」） */
 export const DEFAULT_BULK_WEEKS = 4;

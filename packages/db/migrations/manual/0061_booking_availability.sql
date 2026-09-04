@@ -53,7 +53,11 @@ CREATE TABLE IF NOT EXISTS expert_availability (
   CONSTRAINT expert_availability_end_after_start CHECK (end_at > start_at)
 );
 
-CREATE INDEX IF NOT EXISTS expert_availability_user_start_idx
+-- 同一ユーザー × 同一開始時刻の枠は 1 行（並行送信のレース対策。
+-- アプリ側の重複スキップに加えた最終防衛線。検索用途も兼ねるため
+-- 旧 non-unique index は不要になり削除）
+DROP INDEX IF EXISTS expert_availability_user_start_idx;
+CREATE UNIQUE INDEX IF NOT EXISTS expert_availability_user_start_key
   ON expert_availability (user_id, start_at);
 
 COMMENT ON TABLE expert_availability IS

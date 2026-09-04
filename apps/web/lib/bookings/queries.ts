@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, or } from 'drizzle-orm';
+import { and, desc, eq, lt, or } from 'drizzle-orm';
 import { schema, type ConsultationBookingStatus } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 
@@ -174,6 +174,34 @@ export async function listReceivedBookings(
   } catch (err) {
     console.warn('[listReceivedBookings] failed (0061 未適用?):', err);
     return [];
+  }
+}
+
+/**
+ * 開始時刻を過ぎた requested を expired に一括遷移させる。
+ *
+ * サーバーアクションではなく server-only の関数（'use server' に置くと無認証の
+ * POST でテーブル全体を UPDATE できてしまう）。現状は accept 時の個別遷移 +
+ * 表示側の遅延判定で足りており未使用 — 将来 cron（/api/cron/...）から
+ * 認可付きで呼ぶためのシームとして置いておく。
+ */
+export async function expireStaleBookings(): Promise<number> {
+  try {
+    const db = getDb();
+    const updated = await db
+      .update(schema.consultationBookings)
+      .set({ status: 'expired' })
+      .where(
+        and(
+          eq(schema.consultationBookings.status, 'requested'),
+          lt(schema.consultationBookings.startAt, new Date()),
+        ),
+      )
+      .returning({ id: schema.consultationBookings.id });
+    return updated.length;
+  } catch (err) {
+    console.error('[expireStaleBookings] failed:', err);
+    return 0;
   }
 }
 

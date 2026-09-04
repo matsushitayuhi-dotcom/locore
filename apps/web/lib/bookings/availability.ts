@@ -3,6 +3,7 @@ import { and, asc, eq, gt, inArray, lt } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import {
+  BLOCKING_STATUSES,
   BOOKING_WINDOW_DAYS,
   MIN_LEAD_HOURS,
   SLOT_STEP_MINUTES,
@@ -22,8 +23,6 @@ export type AvailabilitySlot = {
   /** requested / accepted / paid の予約がこの枠に重なっているか（削除不可バッジ用） */
   hasBooking: boolean;
 };
-
-const BLOCKING_STATUSES = ['requested', 'accepted', 'paid'] as const;
 
 /** エキスパート本人の空き枠一覧（from 以降、開始昇順）。設定画面用 */
 export async function listAvailability(
@@ -49,7 +48,12 @@ export async function listAvailability(
       .limit(200);
     if (rows.length === 0) return [];
 
-    const rangeEnd = rows[rows.length - 1]!.endAt;
+    // 予約取得の上限境界は「全枠の endAt の最大」（startAt 順の最終行の endAt だと
+    // 長い枠が先にあるケースでバッジ判定が漏れる）
+    const rangeEnd = rows.reduce(
+      (max, r) => (r.endAt > max ? r.endAt : max),
+      rows[0]!.endAt,
+    );
     const bookings = await db
       .select({
         startAt: schema.consultationBookings.startAt,

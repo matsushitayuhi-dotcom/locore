@@ -13,6 +13,7 @@ import {
 } from '@/lib/chat/threads';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import {
+  BLOCKING_STATUSES,
   DEFAULT_BULK_WEEKS,
   MIN_LEAD_HOURS,
   PLATFORM_FEE_RATE,
@@ -33,7 +34,6 @@ export type BookingActionResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; error: string };
 
-const BLOCKING_STATUSES = ['requested', 'accepted', 'paid'] as const;
 const hmPat = /^([01]\d|2[0-3]):[0-5]\d$/;
 const datePat = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -98,7 +98,9 @@ const addSchema = z.discriminatedUnion('mode', [
  */
 export async function addAvailabilityBulk(
   input: unknown,
-): Promise<BookingActionResult<{ added: number; skipped: number }>> {
+): Promise<
+  BookingActionResult<{ added: number; extended: number; skipped: number }>
+> {
   const parsed = addSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: '入力内容に誤りがあります' };
   const p = parsed.data;
@@ -145,9 +147,17 @@ export async function addAvailabilityBulk(
 
   try {
     const db = getDb();
-    // 完全一致の既存枠はスキップ（再送・二重クリック対策）
+    // 同一開始時刻の既存枠と突き合わせ:
+    //   - (startAt, endAt) 完全一致 → スキップ（再送・二重クリック対策）
+    //   - 同 startAt で新しい endAt の方が長い → 既存行を延長（13:00-15:00 登録済みに
+    //     13:00-17:00 を追加したら 17:00 まで伸びる）
+    //   - 同 startAt で短い/同じ → スキップ
     const existing = await db
-      .select({ startAt: schema.expertAvailability.startAt })
+      .select({
+        id: schema.expertAvailability.id,
+        startAt: schema.expertAvailability.startAt,
+        endAt: schema.expertAvailability.endAt,
+      })
       .from(schema.expertAvailability)
       .where(
         and(
@@ -158,17 +168,50 @@ export async function addAvailabilityBulk(
           ),
         ),
       );
-    const existingTs = new Set(existing.map((r) => r.startAt.getTime()));
-    const toInsert = rows.filter((r) => !existingTs.has(r.startAt.getTime()));
+    const existingByStart = new Map(
+      existing.map((r) => [r.startAt.getTime(), r]),
+    );
+    const toInsert: typeof rows = [];
+    const toExtend: Array<{ id: string; endAt: Date }> = [];
+    let skipped = 0;
+    for (const r of rows) {
+      const ex = existingByStart.get(r.startAt.getTime());
+      if (!ex) {
+        toInsert.push(r);
+      } else if (r.endAt.getTime() > ex.endAt.getTime()) {
+        toExtend.push({ id: ex.id, endAt: r.endAt });
+      } else {
+        skipped += 1;
+      }
+    }
 
+    let added = 0;
     if (toInsert.length > 0) {
-      await db.insert(schema.expertAvailability).values(
-        toInsert.map((r) => ({
-          userId: me.id,
-          startAt: r.startAt,
-          endAt: r.endAt,
-        })),
-      );
+      // UNIQUE(user_id, start_at) との並行送信レースは DO NOTHING で吸収
+      const inserted = await db
+        .insert(schema.expertAvailability)
+        .values(
+          toInsert.map((r) => ({
+            userId: me.id,
+            startAt: r.startAt,
+            endAt: r.endAt,
+          })),
+        )
+        .onConflictDoNothing({
+          target: [
+            schema.expertAvailability.userId,
+            schema.expertAvailability.startAt,
+          ],
+        })
+        .returning({ id: schema.expertAvailability.id });
+      added = inserted.length;
+      skipped += toInsert.length - inserted.length;
+    }
+    for (const ext of toExtend) {
+      await db
+        .update(schema.expertAvailability)
+        .set({ endAt: ext.endAt })
+        .where(eq(schema.expertAvailability.id, ext.id));
     }
     // 現地 TZ をプロフィールに保存（初期値・受信箱表示用）
     await db
@@ -180,7 +223,7 @@ export async function addAvailabilityBulk(
     // TODO(mail): 空き枠公開のお知らせメール等はこのスライスでは送らない
     return {
       ok: true,
-      data: { added: toInsert.length, skipped: rows.length - toInsert.length },
+      data: { added, extended: toExtend.length, skipped },
     };
   } catch (err) {
     console.error('[addAvailabilityBulk] failed:', err);
@@ -277,7 +320,7 @@ export async function requestBooking(
       title: schema.userServices.title,
       priceJpy: schema.userServices.priceJpy,
       durationMinutes: schema.userServices.durationMinutes,
-      durationLabel: schema.userServices.durationLabel,
+      contactMethod: schema.userServices.contactMethod,
     })
     .from(schema.userServices)
     .where(
@@ -293,12 +336,32 @@ export async function requestBooking(
   if (service.userId === me.id) {
     return { ok: false, error: '自分の相談メニューは予約できません' };
   }
+  // 予約可能なメニューの条件（UI 側の CTA 出し分けと同一ルール）:
+  //   - contactMethod='chat'（外部サイト申し込みのメニューに内部予約を作らない）
+  //   - duration_minutes が確定している（フォールバックで 30 分にすると実所要より
+  //     短くカレンダーを塞ぎ、排他制約が実二重予約を通してしまう）
+  //   - priceJpy が確定している（応相談 = チャットで交渉のフローを維持）
+  if (service.contactMethod !== 'chat') {
+    return {
+      ok: false,
+      error: 'このメニューは外部サイトでの申し込み専用です',
+    };
+  }
+  if (service.durationMinutes == null) {
+    return {
+      ok: false,
+      error:
+        'このメニューは空き枠予約に対応していません。チャットで日程をご相談ください',
+    };
+  }
+  if (service.priceJpy == null) {
+    return {
+      ok: false,
+      error: '料金が「応相談」のメニューは、チャットでご相談ください',
+    };
+  }
 
-  const duration =
-    service.durationMinutes ??
-    (service.durationLabel?.match(/^(\d+)分$/)
-      ? Number(service.durationLabel.match(/^(\d+)分$/)![1])
-      : 30);
+  const duration = service.durationMinutes;
   const start = new Date(parsed.data.startAtIso);
   if (Number.isNaN(start.getTime())) {
     return { ok: false, error: '開始日時が不正です' };
@@ -355,7 +418,7 @@ export async function requestBooking(
       };
     }
 
-    const price = service.priceJpy ?? 0;
+    const price = service.priceJpy;
     const inserted = await db
       .insert(schema.consultationBookings)
       .values({
@@ -420,6 +483,57 @@ function isExclusionViolation(err: unknown): boolean {
   );
 }
 
+/** 予約 1 件をロード（当事者チェックは呼び出し側で行う） */
+async function loadBooking(bookingId: string) {
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(schema.consultationBookings)
+    .where(eq(schema.consultationBookings.id, bookingId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/**
+ * ステータス遷移の guarded UPDATE。fromStatuses に一致する行だけを更新し、
+ * 実際に更新できたか（= レースで先を越されていないか）を返す。
+ * 取り下げと承諾の競合などで UPDATE が空振りしたときに、偽の成功応答と
+ * 偽のチャット投稿をしないための要。
+ */
+async function transitionBooking(
+  bookingId: string,
+  fromStatuses: readonly string[],
+  set: Partial<typeof schema.consultationBookings.$inferInsert>,
+): Promise<boolean> {
+  const db = getDb();
+  const updated = await db
+    .update(schema.consultationBookings)
+    .set(set)
+    .where(
+      and(
+        eq(schema.consultationBookings.id, bookingId),
+        inArray(schema.consultationBookings.status, [...fromStatuses]),
+      ),
+    )
+    .returning({ id: schema.consultationBookings.id });
+  return updated.length > 0;
+}
+
+/** 遷移成功後のチャット自動投稿（スレッド未設定・失敗は握りつぶす） */
+async function postBookingChat(
+  chatThreadId: string | null,
+  senderId: string,
+  body: string,
+): Promise<void> {
+  if (!chatThreadId) return;
+  try {
+    await postThreadMessage(chatThreadId, senderId, body);
+    revalidatePath(`/chat/${chatThreadId}`);
+  } catch (err) {
+    console.warn('[bookings] chat message failed:', err);
+  }
+}
+
 /** エキスパートがリクエストを承諾する（accepted = 確定） */
 export async function acceptBooking(
   input: unknown,
@@ -427,14 +541,8 @@ export async function acceptBooking(
   const parsed = idSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: '不正なリクエスト' };
   const me = await requireUser();
-  const db = getDb();
 
-  const rows = await db
-    .select()
-    .from(schema.consultationBookings)
-    .where(eq(schema.consultationBookings.id, parsed.data.bookingId))
-    .limit(1);
-  const b = rows[0];
+  const b = await loadBooking(parsed.data.bookingId);
   if (!b || b.expertId !== me.id) {
     return { ok: false, error: 'リクエストが見つかりません' };
   }
@@ -443,15 +551,7 @@ export async function acceptBooking(
   }
   // 過去枠は承諾できない → expired へ遅延遷移
   if (b.startAt.getTime() < Date.now()) {
-    await db
-      .update(schema.consultationBookings)
-      .set({ status: 'expired' })
-      .where(
-        and(
-          eq(schema.consultationBookings.id, b.id),
-          eq(schema.consultationBookings.status, 'requested'),
-        ),
-      );
+    await transitionBooking(b.id, ['requested'], { status: 'expired' });
     revalidatePath('/bookings');
     return {
       ok: false,
@@ -459,16 +559,12 @@ export async function acceptBooking(
     };
   }
 
+  let accepted: boolean;
   try {
-    await db
-      .update(schema.consultationBookings)
-      .set({ status: 'accepted', respondedAt: new Date() })
-      .where(
-        and(
-          eq(schema.consultationBookings.id, b.id),
-          eq(schema.consultationBookings.status, 'requested'),
-        ),
-      );
+    accepted = await transitionBooking(b.id, ['requested'], {
+      status: 'accepted',
+      respondedAt: new Date(),
+    });
   } catch (err) {
     if (isExclusionViolation(err)) {
       // 同時承諾の競合: もう一方が先に確定した
@@ -477,19 +573,20 @@ export async function acceptBooking(
     console.error('[acceptBooking] failed:', err);
     return { ok: false, error: '承諾に失敗しました' };
   }
-
-  if (b.chatThreadId) {
-    try {
-      await postThreadMessage(
-        b.chatThreadId,
-        me.id,
-        `【予約確定】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）を承諾しました。当日の参加方法はこのチャットでご案内します。`,
-      );
-      revalidatePath(`/chat/${b.chatThreadId}`);
-    } catch (err) {
-      console.warn('[acceptBooking] chat message failed:', err);
-    }
+  if (!accepted) {
+    // レース: 直前に相談者が取り下げた等。チャット投稿せず正直に伝える
+    revalidatePath('/bookings');
+    return {
+      ok: false,
+      error: 'このリクエストは取り下げ済みか、すでに処理されています',
+    };
   }
+
+  await postBookingChat(
+    b.chatThreadId,
+    me.id,
+    `【予約確定】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）を承諾しました。当日の参加方法はこのチャットでご案内します。`,
+  );
   revalidatePath('/bookings');
   // TODO(mail): 相談者へ「予約が確定しました」メール通知（次スライス）
   return { ok: true };
@@ -502,14 +599,8 @@ export async function declineBooking(
   const parsed = idSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: '不正なリクエスト' };
   const me = await requireUser();
-  const db = getDb();
 
-  const rows = await db
-    .select()
-    .from(schema.consultationBookings)
-    .where(eq(schema.consultationBookings.id, parsed.data.bookingId))
-    .limit(1);
-  const b = rows[0];
+  const b = await loadBooking(parsed.data.bookingId);
   if (!b || b.expertId !== me.id) {
     return { ok: false, error: 'リクエストが見つかりません' };
   }
@@ -517,28 +608,23 @@ export async function declineBooking(
     return { ok: false, error: 'このリクエストはすでに処理済みです' };
   }
 
-  await db
-    .update(schema.consultationBookings)
-    .set({ status: 'declined', respondedAt: new Date() })
-    .where(
-      and(
-        eq(schema.consultationBookings.id, b.id),
-        eq(schema.consultationBookings.status, 'requested'),
-      ),
-    );
-
-  if (b.chatThreadId) {
-    try {
-      await postThreadMessage(
-        b.chatThreadId,
-        me.id,
-        `【リクエスト辞退】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）は今回お受けできませんでした。別の枠でのリクエストをご検討ください。`,
-      );
-      revalidatePath(`/chat/${b.chatThreadId}`);
-    } catch (err) {
-      console.warn('[declineBooking] chat message failed:', err);
-    }
+  const declined = await transitionBooking(b.id, ['requested'], {
+    status: 'declined',
+    respondedAt: new Date(),
+  });
+  if (!declined) {
+    revalidatePath('/bookings');
+    return {
+      ok: false,
+      error: 'このリクエストは取り下げ済みか、すでに処理されています',
+    };
   }
+
+  await postBookingChat(
+    b.chatThreadId,
+    me.id,
+    `【リクエスト辞退】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）は今回お受けできませんでした。別の枠でのリクエストをご検討ください。`,
+  );
   revalidatePath('/bookings');
   // TODO(mail): 相談者へ「リクエストが辞退されました」メール通知（次スライス）
   return { ok: true };
@@ -551,14 +637,8 @@ export async function cancelBooking(
   const parsed = idSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: '不正なリクエスト' };
   const me = await requireUser();
-  const db = getDb();
 
-  const rows = await db
-    .select()
-    .from(schema.consultationBookings)
-    .where(eq(schema.consultationBookings.id, parsed.data.bookingId))
-    .limit(1);
-  const b = rows[0];
+  const b = await loadBooking(parsed.data.bookingId);
   if (!b || b.requesterId !== me.id) {
     return { ok: false, error: '予約が見つかりません' };
   }
@@ -566,56 +646,28 @@ export async function cancelBooking(
     return { ok: false, error: 'この予約は取り下げできません' };
   }
 
-  await db
-    .update(schema.consultationBookings)
-    .set({ status: 'cancelled', cancelledAt: new Date() })
-    .where(
-      and(
-        eq(schema.consultationBookings.id, b.id),
-        inArray(schema.consultationBookings.status, ['requested', 'accepted']),
-      ),
-    );
-
-  if (b.chatThreadId) {
-    try {
-      await postThreadMessage(
-        b.chatThreadId,
-        me.id,
-        `【リクエスト取り下げ】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）のリクエストを取り下げました。`,
-      );
-      revalidatePath(`/chat/${b.chatThreadId}`);
-    } catch (err) {
-      console.warn('[cancelBooking] chat message failed:', err);
-    }
+  const cancelled = await transitionBooking(b.id, ['requested', 'accepted'], {
+    status: 'cancelled',
+    cancelledAt: new Date(),
+  });
+  if (!cancelled) {
+    revalidatePath('/bookings');
+    return {
+      ok: false,
+      error: 'この予約はすでに処理されています。最新の状態を確認してください',
+    };
   }
+
+  await postBookingChat(
+    b.chatThreadId,
+    me.id,
+    `【リクエスト取り下げ】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）のリクエストを取り下げました。`,
+  );
   revalidatePath('/bookings');
   // TODO(mail): エキスパートへ「リクエストが取り下げられました」メール通知（次スライス）
   return { ok: true };
 }
 
-/**
- * 開始時刻を過ぎた requested を expired に一括遷移させる。
- * 現状は accept 時の個別遷移＋表示側の遅延判定で足りるが、
- * 将来 cron（/api/cron/...）から呼ぶためのシームとして分離しておく。
- */
-export async function expireStaleBookings(): Promise<
-  BookingActionResult<{ expired: number }>
-> {
-  try {
-    const db = getDb();
-    const updated = await db
-      .update(schema.consultationBookings)
-      .set({ status: 'expired' })
-      .where(
-        and(
-          eq(schema.consultationBookings.status, 'requested'),
-          lt(schema.consultationBookings.startAt, new Date()),
-        ),
-      )
-      .returning({ id: schema.consultationBookings.id });
-    return { ok: true, data: { expired: updated.length } };
-  } catch (err) {
-    console.error('[expireStaleBookings] failed:', err);
-    return { ok: false, error: '期限切れ処理に失敗しました' };
-  }
-}
+// expireStaleBookings（requested 一括 expired 化）は 'use server' から外し、
+// lib/bookings/queries.ts へ移動した（無認証で POST 可能なサーバーアクションに
+// しないため。将来 cron から呼ぶシームはそちら）。

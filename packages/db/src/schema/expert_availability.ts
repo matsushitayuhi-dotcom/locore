@@ -1,4 +1,4 @@
-import { pgTable, uuid, timestamp, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 
@@ -28,7 +28,8 @@ export const expertAvailability = pgTable(
       .defaultNow(),
   },
   (table) => ({
-    userStartIdx: index('expert_availability_user_start_idx').on(
+    // 同一ユーザー × 同一開始時刻は 1 行（並行送信レースの最終防衛線）
+    userStartKey: uniqueIndex('expert_availability_user_start_key').on(
       table.userId,
       table.startAt,
     ),
