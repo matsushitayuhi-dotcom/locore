@@ -244,6 +244,52 @@
   .locore-card:active {
     transform: scale(0.98);
   }
+
+  /* /about-service（GrowthMentor 構成）専用の少量スタイル。
+     Tailwind ユーティリティで書けない keyframes と合成グラデーションのみ。
+     色はすべて既存トークン参照（ハードコード hex なし）。 */
+  .about-carousel-track {
+    animation: about-carousel-up 26s linear infinite;
+  }
+  .about-carousel-track.rev {
+    animation: about-carousel-down 30s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .about-carousel-track {
+      animation: none;
+    }
+  }
+  .about-trust-bg {
+    background:
+      radial-gradient(
+        900px 420px at 82% -10%,
+        color-mix(in srgb, var(--color-primary-500) 17%, transparent),
+        transparent 55%
+      ),
+      linear-gradient(
+        160deg,
+        var(--color-neutral-950),
+        var(--color-neutral-900) 52%,
+        var(--color-neutral-950)
+      );
+  }
+}
+
+@keyframes about-carousel-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+@keyframes about-carousel-down {
+  from {
+    transform: translateY(-50%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* Locore map pin — pin uses local-high amber-ish */
