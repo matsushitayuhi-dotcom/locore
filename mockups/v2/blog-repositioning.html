@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — ブログ再位置付け（3セクション・ショーケースモック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ================= tokens: apps/web/app/globals.css (Locore Lime) 準拠 ================= */
+  :root{
+    --lime:#A8E01C;         /* primary-500 */
+    --lime-300:#B6E84E;
+    --lime-l:#E3F7B8;       /* primary-100 */
+    --lime-50:#F5FBE2;
+    --lime-d:#5E8B0E;       /* primary-700 */
+    --lime-900:#3D5E07;
+    --bg:#F4F4EF;           /* neutral-25 */
+    --muted:#ECECE4;        /* neutral-50 */
+    --card:#FFFFFF;
+    --bd:#E7E7E0;           /* border */
+    --bd2:#D8D8CF;          /* border-strong */
+    --ink:#18181B;--ink-2:#3F3F46;--mu:#71717A;--mu-2:#837F78;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.85}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+  .num{font-family:var(--num)}
+
+  /* ================= showcase chrome（モック説明用・実装対象外） ================= */
+  .intro{border-bottom:1px solid var(--bd);background:var(--card)}
+  .introin{max-width:1120px;margin:0 auto;padding:36px 24px 32px}
+  .intro .tag{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--lime-d)}
+  .intro h1{font-size:clamp(21px,2.8vw,27px);font-weight:700;margin-top:8px}
+  .intro p{margin-top:10px;font-size:13.5px;color:var(--mu);max-width:56em}
+  .intro p b{color:var(--ink-2)}
+  .showcase{padding:0 0 90px}
+  .slab{max-width:1120px;margin:64px auto 0;padding:0 24px}
+  .slabhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .slabhead .no{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);background:var(--lime-50);
+    border:1px solid var(--lime-l);border-radius:9999px;padding:3px 12px}
+  .slabhead h2{font-size:17px;font-weight:700}
+  .slabhead .where{font-family:var(--mono);font-size:11.5px;color:var(--mu)}
+  .slabnote{font-size:12.5px;color:var(--mu);margin-bottom:18px;max-width:64em}
+  .frame{background:var(--card);border:1px solid var(--bd);border-radius:16px;overflow:hidden;box-shadow:var(--sh-sm)}
+  .frame .bar{display:flex;align-items:center;gap:7px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--muted)}
+  .frame .bar i{width:9px;height:9px;border-radius:50%;background:var(--bd2)}
+  .frame .bar span{margin-left:8px;font-family:var(--mono);font-size:11px;color:var(--mu)}
+
+  /* ================= 共通部品（実装トーン準拠） ================= */
+  .vbadge{display:inline-flex;align-items:center;gap:6px;background:var(--lime-l);border:1px solid var(--lime-300);
+    color:var(--lime-900);font-size:12px;font-weight:700;border-radius:9999px;padding:4px 12px;white-space:nowrap}
+  .vbadge svg{width:13px;height:13px;flex:none}
+  .sechead{display:flex;align-items:baseline;gap:10px;font-size:19px;font-weight:700;margin-bottom:18px}
+  .sechead .en{font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--lime-d);font-family:var(--num)}
+  .ava{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:var(--lime-l);color:var(--lime-900)}
+
+  /* ================= [1] エキスパート詳細: 記事セクション ================= */
+  .detailmock{max-width:1024px;margin:0 auto;padding:40px 24px 44px}
+  .detailmock .ctx{border-bottom:1px solid var(--bd);padding-bottom:14px;margin-bottom:28px;
+    font-size:12px;color:var(--mu-2);display:flex;align-items:center;gap:10px}
+  .detailmock .ctx::before{content:"";flex:none;width:22px;height:1px;background:var(--bd2)}
+  .detailmock .ctx.after{border-bottom:0;border-top:1px solid var(--bd);padding:14px 0 0;margin:28px 0 0}
+  .detailmock .ctx.after::before{background:var(--bd2)}
+  .artmeta{margin:-8px 0 18px;font-size:13px;color:var(--mu);max-width:46em}
+  .artgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .art{display:block;border:1px solid var(--bd);border-radius:16px;overflow:hidden;background:var(--card);
+    transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;box-shadow:var(--sh-xs)}
+  .art:hover{transform:translateY(-3px);border-color:var(--lime-300);box-shadow:var(--sh-md)}
+  .art .cov{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--muted)}
+  .art .cov .scene{position:absolute;inset:0;display:grid;place-items:center;font-size:44px;transition:transform .9s var(--ease)}
+  .art:hover .cov .scene{transform:scale(1.06)}
+  .cov.c1 .scene{background:linear-gradient(135deg,#E8EAD8,#CBD5C0 55%,#AEBCA4)}
+  .cov.c2 .scene{background:linear-gradient(135deg,#EDE6D6,#DECFB4 55%,#C4AE8B)}
+  .cov.c3 .scene{background:linear-gradient(135deg,#DDE4E8,#C2CFD8 55%,#9FB4C2)}
+  .cov.c4 .scene{background:linear-gradient(135deg,#EAE4DA,#D8CEC2 55%,#BBAB9A)}
+  .art .cov .cat{position:absolute;top:12px;left:12px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;
+    color:var(--ink);background:rgba(255,255,255,.88);backdrop-filter:blur(6px);border-radius:9999px;padding:4px 11px;font-weight:500}
+  .art .b{padding:15px 18px 17px}
+  .art h3{font-size:15px;font-weight:700;line-height:1.55;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .art .d{margin-top:7px;font-family:var(--mono);font-size:11px;color:var(--mu)}
+  .artfoot{margin-top:20px;display:flex;align-items:center}
+  .artfoot a{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--lime-d)}
+  .artfoot a:hover{text-decoration:underline;text-underline-offset:3px}
+  .artfoot a svg{width:14px;height:14px}
+
+  /* ================= [2] 記事ページ: 筆者ボックス改修版 ================= */
+  .articlemock{max-width:880px;margin:0 auto;padding:44px 24px 48px}
+  .articlemock .ctx-art{font-size:12px;color:var(--mu-2);display:flex;align-items:center;gap:10px;margin-bottom:26px}
+  .articlemock .ctx-art::before{content:"";flex:none;width:22px;height:1px;background:var(--bd2)}
+  .fauxbody{color:var(--mu);font-size:13.5px;line-height:2;margin-bottom:30px}
+  .fauxbody .ph{height:9px;border-radius:5px;background:var(--muted);margin-top:12px}
+  .fauxbody .ph.w1{width:100%}.fauxbody .ph.w2{width:92%}.fauxbody .ph.w3{width:60%}
+  .authcard{display:flex;gap:26px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:24px;
+    padding:32px 34px;box-shadow:0 18px 44px -26px rgba(17,17,17,.22)}
+  .authcard .ava{width:96px;height:96px;font-size:32px;border:2px solid var(--lime)}
+  .authcard .body{flex:1;min-width:0}
+  .authcard .k{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime-d)}
+  .authcard h3{font-size:24px;font-weight:700;margin-top:7px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .authcard .role{font-family:var(--mono);font-size:12.5px;color:var(--mu);margin-top:5px}
+  .authcard .bio{font-size:13.5px;line-height:1.85;color:var(--ink-2);margin-top:13px;max-width:52ch}
+  .authcta-row{margin-top:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .authcta{display:inline-flex;align-items:center;gap:9px;font-size:14px;font-weight:700;color:#0e0e0f;background:var(--lime);
+    padding:12px 24px;border-radius:9999px;transition:transform .2s,background .2s;box-shadow:0 12px 28px -10px rgba(168,224,28,.55)}
+  .authcta:hover{transform:translateY(-2px);background:var(--lime-300)}
+  .authcta svg{width:15px;height:15px}
+  .authcta-sub{font-size:11.5px;color:var(--mu);line-height:1.6}
+  .authlinks{margin-top:15px;display:flex;flex-wrap:wrap;gap:18px;align-items:center}
+  .authlink{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
+  .authlink:hover{text-decoration:underline;text-underline-offset:3px}
+  .authlink svg{width:12px;height:12px}
+
+  /* ================= [3] /articles ヒーロー・リブランド ================= */
+  .heromock{position:relative;min-height:520px;display:flex;flex-direction:column;justify-content:center;
+    overflow:hidden;padding:64px 0;color:#fff;
+    background:radial-gradient(1200px 500px at 78% -10%,rgba(168,224,28,.16),transparent 55%),
+      linear-gradient(160deg,#0b0d09,#141810 48%,#0a0c08)}
+  .heromock .net{position:absolute;inset:0;opacity:.5}
+  .heromock .inner{position:relative;z-index:2;max-width:1120px;margin:0 auto;width:100%;padding:0 28px}
+  .aj-eyebrow{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--lime);display:inline-flex;align-items:center;gap:11px}
+  .aj-eyebrow::before{content:"";width:26px;height:1.5px;background:var(--lime)}
+  .heromock h1{font-weight:900;letter-spacing:-.03em;line-height:1.06;font-size:clamp(38px,6.4vw,84px);margin-top:22px;
+    text-shadow:0 1px 2px rgba(0,0,0,.6),0 4px 34px rgba(0,0,0,.5)}
+  .heromock h1 em{font-style:normal;color:var(--lime)}
+  .heromock .sub{margin-top:22px;max-width:560px;font-size:15px;line-height:1.95;color:rgba(255,255,255,.82)}
+  .heromock .sub b{color:#fff;font-weight:700}
+  .heromock .link-experts{margin-top:14px;display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);
+    font-size:12.5px;font-weight:600;color:var(--lime)}
+  .heromock .link-experts:hover{text-decoration:underline;text-underline-offset:4px}
+  .heromock .link-experts svg{width:14px;height:14px}
+  .aj-srow{margin-top:32px;display:flex;gap:10px;align-items:stretch;max-width:780px}
+  .aj-country{position:relative;flex:none;display:flex;align-items:center;gap:10px;height:56px;padding:0 18px;
+    border-radius:14px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);
+    font-family:var(--mono);font-size:13.5px;color:#fff;cursor:pointer}
+  .aj-country svg{width:16px;height:16px;color:rgba(255,255,255,.75)}
+  .aj-sbox{flex:1;min-width:0;display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;border-radius:14px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px)}
+  .aj-sbox svg{width:19px;height:19px;color:rgba(255,255,255,.75);flex:none}
+  .aj-sbox .plh{font-size:14.5px;color:rgba(255,255,255,.6)}
+  .aj-gobtn{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:9px;height:56px;padding:0 26px;
+    background:var(--lime);color:#0b0c09;border:none;border-radius:14px;font-family:var(--mono);font-size:14px;font-weight:600;
+    cursor:pointer;box-shadow:0 12px 30px -8px rgba(168,224,28,.55);transition:background .2s}
+  .aj-gobtn:hover{background:var(--lime-300)}
+  .aj-gobtn svg{width:16px;height:16px}
+
+  /* ================= responsive ================= */
+  @media(max-width:760px){
+    .artgrid{grid-template-columns:1fr}
+    .authcard{flex-direction:column;text-align:center;padding:30px 22px}
+    .authcard h3{justify-content:center}
+    .authcard .bio{max-width:none}
+    .authcta-row{flex-direction:column;gap:10px}
+    .authcta{width:100%;justify-content:center}
+    .authlinks{justify-content:center}
+    .aj-srow{flex-wrap:wrap}
+    .aj-country{flex:1 1 40%}
+    .aj-sbox{flex:1 1 100%;order:-1}
+    .aj-gobtn{flex:1 1 40%}
+    .heromock{min-height:460px;padding:52px 0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ showcase intro（このページ自体は仕様書。以下3ブロックが実装対象） ============ -->
+<div class="intro"><div class="introin">
+  <span class="tag">Mock — Blog Repositioning</span>
+  <h1>ブログ再位置付け: 3つの差分デザイン</h1>
+  <p>記事は商品ではなく<b>エキスパートのブランディング＋SEO集客装置</b>。相談が主・記事は従、価格や購入UIは一切出さない。以下、実ページの該当部分の切り出しモック3点。配色は現行実装（globals.css の Locore Lime パレット）に準拠。</p>
+</div></div>
+
+<div class="showcase">
+
+  <!-- ================================================================
+       [1/3] エキスパート詳細 — 記事セクション
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">1 / 3</span>
+      <h2>エキスパート詳細 —「◯◯さんの記事」セクション</h2>
+      <span class="where">/experts/[id] ・ レビューセクションの直前に挿入</span>
+    </div>
+    <p class="slabnote">既存の詳細ページの罫線リズム（border-b区切り・SectionHeading）に揃える。記事が0件のエキスパートではセクションごと非表示。価格・購入導線なし、記事は「この人は本当に詳しい」の裏付けとして見せる。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/experts/sasaki-aya</span></div>
+      <div class="detailmock">
+        <div class="ctx">…自己紹介セクション（既存）ここまで</div>
+
+        <div class="sechead"><span class="en">Articles</span>佐々木 彩さんの記事</div>
+        <p class="artmeta">パリでの暮らしと手続きについて、実体験をもとに書いています。相談の前の予習にどうぞ。</p>
+        <div class="artgrid">
+          <a class="art" href="#">
+            <div class="cov c1"><span class="scene">🏠</span><span class="cat">お役立ち情報</span></div>
+            <div class="b">
+              <h3>パリのアパート探し、保証人がいない人のための現実的な選択肢3つ</h3>
+              <div class="d">2026.07.14</div>
+            </div>
+          </a>
+          <a class="art" href="#">
+            <div class="cov c2"><span class="scene">📋</span><span class="cat">お役立ち情報</span></div>
+            <div class="b">
+              <h3>滞在許可証の更新で門前払いされないために、私が毎回持っていく書類一式</h3>
+              <div class="d">2026.05.02</div>
+            </div>
+          </a>
+          <a class="art" href="#">
+            <div class="cov c3"><span class="scene">🏦</span><span class="cat">お役立ち情報</span></div>
+            <div class="b">
+              <h3>渡仏1か月目にやること — 銀行口座・保険・携帯の順番を間違えると詰む話</h3>
+              <div class="d">2026.03.21</div>
+            </div>
+          </a>
+          <a class="art" href="#">
+            <div class="cov c4"><span class="scene">🥖</span><span class="cat">スポット紹介</span></div>
+            <div class="b">
+              <h3>観光客が並ばない朝7時のブーランジェリー、8年住んで通い続けている3軒</h3>
+              <div class="d">2026.01.09</div>
+            </div>
+          </a>
+        </div>
+        <div class="artfoot">
+          <a href="#">佐々木さんの記事をすべて見る<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+        </div>
+
+        <div class="ctx after">レビューセクション（既存）ここから…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [2/3] 記事ページ — 筆者ボックス（AuthorCard）改修版
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">2 / 3</span>
+      <h2>記事ページ — 筆者ボックス（AuthorCard）改修版</h2>
+      <span class="where">記事本文の末尾 ・ 既存 .tj-authcard / .pg-authcard の置き換え</span>
+    </div>
+    <p class="slabnote">記事の読了地点が最強の相談導線。プライマリCTAを「この記事を書いた人に相談する」に差し替え、「プロフィールを見る」はセカンダリのテキストリンクに降格。居住認証バッジを名前の横に追加（実装は expert 詳細と同じ bg-primary-100 / border-primary-300 / text-primary-900）。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/articles/paris-apartment-guarantor — 記事末尾</span></div>
+      <div class="articlemock">
+        <div class="ctx-art">…記事本文ここまで</div>
+        <div class="fauxbody" aria-hidden="true">
+          <div class="ph w1"></div><div class="ph w2"></div><div class="ph w3"></div>
+        </div>
+
+        <div class="authcard">
+          <span class="ava">彩</span>
+          <div class="body">
+            <div class="k">この記事を書いた人</div>
+            <h3>佐々木 彩<span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span></h3>
+            <div class="role">🇫🇷 パリ在住 8年 ・ 輸入雑貨会社 経営</div>
+            <p class="bio">日系商社のパリ駐在をきっかけに渡仏し、現地で起業。駐在員としての生活と「すべて自分で手続きする」生活の両方を経験。記事に書ききれない個別事情は、相談で一緒に整理しています。</p>
+            <div class="authcta-row">
+              <a class="authcta" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg>この記事を書いた人に相談する</a>
+              <span class="authcta-sub">30分から、チャットで気軽に。</span>
+            </div>
+            <div class="authlinks">
+              <a class="authlink" href="#">プロフィールを見る<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+              <a class="authlink" href="#">この書き手の他の記事<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [3/3] /articles 一覧 — ヒーロー・リブランド
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">3 / 3</span>
+      <h2>/articles 一覧 — ヒーロー・リブランド</h2>
+      <span class="where">ArticleJournal のダークヒーロー ・ コピーと導線の差し替えのみ</span>
+    </div>
+    <p class="slabnote">既存のダーク＋ライムのトーン・検索UIはそのまま。h1と説明文を「読みもの」の位置付けに差し替え、「書いた人に相談できる」への橋渡しリンクを1本だけ追加。旧「記事を購入」系の文言・UIは撤去。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app/articles</span></div>
+      <div class="heromock">
+        <svg class="net" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <g stroke="#A8E01C" stroke-width="1" opacity=".28">
+            <line x1="180" y1="90" x2="420" y2="180"/><line x1="420" y1="180" x2="700" y2="110"/>
+            <line x1="700" y1="110" x2="980" y2="220"/><line x1="420" y1="180" x2="560" y2="380"/>
+            <line x1="980" y1="220" x2="1120" y2="120"/><line x1="560" y1="380" x2="900" y2="430"/>
+            <line x1="700" y1="110" x2="560" y2="380"/><line x1="980" y1="220" x2="900" y2="430"/>
+          </g>
+          <g fill="#A8E01C">
+            <circle cx="180" cy="90" r="3.5" opacity=".8"/><circle cx="420" cy="180" r="4.5" opacity=".9"/>
+            <circle cx="700" cy="110" r="3" opacity=".7"/><circle cx="980" cy="220" r="4" opacity=".85"/>
+            <circle cx="1120" cy="120" r="2.5" opacity=".6"/><circle cx="560" cy="380" r="3.5" opacity=".75"/>
+            <circle cx="900" cy="430" r="3" opacity=".65"/>
+          </g>
+        </svg>
+        <div class="inner">
+          <span class="aj-eyebrow">Journal</span>
+          <h1>現地からの、<em>読みもの</em>。</h1>
+          <p class="sub"><b>住んでいる人にしか書けない話</b>を、世界の街から。書いているのは、居住認証済みのエキスパートたち。読んで気になったら、そのまま本人に相談できます。</p>
+          <a class="link-experts" href="#">エキスパートに相談する<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+          <div class="aj-srow">
+            <span class="aj-country"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><line x1="3.5" y1="12" x2="20.5" y2="12"/></svg>すべての国<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><polyline points="6 9 12 15 18 9"/></svg></span>
+            <span class="aj-sbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg><span class="plh">街の名前、テーマで探す…</span></span>
+            <button class="aj-gobtn" type="button">読む<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
