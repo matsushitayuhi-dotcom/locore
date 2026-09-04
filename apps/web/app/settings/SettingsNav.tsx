@@ -26,6 +26,7 @@ type NavItem = {
 const ALL_NAV_ITEMS: readonly NavItem[] = [
   { href: '/settings/profile', label: 'プロフィール' },
   { href: '/settings/services', label: '提供サービス', writerOnly: true },
+  { href: '/settings/availability', label: '空き時間', writerOnly: true },
   { href: '/settings/verification', label: '本人確認', writerOnly: true },
   { href: '/settings/notifications', label: '通知' },
   { href: '/settings/account', label: 'アカウント' },

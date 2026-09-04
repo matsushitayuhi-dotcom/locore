@@ -39,6 +39,7 @@ export default async function ServicesSettingsPage() {
     tags: string[] | null;
     galleryImages: string[] | null;
     durationLabel: string | null;
+    durationMinutes: number | null;
     minParticipants: number | null;
     maxParticipants: number | null;
     languages: string[] | null;
@@ -134,6 +135,7 @@ export default async function ServicesSettingsPage() {
         tags: schema.userServices.tags,
         galleryImages: schema.userServices.galleryImages,
         durationLabel: schema.userServices.durationLabel,
+        durationMinutes: schema.userServices.durationMinutes,
         minParticipants: schema.userServices.minParticipants,
         maxParticipants: schema.userServices.maxParticipants,
         languages: schema.userServices.languages,
@@ -195,6 +197,7 @@ export default async function ServicesSettingsPage() {
               '',
             galleryImages: d?.galleryImages ?? [],
             durationLabel: d?.durationLabel ?? '',
+            durationMinutes: d?.durationMinutes ?? '',
             minParticipants: d?.minParticipants ?? '',
             maxParticipants: d?.maxParticipants ?? '',
             languages: d?.languages ?? [],

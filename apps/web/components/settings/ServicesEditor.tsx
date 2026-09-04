@@ -72,6 +72,8 @@ type Service = {
   consultation: boolean;
   /** 相談テーマ（TOPIC_TAGS の value） */
   topics: string[];
+  /** 所要時間（分）。相談メニューは 30 / 60 の 2 択（0061 追加）。'' = 未設定 */
+  durationMinutes: number | '';
 };
 
 const empty = (): Service => ({
@@ -99,6 +101,7 @@ const empty = (): Service => ({
   cancellationPolicy: '',
   consultation: false,
   topics: [],
+  durationMinutes: '',
 });
 
 /** 改行区切りテキスト → トリム済み配列 (空行は除去) */
@@ -160,6 +163,7 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
     // v2 相談メニュー
     consultation: r.consultation,
     consultationTopics: r.topics,
+    durationMinutes: r.durationMinutes === '' ? null : Number(r.durationMinutes),
   });
 
   const onSave = (idx: number) => {
@@ -724,6 +728,29 @@ function ConsultationFields({
       {value.consultation ? (
         <div>
           <p className="mb-1.5 text-[11px] font-medium text-foreground/70">
+            所要時間（空き枠からの予約リクエストに使われます）
+          </p>
+          <select
+            value={value.durationMinutes === '' ? '' : String(value.durationMinutes)}
+            onChange={(e) => {
+              const v = e.target.value;
+              // durationLabel も '30分' 形式で同期（一覧・詳細の表示互換のため）
+              onPatch(
+                v === ''
+                  ? { durationMinutes: '' }
+                  : { durationMinutes: Number(v), durationLabel: `${v}分` },
+              );
+            }}
+            className="rounded-sm border border-border bg-card px-3 py-1.5 text-[12.5px] focus:border-primary-500 focus:outline-none"
+          >
+            <option value="">未設定</option>
+            <option value="30">30分</option>
+            <option value="60">60分</option>
+          </select>
+          <p className="mb-1.5 mt-1 text-[10.5px] text-foreground/50">
+            料金の目安: 30分 ¥3,000〜5,000 / 60分 ¥6,000〜9,000
+          </p>
+          <p className="mb-1.5 mt-3 text-[11px] font-medium text-foreground/70">
             相談テーマ（複数選択可・一覧の絞り込みに使われます）
           </p>
           <div className="flex flex-wrap gap-1.5">

@@ -63,6 +63,8 @@ const upsertSchema = z
     /** ===== 0058 体験詳細フィールド (すべて任意) ===== */
     galleryImages: z.array(z.string().url().max(2048)).max(20).optional(),
     durationLabel: z.string().trim().max(60).optional().nullable(),
+    /** 所要時間（分）。相談メニューの空き枠予約に使う（0061 追加） */
+    durationMinutes: z.number().int().min(15).max(480).optional().nullable(),
     minParticipants: z.number().int().min(0).max(1000).optional().nullable(),
     maxParticipants: z.number().int().min(0).max(1000).optional().nullable(),
     languages: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
@@ -113,6 +115,7 @@ export async function upsertUserService(
   const detailCols = {
     galleryImages: data.galleryImages ?? [],
     durationLabel: data.durationLabel ?? null,
+    durationMinutes: data.durationMinutes ?? null,
     minParticipants: data.minParticipants ?? null,
     maxParticipants: data.maxParticipants ?? null,
     languages: data.languages ?? [],
