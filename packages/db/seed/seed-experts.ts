@@ -191,6 +191,9 @@ type ExpertSeed = {
   /** メニュー言語表示用（user_services.languages） */
   languageLabels: string[];
   topics: [string, string];
+  /** メニュー名（内容が伝わる名前 + 末尾に所要時間）。30分/60分で重複させない */
+  title30: string;
+  title60: string;
   price30: number;
   price60: number;
   desc30: string;
@@ -221,6 +224,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', 'フランス語', '英語'],
     topics: ['immigration', 'work'],
+    title30: 'パリ移住のビザ・エリア選び相談（30分）',
+    title60: '渡仏プランをまるごと設計（60分）',
     price30: 4000,
     price60: 7000,
     desc30:
@@ -249,6 +254,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', '英語'],
     topics: ['expat_prep', 'childcare'],
+    title30: 'ロンドンの学校選び・教育相談（30分）',
+    title60: '駐在帯同の準備をまるごと整理（60分）',
     price30: 3500,
     price60: 6500,
     desc30:
@@ -278,6 +285,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', 'ドイツ語', '英語'],
     topics: ['immigration', 'procedures'],
+    title30: 'ドイツのビザ・役所手続き相談（30分）',
+    title60: 'ベルリン移住の段取りを一緒に設計（60分）',
     price30: 3000,
     price60: 6000,
     desc30:
@@ -306,6 +315,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', 'タイ語', '英語'],
     topics: ['immigration', 'housing'],
+    title30: 'バンコクの住まい・生活コスト相談（30分）',
+    title60: 'タイ移住・駐在立ち上げの全体設計（60分）',
     price30: 3000,
     price60: 6000,
     desc30:
@@ -334,6 +345,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', '英語'],
     topics: ['study_abroad', 'work'],
+    title30: 'アメリカ美大留学・ポートフォリオ相談（30分）',
+    title60: '留学から現地就職までのプラン設計（60分）',
     price30: 5000,
     price60: 9000,
     desc30:
@@ -362,6 +375,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', '英語'],
     topics: ['study_abroad', 'travel'],
+    title30: 'ワーホリの学校・仕事・家さがし相談（30分）',
+    title60: 'ワーホリ1年のロードマップ作り（60分）',
     price30: 3000,
     price60: 5500,
     desc30:
@@ -390,6 +405,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', '英語'],
     topics: ['study_abroad', 'procedures'],
+    title30: 'カナダ留学の学校選び相談（30分）',
+    title60: 'カナダ留学の全体設計と出願段取り（60分）',
     price30: 3500,
     price60: 6500,
     desc30:
@@ -418,6 +435,8 @@ const EXPERTS: ExpertSeed[] = [
     ],
     languageLabels: ['日本語', 'フランス語'],
     topics: ['childcare', 'travel'],
+    title30: 'パリの保育園・子育て相談（30分）',
+    title60: '子連れ移住・帯同準備をまるごと相談（60分）',
     price30: 3500,
     price60: 6000,
     desc30:
@@ -626,7 +645,7 @@ async function main() {
     {
       id: stableUuid(`expert-svc30:${e.key}`),
       userId: expertUuid(e.key),
-      title: '30分相談',
+      title: e.title30,
       description: e.desc30,
       category: 'consulting',
       priceJpy: e.price30,
@@ -643,7 +662,7 @@ async function main() {
     {
       id: stableUuid(`expert-svc60:${e.key}`),
       userId: expertUuid(e.key),
-      title: '60分相談',
+      title: e.title60,
       description: e.desc60,
       category: 'consulting',
       priceJpy: e.price60,
@@ -747,7 +766,7 @@ async function main() {
     startAt: bookingStart,
     endAt: bookingEnd,
     durationMinutes: 30,
-    serviceTitle: '30分相談',
+    serviceTitle: aya.title30,
     priceJpy: aya.price30,
     commissionRate: '0.20',
     platformFeeJpy: Math.round(aya.price30 * 0.2),
@@ -765,6 +784,7 @@ async function main() {
         endAt: sql`excluded.end_at`,
         priceJpy: sql`excluded.price_jpy`,
         platformFeeJpy: sql`excluded.platform_fee_jpy`,
+        serviceTitle: sql`excluded.service_title`,
         requestMessage: sql`excluded.request_message`,
         respondedAt: sql`null`,
         cancelledAt: sql`null`,
