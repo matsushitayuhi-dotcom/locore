@@ -203,17 +203,31 @@
     display:grid;place-items:center;font-family:var(--num);font-size:12px;font-weight:700}
   .steplbl .jstnote{margin-left:auto;font-size:10.5px;font-weight:500;color:var(--mu);display:inline-flex;align-items:center;gap:5px}
   .steplbl .jstnote svg{width:12px;height:12px;color:var(--lime-d)}
-  .dgroup{margin-top:14px}
-  .dgroup+.dgroup{margin-top:16px}
-  .dgroup .dt{font-size:12.5px;font-weight:700;color:var(--ink-2)}
-  .dgroup .dt span{font-family:var(--num);color:var(--mu);font-weight:400;font-size:11px;margin-left:6px}
-  .tchips{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
-  .tchip{font-family:var(--num);font-size:13.5px;font-weight:600;border:1px solid var(--bd2);background:var(--card);
-    border-radius:9999px;padding:8px 18px;color:var(--ink-2);transition:.15s}
-  .tchip:hover{border-color:var(--lime-d);color:var(--lime-d)}
-  .tchip.on{background:var(--lime);border-color:var(--lime);color:#0e0e0f;font-weight:700;
+  /* --- 週グリッド（Preply参考） --- */
+  .wnav{margin-top:14px;display:flex;align-items:center;gap:10px}
+  .wnav .arr{flex:none;width:34px;height:34px;border-radius:9999px;border:1px solid var(--bd2);background:var(--card);
+    display:grid;place-items:center;color:var(--ink-2);cursor:pointer;transition:.15s}
+  .wnav .arr:hover{border-color:var(--lime-d);color:var(--lime-d)}
+  .wnav .arr svg{width:15px;height:15px}
+  .wnav .arr:disabled{color:var(--bd2);border-color:var(--bd);cursor:default}
+  .wnav .range{font-family:var(--num);font-size:14px;font-weight:700;letter-spacing:.01em}
+  .wnav .tz{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    color:var(--lime-900);background:var(--lime-50);border:1px solid var(--lime-l);border-radius:9999px;padding:4px 12px}
+  .wnav .tz svg{width:12px;height:12px;color:var(--lime-d)}
+  .wgrid{margin-top:12px;display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .wcol{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .wd{text-align:center;padding:6px 0 8px;border-bottom:1px solid var(--bd);line-height:1.35}
+  .wd .dow{display:block;font-size:11px;color:var(--mu)}
+  .wd .date{display:block;font-family:var(--num);font-size:14.5px;font-weight:700}
+  .wcol.off .wd .dow,.wcol.off .wd .date{color:var(--bd2)}
+  .tslot{font-family:var(--num);font-size:13px;font-weight:600;text-align:center;padding:9px 0;border:1px solid var(--bd2);
+    border-radius:10px;background:var(--card);color:var(--ink-2);cursor:pointer;transition:.15s;width:100%}
+  .tslot:hover{border-color:var(--lime-d);color:var(--lime-d)}
+  .tslot.on{background:var(--lime);border-color:var(--lime);color:#0e0e0f;font-weight:700;
     box-shadow:0 6px 16px -6px rgba(168,224,28,.6)}
-  .tchip:disabled{color:var(--bd2);border-color:var(--bd);background:var(--bg);text-decoration:line-through;cursor:not-allowed}
+  .wempty{text-align:center;color:var(--bd2);font-size:13px;padding:10px 0;user-select:none}
+  .phone .wgrid{grid-template-columns:repeat(4,1fr)}
+  .phone .wnav .range{font-size:13px}
   .reqmock textarea{margin-top:12px;width:100%;min-height:120px;resize:vertical;border:1px solid var(--bd2);border-radius:12px;
     background:var(--card);padding:13px 16px;font-family:var(--jp);font-size:13.5px;line-height:1.85;color:var(--ink)}
   .reqmock textarea::placeholder{color:var(--mu-2)}
@@ -515,10 +529,10 @@
   <section class="slab">
     <div class="slabhead">
       <span class="no">3 / 5</span>
-      <h2>予約リクエストページ — 枠を選んで、ひとこと添えて送る</h2>
-      <span class="where">/experts/[id]/request ・ 新規ページ（1カラム / 375px でもそのまま縦積み）</span>
+      <h2>予約リクエストページ — 週カレンダーから枠を選んで送る</h2>
+      <span class="where">/experts/[id]/request ・ 新規ページ（週グリッド、Preply の予約UI参考）</span>
     </div>
-    <p class="slabnote">フォームは1カラム1本道: メニュー確認 → 時刻チップ選択（すべて日本時間・満枠は打ち消し表示） → 相談内容 → 送信。選択内容はライムのサマリーで復唱してから送らせる。右は同一マークアップの 375px 表示 — チップの折り返しだけで成立し、専用モバイルレイアウトは不要。</p>
+    <p class="slabnote">日時選択は週グリッド: 上部に週送りナビ＋「日本時間」チップ、7列（月〜日）の各列に選択可能な開始時刻を縦積み、空きのない日は「—」。選択セルはライム塗り。空き状況が週単位で一望でき、「金曜しか空いてない」が一目で伝わる。選択後のフロー（メッセージ → ライムのサマリー復唱 → 送信）は従来どおり。右は 375px 表示 — 同じグリッドを4日表示に落とし、左右送りで残りの曜日へ（横スクロールでも可、実装しやすい方で）。</p>
     <div class="duo">
       <div class="frame main">
         <div class="bar"><i></i><i></i><i></i><span>locore.app/experts/sasaki-aya/request</span></div>
@@ -533,30 +547,49 @@
             <div class="prc"><b class="num">¥4,000</b><span>/ 30分・税込</span></div>
           </div>
 
-          <div class="steplbl"><span class="n">1</span>日時をえらぶ<span class="jstnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>すべて日本時間</span></div>
+          <div class="steplbl"><span class="n">1</span>日時をえらぶ</div>
 
-          <div class="dgroup">
-            <div class="dt">9月16日（水）<span>あと2枠</span></div>
-            <div class="tchips">
-              <button class="tchip" type="button">20:00</button>
-              <button class="tchip" type="button">21:00</button>
-              <button class="tchip" type="button" disabled>21:30</button>
-            </div>
+          <div class="wnav">
+            <button class="arr" type="button" disabled aria-label="前の週"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg></button>
+            <span class="range">9月14日〜9月20日</span>
+            <button class="arr" type="button" aria-label="次の週"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <span class="tz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>日本時間</span>
           </div>
-          <div class="dgroup">
-            <div class="dt">9月18日（金）<span>あと3枠</span></div>
-            <div class="tchips">
-              <button class="tchip on" type="button">20:00</button>
-              <button class="tchip" type="button">20:30</button>
-              <button class="tchip" type="button">21:00</button>
-              <button class="tchip" type="button" disabled>21:30</button>
+
+          <div class="wgrid">
+            <div class="wcol off">
+              <div class="wd"><span class="dow">月</span><span class="date">14</span></div>
+              <div class="wempty">—</div>
             </div>
-          </div>
-          <div class="dgroup">
-            <div class="dt">9月19日（土）<span>あと2枠</span></div>
-            <div class="tchips">
-              <button class="tchip" type="button">16:00</button>
-              <button class="tchip" type="button">17:00</button>
+            <div class="wcol off">
+              <div class="wd"><span class="dow">火</span><span class="date">15</span></div>
+              <div class="wempty">—</div>
+            </div>
+            <div class="wcol">
+              <div class="wd"><span class="dow">水</span><span class="date">16</span></div>
+              <button class="tslot" type="button">20:00</button>
+              <button class="tslot" type="button">20:30</button>
+              <button class="tslot" type="button">21:00</button>
+            </div>
+            <div class="wcol off">
+              <div class="wd"><span class="dow">木</span><span class="date">17</span></div>
+              <div class="wempty">—</div>
+            </div>
+            <div class="wcol">
+              <div class="wd"><span class="dow">金</span><span class="date">18</span></div>
+              <button class="tslot on" type="button">20:00</button>
+              <button class="tslot" type="button">20:30</button>
+              <button class="tslot" type="button">21:00</button>
+            </div>
+            <div class="wcol">
+              <div class="wd"><span class="dow">土</span><span class="date">19</span></div>
+              <button class="tslot" type="button">16:00</button>
+              <button class="tslot" type="button">16:30</button>
+              <button class="tslot" type="button">17:00</button>
+            </div>
+            <div class="wcol off">
+              <div class="wd"><span class="dow">日</span><span class="date">20</span></div>
+              <div class="wempty">—</div>
             </div>
           </div>
 
@@ -571,7 +604,7 @@
 
       <!-- 同一マークアップの 375px 表示 -->
       <div class="frame phone">
-        <div class="bar"><i></i><i></i><i></i><span>375px — モバイル表示（同一マークアップ）</span></div>
+        <div class="bar"><i></i><i></i><i></i><span>375px — モバイル表示（グリッドを4日に縮小・左右送り）</span></div>
         <div class="reqmock">
           <a class="bk" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 6 5 12 11 18"/></svg>佐々木 彩さんのページに戻る</a>
           <h3>予約リクエスト</h3>
@@ -582,21 +615,37 @@
             <div class="prc"><b class="num">¥4,000</b><span>/ 30分</span></div>
           </div>
 
-          <div class="steplbl"><span class="n">1</span>日時をえらぶ<span class="jstnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>日本時間</span></div>
-          <div class="dgroup">
-            <div class="dt">9月18日（金）</div>
-            <div class="tchips">
-              <button class="tchip on" type="button">20:00</button>
-              <button class="tchip" type="button">20:30</button>
-              <button class="tchip" type="button">21:00</button>
-              <button class="tchip" type="button" disabled>21:30</button>
-            </div>
+          <div class="steplbl"><span class="n">1</span>日時をえらぶ</div>
+
+          <div class="wnav">
+            <button class="arr" type="button" aria-label="前の日程"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg></button>
+            <span class="range">9/16〜9/19</span>
+            <button class="arr" type="button" aria-label="次の日程"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
+            <span class="tz"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>日本時間</span>
           </div>
-          <div class="dgroup">
-            <div class="dt">9月19日（土）</div>
-            <div class="tchips">
-              <button class="tchip" type="button">16:00</button>
-              <button class="tchip" type="button">17:00</button>
+
+          <div class="wgrid">
+            <div class="wcol">
+              <div class="wd"><span class="dow">水</span><span class="date">16</span></div>
+              <button class="tslot" type="button">20:00</button>
+              <button class="tslot" type="button">20:30</button>
+              <button class="tslot" type="button">21:00</button>
+            </div>
+            <div class="wcol off">
+              <div class="wd"><span class="dow">木</span><span class="date">17</span></div>
+              <div class="wempty">—</div>
+            </div>
+            <div class="wcol">
+              <div class="wd"><span class="dow">金</span><span class="date">18</span></div>
+              <button class="tslot on" type="button">20:00</button>
+              <button class="tslot" type="button">20:30</button>
+              <button class="tslot" type="button">21:00</button>
+            </div>
+            <div class="wcol">
+              <div class="wd"><span class="dow">土</span><span class="date">19</span></div>
+              <button class="tslot" type="button">16:00</button>
+              <button class="tslot" type="button">16:30</button>
+              <button class="tslot" type="button">17:00</button>
             </div>
           </div>
 

@@ -141,8 +141,10 @@
   .helpbox b{color:var(--lime-900)}
 
   /* ================= [3][4] メールテンプレ ================= */
-  .mailwrap{background:var(--bg);padding:34px 20px 40px}
-  .envelope{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--bd);border-radius:14px;
+  /* メール地は白（white-base 方針に合わせ、既存テンプレの cream #FAF5EB は使わない）。
+     白地に封筒が沈まないよう罫線は border-strong 相当。 */
+  .mailwrap{background:#fff;padding:34px 20px 40px}
+  .envelope{max-width:560px;margin:0 auto;background:var(--card);border:1px solid var(--bd2);border-radius:14px;
     padding:32px 28px;box-shadow:var(--sh-sm)}
   .envelope .logo{font-size:20px;font-weight:900;letter-spacing:-.02em;display:inline-flex;align-items:center;gap:8px}
   .envelope .logo .mark{width:24px;height:24px;border-radius:50%;background:var(--lime);color:#0e0e0f;display:grid;place-items:center}
@@ -195,7 +197,7 @@
 <div class="intro"><div class="introin">
   <span class="tag">Mock — Notifications Slice</span>
   <h1>通知スライス: 参加リンクとメール4点の差分デザイン</h1>
-  <p>確定した相談を<b>当日たどり着ける</b>ようにするスライス。エキスパートが相談室URL（固定リンク推奨）を登録し、確定カードとメールの両方から参加できるようにする。UI差分は小さいので、BookingCard の confirmed 4状態・設定1カード・メール3通のみ。メールは既存 envelope（560px単一カラム）のレイアウトを踏襲しつつ、配色はサイトと同じライムに更新（既存テンプレのテラコッタは将来こちらに合わせる）。</p>
+  <p>確定した相談を<b>当日たどり着ける</b>ようにするスライス。エキスパートが相談室URL（固定リンク推奨）を登録し、確定カードとメールの両方から参加できるようにする。UI差分は小さいので、BookingCard の confirmed 4状態・設定1カード・メール3通のみ。メールは既存 envelope（560px単一カラム）のレイアウトを踏襲しつつ、配色はサイトと同じライムに更新し、背景も cream ではなく白基調（white-base 方針）に統一（既存テンプレのテラコッタ/creamは将来こちらに合わせる）。</p>
 </div></div>
 
 <div class="showcase">

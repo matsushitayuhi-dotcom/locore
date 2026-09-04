@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — 背景の白基調化（Before / After 比較モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ================= showcase tokens（このページ自体の地は現行 neutral-25） ================= */
+  :root{
+    --lime:#A8E01C;--lime-300:#B6E84E;--lime-200:#CDF088;--lime-l:#E3F7B8;--lime-50:#F5FBE2;
+    --lime-d:#5E8B0E;--lime-900:#3D5E07;
+    --bg:#F4F4EF;--muted:#ECECE4;--card:#FFFFFF;--bd:#E7E7E0;--bd2:#D8D8CF;
+    --ink:#18181B;--ink-2:#3F3F46;--mu:#71717A;--mu-2:#837F78;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.85}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .num{font-family:var(--num)}
+
+  /* ================= showcase chrome ================= */
+  .intro{border-bottom:1px solid var(--bd);background:var(--card)}
+  .introin{max-width:1120px;margin:0 auto;padding:36px 24px 32px}
+  .intro .tag{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--lime-d)}
+  .intro h1{font-size:clamp(21px,2.8vw,27px);font-weight:700;margin-top:8px}
+  .intro p{margin-top:10px;font-size:13.5px;color:var(--mu);max-width:60em}
+  .intro p b{color:var(--ink-2)}
+  .showcase{padding:0 0 90px}
+  .slab{max-width:1120px;margin:64px auto 0;padding:0 24px}
+  .slabhead{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  .slabhead .no{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);background:var(--lime-50);
+    border:1px solid var(--lime-l);border-radius:9999px;padding:3px 12px}
+  .slabhead h2{font-size:17px;font-weight:700}
+  .slabhead .where{font-family:var(--mono);font-size:11.5px;color:var(--mu)}
+  .slabnote{font-size:12.5px;color:var(--mu);margin-bottom:18px;max-width:64em}
+  .frame{border:1px solid var(--bd);border-radius:16px;overflow:hidden;box-shadow:var(--sh-sm);background:var(--card)}
+  .frame .bar{display:flex;align-items:center;gap:7px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--muted)}
+  .frame .bar i{width:9px;height:9px;border-radius:50%;background:var(--bd2)}
+  .frame .bar span{margin-left:8px;font-family:var(--mono);font-size:11px;color:var(--mu)}
+  .frame .bar .pill{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;
+    border-radius:9999px;padding:2px 10px}
+  .frame .bar .pill.bef{background:var(--bd2);color:var(--ink-2)}
+  .frame .bar .pill.aft{background:var(--lime);color:#0e0e0f}
+  .frame+.frame{margin-top:26px}
+
+  /* ================= テーマ変数（Before / After の切り替え点はここだけ） =================
+     before: 現行トークン
+     after : 白基調案 — 地を白に、旧地色を muted に降格、罫線を半段強め、カードに影 */
+  .themed{background:var(--g);color:var(--ink)}
+  .before{--g:#F4F4EF; --mut:#ECECE4; --cbd:#E7E7E0; --cbd2:#D8D8CF; --cardsh:none; --band:#FFFFFF}
+  .after {--g:#FFFFFF; --mut:#F4F4EF; --cbd:#E3E3DA; --cbd2:#CCCCC1; --cardsh:0 1px 2px rgba(24,24,27,.05); --band:#F4F4EF}
+
+  /* ================= 再現: トップ hero（実装 app/page.tsx 準拠） ================= */
+  .pgmock{padding:44px 36px 48px}
+  .hero{max-width:640px}
+  .hbadge{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;border:1px solid var(--cbd);
+    background:#fff;box-shadow:var(--sh-xs);padding:6px 16px;font-size:12.5px;font-weight:700;color:var(--lime-900)}
+  .hbadge i{width:7px;height:7px;border-radius:50%;background:var(--lime);font-style:normal}
+  .hero h3{margin-top:18px;font-size:clamp(26px,3.6vw,38px);font-weight:700;line-height:1.36;letter-spacing:-.015em}
+  .hero h3 em{font-style:normal;color:var(--lime-d)}
+  .hero .sub{margin-top:16px;font-size:14.5px;line-height:1.9;color:var(--ink-2);max-width:33em}
+  .hero .sub b{font-weight:700}
+  .hctas{margin-top:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .hcta-p{display:inline-flex;align-items:center;gap:8px;border-radius:9999px;background:var(--lime);color:#0e0e0f;
+    padding:13px 30px;font-size:15px;font-weight:700;box-shadow:var(--sh-sm)}
+  .hcta-o{display:inline-flex;align-items:center;border-radius:9999px;border:1px solid var(--cbd2);color:var(--ink-2);
+    padding:10px 18px;font-size:13.5px;font-weight:700;background:transparent}
+  .hfacts{margin-top:16px;display:flex;gap:8px 20px;flex-wrap:wrap;font-size:12.5px;color:var(--mu)}
+  .hfacts span{display:inline-flex;align-items:center;gap:6px}
+  .hfacts svg{width:14px;height:14px;color:var(--lime-d);flex:none}
+
+  /* ================= 再現: ExpertCard 列 ================= */
+  .exsec{margin-top:40px}
+  .exsec .k{font-family:var(--num);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--lime-d)}
+  .exsec h4{font-size:21px;font-weight:700;margin-top:6px}
+  .exgrid{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .ex{display:flex;flex-direction:column;border:1px solid var(--cbd);border-radius:16px;background:#fff;
+    padding:22px;box-shadow:var(--cardsh)}
+  .ex .top{display:flex;align-items:center;gap:14px}
+  .ex .ava{width:56px;height:56px;border-radius:50%;background:var(--lime-l);color:var(--lime-900);
+    display:grid;place-items:center;font-size:20px;font-weight:700;flex:none}
+  .ex .nm{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.3}
+  .ex .vb{display:inline-flex;align-items:center;gap:4px;background:var(--lime-l);border:1px solid var(--lime-300);
+    color:var(--lime-900);font-size:11px;font-weight:700;border-radius:9999px;padding:2px 10px;white-space:nowrap}
+  .ex .vb svg{width:11px;height:11px}
+  .ex .ct{margin-top:4px;font-size:12.5px;color:var(--mu)}
+  .ex .ct b{font-weight:500;color:var(--ink-2)}
+  .ex .bio{margin-top:14px;font-size:13px;line-height:1.75;color:var(--ink-2);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ex .chips{margin-top:14px;display:flex;gap:6px;flex-wrap:wrap}
+  .ex .chips span{border-radius:9999px;background:var(--mut);padding:4px 10px;font-size:11px;font-weight:500;color:var(--ink-2)}
+  .ex .foot{margin-top:16px;padding-top:14px;border-top:1px solid var(--cbd);display:flex;align-items:baseline;gap:6px}
+  .ex .foot b{font-family:var(--num);font-size:18px;font-weight:700}
+  .ex .foot span{font-size:11.5px;color:var(--mu)}
+  .ex .foot .mn{margin-left:auto}
+  .ex .foot .mn i{font-style:normal;font-family:var(--num);font-weight:700;color:var(--ink-2)}
+
+  /* ================= 再現: セクション帯（how it works の区切り方） ================= */
+  .band{margin:40px -36px -48px;background:var(--band);border-top:1px solid var(--cbd);padding:28px 36px 34px}
+  .band .lbl{font-family:var(--mono);font-size:10px;color:var(--mu);letter-spacing:.12em;margin-bottom:14px}
+  .band .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .bstep{border:1px solid var(--cbd);border-radius:14px;background:#fff;padding:16px 18px;box-shadow:var(--cardsh)}
+  .after .bstep{background:#fff}
+  .before .bstep{background:var(--g)} /* 現行: 白帯の上に cream カード */
+  .bstep .no{font-family:var(--num);font-size:12px;font-weight:700;color:var(--lime-d);display:flex;align-items:center;gap:8px}
+  .bstep .no::after{content:"";width:28px;height:1px;background:var(--lime-200)}
+  .bstep b{display:block;margin-top:8px;font-size:14px}
+  .bstep .ph{height:7px;border-radius:4px;background:var(--mut);margin-top:9px}
+  .bstep .ph.s{width:70%}
+
+  /* ================= [3] トークン表 ================= */
+  .tokwrap{background:var(--card);padding:26px 28px 30px}
+  .toktable{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;border:1px solid var(--bd);
+    border-radius:12px;overflow:hidden}
+  .toktable th{background:var(--muted);text-align:left;padding:10px 14px;font-size:11.5px;color:var(--ink-2);
+    border-bottom:1px solid var(--bd);white-space:nowrap}
+  .toktable td{padding:11px 14px;vertical-align:top;border-bottom:1px solid var(--bd)}
+  .toktable tr:last-child td{border-bottom:0}
+  .toktable .tok{font-family:var(--mono);font-size:11.5px;font-weight:600;white-space:nowrap}
+  .toktable .tok small{display:block;font-family:var(--jp);font-weight:400;color:var(--mu);font-size:10.5px}
+  .sw{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;white-space:nowrap}
+  .sw i{width:16px;height:16px;border-radius:5px;border:1px solid var(--bd2);font-style:normal;flex:none}
+  .toktable .arrow{color:var(--mu-2);padding:0 4px}
+  .toktable .memo{color:var(--mu);font-size:11.5px;line-height:1.75;min-width:220px}
+  .toktable .memo b{color:var(--ink-2)}
+  .keep{font-size:10.5px;font-weight:700;color:var(--lime-900);background:var(--lime-l);border:1px solid var(--lime-300);
+    border-radius:9999px;padding:1px 9px;white-space:nowrap}
+
+  /* ================= responsive ================= */
+  @media(max-width:920px){
+    .exgrid,.band .steps{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:640px){
+    .pgmock{padding:32px 20px 36px}
+    .band{margin:32px -20px -36px;padding:24px 20px 28px}
+    .exgrid,.band .steps{grid-template-columns:1fr}
+    .toktable .memo{min-width:0}
+    .tokwrap{overflow-x:auto}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ showcase intro ============ -->
+<div class="intro"><div class="introin">
+  <span class="tag">Mock — White Base</span>
+  <h1>背景の白基調化: Before / After ＋ トークン変更案</h1>
+  <p>「クリーム地（neutral-25 #F4F4EF）がもっさり見える」への対応案。<b>地を #FFFFFF にし、旧地色は bg-muted に降格</b>。白地に白カードが沈まないよう罫線を半段強め＋カードに shadow-xs を標準付与し、セクション区切りは「白 ⇄ muted 帯」の交互で作る。<b>ライムのアクセント・primary 系トークンは一切変更しない</b>。下の2フレームは同一マークアップで、テーマ変数（地・muted・罫線・影）だけを差し替えたもの。</p>
+</div></div>
+
+<div class="showcase">
+
+  <!-- ================================================================
+       [1/3] Before — 現行 cream 地
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">1 / 3</span>
+      <h2>Before — 現行（cream 地 #F4F4EF）</h2>
+      <span class="where">/ ・ hero + 注目エキスパート列 + セクション帯（現行トークン）</span>
+    </div>
+    <p class="slabnote">現行: cream 地に白カード。カードは立つが、画面全体の明度が一段沈み、余白が「詰まって」見える。セクション区切りは cream ⇄ 白帯の交互。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app — 現行トークン</span><span class="pill bef">BEFORE</span></div>
+      <div class="themed before pgmock">
+        <div class="hero">
+          <span class="hbadge"><i></i>居住認証つき・海外在住日本人への相談サービス</span>
+          <h3>現地に住む日本人に、<br /><em>30分だけ</em>相談できる。</h3>
+          <p class="sub">移住、留学、駐在準備、こだわりの旅行——。ガイドブックにも検索にも出てこない「実際のところ」を、<b>いま現地で暮らす日本人</b>にオンラインで直接聞けます。</p>
+          <div class="hctas">
+            <a class="hcta-p" href="#">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+            <a class="hcta-o" href="#">使い方を見る</a>
+          </div>
+          <div class="hfacts">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>全員、居住認証済み</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>30分 ¥3,000〜</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2.5"/><path d="M16 10.5 21 7.5v9l-5-3z"/></svg>オンラインで完結</span>
+          </div>
+        </div>
+
+        <div class="exsec">
+          <span class="k">Experts</span>
+          <h4>この街の「先輩」に聞く。</h4>
+          <div class="exgrid">
+            <a class="ex" href="#">
+              <div class="top"><span class="ava">彩</span>
+                <div><div class="nm">佐々木 彩<span class="vb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span></div>
+                <div class="ct">🇫🇷 パリ在住 <b>8年</b></div></div></div>
+              <p class="bio">日系商社の駐在をきっかけに渡仏し、現地で起業。駐在生活と「全部自分で手続きする生活」の両方を知っています。</p>
+              <div class="chips"><span>移住</span><span>仕事・起業</span><span>生活手続き</span></div>
+              <div class="foot"><b>¥4,000</b><span>/ 30分〜</span><span class="mn">メニュー <i>2</i> 件</span></div>
+            </a>
+            <a class="ex" href="#">
+              <div class="top"><span class="ava">健</span>
+                <div><div class="nm">高橋 健太郎<span class="vb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span></div>
+                <div class="ct">🇬🇧 ロンドン在住 <b>5年</b></div></div></div>
+              <p class="bio">金融系の現地採用からスタートし、転職2回。イギリスの就活・ビザ・家探しは一通りつまずきました。</p>
+              <div class="chips"><span>就職・転職</span><span>住まい</span><span>留学</span></div>
+              <div class="foot"><b>¥3,500</b><span>/ 30分〜</span><span class="mn">メニュー <i>2</i> 件</span></div>
+            </a>
+            <a class="ex" href="#">
+              <div class="top"><span class="ava">実</span>
+                <div><div class="nm">山本 実咲<span class="vb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span></div>
+                <div class="ct">🇩🇪 ベルリン在住 <b>6年</b></div></div></div>
+              <p class="bio">ワーホリから正社員、永住権まで。ドイツ語ゼロから始めた立ち上げ期の話が得意です。子連れ生活情報も。</p>
+              <div class="chips"><span>移住</span><span>子育て</span><span>生活手続き</span></div>
+              <div class="foot"><b>¥3,000</b><span>/ 30分〜</span><span class="mn">メニュー <i>3</i> 件</span></div>
+            </a>
+          </div>
+        </div>
+
+        <div class="band">
+          <div class="lbl">SECTION BREAK — 現行: cream 地 ⇄ 白帯（bg-card）の交互</div>
+          <div class="steps">
+            <div class="bstep"><span class="no">01</span><b>探す</b><div class="ph"></div><div class="ph s"></div></div>
+            <div class="bstep"><span class="no">02</span><b>チャットで相談</b><div class="ph"></div><div class="ph s"></div></div>
+            <div class="bstep"><span class="no">03</span><b>オンラインで話す</b><div class="ph"></div><div class="ph s"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [2/3] After — 白基調案
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">2 / 3</span>
+      <h2>After — 白基調案（#FFFFFF 地）</h2>
+      <span class="where">同一マークアップ ・ テーマ変数のみ差し替え</span>
+    </div>
+    <p class="slabnote">地を白に。カードは「罫線半段強め＋shadow-xs」で層を作り、チップ・入力などの淡い面には旧地色 #F4F4EF（新 bg-muted）を使う。セクション区切りは「白 ⇄ muted 帯」の交互に置き換え — cream は消えるが、リズムは維持される。ライムの発色は白地でより立つ。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>locore.app — 白基調トークン案</span><span class="pill aft">AFTER</span></div>
+      <div class="themed after pgmock">
+        <div class="hero">
+          <span class="hbadge"><i></i>居住認証つき・海外在住日本人への相談サービス</span>
+          <h3>現地に住む日本人に、<br /><em>30分だけ</em>相談できる。</h3>
+          <p class="sub">移住、留学、駐在準備、こだわりの旅行——。ガイドブックにも検索にも出てこない「実際のところ」を、<b>いま現地で暮らす日本人</b>にオンラインで直接聞けます。</p>
+          <div class="hctas">
+            <a class="hcta-p" href="#">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+            <a class="hcta-o" href="#">使い方を見る</a>
+          </div>
+          <div class="hfacts">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>全員、居住認証済み</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>30分 ¥3,000〜</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2.5"/><path d="M16 10.5 21 7.5v9l-5-3z"/></svg>オンラインで完結</span>
+          </div>
+        </div>
+
+        <div class="exsec">
+          <span class="k">Experts</span>
+          <h4>この街の「先輩」に聞く。</h4>
+          <div class="exgrid">
+            <a class="ex" href="#">
+              <div class="top"><span class="ava">彩</span>
+                <div><div class="nm">佐々木 彩<span class="vb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span></div>
+                <div class="ct">🇫🇷 パリ在住 <b>8年</b></div></div></div>
+              <p class="bio">日系商社の駐在をきっかけに渡仏し、現地で起業。駐在生活と「全部自分で手続きする生活」の両方を知っています。</p>
+              <div class="chips"><span>移住</span><span>仕事・起業</span><span>生活手続き</span></div>
+              <div class="foot"><b>¥4,000</b><span>/ 30分〜</span><span class="mn">メニュー <i>2</i> 件</span></div>
+            </a>
+            <a class="ex" href="#">
+              <div class="top"><span class="ava">健</span>
+                <div><div class="nm">高橋 健太郎<span class="vb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span></div>
+                <div class="ct">🇬🇧 ロンドン在住 <b>5年</b></div></div></div>
+              <p class="bio">金融系の現地採用からスタートし、転職2回。イギリスの就活・ビザ・家探しは一通りつまずきました。</p>
+              <div class="chips"><span>就職・転職</span><span>住まい</span><span>留学</span></div>
+              <div class="foot"><b>¥3,500</b><span>/ 30分〜</span><span class="mn">メニュー <i>2</i> 件</span></div>
+            </a>
+            <a class="ex" href="#">
+              <div class="top"><span class="ava">実</span>
+                <div><div class="nm">山本 実咲<span class="vb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span></div>
+                <div class="ct">🇩🇪 ベルリン在住 <b>6年</b></div></div></div>
+              <p class="bio">ワーホリから正社員、永住権まで。ドイツ語ゼロから始めた立ち上げ期の話が得意です。子連れ生活情報も。</p>
+              <div class="chips"><span>移住</span><span>子育て</span><span>生活手続き</span></div>
+              <div class="foot"><b>¥3,000</b><span>/ 30分〜</span><span class="mn">メニュー <i>3</i> 件</span></div>
+            </a>
+          </div>
+        </div>
+
+        <div class="band">
+          <div class="lbl">SECTION BREAK — 新: 白 ⇄ muted 帯（#F4F4EF）の交互。旧地色はここで生きる</div>
+          <div class="steps">
+            <div class="bstep"><span class="no">01</span><b>探す</b><div class="ph"></div><div class="ph s"></div></div>
+            <div class="bstep"><span class="no">02</span><b>チャットで相談</b><div class="ph"></div><div class="ph s"></div></div>
+            <div class="bstep"><span class="no">03</span><b>オンラインで話す</b><div class="ph"></div><div class="ph s"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================
+       [3/3] トークン変更一覧
+  ================================================================= -->
+  <section class="slab">
+    <div class="slabhead">
+      <span class="no">3 / 3</span>
+      <h2>変更するトークン — 新旧値一覧</h2>
+      <span class="where">apps/web/app/globals.css（source of truth: packages/ui/src/styles/globals.css）</span>
+    </div>
+    <p class="slabnote">変更は neutral 系の4値＋運用ルール2点のみ。primary（ライム）・secondary・semantic 色はすべて据え置き。エイリアス（--color-bg / --color-surface-muted / --color-border …）は参照先が変わるだけなので触らない。</p>
+    <div class="frame">
+      <div class="bar"><i></i><i></i><i></i><span>globals.css — token diff</span></div>
+      <div class="tokwrap">
+        <table class="toktable">
+          <tr><th>トークン</th><th>旧</th><th></th><th>新</th><th>意図・使いどころ</th></tr>
+          <tr>
+            <td class="tok">--color-neutral-25<small>= --color-bg（ページ地）</small></td>
+            <td><span class="sw"><i style="background:#F4F4EF"></i>#F4F4EF</span></td>
+            <td class="arrow">→</td>
+            <td><span class="sw"><i style="background:#FFFFFF"></i>#FFFFFF</span></td>
+            <td class="memo">地を白に。「もっさり」の主因を除去し、ライムの発色を立たせる。</td>
+          </tr>
+          <tr>
+            <td class="tok">--color-neutral-50<small>= --color-surface-muted（bg-muted）</small></td>
+            <td><span class="sw"><i style="background:#ECECE4"></i>#ECECE4</span></td>
+            <td class="arrow">→</td>
+            <td><span class="sw"><i style="background:#F4F4EF"></i>#F4F4EF</span></td>
+            <td class="memo">旧地色を「淡い面」に降格。<b>テーマチップ地・入力地・muted 帯</b>で cream の温かみを残す。</td>
+          </tr>
+          <tr>
+            <td class="tok">--color-neutral-100<small>= --color-border</small></td>
+            <td><span class="sw"><i style="background:#E7E7E0"></i>#E7E7E0</span></td>
+            <td class="arrow">→</td>
+            <td><span class="sw"><i style="background:#E3E3DA"></i>#E3E3DA</span></td>
+            <td class="memo">半段強め。白地×白カードで輪郭が消えないように。</td>
+          </tr>
+          <tr>
+            <td class="tok">--color-neutral-200<small>= --color-border-strong</small></td>
+            <td><span class="sw"><i style="background:#D8D8CF"></i>#D8D8CF</span></td>
+            <td class="arrow">→</td>
+            <td><span class="sw"><i style="background:#CCCCC1"></i>#CCCCC1</span></td>
+            <td class="memo">同上（セレクト枠・アウトラインボタンの視認性維持）。</td>
+          </tr>
+          <tr>
+            <td class="tok">--shadow-xs ほか影トークン</td>
+            <td colspan="3"><span class="keep">値は変更なし</span></td>
+            <td class="memo"><b>運用変更:</b> .locore-card / ExpertCard に shadow-xs を標準付与。白地では罫線だけだと平板になるため、影で層を作る（hover は従来の -translate-y + shadow-md のまま）。</td>
+          </tr>
+          <tr>
+            <td class="tok">セクション区切り</td>
+            <td colspan="3"><span class="keep">トークン変更なし</span></td>
+            <td class="memo"><b>運用変更:</b> 現行の「cream 地 ⇄ bg-card 白帯」交互は白地では効かない。<b>「白 ⇄ bg-muted 帯」＋ border-y</b> に置き換え（how it works・trust 等）。ハイライト帯は従来どおり bg-primary-50 グラデが使える。</td>
+          </tr>
+          <tr>
+            <td class="tok">--color-primary-*（ライム）ほか</td>
+            <td colspan="3"><span class="keep">すべて据え置き</span></td>
+            <td class="memo">CTA・バッジ・選択状態のライム、semantic（warning / info / danger）は変更しない。メールテンプレの地も cream #FAF5EB → 白へ（notifications-slice.html 反映済み）。</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
