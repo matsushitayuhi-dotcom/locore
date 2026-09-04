@@ -1,9 +1,10 @@
 import 'server-only';
-import { desc, inArray, sql } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { listServices } from '@/lib/services/list';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
+import { getVerifiedUserIds } from '@/lib/residents/verification';
 import { CONSULTATION_TAG } from './constants';
 
 /**
@@ -140,10 +141,9 @@ export async function listExperts(
   if (list.length === 0) return [];
 
   const ownerIds = list.map((g) => g.ownerId);
-  const db = getDb();
 
   // 2+3. プロフィール（bio / 在住情報 / 言語）と居住認証は独立なので並列取得。
-  //      居住認証は最新申請が approved かどうか（getResidentProfile と同じ思想）。
+  //      居住認証は共通判定 getVerifiedUserIds（最新申請が approved）。
   type ProfileRow = {
     id: string;
     bio: string | null;
@@ -156,6 +156,8 @@ export async function listExperts(
   const fetchProfiles = async (): Promise<Map<string, ProfileRow>> => {
     const map = new Map<string, ProfileRow>();
     try {
+      // getDb() も try 内で呼ぶ（DATABASE_URL 未設定でも sitemap / build を壊さない）
+      const db = getDb();
       const rows = await db
         .select({
           id: schema.users.id,
@@ -174,31 +176,9 @@ export async function listExperts(
     }
     return map;
   };
-  const fetchVerifiedIds = async (): Promise<Set<string>> => {
-    const set = new Set<string>();
-    try {
-      const rows = await db
-        .selectDistinctOn([schema.residencyVerifications.userId], {
-          userId: schema.residencyVerifications.userId,
-          status: schema.residencyVerifications.status,
-        })
-        .from(schema.residencyVerifications)
-        .where(inArray(schema.residencyVerifications.userId, ownerIds))
-        .orderBy(
-          schema.residencyVerifications.userId,
-          desc(schema.residencyVerifications.submittedAt),
-        );
-      for (const r of rows) {
-        if (r.status === 'approved') set.add(r.userId);
-      }
-    } catch (err) {
-      console.warn('[listExperts] residency_verifications fetch failed:', err);
-    }
-    return set;
-  };
   const [profileById, verifiedIds] = await Promise.all([
     fetchProfiles(),
-    fetchVerifiedIds(),
+    getVerifiedUserIds(ownerIds),
   ]);
 
   const cards: ExpertCard[] = list.map((g) => {
@@ -236,6 +216,32 @@ export async function listExperts(
   // 認証済みを先に。同区分内は元の並び（価格昇順ベース）を維持
   cards.sort((a, b) => Number(b.isVerified) - Number(a.isVerified));
   return cards;
+}
+
+/**
+ * ユーザーが「エキスパート」（tags に 'consultation' を含む is_active な
+ * 相談メニューを 1 件以上出品）かどうかの軽量判定。limit 1 の存在チェックのみで、
+ * メニュー一覧を全件引かない。0055 (tags 列) 未適用環境は false フォールバック。
+ */
+export async function isExpertUser(userId: string): Promise<boolean> {
+  if (!userId) return false;
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({ id: schema.userServices.id })
+      .from(schema.userServices)
+      .where(
+        sql`${schema.userServices.userId} = ${userId} AND ${schema.userServices.isActive} = true AND ${schema.userServices.tags} && ARRAY[${CONSULTATION_TAG}]::text[]`,
+      )
+      .limit(1);
+    return rows.length > 0;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/does not exist/i.test(msg)) {
+      console.warn('[isExpertUser] failed:', err);
+    }
+    return false;
+  }
 }
 
 /** トップページの「注目エキスパート」。認証済み優先で limit 件。 */

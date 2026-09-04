@@ -66,8 +66,6 @@ export async function listServices(
     sort = 'newest',
   } = opts;
 
-  const db = getDb();
-
   // featured.ts と同じ audience フィルタ
   let matchAudience = undefined;
   if (audience === 'traveler') {
@@ -90,6 +88,8 @@ export async function listServices(
     .filter((t) => t.length > 0);
 
   try {
+    // getDb() も try 内で呼ぶ（DATABASE_URL 未設定でも sitemap / build を壊さない）
+    const db = getDb();
     const where = and(
       eq(schema.userServices.isActive, true),
       isNull(schema.users.deletedAt),
@@ -247,8 +247,8 @@ export async function listServicesByUserId(
   limit = 3,
 ): Promise<FeaturedService[]> {
   if (!userId) return [];
-  const db = getDb();
   try {
+    const db = getDb();
     const rows = await db
       .select({
         id: schema.userServices.id,

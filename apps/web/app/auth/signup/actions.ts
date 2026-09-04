@@ -36,6 +36,9 @@ export async function signUp(input: unknown): Promise<SignUpResult | void> {
   }
 
   const supabase = createSupabaseServerClient();
+  // 注意: ここは共通の getSiteUrl()（locore.app フォールバック）を意図的に使わない。
+  // 確認メールのリンク先なので、env 未設定のローカルで本番ドメインに飛ばすより
+  // 相対 URL（Supabase の site_url 既定に解決）の方が安全なため。
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? '';
 

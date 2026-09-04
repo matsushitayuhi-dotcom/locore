@@ -4,6 +4,7 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import type { FeaturedService } from '@/lib/services/featured';
 import type { LanguageLevel } from '@/lib/resident/constants';
+import { isUserVerified } from '@/lib/residents/verification';
 
 /**
  * /residents/[id] 駐在員ハブ用に、ユーザー本体 + writer_profile + 公開記事 +
@@ -212,19 +213,8 @@ export async function getResidentProfile(
 
   if (!u) return null;
 
-  // ----- 2. 本人確認 -----
-  let isVerified = false;
-  try {
-    const rows = await db
-      .select({ status: schema.residencyVerifications.status })
-      .from(schema.residencyVerifications)
-      .where(eq(schema.residencyVerifications.userId, userId))
-      .orderBy(desc(schema.residencyVerifications.submittedAt))
-      .limit(1);
-    isVerified = rows[0]?.status === 'approved';
-  } catch {
-    isVerified = false;
-  }
+  // ----- 2. 本人確認（最新申請 approved。共通判定に集約） -----
+  const isVerified = await isUserVerified(userId);
 
   // ----- 2.5 ソーシャルリンク (sns_links) -----
   let socialLinks: Array<{ platform: string; url: string }> = [];

@@ -13,6 +13,7 @@ import { SiteFooter } from '../components/SiteFooter';
 import { BottomNav } from '../components/BottomNav';
 import { HeaderShell } from '../components/HeaderShell';
 import { ViewerProvider } from '../components/viewer/ViewerProvider';
+import { getSiteUrl } from '../lib/seo/siteUrl';
 
 /**
  * 【2026-06 キャッシュ改修】
@@ -53,11 +54,19 @@ const jetbrains = JetBrains_Mono({
   display: 'swap',
 });
 
+// OG画像・canonical 等の相対 URL 解決基準。未設定環境は本番ドメインに解決。
+// NEXT_PUBLIC_SITE_URL がスキーム無し等の不正値でも new URL() で全ページを
+// 落とさないよう、パースできないときは本番ドメインにフォールバックする。
+function resolveMetadataBase(): URL {
+  try {
+    return new URL(getSiteUrl());
+  } catch {
+    return new URL('https://locore.app');
+  }
+}
+
 export const metadata: Metadata = {
-  // OG画像・canonical 等の相対 URL 解決基準。未設定環境は本番ドメインに解決。
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://locore.app',
-  ),
+  metadataBase: resolveMetadataBase(),
   title: {
     default: 'Locore — 現地に住む日本人に、30分だけ相談できる',
     template: '%s | Locore',

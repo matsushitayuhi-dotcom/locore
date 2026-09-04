@@ -12,9 +12,12 @@ import * as schema from './schema';
  * （恒久策は DATABASE_URL を transaction pooler = port 6543 に切り替えること）
  */
 export const createDbClient = (databaseUrl: string) => {
+  // DB_POOL_MAX='' や不正値のとき Number('') === 0 で「接続 0 本のプール」に
+  // なり全クエリが永久に待つ。正の整数として解釈できないときは既定の 5。
+  const poolMax = Number.parseInt(process.env.DB_POOL_MAX ?? '', 10);
   const client = postgres(databaseUrl, {
     prepare: false,
-    max: Number(process.env.DB_POOL_MAX ?? 5),
+    max: Number.isFinite(poolMax) && poolMax > 0 ? poolMax : 5,
   });
   return drizzle(client, { schema });
 };

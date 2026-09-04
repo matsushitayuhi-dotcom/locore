@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { getPublishedDbArticles } from '@/lib/articles/published';
 import { listExperts } from '@/lib/experts/list';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 
 /**
  * sitemap.xml — v2 ブログ再位置付け（SEO）。
@@ -12,8 +13,7 @@ import { listExperts } from '@/lib/experts/list';
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://locore.app';
+  const base = getSiteUrl();
 
   const [articles, experts] = await Promise.all([
     getPublishedDbArticles(500),
