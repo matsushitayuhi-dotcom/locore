@@ -116,6 +116,56 @@ const languageSchema = z.object({
   level: z.enum(RESIDENT_LANGUAGE_LEVELS),
 });
 
+// ===== 経歴（学歴・職歴 / manual/0062_user_career_history.sql）=====
+// 保存は offerings と同じ全置換方式。年はすべて任意（1950〜現在+1）。
+const careerText = z
+  .string()
+  .trim()
+  .max(80)
+  .optional()
+  .nullable()
+  .transform((v) => (v ? v : null));
+const careerYear = z
+  .number()
+  .int()
+  .min(1950)
+  .max(new Date().getFullYear() + 1)
+  .optional()
+  .nullable()
+  .transform((v) => v ?? null);
+
+const educationEntrySchema = z
+  .object({
+    school: z.string().trim().min(1, '学校名を入力してください').max(80),
+    degree: careerText,
+    field: careerText,
+    startYear: careerYear,
+    endYear: careerYear,
+  })
+  .refine(
+    (e) => e.startYear == null || e.endYear == null || e.startYear <= e.endYear,
+    { message: '開始年は終了年以前にしてください', path: ['startYear'] },
+  );
+
+const workEntrySchema = z
+  .object({
+    company: z.string().trim().min(1, '会社・組織名を入力してください').max(80),
+    title: careerText,
+    startYear: careerYear,
+    endYear: careerYear,
+    current: z.boolean().optional().default(false),
+  })
+  .refine(
+    (e) =>
+      e.current ||
+      e.startYear == null ||
+      e.endYear == null ||
+      e.startYear <= e.endYear,
+    { message: '開始年は終了年以前にしてください', path: ['startYear'] },
+  )
+  // 「現在」チェック時は endYear を無視して null に正規化
+  .transform((e) => (e.current ? { ...e, endYear: null } : e));
+
 const updateResidentProfileSchema = z.object({
   homeCountry: optionalText(2),
   homeRegion: optionalText(80),
@@ -143,6 +193,8 @@ const updateResidentProfileSchema = z.object({
     .or(z.literal('').transform(() => undefined))
     .or(z.null().transform(() => undefined)),
   offerings: z.array(z.string().trim().min(1).max(120)).max(8).default([]),
+  education: z.array(educationEntrySchema).max(10).default([]),
+  workHistory: z.array(workEntrySchema).max(10).default([]),
   languages: z.array(languageSchema).max(8).default([]),
   interests: z.array(z.string().trim().min(1).max(30)).max(20).default([]),
   lookingFor: z.array(z.string().trim().min(1).max(30)).max(10).default([]),
@@ -176,6 +228,8 @@ export async function updateResidentProfile(
       occupation: data.occupation ?? null,
       coverImageUrl: data.coverImageUrl ?? null,
       offerings: data.offerings,
+      education: data.education,
+      workHistory: data.workHistory,
       languages: data.languages,
       interests: data.interests,
       lookingFor: data.lookingFor,

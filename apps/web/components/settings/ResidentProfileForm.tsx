@@ -4,7 +4,12 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button, Input } from '@locore/ui';
 import { Plus, X } from 'lucide-react';
+import type { EducationEntry, WorkEntry } from '@locore/db';
 import { updateResidentProfile } from '@/app/settings/profile/actions';
+import {
+  CareerHistoryEditor,
+  type CareerDraft,
+} from '@/components/settings/CareerHistoryEditor';
 import {
   FAMILY_STAGES,
   FAMILY_STAGE_LABEL,
@@ -44,12 +49,54 @@ type Props = {
     occupation: string;
     coverImageUrl: string;
     offerings: string[];
+    education: EducationEntry[];
+    workHistory: WorkEntry[];
     languages: Lang[];
     interests: string[];
     lookingFor: string[];
     openToMeetups: boolean;
   };
 };
+
+/** DB の経歴エントリ ⇄ 行エディタの draft 形の相互変換 */
+function workToDraft(w: WorkEntry): CareerDraft {
+  return {
+    name: w.company,
+    sub1: w.title ?? '',
+    sub2: '',
+    startYear: w.startYear ?? '',
+    endYear: w.endYear ?? '',
+    current: !!w.current,
+  };
+}
+function eduToDraft(e: EducationEntry): CareerDraft {
+  return {
+    name: e.school,
+    sub1: e.degree ?? '',
+    sub2: e.field ?? '',
+    startYear: e.startYear ?? '',
+    endYear: e.endYear ?? '',
+    current: false,
+  };
+}
+function draftToWork(d: CareerDraft): WorkEntry {
+  return {
+    company: d.name.trim(),
+    title: d.sub1.trim() || null,
+    startYear: d.startYear === '' ? null : d.startYear,
+    endYear: d.current || d.endYear === '' ? null : d.endYear,
+    current: d.current,
+  };
+}
+function draftToEdu(d: CareerDraft): EducationEntry {
+  return {
+    school: d.name.trim(),
+    degree: d.sub1.trim() || null,
+    field: d.sub2.trim() || null,
+    startYear: d.startYear === '' ? null : d.startYear,
+    endYear: d.endYear === '' ? null : d.endYear,
+  };
+}
 
 /** users.arrival_year（西暦）→ "1-2" 等のバケット */
 function bucketFromArrivalYear(arrivalYear: number | null): ResidenceYearBucket | '' {
@@ -79,6 +126,12 @@ export function ResidentProfileForm({ initial }: Props) {
   const [occupation, setOccupation] = useState(initial.occupation);
   const [coverImageUrl, setCoverImageUrl] = useState(initial.coverImageUrl);
   const [offerings, setOfferings] = useState<string[]>(initial.offerings);
+  const [workRows, setWorkRows] = useState<CareerDraft[]>(
+    initial.workHistory.map(workToDraft),
+  );
+  const [eduRows, setEduRows] = useState<CareerDraft[]>(
+    initial.education.map(eduToDraft),
+  );
   const [languages, setLanguages] = useState<Lang[]>(initial.languages);
   const [interests, setInterests] = useState<string[]>(initial.interests);
   const [lookingFor, setLookingFor] = useState<string[]>(initial.lookingFor);
@@ -147,6 +200,9 @@ export function ResidentProfileForm({ initial }: Props) {
         occupation: occupation || undefined,
         coverImageUrl: coverImageUrl || undefined,
         offerings,
+        // 経歴: 名称が空の行は未入力扱いで除外し、DB のエントリ形に変換して全置換
+        workHistory: workRows.filter((r) => r.name.trim()).map(draftToWork),
+        education: eduRows.filter((r) => r.name.trim()).map(draftToEdu),
         languages,
         interests,
         lookingFor,
@@ -286,6 +342,30 @@ export function ResidentProfileForm({ initial }: Props) {
         <p className="mt-1 text-[11px] text-foreground/55">
           プロフィール上部に大きく表示されます。
         </p>
+      </div>
+
+      {/* 経歴（職歴・学歴） */}
+      <div className="space-y-4">
+        <div>
+          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+            経歴（任意）
+          </label>
+          <p className="text-[11px] text-foreground/55">
+            相談者が「どんな背景の人か」を知る手がかりになります。書ける範囲でどうぞ（年は任意）。
+          </p>
+        </div>
+        <CareerHistoryEditor
+          kind="work"
+          label="職歴"
+          rows={workRows}
+          onChange={setWorkRows}
+        />
+        <CareerHistoryEditor
+          kind="education"
+          label="学歴"
+          rows={eduRows}
+          onChange={setEduRows}
+        />
       </div>
 
       {/* ヘッダー画像 */}
