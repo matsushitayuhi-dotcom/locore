@@ -44,24 +44,28 @@ export default async function ExpertsPage({
   searchParams?: Search;
 }) {
   const country = firstParam(searchParams?.country).toLowerCase();
-  const city = firstParam(searchParams?.city);
+  const rawCity = firstParam(searchParams?.city);
   const topic = firstParam(searchParams?.topic);
   const price = firstParam(searchParams?.price);
 
   const range = PRICE_RANGES.find((r) => r.value === price);
 
-  const [experts, countryOptions, cityOptions] = await Promise.all([
-    listExperts({
-      countryCode: country || undefined,
-      citySlug: city || undefined,
-      topic: topic || undefined,
-      minPrice: range?.min,
-      maxPrice: range?.max ?? undefined,
-    }),
+  const [countryOptions, cityOptions] = await Promise.all([
     listExpertCountries(),
     // 国選択時はその国の都市だけを選択肢に出す（国→都市の連動）
     listExpertCities(country || undefined),
   ]);
+  // 国を切り替えたとき前の国の city パラメータが残ると、両者が AND されて
+  // 原因の見えない 0 件表示になる。選択肢（= その国の都市）に無い city は無視する
+  const city = cityOptions.some((c) => c.slug === rawCity) ? rawCity : '';
+
+  const experts = await listExperts({
+    countryCode: country || undefined,
+    citySlug: city || undefined,
+    topic: topic || undefined,
+    minPrice: range?.min,
+    maxPrice: range?.max ?? undefined,
+  });
   const selectedCountry = countryOptions.find((c) => c.code === country);
 
   // テーマチップ用: topic 以外の現在条件を維持した href を組み立てる
