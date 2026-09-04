@@ -6,11 +6,6 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { listOpenStartTimes } from '@/lib/bookings/availability';
-import {
-  formatDateLongJst,
-  formatTimeInTz,
-  jstDateKey,
-} from '@/lib/bookings/time';
 import { countryFlagEmoji } from '@/lib/experts/list';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import { RequestForm } from './RequestForm';
@@ -87,28 +82,9 @@ export default async function BookingRequestPage({
   }
   const duration = service.durationMinutes;
 
+  // 週グリッド（booking-slice モック 3/5）は client 側で曜日×時刻に組み立てる
   const openStarts = await listOpenStartTimes(params.id, duration);
-
-  // 日本時間の日付でグルーピング（最初の 8 日分・1 日最大 12 チップ）
-  const groupMap = new Map<
-    string,
-    { label: string; times: Array<{ iso: string; label: string }> }
-  >();
-  for (const d of openStarts) {
-    const key = jstDateKey(d);
-    const g = groupMap.get(key) ?? { label: formatDateLongJst(d), times: [] };
-    if (g.times.length < 12) {
-      g.times.push({
-        iso: d.toISOString(),
-        label: formatTimeInTz(d, 'Asia/Tokyo'),
-      });
-    }
-    groupMap.set(key, g);
-  }
-  const groups = Array.from(groupMap.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(0, 8)
-    .map(([, g]) => g);
+  const slotIsos = openStarts.map((d) => d.toISOString());
 
   const flag = countryFlagEmoji(service.ownerCountry);
 
@@ -160,7 +136,7 @@ export default async function BookingRequestPage({
           </div>
         </div>
 
-        {groups.length === 0 ? (
+        {slotIsos.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-border-strong bg-muted px-6 py-10 text-center text-[13px] text-neutral-500">
             いま選べる空き枠がありません。
             <br />
@@ -181,7 +157,7 @@ export default async function BookingRequestPage({
             expertName={service.ownerName}
             priceJpy={service.priceJpy}
             durationMinutes={duration}
-            groups={groups}
+            slotIsos={slotIsos}
           />
         )}
       </div>
