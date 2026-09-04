@@ -69,16 +69,16 @@ export default async function ExpertDetailPage({
   const { avgStars, count: reviewCount, recent } = profile.reviewSummary;
 
   return (
-    <main className="bg-[#FAFAF7] text-[#18181B]">
+    <main className="bg-background text-foreground">
       <div className="mx-auto max-w-[1024px] px-6">
         {/* breadcrumb */}
-        <div className="pt-5 text-[12.5px] text-[#71717A]">
-          <Link href="/experts" className="hover:text-[#D4634A]">
+        <div className="pt-5 text-[12.5px] text-neutral-500">
+          <Link href="/experts" className="hover:text-primary-700">
             エキスパート一覧
           </Link>
           {cityName ? (
             <>
-              <span className="mx-2 text-[#C9C5BB]">/</span>
+              <span className="mx-2 text-border-strong">/</span>
               <Link
                 href={{
                   pathname: '/experts',
@@ -86,29 +86,29 @@ export default async function ExpertDetailPage({
                     ? { city: sortedMenus[0].citySlug }
                     : {},
                 }}
-                className="hover:text-[#D4634A]"
+                className="hover:text-primary-700"
               >
                 {flag ? `${flag} ` : ''}
                 {cityName}
               </Link>
             </>
           ) : null}
-          <span className="mx-2 text-[#C9C5BB]">/</span>
+          <span className="mx-2 text-border-strong">/</span>
           {profile.displayName}
         </div>
 
         {/* hero */}
-        <section className="border-b border-[#E7E5E0] pb-8 pt-6">
+        <section className="border-b border-border pb-8 pt-6">
           <div className="flex items-start gap-5 sm:gap-6">
             {profile.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={profile.avatarUrl}
                 alt=""
-                className="h-[76px] w-[76px] shrink-0 rounded-full border-[3px] border-white object-cover shadow-[0_2px_6px_rgba(24,24,27,.06)] sm:h-[104px] sm:w-[104px]"
+                className="h-[76px] w-[76px] shrink-0 rounded-full border-[3px] border-white object-cover shadow-sm sm:h-[104px] sm:w-[104px]"
               />
             ) : (
-              <span className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-full border-[3px] border-white bg-[#F4DACE] text-[28px] font-bold text-[#6E2F1F] shadow-[0_2px_6px_rgba(24,24,27,.06)] sm:h-[104px] sm:w-[104px] sm:text-[36px]">
+              <span className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-full border-[3px] border-white bg-primary-100 text-[28px] font-bold text-primary-900 shadow-sm sm:h-[104px] sm:w-[104px] sm:text-[36px]">
                 {profile.displayName.charAt(0)}
               </span>
             )}
@@ -116,40 +116,40 @@ export default async function ExpertDetailPage({
               <h1 className="flex flex-wrap items-center gap-3 text-[clamp(23px,3vw,29px)] font-bold tracking-tight">
                 {profile.displayName}
                 {profile.isVerified ? (
-                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#F4DACE] bg-[#FAF1ED] px-3 py-1 text-[12px] font-bold text-[#A84A35]">
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-3 py-1 text-[12px] font-bold text-primary-900">
                     <ShieldCheck className="h-[13px] w-[13px] shrink-0" aria-hidden />
                     居住認証済み
                   </span>
                 ) : null}
               </h1>
-              <div className="mt-1.5 text-[14px] text-[#3F3F46]">
+              <div className="mt-1.5 text-[14px] text-neutral-700">
                 {flag ? `${flag} ` : ''}
                 {cityName ? `${cityName}在住 ` : ''}
                 {years != null ? <b className="font-bold">{years}年</b> : null}
                 {profile.occupation ? ` ・ ${profile.occupation}` : ''}
               </div>
-              <div className="mt-3.5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[#71717A]">
+              <div className="mt-3.5 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-neutral-500">
                 {languages.length > 0 ? (
                   <span className="inline-flex items-center gap-1.5">
-                    <Globe className="h-[15px] w-[15px] shrink-0 text-[#837F78]" aria-hidden />
+                    <Globe className="h-[15px] w-[15px] shrink-0 text-neutral-400" aria-hidden />
                     {languages.join('・')}
                   </span>
                 ) : null}
                 <span className="inline-flex items-center gap-1.5">
-                  <Video className="h-[15px] w-[15px] shrink-0 text-[#837F78]" aria-hidden />
+                  <Video className="h-[15px] w-[15px] shrink-0 text-neutral-400" aria-hidden />
                   オンライン相談
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-[15px] w-[15px] shrink-0 text-[#837F78]" aria-hidden />
+                  <Clock className="h-[15px] w-[15px] shrink-0 text-neutral-400" aria-hidden />
                   30分または60分
                 </span>
               </div>
               {reviewCount > 0 && avgStars != null ? (
-                <div className="mt-3.5 text-[14px] font-bold text-[#3F3F46]">
-                  <i className="not-italic text-[#D4634A]">★</i> {avgStars}
+                <div className="mt-3.5 text-[14px] font-bold text-neutral-700">
+                  <i className="not-italic text-primary-700">★</i> {avgStars}
                   <a
                     href="#reviews"
-                    className="ml-1.5 text-[12.5px] font-normal text-[#71717A] underline underline-offset-4"
+                    className="ml-1.5 text-[12.5px] font-normal text-neutral-500 underline underline-offset-4"
                   >
                     レビュー {reviewCount}件を読む
                   </a>
@@ -166,8 +166,8 @@ export default async function ExpertDetailPage({
             id="consult-menu"
             className="order-first mb-6 flex flex-col gap-3.5 lg:sticky lg:top-[86px] lg:order-last lg:mb-0"
           >
-            <div className="flex items-baseline gap-2 text-[13px] font-bold text-[#3F3F46]">
-              <span className="text-[10.5px] font-semibold uppercase tracking-[0.13em] text-[#D4634A]">
+            <div className="flex items-baseline gap-2 text-[13px] font-bold text-neutral-700">
+              <span className="text-[10.5px] font-semibold uppercase tracking-[0.13em] text-primary-700">
                 Menu
               </span>
               相談メニュー
@@ -182,11 +182,11 @@ export default async function ExpertDetailPage({
                 recommended={i === 0 && sortedMenus.length > 1}
               />
             ))}
-            <div className="flex items-start gap-2 rounded-xl bg-[#DCEAF5] px-4 py-3 text-[11.5px] leading-relaxed text-[#1C5384]">
+            <div className="flex items-start gap-2 rounded-xl bg-info-50 px-4 py-3 text-[11.5px] leading-relaxed text-info-500">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
               予約・決済機能は準備中です。まずはチャットで相談内容と日程をすり合わせてください。
             </div>
-            <p className="text-center text-[11px] leading-relaxed text-[#837F78]">
+            <p className="text-center text-[11px] leading-relaxed text-neutral-400">
               やり取りはすべてLocore内のチャットで行われます。
               <br />
               個人連絡先の交換は相談成立後まで不要です。
@@ -196,13 +196,13 @@ export default async function ExpertDetailPage({
           {/* main */}
           <div>
             {topics.length > 0 ? (
-              <section className="border-b border-[#E7E5E0] pb-7 lg:pt-0">
+              <section className="border-b border-border pb-7 lg:pt-0">
                 <SectionHeading en="Topics">得意分野</SectionHeading>
                 <div className="flex flex-wrap gap-2">
                   {topics.map((t) => (
                     <span
                       key={t}
-                      className="rounded-full bg-[#F4F2EC] px-[15px] py-1.5 text-[12.5px] font-medium text-[#3F3F46]"
+                      className="rounded-full bg-muted px-[15px] py-1.5 text-[12.5px] font-medium text-neutral-700"
                     >
                       {topicLabel(t)}
                     </span>
@@ -212,7 +212,7 @@ export default async function ExpertDetailPage({
             ) : null}
 
             {profile.offerings.length > 0 ? (
-              <section className="border-b border-[#E7E5E0] py-7">
+              <section className="border-b border-border py-7">
                 <SectionHeading en="Consultations">
                   こんな相談に乗れます
                 </SectionHeading>
@@ -220,9 +220,9 @@ export default async function ExpertDetailPage({
                   {profile.offerings.map((o) => (
                     <li
                       key={o}
-                      className="flex items-start gap-3 text-[14px] text-[#3F3F46]"
+                      className="flex items-start gap-3 text-[14px] text-neutral-700"
                     >
-                      <span className="mt-1 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-[#FAF1ED] text-[#D4634A]">
+                      <span className="mt-1 grid h-[22px] w-[22px] shrink-0 place-items-center rounded-full bg-primary-50 text-primary-700">
                         <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
                       </span>
                       {o}
@@ -233,13 +233,13 @@ export default async function ExpertDetailPage({
             ) : null}
 
             {bioParagraphs.length > 0 ? (
-              <section className="border-b border-[#E7E5E0] py-7">
+              <section className="border-b border-border py-7">
                 <SectionHeading en="About">自己紹介</SectionHeading>
                 <div className="space-y-3.5">
                   {bioParagraphs.map((p, i) => (
                     <p
                       key={i}
-                      className="text-[14px] leading-loose text-[#3F3F46]"
+                      className="text-[14px] leading-loose text-neutral-700"
                     >
                       {p}
                     </p>
@@ -253,12 +253,12 @@ export default async function ExpertDetailPage({
                 <SectionHeading en="Reviews">レビュー</SectionHeading>
                 <div className="mb-5 flex items-center gap-3">
                   <span className="text-[25px] font-bold tabular-nums">
-                    <i className="mr-1 not-italic text-[20px] text-[#D4634A]">
+                    <i className="mr-1 not-italic text-[20px] text-primary-700">
                       ★
                     </i>
                     {avgStars}
                   </span>
-                  <span className="text-[13px] text-[#71717A]">
+                  <span className="text-[13px] text-neutral-500">
                     {reviewCount}件のレビュー
                   </span>
                 </div>
@@ -267,7 +267,7 @@ export default async function ExpertDetailPage({
                     key={r.id}
                     className={
                       'py-4' +
-                      (i === 0 ? '' : ' border-t border-[#E7E5E0]')
+                      (i === 0 ? '' : ' border-t border-border')
                     }
                   >
                     <div className="flex items-center gap-3">
@@ -279,7 +279,7 @@ export default async function ExpertDetailPage({
                           className="h-10 w-10 shrink-0 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#DCEAF5] text-[14px] font-bold text-[#1C5384]">
+                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-info-50 text-[14px] font-bold text-info-500">
                           {r.reviewerName.charAt(0)}
                         </span>
                       )}
@@ -287,17 +287,17 @@ export default async function ExpertDetailPage({
                         <div className="text-[13.5px] font-bold">
                           {r.reviewerName}
                         </div>
-                        <div className="text-[11.5px] text-[#71717A]">
+                        <div className="text-[11.5px] text-neutral-500">
                           {formatMonthJa(r.createdAt)}
                         </div>
                       </div>
-                      <span className="ml-auto text-[12px] font-bold text-[#3F3F46]">
-                        <i className="not-italic text-[#D4634A]">★</i>{' '}
+                      <span className="ml-auto text-[12px] font-bold text-neutral-700">
+                        <i className="not-italic text-primary-700">★</i>{' '}
                         {r.satisfactionStars.toFixed(1)}
                       </span>
                     </div>
                     {r.body ? (
-                      <p className="mt-2 text-[13.5px] leading-relaxed text-[#3F3F46]">
+                      <p className="mt-2 text-[13.5px] leading-relaxed text-neutral-700">
                         {r.body}
                       </p>
                     ) : null}
@@ -311,7 +311,7 @@ export default async function ExpertDetailPage({
 
       {/* mobile bottom CTA */}
       <div
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E7E5E0] bg-white/95 px-[18px] pt-3 backdrop-blur-md lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 px-[18px] pt-3 backdrop-blur-md lg:hidden"
         style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }}
       >
         <div className="mx-auto flex max-w-[560px] items-center gap-3.5">
@@ -319,21 +319,21 @@ export default async function ExpertDetailPage({
             <b className="block text-[19px] font-bold tabular-nums">
               {minPrice != null ? `¥${minPrice.toLocaleString()}` : '応相談'}
               {minPrice != null ? (
-                <span className="text-[12px] font-normal text-[#71717A]">
+                <span className="text-[12px] font-normal text-neutral-500">
                   {' '}
                   /30分〜
                 </span>
               ) : null}
             </b>
             {reviewCount > 0 && avgStars != null ? (
-              <span className="text-[10.5px] text-[#71717A]">
+              <span className="text-[10.5px] text-neutral-500">
                 ★{avgStars} ・ レビュー{reviewCount}件
               </span>
             ) : null}
           </div>
           <a
             href="#consult-menu"
-            className="inline-flex flex-1 items-center justify-center rounded-full bg-[#D4634A] py-3 text-[15px] font-bold text-white transition hover:bg-[#A84A35]"
+            className="inline-flex flex-1 items-center justify-center rounded-full bg-primary-500 py-3 text-[15px] font-bold text-neutral-950 transition hover:bg-primary-300"
           >
             チャットで相談する
           </a>
@@ -352,7 +352,7 @@ function SectionHeading({
 }) {
   return (
     <h2 className="mb-[18px] flex items-baseline gap-2.5 text-[19px] font-bold">
-      <span className="text-[11px] font-semibold uppercase tracking-[0.13em] text-[#D4634A]">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.13em] text-primary-700">
         {en}
       </span>
       {children}

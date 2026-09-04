@@ -1,5 +1,10 @@
 # Locore Brand Kit
 
+> **注意 (2026-09)**: 現行サイトの実パレットは**ライム基調**
+> (`apps/web/app/globals.css` の `--color-primary-*` = #A8E01C 系が正)。
+> 本書のテラコッタ案は**未採用**です。Web 実装の配色はこの文書ではなく
+> globals.css / tailwind-preset のトークンに従ってください。
+
 資料作り (Keynote / Google Slides / PowerPoint / Figma / Canva / 印刷物) 用のブランドキット。
 ソースは `apps/web/app/globals.css` + `packages/ui/src/tailwind-preset.ts` から抽出。
 コードを変更したらこのドキュメントも更新してください。

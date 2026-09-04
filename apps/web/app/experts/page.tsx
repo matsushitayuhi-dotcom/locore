@@ -64,22 +64,22 @@ export default async function ExpertsPage({
   });
 
   return (
-    <main className="bg-[#FAFAF7] text-[#18181B]">
+    <main className="bg-background text-foreground">
       {/* page head */}
       <div className="mx-auto max-w-[1120px] px-6 pt-11">
-        <span className="block text-[12px] font-semibold uppercase tracking-[0.14em] text-[#D4634A]">
+        <span className="block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">
           Experts
         </span>
         <h1 className="mt-2 text-[clamp(24px,3.4vw,32px)] font-bold tracking-tight">
           エキスパートを探す
         </h1>
-        <p className="mt-2 max-w-[40em] text-[14px] text-[#71717A]">
+        <p className="mt-2 max-w-[40em] text-[14px] text-neutral-500">
           全員、書類審査による居住認証済み。都市とテーマで絞り込んで、あなたの相談に合う人を見つけてください。
         </p>
       </div>
 
       {/* filters */}
-      <div className="sticky top-0 z-40 mt-6 border-b border-[#E7E5E0] bg-[#FAFAF7]/90 backdrop-blur-md">
+      <div className="sticky top-0 z-40 mt-6 border-b border-border bg-background/90 backdrop-blur-md">
         <div className="mx-auto max-w-[1120px] px-6 py-3.5">
           <form
             action="/experts"
@@ -91,7 +91,7 @@ export default async function ExpertsPage({
               name="city"
               defaultValue={city}
               aria-label="都市で絞り込む"
-              className="appearance-none rounded-full border border-[#C9C5BB] bg-white px-4 py-2 pr-8 text-[13.5px] font-bold text-[#18181B] outline-none focus:border-[#D4634A]"
+              className="appearance-none rounded-full border border-border-strong bg-card px-4 py-2 pr-8 text-[13.5px] font-bold text-foreground outline-none focus:border-primary-500"
             >
               <option value="">すべての都市</option>
               {cityOptions.map((c) => (
@@ -104,7 +104,7 @@ export default async function ExpertsPage({
               name="price"
               defaultValue={price}
               aria-label="料金で絞り込む"
-              className="appearance-none rounded-full border border-[#C9C5BB] bg-white px-4 py-2 pr-8 text-[13.5px] font-bold text-[#18181B] outline-none focus:border-[#D4634A]"
+              className="appearance-none rounded-full border border-border-strong bg-card px-4 py-2 pr-8 text-[13.5px] font-bold text-foreground outline-none focus:border-primary-500"
             >
               <option value="">料金（30分〜）</option>
               {PRICE_RANGES.map((r) => (
@@ -115,12 +115,12 @@ export default async function ExpertsPage({
             </select>
             <button
               type="submit"
-              className="rounded-full border border-transparent bg-[#D4634A] px-5 py-2 text-[13.5px] font-bold text-white transition hover:bg-[#A84A35]"
+              className="rounded-full border border-transparent bg-primary-500 px-5 py-2 text-[13.5px] font-bold text-neutral-950 transition hover:bg-primary-300"
             >
               絞り込む
             </button>
-            <span className="ml-auto text-[13px] text-[#71717A]">
-              <b className="text-[15px] tabular-nums text-[#18181B]">
+            <span className="ml-auto text-[13px] text-neutral-500">
+              <b className="text-[15px] tabular-nums text-foreground">
                 {experts.length}
               </b>{' '}
               名のエキスパート
@@ -148,16 +148,16 @@ export default async function ExpertsPage({
       {/* grid */}
       <div className="mx-auto max-w-[1120px] px-6 pb-20 pt-8">
         {experts.length === 0 ? (
-          <div className="px-5 py-16 text-center text-[13px] text-[#71717A]">
+          <div className="px-5 py-16 text-center text-[13px] text-neutral-500">
             <div className="mb-2.5 text-[34px]">🧭</div>
-            <b className="mb-1.5 block text-[16px] text-[#3F3F46]">
+            <b className="mb-1.5 block text-[16px] text-neutral-700">
               この条件のエキスパートは、まだいません
             </b>
             条件を少しゆるめてみてください。新しいエキスパートは毎月増えています。
             <div className="mt-4">
               <Link
                 href="/experts"
-                className="inline-flex rounded-full border border-[#C9C5BB] bg-white px-5 py-2 text-[13.5px] font-bold text-[#3F3F46] transition hover:border-[#18181B] hover:text-[#18181B]"
+                className="inline-flex rounded-full border border-border-strong bg-card px-5 py-2 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground"
               >
                 絞り込みをリセット
               </Link>
@@ -172,21 +172,21 @@ export default async function ExpertsPage({
         )}
 
         {/* register strip */}
-        <div className="mt-11 flex flex-wrap items-center gap-5 rounded-2xl border border-dashed border-[#C9C5BB] bg-[#F4F2EC] px-7 py-6">
-          <span className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full border border-[#F4DACE] bg-[#FAF1ED] text-[#D4634A]">
+        <div className="mt-11 flex flex-wrap items-center gap-5 rounded-2xl border border-dashed border-border-strong bg-muted px-7 py-6">
+          <span className="grid h-[46px] w-[46px] shrink-0 place-items-center rounded-full border border-primary-200 bg-primary-50 text-primary-700">
             <ShieldCheck className="h-[22px] w-[22px]" aria-hidden />
           </span>
           <div>
             <b className="block text-[15px]">
               海外在住のあなたへ — エキスパートとして登録しませんか
             </b>
-            <p className="mt-0.5 text-[12.5px] text-[#71717A]">
+            <p className="mt-0.5 text-[12.5px] text-neutral-500">
               居住認証を通過すると、あなたの「暮らしの知識」が誰かの30分になります。
             </p>
           </div>
           <Link
             href="/become-writer"
-            className="rounded-full border border-[#C9C5BB] bg-white px-4 py-2 text-[13.5px] font-bold text-[#3F3F46] transition hover:border-[#18181B] hover:text-[#18181B] sm:ml-auto"
+            className="rounded-full border border-border-strong bg-card px-4 py-2 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground sm:ml-auto"
           >
             登録について見る
           </Link>
@@ -211,8 +211,8 @@ function TopicChip({
       className={
         'shrink-0 whitespace-nowrap rounded-full border px-4 py-1.5 text-[13px] transition ' +
         (active
-          ? 'border-[#D4634A] bg-[#D4634A] font-bold text-white'
-          : 'border-[#C9C5BB] bg-white font-medium text-[#3F3F46] hover:border-[#A84A35] hover:text-[#A84A35]')
+          ? 'border-primary-500 bg-primary-500 font-bold text-neutral-950'
+          : 'border-border-strong bg-card font-medium text-neutral-700 hover:border-primary-700 hover:text-primary-700')
       }
     >
       {children}

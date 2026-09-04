@@ -22,16 +22,16 @@ export function ConsultMenuCard({
   return (
     <div
       className={
-        'rounded-2xl border bg-white p-[22px] transition ' +
+        'rounded-2xl border bg-card p-[22px] transition ' +
         (recommended
-          ? 'border-[#EBC0AD] shadow-[0_6px_16px_rgba(24,24,27,.08)]'
-          : 'border-[#E7E5E0] shadow-[0_1px_2px_rgba(24,24,27,.04)]')
+          ? 'border-primary-200 shadow-md'
+          : 'border-border shadow-xs')
       }
     >
       <div className="flex items-baseline gap-2">
-        <b className="text-[15.5px] font-bold text-[#18181B]">{service.title}</b>
+        <b className="text-[15.5px] font-bold text-foreground">{service.title}</b>
         {recommended ? (
-          <span className="ml-auto rounded-full border border-[#F4DACE] bg-[#FAF1ED] px-2.5 py-0.5 text-[10.5px] font-bold text-[#A84A35]">
+          <span className="ml-auto rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[10.5px] font-bold text-primary-900">
             はじめての方に
           </span>
         ) : null}
@@ -39,21 +39,21 @@ export function ConsultMenuCard({
       <div className="mt-2 flex items-baseline gap-1">
         {service.priceJpy != null ? (
           <>
-            <b className="text-[26px] font-bold tabular-nums text-[#18181B]">
+            <b className="text-[26px] font-bold tabular-nums text-foreground">
               ¥{service.priceJpy.toLocaleString()}
             </b>
             {service.priceUnit ? (
-              <span className="text-[12px] text-[#71717A]">
+              <span className="text-[12px] text-neutral-500">
                 / {service.priceUnit}
               </span>
             ) : null}
           </>
         ) : (
-          <b className="text-[18px] font-bold text-[#3F3F46]">応相談</b>
+          <b className="text-[18px] font-bold text-neutral-700">応相談</b>
         )}
       </div>
       {service.description ? (
-        <p className="mt-2.5 text-[12.5px] leading-relaxed text-[#71717A]">
+        <p className="mt-2.5 text-[12.5px] leading-relaxed text-neutral-500">
           {service.description}
         </p>
       ) : null}
@@ -68,7 +68,7 @@ export function ConsultMenuCard({
           externalUrl={service.externalUrl}
           ctaLabel="チャットで相談する"
           redirectPath={`/experts/${expertId}`}
-          buttonClassName="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#D4634A] px-6 py-3 text-[14.5px] font-bold text-white shadow-[0_2px_6px_rgba(24,24,27,.06)] transition hover:bg-[#A84A35]"
+          buttonClassName="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary-500 px-6 py-3 text-[14.5px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
         />
       </div>
     </div>

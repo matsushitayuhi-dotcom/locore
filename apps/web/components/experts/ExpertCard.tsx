@@ -13,7 +13,7 @@ export function ExpertCard({ expert }: { expert: ExpertCardData }) {
   return (
     <Link
       href={`/experts/${expert.userId}`}
-      className="flex flex-col rounded-2xl border border-[#E7E5E0] bg-white p-[22px] shadow-[0_1px_2px_rgba(24,24,27,.04)] transition duration-200 hover:-translate-y-0.5 hover:border-[#DD9477] hover:shadow-[0_6px_16px_rgba(24,24,27,.08)]"
+      className="flex flex-col rounded-2xl border border-border bg-card p-[22px] shadow-xs transition duration-200 hover:-translate-y-0.5 hover:border-primary-300 hover:shadow-md"
     >
       <div className="flex items-center gap-3.5">
         {expert.avatarUrl ? (
@@ -24,25 +24,25 @@ export function ExpertCard({ expert }: { expert: ExpertCardData }) {
             className="h-14 w-14 shrink-0 rounded-full object-cover"
           />
         ) : (
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#F4DACE] text-[20px] font-bold text-[#6E2F1F]">
+          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-100 text-[20px] font-bold text-primary-900">
             {expert.displayName.charAt(0)}
           </span>
         )}
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-[16px] font-bold leading-tight text-[#18181B]">
+          <div className="flex flex-wrap items-center gap-2 text-[16px] font-bold leading-tight text-foreground">
             {expert.displayName}
             {expert.isVerified ? (
-              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-[#F4DACE] bg-[#FAF1ED] px-2.5 py-0.5 text-[11px] font-bold text-[#A84A35]">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
                 <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden />
                 認証済み
               </span>
             ) : null}
           </div>
-          <div className="mt-1 text-[12.5px] text-[#71717A]">
+          <div className="mt-1 text-[12.5px] text-neutral-500">
             {flag ? `${flag} ` : ''}
             {expert.cityNameJa ?? '—'}在住{' '}
             {expert.yearsInCity != null ? (
-              <b className="font-medium text-[#3F3F46]">
+              <b className="font-medium text-neutral-700">
                 {expert.yearsInCity}年
               </b>
             ) : null}
@@ -51,7 +51,7 @@ export function ExpertCard({ expert }: { expert: ExpertCardData }) {
       </div>
 
       {expert.bio ? (
-        <p className="mt-3.5 line-clamp-2 text-[13px] leading-relaxed text-[#3F3F46]">
+        <p className="mt-3.5 line-clamp-2 text-[13px] leading-relaxed text-neutral-700">
           {expert.bio}
         </p>
       ) : null}
@@ -61,7 +61,7 @@ export function ExpertCard({ expert }: { expert: ExpertCardData }) {
           {expert.topics.map((t) => (
             <span
               key={t}
-              className="rounded-full bg-[#F4F2EC] px-2.5 py-1 text-[11px] font-medium text-[#3F3F46]"
+              className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-neutral-700"
             >
               {topicLabel(t)}
             </span>
@@ -70,27 +70,27 @@ export function ExpertCard({ expert }: { expert: ExpertCardData }) {
       ) : null}
 
       {expert.languages.length > 0 ? (
-        <div className="mt-3 flex items-center gap-1.5 text-[12px] text-[#71717A]">
-          <Globe className="h-3.5 w-3.5 shrink-0 text-[#837F78]" aria-hidden />
+        <div className="mt-3 flex items-center gap-1.5 text-[12px] text-neutral-500">
+          <Globe className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
           {expert.languages.join('・')}
         </div>
       ) : null}
 
       <div className="flex-1" aria-hidden />
-      <div className="mt-4 flex items-baseline gap-1.5 border-t border-[#E7E5E0] pt-3.5">
+      <div className="mt-4 flex items-baseline gap-1.5 border-t border-border pt-3.5">
         {expert.minPriceJpy != null ? (
           <>
-            <span className="text-[18px] font-bold tabular-nums text-[#18181B]">
+            <span className="text-[18px] font-bold tabular-nums text-foreground">
               ¥{expert.minPriceJpy.toLocaleString()}
             </span>
-            <span className="text-[11.5px] text-[#71717A]">/ 30分〜</span>
+            <span className="text-[11.5px] text-neutral-500">/ 30分〜</span>
           </>
         ) : (
-          <span className="text-[13px] font-bold text-[#3F3F46]">応相談</span>
+          <span className="text-[13px] font-bold text-neutral-700">応相談</span>
         )}
-        <span className="ml-auto text-[11.5px] text-[#71717A]">
+        <span className="ml-auto text-[11.5px] text-neutral-500">
           メニュー{' '}
-          <b className="tabular-nums text-[#3F3F46]">{expert.menuCount}</b> 件
+          <b className="tabular-nums text-neutral-700">{expert.menuCount}</b> 件
         </span>
       </div>
     </Link>
