@@ -10,12 +10,14 @@
 @layer base {
   :root {
     /* 2026-09 白基調化（mockups/v2/white-base.html）:
-       地を #FFFFFF に、旧地色 #F4F4EF は neutral-50（bg-muted）へ降格して
-       チップ地・入力地・セクション帯で温かみを残す。白地でカードが沈まないよう
-       罫線は半段強め。primary（ライム）・semantic 色は据え置き。 */
+       地を #FFFFFF に。白地でカードが沈まないよう罫線は半段強め。
+       primary（ライム）・semantic 色は据え置き。
+       追補: 黄みがかったクリーム（#F4F4EF）のアクセント面も「もっさりする」との
+       ユーザー要望で廃止し、neutral-50（bg-muted = チップ地・帯・ホバー）は
+       無彩色のごく薄いグレー（zinc-100 相当）に。区別は border + shadow で付ける。 */
     --color-neutral-0:   #ffffff;
     --color-neutral-25:  #FFFFFF;
-    --color-neutral-50:  #F4F4EF;
+    --color-neutral-50:  #F4F4F5;
     --color-neutral-100: #E3E3DA;
     --color-neutral-200: #CCCCC1;
     --color-neutral-300: #a5a09a;
