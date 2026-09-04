@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — Locoreについて（/about ブランドページ・完成形モック）</title>
+<!--
+  実装時の metadata:
+    title: 「Locoreについて」
+    description: 「Locoreは、海外に住む日本人に直接相談できるサービスです。移住・留学・駐在・旅行の
+      "あなたの場合"に、いまその街で暮らす居住認証済みのエキスパートが答えます。」
+  役割: /about = ブランド/ミッション（なぜLocoreか）。how-to・料金・FAQ は /about-service に譲る。
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ================= tokens: white-base 準拠・ライム・ゴシック統一（about-service v7 と同一言語） ================= */
+  :root{
+    --lime:#A8E01C;--lime-300:#B6E84E;--lime-200:#CDF088;--lime-l:#E3F7B8;--lime-50:#F5FBE2;
+    --lime-d:#5E8B0E;--lime-900:#3D5E07;
+    --bg:#FFFFFF;--muted:#F4F4EF;--card:#FFFFFF;
+    --bd:#E3E3DA;--bd2:#CCCCC1;
+    --ink:#18181B;--ink-2:#3F3F46;--gray:#52525B;--mu:#71717A;--mu-2:#837F78;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+    --sh-xs:0 1px 2px rgba(24,24,27,.05);--sh-sm:0 2px 8px rgba(24,24,27,.07);
+    --sh-md:0 10px 26px -10px rgba(24,24,27,.13);--sh-lg:0 22px 48px -18px rgba(24,24,27,.2);
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.9;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .num{font-family:var(--num)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  /* 強調はゴシックのまま「ウェイト＋ライム色」。明朝・斜体は不使用 */
+  .em{font-weight:900;color:var(--lime-d)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:9999px;font-weight:700;
+    border:1px solid transparent;transition:.16s var(--ease);white-space:nowrap}
+  .btn svg{width:16px;height:16px;flex:none}
+  .btn-p{background:var(--lime);color:#0e0e0f;padding:14px 32px;font-size:15px;box-shadow:var(--sh-sm)}
+  .btn-p:hover{background:var(--lime-300)}
+  .tlink{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:700;color:var(--ink)}
+  .tlink u{text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:5px}
+  .tlink:hover u{text-decoration-color:var(--lime-d)}
+  .vbadge{display:inline-flex;align-items:center;gap:5px;background:var(--lime-l);border:1px solid var(--lime-300);
+    color:var(--lime-900);font-size:11px;font-weight:700;border-radius:9999px;padding:3px 10px;white-space:nowrap}
+  .vbadge svg{width:11px;height:11px;flex:none}
+  /* 実写アバター: Pexels（商用可・帰属不要）のサンプル素材。特定の実在エキスパートではなく
+     デモ用プレースホルダ。実装時は /experts/<name>.jpg に置換。 */
+  img.ava{border-radius:50%;object-fit:cover;flex:none;background:var(--muted)}
+
+  /* ================= header ================= */
+  .top{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:26px;padding:13px 24px}
+  .logo{font-weight:900;font-size:20px;letter-spacing:-.02em;flex:none;display:inline-flex;align-items:center;gap:8px}
+  .logo .mark{width:27px;height:27px;border-radius:50%;background:var(--lime);color:#0e0e0f;display:grid;place-items:center;flex:none}
+  .logo .mark svg{width:14px;height:14px}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:22px;font-size:14px;font-weight:600;color:var(--ink-2)}
+  .nav a.nl:hover{color:var(--lime-d)}
+  .nav a.on{color:var(--ink);font-weight:700}
+  .nav .lgn{border:1.5px solid var(--ink);border-radius:9999px;padding:7px 18px;font-size:13.5px;font-weight:700;transition:.16s}
+  .nav .lgn:hover{background:var(--ink);color:#fff}
+
+  /* ================= 共通 ================= */
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--lime-900);
+    background:var(--lime-l);border:1px solid var(--lime-300);border-radius:9999px;padding:5px 16px}
+  .kicker i{width:7px;height:7px;border-radius:50%;background:var(--lime-d);font-style:normal}
+  .sec{padding:80px 0 88px}
+  .sec-tint{background:linear-gradient(178deg,#fff,#FBFDF3)}
+  .sech{margin-top:18px;font-size:clamp(25px,3.6vw,38px);font-weight:900;letter-spacing:-.028em;line-height:1.42}
+  .secp{margin-top:16px;font-size:15.5px;color:var(--gray);line-height:2.1}
+
+  /* ================= [1] hero（写真帯） =================
+     実写はPexels（商用可・帰属不要）。背景装飾のみ。実装時は url(/about/video-call-grid.jpg)。 */
+  .hero{position:relative;padding:96px 0 110px;color:#fff;text-align:center;
+    background:
+      linear-gradient(rgba(11,13,7,.82),rgba(11,13,7,.66) 46%,rgba(11,13,7,.85)),
+      url("../../apps/web/public/about/video-call-grid.jpg") center/cover no-repeat #101408}
+  .hero .kicker{background:rgba(255,255,255,.08);border-color:rgba(168,224,28,.5);color:var(--lime)}
+  .hero .kicker i{background:var(--lime)}
+  .hero h1{margin:24px auto 0;font-size:clamp(30px,4.8vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1.42;
+    max-width:22em;text-shadow:0 2px 24px rgba(0,0,0,.4)}
+  .hero h1 b{color:var(--lime);font-weight:900}
+  .hero .sub{margin:24px auto 0;font-size:16px;line-height:2.15;color:rgba(255,255,255,.86);max-width:36em}
+  .hero .sub b{font-weight:700;color:#fff}
+
+  /* ================= [2] 課題（ナラティブ） ================= */
+  .why .in{max-width:720px;margin:0 auto;text-align:center}
+  .why .qrow{margin:44px auto 0;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;max-width:820px}
+  .why .q{background:#fff;border:1px solid var(--bd);border-radius:9999px;padding:10px 22px;
+    font-size:13.5px;font-weight:700;color:var(--ink-2);box-shadow:var(--sh-xs)}
+  .why .q::before{content:"「";color:var(--lime-d)}
+  .why .q::after{content:"」";color:var(--lime-d)}
+
+  /* ================= [3] 3つの柱 ================= */
+  .pillars{margin-top:44px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .pillar{background:#fff;border:1px solid var(--bd);border-radius:18px;padding:30px 28px;box-shadow:var(--sh-xs)}
+  .pillar .no{display:flex;align-items:center;gap:12px}
+  .pillar .no .ic{flex:none;width:50px;height:50px;border-radius:15px;background:var(--lime-l);color:var(--lime-900);
+    display:grid;place-items:center}
+  .pillar .no .ic svg{width:24px;height:24px}
+  .pillar .no i{font-style:normal;font-family:var(--num);font-size:13px;font-weight:800;color:var(--lime-d)}
+  .pillar h3{margin-top:16px;font-size:17.5px;font-weight:900;line-height:1.6}
+  .pillar p{margin-top:9px;font-size:14px;color:var(--gray);line-height:2}
+  .pillar p b{color:var(--ink);font-weight:700}
+
+  /* ================= [4] 居住認証（ダーク帯） ================= */
+  .sec-dark{color:#fff;background:linear-gradient(160deg,#0c0e0a,#151a11 52%,#0b0d09)}
+  .sec-dark .kicker{background:transparent;border-color:rgba(168,224,28,.45);color:var(--lime)}
+  .sec-dark .kicker i{background:var(--lime)}
+  .sec-dark .sech{color:#fff}
+  .sec-dark .sech b{color:var(--lime);font-weight:900}
+  .sec-dark .secp{color:rgba(255,255,255,.78);max-width:34em}
+  .trustgrid{display:grid;grid-template-columns:1.04fr .96fr;gap:56px;align-items:center}
+  .trustlink{margin-top:26px;display:inline-flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:var(--lime)}
+  .trustlink svg{width:15px;height:15px}
+  .trustlink:hover{text-decoration:underline;text-underline-offset:4px}
+  .trustcard{background:#fff;color:var(--ink);border-radius:22px;padding:34px 32px;text-align:center;
+    box-shadow:0 26px 60px -20px rgba(0,0,0,.5)}
+  .trustcard .shield{margin:0 auto 16px;width:84px;height:84px;border-radius:50%;border:1.5px solid var(--lime-200);
+    background:var(--lime-50);color:var(--lime-d);display:grid;place-items:center}
+  .trustcard .shield svg{width:40px;height:40px}
+  .trustcard .vbadge{font-size:13.5px;padding:6px 18px}
+  .trustcard .vbadge svg{width:13px;height:13px}
+  .trustcard>p{margin-top:15px;font-size:14px;line-height:2;color:var(--gray)}
+  .trustcard>p b{color:var(--ink)}
+  .trustcard .demo{margin-top:20px;text-align:left;border-top:1px dashed var(--bd2);padding-top:16px}
+  .trustcard .demo .lb{font-family:var(--mono);font-size:9.5px;color:var(--mu);letter-spacing:.12em;margin-bottom:10px}
+  .demohit{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px 16px}
+  .demohit .r{display:flex;align-items:center;gap:11px}
+  .demohit .ava{width:44px;height:44px}
+  .demohit .nm{font-size:13.5px;font-weight:800}
+  .demohit .ct{font-size:11.5px;color:var(--gray);margin-top:1px}
+  .demohit .vbadge{margin-left:auto}
+
+  /* ================= [5] エキスパートとは ================= */
+  .whohead{max-width:720px}
+  .whogrid{margin-top:40px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .who{background:#fff;border:1px solid var(--bd);border-radius:18px;padding:24px 20px;text-align:center;box-shadow:var(--sh-xs)}
+  .who img.ava{width:84px;height:84px;margin:0 auto;border:3px solid #fff;box-shadow:var(--sh-sm)}
+  .who .nm{margin-top:14px;font-size:15px;font-weight:800}
+  .who .ct{margin-top:3px;font-size:12.5px;color:var(--gray)}
+  .who .tale{margin-top:10px;font-size:12.5px;color:var(--gray);line-height:1.9}
+  .who .vbadge{margin-top:12px}
+  .whonote{margin-top:22px;font-size:12.5px;color:var(--mu);text-align:center}
+
+  /* ================= [6] 名前の由来 ================= */
+  .name .in{max-width:640px;margin:0 auto;text-align:center}
+  .name .markbig{margin:0 auto 20px;width:64px;height:64px;border-radius:50%;background:var(--lime);color:#0e0e0f;
+    display:grid;place-items:center;box-shadow:var(--sh-md)}
+  .name .markbig svg{width:32px;height:32px}
+  .name .formula{font-family:var(--num);font-size:clamp(19px,2.6vw,26px);font-weight:800;letter-spacing:-.01em}
+  .name .formula b{color:var(--lime-d)}
+  .name .formula .jp{font-family:var(--jp);font-size:.62em;font-weight:700;color:var(--gray)}
+  .name p{margin-top:16px;font-size:15px;color:var(--gray);line-height:2.1}
+
+  /* ================= [7] 最終CTA（写真帯） =================
+     実写はPexels（商用可・帰属不要）。背景装飾のみ。実装時は /about/diverse-team.jpg。 */
+  .final{padding:0 0 92px}
+  .finalin{border-radius:24px;padding:72px 40px;text-align:center;color:#fff;overflow:hidden;
+    background:
+      linear-gradient(rgba(11,13,7,.76),rgba(11,13,7,.82)),
+      url("../../apps/web/public/about/diverse-team.jpg") center/cover no-repeat #101408}
+  .finalin h2{font-size:clamp(27px,4.2vw,44px);font-weight:900;letter-spacing:-.03em;line-height:1.35;color:#fff;
+    text-shadow:0 2px 24px rgba(0,0,0,.35)}
+  .finalin h2 b{color:var(--lime);font-weight:900}
+  .finalin p{margin-top:16px;font-size:15.5px;color:rgba(255,255,255,.86)}
+  .finalin .ctas{margin-top:30px;display:flex;justify-content:center;align-items:center;gap:24px;flex-wrap:wrap}
+  .finalin .tlink{color:#fff}
+  .finalin .more{margin-top:20px;font-size:13.5px;color:rgba(255,255,255,.78)}
+  .finalin .more a{font-weight:700;color:#fff;text-decoration:underline;text-decoration-color:var(--lime);
+    text-decoration-thickness:2px;text-underline-offset:4px}
+
+  /* ================= footer ================= */
+  footer{border-top:1px solid var(--bd);background:#fff}
+  .footin{max-width:1080px;margin:0 auto;padding:46px 24px 34px;display:flex;gap:40px;flex-wrap:wrap}
+  .footin .fl{margin-right:auto;max-width:300px}
+  .footin .fl p{margin-top:12px;font-size:13px;color:var(--gray);line-height:1.95}
+  .fcol{min-width:140px}
+  .fcol b{font-size:13px;font-weight:800;color:var(--ink-2);display:block;margin-bottom:12px}
+  .fcol a{display:block;font-size:13.5px;color:var(--gray);padding:4px 0}
+  .fcol a:hover{color:var(--lime-d)}
+  .fbottom{border-top:1px solid var(--bd)}
+  .fbottomin{max-width:1080px;margin:0 auto;padding:16px 24px;display:flex;gap:20px;align-items:center;font-size:12px;color:var(--mu)}
+  .fbottomin .r{margin-left:auto;display:flex;gap:18px}
+
+  /* ================= responsive ================= */
+  @media(max-width:960px){
+    .pillars{grid-template-columns:1fr}
+    .trustgrid{grid-template-columns:1fr;gap:44px}
+    .trustcard{max-width:520px;margin:0 auto}
+    .whogrid{grid-template-columns:1fr 1fr}
+  }
+  @media(max-width:640px){
+    .nav a.nl{display:none}
+    .hero{padding:72px 0 84px}
+    .whogrid{grid-template-columns:1fr}
+    .finalin{padding:52px 22px}
+    .fbottomin{flex-direction:column;align-items:flex-start;gap:8px}
+    .fbottomin .r{margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== header ===================== -->
+<header class="top"><div class="topin">
+  <a class="logo" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+  <nav class="nav">
+    <a class="nl" href="#">エキスパートを探す</a>
+    <a class="nl" href="#">使い方</a>
+    <a class="nl on" href="#">Locoreについて</a>
+    <a class="lgn" href="#">ログイン</a>
+  </nav>
+</div></header>
+
+<!-- ===================== [1] hero ===================== -->
+<section class="hero"><div class="wrap">
+  <span class="kicker"><i></i>About Locore</span>
+  <h1>海外で暮らす「これから」を、<br />ひとりにしない。</h1>
+  <p class="sub">移住、留学、駐在、こだわりの旅行。ネットには一般論しかなくて、SNSやAIは"あなたの場合"には答えてくれません。Locoreは、<b>その街でいま実際に暮らす日本人</b>に、直接相談できる場所です。</p>
+</div></section>
+
+<!-- ===================== [2] なぜLocoreか ===================== -->
+<section class="sec why"><div class="wrap">
+  <div class="in">
+    <span class="kicker"><i></i>Why Locore</span>
+    <h2 class="sech">"実際のところ"は、<br /><span class="em">住んでいる人</span>しか知らない。</h2>
+    <p class="secp">海外に出る準備は、わからないことだらけです。役所の情報は一般論、SNSは断片的、AIはその街に住んだ経験を持ちません。子連れで住むならどのエリアか、現地校はどう選ぶか、ビザの実務はどう進むか——本当に知りたいことに答えられるのは、いまその街で暮らしている人です。</p>
+  </div>
+  <div class="qrow" aria-hidden="true">
+    <span class="q">子連れで住むなら、どのエリア？</span>
+    <span class="q">現地校は、どう選ぶ？</span>
+    <span class="q">ビザの実務は、実際どう進む？</span>
+  </div>
+</div></section>
+
+<!-- ===================== [3] 私たちの答え ===================== -->
+<section class="sec sec-tint"><div class="wrap">
+  <div style="max-width:720px">
+    <span class="kicker"><i></i>Our answer</span>
+    <h2 class="sech">だから、現地の人に<span class="em">直接聞ける場所</span>をつくりました。</h2>
+  </div>
+  <div class="pillars">
+    <div class="pillar">
+      <div class="no"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/></svg></span><i>01</i></div>
+      <h3>現地在住の日本人エキスパートに、直接相談</h3>
+      <p>その街で暮らす先輩に、あなたの事情を話して聞けます。検索では出てこない「実際のところ」が、30分で手に入ります。</p>
+    </div>
+    <div class="pillar">
+      <div class="no"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg></span><i>02</i></div>
+      <h3>居住認証で、"本当に現地にいる人"だけを掲載</h3>
+      <p>エキスパートは全員、現地での居住実績を書類で確認しています。<b>「行ったことがある」ではなく「いま住んでいる」</b>人の言葉です。</p>
+    </div>
+    <div class="pillar">
+      <div class="no"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg></span><i>03</i></div>
+      <h3>30分の単発から、継続的な伴走まで</h3>
+      <p>まずは30分の相談から。気に入れば、渡航まで継続的に伴走してもらえます。やり取りは<b>日本語で、日本時間で</b>。</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== [4] 居住認証（ダーク帯） ===================== -->
+<section class="sec sec-dark"><div class="wrap trustgrid">
+  <div>
+    <span class="kicker"><i></i>Trust</span>
+    <h2 class="sech">話す相手が、<br />本当に<b>現地にいる人</b>か。</h2>
+    <p class="secp">オンラインの相談で、いちばん確かめにくいのがここです。Locoreのエキスパートは全員、現地での居住実績を書類で確認しています。プロフィールには居住認証済みのバッジが付きます。</p>
+    <a class="trustlink" href="#">審査のステップをくわしく見る<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+  </div>
+  <div class="trustcard">
+    <div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg></div>
+    <span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+    <p>このバッジは、運営が書類で居住実態を確認したエキスパートだけのものです。</p>
+    <div class="demo">
+      <div class="lb">▼ 一覧でもプロフィールでも</div>
+      <div class="demohit">
+        <div class="r">
+          <img class="ava" src="../../apps/web/public/experts/aya.jpg" alt="" />
+          <div>
+            <div class="nm">佐々木 彩</div>
+            <div class="ct">🇫🇷 パリ在住 8年 ・ 現地で起業</div>
+          </div>
+          <span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== [5] エキスパートとは ===================== -->
+<section class="sec"><div class="wrap">
+  <div class="whohead">
+    <span class="kicker"><i></i>Who they are</span>
+    <h2 class="sech">商業インフルエンサーではなく、<br />その街の<span class="em">生活者</span>。</h2>
+    <p class="secp">元商社からパリで起業した人、子ども2人を現地校に通わせている親、留学から現地就職した人。フォロワー数ではなく、現地での経験の深さで選んでいます。</p>
+  </div>
+  <div class="whogrid">
+    <div class="who">
+      <img class="ava" src="../../apps/web/public/experts/aya.jpg" alt="" />
+      <div class="nm">佐々木 彩</div>
+      <div class="ct">🇫🇷 パリ在住 8年</div>
+      <p class="tale">日系商社の駐在をきっかけに渡仏し、現地で輸入雑貨の会社を経営。</p>
+      <span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+    </div>
+    <div class="who">
+      <img class="ava" src="../../apps/web/public/experts/misaki.jpg" alt="" />
+      <div class="nm">山本 実咲</div>
+      <div class="ct">🇩🇪 ベルリン在住 6年</div>
+      <p class="tale">子ども2人を現地校に通わせながら、ワーホリから永住権までを経験。</p>
+      <span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+    </div>
+    <div class="who">
+      <img class="ava" src="../../apps/web/public/experts/kentaro.jpg" alt="" />
+      <div class="nm">高橋 健太郎</div>
+      <div class="ct">🇬🇧 ロンドン在住 5年</div>
+      <p class="tale">留学から現地就職へ。イギリスの就活・ビザ・家探しを一通り経験。</p>
+      <span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+    </div>
+    <div class="who">
+      <img class="ava" src="../../apps/web/public/experts/daisuke.jpg" alt="" />
+      <div class="nm">中村 大輔</div>
+      <div class="ct">🇹🇭 バンコク在住 10年</div>
+      <p class="tale">駐在からそのまま移住して10年。生活の立ち上げと現地の商習慣に詳しい。</p>
+      <span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+    </div>
+  </div>
+  <p class="whonote">写真はサンプルです。エキスパートの経歴は登録時の申告と居住認証にもとづいて掲載します。</p>
+</div></section>
+
+<!-- ===================== [6] 名前の由来 ===================== -->
+<section class="sec sec-tint name"><div class="wrap">
+  <div class="in">
+    <span class="markbig"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>
+    <div class="formula">Locore = <b>Local</b><span class="jp">（現地）</span> + <b>Lore</b><span class="jp">（その土地の知恵）</span></div>
+    <p>現地に根ざした知恵を、必要としている人へ。名前には、それだけの意味を込めています。</p>
+  </div>
+</div></section>
+
+<!-- ===================== [7] 最終CTA（写真帯） ===================== -->
+<section class="final"><div class="wrap">
+  <div class="finalin">
+    <h2>あなたの海外を、<b>経験者</b>と。</h2>
+    <p>検索を3時間続けるより、住んでいる人にひとこと聞いてみませんか。</p>
+    <div class="ctas">
+      <a class="btn btn-p" href="#">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+      <a class="tlink" href="#"><u>エキスパートとして参加</u></a>
+    </div>
+    <p class="more"><a href="#">使い方をくわしく見る</a></p>
+  </div>
+</div></section>
+
+<!-- ===================== footer ===================== -->
+<footer>
+  <div class="footin">
+    <div class="fl">
+      <a class="logo" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+      <p>海外に住む日本人の「現地で暮らしているからこそ知っていること」を、30分から相談できるサービスです。</p>
+    </div>
+    <div class="fcol"><b>相談する</b>
+      <a href="#">エキスパートを探す</a>
+      <a href="#">使い方</a>
+      <a href="#">読みもの</a>
+    </div>
+    <div class="fcol"><b>教える</b>
+      <a href="#">エキスパート登録</a>
+      <a href="#">居住認証について</a>
+    </div>
+    <div class="fcol"><b>Locore</b>
+      <a href="#">Locoreについて</a>
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+  <div class="fbottom"><div class="fbottomin">
+    <span>© 2026 Locore</span>
+    <div class="r"><a href="#">特定商取引法に基づく表記</a><a href="#">お問い合わせ</a></div>
+  </div></div>
+</footer>
+
+</body>
+</html>
