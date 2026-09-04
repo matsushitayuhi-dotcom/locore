@@ -44,6 +44,8 @@ export type ExpertCard = {
 
 export type ListExpertsOptions = {
   citySlug?: string;
+  /** ISO alpha-2 lowercase（countries.code）。国ファーストフィルタ用 */
+  countryCode?: string;
   /** TOPIC_TAGS の value。指定時はそのテーマのメニューを持つ人だけ */
   topic?: string;
   minPrice?: number;
@@ -64,7 +66,7 @@ export function countryFlagEmoji(code: string | null | undefined): string {
 export async function listExperts(
   opts: ListExpertsOptions = {},
 ): Promise<ExpertCard[]> {
-  const { citySlug, topic, minPrice, maxPrice } = opts;
+  const { citySlug, countryCode, topic, minPrice, maxPrice } = opts;
 
   // 1. 相談メニューを全部引いて ownerId でグルーピング。
   //    価格フィルタは listServices に渡さない: メニュー単位で絞ると
@@ -75,6 +77,7 @@ export async function listExperts(
   const { services } = await listServices({
     tags: [CONSULTATION_TAG],
     citySlug,
+    countryCode,
     limit: 500,
     sort: 'price_asc',
   });
@@ -253,7 +256,9 @@ export async function listFeaturedExperts(limit = 6): Promise<ExpertCard[]> {
 /** /experts の都市フィルタ選択肢（相談メニューが存在する都市だけ）。 */
 export type ExpertCity = { slug: string; nameJa: string };
 
-export async function listExpertCities(): Promise<ExpertCity[]> {
+export async function listExpertCities(
+  countryCode?: string,
+): Promise<ExpertCity[]> {
   try {
     const db = getDb();
     const rows = await db
@@ -266,12 +271,66 @@ export async function listExpertCities(): Promise<ExpertCity[]> {
         schema.cities,
         sql`${schema.cities.id} = ${schema.userServices.cityId}`,
       )
+      .leftJoin(
+        schema.countries,
+        sql`${schema.countries.id} = ${schema.cities.countryId}`,
+      )
       .where(
-        sql`${schema.userServices.isActive} = true AND ${schema.userServices.tags} && ARRAY[${CONSULTATION_TAG}]::text[]`,
+        sql`${schema.userServices.isActive} = true AND ${schema.userServices.tags} && ARRAY[${CONSULTATION_TAG}]::text[]${
+          countryCode ? sql` AND ${schema.countries.code} = ${countryCode}` : sql``
+        }`,
       );
     return rows.sort((a, b) => a.nameJa.localeCompare(b.nameJa, 'ja'));
   } catch (err) {
     console.warn('[listExpertCities] failed:', err);
+    return [];
+  }
+}
+
+/** /experts の国フィルタ選択肢（相談メニューが存在する国だけ・人数つき）。 */
+export type ExpertCountry = {
+  /** countries.code（lowercase alpha-2） */
+  code: string;
+  nameJa: string;
+  /** 国旗絵文字 */
+  emoji: string;
+  /** その国に相談メニューを持つエキスパートの人数 */
+  expertCount: number;
+};
+
+export async function listExpertCountries(): Promise<ExpertCountry[]> {
+  try {
+    const db = getDb();
+    const result = await db.execute(sql`
+      SELECT co.code AS code, co.name_ja AS name_ja,
+             COUNT(DISTINCT us.user_id)::int AS cnt
+        FROM user_services us
+        INNER JOIN users u ON u.id = us.user_id AND u.deleted_at IS NULL
+        INNER JOIN cities c ON c.id = us.city_id
+        INNER JOIN countries co ON co.id = c.country_id
+       WHERE us.is_active = true
+         AND us.tags && ARRAY[${CONSULTATION_TAG}]::text[]
+       GROUP BY co.code, co.name_ja
+       ORDER BY cnt DESC, co.code ASC
+    `);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw: any = result;
+    const rows: Array<{ code?: unknown; name_ja?: unknown; cnt?: unknown }> =
+      Array.isArray(raw) ? raw : raw?.rows ?? [];
+    const out: ExpertCountry[] = [];
+    for (const r of rows) {
+      if (typeof r.code !== 'string' || typeof r.name_ja !== 'string') continue;
+      const count = typeof r.cnt === 'number' ? r.cnt : Number(r.cnt);
+      out.push({
+        code: r.code,
+        nameJa: r.name_ja,
+        emoji: countryFlagEmoji(r.code),
+        expertCount: Number.isFinite(count) ? count : 0,
+      });
+    }
+    return out;
+  } catch (err) {
+    console.warn('[listExpertCountries] failed:', err);
     return [];
   }
 }
