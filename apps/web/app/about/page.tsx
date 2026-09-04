@@ -1,430 +1,398 @@
-﻿import Link from 'next/link';
-import { Button } from '@locore/ui';
-import { Sparkles, BadgeCheck } from '@locore/ui/icons';
-import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, Clock, MapPin, MessageCircle, ShieldCheck } from 'lucide-react';
+
+/**
+ * `/about` — Locoreについて（ブランド/ミッションページ）。
+ * mockups/v2/about-page-v1.html（558951c）を忠実に実装。
+ * 役割: /about = なぜLocoreか。how-to・料金・FAQ は /about-service に譲る。
+ * 7 セクション: hero（写真帯・CTAなし）/ 課題 / 3つの柱 / 居住認証ダーク帯 /
+ * エキスパートとは（実写4人カード）/ 名前の由来 / 最終CTA（写真帯）。
+ * 写真（/about/*.jpg・/experts/*.jpg）はデモ用プレースホルダ（Pexels 商用可素材。
+ * 特定の実在人物・エキスパートではない）。デザイン言語は about-service v7 と同一
+ * （ライム・白基調・ゴシック統一・強調はウェイト+ライム色）。
+ */
 
 export const metadata = {
-  title: 'Locore とは',
+  title: 'Locoreについて',
   description:
-    'Locore は、在外邦人駐在員が現地で書く有料・編集的な旅行誌。観光ガイドにはない街の輪郭を、現地で暮らす人の目線から届けます。',
+    'Locoreは、海外の街で暮らした経験のある日本人に直接相談できるサービスです。移住・留学・駐在・旅行の「あなたの場合」に、その街で実際に暮らした（現在・過去の）居住認証済みエキスパートが答えます。',
 };
+
+/* ===== 小物（about-service v7 と同じ言語） ===== */
+
+function Kicker({ dark = false, children }: { dark?: boolean; children: React.ReactNode }) {
+  return (
+    <span
+      className={
+        'inline-flex items-center gap-2 rounded-full border px-4 py-[5px] text-[12.5px] font-bold ' +
+        (dark
+          ? 'border-primary-500/45 bg-transparent text-primary-500'
+          : 'border-primary-300 bg-primary-100 text-primary-900')
+      }
+    >
+      <i
+        className={
+          'h-[7px] w-[7px] rounded-full not-italic ' +
+          (dark ? 'bg-primary-500' : 'bg-primary-700')
+        }
+        aria-hidden
+      />
+      {children}
+    </span>
+  );
+}
+
+function SectionH({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="mt-[18px] text-[clamp(25px,3.6vw,38px)] font-black leading-[1.42] tracking-[-0.028em]">
+      {children}
+    </h2>
+  );
+}
+
+/** 強調: ゴシックのままウェイト + ライム色（明朝・斜体不使用） */
+function Em({ children }: { children: React.ReactNode }) {
+  return <span className="font-black text-primary-700">{children}</span>;
+}
+
+function VBadge({ label = '居住認証済み' }: { label?: string }) {
+  return (
+    <span className="inline-flex items-center gap-[5px] whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-[3px] text-[11px] font-bold text-primary-900">
+      <ShieldCheck className="h-[11px] w-[11px] shrink-0" aria-hidden />
+      {label}
+    </span>
+  );
+}
+
+/* ===== [5] エキスパートカード ===== */
+
+type WhoCard = {
+  img: string;
+  name: string;
+  city: string;
+  tale: string;
+};
+
+const WHO_CARDS: WhoCard[] = [
+  {
+    img: '/experts/aya.jpg',
+    name: '佐々木 彩',
+    city: '🇫🇷 パリ在住 8年',
+    tale: '日系商社の駐在をきっかけに渡仏し、現地で輸入雑貨の会社を経営。',
+  },
+  {
+    img: '/experts/misaki.jpg',
+    name: '山本 実咲',
+    city: '🇩🇪 ベルリン在住 6年',
+    tale: '子ども2人を現地校に通わせながら、ワーホリから永住権までを経験。',
+  },
+  {
+    img: '/experts/eri.jpg',
+    name: '藤田 絵里',
+    city: '🇺🇸 元・ニューヨーク在住 4年',
+    tale: '大学院留学から現地就職まで4年を過ごし、いまは帰国。留学準備の相談に乗っています。',
+  },
+  {
+    img: '/experts/daisuke.jpg',
+    name: '中村 大輔',
+    city: '🇹🇭 バンコク在住 10年',
+    tale: '駐在からそのまま移住して10年。生活の立ち上げと現地の商習慣に詳しい。',
+  },
+];
+
+/* ============================== page ============================== */
 
 export default function AboutPage() {
   return (
-    <main className="bg-background">
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-40 -top-40 h-[400px] w-[400px] rounded-full bg-primary-500/10 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-32 right-0 h-[300px] w-[300px] rounded-full bg-accent-500/10 blur-3xl"
-        />
-        <div className="relative mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-24">
-          <p className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300 ring-1 ring-border">
-            <Sparkles className="h-3 w-3" />
+    <main className="overflow-hidden bg-background text-foreground">
+      {/* ===== [1] hero（写真帯・CTAなし）。写真はデモ用プレースホルダ ===== */}
+      <section className="about-brand-hero-bg relative px-6 pb-[110px] pt-24 text-center text-white max-sm:pb-[84px] max-sm:pt-[72px]">
+        <div className="mx-auto max-w-[1080px]">
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary-500/50 bg-white/10 px-4 py-[5px] text-[12.5px] font-bold text-primary-500">
+            <i className="h-[7px] w-[7px] rounded-full bg-primary-500 not-italic" aria-hidden />
             About Locore
-          </p>
-          <h1
-            className="text-[36px] font-semibold leading-[1.15] tracking-tight text-foreground sm:text-[52px]"
-          >
-            観光ガイドの 1 行先にある、
-            <br className="hidden sm:block" />
-            街の本当の輪郭を持ち帰る
+          </span>
+          <h1 className="mx-auto mt-6 max-w-[22em] text-[clamp(30px,4.8vw,52px)] font-black leading-[1.42] tracking-[-0.03em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.4)]">
+            海外での「これから」を、
+            <br />
+            経験者と。
           </h1>
-          <p className="mt-6 text-[16px] leading-[1.9] text-foreground/70">
-            Locore（ロコレ）は、在外邦人の駐在員が現地で書く、有料・短尺の旅行誌です。
-            映え目当ての観光ガイドや、誰でも書ける AI 旅行記事ではなく、
-            <strong className="font-semibold text-foreground">
-              {' '}その街で実際に暮らしている人だけが知っている「もう一段深い情報」
-            </strong>
-            を、編集の手を入れて届けます。
+          <p className="mx-auto mt-6 max-w-[36em] text-[16px] leading-[2.15] text-white/85">
+            移住、留学、駐在、こだわりの旅行。ネットには一般論しかなくて、SNSやAIは&quot;あなたの場合&quot;には答えてくれません。Locoreは、
+            <b className="font-bold text-white">
+              その街で暮らす日本人、そして暮らした経験のある日本人
+            </b>
+            に、直接相談できる場所です。
           </p>
         </div>
       </section>
 
-      {/* Why */}
-      <section className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-        <SectionHeader kicker="Why" title="なぜ Locore か" />
-        <p className="mt-6 text-[15px] leading-[1.9] text-foreground/75">
-          海外旅行の情報源は、いま 3 種類に集約されつつあります — 観光ガイドブック、SNS、そして AI 旅行アシスタント。
-          どれもそれぞれの便利さがありますが、
-          <strong className="font-semibold text-foreground">
-            {' '}「現地で実際に暮らしている人が、平日の昼に通っている店」
-          </strong>
-          のような情報は、いずれにもほぼ載っていません。
-        </p>
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          <ContrastCard
-            label="観光ガイド"
-            issue="情報が古い・大規模店舗中心・現地民の感覚は薄い"
-          />
-          <ContrastCard
-            label="SNS / 映え系"
-            issue="集客のために観光地化が加速、リアルな日常からは離れる"
-          />
-          <ContrastCard
-            label="AI 旅行アシスタント"
-            issue="既存の Web 上の情報の編集に過ぎず、ローカル経験を持たない"
-          />
-        </div>
-        <div className="mt-10 rounded-xl border border-primary-500/30 bg-primary-500/5 p-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300">
-            Locore のスタンス
-          </p>
-          <p
-            className="mt-2 text-[20px] font-semibold leading-snug text-foreground"
-          >
-            居住経験 = 信頼レイヤー、編集の手 = 品質レイヤー。
-          </p>
-          <p className="mt-3 text-[14px] leading-[1.9] text-foreground/70">
-            執筆者は全員、現地に一定期間以上住んでいる日本人。さらに編集チームが
-            内容の独自性とローカル度をチェックし、観光地寄りに偏ったものは
-            ローカルスコアを下げて読者に明示します。
-          </p>
-        </div>
-      </section>
-
-      {/* Who: creators */}
-      <section className="border-y border-border bg-card/40">
-        <div className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHeader kicker="Who" title="書き手 — 駐在員" />
-          <p className="mt-6 text-[15px] leading-[1.9] text-foreground/75">
-            Locore の駐在員は、現地に住む日本人。商業的に動くインフルエンサーではなく、
-            自分の街への愛着で書く生活者です。3 つの Tier に分かれており、
-            居住年数とコンテンツ実績で判定します。
-          </p>
-          <div className="mt-8 grid gap-3 sm:grid-cols-3">
-            <TierCard
-              tier="S"
-              years="5 年以上"
-              note="居住認証 + 編集部レビュー通過 + 累計売上 50 万円以上"
-            />
-            <TierCard
-              tier="A"
-              years="3 年以上"
-              note="居住認証 + 編集部レビュー通過"
-            />
-            <TierCard
-              tier="B"
-              years="1 年以上"
-              note="居住認証のみ。書き手としての修行段階"
-            />
-          </div>
-          <p className="mt-8 text-[13px] leading-[1.9] text-foreground/60">
-            駐在員になるには
-            <Link
-              href="/become-writer"
-              className="ml-1 text-primary-300 underline-offset-4 hover:underline"
-            >
-              こちら
-            </Link>
-            から申請してください。Founders 枠（先着 50 名）は手数料優遇 + 永久バッジ付き。
-          </p>
-        </div>
-      </section>
-
-      {/* What: content principles */}
-      <section className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-        <SectionHeader kicker="What" title="コンテンツの方針" />
-        <ul className="mt-8 space-y-6">
-          <PrincipleItem
-            title="編集の手が入っている"
-            body="自由投稿の SNS と違い、すべての公開記事は編集チームのレビューを経ます。事実の裏取り・規約違反のスクリーニング・観光客向けすぎないかの判定を行います。"
-          />
-          <PrincipleItem
-            title="ローカルスコアで透明性を担保"
-            body="各記事に 0–100 のローカルスコアを付与します。Google 評価件数・SNS 露出度・駐在員の主観などをハイブリッドで算出。観光地寄りの記事もスコアを明示した上で公開します。"
-          />
-          <PrincipleItem
-            title="映え禁止"
-            body="カバー画像は 3:2、本文は短尺の編集的文体。SNS 的な過剰演出ではなく、平日の昼の店内のような「普段の街の表情」を尊重します。"
-          />
-          <PrincipleItem
-            title="スポット位置情報は購入後に解放"
-            body="無料プレビューではエリアまでしか表示しません。具体的な店舗・住所・営業時間は購入後に解放されます。駐在員の取材コストを保護するための設計です。"
-          />
-        </ul>
-      </section>
-
-      {/* How */}
-      <section className="border-y border-border bg-card/40">
-        <div className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHeader kicker="How" title="使い方" />
-          <ol className="mt-8 space-y-4">
-            <StepItem
-              n={1}
-              title="記事を読む"
-              body="フィードまたはマップから、街・テーマ・ローカル度で記事を選びます。無料プレビューで雰囲気を確認できます。"
-            />
-            <StepItem
-              n={2}
-              title="気になったら購入"
-              body="1 記事 ¥600〜3,000 程度。購入と同時に本文・スポット詳細・地図ピンが解放されます。返金不可ですが、品質が著しく低い場合は個別対応します。"
-            />
-            <StepItem
-              n={3}
-              title="気になることは駐在員に直接質問"
-              body="記事駐在員とは 1:1 のメッセージで質問できます。営業時間の変動など現地でないと分からないことも、直接聞けます。"
-            />
-            <StepItem
-              n={4}
-              title="旅程に追加して、地図で見ながら歩く"
-              body="購入した記事のスポットは旅程ページに自由に組み合わせられます。Google マップ連携で道順も確認できます。"
-            />
-          </ol>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-        <SectionHeader kicker="Pricing" title="価格・手数料" />
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50">
-              読者
-            </p>
-            <p
-              className="mt-2 text-[28px] font-semibold tabular text-foreground"
-            >
-              ¥600 〜 ¥3,000
-              <span className="ml-1 text-[14px] font-normal text-foreground/50">
-                / 1 記事
-              </span>
-            </p>
-            <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
-              ガイドブック 1 章分相当が、現地民の編集付きで手に入る価格帯。
-              月額サブスクではなく、買い切り。
+      {/* ===== [2] なぜLocoreか ===== */}
+      <section className="px-6 pb-[88px] pt-20">
+        <div className="mx-auto max-w-[1080px]">
+          <div className="mx-auto max-w-[720px] text-center">
+            <Kicker>Why Locore</Kicker>
+            <SectionH>
+              本当のことは、
+              <br />
+              <Em>暮らした人</Em>しか知らない。
+            </SectionH>
+            <p className="mt-4 text-[15.5px] leading-[2.1] text-neutral-500">
+              海外に出る準備は、わからないことだらけです。役所のサイトは一般論ばかり、SNSは断片的で、AIもその街で暮らした経験までは持っていません。子連れならどのエリアに住むか、現地の学校はどう選ぶか、ビザの手続きは実際どう進むのか。こういうことを本当に知っているのは、その街で暮らした人だけです。
             </p>
           </div>
-          <div className="rounded-xl border border-border bg-card p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50">
-              駐在員
-            </p>
-            <p
-              className="mt-2 text-[28px] font-semibold tabular text-foreground"
-            >
-              売上の 70%
-              <span className="ml-1 text-[14px] font-normal text-foreground/50">
-                を還元
-              </span>
-            </p>
-            <p className="mt-2 text-[13px] leading-[1.9] text-foreground/70">
-              プラットフォーム手数料は 30%。決済・モデレーション・配信・サポートを含みます。
-              Founders 枠は最初の 2 年間 80% 還元。
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="border-t border-border bg-card/40">
-        <div className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-          <SectionHeader kicker="FAQ" title="よくある質問" />
-          <div className="mt-8 space-y-3">
-            <FaqItem
-              q="記事の返金はできますか？"
-              a="原則できません。デジタルコンテンツの性質上、購入後すぐに本文と位置情報が解放されるためです。ただし、記載情報に重大な誤り（店舗閉業・全く異なる場所）がある場合は個別に審査のうえ対応します。"
-            />
-            <FaqItem
-              q="駐在員はどう選んでいますか？"
-              a="現地居住 1 年以上の証明（在留カード・公共料金の請求書等）を編集部が確認します。さらに最初の 3 本の投稿は編集レビュー必須。観光地紹介に偏ったり、事実誤認があれば差し戻します。"
-            />
-            <FaqItem
-              q="他のサービスや雑誌で見た店も Locore に載りますか？"
-              a="載ることはあります。ただし「観光地化済み」と編集が判断するとローカルスコアが下がる仕組みです。Locore の主役は「ガイドブックにまだ載っていない場所」ですが、地元の人が日常で通う店なら有名店も対象です。"
-            />
-            <FaqItem
-              q="購入後に駐在員にどこまで質問できますか？"
-              a="基本的に 1 記事あたり数往復までは無料の範囲。「平日の何時頃が空いている？」「ベジタリアン対応？」のようなライトな質問が想定されています。深掘りした 1on1 コンサルティングは別途有料サービスとして提供している駐在員もいます。"
-            />
-            <FaqItem
-              q="海外からでも使えますか？"
-              a="はい。アカウント言語は日本語ですが、ブラウザ・スマホからどこからでも利用できます。決済は Stripe（日本円建て）です。多言語対応は順次拡大予定。"
-            />
-            <FaqItem
-              q="プライバシー・規約について"
-              a={
-                <>
-                  <Link
-                    href="/legal/privacy"
-                    className="text-primary-300 underline-offset-4 hover:underline"
-                  >
-                    プライバシーポリシー
-                  </Link>
-                  {' / '}
-                  <Link
-                    href="/legal/terms"
-                    className="text-primary-300 underline-offset-4 hover:underline"
-                  >
-                    利用規約
-                  </Link>
-                  {' / '}
-                  <Link
-                    href="/contact?category=takedown"
-                    className="text-primary-300 underline-offset-4 hover:underline"
-                  >
-                    送信防止措置申出（プロ責法）
-                  </Link>
-                  をご覧ください。
-                </>
-              }
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="mx-auto max-w-screen-md px-4 py-16 sm:px-6 sm:py-20">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-500/15 via-card to-card p-8 ring-1 ring-border sm:p-12">
           <div
+            className="mx-auto mt-11 flex max-w-[820px] flex-wrap justify-center gap-3"
             aria-hidden
-            className="pointer-events-none absolute -right-12 -top-12 h-32 w-32 rounded-full bg-primary-500/20 blur-3xl"
-          />
-          <p className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-neutral-950">
-            Founders 枠 — 先着 50 名
-          </p>
-          <h2
-            className="mt-4 text-[28px] font-semibold leading-snug tracking-tight text-foreground"
           >
-            Locore を一緒に育てる駐在員、
-            <br className="hidden sm:block" />
-            いま探しています。
-          </h2>
-          <p className="mt-4 text-[14px] leading-[1.9] text-foreground/70">
-            取り分の優遇（最初 2 年 80%）、永久 Founders バッジ、編集チームへのフィードバック権。
-            フォロワー数ではなく、街への深さを最優先で選びます。
+            {[
+              '子連れで住むなら、どのエリア？',
+              '現地校は、どう選ぶ？',
+              'ビザの実務は、実際どう進む？',
+            ].map((q) => (
+              <span
+                key={q}
+                className="rounded-full border border-border bg-card px-[22px] py-2.5 text-[13.5px] font-bold text-neutral-700 shadow-xs"
+              >
+                <span className="text-primary-700">「</span>
+                {q}
+                <span className="text-primary-700">」</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== [3] 私たちの答え（3つの柱） ===== */}
+      <section className="about-tint-b px-6 pb-[88px] pt-20">
+        <div className="mx-auto max-w-[1080px]">
+          <div className="max-w-[720px]">
+            <Kicker>Our answer</Kicker>
+            <SectionH>
+              だから、現地の人に<Em>直接聞ける場所</Em>をつくりました。
+            </SectionH>
+          </div>
+          <div className="mt-11 grid gap-[18px] lg:grid-cols-3">
+            {[
+              {
+                icon: <MessageCircle className="h-6 w-6" aria-hidden />,
+                no: '01',
+                t: '現地で暮らした日本人エキスパートに、直接相談',
+                p: (
+                  <>
+                    その街で暮らした先輩に、あなたの状況を話して直接聞けます。検索では出てこない話が、30分でわかります。
+                  </>
+                ),
+              },
+              {
+                icon: <ShieldCheck className="h-6 w-6" aria-hidden />,
+                no: '02',
+                t: '居住認証で、"本当に暮らした人"だけを掲載',
+                p: (
+                  <>
+                    エキスパートは全員、現地での居住実績(現在または過去)を書類で確認しています。
+                    <b className="font-bold text-foreground">
+                      「旅行で立ち寄っただけ」ではなく「実際に暮らした経験がある」
+                    </b>
+                    人の言葉です。
+                  </>
+                ),
+              },
+              {
+                icon: <Clock className="h-6 w-6" aria-hidden />,
+                no: '03',
+                t: '30分の単発から、継続的な伴走まで',
+                p: (
+                  <>
+                    まずは30分の相談から。気に入れば、渡航まで継続的に伴走してもらえます。やり取りは
+                    <b className="font-bold text-foreground">日本語で、日本時間で</b>。
+                  </>
+                ),
+              },
+            ].map((c) => (
+              <div
+                key={c.no}
+                className="rounded-[18px] border border-border bg-card px-7 py-[30px] shadow-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid h-[50px] w-[50px] shrink-0 place-items-center rounded-[15px] bg-primary-100 text-primary-900">
+                    {c.icon}
+                  </span>
+                  <i className="text-[13px] font-extrabold not-italic tabular-nums text-primary-700">
+                    {c.no}
+                  </i>
+                </div>
+                <h3 className="mt-4 text-[17.5px] font-black leading-[1.6]">{c.t}</h3>
+                <p className="mt-2 text-[14px] leading-[2] text-neutral-500">{c.p}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== [4] 居住認証（ダーク帯） ===== */}
+      <section className="about-trust-bg px-6 pb-[88px] pt-20 text-white">
+        <div className="mx-auto grid max-w-[1080px] items-center gap-11 lg:grid-cols-[1.04fr_.96fr] lg:gap-14">
+          <div>
+            <Kicker dark>Trust</Kicker>
+            <h2 className="mt-[18px] text-[clamp(25px,3.6vw,38px)] font-black leading-[1.42] tracking-[-0.028em] text-white">
+              話す相手が、本当に
+              <br />
+              <b className="font-black text-primary-500">その街で暮らした人</b>か。
+            </h2>
+            <p className="mt-4 max-w-[34em] text-[15.5px] leading-[2.1] text-white/75">
+              オンラインの相談で、いちばん確かめにくいのがここです。Locoreのエキスパートは全員、現地での居住実績（現在または過去）を書類で確認しています。プロフィールには居住認証済みのバッジが付きます。
+            </p>
+            <Link
+              href="/about-service"
+              className="mt-[26px] inline-flex items-center gap-2 text-[14.5px] font-bold text-primary-500 hover:underline hover:underline-offset-4"
+            >
+              審査のステップをくわしく見る
+              <ArrowRight className="h-[15px] w-[15px]" aria-hidden />
+            </Link>
+          </div>
+          {/* 白カード。text-foreground 明示でダーク帯の白文字継承を遮断 */}
+          <div className="rounded-[22px] bg-card px-8 py-[34px] text-center text-foreground shadow-[0_26px_60px_-20px_rgba(0,0,0,0.5)]">
+            <div className="mx-auto mb-4 grid h-[84px] w-[84px] place-items-center rounded-full border-[1.5px] border-primary-200 bg-primary-50 text-primary-700">
+              <ShieldCheck className="h-10 w-10" strokeWidth={1.8} aria-hidden />
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-300 bg-primary-100 px-[18px] py-1.5 text-[13.5px] font-bold text-primary-900">
+              <ShieldCheck className="h-[13px] w-[13px]" aria-hidden />
+              居住認証済み
+            </span>
+            <p className="mt-[15px] text-[14px] leading-[2] text-neutral-500">
+              このバッジは、現地での居住実績を運営が書類で確認したエキスパートだけのものです。
+            </p>
+            <div className="mt-5 border-t border-dashed border-border-strong pt-4 text-left">
+              <div className="mb-2.5 text-[9.5px] tracking-[0.12em] text-neutral-500">
+                ▼ 一覧でもプロフィールでも
+              </div>
+              <div className="rounded-[14px] border border-border bg-card px-4 py-3.5">
+                <div className="flex items-center gap-[11px]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/experts/aya.jpg"
+                    alt=""
+                    className="h-11 w-11 shrink-0 rounded-full bg-muted object-cover"
+                  />
+                  <div>
+                    <div className="text-[13.5px] font-extrabold">佐々木 彩</div>
+                    <div className="mt-px text-[11.5px] text-neutral-500">
+                      🇫🇷 パリ在住 8年 ・ 現地で起業
+                    </div>
+                  </div>
+                  <span className="ml-auto">
+                    <VBadge label="認証済み" />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== [5] エキスパートとは ===== */}
+      <section className="px-6 pb-[88px] pt-20">
+        <div className="mx-auto max-w-[1080px]">
+          <div className="max-w-[720px]">
+            <Kicker>Who they are</Kicker>
+            <SectionH>
+              商業インフルエンサーではなく、
+              <br />
+              その街の<Em>生活者</Em>。
+            </SectionH>
+            <p className="mt-4 text-[15.5px] leading-[2.1] text-neutral-500">
+              いまパリで起業している人、ベルリンで子育て中の親、数年前までニューヨークに留学していた先輩。いま住んでいる人も、かつて住んでいた人もいます。フォロワー数ではなく、その街で暮らした経験の深さで選んでいます。
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {WHO_CARDS.map((w) => (
+              <div
+                key={w.name}
+                className="rounded-[18px] border border-border bg-card px-5 py-6 text-center shadow-xs"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={w.img}
+                  alt=""
+                  className="mx-auto h-[84px] w-[84px] rounded-full border-[3px] border-white bg-muted object-cover shadow-sm"
+                />
+                <div className="mt-3.5 text-[15px] font-extrabold">{w.name}</div>
+                <div className="mt-[3px] text-[12.5px] text-neutral-500">{w.city}</div>
+                <p className="mt-2.5 text-[12.5px] leading-[1.9] text-neutral-500">
+                  {w.tale}
+                </p>
+                <div className="mt-3">
+                  <VBadge />
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-[22px] text-center text-[12.5px] text-neutral-500">
+            写真はサンプルです。エキスパートの経歴は登録時の申告と居住認証にもとづいて掲載します。
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/founders">
-              <Button variant="primary" size="lg">
-                応募ページを見る
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/">
-              <Button variant="outline" size="lg">
-                まず記事を見てみる
-              </Button>
-            </Link>
+        </div>
+      </section>
+
+      {/* ===== [6] 名前の由来 ===== */}
+      <section className="about-tint-b px-6 pb-[88px] pt-20">
+        <div className="mx-auto max-w-[640px] text-center">
+          <span className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-full bg-primary-500 text-neutral-950 shadow-md">
+            <MapPin className="h-8 w-8" aria-hidden />
+          </span>
+          <div className="text-[clamp(19px,2.6vw,26px)] font-extrabold tracking-[-0.01em] tabular-nums">
+            Locore = <b className="font-extrabold text-primary-700">Local</b>
+            <span className="text-[0.62em] font-bold text-neutral-500">（現地）</span> +{' '}
+            <b className="font-extrabold text-primary-700">Lore</b>
+            <span className="text-[0.62em] font-bold text-neutral-500">
+              （その土地の知恵）
+            </span>
+          </div>
+          <p className="mt-4 text-[15px] leading-[2.1] text-neutral-500">
+            現地で暮らした人だけが持っている知恵を、それを必要とする人へ。そんな思いでつけた名前です。
+          </p>
+        </div>
+      </section>
+
+      {/* ===== [7] 最終CTA（写真帯）。写真はデモ用プレースホルダ ===== */}
+      <section className="px-6 pb-[92px]">
+        <div className="mx-auto max-w-[1080px]">
+          <div className="about-final-bg overflow-hidden rounded-3xl px-10 py-[72px] text-center text-white max-sm:px-[22px] max-sm:py-[52px]">
+            <h2 className="text-[clamp(27px,4.2vw,44px)] font-black leading-[1.35] tracking-[-0.03em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]">
+              あなたの海外を、
+              <b className="font-black text-primary-500">経験者</b>と。
+            </h2>
+            <p className="mt-4 text-[15.5px] text-white/85">
+              検索を3時間続けるより、暮らした人にひとこと聞いてみませんか。
+            </p>
+            <div className="mt-[30px] flex flex-wrap items-center justify-center gap-6">
+              <Link
+                href="/experts"
+                className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
+              >
+                エキスパートを探す
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+              <Link
+                href="/become-writer"
+                className="inline-flex items-center text-[15px] font-bold text-white"
+              >
+                <u className="underline decoration-primary-500 decoration-[3px] underline-offset-[5px] hover:decoration-primary-300">
+                  エキスパートとして参加
+                </u>
+              </Link>
+            </div>
+            <p className="mt-5 text-[13.5px] text-white/80">
+              <Link
+                href="/about-service"
+                className="font-bold text-white underline decoration-primary-500 decoration-2 underline-offset-4"
+              >
+                使い方をくわしく見る
+              </Link>
+            </p>
           </div>
         </div>
       </section>
     </main>
-  );
-}
-
-function SectionHeader({
-  kicker,
-  title,
-}: {
-  kicker: string;
-  title: string;
-}) {
-  return (
-    <div>
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
-        {kicker}
-      </p>
-      <h2
-        className="text-[28px] font-semibold leading-tight tracking-tight text-foreground sm:text-[34px]"
-      >
-        {title}
-      </h2>
-    </div>
-  );
-}
-
-function ContrastCard({ label, issue }: { label: string; issue: string }) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <p className="text-[12px] font-semibold uppercase tracking-wider text-foreground/60">
-        {label}
-      </p>
-      <p className="mt-2 text-[13px] leading-[1.85] text-foreground/75">
-        {issue}
-      </p>
-    </div>
-  );
-}
-
-function TierCard({
-  tier,
-  years,
-  note,
-}: {
-  tier: string;
-  years: string;
-  note: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center gap-2">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary-500 text-[14px] font-bold text-neutral-950">
-          {tier}
-        </span>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-foreground/60">
-          居住 {years}
-        </p>
-      </div>
-      <p className="mt-3 text-[13px] leading-[1.85] text-foreground/75">{note}</p>
-    </div>
-  );
-}
-
-function PrincipleItem({ title, body }: { title: string; body: string }) {
-  return (
-    <li className="rounded-xl border border-border bg-card p-6">
-      <div className="flex items-start gap-3">
-        <BadgeCheck
-          className="mt-0.5 size-5 shrink-0 text-primary-300"
-          aria-hidden
-        />
-        <div className="flex-1">
-          <p className="text-[16px] font-semibold text-foreground">{title}</p>
-          <p className="mt-2 text-[14px] leading-[1.85] text-foreground/70">{body}</p>
-        </div>
-      </div>
-    </li>
-  );
-}
-
-function StepItem({
-  n,
-  title,
-  body,
-}: {
-  n: number;
-  title: string;
-  body: string;
-}) {
-  return (
-    <li className="flex gap-4">
-      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-500 text-[14px] font-bold text-neutral-950 tabular">
-        {n}
-      </span>
-      <div className="flex-1 pb-1">
-        <p className="text-[16px] font-semibold text-foreground">{title}</p>
-        <p className="mt-1 text-[14px] leading-[1.85] text-foreground/70">
-          {body}
-        </p>
-      </div>
-    </li>
-  );
-}
-
-function FaqItem({ q, a }: { q: string; a: React.ReactNode }) {
-  return (
-    <details className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-border-strong">
-      <summary className="flex cursor-pointer items-center justify-between gap-3 text-[14px] font-semibold text-foreground">
-        <span>{q}</span>
-        <span className="text-[18px] text-foreground/40 transition-transform group-open:rotate-45">
-          +
-        </span>
-      </summary>
-      <div className="mt-3 text-[13px] leading-[1.9] text-foreground/70">{a}</div>
-    </details>
   );
 }

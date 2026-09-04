@@ -17,7 +17,16 @@ import { NextResponse, type NextRequest } from 'next/server';
 // トップの「エキスパートを探す」導線が機能しない（相談開始時にログインを課す）。
 // /articles はSEO集客装置（ブログ再位置付け）: Googlebot・未ログイン読者が
 // 記事を読めないと集客が成立しないため公開。
-const PUBLIC_PREFIXES = ['/auth', '/experts', '/about-service', '/articles'];
+// /about はブランド/ミッションページ（マーケティング）: 未ログインでも読める。
+// ※ prefix 判定は「完全一致 or `prefix/` で始まる」なので '/about' を足しても
+//   '/about-service' は巻き込まれない（そちらは既存エントリで公開済み）。
+const PUBLIC_PREFIXES = [
+  '/auth',
+  '/experts',
+  '/about',
+  '/about-service',
+  '/articles',
+];
 
 /** プレフィックスではなく完全一致で公開するパス（ランディングのみ）。 */
 const PUBLIC_EXACT = ['/'];

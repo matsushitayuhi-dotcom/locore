@@ -264,6 +264,17 @@
       url('/about/video-call-grid.jpg') center / cover no-repeat
         var(--color-neutral-950);
   }
+  /* /about ブランドページのヒーロー（縦方向オーバーレイ。about-service とは別配合） */
+  .about-brand-hero-bg {
+    background:
+      linear-gradient(
+        color-mix(in srgb, var(--color-neutral-950) 82%, transparent),
+        color-mix(in srgb, var(--color-neutral-950) 66%, transparent) 46%,
+        color-mix(in srgb, var(--color-neutral-950) 85%, transparent)
+      ),
+      url('/about/video-call-grid.jpg') center / cover no-repeat
+        var(--color-neutral-950);
+  }
   .about-call-bg {
     background:
       linear-gradient(
