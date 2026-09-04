@@ -14,6 +14,10 @@ export const CONSULTATION_TAG = 'consultation';
  * 2026-09 留学特化リポジショニング: 在学生・アルムナイによる留学相談に合わせて
  * 9 種へ刷新。旧タグ（immigration / expat_prep 等）は選択肢から外すが、
  * 既存データの表示互換のため lib/services/tagLabels.ts のマップには残す。
+ *
+ * 並び順は「トラック → テーマ」で固定（描画側はこの配列順をそのまま使う）:
+ * 先頭 4 つ（grad_school / mba / undergrad / language_exchange）がトラック、
+ * 以降 5 つがテーマ。各相談メニューの tags は最低 1 つトラックを含める約束。
  */
 export const TOPIC_TAGS = [
   { value: 'grad_school', label: '大学院出願' },

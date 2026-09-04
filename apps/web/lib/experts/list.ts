@@ -6,6 +6,7 @@ import { listServices } from '@/lib/services/list';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { getVerifiedUserIds } from '@/lib/residents/verification';
 import { CONSULTATION_TAG } from './constants';
+import { deriveEnrollment, type Enrollment } from './enrollment';
 
 /**
  * /experts 一覧・トップの注目エキスパート用クエリヘルパ。
@@ -40,6 +41,8 @@ export type ExpertCard = {
   minPriceJpy: number | null;
   menuCount: number;
   isVerified: boolean;
+  /** 在学生/アルムナイ（users.education から導出）。学歴未記入は null */
+  enrollment?: Enrollment | null;
 };
 
 export type ListExpertsOptions = {
@@ -179,9 +182,37 @@ export async function listExperts(
     }
     return map;
   };
-  const [profileById, verifiedIds] = await Promise.all([
+  // 学歴（0062）は byId.ts と同じく分離クエリ:
+  // 未適用環境で bio 等の本体 SELECT まで巻き込んで落とさないため。
+  const fetchEnrollments = async (): Promise<Map<string, Enrollment | null>> => {
+    const map = new Map<string, Enrollment | null>();
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({
+          id: schema.users.id,
+          education: schema.users.education,
+        })
+        .from(schema.users)
+        .where(inArray(schema.users.id, ownerIds));
+      for (const r of rows) {
+        map.set(
+          r.id,
+          deriveEnrollment(Array.isArray(r.education) ? r.education : null),
+        );
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/does not exist/i.test(msg)) {
+        console.warn('[listExperts] education fetch failed:', err);
+      }
+    }
+    return map;
+  };
+  const [profileById, verifiedIds, enrollmentById] = await Promise.all([
     fetchProfiles(),
     getVerifiedUserIds(ownerIds),
+    fetchEnrollments(),
   ]);
 
   const cards: ExpertCard[] = list.map((g) => {
@@ -213,6 +244,7 @@ export async function listExperts(
       minPriceJpy: g.minPriceJpy,
       menuCount: g.menuCount,
       isVerified: verifiedIds.has(g.ownerId),
+      enrollment: enrollmentById.get(g.ownerId) ?? null,
     };
   });
 

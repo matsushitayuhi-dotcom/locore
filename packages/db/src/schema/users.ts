@@ -55,7 +55,7 @@ export type NotificationPreferences = {
  * 学歴 1 件（manual/0062_user_career_history.sql）。本人申告・すべて任意項目。
  * 年は西暦。null / undefined = 未記入（表示側は期間を出さない）。
  * current=true は在学中（endYear は無視して「現在」扱い）。留学特化で
- * 「在学生 / アルムナイ」判定に使う（lib/residents/enrollment.ts）。
+ * 「在学生 / アルムナイ」判定に使う（apps/web/lib/experts/enrollment.ts）。
  */
 export type EducationEntry = {
   school: string;

@@ -208,7 +208,9 @@ type ExpertSeed = {
   languages: Array<{ code: string; level: string }>;
   /** メニュー言語表示用（user_services.languages） */
   languageLabels: string[];
-  topics: [string, string];
+  /** 先頭は必ずトラック（grad_school/mba/undergrad/language_exchange）。
+   *  各メニューは最低 1 つトラックタグを持つ約束（/experts フィルタと連動）。 */
+  topics: string[];
   /** メニュー名（内容が伝わる名前 + 末尾に所要時間）。30分/60分で重複させない */
   title30: string;
   title60: string;
@@ -405,7 +407,7 @@ const EXPERTS: ExpertSeed[] = [
       { code: 'de', level: 'conversation' },
     ],
     languageLabels: ['日本語', '英語', 'ドイツ語'],
-    topics: ['majors_labs', 'funding'],
+    topics: ['grad_school', 'majors_labs', 'funding'],
     title30: '博士留学・研究室選び相談（30分）',
     title60: '研究計画書の壁打ち（60分）',
     education: [
@@ -756,7 +758,7 @@ async function main() {
       contactMethod: 'chat',
       cityId: cityIdBySlug[e.citySlug]!,
       audience: 'both',
-      tags: ['consultation', e.topics[0], e.topics[1]],
+      tags: ['consultation', ...e.topics],
       durationLabel: '30分',
       durationMinutes: 30,
       languages: e.languageLabels,
@@ -774,7 +776,7 @@ async function main() {
       contactMethod: 'chat',
       cityId: cityIdBySlug[e.citySlug]!,
       audience: 'both',
-      tags: ['consultation', e.topics[0], e.topics[1]],
+      tags: ['consultation', ...e.topics],
       durationLabel: '60分',
       durationMinutes: 60,
       languages: e.languageLabels,
