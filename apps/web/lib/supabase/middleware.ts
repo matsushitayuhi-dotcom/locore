@@ -15,7 +15,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 // 2026-09 (v2): エキスパート相談の表側 (/experts, /experts/[id]) と使い方は
 // ランディングと同じ理由で公開。未ログイン訪問者が一覧・詳細を見られないと
 // トップの「エキスパートを探す」導線が機能しない（相談開始時にログインを課す）。
-const PUBLIC_PREFIXES = ['/auth', '/experts', '/about-service'];
+// /articles はSEO集客装置（ブログ再位置付け）: Googlebot・未ログイン読者が
+// 記事を読めないと集客が成立しないため公開。
+const PUBLIC_PREFIXES = ['/auth', '/experts', '/about-service', '/articles'];
 
 /** プレフィックスではなく完全一致で公開するパス（ランディングのみ）。 */
 const PUBLIC_EXACT = ['/'];

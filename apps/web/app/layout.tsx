@@ -54,12 +54,16 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  // OG画像・canonical 等の相対 URL 解決基準。未設定環境は本番ドメインに解決。
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://locore.app',
+  ),
   title: {
-    default: 'Locore — 在外邦人がつくる、もう一段深い旅',
+    default: 'Locore — 現地に住む日本人に、30分だけ相談できる',
     template: '%s | Locore',
   },
   description:
-    'Locore は現地で生活するクリエイターが綴る、観光ガイドにはない深い街の物語。映え目当てではなく、その土地の本当の輪郭を持ち帰るための、有料・短尺の旅行誌。',
+    '移住、留学、駐在準備、こだわりの旅行。ガイドブックにも検索にも出てこない「実際のところ」を、居住認証済みの海外在住日本人にオンラインで直接相談できます。',
   applicationName: 'Locore',
   manifest: '/manifest.webmanifest',
   // ファビコン / アプリアイコン。public/ に同名ファイルがあれば自動配信される
@@ -75,9 +79,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'Locore',
-    title: 'Locore — 在外邦人がつくる、もう一段深い旅',
+    title: 'Locore — 現地に住む日本人に、30分だけ相談できる',
     description:
-      '現地に住むクリエイターが書く、観光ガイドにはない街の物語。短尺の有料旅行誌。',
+      '居住認証済みの海外在住日本人に、移住・留学・駐在準備・旅行の「実際のところ」をオンラインで直接相談。30分 ¥3,000〜。',
     images: [
       {
         url: '/og-image.png',
@@ -90,9 +94,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Locore',
+    title: 'Locore — 現地に住む日本人に、30分だけ相談できる',
     description:
-      '現地に住むクリエイターが書く、観光ガイドにはない街の物語。',
+      '居住認証済みの海外在住日本人に、暮らしの「実際のところ」をオンラインで相談。',
     images: ['/og-image.png'],
   },
 };

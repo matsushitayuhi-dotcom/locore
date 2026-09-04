@@ -90,5 +90,9 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/',
       })),
     ],
+    sitemap: `${
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
+      'https://locore.app'
+    }/sitemap.xml`,
   };
 }
