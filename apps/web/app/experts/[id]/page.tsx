@@ -23,6 +23,7 @@ import { countryFlagEmoji } from '@/lib/experts/list';
 import { CONSULTATION_TAG, topicLabel } from '@/lib/experts/constants';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { ConsultMenuCard } from '@/components/experts/ConsultMenuCard';
+import { CareerTimeline } from '@/components/experts/CareerTimeline';
 
 /**
  * /experts/[id] — エキスパート詳細（v2 表側）。id は users.id。
@@ -370,6 +371,17 @@ export default async function ExpertDetailPage({
                     </p>
                   ))}
                 </div>
+              </section>
+            ) : null}
+
+            {/* 経歴（学歴・職歴スライス）。本人申告の職歴→学歴タイムライン */}
+            {profile.workHistory.length > 0 || profile.education.length > 0 ? (
+              <section className="border-b border-border py-7">
+                <SectionHeading en="Background">経歴</SectionHeading>
+                <CareerTimeline
+                  workHistory={profile.workHistory}
+                  education={profile.education}
+                />
               </section>
             ) : null}
 

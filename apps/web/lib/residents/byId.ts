@@ -3,6 +3,7 @@ import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import type { FeaturedService } from '@/lib/services/featured';
+import type { EducationEntry, WorkEntry } from '@locore/db';
 import type { LanguageLevel } from '@/lib/resident/constants';
 import { isUserVerified } from '@/lib/residents/verification';
 
@@ -61,6 +62,9 @@ export type ResidentProfileBundle = {
   coverImageUrl: string | null;
   /** 「こんな相談に乗れます」= 提供できることの箇条書き */
   offerings: string[];
+  /** 学歴・職歴（0062。本人申告）。未適用環境は空配列 */
+  education: EducationEntry[];
+  workHistory: WorkEntry[];
   /** ソーシャルリンク（sns_links）。登録があるものだけ表示 */
   socialLinks: Array<{ platform: string; url: string }>;
   languages: Array<{ code: string; level: LanguageLevel }>;
@@ -215,6 +219,33 @@ export async function getResidentProfile(
 
   // ----- 2. 本人確認（最新申請 approved。共通判定に集約） -----
   const isVerified = await isUserVerified(userId);
+
+  // ----- 2.2 経歴（0062）。未適用環境で本体 SELECT を落とさないよう分離クエリ -----
+  let education: EducationEntry[] = [];
+  let workHistory: WorkEntry[] = [];
+  try {
+    const rows = await db
+      .select({
+        education: schema.users.education,
+        workHistory: schema.users.workHistory,
+      })
+      .from(schema.users)
+      .where(eq(schema.users.id, userId))
+      .limit(1);
+    education = Array.isArray(rows[0]?.education) ? rows[0]!.education : [];
+    workHistory = Array.isArray(rows[0]?.workHistory)
+      ? rows[0]!.workHistory
+      : [];
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[getResidentProfile] education/work_history 未適用。manual/0062_user_career_history.sql を適用してください。',
+      );
+    } else {
+      console.warn('[getResidentProfile] career fetch failed:', err);
+    }
+  }
 
   // ----- 2.5 ソーシャルリンク (sns_links) -----
   let socialLinks: Array<{ platform: string; url: string }> = [];
@@ -463,6 +494,8 @@ export async function getResidentProfile(
     occupation: u.occupation,
     coverImageUrl: u.coverImageUrl ?? null,
     offerings: (u.offerings ?? []) as string[],
+    education,
+    workHistory,
     socialLinks,
     languages: (u.languages ?? []) as Array<{
       code: string;
