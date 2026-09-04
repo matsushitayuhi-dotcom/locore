@@ -245,50 +245,111 @@
     transform: scale(0.98);
   }
 
-  /* /about-service（GrowthMentor 構成）専用の少量スタイル。
-     Tailwind ユーティリティで書けない keyframes と合成グラデーションのみ。
-     色はすべて既存トークン参照（ハードコード hex なし）。 */
-  .about-carousel-track {
-    animation: about-carousel-up 26s linear infinite;
-  }
-  .about-carousel-track.rev {
-    animation: about-carousel-down 30s linear infinite;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .about-carousel-track {
-      animation: none;
-    }
-  }
-  .about-trust-bg {
+  /* /about-service（v7・GrowthMentor 構成）専用の少量スタイル。
+     Tailwind ユーティリティで書きにくい合成グラデーション（写真帯オーバーレイ・
+     ダーク帯・薄ライムのティント）のみ。色はすべて既存トークン参照
+     （ハードコード hex なし）。写真はデモ用プレースホルダ（Pexels 商用可素材）。 */
+  .about-hero-bg {
     background:
-      radial-gradient(
-        900px 420px at 82% -10%,
-        color-mix(in srgb, var(--color-primary-500) 17%, transparent),
-        transparent 55%
+      linear-gradient(
+        100deg,
+        color-mix(in srgb, var(--color-neutral-950) 90%, transparent) 0%,
+        color-mix(in srgb, var(--color-neutral-950) 78%, transparent) 44%,
+        color-mix(in srgb, var(--color-neutral-950) 50%, transparent) 100%
       ),
       linear-gradient(
-        160deg,
-        var(--color-neutral-950),
-        var(--color-neutral-900) 52%,
-        var(--color-neutral-950)
-      );
+        color-mix(in srgb, var(--color-neutral-950) 28%, transparent),
+        color-mix(in srgb, var(--color-neutral-950) 28%, transparent)
+      ),
+      url('/about/video-call-grid.jpg') center / cover no-repeat
+        var(--color-neutral-950);
   }
-}
-
-@keyframes about-carousel-up {
-  from {
-    transform: translateY(0);
+  .about-call-bg {
+    background:
+      linear-gradient(
+        color-mix(in srgb, var(--color-neutral-950) 88%, transparent),
+        color-mix(in srgb, var(--color-neutral-950) 88%, transparent)
+      ),
+      url('/about/video-call-grid.jpg') center / cover no-repeat
+        var(--color-neutral-950);
   }
-  to {
-    transform: translateY(-50%);
+  .about-final-bg {
+    background:
+      linear-gradient(
+        color-mix(in srgb, var(--color-neutral-950) 76%, transparent),
+        color-mix(in srgb, var(--color-neutral-950) 82%, transparent)
+      ),
+      url('/about/diverse-team.jpg') center / cover no-repeat
+        var(--color-neutral-950);
   }
-}
-@keyframes about-carousel-down {
-  from {
-    transform: translateY(-50%);
+  .about-trust-bg {
+    background: linear-gradient(
+      160deg,
+      var(--color-neutral-950),
+      var(--color-neutral-900) 52%,
+      var(--color-neutral-950)
+    );
   }
-  to {
-    transform: translateY(0);
+  .about-darkcard-bg {
+    background: linear-gradient(
+      160deg,
+      var(--color-neutral-950),
+      color-mix(in srgb, var(--color-primary-900) 28%, var(--color-neutral-950))
+        55%,
+      var(--color-neutral-950)
+    );
+  }
+  /* セクションの薄ライムティント（v7 の #FBFDF3 相当をトークンから合成） */
+  .about-tint-b {
+    background: linear-gradient(
+      178deg,
+      var(--color-neutral-0),
+      color-mix(in srgb, var(--color-primary-50) 45%, var(--color-neutral-0))
+    );
+  }
+  .about-tint-t {
+    background: linear-gradient(
+      178deg,
+      color-mix(in srgb, var(--color-primary-50) 45%, var(--color-neutral-0)),
+      var(--color-neutral-0)
+    );
+  }
+  /* ステップ UI 画面モックの地色 */
+  .about-shot-lime {
+    background: linear-gradient(
+      170deg,
+      color-mix(in srgb, var(--color-primary-50) 40%, var(--color-neutral-0)),
+      color-mix(in srgb, var(--color-primary-100) 45%, var(--color-neutral-0))
+    );
+  }
+  .about-shot-fade {
+    background: linear-gradient(
+      170deg,
+      var(--color-neutral-0),
+      var(--color-primary-50)
+    );
+  }
+  .about-shot-faint {
+    background: linear-gradient(
+      170deg,
+      var(--color-neutral-0),
+      color-mix(in srgb, var(--color-primary-50) 45%, var(--color-neutral-0))
+    );
+  }
+  /* ④通話カードのタイル地 */
+  .about-tile-lime {
+    background: radial-gradient(
+      120% 100% at 50% 18%,
+      color-mix(in srgb, var(--color-primary-900) 55%, var(--color-neutral-900)),
+      var(--color-neutral-950) 70%
+    );
+  }
+  .about-tile-gray {
+    background: radial-gradient(
+      120% 100% at 50% 18%,
+      var(--color-neutral-700),
+      var(--color-neutral-950) 70%
+    );
   }
 }
 
