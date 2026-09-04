@@ -5,6 +5,8 @@ import { getDb } from '@/lib/db/client';
 import { getDbArticleBundle } from '@/lib/articles/published';
 import { getArticleVideos } from '@/lib/articles/v2';
 import { ArticleRendererV2 } from '@/components/article/v2/ArticleRendererV2';
+import { isExpertUser } from '@/lib/experts/list';
+import { isUserVerified } from '@/lib/residents/verification';
 
 export const metadata = {
   title: '共有プレビュー',
@@ -68,7 +70,13 @@ export default async function PreviewByTokenPage({
   const bundle = await getDbArticleBundle(row.id, { allowUnpublished: true });
   if (!bundle) return notFound();
 
-  const videos = await getArticleVideos(bundle.article.id);
+  // 本番 /articles/[id] と同じ著者カード表示（エキスパート CTA / 認証バッジ）
+  const writerId = bundle.writer?.id ?? '';
+  const [videos, authorIsExpert, authorIsVerified] = await Promise.all([
+    getArticleVideos(bundle.article.id),
+    isExpertUser(writerId),
+    isUserVerified(writerId),
+  ]);
 
   return (
     <div className="space-y-3">
@@ -106,6 +114,11 @@ export default async function PreviewByTokenPage({
         authorServices={[]}
         videos={videos}
         previewMode
+        authorIsExpert={authorIsExpert}
+        authorExpertHref={
+          authorIsExpert && writerId ? `/experts/${writerId}` : undefined
+        }
+        authorIsVerified={authorIsVerified}
       />
     </div>
   );

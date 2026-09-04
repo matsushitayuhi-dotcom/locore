@@ -3,6 +3,8 @@ import { getDbArticleBundle } from '@/lib/articles/published';
 import { getArticleVideos } from '@/lib/articles/v2';
 import { ArticleRendererV2 } from '@/components/article/v2/ArticleRendererV2';
 import { requireUser } from '@/lib/auth/require-user';
+import { isExpertUser } from '@/lib/experts/list';
+import { isUserVerified } from '@/lib/residents/verification';
 
 export const metadata = {
   title: '公開前プレビュー',
@@ -35,7 +37,14 @@ export default async function PreviewArticlePage({
     return notFound();
   }
 
-  const videos = await getArticleVideos(article.id);
+  // 本番 /articles/[id] と同じ著者カード表示（エキスパート CTA / 認証バッジ）に
+  // なるよう、エキスパート判定・居住認証も引いて渡す
+  const writerId = bundle.writer?.id ?? '';
+  const [videos, authorIsExpert, authorIsVerified] = await Promise.all([
+    getArticleVideos(article.id),
+    isExpertUser(writerId),
+    isUserVerified(writerId),
+  ]);
 
   return (
     <ArticleRendererV2
@@ -63,6 +72,11 @@ export default async function PreviewArticlePage({
       authorServices={[]}
       videos={videos}
       previewMode
+      authorIsExpert={authorIsExpert}
+      authorExpertHref={
+        authorIsExpert && writerId ? `/experts/${writerId}` : undefined
+      }
+      authorIsVerified={authorIsVerified}
     />
   );
 }

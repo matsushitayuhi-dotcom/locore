@@ -332,6 +332,11 @@ function ChatIcon() {
  *   「この記事を書いた人に相談する」→ /experts/[id]（expertHref）に差し替え、
  *   「プロフィールを見る」はセカンダリのテキストリンクに降格。居住認証バッジを
  *   名前の横に表示。非エキスパート著者は従来どおり /users/[id]（後方互換）。
+ *
+ * 導線（公開ファネル）:
+ *   エキスパート著者のリンクは全て公開の /experts/[id]（記事一覧は #articles）へ。
+ *   非エキスパート著者の /users/[id] はログインゲート下で未ログイン訪問者の
+ *   行き止まりになるため、viewerLoggedIn=false のときはプロフィール系リンクを出さない。
  */
 export function AuthorCard({
   writer,
@@ -340,6 +345,7 @@ export function AuthorCard({
   isExpert = false,
   expertHref,
   isVerified = false,
+  viewerLoggedIn = false,
 }: {
   writer: Writer | null;
   authorServices: FeaturedService[];
@@ -347,6 +353,7 @@ export function AuthorCard({
   isExpert?: boolean;
   expertHref?: string;
   isVerified?: boolean;
+  viewerLoggedIn?: boolean;
 }) {
   if (!writer) return null;
 
@@ -359,9 +366,10 @@ export function AuthorCard({
     </>
   );
 
-  // エキスパートの著者ページは /experts/[id]、それ以外は従来の /users/[id]
-  const profileHref =
-    isExpert && expertHref ? expertHref : `/users/${writer.id}`;
+  // エキスパートの著者ページは /experts/[id]。非エキスパートは従来の /users/[id]
+  // だが、未ログイン訪問者にはリンクしない（ログインゲートの行き止まり回避）。
+  const profileHref = isExpert && expertHref ? expertHref : `/users/${writer.id}`;
+  const showProfileLinks = (isExpert && !!expertHref) || viewerLoggedIn;
 
   const badge = isVerified ? (
     <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 align-middle text-[11px] font-bold text-primary-900">
@@ -395,26 +403,26 @@ export function AuthorCard({
               プロフィールを見る
               <ArrowIcon />
             </Link>
-            <Link className={`${variant}-authlink`} href={`/users/${writer.id}?tab=articles`}>
+            <Link className={`${variant}-authlink`} href={`${expertHref}#articles`}>
               この書き手の他の記事
               <ArrowIcon />
             </Link>
           </div>
         </>
-      ) : (
+      ) : viewerLoggedIn ? (
         <>
           <Link className={`${variant}-authcta`} href={`/users/${writer.id}`}>
             プロフィールを見る
             <ArrowIcon />
           </Link>
           <div className={`${variant}-authlinks`}>
-            <Link className={`${variant}-authlink`} href={`/users/${writer.id}?tab=articles`}>
+            <Link className={`${variant}-authlink`} href={`/users/${writer.id}#articles`}>
               この書き手の他の記事
               <ArrowIcon />
             </Link>
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 
@@ -423,10 +431,15 @@ export function AuthorCard({
   return (
     <>
       <div className={`${cardClass} ${variant}-rev`}>
-        <Link href={profileHref} aria-label={`${writer.name} のプロフィールへ`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+        {showProfileLinks ? (
+          <Link href={profileHref} aria-label={`${writer.name} のプロフィールへ`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={writer.avatarUrl} alt={writer.name} />
+          </Link>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
           <img src={writer.avatarUrl} alt={writer.name} />
-        </Link>
+        )}
         {body}
       </div>
 
@@ -435,7 +448,11 @@ export function AuthorCard({
         <div className={`${variant}-svcsec ${variant}-rev`}>
           <div className="lab">
             <span className="k">この書き手の他のサービス</span>
-            <Link href={`/users/${writer.id}?tab=services`}>すべて見る →</Link>
+            {isExpert && expertHref ? (
+              <Link href={expertHref}>すべて見る →</Link>
+            ) : viewerLoggedIn ? (
+              <Link href={`/users/${writer.id}#services`}>すべて見る →</Link>
+            ) : null}
           </div>
           <div className={`${variant}-svcgrid`}>
             {authorServices.slice(0, 4).map((s) => (

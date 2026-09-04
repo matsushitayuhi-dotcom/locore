@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getArticleBundleForPreview } from '@/lib/articles/v2';
 import { ArticleRendererV2 } from '@/components/article/v2/ArticleRendererV2';
+import { isExpertUser } from '@/lib/experts/list';
+import { isUserVerified } from '@/lib/residents/verification';
 
 /**
  * `/mockup/real/[id]` — その id の本物の記事を、新レンダラで描画するプレビュー。
@@ -29,6 +31,13 @@ export default async function MockupRealArticlePage({
 }) {
   const bundle = await getArticleBundleForPreview(params.id);
   if (!bundle) return notFound();
+
+  // 本番 /articles/[id] と同じ著者カード表示（エキスパート CTA / 認証バッジ）
+  const writerId = bundle.writer?.id ?? '';
+  const [authorIsExpert, authorIsVerified] = await Promise.all([
+    isExpertUser(writerId),
+    isUserVerified(writerId),
+  ]);
 
   return (
     <>
@@ -79,6 +88,11 @@ export default async function MockupRealArticlePage({
         authorServices={[]}
         videos={bundle.videos}
         previewMode
+        authorIsExpert={authorIsExpert}
+        authorExpertHref={
+          authorIsExpert && writerId ? `/experts/${writerId}` : undefined
+        }
+        authorIsVerified={authorIsVerified}
       />
     </>
   );
