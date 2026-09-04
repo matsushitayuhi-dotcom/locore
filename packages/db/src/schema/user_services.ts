@@ -59,6 +59,9 @@ export const userServices = pgTable(
     galleryImages: text('gallery_images').array().default([]),
     /** 所要時間ラベル（例 "約2時間"） */
     durationLabel: text('duration_label'),
+    /** 所要時間（分）。相談メニューの空き枠候補生成に使う。'30分' 形式の
+     *  duration_label は 0061 でバックフィル済み。NULL = 未設定 */
+    durationMinutes: integer('duration_minutes'),
     /** 最少 / 最多人数 */
     minParticipants: integer('min_participants'),
     maxParticipants: integer('max_participants'),

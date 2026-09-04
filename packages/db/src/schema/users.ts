@@ -111,6 +111,13 @@ export const users = pgTable(
     openToMeetups: boolean('open_to_meetups').notNull().default(false),
 
     /**
+     * IANA タイムゾーン（例 'Europe/Paris'）。エキスパートの空き枠入力の基準。
+     * NULL = 未設定（空き枠登録時にメニュー都市の cities.timezone を初期値に保存）。
+     * manual/0061_booking_availability.sql。
+     */
+    timezone: text('timezone'),
+
+    /**
      * プロフィールのヒーロー（ヘッダー）背景画像の Public URL。
      * NULL = 未設定（表示側はライムのネットワーク演出にフォールバック）。
      * manual/0056_resident_profile_social_cover.sql。

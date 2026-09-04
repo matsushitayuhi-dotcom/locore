@@ -29,12 +29,16 @@ import {
   articles,
   residencyVerifications,
   userServices,
+  expertAvailability,
+  consultationBookings,
   type NewCity,
   type NewUser,
   type NewWriterProfile,
   type NewArticle,
   type NewResidencyVerification,
   type NewUserService,
+  type NewExpertAvailability,
+  type NewConsultationBooking,
 } from '../src/schema';
 
 // =============================================================================
@@ -47,6 +51,52 @@ function stableUuid(seed: string): string {
     ((parseInt(hash.slice(16, 18), 16) & 0x3f) | 0x80).toString(16)
   }${hash.slice(18, 20)}-${hash.slice(20, 32)}`;
   return v;
+}
+
+// =============================================================================
+// タイムゾーン変換（apps/web/lib/bookings/time.ts の localToUtc と同じ Intl 方式。
+// seed は @locore/db 単体で動かすため依存させずに最小限を複製）
+// =============================================================================
+
+function tzOffsetMs(tz: string, utc: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }).formatToParts(utc);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  return (
+    Date.UTC(
+      get('year'),
+      get('month') - 1,
+      get('day'),
+      get('hour') % 24,
+      get('minute'),
+      get('second'),
+    ) - utc.getTime()
+  );
+}
+
+/** tz の現地時刻 (y,mo,d,hh,mm) に対応する UTC Date（DST 跨ぎは 2 回反復で収束） */
+function localToUtc(
+  tz: string,
+  y: number,
+  mo: number,
+  d: number,
+  hh: number,
+  mm: number,
+): Date {
+  const wall = Date.UTC(y, mo - 1, d, hh, mm);
+  let ts = wall;
+  for (let i = 0; i < 2; i++) {
+    ts = wall - tzOffsetMs(tz, new Date(ts));
+  }
+  return new Date(ts);
 }
 
 // =============================================================================
@@ -111,6 +161,17 @@ const expertCities: NewCity[] = [
     isActive: true,
   },
 ];
+
+/** citySlug → IANA タイムゾーン（users.timezone と空き枠生成に使う） */
+const CITY_TZ: Record<string, string> = {
+  paris: 'Europe/Paris',
+  london: 'Europe/London',
+  nyc: 'America/New_York',
+  berlin: 'Europe/Berlin',
+  bangkok: 'Asia/Bangkok',
+  melbourne: 'Australia/Melbourne',
+  vancouver: 'America/Vancouver',
+};
 
 // =============================================================================
 // エキスパート定義（mockups/v2 のカードコピーに準拠）
@@ -394,6 +455,15 @@ async function main() {
       },
     });
 
+  // country_id が未設定の都市を countries にひも付け（国ファーストフィルタ用。
+  // cities.country は alpha-2 だが大文字混在の旧データがあるため lower で照合）
+  await db.execute(sql`
+    UPDATE cities SET country_id = countries.id
+      FROM countries
+     WHERE cities.country_id IS NULL
+       AND lower(cities.country) = countries.code
+  `);
+
   // 使う都市の slug → UUID
   const usedSlugs = Array.from(new Set(EXPERTS.map((e) => e.citySlug)));
   const cityRows = await db.select({ id: cities.id, slug: cities.slug }).from(cities);
@@ -420,6 +490,7 @@ async function main() {
     occupation: e.occupation,
     offerings: e.offerings,
     languages: e.languages,
+    timezone: CITY_TZ[e.citySlug] ?? null,
     isSample: true,
   }));
 
@@ -440,6 +511,7 @@ async function main() {
         occupation: sql`excluded.occupation`,
         offerings: sql`excluded.offerings`,
         languages: sql`excluded.languages`,
+        timezone: sql`excluded.timezone`,
         isSample: sql`excluded.is_sample`,
       },
     });
@@ -606,6 +678,96 @@ async function main() {
         languages: sql`excluded.languages`,
         isActive: sql`excluded.is_active`,
         position: sql`excluded.position`,
+      },
+    });
+
+  // ---- expert_availability（今後3週間・週3区間・現地夕方〜夜中心） ----------
+  // 決定論的 ID + ON CONFLICT DO UPDATE で、再実行のたびに未来の枠へ同期される。
+  console.log('[seed-experts] expert_availability ...');
+  type Window = { dow: number; startH: number; endH: number }; // dow: 0=日
+  const WINDOWS: Window[] = [
+    { dow: 3, startH: 18, endH: 20 }, // 水 18-20（現地）
+    { dow: 5, startH: 19, endH: 21 }, // 金 19-21（現地）
+    { dow: 6, startH: 9, endH: 12 }, // 土 午前（現地）
+  ];
+  /** 今日より後で最初に weekday=dow になる日付（UTC 基準の日付でよい） */
+  const nextDow = (dow: number): Date => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + 1);
+    while (d.getUTCDay() !== dow) d.setUTCDate(d.getUTCDate() + 1);
+    return d;
+  };
+  const availRows: NewExpertAvailability[] = EXPERTS.flatMap((e) => {
+    const tz = CITY_TZ[e.citySlug] ?? 'UTC';
+    return WINDOWS.flatMap((w, wi) => {
+      const base = nextDow(w.dow);
+      return [0, 1, 2].map((week): NewExpertAvailability => {
+        const d = new Date(base);
+        d.setUTCDate(d.getUTCDate() + week * 7);
+        const y = d.getUTCFullYear();
+        const mo = d.getUTCMonth() + 1;
+        const day = d.getUTCDate();
+        return {
+          id: stableUuid(`expert-avail:${e.key}:${wi}:${week}`),
+          userId: expertUuid(e.key),
+          startAt: localToUtc(tz, y, mo, day, w.startH, 0),
+          endAt: localToUtc(tz, y, mo, day, w.endH, 0),
+        };
+      });
+    });
+  });
+  await db
+    .insert(expertAvailability)
+    .values(availRows)
+    .onConflictDoUpdate({
+      target: expertAvailability.id,
+      set: {
+        userId: sql`excluded.user_id`,
+        startAt: sql`excluded.start_at`,
+        endAt: sql`excluded.end_at`,
+      },
+    });
+
+  // ---- consultation_bookings（requested 状態のサンプル 1 件） --------------
+  // is_sample ユーザー間: 高橋（ロンドン）→ 佐々木 彩（パリ）の 30 分相談。
+  // 佐々木の最初の空き枠冒頭 30 分をリクエスト中にして、受信箱 UI を確認できるようにする。
+  console.log('[seed-experts] consultation_bookings (sample requested) ...');
+  const ayaFirstSlot = availRows.find(
+    (r) => r.userId === expertUuid('aya'),
+  )!;
+  const aya = EXPERTS.find((e) => e.key === 'aya')!;
+  const bookingStart = ayaFirstSlot.startAt as Date;
+  const bookingEnd = new Date(bookingStart.getTime() + 30 * 60_000);
+  const sampleBooking: NewConsultationBooking = {
+    id: stableUuid('expert-booking:sample-requested'),
+    serviceId: stableUuid('expert-svc30:aya'),
+    expertId: expertUuid('aya'),
+    requesterId: expertUuid('kentaro'),
+    status: 'requested',
+    startAt: bookingStart,
+    endAt: bookingEnd,
+    durationMinutes: 30,
+    serviceTitle: '30分相談',
+    priceJpy: aya.price30,
+    commissionRate: '0.20',
+    platformFeeJpy: Math.round(aya.price30 * 0.2),
+    requestMessage:
+      '来年4月にパリ移住予定です。ビザ申請の書類と、11区・20区あたりのエリア選びについて相談したいです。',
+  };
+  await db
+    .insert(consultationBookings)
+    .values([sampleBooking])
+    .onConflictDoUpdate({
+      target: consultationBookings.id,
+      set: {
+        status: sql`excluded.status`,
+        startAt: sql`excluded.start_at`,
+        endAt: sql`excluded.end_at`,
+        priceJpy: sql`excluded.price_jpy`,
+        platformFeeJpy: sql`excluded.platform_fee_jpy`,
+        requestMessage: sql`excluded.request_message`,
+        respondedAt: sql`null`,
+        cancelledAt: sql`null`,
       },
     });
 

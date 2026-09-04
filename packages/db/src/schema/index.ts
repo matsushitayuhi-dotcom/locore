@@ -51,6 +51,10 @@ export * from './user_follows';
 export * from './user_services';
 export * from './chat';
 
+// 予約スライス（空き枠 + 相談予約）
+export * from './expert_availability';
+export * from './consultation_bookings';
+
 // Marketplace (skill / network)
 export * from './seller_profiles';
 export * from './listings';

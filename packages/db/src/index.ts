@@ -6,3 +6,9 @@ export {
   DEFAULT_NOTIFICATION_PREFERENCES,
   type NotificationPreferences,
 } from './schema/users';
+
+// 予約ステータスはアプリ側のラベル・分岐で使うので個別に再エクスポート
+export {
+  CONSULTATION_BOOKING_STATUSES,
+  type ConsultationBookingStatus,
+} from './schema/consultation_bookings';
