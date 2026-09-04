@@ -1,12 +1,16 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { desc, eq, isNull } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { getDbArticleBundle } from '../../../lib/articles/published';
 import {
   articleJsonLd,
   extractDescription,
+  jsonLdScriptText,
 } from '@/lib/seo/jsonld';
-import { CONSULTATION_TAG } from '@/lib/experts/constants';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
+import { isExpertUser } from '@/lib/experts/list';
+import { isUserVerified } from '@/lib/residents/verification';
 import { getArticleVideos } from '../../../lib/articles/v2';
 import { ArticleRendererV2 } from '../../../components/article/v2/ArticleRendererV2';
 import {
@@ -27,58 +31,39 @@ import { listServicesByUserId } from '@/lib/services/list';
 
 export const dynamic = 'force-dynamic';
 
-const uuidPat =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 /**
- * SEO 用メタデータ（v2 ブログ再位置付け）。
- * バンドル全体（スポット・レビュー・関連）を引かず、記事 + 著者名だけの軽量クエリ。
+ * generateMetadata とページ本体が同一リクエスト内で同じバンドルを共有するための
+ * React cache()。以前は generateMetadata 用に記事を別クエリで二重フェッチしていた。
+ * getDbArticleBundle は published のみ返し、DB 失敗時は null（→ メタデータ空）。
  */
+const getArticleBundleCached = cache((id: string) => getDbArticleBundle(id));
+
+/** SEO 用メタデータ（v2 ブログ再位置付け）。 */
 export async function generateMetadata({
   params,
 }: {
   params: { id: string };
 }): Promise<Metadata> {
-  if (!uuidPat.test(params.id)) return {};
-  try {
-    const db = getDb();
-    const rows = await db
-      .select({
-        title: schema.articles.title,
-        body: schema.articles.body,
-        coverImageUrl: schema.articles.coverImageUrl,
-        status: schema.articles.status,
-      })
-      .from(schema.articles)
-      .where(
-        and(
-          eq(schema.articles.id, params.id),
-          isNull(schema.articles.deletedAt),
-        ),
-      )
-      .limit(1);
-    const a = rows[0];
-    if (!a || a.status !== 'published') return {};
-    const description = extractDescription(a.body, 120);
-    return {
+  const bundle = await getArticleBundleCached(params.id);
+  if (!bundle) return {};
+  const a = bundle.article;
+  const description = extractDescription(a.body, 120);
+  return {
+    title: a.title,
+    description,
+    openGraph: {
+      type: 'article',
       title: a.title,
       description,
-      openGraph: {
-        type: 'article',
-        title: a.title,
-        description,
-        ...(a.coverImageUrl ? { images: [{ url: a.coverImageUrl }] } : {}),
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title: a.title,
-        description,
-        ...(a.coverImageUrl ? { images: [a.coverImageUrl] } : {}),
-      },
-    };
-  } catch {
-    return {};
-  }
+      ...(a.coverImageUrl ? { images: [{ url: a.coverImageUrl }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: a.title,
+      description,
+      ...(a.coverImageUrl ? { images: [a.coverImageUrl] } : {}),
+    },
+  };
 }
 
 export default async function ArticleDetailPage({
@@ -86,8 +71,8 @@ export default async function ArticleDetailPage({
 }: {
   params: { id: string };
 }) {
-  // DB ファースト：mock を経由せず直接 DB を引く
-  const bundle = await getDbArticleBundle(params.id);
+  // DB ファースト：mock を経由せず直接 DB を引く（generateMetadata と共有キャッシュ）
+  const bundle = await getArticleBundleCached(params.id);
   if (!bundle) return notFound();
   const article = bundle.article;
   const writer = bundle.writer ?? null;
@@ -97,8 +82,9 @@ export default async function ArticleDetailPage({
   const region = bundle.region;
   const country = bundle.country;
 
-  // 2026-09 (v2) ブログ再位置付け: bodyPaid が空の記事は Paywall を出さず
-  // 全文表示する（判定は各レイアウト側の paidHtml 条件）。
+  // 2026-09 (v2) ブログ再位置付け: 無料記事（priceJpy === 0 かつ bodyPaid 無し）
+  // だけ Paywall を出さず全文表示する。priceJpy > 0 の記事は bodyPaid が空でも
+  // ゲートする（有料スポット詳細の漏えい防止。判定は各レイアウト側）。
 
   // 関連記事は DB から取得済み
   const related = relatedDb.slice(0, 6);
@@ -135,7 +121,8 @@ export default async function ArticleDetailPage({
   //    未ログインユーザーも localStorage 経由で開ける)
   const unlocked = purchasedFromDb || isOwner;
 
-  // お気に入りスポット + いいね / ブックマーク数 + 自分の既存レビュー を並列取得
+  // お気に入りスポット + いいね / ブックマーク数 + 自分の既存レビュー +
+  // 著者のエキスパート判定・居住認証 を並列取得
   const [
     { folders },
     bookmarkedSpotIds,
@@ -144,6 +131,8 @@ export default async function ArticleDetailPage({
     bookmarkedArticleIds,
     myReview,
     authorServices,
+    authorIsExpert,
+    authorIsVerified,
     videos,
   ] = await Promise.all([
     listMyFolders(),
@@ -152,9 +141,14 @@ export default async function ArticleDetailPage({
     listMyLikedArticleIds(),
     getMyBookmarkedIdSet(),
     getMyReviewForArticle(article.id),
-    // 著者カード末尾の「他のサービス」+ エキスパート判定（consultation タグ）用。
-    // 判定漏れを減らすため 3 → 8 件引く（カード側は先頭 4 件だけ表示）
-    writer?.id ? listServicesByUserId(writer.id, 8) : Promise.resolve([]),
+    // 著者カード末尾の「他のサービス」表示用（カード側は先頭 4 件だけ表示）
+    writer?.id ? listServicesByUserId(writer.id, 4) : Promise.resolve([]),
+    // v2 ブログ再位置付け: 著者がエキスパート（consultation タグの相談メニューを
+    // 持つ）なら、著者カードの CTA を「この記事を書いた人に相談する」に切り替える。
+    // 判定は limit 1 の存在チェック（表示用リストの件数に依存しない）。
+    writer?.id ? isExpertUser(writer.id) : Promise.resolve(false),
+    // 居住認証バッジ（最新申請 approved の共通判定）
+    writer?.id ? isUserVerified(writer.id) : Promise.resolve(false),
     // essay（ブログ・場所なし）v2 レンダラ用の外部動画
     getArticleVideos(article.id),
   ]);
@@ -166,34 +160,11 @@ export default async function ArticleDetailPage({
   };
   const initialLiked = likedSet.has(article.id);
 
-  // v2 ブログ再位置付け: 著者がエキスパート（consultation タグの相談メニューを
-  // 持つ）なら、著者カードの CTA を「この記事を書いた人に相談する」に切り替える。
-  const authorIsExpert = authorServices.some((s) =>
-    s.tags.includes(CONSULTATION_TAG),
-  );
   const authorExpertHref =
     authorIsExpert && writer ? `/experts/${writer.id}` : undefined;
 
-  // 居住認証バッジ（最新申請が approved。getResidentProfile と同じ判定）
-  let authorIsVerified = false;
-  if (writer?.id) {
-    try {
-      const db = getDb();
-      const rows = await db
-        .select({ status: schema.residencyVerifications.status })
-        .from(schema.residencyVerifications)
-        .where(eq(schema.residencyVerifications.userId, writer.id))
-        .orderBy(desc(schema.residencyVerifications.submittedAt))
-        .limit(1);
-      authorIsVerified = rows[0]?.status === 'approved';
-    } catch {
-      authorIsVerified = false;
-    }
-  }
-
   // Article JSON-LD（SEO）
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://locore.app';
+  const siteUrl = getSiteUrl();
   const jsonLd = articleJsonLd({
     url: `${siteUrl}/articles/${article.id}`,
     title: article.title,
@@ -210,7 +181,9 @@ export default async function ArticleDetailPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // ユーザー入力（タイトル・著者名）を含むため必ず jsonLdScriptText で
+        // < > & をエスケープする（</script> 挿入による stored XSS 防止）
+        dangerouslySetInnerHTML={{ __html: jsonLdScriptText(jsonLd) }}
       />
       <ArticleRendererV2
       article={article}

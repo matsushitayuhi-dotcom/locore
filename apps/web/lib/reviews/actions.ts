@@ -9,7 +9,11 @@ import { requireUser } from '@/lib/auth/require-user';
 import { getCurrentUser } from '@/lib/auth/current-user';
 
 /**
- * 記事のレビュー（購入後に書ける）の Server Actions。
+ * 記事のレビューの Server Actions。
+ *
+ * ルール（UI の 3 レイアウトと共通）:
+ *   - 有料記事（priceJpy > 0）: 購入者のみレビュー可
+ *   - 無料記事（priceJpy === 0）: ログイン読者なら誰でも（¥0 の purchases 行を自動作成）
  *
  * - 1 購入 = 1 レビュー（reviews.purchase_id UNIQUE）
  * - local_score: 0-100
@@ -59,9 +63,45 @@ export async function submitReview(
     )
     .orderBy(desc(schema.purchases.purchasedAt))
     .limit(1);
-  const purchase = purchaseRows[0];
+  let purchase = purchaseRows[0];
+
+  // 1.5 購入行が無い場合、無料記事（priceJpy === 0）ならログイン読者は誰でも
+  //     レビュー可（UI の 3 レイアウト共通ルールと同一）。v2 で無料記事の
+  //     Paywall（¥0 アンロール導線）を撤去したため、レビュー投稿時に
+  //     amountJpy=0 の purchases 行を作って reviews.purchase_id に紐づける。
   if (!purchase) {
-    return { ok: false, error: '購入済みの記事のみレビューできます' };
+    const articleRows = await db
+      .select({
+        priceJpy: schema.articles.priceJpy,
+        writerId: schema.articles.writerId,
+        status: schema.articles.status,
+      })
+      .from(schema.articles)
+      .where(eq(schema.articles.id, parsed.data.articleId))
+      .limit(1);
+    const article = articleRows[0];
+    if (!article || article.status !== 'published') {
+      return { ok: false, error: '記事が見つかりません' };
+    }
+    if (article.priceJpy > 0) {
+      return { ok: false, error: '購入済みの記事のみレビューできます' };
+    }
+    if (article.writerId === me.id) {
+      return { ok: false, error: '自分の記事はレビューできません' };
+    }
+    const inserted = await db
+      .insert(schema.purchases)
+      .values({
+        buyerId: me.id,
+        articleId: parsed.data.articleId,
+        amountJpy: 0,
+        feeJpy: 0,
+        payoutJpy: 0,
+        status: 'completed',
+        purchasedAt: new Date(),
+      })
+      .returning({ id: schema.purchases.id });
+    purchase = inserted[0]!;
   }
 
   // 2. UPSERT（既にあれば本文と評価だけ更新）

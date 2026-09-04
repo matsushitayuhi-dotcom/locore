@@ -163,7 +163,7 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
                 />
               </>
             ) : null
-          ) : !paidHtml ? null : ( // 有料パートが無い記事は Paywall 自体を出さない（v2 ブログ再位置付け）
+          ) : !paidHtml && article.priceJpy === 0 ? null : ( // 無料記事（¥0 かつ有料パート無し）だけ Paywall を出さない。¥0 超は body_paid が空でもゲート
             <Paywall
               article={article}
               bodyAfter={paidHtml ? article.bodyPaid! : ''}
@@ -175,8 +175,12 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
             />
           )}
 
-          {/* レビュー投稿（購入読者のみ。preview / owner では出さない）*/}
-          {!previewMode && unlocked && !isOwner ? (
+          {/* レビュー投稿（無料記事はログイン読者なら誰でも・有料記事は購入者のみ。
+              preview / owner では出さない。3 レイアウト共通ルール）*/}
+          {!previewMode &&
+          !isOwner &&
+          viewerLoggedIn &&
+          (article.priceJpy === 0 || purchasedOrOwner) ? (
             <div style={{ marginTop: 28 }}>
               <ReviewBlock
                 articleId={article.id}
@@ -198,6 +202,7 @@ export function EssayArticleV2(props: EssayArticleV2Props) {
             isExpert={props.authorIsExpert}
             expertHref={props.authorExpertHref}
             isVerified={props.authorIsVerified}
+            viewerLoggedIn={viewerLoggedIn}
           />
         </div>
       </section>

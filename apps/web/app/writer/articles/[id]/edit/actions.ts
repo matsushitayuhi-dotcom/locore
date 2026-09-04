@@ -352,6 +352,8 @@ export async function publishArticle(
     .select({
       title: schema.articles.title,
       body: schema.articles.body,
+      bodyPaid: schema.articles.bodyPaid,
+      priceJpy: schema.articles.priceJpy,
       bodyStyle: schema.articles.bodyStyle,
       photoEntries: schema.articles.photoEntries,
       tags: schema.articles.tags,
@@ -386,6 +388,17 @@ export async function publishArticle(
         error: `本文: 30 文字以上で入力してください (現在 ${plain.length} 文字)`,
       };
     }
+  }
+
+  // 有料記事（priceJpy > 0）は有料パート本文が必須。空のまま公開すると
+  // 読者に「購入しても何も増えない」記事ができ、記事ページのゲート判定も
+  // 価格ベースで働く（v2）ため、公開時点で弾く。
+  if (a.priceJpy > 0 && !(a.bodyPaid ?? '').replace(/<[^>]*>/g, '').trim()) {
+    return {
+      ok: false,
+      error:
+        '有料パート本文が空です。価格を設定した記事は有料パートを書くか、価格を ¥0 にしてください',
+    };
   }
 
   const moderation = runMockModeration({

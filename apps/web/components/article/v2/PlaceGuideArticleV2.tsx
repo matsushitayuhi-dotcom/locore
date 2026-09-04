@@ -137,8 +137,9 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
         </section>
       ) : null}
 
-      {/* 有料パート（body_paid）が無い記事は Paywall を出さず全文表示（v2 ブログ再位置付け） */}
-      {!unlocked && paidHtml ? (
+      {/* 無料記事（priceJpy===0 かつ body_paid 無し）だけ Paywall を出さず全文表示。
+          priceJpy>0 は body_paid が空でもゲート（場所詳細・地図の漏えい防止） */}
+      {!unlocked && (paidHtml || article.priceJpy > 0) ? (
         /* ===== 未解放: Paywall（有料詳細は一切出さない）===== */
         <section className="pg-listsec">
           <div className="pg-wrap">
@@ -321,8 +322,12 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
               place-guide は地図を持たず、各場所カード／リストの「地図で見る」
               リンクで個別に Google マップへ導線する。 */}
 
-          {/* ===== レビュー投稿（購入読者のみ。preview / owner では出さない）===== */}
-          {!previewMode && !isOwner ? (
+          {/* ===== レビュー投稿（無料記事はログイン読者なら誰でも・有料記事は
+              購入者のみ。preview / owner では出さない。3 レイアウト共通ルール）===== */}
+          {!previewMode &&
+          !isOwner &&
+          viewerLoggedIn &&
+          (article.priceJpy === 0 || purchasedOrOwner) ? (
             <section className="pg-listsec" style={{ padding: '8px 0 0' }}>
               <div className="pg-wrap">
                 <ReviewBlock
@@ -346,6 +351,7 @@ export function PlaceGuideArticleV2(props: PlaceGuideArticleV2Props) {
             isExpert={props.authorIsExpert}
             expertHref={props.authorExpertHref}
             isVerified={props.authorIsVerified}
+            viewerLoggedIn={viewerLoggedIn}
           />
         </div>
       </section>

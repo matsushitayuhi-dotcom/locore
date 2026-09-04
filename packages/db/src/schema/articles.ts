@@ -117,8 +117,9 @@ export const articles = pgTable(
     /** 無料プレビュー本文（購入前にも見える）。Markdown。 */
     body: text('body').notNull(),
     /**
-     * 有料部分本文（購入後表示）。NULL のときは旧ロジック（body の途中で自動分割）に
-     * フォールバック。マイグレーション: `manual/0012_body_paid.sql`
+     * 有料部分本文（購入後表示）。NULL / 空のときは有料パートなし（自動分割の
+     * 旧フォールバックは廃止済み）。price_jpy > 0 の記事は公開時（publishArticle）に
+     * 非空を必須とする。マイグレーション: `manual/0012_body_paid.sql`
      */
     bodyPaid: text('body_paid'),
     coverImageUrl: text('cover_image_url'),

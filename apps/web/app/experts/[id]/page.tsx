@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowRight, Check, Clock, Globe, Info, ShieldCheck, Video } from 'lucide-react';
-import { personJsonLd } from '@/lib/seo/jsonld';
+import { Check, Clock, Globe, Info, ShieldCheck, Video } from 'lucide-react';
+import { personJsonLd, jsonLdScriptText } from '@/lib/seo/jsonld';
+import { getSiteUrl } from '@/lib/seo/siteUrl';
 import { getResidentProfile } from '@/lib/residents/byId';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { countryFlagEmoji } from '@/lib/experts/list';
@@ -71,8 +72,7 @@ export default async function ExpertDetailPage({
   const articles = profile.articles.slice(0, 4);
 
   // Person JSON-LD（SEO: 記事の著者 = エキスパート本人を検索エンジンに伝える）
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://locore.app';
+  const siteUrl = getSiteUrl();
   const jsonLd = personJsonLd({
     url: `${siteUrl}/experts/${profile.id}`,
     name: profile.displayName,
@@ -86,7 +86,9 @@ export default async function ExpertDetailPage({
     <main className="bg-background text-foreground">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        // ユーザー入力（displayName / bio / occupation）を含むため必ず
+        // jsonLdScriptText で < > & をエスケープする（stored XSS 防止）
+        dangerouslySetInnerHTML={{ __html: jsonLdScriptText(jsonLd) }}
       />
       <div className="mx-auto max-w-[1024px] px-6">
         {/* breadcrumb */}
@@ -268,7 +270,10 @@ export default async function ExpertDetailPage({
 
             {/* ブログ再位置付け: 記事は「この人は本当に詳しい」の裏付け。価格・購入UIなし */}
             {articles.length > 0 ? (
-              <section className="border-b border-border py-7">
+              <section
+                id="articles"
+                className="scroll-mt-20 border-b border-border py-7"
+              >
                 <SectionHeading en="Articles">
                   {profile.displayName}さんの記事
                 </SectionHeading>
@@ -314,15 +319,9 @@ export default async function ExpertDetailPage({
                     </Link>
                   ))}
                 </div>
-                <div className="mt-5">
-                  <Link
-                    href={`/users/${profile.id}?tab=articles`}
-                    className="inline-flex items-center gap-1.5 text-[13px] font-bold text-primary-700 hover:underline hover:underline-offset-4"
-                  >
-                    {profile.displayName}さんの記事をすべて見る
-                    <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-                  </Link>
-                </div>
+                {/* /users/[id] はログインゲート下で未ログイン訪問者の行き止まりに
+                    なるため「すべて見る」リンクは出さない（このページ自体が
+                    予習用の記事セクション）。 */}
               </section>
             ) : null}
 
@@ -450,11 +449,20 @@ const ARTICLE_TYPE_LABEL: Record<string, string> = {
   expat_info: 'お役立ち情報',
 };
 
-/** 記事カードの公開日（2026.07.14 形式） */
-function fmtDateDot(iso: string): string {
+/**
+ * 記事カードの公開日（2026.07.14 形式）。
+ * サーバーのローカル TZ に依存しないよう日本時間で固定フォーマットする。
+ */
+function fmtDateDot(iso: string | null | undefined): string {
+  if (!iso) return '';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${d.getFullYear()}.${mm}.${dd}`;
+  return new Intl.DateTimeFormat('ja-JP', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+    .format(d)
+    .replace(/\//g, '.');
 }
