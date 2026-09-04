@@ -2,7 +2,7 @@
 
 import 'server-only';
 import { z } from 'zod';
-import { and, eq, inArray, lt, sql } from 'drizzle-orm';
+import { and, eq, gt, gte, inArray, lt, lte, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -39,6 +39,26 @@ const datePat = /^\d{4}-\d{2}-\d{2}$/;
 
 function isWriterRole(role: string): boolean {
   return role === 'resident_writer' || role === 'editor';
+}
+
+/**
+ * DB 例外をユーザー向けの文言に変換する。
+ * 「とりあえず 0061 未適用のせいにする」固定文言をやめ、原因別に切り分ける。
+ * 本番は汎用文言のみ、開発時（NODE_ENV !== 'production'）は実 error.message を
+ * 付けて、握りつぶしによる誤診断（今回の Date シリアライズ問題の温床）を防ぐ。
+ */
+function describeDbError(generic: string, err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/does not exist/i.test(msg)) {
+    return `${generic}（DB スキーマが未適用の可能性があります: manual/0061_booking_availability.sql を適用してください）`;
+  }
+  if (/permission denied/i.test(msg)) {
+    return `${generic}（DB 権限エラー）`;
+  }
+  if (process.env.NODE_ENV !== 'production') {
+    return `${generic}（開発時詳細: ${msg}）`;
+  }
+  return generic;
 }
 
 function isValidTimezone(tz: string): boolean {
@@ -229,8 +249,7 @@ export async function addAvailabilityBulk(
     console.error('[addAvailabilityBulk] failed:', err);
     return {
       ok: false,
-      error:
-        '空き枠の保存に失敗しました。0061_booking_availability.sql が適用されているか確認してください',
+      error: describeDbError('空き枠の保存に失敗しました', err),
     };
   }
 }
@@ -269,7 +288,9 @@ export async function deleteAvailability(
           eq(schema.consultationBookings.expertId, me.id),
           inArray(schema.consultationBookings.status, [...BLOCKING_STATUSES]),
           lt(schema.consultationBookings.startAt, slot.endAt),
-          sql`${schema.consultationBookings.endAt} > ${slot.startAt}`,
+          // 注意: 生 sql テンプレートに Date を渡すと postgres-js が
+          // シリアライズできず ERR_INVALID_ARG_TYPE で落ちる。必ず typed operator で
+          gt(schema.consultationBookings.endAt, slot.startAt),
         ),
       )
       .limit(1);
@@ -287,7 +308,7 @@ export async function deleteAvailability(
     return { ok: true };
   } catch (err) {
     console.error('[deleteAvailability] failed:', err);
-    return { ok: false, error: '削除に失敗しました' };
+    return { ok: false, error: describeDbError('削除に失敗しました', err) };
   }
 }
 
@@ -386,8 +407,10 @@ export async function requestBooking(
       .where(
         and(
           eq(schema.expertAvailability.userId, service.userId),
-          sql`${schema.expertAvailability.startAt} <= ${start}`,
-          sql`${schema.expertAvailability.endAt} >= ${end}`,
+          // Date は typed operator で渡す（生 sql テンプレートだと postgres-js が
+          // Date をシリアライズできず ERR_INVALID_ARG_TYPE になる）
+          lte(schema.expertAvailability.startAt, start),
+          gte(schema.expertAvailability.endAt, end),
         ),
       )
       .limit(1);
@@ -407,7 +430,7 @@ export async function requestBooking(
           eq(schema.consultationBookings.expertId, service.userId),
           inArray(schema.consultationBookings.status, [...BLOCKING_STATUSES]),
           lt(schema.consultationBookings.startAt, end),
-          sql`${schema.consultationBookings.endAt} > ${start}`,
+          gt(schema.consultationBookings.endAt, start),
         ),
       )
       .limit(1);
@@ -466,8 +489,7 @@ export async function requestBooking(
     console.error('[requestBooking] failed:', err);
     return {
       ok: false,
-      error:
-        'リクエストの送信に失敗しました。0061_booking_availability.sql が適用されているか確認してください',
+      error: describeDbError('リクエストの送信に失敗しました', err),
     };
   }
 }
@@ -571,7 +593,7 @@ export async function acceptBooking(
       return { ok: false, error: 'この枠は別の予約で確定済みです' };
     }
     console.error('[acceptBooking] failed:', err);
-    return { ok: false, error: '承諾に失敗しました' };
+    return { ok: false, error: describeDbError('承諾に失敗しました', err) };
   }
   if (!accepted) {
     // レース: 直前に相談者が取り下げた等。チャット投稿せず正直に伝える
