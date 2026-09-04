@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — ご利用方法（about-service v6・写真帯＋指定コピー・完成形モック）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  /* ================= tokens: white-base 準拠・ライム・ゴシック統一 ================= */
+  :root{
+    --lime:#A8E01C;--lime-300:#B6E84E;--lime-200:#CDF088;--lime-l:#E3F7B8;--lime-50:#F5FBE2;
+    --lime-d:#5E8B0E;--lime-900:#3D5E07;
+    --bg:#FFFFFF;--muted:#F4F4EF;--card:#FFFFFF;
+    --bd:#E3E3DA;--bd2:#CCCCC1;
+    --ink:#18181B;--ink-2:#3F3F46;--gray:#52525B;--mu:#71717A;--mu-2:#837F78;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+    --sh-xs:0 1px 2px rgba(24,24,27,.05);--sh-sm:0 2px 8px rgba(24,24,27,.07);
+    --sh-md:0 10px 26px -10px rgba(24,24,27,.13);--sh-lg:0 22px 48px -18px rgba(24,24,27,.2);
+    --ease:cubic-bezier(.22,1,.36,1);
+    /* タイムライン軸（使い方ブロック限定・ヘアライン） */
+    --railw:40px;--railgap:24px;--linex:19px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--jp);-webkit-font-smoothing:antialiased;
+    font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.9;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit;cursor:pointer}
+  h1,h2,h3{letter-spacing:-.01em;line-height:1.4}
+  .num{font-family:var(--num)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  /* 強調はゴシックのまま「ウェイト＋ライム色」。斜体・明朝は不使用 */
+  .em{font-weight:900;color:var(--lime-d)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:9999px;font-weight:700;
+    border:1px solid transparent;transition:.16s var(--ease);white-space:nowrap}
+  .btn svg{width:16px;height:16px;flex:none}
+  .btn-p{background:var(--lime);color:#0e0e0f;padding:14px 32px;font-size:15px;box-shadow:var(--sh-sm)}
+  .btn-p:hover{background:var(--lime-300)}
+  .btn-ink{background:var(--ink);color:#fff;padding:14px 32px;font-size:15px;box-shadow:var(--sh-sm)}
+  .btn-ink:hover{background:#000}
+  .tlink{display:inline-flex;align-items:center;gap:7px;font-size:15px;font-weight:700;color:var(--ink)}
+  .tlink u{text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:5px}
+  .tlink:hover u{text-decoration-color:var(--lime-d)}
+  .vbadge{display:inline-flex;align-items:center;gap:5px;background:var(--lime-l);border:1px solid var(--lime-300);
+    color:var(--lime-900);font-size:11px;font-weight:700;border-radius:9999px;padding:3px 10px;white-space:nowrap}
+  .vbadge svg{width:11px;height:11px;flex:none}
+  .ava{border-radius:50%;display:grid;place-items:center;font-weight:700;flex:none;background:var(--lime-l);color:var(--lime-900)}
+
+  /* ================= header ================= */
+  .top{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd)}
+  .topin{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:26px;padding:13px 24px}
+  .logo{font-weight:900;font-size:20px;letter-spacing:-.02em;flex:none;display:inline-flex;align-items:center;gap:8px}
+  .logo .mark{width:27px;height:27px;border-radius:50%;background:var(--lime);color:#0e0e0f;display:grid;place-items:center;flex:none}
+  .logo .mark svg{width:14px;height:14px}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:22px;font-size:14px;font-weight:600;color:var(--ink-2)}
+  .nav a.nl:hover{color:var(--lime-d)}
+  .nav a.on{color:var(--ink);font-weight:700}
+  .nav .lgn{border:1.5px solid var(--ink);border-radius:9999px;padding:7px 18px;font-size:13.5px;font-weight:700;transition:.16s}
+  .nav .lgn:hover{background:var(--ink);color:#fff}
+
+  /* ================= セクション共通（線なし・通常グリッド） ================= */
+  .sec{padding:76px 0 84px}
+  .sec-tint{background:linear-gradient(178deg,#fff,#FBFDF3)}
+  .sec-tint2{background:linear-gradient(178deg,#FBFDF3,#fff)}
+  .shead{max-width:720px;margin:0 auto;text-align:center}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--lime-900);
+    background:var(--lime-l);border:1px solid var(--lime-300);border-radius:9999px;padding:5px 16px}
+  .kicker i{width:7px;height:7px;border-radius:50%;background:var(--lime-d);font-style:normal}
+  .sech{margin-top:18px;font-size:clamp(25px,3.6vw,38px);font-weight:900;letter-spacing:-.028em;line-height:1.4}
+  .secp{margin-top:14px;font-size:15.5px;color:var(--gray);line-height:2.05}
+  .shead .secp{margin-left:auto;margin-right:auto;max-width:38em}
+
+  /* ================= hero（線なし・写真帯） =================
+     実写はPexels（商用可・帰属不要）。背景装飾のみで、特定エキスパートの
+     写真ではない。実装時は url(/about/video-call-grid.jpg) に置換。 */
+  .hero{position:relative;padding:76px 0 92px;color:#fff;
+    background:
+      linear-gradient(100deg,rgba(11,13,7,.9) 0%,rgba(11,13,7,.78) 44%,rgba(11,13,7,.5) 100%),
+      linear-gradient(rgba(11,13,7,.28),rgba(11,13,7,.28)),
+      url("../../apps/web/public/about/video-call-grid.jpg") center/cover no-repeat #101408}
+  .hero .kicker{background:rgba(255,255,255,.08);border-color:rgba(168,224,28,.5);color:var(--lime)}
+  .hero .kicker i{background:var(--lime)}
+  .herogrid{display:grid;grid-template-columns:1.04fr .96fr;gap:52px;align-items:center}
+  .hero h1{font-size:clamp(31px,4.8vw,52px);font-weight:900;letter-spacing:-.03em;line-height:1.3;color:#fff;
+    text-shadow:0 2px 24px rgba(0,0,0,.35)}
+  .hero h1 .em{color:var(--lime)}
+  .hero .sub{margin-top:22px;font-size:16px;line-height:2.1;color:rgba(255,255,255,.86);max-width:30em}
+  .hero .sub b{font-weight:700;color:#fff}
+  .hero .tlink{color:#fff}
+  .hero .herofolk p{color:rgba(255,255,255,.78)}
+  .hero .herofolk p b{color:#fff}
+  .hero .stack .ava{border-color:rgba(255,255,255,.9)}
+  .hctas{margin-top:30px;display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+  .herofolk{margin-top:30px;display:flex;align-items:center;gap:14px}
+  .stack{display:flex}
+  .stack .ava{width:40px;height:40px;font-size:14px;border:2.5px solid #fff;box-shadow:var(--sh-xs)}
+  .stack .ava+.ava{margin-left:-10px}
+  .stack .ava.a2{background:#EAF3D2;color:#4c6d16}
+  .stack .ava.a3{background:#DCEFC0;color:var(--lime-900)}
+  .stack .ava.a4{background:var(--lime-200);color:#33510a}
+  .herofolk p{font-size:13.5px;color:var(--gray);line-height:1.8}
+  .herofolk p b{color:var(--ink)}
+  .player{background:#fff;border:1px solid var(--bd);border-radius:20px;box-shadow:var(--sh-lg);padding:16px 16px 14px}
+  .player .chrome{display:flex;align-items:center;gap:6px;padding:0 4px 12px}
+  .player .chrome i{width:9px;height:9px;border-radius:50%;background:var(--bd2);font-style:normal}
+  .player .chrome span{margin-left:8px;font-family:var(--mono);font-size:10.5px;color:var(--mu)}
+  .player .chrome .live{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);
+    font-size:9.5px;font-weight:600;color:var(--lime-900);background:var(--lime-l);border-radius:9999px;padding:2px 9px}
+  .player .chrome .live b{width:6px;height:6px;border-radius:50%;background:var(--lime-d)}
+  .pxcard{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:13px 15px;box-shadow:var(--sh-xs)}
+  .pxcard .r{display:flex;align-items:center;gap:11px}
+  .pxcard .ava{width:44px;height:44px;font-size:16px}
+  .pxcard .nm{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pxcard .ct{font-size:12px;color:var(--gray);margin-top:2px}
+  .pxcard .pr{margin-left:auto;text-align:right;line-height:1.3}
+  .pxcard .pr b{font-family:var(--num);font-size:15px;font-weight:700;display:block}
+  .pxcard .pr span{font-size:10px;color:var(--mu)}
+  .chatline{margin-top:10px;display:flex;flex-direction:column;gap:8px;font-size:12.5px;line-height:1.8}
+  .bub{max-width:88%;border-radius:14px;padding:9px 13px}
+  .bub.me{align-self:flex-end;background:var(--ink);color:#fff;border-bottom-right-radius:5px}
+  .bub.ex{align-self:flex-start;background:var(--muted);border:1px solid var(--bd);border-bottom-left-radius:5px}
+  .playbar{margin-top:13px;display:flex;align-items:center;gap:11px;padding:0 4px}
+  .playbar .pb{flex:none;width:28px;height:28px;border-radius:50%;background:var(--lime);display:grid;place-items:center}
+  .playbar .pb svg{width:11px;height:11px;color:#0e0e0f}
+  .playbar .trk{flex:1;height:6px;border-radius:9999px;background:var(--muted);position:relative}
+  .playbar .trk i{position:absolute;left:0;top:0;bottom:0;width:38%;border-radius:9999px;background:var(--lime);font-style:normal}
+  .playbar time{font-family:var(--mono);font-size:10px;color:var(--mu)}
+
+  /* ================= 使い方ブロック（ここだけ左タイムライン） ================= */
+  .how{padding:84px 0 92px}
+  .tabbar{margin:26px auto 0;display:flex;width:max-content;max-width:100%;background:var(--muted);
+    border:1px solid var(--bd);border-radius:9999px;padding:4px}
+  .tabbar button{border:none;background:transparent;border-radius:9999px;padding:10px 28px;font-size:14px;font-weight:700;
+    color:var(--mu);transition:.18s}
+  .tabbar button.on{background:var(--ink);color:#fff}
+  /* 連続ヘアライン: パネルの外側（.tl の rail）に1本。タブを切り替えても線は残り、
+     高さはパネル内容に自動追従。線は上下端でフェードアウト */
+  .tl{display:grid;grid-template-columns:var(--railw) 1fr;column-gap:var(--railgap);margin-top:56px}
+  .rail{position:relative}
+  .rail .ln{position:absolute;left:var(--linex);top:0;bottom:0;width:1px;
+    background:linear-gradient(to bottom,transparent,var(--bd2) 34px,var(--bd2) calc(100% - 34px),transparent)}
+  .rail .ln::before{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);
+    width:9px;height:9px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 4px var(--lime-l)}
+  .rail .ln::after{content:"";position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+    width:7px;height:7px;border-radius:50%;background:var(--bd2)}
+  .panel[hidden]{display:none}
+  /* マイルストンピル: 細線に対しノードだけ存在感（ライム角丸マーカー＋白ピル） */
+  .mstone{position:relative;z-index:2;display:inline-flex;align-items:center;gap:10px;background:#fff;
+    border:1px solid var(--bd2);border-radius:12px;padding:8px 18px 8px 10px;font-size:14px;font-weight:800;
+    color:var(--ink);box-shadow:var(--sh-sm);
+    /* マーカー中心が縦線に乗る: linex - railw - railgap - (padding-left 10 + mk 22/2) */
+    margin-left:calc(var(--linex) - var(--railw) - var(--railgap) - 21px)}
+  .mstone .mk{flex:none;width:22px;height:22px;border-radius:7px;background:var(--lime);color:#0e0e0f;
+    display:grid;place-items:center;font-family:var(--num);font-size:12px;font-weight:800}
+  /* 現在地的な強調（①と⑤だけリング） */
+  .mstone.now .mk{box-shadow:0 0 0 5px var(--lime-l)}
+  .stepblk{padding:8px 0 72px}
+  .stepblk:last-of-type{padding-bottom:24px}
+  .steprow{margin-top:26px;display:grid;grid-template-columns:.9fr 1.1fr;gap:44px;align-items:center}
+  .steprow .cop h3{font-size:22px;font-weight:900;letter-spacing:-.018em}
+  .steprow .cop p{margin-top:12px;font-size:15px;color:var(--gray);line-height:2.05;max-width:34em}
+  .steprow .cop p b{color:var(--ink);font-weight:700}
+  .steprow .cop .free{margin-top:14px;display:inline-flex;align-items:center;gap:6px;background:var(--lime-l);
+    border:1px solid var(--lime-300);color:var(--lime-900);font-size:12.5px;font-weight:700;border-radius:9999px;padding:5px 15px}
+  .steprow .cop .mini{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+  .steprow .cop .mini .it{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--gray);line-height:1.9}
+  .steprow .cop .mini .it b{color:var(--ink);font-weight:700}
+  .steprow .cop .mini .it .ck{flex:none;margin-top:5px;width:19px;height:19px;border-radius:50%;background:var(--lime);
+    color:#0e0e0f;display:grid;place-items:center}
+  .steprow .cop .mini .it .ck svg{width:10px;height:10px}
+  .shot{border-radius:18px;overflow:hidden;box-shadow:var(--sh-md);border:1px solid var(--bd)}
+  /* shot ①: 検索 */
+  .shot-find{background:linear-gradient(170deg,#FBFDF3,#F1F8DF);padding:22px 20px}
+  .sf-input{display:flex;gap:8px}
+  .sf-input .box{flex:1;display:flex;align-items:center;gap:9px;background:#fff;border:1.5px solid var(--bd2);
+    border-radius:9999px;padding:11px 16px;font-size:12.5px;color:var(--ink-2)}
+  .sf-input .box svg{width:14px;height:14px;color:var(--mu);flex:none}
+  .sf-input .box b{color:var(--ink)}
+  .sf-go{flex:none;display:inline-flex;align-items:center;background:var(--lime);color:#0e0e0f;
+    border:none;border-radius:9999px;padding:0 20px;font-size:12.5px;font-weight:800}
+  .sf-tag{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+  .sf-tag span{background:#fff;border:1px solid var(--bd);border-radius:9999px;padding:4px 12px;font-size:10.5px;font-weight:700;color:var(--ink-2)}
+  .sf-tag span.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .sf-hit{margin-top:14px;background:#fff;border:1.5px solid var(--lime-300);border-radius:14px;padding:14px 16px;box-shadow:var(--sh-sm)}
+  .sf-hit .r{display:flex;align-items:center;gap:11px}
+  .sf-hit .ava{width:44px;height:44px;font-size:16px}
+  .sf-hit .nm{font-size:13.5px;font-weight:800}
+  .sf-hit .ct{font-size:11.5px;color:var(--gray);margin-top:1px}
+  .sf-hit .meta{margin-top:10px;padding-top:10px;border-top:1px dashed var(--bd);display:flex;align-items:center;gap:8px}
+  .sf-hit .meta .pr{font-family:var(--num);font-size:14px;font-weight:800}
+  .sf-hit .meta .pr small{font-family:var(--jp);font-size:9.5px;color:var(--mu);font-weight:400}
+  .sf-hit .meta .st{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--ink-2)}
+  .sf-hit .meta .st i{font-style:normal;color:var(--lime-d)}
+  .sf-more{margin-top:10px;background:#fff;border:1px solid var(--bd);border-radius:14px;padding:11px 16px;
+    display:flex;align-items:center;gap:11px;opacity:.55}
+  .sf-more .ava{width:32px;height:32px;font-size:12px;background:#EAF3D2;color:#4c6d16}
+  .sf-more .ph{flex:1;height:7px;border-radius:4px;background:var(--muted)}
+  /* shot ②: チャット */
+  .shot-chat{background:linear-gradient(170deg,#fff,#F5FBE2);padding:20px}
+  .ch-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd);padding-bottom:12px}
+  .ch-head .ava{width:36px;height:36px;font-size:13px}
+  .ch-head .nm{font-size:13px;font-weight:800}
+  .ch-head .st{font-size:10px;color:var(--lime-d);font-weight:700}
+  .ch-head .fr{margin-left:auto;display:inline-flex;align-items:center;gap:5px;background:var(--lime-l);
+    border:1px solid var(--lime-300);color:var(--lime-900);font-size:10px;font-weight:800;border-radius:9999px;padding:3px 11px}
+  .ch-body{margin-top:14px;display:flex;flex-direction:column;gap:9px;font-size:12.5px;line-height:1.8}
+  .ch-in{margin-top:14px;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--bd2);
+    border-radius:9999px;padding:9px 9px 9px 16px;font-size:11.5px;color:var(--mu-2)}
+  .ch-in .snd{margin-left:auto;flex:none;width:30px;height:30px;border-radius:50%;background:var(--lime);
+    display:grid;place-items:center}
+  .ch-in .snd svg{width:13px;height:13px;color:#0e0e0f}
+  /* shot ③: 週グリッド */
+  .shot-slots{background:#fff;padding:22px}
+  .shot-slots .nav{display:flex;align-items:center;gap:10px}
+  .shot-slots .arr{width:28px;height:28px;border-radius:9999px;border:1.5px solid var(--bd2);background:#fff;
+    display:grid;place-items:center;color:var(--ink-2)}
+  .shot-slots .arr svg{width:11px;height:11px}
+  .shot-slots .rng{font-family:var(--num);font-size:13px;font-weight:800}
+  .shot-slots .tzc{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:800;
+    color:var(--lime-900);background:var(--lime-l);border:1px solid var(--lime-300);border-radius:9999px;padding:3px 12px}
+  .shot-slots .tzc svg{width:11px;height:11px;color:var(--lime-d)}
+  .shot-slots .g{margin-top:13px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+  .shot-slots .c{display:flex;flex-direction:column;gap:6px}
+  .shot-slots .hd{text-align:center;border-bottom:1.5px solid var(--bd);padding-bottom:6px;line-height:1.3}
+  .shot-slots .hd .w{display:block;font-size:10px;color:var(--mu);font-weight:700}
+  .shot-slots .hd .d{display:block;font-family:var(--num);font-size:14px;font-weight:800}
+  .shot-slots .c.off .hd .w,.shot-slots .c.off .hd .d{color:var(--bd2)}
+  .shot-slots .s{font-family:var(--num);font-size:11.5px;font-weight:700;text-align:center;padding:8px 0;
+    border:1.5px solid var(--bd2);border-radius:9px;color:var(--ink-2)}
+  .shot-slots .s.on{background:var(--lime);border-color:var(--lime);color:#0e0e0f;font-weight:800}
+  .shot-slots .e{text-align:center;color:var(--bd2);font-size:12px;padding:8px 0}
+  /* shot ④: ダーク通話（背景に実写を薄く敷く。装飾のみ・タイル内は従来のCSSアバター） */
+  .shot-call{padding:18px;
+    background:
+      linear-gradient(rgba(13,16,7,.88),rgba(13,16,7,.88)),
+      url("../../apps/web/public/about/video-call-grid.jpg") center/cover no-repeat #101408}
+  .call-top{display:flex;align-items:center;padding:0 2px 10px}
+  .call-top .rec{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;letter-spacing:.08em}
+  .call-top .rec i{width:8px;height:8px;border-radius:50%;background:#ef4444;font-style:normal}
+  .call-top .len{margin-left:auto;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.75);
+    background:rgba(255,255,255,.12);border-radius:9999px;padding:3px 11px}
+  .call-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .call-tile{position:relative;aspect-ratio:1/0.92;border-radius:12px;overflow:hidden;display:grid;place-items:center}
+  .call-tile.t1{background:radial-gradient(120% 100% at 50% 18%,#2c331f,#171c0e 70%)}
+  .call-tile.t2{background:radial-gradient(120% 100% at 50% 18%,#26292e,#141519 70%)}
+  .call-tile .fig{width:56%;aspect-ratio:1/1;border-radius:50%;display:grid;place-items:center;font-size:clamp(20px,2.4vw,28px);font-weight:800}
+  .call-tile.t1 .fig{background:var(--lime-l);color:var(--lime-900)}
+  .call-tile.t2 .fig{background:#3b4048;color:#e6e8ec}
+  .call-tile .tag{position:absolute;left:8px;bottom:8px;font-size:9.5px;font-weight:700;color:#fff;
+    background:rgba(0,0,0,.55);border-radius:8px;padding:3px 9px}
+  .call-bar{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:10px}
+  .call-bar i{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;font-style:normal}
+  .call-bar i svg{width:13px;height:13px;color:#fff}
+  .call-bar i.end{background:#dc2626;width:42px}
+  /* ⑤: 大ダークカード（相談のあと） */
+  .darkcard{margin-top:26px;background:linear-gradient(160deg,#101408,#171d0d 55%,#0e1207);border-radius:22px;
+    padding:48px;color:#fff;display:grid;grid-template-columns:1.04fr .96fr;gap:48px;align-items:center;box-shadow:var(--sh-lg)}
+  .darkcard h3{font-size:clamp(22px,3vw,30px);font-weight:900;letter-spacing:-.022em;line-height:1.45}
+  .darkcard h3 b{color:var(--lime);font-weight:900}
+  .darkcard .dp{margin-top:14px;font-size:14.5px;line-height:2.05;color:rgba(255,255,255,.76);max-width:32em}
+  .darkcard .dnote{margin-top:18px;font-family:var(--mono);font-size:10.5px;color:rgba(255,255,255,.5)}
+  .sumpanel{background:#fff;color:var(--ink);border-radius:16px;padding:20px 22px}
+  .sumpanel .lb{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.14em;color:var(--mu)}
+  .sumpanel .row{margin-top:11px;display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.8}
+  .sumpanel .row .tg{flex:none;margin-top:2px;font-size:10px;font-weight:800;border-radius:7px;padding:2px 9px;white-space:nowrap}
+  .sumpanel .row.b4 .tg{background:var(--muted);color:var(--mu)}
+  .sumpanel .row.b4 span{color:var(--gray)}
+  .sumpanel .row.af .tg{background:var(--lime);color:#0e0e0f}
+  .sumpanel .row.af span{color:var(--ink-2);font-weight:600}
+  .sumpanel .again{margin-top:16px;display:flex;align-items:center;gap:10px;border-top:1px dashed var(--bd2);padding-top:14px}
+  .sumpanel .again .ava{width:32px;height:32px;font-size:12px}
+  .sumpanel .again p{font-size:11.5px;color:var(--gray);line-height:1.6}
+  .sumpanel .again .re{margin-left:auto;flex:none;background:var(--lime);border-radius:9999px;padding:6px 15px;
+    font-size:11px;font-weight:800;color:#0e0e0f}
+  .howcta{margin-top:44px}
+  .howcta .note{margin-top:13px;font-size:13.5px;color:var(--gray)}
+  /* エキスパート側の小さめ shot */
+  .steprow .shot.sm{max-width:440px}
+  .xf-f{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:9px 13px;font-size:11.5px;color:var(--ink-2)}
+  .xf-f+.xf-f{margin-top:8px}
+  .xf-f b{display:block;font-size:9px;color:var(--mu);font-weight:600;letter-spacing:.08em}
+  .xf-btn{margin-top:10px;background:var(--lime);border-radius:9999px;text-align:center;padding:8px 0;font-size:11.5px;font-weight:800}
+  .shot-form{background:linear-gradient(170deg,#FBFDF3,#F1F8DF);padding:20px 18px}
+  .shot-verify{background:linear-gradient(170deg,#fff,#F5FBE2);padding:20px 18px}
+  .xv-doc{display:flex;align-items:center;gap:9px;background:#fff;border:1.5px dashed var(--bd2);border-radius:12px;
+    padding:11px 13px;font-size:11.5px;color:var(--ink-2)}
+  .xv-doc svg{width:14px;height:14px;color:var(--lime-d);flex:none}
+  .xv-doc+.xv-doc{margin-top:8px}
+  .xv-st{margin-top:11px;display:inline-flex;align-items:center;gap:7px;background:var(--lime-l);border:1px solid var(--lime-300);
+    border-radius:9999px;padding:6px 14px;font-size:11px;font-weight:800;color:var(--lime-900)}
+  .xv-st svg{width:12px;height:12px}
+  .shot-menu{background:linear-gradient(170deg,#FBFDF3,#EFF7DB);padding:20px 18px}
+  .xm-card{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:13px 15px}
+  .xm-card .t{display:flex;align-items:baseline;gap:6px;font-size:12.5px;font-weight:800}
+  .xm-card .t i{font-style:normal;margin-left:auto;font-family:var(--num);font-size:15px}
+  .xm-card .ph{height:6px;border-radius:4px;background:var(--muted);margin-top:8px}
+  .xm-card .ph.s{width:60%}
+  .xm-tags{margin-top:10px;display:flex;gap:5px;flex-wrap:wrap}
+  .xm-tags span{background:#fff;border:1px solid var(--bd);border-radius:9999px;padding:3px 11px;font-size:10px;font-weight:700;color:var(--ink-2)}
+  .xm-tags span.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .shot-inbox{background:linear-gradient(170deg,#fff,#FBFDF3);padding:20px 18px}
+  .xi-req{background:#fff;border:1.5px solid #fde68a;border-radius:13px;padding:12px 14px}
+  .xi-req .h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800}
+  .xi-req .h .ava{width:28px;height:28px;font-size:11px;background:var(--muted);color:var(--ink-2)}
+  .xi-req .h .pill{margin-left:auto;background:#fef3c7;border:1px solid #fde68a;color:#92400e;
+    font-size:9px;font-weight:800;border-radius:9999px;padding:2px 9px}
+  .xi-req .d{margin-top:7px;font-family:var(--num);font-size:10.5px;color:var(--gray)}
+  .xi-req .b{margin-top:9px;display:flex;gap:8px;align-items:center}
+  .xi-req .b .ok{background:var(--lime);border-radius:9999px;padding:5px 16px;font-size:10.5px;font-weight:800}
+  .xi-req .b .ng{color:var(--mu);font-size:10.5px;font-weight:600}
+
+  /* ================= ユースケース（線なし） ================= */
+  .ucgrid{margin-top:38px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .ucard{display:flex;flex-direction:column;gap:14px;background:#fff;border:1px solid var(--bd);border-radius:16px;
+    padding:21px 23px;box-shadow:var(--sh-xs);transition:.18s var(--ease)}
+  .ucard:hover{border-color:var(--lime-300);box-shadow:var(--sh-md)}
+  .ucard .q{font-size:14.5px;font-weight:700;line-height:1.7}
+  .ucard .q::before{content:"「";color:var(--lime-d)}
+  .ucard .q::after{content:"」";color:var(--lime-d)}
+  .ucard .t{margin-top:auto;display:flex;align-items:center;gap:8px}
+  .ucard .t span{border-radius:9999px;background:var(--lime-l);border:1px solid var(--lime-300);
+    padding:3px 13px;font-size:11.5px;font-weight:800;color:var(--lime-900)}
+  .ucard .t svg{width:14px;height:14px;color:var(--lime-d);margin-left:auto}
+
+  /* ================= 居住認証 ダーク帯（線なし） ================= */
+  .sec-dark{color:#fff;background:linear-gradient(160deg,#0c0e0a,#151a11 52%,#0b0d09)}
+  .sec-dark .sech{color:#fff}
+  .sec-dark .sech b{color:var(--lime);font-weight:900}
+  .sec-dark .secp{color:rgba(255,255,255,.76)}
+  .sec-dark .kicker{background:transparent;border-color:rgba(168,224,28,.45);color:var(--lime)}
+  .sec-dark .kicker i{background:var(--lime)}
+  .trustgrid{margin-top:40px;display:grid;grid-template-columns:1.04fr .96fr;gap:56px;align-items:center}
+  .tsteps{display:flex;flex-direction:column}
+  .tstep{position:relative;display:flex;gap:18px;padding-bottom:30px}
+  .tstep:last-child{padding-bottom:0}
+  .tstep:not(:last-child)::before{content:"";position:absolute;left:18px;top:44px;bottom:4px;width:1px;background:rgba(168,224,28,.4)}
+  .tstep .n{z-index:1;flex:none;width:38px;height:38px;border-radius:50%;background:var(--lime);color:#0e0e0f;
+    display:grid;place-items:center;font-family:var(--num);font-size:15px;font-weight:800}
+  .tstep b{display:block;font-size:16.5px;font-weight:800}
+  .tstep p{margin-top:6px;font-size:14.5px;line-height:2;color:rgba(255,255,255,.72)}
+  .tstep .gate{display:inline-flex;margin-top:10px;font-size:11.5px;font-weight:800;color:var(--lime);
+    border:1px solid rgba(168,224,28,.5);border-radius:9999px;padding:3px 14px}
+  .trustcard{background:#fff;color:var(--ink);border-radius:22px;padding:34px 32px;text-align:center;
+    box-shadow:0 26px 60px -20px rgba(0,0,0,.5)}
+  .trustcard .shield{margin:0 auto 16px;width:84px;height:84px;border-radius:50%;border:1.5px solid var(--lime-200);
+    background:var(--lime-50);color:var(--lime-d);display:grid;place-items:center}
+  .trustcard .shield svg{width:40px;height:40px}
+  .trustcard .vbadge{font-size:13.5px;padding:6px 18px}
+  .trustcard .vbadge svg{width:13px;height:13px}
+  .trustcard>p{margin-top:15px;font-size:14px;line-height:2;color:var(--gray)}
+  .trustcard>p b{color:var(--ink)}
+  .trustcard .demo{margin-top:20px;text-align:left;border-top:1px dashed var(--bd2);padding-top:16px}
+  .trustcard .demo .lb{font-family:var(--mono);font-size:9.5px;color:var(--mu);letter-spacing:.12em;margin-bottom:10px}
+  .trustcard .demo .sf-hit{margin-top:0;border-color:var(--bd);box-shadow:none}
+
+  /* ================= 料金（線なし） ================= */
+  .freeline{margin:40px auto 26px;display:flex;align-items:center;gap:18px;background:#fff;
+    border:1.5px solid var(--lime-300);border-radius:18px;padding:20px 26px;box-shadow:var(--sh-sm);max-width:720px}
+  .freeline .zero{flex:none;width:56px;height:56px;border-radius:50%;background:var(--lime);color:#0e0e0f;
+    display:grid;place-items:center;font-family:var(--num);font-size:16px;font-weight:800}
+  .freeline b{font-size:16px;font-weight:800}
+  .freeline p{font-size:13.5px;color:var(--gray);margin-top:3px;line-height:1.9}
+  .prgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .pcardx{position:relative;background:#fff;border:1px solid var(--bd);border-radius:18px;padding:28px 26px;
+    box-shadow:var(--sh-xs);display:flex;flex-direction:column}
+  .pcardx.hot{border:1.5px solid var(--lime);box-shadow:var(--sh-md)}
+  .pcardx .rec{position:absolute;top:18px;right:18px;background:var(--lime-l);border:1px solid var(--lime-300);
+    color:var(--lime-900);border-radius:9999px;padding:3px 13px;font-size:11px;font-weight:800}
+  .pcardx .h{font-size:15px;font-weight:800}
+  .pcardx .pr{margin-top:10px;display:flex;align-items:baseline;gap:6px}
+  .pcardx .pr b{font-family:var(--num);font-size:31px;font-weight:800;letter-spacing:-.02em}
+  .pcardx .pr span{font-size:12.5px;color:var(--gray)}
+  .pcardx ul{margin-top:15px;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:13.5px;color:var(--ink-2)}
+  .pcardx li{display:flex;gap:9px;align-items:flex-start;line-height:1.85}
+  .pcardx li .ck{flex:none;margin-top:4px;width:17px;height:17px;border-radius:50%;background:var(--lime-l);
+    color:var(--lime-900);display:grid;place-items:center}
+  .pcardx li .ck svg{width:9px;height:9px}
+  .pcardx .tagm{margin-top:15px;font-size:11.5px;color:var(--mu)}
+  .prinfo{margin:22px auto 0;display:flex;gap:10px;align-items:flex-start;background:#fff;border:1.5px dashed var(--bd2);
+    border-radius:14px;padding:14px 20px;font-size:13.5px;color:var(--ink-2);line-height:1.95;max-width:720px}
+  .prinfo svg{width:15px;height:15px;flex:none;margin-top:4px;color:var(--lime-d)}
+
+  /* ================= outcome（線なし） ================= */
+  .ogrid{margin-top:42px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .ocard{position:relative;background:#fff;border:1px solid var(--bd);border-radius:18px;padding:25px 23px;box-shadow:var(--sh-xs)}
+  .ocard .ex{position:absolute;top:-12px;left:18px;font-family:var(--mono);font-size:9.5px;font-weight:600;
+    letter-spacing:.12em;background:var(--ink);color:#fff;border-radius:9999px;padding:3px 12px}
+  .ocard .th{display:inline-flex;border-radius:9999px;background:var(--lime-l);border:1px solid var(--lime-300);
+    padding:3px 13px;font-size:11.5px;font-weight:800;color:var(--lime-900)}
+  .ocard h3{margin-top:12px;font-size:16px;font-weight:800;line-height:1.6}
+  .ocard .ba{margin-top:15px;display:flex;flex-direction:column;gap:10px;font-size:13.5px;line-height:1.85}
+  .ocard .ba>div{display:flex;gap:9px;align-items:flex-start}
+  .ocard .ba .tag{flex:none;margin-top:3px;font-size:10px;font-weight:800;border-radius:7px;padding:2px 9px;white-space:nowrap}
+  .ocard .ba .b4 .tag{background:var(--muted);color:var(--mu)}
+  .ocard .ba .b4 span{color:var(--gray)}
+  .ocard .ba .af .tag{background:var(--lime);color:#0e0e0f}
+  .ocard .ba .af span{color:var(--ink-2);font-weight:600}
+
+  /* ================= FAQ（線なし） ================= */
+  .faqin{margin:38px auto 0;max-width:760px}
+  .faqin details{border:1px solid var(--bd);border-radius:15px;background:#fff;padding:18px 24px;box-shadow:var(--sh-xs);transition:.16s}
+  .faqin details+details{margin-top:12px}
+  .faqin details:hover{border-color:var(--bd2)}
+  .faqin details[open]{border-color:var(--lime);box-shadow:var(--sh-sm)}
+  .faqin summary{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer;
+    font-size:15px;font-weight:800;list-style:none}
+  .faqin summary::-webkit-details-marker{display:none}
+  .faqin summary .x{flex:none;width:26px;height:26px;border-radius:50%;background:var(--lime-l);color:var(--lime-900);
+    display:grid;place-items:center;font-size:15px;font-weight:700;transition:transform .2s;line-height:1}
+  .faqin details[open] summary .x{transform:rotate(45deg);background:var(--lime);color:#0e0e0f}
+  .faqin .a{margin-top:12px;font-size:14px;line-height:2.05;color:var(--gray)}
+  .faqin .a b{color:var(--ink)}
+
+  /* ================= final CTA（線なし・写真帯） =================
+     実写はPexels（商用可・帰属不要）。背景装飾のみ。実装時は /about/diverse-team.jpg。 */
+  .finalin{border-radius:24px;padding:72px 40px;text-align:center;color:#fff;overflow:hidden;
+    background:
+      linear-gradient(rgba(11,13,7,.76),rgba(11,13,7,.82)),
+      url("../../apps/web/public/about/diverse-team.jpg") center/cover no-repeat #101408}
+  .finalin h2{font-size:clamp(27px,4.2vw,44px);font-weight:900;letter-spacing:-.03em;line-height:1.35;color:#fff;
+    text-shadow:0 2px 24px rgba(0,0,0,.35)}
+  .finalin h2 b{color:var(--lime);font-weight:900}
+  .finalin p{margin-top:16px;font-size:15.5px;color:rgba(255,255,255,.86)}
+  .finalin .ctas{margin-top:30px;display:flex;justify-content:center;align-items:center;gap:24px;flex-wrap:wrap}
+  .finalin .tlink{color:#fff}
+  .finalin .note{margin-top:15px;font-size:13.5px;color:rgba(255,255,255,.72)}
+
+  /* ================= footer ================= */
+  footer{border-top:1px solid var(--bd);background:#fff}
+  .footin{max-width:1080px;margin:0 auto;padding:46px 24px 34px;display:flex;gap:40px;flex-wrap:wrap}
+  .footin .fl{margin-right:auto;max-width:300px}
+  .footin .fl p{margin-top:12px;font-size:13px;color:var(--gray);line-height:1.95}
+  .fcol{min-width:140px}
+  .fcol b{font-size:13px;font-weight:800;color:var(--ink-2);display:block;margin-bottom:12px}
+  .fcol a{display:block;font-size:13.5px;color:var(--gray);padding:4px 0}
+  .fcol a:hover{color:var(--lime-d)}
+  .fbottom{border-top:1px solid var(--bd)}
+  .fbottomin{max-width:1080px;margin:0 auto;padding:16px 24px;display:flex;gap:20px;align-items:center;font-size:12px;color:var(--mu)}
+  .fbottomin .r{margin-left:auto;display:flex;gap:18px}
+
+  /* ================= responsive ================= */
+  @media(max-width:960px){
+    .herogrid,.steprow,.trustgrid,.darkcard{grid-template-columns:1fr}
+    .darkcard{padding:34px 26px;gap:32px}
+    .ucgrid,.ogrid,.prgrid{grid-template-columns:1fr 1fr}
+    .steprow{gap:24px}
+    .steprow .shot{max-width:540px}
+  }
+  @media(max-width:640px){
+    :root{--railw:12px;--railgap:14px;--linex:5px}
+    .nav a.nl{display:none}
+    .mstone{padding:6px 15px 6px 8px;font-size:13px;
+      margin-left:calc(var(--linex) - var(--railw) - var(--railgap) - 18px)}
+    .mstone .mk{width:20px;height:20px;font-size:11px}
+    .ucgrid,.ogrid,.prgrid{grid-template-columns:1fr}
+    .finalin{padding:48px 22px}
+    .freeline{align-items:flex-start}
+    .fbottomin{flex-direction:column;align-items:flex-start;gap:8px}
+    .fbottomin .r{margin-left:0}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== header ===================== -->
+<header class="top"><div class="topin">
+  <a class="logo" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+  <nav class="nav">
+    <a class="nl" href="#">エキスパートを探す</a>
+    <a class="nl on" href="#">使い方</a>
+    <a class="lgn" href="#">ログイン</a>
+  </nav>
+</div></header>
+
+<!-- ===================== hero（線なし） ===================== -->
+<section class="hero"><div class="wrap herogrid">
+  <div>
+    <span class="kicker"><i></i>居住認証つき・海外在住日本人への相談サービス</span>
+    <h1 style="margin-top:22px">海外のことは、<br /><span class="em">現地にいる人</span>と。</h1>
+    <p class="sub">移住、留学、駐在準備、こだわりの旅行。ひとりで検索し続けるのは、今日でおしまい。<b>いまその街で暮らす日本人</b>に、30分からオンラインで相談できます。</p>
+    <div class="hctas">
+      <a class="btn btn-p" href="#">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+      <a class="tlink" href="#"><u>エキスパートとして参加</u></a>
+    </div>
+    <div class="herofolk">
+      <span class="stack"><span class="ava">彩</span><span class="ava a2">健</span><span class="ava a3">実</span><span class="ava a4">大</span></span>
+      <p><b>パリからバンコクまで。</b>世界の街の「先輩」が、全員・居住認証済みで待っています。</p>
+    </div>
+  </div>
+  <div class="player" aria-hidden="true">
+    <div class="chrome"><i></i><i></i><i></i><span>locore.app</span><span class="live"><b></b>相談中</span></div>
+    <div class="pxcard">
+      <div class="r">
+        <span class="ava">彩</span>
+        <div>
+          <div class="nm">佐々木 彩<span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span></div>
+          <div class="ct">🇫🇷 パリ在住 8年 ・ 輸入雑貨会社 経営</div>
+        </div>
+        <div class="pr"><b class="num">¥4,000</b><span>/ 30分〜</span></div>
+      </div>
+    </div>
+    <div class="chatline">
+      <div class="bub me">来月からパリ駐在が決まりました。子連れで住むエリアの「実際のところ」を教えてほしいです…!</div>
+      <div class="bub ex">もちろんです。お子さんの年齢と職場の場所を教えてください。候補を3つに絞りましょう。</div>
+    </div>
+    <div class="playbar">
+      <span class="pb"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="7 4.5 20 12 7 19.5"/></svg></span>
+      <span class="trk"><i></i></span>
+      <time>11:23 / 30:00</time>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== 使い方（ここだけ左タイムライン） ===================== -->
+<section class="how"><div class="wrap">
+  <div class="shead">
+    <span class="kicker"><i></i>How it works</span>
+    <h2 class="sech">ご利用方法</h2>
+    <div class="tabbar" role="tablist" style="margin-left:auto;margin-right:auto">
+      <button type="button" class="on" id="tab-user" onclick="swTab('user')">相談する（ユーザー）</button>
+      <button type="button" id="tab-expert" onclick="swTab('expert')">相談にのる（エキスパート）</button>
+    </div>
+  </div>
+
+  <div class="tl">
+    <div class="rail"><i class="ln"></i></div>
+    <div>
+      <!-- 相談者フロー（時系列 ①〜⑤） -->
+      <div class="panel" id="panel-user">
+        <!-- ① -->
+        <div class="stepblk">
+          <div class="mstone now"><span class="mk">1</span>エキスパートを探す</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>気になる人を探す</h3>
+              <p>興味のある場所やテーマで絞り込んだり、検索したり。エキスパートのプロフィールや相談メニュー、レビューを見ながらコンタクトを取りたい人を決めます。表示されるエキスパートは全員、当サイトで居住実績の認定を行っているのでご安心してご相談いただけます。</p>
+            </div>
+            <div class="shot shot-find">
+              <div class="sf-input">
+                <span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.2" y2="16.2"/></svg><b>パリ 子連れ移住</b></span>
+                <button class="sf-go" type="button">探す</button>
+              </div>
+              <div class="sf-tag"><span class="on">🇫🇷 フランス</span><span>移住</span><span>子育て</span><span>¥5,000まで</span></div>
+              <div class="sf-hit">
+                <div class="r">
+                  <span class="ava">彩</span>
+                  <div>
+                    <div class="nm">佐々木 彩</div>
+                    <div class="ct">🇫🇷 パリ在住 8年 ・ 現地で起業</div>
+                  </div>
+                  <span class="vbadge" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span>
+                </div>
+                <div class="meta"><span class="pr">¥4,000<small> / 30分〜</small></span><span class="st"><i>★</i> 4.9 ・ レビュー12件</span></div>
+              </div>
+              <div class="sf-more"><span class="ava">実</span><span class="ph"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ② -->
+        <div class="stepblk">
+          <div class="mstone"><span class="mk">2</span>チャットで相談（無料）</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>カジュアル相談</h3>
+              <p>直接話をする前に本人とコンタクト。相談内容に適したエキスパートかを事前に確認することができます。</p>
+              <span class="free">ここまで完全無料</span>
+            </div>
+            <div class="shot shot-chat">
+              <div class="ch-head">
+                <span class="ava">彩</span>
+                <div><div class="nm">佐々木 彩</div><div class="st">● オンライン</div></div>
+                <span class="fr">事前チャット無料</span>
+              </div>
+              <div class="ch-body">
+                <div class="bub me">来春パリ移住予定です。ビザとエリア選び、30分で相談できますか？</div>
+                <div class="bub ex">できますよ。現在のお仕事と予算感を事前に教えてもらえると、当日が濃くなります。</div>
+              </div>
+              <div class="ch-in">メッセージを入力…<span class="snd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ 日程（時差の話はここに統合） -->
+        <div class="stepblk">
+          <div class="mstone"><span class="mk">3</span>相談日を決める</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>空き枠から選ぶだけ</h3>
+              <div class="mini">
+                <div class="it"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span><span>空き枠も確定日時も<b>ユーザーの現地時間で表示</b>。地球の裏側にいても迷いません。</span></div>
+                <div class="it"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span><span>リクエストが承諾されるとインタビューが確定。<b>前日にリマインドが届きます</b>。</span></div>
+              </div>
+            </div>
+            <div class="shot shot-slots">
+              <div class="nav">
+                <span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg></span>
+                <span class="rng">9月14日〜9月20日</span>
+                <span class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></span>
+                <span class="tzc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7.5 12 12 15 14"/></svg>すべて日本時間</span>
+              </div>
+              <div class="g">
+                <div class="c">
+                  <div class="hd"><span class="w">水</span><span class="d">16</span></div>
+                  <span class="s">20:00</span><span class="s">20:30</span><span class="s">21:00</span>
+                </div>
+                <div class="c off">
+                  <div class="hd"><span class="w">木</span><span class="d">17</span></div>
+                  <span class="e">—</span>
+                </div>
+                <div class="c">
+                  <div class="hd"><span class="w">金</span><span class="d">18</span></div>
+                  <span class="s on">20:00</span><span class="s">20:30</span><span class="s">21:00</span>
+                </div>
+                <div class="c">
+                  <div class="hd"><span class="w">土</span><span class="d">19</span></div>
+                  <span class="s">16:00</span><span class="s">16:30</span><span class="s">17:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ④ 通話（アプリ不要・Zoom/Meetはここに統合） -->
+        <div class="stepblk">
+          <div class="mstone"><span class="mk">4</span>オンライン相談</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>エキスパートへいざ相談！</h3>
+              <p>ビデオ通話で、抱えている悩み事や課題をエキスパートに相談できます。</p>
+              <div class="mini">
+                <div class="it"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span><span><b>特別なアプリは不要</b>。確定後に届く参加リンクを、当日クリックするだけ。</span></div>
+                <div class="it"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span><span><b>Zoom / Google Meet でもOK</b>。使い慣れたツールのままで構いません。</span></div>
+              </div>
+            </div>
+            <div class="shot shot-call">
+              <div class="call-top">
+                <span class="rec"><i></i>REC</span>
+                <span class="len">オンライン ・ 30分</span>
+              </div>
+              <div class="call-grid">
+                <div class="call-tile t1"><span class="fig">彩</span><span class="tag">佐々木 彩 — パリ</span></div>
+                <div class="call-tile t2"><span class="fig">あ</span><span class="tag">あなた — 東京</span></div>
+              </div>
+              <div class="call-bar">
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/><path d="M18 11a6 6 0 0 1-12 0"/><line x1="12" y1="17" x2="12" y2="21"/></svg></i>
+                <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2.5"/><path d="M16 10.5 21 7.5v9l-5-3z"/></svg></i>
+                <i class="end"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12c-2.5-2.5-6-4-10-4S4.5 9.5 2 12l3 3 3.5-2v-3a12 12 0 0 1 7 0v3l3.5 2 3-3z"/></svg></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⑤ 相談のあと（大ダークカード） -->
+        <div class="stepblk">
+          <div class="mstone now"><span class="mk">5</span>相談相手から伴走相手へ</div>
+          <div class="darkcard">
+            <div>
+              <h3>気に入れば<b>継続的なメンター</b>に</h3>
+              <p class="dp">エキスパートの方のアドバイスが参考になれば、継続的に伴走支援を行ってもらうこともできます。1回では解決できないことも一緒なら最後まで走り切れます。</p>
+              <p class="dnote">SESSION NOTES ・ CHAT LOG ・ REBOOK</p>
+            </div>
+            <div class="sumpanel">
+              <span class="lb">SESSION NOTES — 9/18 佐々木 彩さん</span>
+              <div class="row b4"><span class="tg">相談前</span><span>ビザの候補が多すぎて決められない</span></div>
+              <div class="row af"><span class="tg">相談後</span><span>自分の場合の最適1つ＋申請書類の順番</span></div>
+              <div class="row af"><span class="tg">次にやる</span><span>戸籍謄本のアポスティーユ取得（今週）</span></div>
+              <div class="again">
+                <span class="ava">彩</span>
+                <p>続きの相談も、同じ流れで。</p>
+                <span class="re">もう一度相談する</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="howcta">
+          <a class="btn btn-p" href="#">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+          <div class="note">会員登録は無料。チャットでの事前相談から始められます。</div>
+        </div>
+      </div>
+
+      <!-- エキスパートフロー（時系列 ①〜⑤） -->
+      <div class="panel" id="panel-expert" hidden>
+        <div class="stepblk">
+          <div class="mstone now"><span class="mk">1</span>登録する</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>まずは、無料登録から</h3>
+              <p>会員登録のあと、エキスパート参加を申請。<b>都市・在住年数・得意なこと</b>を入力するだけです。</p>
+            </div>
+            <div class="shot sm shot-form">
+              <div class="xf-f"><b>お住まいの都市</b>🇫🇷 パリ（フランス）</div>
+              <div class="xf-f"><b>在住年数</b>8年</div>
+              <div class="xf-f"><b>得意なこと</b>移住・起業・生活手続き</div>
+              <div class="xf-btn">この内容で申請する</div>
+            </div>
+          </div>
+        </div>
+        <div class="stepblk">
+          <div class="mstone"><span class="mk">2</span>居住認証を受ける</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>書類で、居住実態を証明</h3>
+              <p>滞在許可証などの書類を提出し、運営が審査します。<b>通過した人だけ</b>が一覧に掲載され、バッジが付きます。</p>
+            </div>
+            <div class="shot sm shot-verify">
+              <div class="xv-doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>滞在許可証.pdf</div>
+              <div class="xv-doc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>公共料金の請求書.pdf</div>
+              <span class="xv-st"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>審査通過 — バッジ付与</span>
+            </div>
+          </div>
+        </div>
+        <div class="stepblk">
+          <div class="mstone"><span class="mk">3</span>相談メニューを作る</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>料金もテーマも、あなたが決める</h3>
+              <p>30分・60分のメニューを作成し、<b>空き時間はあなたの現地時間</b>で登録。相談者には日本時間で表示されます。</p>
+            </div>
+            <div class="shot sm shot-menu">
+              <div class="xm-card">
+                <div class="t">30分相談<i class="num">¥4,000</i></div>
+                <div class="ph"></div><div class="ph s"></div>
+              </div>
+              <div class="xm-tags"><span class="on">移住</span><span class="on">生活手続き</span><span>子育て</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="stepblk">
+          <div class="mstone"><span class="mk">4</span>予約が入る</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>リクエストを、承諾するだけ</h3>
+              <p>空き枠に予約リクエストが届きます。内容を見て<b>承諾したら確定</b>。参加リンクは自動で相手に共有されます。</p>
+            </div>
+            <div class="shot sm shot-inbox">
+              <div class="xi-req">
+                <div class="h"><span class="ava">高</span>高橋さん<span class="pill">リクエスト中</span></div>
+                <div class="d">9/18（金）13:00 現地時間 ・ 30分相談 ¥4,000</div>
+                <div class="b"><span class="ok">承諾する</span><span class="ng">辞退</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="stepblk">
+          <div class="mstone now"><span class="mk">5</span>オンラインで相談</div>
+          <div class="steprow">
+            <div class="cop">
+              <h3>あなたの経験が、誰かの30分に</h3>
+              <p>当日はビデオ通話で30分。<b>Zoom / Google Meet</b>の固定リンクを登録しておけば、毎回そのまま使えます。</p>
+            </div>
+            <div class="shot sm shot-call">
+              <div class="call-top">
+                <span class="rec"><i></i>REC</span>
+                <span class="len">オンライン ・ 30分</span>
+              </div>
+              <div class="call-grid">
+                <div class="call-tile t1"><span class="fig">彩</span><span class="tag">あなた — パリ</span></div>
+                <div class="call-tile t2"><span class="fig">高</span><span class="tag">高橋さん — 東京</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="howcta">
+          <a class="btn btn-p" href="#">エキスパートとして参加する<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+          <div class="note">参加は無料。あなたの海外経験が、誰かの30分になります。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== よくある相談（線なし） ===================== -->
+<section class="sec sec-tint"><div class="wrap">
+  <div class="shead">
+    <span class="kicker"><i></i>Use cases</span>
+    <h2 class="sech">よくある相談内容</h2>
+  </div>
+  <div class="ucgrid">
+    <a class="ucard" href="#"><span class="q">子連れでの移住、何から始めればいい？</span><div class="t"><span>移住</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">現地校とインター、うちの子はどっち？</span><div class="t"><span>子育て・教育</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">ワーホリの家探し、保証人がいない</span><div class="t"><span>住まい</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">駐在の帯同、会社任せで大丈夫？</span><div class="t"><span>駐在準備</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">現地就職のリアル。求人の探し方から</span><div class="t"><span>就職・転職</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">口座・保険・携帯、最初の1か月の順番</span><div class="t"><span>生活手続き</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">フリーランス登録と税金の段取りは？</span><div class="t"><span>仕事・起業</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">留学前に、学校のリアルを聞きたい</span><div class="t"><span>留学</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+    <a class="ucard" href="#"><span class="q">観光じゃない旅がしたい。住民の目線で</span><div class="t"><span>旅行プラン</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></div></a>
+  </div>
+</div></section>
+
+<!-- ===================== 居住認証（ダーク・線なし） ===================== -->
+<section class="sec sec-dark"><div class="wrap">
+  <span class="kicker"><i></i>Trust — Locoreの核</span>
+  <h2 class="sech" style="margin-top:20px">誰でもは、載れません。<br /><b>居住認証</b>という関門。</h2>
+  <p class="secp" style="max-width:38em">SNSで見つけた「現地在住」は、本当にいまその街に住んでいるでしょうか。Locoreに掲載される全エキスパートは、現地の居住実態を書類で確認済みです。</p>
+  <div class="trustgrid">
+    <div class="tsteps">
+      <div class="tstep">
+        <span class="n">1</span>
+        <div><b>居住を証明する書類の提出</b><p>現地の滞在許可証・公共料金の請求書・賃貸契約書など、「いま住んでいる」ことを示す書類を提出。</p></div>
+      </div>
+      <div class="tstep">
+        <span class="n">2</span>
+        <div><b>運営による審査</b><p>書類と申告内容（都市・在住年数）を運営が照合します。<span class="gate">基準を満たさなければ、掲載されません</span></p></div>
+      </div>
+      <div class="tstep">
+        <span class="n">3</span>
+        <div><b>認証バッジの付与</b><p>通過した人だけに「居住認証済み」バッジ。相談後の公開レビューと合わせて、信頼の目印に。</p></div>
+      </div>
+    </div>
+    <div class="trustcard">
+      <div class="shield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg></div>
+      <span class="vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>居住認証済み</span>
+      <p>このバッジは、運営が書類で居住実態を確認したエキスパートだけのもの。「行ったことがある」ではなく、<b>「いま住んでいる」</b>人の言葉です。</p>
+      <div class="demo">
+        <div class="lb">▼ 一覧でもプロフィールでも</div>
+        <div class="sf-hit">
+          <div class="r">
+            <span class="ava">彩</span>
+            <div>
+              <div class="nm">佐々木 彩</div>
+              <div class="ct">🇫🇷 パリ在住 8年 ・ 現地で起業</div>
+            </div>
+            <span class="vbadge" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 11.5 11.2 13.7 15.3 9.6"/></svg>認証済み</span>
+          </div>
+          <div class="meta"><span class="pr">¥4,000<small> / 30分〜</small></span><span class="st"><i>★</i> 4.9 ・ レビュー12件</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== 料金（線なし） ===================== -->
+<section class="sec sec-tint2"><div class="wrap">
+  <div class="shead">
+    <span class="kicker"><i></i>Pricing</span>
+    <h2 class="sech">料金は、<span class="em">ぜんぶ先に</span>見える。</h2>
+    <p class="secp">エキスパートごとにメニューと料金を明示。隠れた費用はありません。</p>
+  </div>
+  <div class="freeline">
+    <span class="zero">¥0</span>
+    <div><b>予約前のチャット相談は、無料。</b><p>エキスパート探しも、読みものも、申し込む前の質問も無料。合わなければ、やめてOK。</p></div>
+  </div>
+  <div class="prgrid">
+    <div class="pcardx hot">
+      <span class="rec">はじめての方に</span>
+      <div class="h">30分相談</div>
+      <div class="pr"><b>¥3,000</b><span>〜 / 30分・税込</span></div>
+      <ul>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>ピンポイントの疑問に。テーマ1〜2個をじっくり</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>料金はエキスパートごとに設定・事前に明示</li>
+      </ul>
+      <div class="tagm">料金はエキスパート設定の目安です</div>
+    </div>
+    <div class="pcardx">
+      <div class="h">60分相談</div>
+      <div class="pr"><b>¥6,000</b><span>〜 / 60分・税込</span></div>
+      <ul>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>移住・駐在の全体設計など、腰を据えた相談に</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>「渡航までのやること」を時系列で一緒に整理</li>
+      </ul>
+      <div class="tagm">料金はエキスパート設定の目安です</div>
+    </div>
+    <div class="pcardx">
+      <div class="h">継続プラン（月額）</div>
+      <div class="pr"><b>月額</b><span>エキスパートごとに設定</span></div>
+      <ul>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>渡航準備の数か月、同じ人に伴走してほしいときに</li>
+        <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5 12.5 9.5 17.5 19.5 7"/></svg></span>定期相談＋チャットでの継続フォロー</li>
+      </ul>
+      <div class="tagm">対応しているエキスパートのみ</div>
+    </div>
+  </div>
+  <div class="prinfo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.8" r=".4" fill="currentColor"/></svg>決済機能は現在準備中です。まずは無料のチャットと予約リクエストからお試しください。</div>
+</div></section>
+
+<!-- ===================== 30分でここまで（線なし） ===================== -->
+<section class="sec"><div class="wrap">
+  <div class="shead">
+    <span class="kicker"><i></i>In 30 minutes</span>
+    <h2 class="sech">30分で、<span class="em">ここまで進む</span>。</h2>
+    <p class="secp">実際にできる相談の「例」です。あなたの事情に合わせて、もっと具体的に聞けます。</p>
+  </div>
+  <div class="ogrid">
+    <div class="ocard">
+      <span class="ex">相談例</span>
+      <span class="th">移住</span>
+      <h3>パリ移住のビザ、どれで行く？</h3>
+      <div class="ba">
+        <div class="b4"><span class="tag">相談前</span><span>ビザの種類が多すぎて、1か月調べても決められない。</span></div>
+        <div class="af"><span class="tag">30分後</span><span>自分の職歴・予算なら現実的な選択肢は2つ。必要書類と申請の順番までメモが残る。</span></div>
+      </div>
+    </div>
+    <div class="ocard">
+      <span class="ex">相談例</span>
+      <span class="th">子育て・教育</span>
+      <h3>現地校の見学、何を見ればいい？</h3>
+      <div class="ba">
+        <div class="b4"><span class="tag">相談前</span><span>学校のWebサイトを眺めても、違いが分からない。</span></div>
+        <div class="af"><span class="tag">30分後</span><span>子連れ移住の先輩から「見学で必ず確認する5点」と学区の実情を聞き、候補が3校に絞れる。</span></div>
+      </div>
+    </div>
+    <div class="ocard">
+      <span class="ex">相談例</span>
+      <span class="th">住まい</span>
+      <h3>保証人なしの家探し、詰まない段取り</h3>
+      <div class="ba">
+        <div class="b4"><span class="tag">相談前</span><span>内見の申し込みが全部スルーされる。理由も分からない。</span></div>
+        <div class="af"><span class="tag">30分後</span><span>書類（ドシエ）の作り方と保証人サービスの現実的な使い方が分かり、次の一手が決まる。</span></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ===================== FAQ（線なし） ===================== -->
+<section class="sec sec-tint2"><div class="wrap">
+  <div class="shead">
+    <span class="kicker"><i></i>FAQ</span>
+    <h2 class="sech">はじめる前に、<span class="em">気になること</span>。</h2>
+  </div>
+  <div class="faqin">
+    <details>
+      <summary>料金はいくらですか？<span class="x">+</span></summary>
+      <div class="a">相談メニューごとにエキスパートが設定しています。目安は<b>30分 ¥3,000〜、60分 ¥6,000〜</b>。各エキスパートのページで、時間と料金を確認してから申し込めます。継続プラン（月額）を用意しているエキスパートもいます。</div>
+    </details>
+    <details>
+      <summary>予約や決済はどうやるのですか？<span class="x">+</span></summary>
+      <div class="a">空き枠からの予約リクエストとチャットは使えます。<b>決済機能は現在準備中</b>のため、料金の支払いが必要になる段階の前で止まります。まずはチャットでの相談内容のすり合わせからお試しください。</div>
+    </details>
+    <details>
+      <summary>「居住認証」は何を確認しているのですか？<span class="x">+</span></summary>
+      <div class="a">現地の滞在許可証・公共料金の請求書・賃貸契約書などの書類で、<b>「いま、その街に実際に住んでいる」こと</b>を運営が確認しています。経歴や肩書きの審査ではなく、居住実態の審査です。確認済みのエキスパートだけにバッジが表示されます。</div>
+    </details>
+    <details>
+      <summary>無料でできることはありますか？<span class="x">+</span></summary>
+      <div class="a">会員登録・エキスパート探し・記事（読みもの）・<b>申し込み前のチャットでの質問</b>まで、すべて無料です。有料になるのは相談メニューを申し込んでからです。</div>
+    </details>
+    <details>
+      <summary>どんなことを相談できますか？<span class="x">+</span></summary>
+      <div class="a">移住・留学・駐在準備の段取り、住むエリア選び、生活の手続き、子育てや学校、仕事や起業、こだわりの旅行プランまで。各エキスパートの「こんな相談に乗れます」を見て選んでください。医療・法律・税務など資格が必要な業務のアドバイスは対象外です（経験談としてのお話は可能です）。</div>
+    </details>
+    <details>
+      <summary>エキスパートは海外在住。時差は大丈夫？<span class="x">+</span></summary>
+      <div class="a">空き枠も確定日時も<b>すべて日本時間で表示</b>されるので、時差の計算は不要です。エキスパート側には現地時間で表示され、換算はLocoreが自動で行います。多くのエキスパートが日本時間の夜・週末に枠を設定しています。</div>
+    </details>
+    <details>
+      <summary>キャンセルはできますか？<span class="x">+</span></summary>
+      <div class="a">エキスパートが承諾する前のリクエストは、いつでも取り消せます。確定後に都合が悪くなった場合は、できるだけ早くチャットで相手に連絡して日程を調整してください。決済導入にあわせて、キャンセルポリシーを正式に整備する予定です。</div>
+    </details>
+    <details>
+      <summary>相談相手と合わなかったら？<span class="x">+</span></summary>
+      <div class="a">そのために<b>申し込み前の無料チャット</b>があります。話し方や詳しさが合うか、まず質問して確かめてください。相談後はレビューで率直な評価を残せます。やり取りで問題があった場合は、運営までご連絡ください。</div>
+    </details>
+  </div>
+</div></section>
+
+<!-- ===================== 最終CTA（線なし） ===================== -->
+<section class="sec" style="padding-top:24px;padding-bottom:88px"><div class="wrap">
+  <div class="finalin">
+    <h2>あなたの海外を、<b>経験者</b>と。</h2>
+    <p>検索を3時間続けるより、住んでいる人にひとこと聞いてみませんか。</p>
+    <div class="ctas">
+      <a class="btn btn-p" href="#">エキスパートを探す<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></a>
+      <a class="tlink" href="#"><u>エキスパートとして参加</u></a>
+    </div>
+    <div class="note">会員登録は無料。チャットでの事前相談から始められます。</div>
+  </div>
+</div></section>
+
+<!-- ===================== footer ===================== -->
+<footer>
+  <div class="footin">
+    <div class="fl">
+      <a class="logo" href="#"><span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.3-6.5-10a6.5 6.5 0 1 1 13 0c0 4.7-6.5 10-6.5 10z"/><circle cx="12" cy="10.6" r="2.4"/></svg></span>Locore</a>
+      <p>海外に住む日本人の「現地で暮らしているからこそ知っていること」を、30分から相談できるサービスです。</p>
+    </div>
+    <div class="fcol"><b>相談する</b>
+      <a href="#">エキスパートを探す</a>
+      <a href="#">使い方</a>
+      <a href="#">読みもの</a>
+    </div>
+    <div class="fcol"><b>教える</b>
+      <a href="#">エキスパート登録</a>
+      <a href="#">居住認証について</a>
+    </div>
+    <div class="fcol"><b>Locore</b>
+      <a href="#">運営会社</a>
+      <a href="#">利用規約</a>
+      <a href="#">プライバシーポリシー</a>
+    </div>
+  </div>
+  <div class="fbottom"><div class="fbottomin">
+    <span>© 2026 Locore</span>
+    <div class="r"><a href="#">特定商取引法に基づく表記</a><a href="#">お問い合わせ</a></div>
+  </div></div>
+</footer>
+
+<script>
+  // 相談者 / エキスパート のタブ切替（線は .tl の rail にあるため切替後も連続）
+  function swTab(which){
+    var isUser = which === 'user';
+    document.getElementById('panel-user').hidden = !isUser;
+    document.getElementById('panel-expert').hidden = isUser;
+    document.getElementById('tab-user').classList.toggle('on', isUser);
+    document.getElementById('tab-expert').classList.toggle('on', !isUser);
+  }
+</script>
+</body>
+</html>
