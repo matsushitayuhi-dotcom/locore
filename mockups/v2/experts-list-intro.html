@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — /experts 一覧（Intro ベース）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ===== 現行トークン（apps/web/app/globals.css と同値） ===== */
+  :root{
+    --lime-50:#F5FBE2;--lime-100:#E3F7B8;--lime-200:#CDF088;--lime-300:#B6E84E;--lime:#A8E01C;--lime-700:#5E8B0E;--lime-900:#3D5E07;
+    --bg:#FFFFFF;--card:#FFFFFF;--muted:#F4F4F5;--bd:#E3E3DA;--bd2:#CCCCC1;
+    --n300:#a5a09a;--n400:#837f78;--n500:#71717a;--n700:#3f3f46;--n900:#18181b;--n950:#0e0e0f;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--n900);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.7}
+  a{color:inherit;text-decoration:none}
+  svg{display:block}
+  .num{font-family:var(--num);font-variant-numeric:tabular-nums}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 40px}
+
+  /* モック注記（実装対象外） */
+  .note{background:var(--n900);color:#fff;font-size:12px;padding:8px 24px;display:flex;gap:14px;align-items:center}
+  .note b{color:var(--lime)}
+  .note span{color:#a1a1aa}
+
+  /* 共有ヘッダー（現行のまま。触らない） */
+  .hdr{background:var(--n900);height:48px;display:flex;align-items:center}
+  .hdr .wrap{display:flex;align-items:center;gap:26px;width:100%}
+  .hdr .logo{color:var(--lime);font-weight:700;font-size:18px;letter-spacing:-.01em}
+  .hdr nav{margin:0 auto;display:flex;gap:26px;font-size:13px;font-weight:600;color:#e4e4e7}
+  .hdr nav .on{color:var(--lime)}
+  .hdr .av{width:26px;height:26px;border-radius:50%;background:#52525b}
+
+  /* ===== 1. Intro 型の大見出し：太字の一文 + 薄い続き ===== */
+  .lede{padding:44px 0 26px}
+  .lede h1{font-size:clamp(24px,3.1vw,34px);font-weight:300;line-height:1.45;letter-spacing:-.005em;color:var(--n500)}
+  .lede h1 b{font-weight:700;color:var(--n900)}
+  .lede p{margin-top:10px;font-size:13.5px;color:var(--n500)}
+  .lede p .v{display:inline-flex;align-items:center;gap:5px;margin-right:16px;color:var(--n700)}
+  .lede p .v svg{width:14px;height:14px;color:var(--lime-700)}
+
+  /* ===== 2. 国の円形カテゴリ（Intro の category circles）===== */
+  .cats{display:flex;align-items:flex-start;gap:0;border-bottom:1px solid var(--bd)}
+  .catrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1;padding-bottom:0}
+  .catrow::-webkit-scrollbar{display:none}
+  .cat{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:10px;padding:2px 12px 12px;border-bottom:2px solid transparent;color:var(--n500);font-size:12px;font-weight:500;white-space:nowrap;transition:.15s}
+  .cat .ring{width:74px;height:74px;border-radius:50%;overflow:hidden;background:var(--muted);position:relative;border:1px solid var(--bd)}
+  .cat .ring img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.9)}
+  .cat .ring i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-family:var(--num);font-size:15px;font-weight:700;letter-spacing:.06em;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.45)}
+  .cat .ring.all{background:var(--n900);border-color:var(--n900)}
+  .cat .ring.all i{text-shadow:none;color:var(--lime);font-size:18px}
+  .cat small{display:block;text-align:center;font-family:var(--num);font-size:10.5px;color:var(--n400);margin-top:-6px}
+  .cat:hover{color:var(--n900)}
+  .cat.on{color:var(--n900);font-weight:700;border-bottom-color:var(--n900)}
+  .cat.on .ring{box-shadow:0 0 0 3px var(--lime)}
+  .filterbtn{flex:0 0 auto;margin-left:18px;padding-left:18px;border-left:1px solid var(--bd);align-self:center;margin-bottom:12px}
+  .filterbtn button{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--bd2);background:var(--card);border-radius:12px;padding:12px 18px;font:600 13px var(--jp);color:var(--n900);cursor:pointer}
+  .filterbtn button svg{width:15px;height:15px}
+  .filterbtn button:hover{border-color:var(--n900)}
+
+  /* 展開したフィルタ行（フィルターボタン押下時。GET フォーム） */
+  .fpanel{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:14px 0 0}
+  .sel{appearance:none;border:1px solid var(--bd2);background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%233f3f46' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;border-radius:12px;padding:10px 34px 10px 14px;font:600 13px var(--jp);color:var(--n900)}
+  .chip{border:1px solid var(--bd2);background:var(--card);border-radius:9999px;padding:7px 14px;font-size:12.5px;font-weight:500;color:var(--n700)}
+  .chip.on{background:var(--n900);border-color:var(--n900);color:#fff;font-weight:700}
+  .fpanel .count{margin-left:auto;font-size:12.5px;color:var(--n500)}
+  .fpanel .count b{font-family:var(--num);font-size:15px;color:var(--n900)}
+
+  /* ===== 3. セクション見出し（Intro: "Top Experts. Access to …"）===== */
+  .sec{padding-top:38px}
+  .sec h2{font-size:clamp(19px,2.2vw,24px);font-weight:300;line-height:1.45;color:var(--n500);max-width:36em}
+  .sec h2 b{font-weight:700;color:var(--n900)}
+  .sec .all{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:14px;color:var(--n700);text-decoration:underline;text-underline-offset:5px;text-decoration-color:var(--bd2)}
+  .sec .all svg{width:14px;height:14px}
+  .sec .all:hover{color:var(--n900);text-decoration-color:var(--n900)}
+
+  /* ===== 4. 横スクロール列 + 縦長カード（Intro の 4:5 portrait card）===== */
+  .rail{position:relative;margin-top:20px}
+  .row{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 5*14px)/6);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:6px}
+  .row::-webkit-scrollbar{display:none}
+  .row>*{scroll-snap-align:start}
+  .arrow{position:absolute;right:-18px;top:calc(50% - 60px);width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--bd);box-shadow:var(--sh-md);display:grid;place-items:center;cursor:pointer}
+  .arrow svg{width:16px;height:16px}
+  .arrow:hover{border-color:var(--n900)}
+
+  .ex{display:block}
+  .ex .ph{position:relative;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:linear-gradient(160deg,#2b2f2a,#151615)}
+  .ex .ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.16,1,.3,1)}
+  .ex:hover .ph img{transform:scale(1.04)}
+  /* 人物写真は出さない → 都市写真の上にイニシャルの丸 */
+  .ex .mono{position:absolute;left:10px;top:10px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.92);color:var(--n900);display:grid;place-items:center;font-size:17px;font-weight:700;backdrop-filter:blur(6px)}
+  .ex .city{position:absolute;right:10px;top:12px;font-family:var(--num);font-size:10.5px;font-weight:700;letter-spacing:.12em;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .ex .pill{position:absolute;left:10px;bottom:10px;display:inline-flex;align-items:center;gap:5px;background:var(--n900);color:#fff;border-radius:8px;padding:5px 9px;font-size:11.5px;font-weight:700}
+  .ex .pill svg{width:12px;height:12px;color:var(--lime)}
+  .ex .times{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#fff;color:var(--n900);border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;box-shadow:var(--sh-md);opacity:0;transition:.2s}
+  .ex:hover .times{opacity:1}
+  .ex:hover .ph::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.28)}
+  .ex .name{display:flex;align-items:center;gap:5px;margin-top:10px;font-size:15.5px;font-weight:700;line-height:1.3}
+  .ex .name svg{width:15px;height:15px;color:var(--lime-700);flex:0 0 auto}
+  .ex .price{margin-top:3px;font-size:13px;color:var(--n700)}
+  .ex .price b{font-family:var(--num);font-weight:600;color:var(--n900)}
+  .ex .price i{font-style:normal;color:var(--n300);margin:0 5px}
+  .ex .loc{margin-top:2px;font-size:12px;color:var(--n500)}
+  .ex .desc{margin-top:6px;font-size:12.5px;line-height:1.6;color:var(--n500);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* 絞り込み後（1 列のグリッド表示）*/
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px 14px;margin-top:20px}
+
+  /* ===== 5. 使い方 3 タイル（Intro の "How it works"）===== */
+  .how{margin-top:64px;padding-top:40px;border-top:1px solid var(--bd)}
+  .how h2{font-size:22px;font-weight:500}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+  .tile{background:var(--muted);border-radius:14px;padding:30px 22px 26px;text-align:center}
+  .tile .ic{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;border:1.5px solid var(--n900);display:grid;place-items:center}
+  .tile .ic svg{width:24px;height:24px}
+  .tile b{display:block;font-size:15.5px;font-weight:600}
+  .tile p{margin-top:6px;font-size:13px;color:var(--n500);max-width:22em;margin-left:auto;margin-right:auto}
+
+  /* ===== 6. フッター前の帯（Intro の黒フッター上部）===== */
+  .join{margin:56px 0 0;background:var(--n900);color:#fff;border-radius:18px;padding:40px 44px;display:flex;align-items:center;gap:30px;flex-wrap:wrap}
+  .join h3{font-size:22px;font-weight:300;line-height:1.45;max-width:20em}
+  .join h3 b{font-weight:700;color:var(--lime)}
+  .join a{margin-left:auto;border:1px solid #fff;border-radius:10px;padding:14px 26px;font-size:15px;font-weight:600}
+  .join a:hover{background:#fff;color:var(--n900)}
+  .foot{padding:36px 0 60px;font-size:11.5px;color:var(--n400)}
+
+  @media (max-width:1100px){.row{grid-auto-columns:calc((100% - 3*14px)/4)}.grid{grid-template-columns:repeat(3,1fr)}}
+  @media (max-width:760px){.wrap{padding:0 20px}.row{grid-auto-columns:calc((100% - 14px)/2)}.grid{grid-template-columns:repeat(2,1fr)}.tiles{grid-template-columns:1fr}.arrow{display:none}.cat .ring{width:62px;height:62px}.filterbtn{display:none}}
+  @media (prefers-reduced-motion: reduce){.ex .ph img,.ex .times{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="note"><b>MOCK</b> /experts 一覧 — Intro ベース <span>— 白基調・ライム・ゴシック。人物写真は出さず「都市写真 + イニシャル」。都市写真は仮（Unsplash）。名前・料金はシードデータ準拠。</span></div>
+
+<header class="hdr"><div class="wrap"><span class="logo">Locore</span><nav><span class="on">エキスパートを探す</span><span>使い方</span></nav><span class="av"></span><span style="color:#fff">≡</span></div></header>
+
+<main class="wrap">
+
+  <!-- 1. lede -->
+  <section class="lede">
+    <h1><b>エキスパートを選ぶ。</b>日程を決める。現地の30分を、オンラインで聞く。</h1>
+    <p>
+      <span class="v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>全員、書類審査による居住認証済み</span>
+      <span class="v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>30分 ¥3,000〜</span>
+    </p>
+  </section>
+
+  <!-- 2. country circles -->
+  <div class="cats">
+    <div class="catrow">
+      <a class="cat on" href="#"><span class="ring all"><i>ALL</i></span>すべての国<small>8名</small></a>
+      <a class="cat" href="#"><span class="ring"><img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=200&q=70" alt=""><i>FR</i></span>フランス<small>2名</small></a>
+      <a class="cat" href="#"><span class="ring"><img src="https://images.unsplash.com/photo-1560969184-10fe8719e047?w=200&q=70" alt=""><i>DE</i></span>ドイツ<small>1名</small></a>
+      <a class="cat" href="#"><span class="ring"><img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=200&q=70" alt=""><i>GB</i></span>イギリス<small>1名</small></a>
+      <a class="cat" href="#"><span class="ring"><img src="https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=200&q=70" alt=""><i>TH</i></span>タイ<small>1名</small></a>
+      <a class="cat" href="#"><span class="ring"><img src="https://images.unsplash.com/photo-1514395462725-fb4566210144?w=200&q=70" alt=""><i>AU</i></span>オーストラリア<small>1名</small></a>
+      <a class="cat" href="#"><span class="ring"><img src="https://images.unsplash.com/photo-1559511260-66a654ae982a?w=200&q=70" alt=""><i>CA</i></span>カナダ<small>1名</small></a>
+      <a class="cat" href="#"><span class="ring"><img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=200&q=70" alt=""><i>US</i></span>アメリカ<small>1名</small></a>
+    </div>
+    <div class="filterbtn"><button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M10 18h4"/></svg>絞り込む</button></div>
+  </div>
+  <!-- 絞り込むを押した時だけ出る行（GET フォーム）。国を選ぶとその国の都市だけが出る -->
+  <form class="fpanel" onsubmit="return false">
+    <select class="sel"><option>すべての都市</option></select>
+    <select class="sel"><option>料金（30分〜）</option><option>〜 ¥3,000</option><option>¥3,001 〜 ¥4,000</option><option>¥4,001 〜</option></select>
+    <a class="chip on" href="#">すべて</a><a class="chip" href="#">移住</a><a class="chip" href="#">留学</a><a class="chip" href="#">駐在準備</a><a class="chip" href="#">旅行</a><a class="chip" href="#">子育て・教育</a><a class="chip" href="#">住まい</a><a class="chip" href="#">仕事・起業</a><a class="chip" href="#">生活手続き</a>
+    <span class="count"><b>8</b> 名</span>
+  </form>
+
+  <!-- 3+4. rows by theme -->
+  <section class="sec">
+    <h2><b>移住・駐在。</b>ビザ、住まい、手続き。「実際のところ」を住んでいる人に。</h2>
+    <a class="all" href="#">すべて見る<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    <div class="rail">
+      <div class="row">
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1560969184-10fe8719e047?w=600&q=70" alt=""><span class="mono">山</span><span class="city">BERLIN</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">山本 実咲<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,000</b><i>•</i>30分〜</div>
+          <div class="loc">ドイツ・ベルリン在住 6年 ・ フリーランスデザイナー</div>
+          <p class="desc">フリーランスビザで働くデザイナー。ドイツの役所手続き・保険・住民登録のつまずきポイントを先回りできます。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=600&q=70" alt=""><span class="mono">中</span><span class="city">BANGKOK</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">中村 大輔<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,000</b><i>•</i>30分〜</div>
+          <div class="loc">タイ・バンコク在住 10年 ・ 現地法人 経営</div>
+          <p class="desc">現地法人を経営して10年。駐在の立ち上げ、コンドミニアム選び、タイ移住の生活コスト感覚まで具体的に話せます。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=70" alt=""><span class="mono">佐</span><span class="city">PARIS</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">佐々木 彩<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥4,000</b><i>•</i>30分〜</div>
+          <div class="loc">フランス・パリ在住 8年 ・ 輸入雑貨会社 経営</div>
+          <p class="desc">元日系商社の駐在から現地で起業。ビザ・会社設立・アパート探しまで、渡仏まわりは一通り経験しています。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&q=70" alt=""><span class="mono">高</span><span class="city">LONDON</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">高橋 健太郎<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,500</b><i>•</i>30分〜</div>
+          <div class="loc">イギリス・ロンドン在住 5年 ・ 金融系 現地採用</div>
+          <p class="desc">金融系の駐在で渡英し、現地採用に切替。子供2人が現地の小学校に通っており、学校選びと教育事情が得意です。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=70" alt=""><span class="mono">藤</span><span class="city">NEW YORK</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">藤田 絵里<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥5,000</b><i>•</i>30分〜</div>
+          <div class="loc">アメリカ・ニューヨーク在住 7年 ・ 現地企業デザイナー</div>
+          <p class="desc">美大留学からそのまま現地企業のデザイナーに。ポートフォリオ・学校選び・OPT後の就職のリアルを話せます。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1559511260-66a654ae982a?w=600&q=70" alt=""><span class="mono">森</span><span class="city">VANCOUVER</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">森本 千夏<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,500</b><i>•</i>30分〜</div>
+          <div class="loc">カナダ・バンクーバー在住 6年 ・ 元留学エージェント</div>
+          <p class="desc">元留学エージェント勤務で、現地カレッジ卒。学校の「パンフレットに載らない評判」とホームステイ事情に詳しいです。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1514395462725-fb4566210144?w=600&q=70" alt=""><span class="mono">小</span><span class="city">MELBOURNE</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">小川 遥<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,000</b><i>•</i>30分〜</div>
+          <div class="loc">オーストラリア・メルボルン在住 4年 ・ カフェマネージャー</div>
+          <p class="desc">ワーキングホリデーから現地就職。語学学校選び、仕事探し、シェアハウスの探し方が得意です。</p>
+        </a>
+      </div>
+      <button class="arrow" type="button" aria-label="次へ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2><b>留学・ワーホリ。</b>学校選びから最初の3か月の設計まで、卒業した人・働いた人に。</h2>
+    <a class="all" href="#">すべて見る<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    <div class="rail">
+      <div class="row">
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1514395462725-fb4566210144?w=600&q=70" alt=""><span class="mono">小</span><span class="city">MELBOURNE</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">小川 遥<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,000</b><i>•</i>30分〜</div>
+          <div class="loc">オーストラリア・メルボルン在住 4年</div>
+          <p class="desc">ワーキングホリデーから現地就職。語学学校選び、仕事探し、シェアハウスの探し方が得意です。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1559511260-66a654ae982a?w=600&q=70" alt=""><span class="mono">森</span><span class="city">VANCOUVER</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">森本 千夏<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,500</b><i>•</i>30分〜</div>
+          <div class="loc">カナダ・バンクーバー在住 6年</div>
+          <p class="desc">元留学エージェント勤務で、現地カレッジ卒。学校の「パンフレットに載らない評判」とホームステイ事情に詳しいです。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=70" alt=""><span class="mono">藤</span><span class="city">NEW YORK</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">藤田 絵里<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥5,000</b><i>•</i>30分〜</div>
+          <div class="loc">アメリカ・ニューヨーク在住 7年</div>
+          <p class="desc">美大留学からそのまま現地企業のデザイナーに。ポートフォリオ・学校選び・OPT後の就職のリアルを話せます。</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2><b>子育て・教育。</b>保育園、現地校、帯同家族の立ち上げ。いま子育て中の人に。</h2>
+    <a class="all" href="#">すべて見る<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    <div class="rail">
+      <div class="row">
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=70" alt=""><span class="mono">岡</span><span class="city">PARIS</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">岡田 真由<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,500</b><i>•</i>30分〜</div>
+          <div class="loc">フランス・パリ在住 11年</div>
+          <p class="desc">パリで2人の子供を育てる日仏家庭。保育園（クレッシュ）から現地小学校まで、フランスの子育て・教育制度を実体験で語れます。</p>
+        </a>
+        <a class="ex" href="#">
+          <div class="ph"><img src="https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&q=70" alt=""><span class="mono">高</span><span class="city">LONDON</span><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span><span class="times">空き枠を見る</span></div>
+          <div class="name">高橋 健太郎<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></div>
+          <div class="price"><b>¥3,500</b><i>•</i>30分〜</div>
+          <div class="loc">イギリス・ロンドン在住 5年</div>
+          <p class="desc">金融系の駐在で渡英し、現地採用に切替。子供2人が現地の小学校に通っており、学校選びと教育事情が得意です。</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. how it works -->
+  <section class="how">
+    <h2>使い方</h2>
+    <div class="tiles">
+      <div class="tile"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><circle cx="11" cy="10" r="2.2"/><path d="M7.5 15.5c.8-1.6 2-2.3 3.5-2.3s2.7.7 3.5 2.3"/></svg></span><b>エキスパートを探す</b><p>国とテーマで絞り込み、プロフィールと相談メニューを見て選びます</p></div>
+      <div class="tile"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 3v3M16 3v3M4 10h16M9 15h3"/></svg></span><b>空き枠を選んで予約</b><p>30分または60分。日本時間の空き枠から選んでリクエスト。チャットでの事前相談も無料です</p></div>
+      <div class="tile"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><rect x="8" y="9.5" width="6" height="5" rx="1"/><path d="m14 11 2.5-1.5v5L14 13"/></svg></span><b>オンラインで話す</b><p>ビデオ通話で、あなたの事情に合わせた「現地のリアル」を聞けます</p></div>
+    </div>
+  </section>
+
+  <!-- 6. join -->
+  <section class="join">
+    <h3>海外在住のあなたへ。<br>あなたの「暮らしの知識」が、<b>誰かの30分</b>になります。</h3>
+    <a href="#">エキスパートとして登録</a>
+  </section>
+  <div class="foot">© Locore Inc. 2026</div>
+</main>
+
+</body>
+</html>
