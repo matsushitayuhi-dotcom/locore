@@ -28,11 +28,12 @@ export default async function BecomeWriterPage() {
           <h1
             className="mt-2 text-[28px] font-semibold tracking-tight sm:text-[36px]"
           >
-            エキスパートとして登録する
+            海外の大学で学ぶあなた・学んだあなたへ
           </h1>
           <p className="mt-3 text-[14px] leading-[1.9] text-foreground/70">
-            海外での暮らしの知識を、30分からのオンライン相談として提供できます。
-            居住認証は別途、現地居住者として認証バッジを得るための任意の申請です。
+            出願で悩んだあの時間が、後輩の30分になります。エッセイ・出願・現地生活の
+            経験を、30分からのオンライン相談として提供できます。
+            居住認証は別途、現地在住（在学・勤務）の認証バッジを得るための任意の申請です。
           </p>
         </header>
 

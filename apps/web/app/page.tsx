@@ -23,9 +23,9 @@ import { ExpertCard } from '@/components/experts/ExpertCard';
 export const revalidate = 3600;
 
 export const metadata = {
-  title: 'Locore — 現地に住む日本人に、30分だけ相談できる',
+  title: 'Locore — 海外大学の在学生・卒業生に、留学相談',
   description:
-    '移住、留学、駐在準備、こだわりの旅行。ガイドブックにも検索にも出てこない「実際のところ」を、居住認証済みの海外在住日本人にオンラインで直接相談できます。30分 ¥3,000〜。',
+    '大学院・MBA・学部の出願から現地生活まで。予備校の一般論ではなく、いま現地で学ぶ先輩のリアルを30分¥3,000〜で。',
 };
 
 export default async function HomePage() {
@@ -39,17 +39,17 @@ export default async function HomePage() {
           <div>
             <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-[12.5px] font-bold text-primary-900 shadow-xs">
               <span className="h-[7px] w-[7px] rounded-full bg-primary-500" aria-hidden />
-              居住認証つき・海外在住日本人への相談サービス
+              在学生・アルムナイによる留学相談・伴走
             </span>
             <h1 className="text-[clamp(30px,4.6vw,46px)] font-bold leading-[1.36] tracking-tight">
-              現地に住む日本人に、
+              いまその大学に通う先輩に、
               <br />
-              <span className="text-primary-700">30分だけ</span>相談できる。
+              <span className="text-primary-700">30分から</span>相談できる。
             </h1>
             <p className="mt-5 max-w-[33em] text-[15.5px] leading-relaxed text-neutral-700">
-              移住、留学、駐在準備、こだわりの旅行——。ガイドブックにも検索にも出てこない「実際のところ」を、
-              <b className="font-bold">いま現地で暮らす日本人</b>
-              にオンラインで直接聞けます。
+              エッセイも、研究室選びも、現地の家探しも。
+              <b className="font-bold">合格した先輩・いま通っている先輩</b>
+              に、あなたの場合を直接聞けます。
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3.5">
               <Link
@@ -89,14 +89,14 @@ export default async function HomePage() {
             <div className="absolute left-[8%] top-[6%] w-[76%] rounded-2xl border border-border bg-card p-5 shadow-md sm:w-[63%]">
               <div className="flex items-center gap-3.5">
                 <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-primary-100 text-[19px] font-bold text-primary-900">
-                  彩
+                  里
                 </span>
                 <div>
                   <div className="text-[15.5px] font-bold leading-tight">
-                    佐々木 彩
+                    高村 里奈
                   </div>
                   <div className="mt-0.5 text-[12px] text-neutral-500">
-                    🇫🇷 パリ在住8年・現地で起業
+                    🇺🇸 ボストン・HBS在学中
                   </div>
                 </div>
                 <span className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
@@ -105,7 +105,7 @@ export default async function HomePage() {
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {['移住', '仕事・起業', '生活手続き'].map((t) => (
+                {['MBA', 'エッセイ・出願書類', '面接対策'].map((t) => (
                   <span
                     key={t}
                     className="rounded-full bg-muted px-[11px] py-1 text-[11px] font-medium text-neutral-700"
@@ -115,7 +115,7 @@ export default async function HomePage() {
                 ))}
               </div>
               <div className="mt-3.5 flex items-baseline gap-1.5 border-t border-border pt-3">
-                <b className="text-[19px] font-bold tabular-nums">¥4,000</b>
+                <b className="text-[19px] font-bold tabular-nums">¥6,000</b>
                 <span className="text-[12px] text-neutral-500">/ 30分〜</span>
               </div>
             </div>
@@ -123,17 +123,17 @@ export default async function HomePage() {
               <span className="block text-[10.5px] text-white/60">
                 相談者
               </span>
-              来月からパリ駐在が決まりました。子連れで住むエリアの「実際のところ」を教えてほしいです…!
+              来年秋入学でMBA出願を予定しています。エッセイの方向性を相談したいです…!
             </div>
             <div className="absolute bottom-[4%] left-[4%] flex max-w-[66%] items-start gap-2.5 rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-[12.5px] leading-relaxed shadow-md">
               <span className="mt-0.5 grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-primary-100 text-[12px] font-bold text-primary-900">
-                彩
+                里
               </span>
               <div>
                 <span className="block text-[10.5px] text-neutral-500">
-                  佐々木さん
+                  高村さん
                 </span>
-                もちろんです。お子さんの年齢と職場の場所を教えてください。候補を3つに絞りましょう。
+                もちろんです。ご職歴とターゲット校を教えてください。エッセイの軸を一緒に絞りましょう。
               </div>
             </div>
           </div>
@@ -154,12 +154,12 @@ export default async function HomePage() {
               使い方は、3ステップ。
             </h2>
             <p className="mt-3 text-[14.5px] text-neutral-500">
-              知りたい街のエキスパートを見つけて、話すだけ。準備も移動もいりません。
+              志望校の先輩を見つけて、話すだけ。準備も移動もいりません。
             </p>
           </div>
           <div className="grid gap-5 md:grid-cols-3">
             <HowStep no="01" icon={<Search className="h-[22px] w-[22px]" aria-hidden />} title="探す">
-              都市と相談したいテーマで検索。プロフィールと相談メニュー、レビューを見て、自分に合う人を選びます。
+              国と相談したいテーマで検索。プロフィールと相談メニュー、レビューを見て、自分に合う先輩を選びます。
             </HowStep>
             <HowStep
               no="02"
@@ -171,10 +171,10 @@ export default async function HomePage() {
             <HowStep
               no="03"
               icon={<Video className="h-[22px] w-[22px]" aria-hidden />}
-              title="オンラインで話す"
+              title="セッションで伴走"
               soon
             >
-              30分または60分、ビデオ通話でじっくり。あなたの事情に合わせた「現地のリアル」が聞けます。
+              30分または60分、ビデオ通話でじっくり。出願から渡航後まで、あなたの状況に合わせて伴走してもらえます。
             </HowStep>
           </div>
         </div>
@@ -190,10 +190,10 @@ export default async function HomePage() {
                   Experts
                 </span>
                 <h2 className="text-[clamp(23px,3vw,30px)] font-bold">
-                  この街の「先輩」に聞く。
+                  その大学の「先輩」に聞く。
                 </h2>
                 <p className="mt-3 text-[14.5px] text-neutral-500">
-                  全員が書類審査による居住認証済み。いま、本当にその街で暮らしている人たちです。
+                  全員が書類審査による居住認証済み。いま、本当に現地で学んでいる・学んだ人たちです。
                 </p>
               </div>
               <Link
@@ -221,12 +221,12 @@ export default async function HomePage() {
               Trust
             </span>
             <h2 className="text-[clamp(23px,3vw,30px)] font-bold leading-snug">
-              「本当に現地在住」だけが、
+              「本当にそこで学んだ人」だけが、
               <br />
               答えられることがある。
             </h2>
             <p className="mt-3 max-w-[640px] text-[14.5px] text-neutral-500">
-              SNSで見つけた相談相手は、本当にその街に住んでいるでしょうか。Locoreのエキスパートは全員、書類審査で現地の居住実態を確認しています。
+              SNSで見つけた「合格者」は本物でしょうか。Locoreのエキスパートは全員、書類審査で現地在住（在学・勤務）の実態を確認しています。
             </p>
             <div className="mt-7 flex flex-col">
               <TrustStep n={1} title="居住を証明する書類の提出" last={false}>

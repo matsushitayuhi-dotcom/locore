@@ -32,7 +32,7 @@ import { AboutHowTabs } from './AboutHowTabs';
 export const metadata = {
   title: '使い方',
   description:
-    '海外のことは、現地にいる人と。移住・留学・駐在準備・旅行の「あなたの場合はどうか」を、居住認証済みの海外在住日本人に30分からオンラインで相談できます。ご利用方法・居住認証・料金の説明ページです。',
+    '留学のことは、通っている先輩と。学部・大学院・MBA・語学・交換留学の「あなたの場合はどうか」を、居住認証済みの在学生・アルムナイに30分からオンラインで相談できます。ご利用方法・居住認証・料金の説明ページです。',
 };
 
 /* ===== 小物 ===== */
@@ -103,9 +103,9 @@ function SfHit({ shadow = true }: { shadow?: boolean }) {
       <div className="flex items-center gap-[11px]">
         <PhotoAva src="/experts/aya.jpg" size="h-11 w-11" />
         <div>
-          <div className="text-[13.5px] font-extrabold">佐々木 彩</div>
+          <div className="text-[13.5px] font-extrabold">高村 里奈</div>
           <div className="mt-px text-[11.5px] text-neutral-500">
-            🇫🇷 パリ在住 8年 ・ 現地で起業
+            🇺🇸 ボストン ・ HBS在学中
           </div>
         </div>
         <span className="ml-auto">
@@ -114,7 +114,7 @@ function SfHit({ shadow = true }: { shadow?: boolean }) {
       </div>
       <div className="mt-2.5 flex items-center gap-2 border-t border-dashed border-border pt-2.5">
         <span className="text-[14px] font-extrabold tabular-nums">
-          ¥4,000
+          ¥6,000
           <small className="text-[9.5px] font-normal text-neutral-500"> / 30分〜</small>
         </span>
         <span className="ml-auto text-[10.5px] font-bold text-neutral-700">
@@ -195,14 +195,14 @@ function UserFlowPanel() {
       {/* ① 探す */}
       <div className="pb-[72px] pt-2">
         <Milestone n={1} now>
-          エキスパートを探す
+          情報収集
         </Milestone>
         <StepRow
           cop={
             <>
-              <StepH>気になる人を探す</StepH>
+              <StepH>志望校の先輩を探す</StepH>
               <StepP>
-                興味のある場所やテーマで絞り込んだり、検索したり。エキスパートのプロフィールや相談メニュー、レビューを見ながらコンタクトを取りたい人を決めます。表示されるエキスパートは全員、当サイトで居住実績の認定を行っているのでご安心してご相談いただけます。
+                学校・専攻・相談テーマで絞り込んだり、検索したり。先輩のプロフィールや相談メニュー、レビューを見ながらコンタクトを取りたい人を決めます。表示されるエキスパートは全員、当サイトで現地の居住実績（在学・勤務）の認定を行っているのでご安心してご相談いただけます。
               </StepP>
             </>
           }
@@ -211,7 +211,7 @@ function UserFlowPanel() {
               <div className="flex gap-2">
                 <span className="flex flex-1 items-center gap-[9px] rounded-full border-[1.5px] border-border-strong bg-card px-4 py-[11px] text-[12.5px] text-neutral-700">
                   <Search className="h-3.5 w-3.5 shrink-0 text-neutral-500" aria-hidden />
-                  <b className="font-bold text-foreground">パリ 子連れ移住</b>
+                  <b className="font-bold text-foreground">MBA エッセイ</b>
                 </span>
                 <span className="inline-flex shrink-0 items-center rounded-full bg-primary-500 px-5 text-[12.5px] font-extrabold text-neutral-950">
                   探す
@@ -219,9 +219,9 @@ function UserFlowPanel() {
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 <span className="rounded-full bg-neutral-900 px-3 py-1 text-[10.5px] font-bold text-white">
-                  🇫🇷 フランス
+                  🇺🇸 アメリカ
                 </span>
-                {['移住', '子育て', '¥5,000まで'].map((t) => (
+                {['MBA', 'エッセイ', '¥6,000まで'].map((t) => (
                   <span
                     key={t}
                     className="rounded-full border border-border bg-card px-3 py-1 text-[10.5px] font-bold text-neutral-700"
@@ -244,13 +244,13 @@ function UserFlowPanel() {
 
       {/* ② チャット */}
       <div className="pb-[72px] pt-2">
-        <Milestone n={2}>チャットで相談（無料）</Milestone>
+        <Milestone n={2}>出願校決め</Milestone>
         <StepRow
           cop={
             <>
-              <StepH>カジュアル相談</StepH>
+              <StepH>チャットで出願校を壁打ち（無料）</StepH>
               <StepP>
-                直接話をする前に本人とコンタクト。相談内容に適したエキスパートかを事前に確認することができます。
+                直接話をする前に本人とコンタクト。出願校の候補や相談内容に適した先輩かを、事前に確認することができます。
               </StepP>
               <span className="mt-3.5 inline-flex items-center gap-1.5 rounded-full border border-primary-300 bg-primary-100 px-[15px] py-[5px] text-[12.5px] font-bold text-primary-900">
                 ここまで完全無料
@@ -262,7 +262,7 @@ function UserFlowPanel() {
               <div className="flex items-center gap-2.5 border-b border-border pb-3">
                 <PhotoAva src="/experts/aya.jpg" size="h-9 w-9" />
                 <div>
-                  <div className="text-[13px] font-extrabold">佐々木 彩</div>
+                  <div className="text-[13px] font-extrabold">高村 里奈</div>
                   <div className="text-[10px] font-bold text-primary-700">● オンライン</div>
                 </div>
                 <span className="ml-auto inline-flex items-center gap-[5px] rounded-full border border-primary-300 bg-primary-100 px-[11px] py-[3px] text-[10px] font-extrabold text-primary-900">
@@ -271,11 +271,11 @@ function UserFlowPanel() {
               </div>
               <div className="mt-3.5 flex flex-col gap-[9px] text-[12.5px] leading-[1.8]">
                 <div className="max-w-[88%] self-end rounded-[14px] rounded-br-[5px] bg-neutral-900 px-[13px] py-[9px] text-white">
-                  来春パリ移住予定です。ビザとエリア選び、30分で相談できますか？
+                  来年秋入学でMBA出願予定です。出願校を3校に絞る相談、30分でできますか？
                 </div>
                 {/* エキスパート側は薄ライム地 + 濃文字（保護色回避のため色を明示） */}
                 <div className="max-w-[88%] self-start rounded-[14px] rounded-bl-[5px] border border-primary-100 bg-primary-50 px-[13px] py-[9px] text-foreground">
-                  できますよ。現在のお仕事と予算感を事前に教えてもらえると、当日が濃くなります。
+                  できますよ。ご職歴とスコアを事前に教えてもらえると、当日が濃くなります。
                 </div>
               </div>
               <div className="mt-3.5 flex items-center gap-2 rounded-full border-[1.5px] border-border-strong bg-card py-[9px] pl-4 pr-[9px] text-[11.5px] text-neutral-400">
@@ -291,11 +291,14 @@ function UserFlowPanel() {
 
       {/* ③ 日程（時差の話を統合） */}
       <div className="pb-[72px] pt-2">
-        <Milestone n={3}>相談日を決める</Milestone>
+        <Milestone n={3}>出願書類</Milestone>
         <StepRow
           cop={
             <>
-              <StepH>空き枠から選ぶだけ</StepH>
+              <StepH>エッセイ・書類は、セッションで伴走</StepH>
+              <StepP>
+                エッセイや研究計画のレビューは、空き枠からセッションを予約するだけ。
+              </StepP>
               <div className="mt-3.5 flex flex-col gap-[9px]">
                 <MiniCheck>
                   空き枠も確定日時も<b>ユーザーの現地時間で表示</b>
@@ -369,12 +372,14 @@ function UserFlowPanel() {
 
       {/* ④ 通話（アプリ不要・Zoom/Meet を統合） */}
       <div className="pb-[72px] pt-2">
-        <Milestone n={4}>オンライン相談</Milestone>
+        <Milestone n={4}>合否・渡航準備</Milestone>
         <StepRow
           cop={
             <>
-              <StepH>エキスパートへいざ相談！</StepH>
-              <StepP>ビデオ通話で、抱えている悩み事や課題をエキスパートに相談できます。</StepP>
+              <StepH>面接対策も渡航準備も、オンラインで</StepH>
+              <StepP>
+                ビデオ通話で、模擬面接から合格後のビザ・住まい・持ち物まで相談できます。
+              </StepP>
               <div className="mt-3.5 flex flex-col gap-[9px]">
                 <MiniCheck>
                   <b>特別なアプリは不要</b>
@@ -386,22 +391,22 @@ function UserFlowPanel() {
               </div>
             </>
           }
-          shot={<CallShot leftTag="佐々木 彩 — パリ" rightInitial="あ" rightTag="あなた — 東京" bar />}
+          shot={<CallShot leftTag="高村 里奈 — ボストン" rightInitial="あ" rightTag="あなた — 東京" bar />}
         />
       </div>
 
       {/* ⑤ 相談のあと（大ダークカード） */}
       <div className="pb-6 pt-2">
         <Milestone n={5} now>
-          相談相手から伴走相手へ
+          現地生活
         </Milestone>
         <div className="about-darkcard-bg mt-[26px] grid items-center gap-8 rounded-[22px] p-[34px] text-white shadow-lg md:grid-cols-[1.04fr_.96fr] md:gap-12 md:p-12">
           <div>
             <h3 className="text-[clamp(22px,3vw,30px)] font-black leading-[1.45] tracking-[-0.022em]">
-              気に入れば<b className="font-black text-primary-500">継続的なメンター</b>に
+              合格のあとも、<b className="font-black text-primary-500">継続的なメンター</b>に
             </h3>
             <p className="mt-3.5 max-w-[32em] text-[14.5px] leading-[2.05] text-white/75">
-              エキスパートの方のアドバイスが参考になれば、継続的に伴走支援を行ってもらうこともできます。1回では解決できないことも一緒なら最後まで走り切れます。
+              合格して終わりではありません。住まい探し、履修の組み方、現地生活の立ち上げまで、先輩に継続的に伴走してもらえます。1回では解決できないことも一緒なら最後まで走り切れます。
             </p>
             <p className="mt-[18px] text-[10.5px] tracking-[0.08em] text-white/50">
               SESSION NOTES ・ CHAT LOG ・ REBOOK
@@ -410,20 +415,20 @@ function UserFlowPanel() {
           {/* 白パネルは text-foreground を明示（ダークカードの白文字継承を遮断） */}
           <div className="rounded-2xl bg-card px-[22px] py-5 text-foreground">
             <span className="text-[9.5px] font-semibold tracking-[0.14em] text-neutral-500">
-              SESSION NOTES — 9/18 佐々木 彩さん
+              SESSION NOTES — 9/18 高村 里奈さん
             </span>
             <div className="mt-[11px] flex items-start gap-2.5 text-[13px] leading-[1.8]">
               <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-muted px-[9px] py-0.5 text-[10px] font-extrabold text-neutral-500">
                 相談前
               </span>
-              <span className="text-neutral-500">ビザの候補が多すぎて決められない</span>
+              <span className="text-neutral-500">エッセイのテーマが決まらず白紙のまま</span>
             </div>
             <div className="mt-[11px] flex items-start gap-2.5 text-[13px] leading-[1.8]">
               <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-primary-500 px-[9px] py-0.5 text-[10px] font-extrabold text-neutral-950">
                 相談後
               </span>
               <span className="font-semibold text-neutral-700">
-                自分の場合の最適1つ＋申請書類の順番
+                職歴から軸が1本＋段落構成のメモ
               </span>
             </div>
             <div className="mt-[11px] flex items-start gap-2.5 text-[13px] leading-[1.8]">
@@ -431,7 +436,7 @@ function UserFlowPanel() {
                 次にやる
               </span>
               <span className="font-semibold text-neutral-700">
-                戸籍謄本のアポスティーユ取得（今週）
+                推薦者への依頼メール送付（今週）
               </span>
             </div>
             <div className="mt-4 flex items-center gap-2.5 border-t border-dashed border-border-strong pt-3.5">
@@ -549,16 +554,16 @@ function ExpertFlowPanel() {
             <>
               <StepH>まずは、無料登録から</StepH>
               <StepP>
-                会員登録のあと、エキスパート参加を申請。<b>都市・在住年数・得意なこと</b>
+                会員登録のあと、エキスパート参加を申請。<b>大学・プログラム・得意なこと</b>
                 を入力するだけです。
               </StepP>
             </>
           }
           shot={
             <div className={`${shotCls} about-shot-lime space-y-2 p-5`}>
-              <XField label="お住まいの都市">🇫🇷 パリ（フランス）</XField>
-              <XField label="在住年数">8年</XField>
-              <XField label="得意なこと">移住・起業・生活手続き</XField>
+              <XField label="在学中・出身の大学">🇺🇸 ハーバード（ボストン）</XField>
+              <XField label="プログラム">MBA・2025年入学</XField>
+              <XField label="得意なこと">MBA出願・エッセイ・面接対策</XField>
               <div className="rounded-full bg-primary-500 py-2 text-center text-[11.5px] font-extrabold text-neutral-950">
                 この内容で申請する
               </div>
@@ -576,8 +581,8 @@ function ExpertFlowPanel() {
             <>
               <StepH>書類で、居住実態を証明</StepH>
               <StepP>
-                滞在許可証などの書類を提出し、運営が審査します。<b>通過した人だけ</b>
-                が一覧に掲載され、バッジが付きます。
+                滞在許可証・在学証明などの書類を提出し、運営が審査します。
+                <b>通過した人だけ</b>が一覧に掲載され、バッジが付きます。
               </StepP>
             </>
           }
@@ -628,9 +633,9 @@ function ExpertFlowPanel() {
                 <div className="mt-2 h-1.5 w-[60%] rounded bg-muted" />
               </div>
               <div className="mt-2.5 flex flex-wrap gap-[5px]">
-                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[10px] font-bold text-white">移住</span>
-                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[10px] font-bold text-white">生活手続き</span>
-                <span className="rounded-full border border-border bg-card px-[11px] py-[3px] text-[10px] font-bold text-neutral-700">子育て</span>
+                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[10px] font-bold text-white">MBA</span>
+                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[10px] font-bold text-white">エッセイ・出願書類</span>
+                <span className="rounded-full border border-border bg-card px-[11px] py-[3px] text-[10px] font-bold text-neutral-700">面接対策</span>
               </div>
             </div>
           }
@@ -656,15 +661,15 @@ function ExpertFlowPanel() {
               <div className="rounded-[13px] border-[1.5px] border-warning-500/40 bg-card px-3.5 py-3">
                 <div className="flex items-center gap-2 text-[12px] font-extrabold">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-bold text-neutral-700">
-                    高
+                    伊
                   </span>
-                  高橋さん
+                  伊藤さん
                   <span className="ml-auto rounded-full border border-warning-500/40 bg-warning-50 px-[9px] py-0.5 text-[9px] font-extrabold text-warning-700">
                     リクエスト中
                   </span>
                 </div>
                 <div className="mt-[7px] text-[10.5px] tabular-nums text-neutral-500">
-                  9/18（金）13:00 現地時間 ・ 30分相談 ¥4,000
+                  9/18（金）13:00 現地時間 ・ 30分相談 ¥6,000
                 </div>
                 <div className="mt-[9px] flex items-center gap-2">
                   <span className="rounded-full bg-primary-500 px-4 py-[5px] text-[10.5px] font-extrabold text-neutral-950">
@@ -694,7 +699,7 @@ function ExpertFlowPanel() {
               </StepP>
             </>
           }
-          shot={<CallShot leftTag="あなた — パリ" rightInitial="高" rightTag="高橋さん — 東京" />}
+          shot={<CallShot leftTag="あなた — ボストン" rightInitial="伊" rightTag="伊藤さん — 東京" />}
         />
       </div>
 
@@ -717,15 +722,15 @@ function ExpertFlowPanel() {
 /* ===== ユースケース ===== */
 
 const USE_CASES: Array<{ q: string; label: string; topic: string }> = [
-  { q: '子連れでの移住、何から始めればいい？', label: '移住', topic: 'immigration' },
-  { q: '現地校とインター、うちの子はどっち？', label: '子育て・教育', topic: 'childcare' },
-  { q: 'ワーホリの家探し、保証人がいない', label: '住まい', topic: 'housing' },
-  { q: '駐在の帯同、会社任せで大丈夫？', label: '駐在準備', topic: 'expat_prep' },
-  { q: '現地就職のリアル。求人の探し方から', label: '就職・転職', topic: 'work' },
-  { q: '口座・保険・携帯、最初の1か月の順番', label: '生活手続き', topic: 'procedures' },
-  { q: 'フリーランス登録と税金の段取りは？', label: '仕事・起業', topic: 'work' },
-  { q: '留学前に、学校のリアルを聞きたい', label: '留学', topic: 'study_abroad' },
-  { q: '観光じゃない旅がしたい。住民の目線で', label: '旅行プラン', topic: 'travel' },
+  { q: '出願校、どうやって3校に絞る？', label: '大学院出願', topic: 'grad_school' },
+  { q: 'MBAエッセイ、何を軸に書けば刺さる？', label: 'MBA', topic: 'mba' },
+  { q: '日本の高校から、直接出願できる？', label: '学部出願', topic: 'undergrad' },
+  { q: '交換留学の学内選考、何を準備する？', label: '語学・交換留学', topic: 'language_exchange' },
+  { q: 'SoP・志望理由書、書き出しから相談したい', label: 'エッセイ・出願書類', topic: 'application_docs' },
+  { q: '面接で何を聞かれる？想定問答を作りたい', label: '面接対策', topic: 'interview' },
+  { q: '奨学金、自分の条件ならどれが現実的？', label: '奨学金・費用', topic: 'funding' },
+  { q: '寮とシェアハウス、実際どっちがいい？', label: '現地生活・キャンパス', topic: 'campus_life' },
+  { q: '研究室選び、教授へのコンタクトはどう取る？', label: '専攻・研究室選び', topic: 'majors_labs' },
 ];
 
 /* ===== 相談例 ===== */
@@ -800,16 +805,16 @@ export default function AboutServicePage() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary-500/50 bg-white/10 px-4 py-[5px] text-[12.5px] font-bold text-primary-500">
               <i className="h-[7px] w-[7px] rounded-full bg-primary-500 not-italic" aria-hidden />
-              居住認証つき・海外在住日本人への相談サービス
+              居住認証つき・在学生/アルムナイへの留学相談
             </span>
             <h1 className="mt-[22px] text-[clamp(31px,4.8vw,52px)] font-black leading-[1.3] tracking-[-0.03em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]">
-              海外のことは、
+              留学のことは、
               <br />
-              <span className="text-primary-500">現地にいる人</span>と。
+              <span className="text-primary-500">通っている先輩</span>と。
             </h1>
             <p className="mt-[22px] max-w-[30em] text-[16px] leading-[2.1] text-white/85">
-              移住、留学、駐在準備、こだわりの旅行。ひとりで検索し続けるのは、今日でおしまい。
-              <b className="font-bold text-white">いまその街で暮らす日本人</b>
+              学部、大学院、MBA、語学・交換留学。ひとりで検索し続けるのは、今日でおしまい。
+              <b className="font-bold text-white">いまその大学で学ぶ先輩</b>
               に、30分からオンラインで相談できます。
             </p>
             <div className="mt-[30px] flex flex-wrap items-center gap-6">
@@ -847,8 +852,8 @@ export default function AboutServicePage() {
                 )}
               </span>
               <p className="text-[13.5px] leading-[1.8] text-white/80">
-                <b className="font-bold text-white">パリからバンコクまで。</b>
-                世界の街の「先輩」が、全員・居住認証済みで待っています。
+                <b className="font-bold text-white">ボストンからロンドンまで。</b>
+                世界の大学の「先輩」が、全員・居住認証済みで待っています。
               </p>
             </div>
           </div>
@@ -873,25 +878,25 @@ export default function AboutServicePage() {
                 <PhotoAva src="/experts/aya.jpg" size="h-11 w-11" />
                 <div>
                   <div className="flex flex-wrap items-center gap-2 text-[14px] font-bold">
-                    佐々木 彩
+                    高村 里奈
                     <VBadge />
                   </div>
                   <div className="mt-0.5 text-[12px] text-neutral-500">
-                    🇫🇷 パリ在住 8年 ・ 輸入雑貨会社 経営
+                    🇺🇸 ボストン ・ HBS在学中（元総合商社）
                   </div>
                 </div>
                 <div className="ml-auto text-right leading-[1.3]">
-                  <b className="block text-[15px] font-bold tabular-nums">¥4,000</b>
+                  <b className="block text-[15px] font-bold tabular-nums">¥6,000</b>
                   <span className="text-[10px] text-neutral-500">/ 30分〜</span>
                 </div>
               </div>
             </div>
             <div className="mt-2.5 flex flex-col gap-2 text-[12.5px] leading-[1.8]">
               <div className="max-w-[88%] self-end rounded-[14px] rounded-br-[5px] bg-neutral-900 px-[13px] py-[9px] text-white">
-                来月からパリ駐在が決まりました。子連れで住むエリアの「実際のところ」を教えてほしいです…!
+                来年秋入学でMBA出願を予定しています。エッセイの方向性を相談したいです…!
               </div>
               <div className="max-w-[88%] self-start rounded-[14px] rounded-bl-[5px] border border-primary-100 bg-primary-50 px-[13px] py-[9px] text-foreground">
-                もちろんです。お子さんの年齢と職場の場所を教えてください。候補を3つに絞りましょう。
+                もちろんです。ご職歴とターゲット校を教えてください。エッセイの軸を一緒に絞りましょう。
               </div>
             </div>
             <div className="mt-[13px] flex items-center gap-[11px] px-1">
@@ -1083,8 +1088,8 @@ export default function AboutServicePage() {
                 <span className="text-[12.5px] text-neutral-500">〜 / 60分・税込</span>
               </div>
               <ul className="mt-[15px] flex flex-col gap-[9px] text-[13.5px] leading-[1.85] text-neutral-700">
-                <PriceLi>移住・駐在の全体設計など、腰を据えた相談に</PriceLi>
-                <PriceLi>「渡航までのやること」を時系列で一緒に整理</PriceLi>
+                <PriceLi>エッセイレビューや出願の全体設計など、腰を据えた相談に</PriceLi>
+                <PriceLi>「出願までのやること」を時系列で一緒に整理</PriceLi>
               </ul>
               <div className="mt-[15px] text-[11.5px] text-neutral-500">
                 料金はエキスパート設定の目安です
@@ -1126,22 +1131,22 @@ export default function AboutServicePage() {
           </div>
           <div className="mt-[42px] grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
             <OutcomeCard
-              theme="移住"
-              title="パリ移住のビザ、どれで行く？"
-              before="ビザの種類が多すぎて、1か月調べても決められない。"
-              after="自分の職歴・予算なら現実的な選択肢は2つ。必要書類と申請の順番までメモが残る。"
+              theme="MBA"
+              title="MBAエッセイ、何を軸にする？"
+              before="テーマが決まらず、ドラフトが2週間白紙のまま。"
+              after="職歴の棚卸しから軸が1本決まり、段落構成のメモが残る。推薦者に頼む内容も明確に。"
             />
             <OutcomeCard
-              theme="子育て・教育"
-              title="現地校の見学、何を見ればいい？"
-              before="学校のWebサイトを眺めても、違いが分からない。"
-              after="子連れ移住の先輩から「見学で必ず確認する5点」と学区の実情を聞き、候補が3校に絞れる。"
+              theme="大学院出願"
+              title="出願校リスト、どう絞る？"
+              before="ランキングを眺めては閉じるの繰り返しで、堂々巡り。"
+              after="研究テーマと予算で現実的な5校に絞れて、各校の締切と必要書類のカレンダーができる。"
             />
             <OutcomeCard
-              theme="住まい"
-              title="保証人なしの家探し、詰まない段取り"
-              before="内見の申し込みが全部スルーされる。理由も分からない。"
-              after="書類（ドシエ）の作り方と保証人サービスの現実的な使い方が分かり、次の一手が決まる。"
+              theme="奨学金・費用"
+              title="奨学金、自分ならどれが現実的？"
+              before="制度が多すぎて、条件の違いが比較できない。"
+              after="自分の条件で出せる2つに絞れて、エッセイの締切から逆算したスケジュールが決まる。"
             />
           </div>
         </div>
@@ -1178,7 +1183,7 @@ export default function AboutServicePage() {
               まで、すべて無料です。有料になるのは相談メニューを申し込んでからです。
             </FaqItem>
             <FaqItem q="どんなことを相談できますか？">
-              移住・留学・駐在準備の段取り、住むエリア選び、生活の手続き、子育てや学校、仕事や起業、こだわりの旅行プランまで。各エキスパートの「こんな相談に乗れます」を見て選んでください。医療・法律・税務など資格が必要な業務のアドバイスは対象外です（経験談としてのお話は可能です）。
+              学部・大学院・MBA・語学・交換留学の出願準備、エッセイや研究計画のレビュー、面接対策、奨学金、渡航後の住まいやキャンパス生活まで。各エキスパートの「こんな相談に乗れます」を見て選んでください。医療・法律・税務など資格が必要な業務のアドバイスは対象外です（経験談としてのお話は可能です）。
             </FaqItem>
             <FaqItem q="エキスパートは海外在住。時差は大丈夫？">
               空き枠も確定日時も<b>すべて日本時間で表示</b>

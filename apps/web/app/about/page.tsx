@@ -15,7 +15,7 @@ import { ArrowRight, Clock, MapPin, MessageCircle, ShieldCheck } from 'lucide-re
 export const metadata = {
   title: 'Locoreについて',
   description:
-    'Locoreは、海外の街で暮らした経験のある日本人に直接相談できるサービスです。移住・留学・駐在・旅行の「あなたの場合」に、その街で実際に暮らした（現在・過去の）居住認証済みエキスパートが答えます。',
+    'Locoreは、海外大学の在学生・卒業生に直接相談できる留学相談サービスです。学部・大学院・MBA・語学・交換留学の「あなたの場合」に、その大学で実際に学んだ（現在・過去の）居住認証済みエキスパートが答えます。',
 };
 
 /* ===== 小物（about-service v7 と同じ言語） ===== */
@@ -76,27 +76,27 @@ type WhoCard = {
 const WHO_CARDS: WhoCard[] = [
   {
     img: '/experts/aya.jpg',
-    name: '佐々木 彩',
-    city: '🇫🇷 パリ在住 8年',
-    tale: '日系商社の駐在をきっかけに渡仏し、現地で輸入雑貨の会社を経営。',
+    name: '高村 里奈',
+    city: '🇺🇸 ハーバード・ビジネス・スクール在学中',
+    tale: '元総合商社。2024年出願でHBSとWhartonに合格し、私費×奨学金でMBA留学中。',
   },
   {
-    img: '/experts/misaki.jpg',
-    name: '山本 実咲',
-    city: '🇩🇪 ベルリン在住 6年',
-    tale: '子ども2人を現地校に通わせながら、ワーホリから永住権までを経験。',
+    img: '/experts/kentaro.jpg',
+    name: '伊藤 蓮',
+    city: '🇺🇸 コロンビア大学 CS修士在学中',
+    tale: '事業会社エンジニアから社会人出願。SoPと社会人経験の見せ方に詳しい。',
+  },
+  {
+    img: '/experts/chinatsu.jpg',
+    name: '三宅 楓',
+    city: '🇫🇷 シアンスポ修了・パリ勤務',
+    tale: '英語プログラムで修士を修了し、現地就職。出願から面接までを経験者として。',
   },
   {
     img: '/experts/eri.jpg',
-    name: '藤田 絵里',
-    city: '🇺🇸 元・ニューヨーク在住 4年',
-    tale: '大学院留学から現地就職まで4年を過ごし、いまは帰国。留学準備の相談に乗っています。',
-  },
-  {
-    img: '/experts/daisuke.jpg',
-    name: '中村 大輔',
-    city: '🇹🇭 バンコク在住 10年',
-    tale: '駐在からそのまま移住して10年。生活の立ち上げと現地の商習慣に詳しい。',
+    name: '岡部 咲',
+    city: '🇨🇦 ブリティッシュコロンビア大学在学中',
+    tale: '日本の高校から直接出願でUBCへ。学部出願とキャンパス生活のいまを話せる。',
   },
 ];
 
@@ -118,9 +118,9 @@ export default function AboutPage() {
             経験者と。
           </h1>
           <p className="mx-auto mt-6 max-w-[36em] text-[16px] leading-[2.15] text-white/85">
-            移住、留学、駐在、こだわりの旅行。ネットには一般論しかなくて、SNSやAIは&quot;あなたの場合&quot;には答えてくれません。Locoreは、
+            学部、大学院、MBA、語学・交換留学。ネットには一般論しかなくて、SNSやAIは&quot;あなたの場合&quot;には答えてくれません。Locoreは、
             <b className="font-bold text-white">
-              その街で暮らす日本人、そして暮らした経験のある日本人
+              その大学に通う日本人、そして学んだ経験のある日本人
             </b>
             に、直接相談できる場所です。
           </p>
@@ -133,12 +133,12 @@ export default function AboutPage() {
           <div className="mx-auto max-w-[720px] text-center">
             <Kicker>Why Locore</Kicker>
             <SectionH>
-              本当のことは、
+              入ってからの本当のことは、
               <br />
-              <Em>暮らした人</Em>しか知らない。
+              <Em>いま通っている人</Em>しか知らない。
             </SectionH>
             <p className="mt-4 text-[15.5px] leading-[2.1] text-neutral-500">
-              海外に出る準備は、わからないことだらけです。役所のサイトは一般論ばかり、SNSは断片的で、AIもその街で暮らした経験までは持っていません。子連れならどのエリアに住むか、現地の学校はどう選ぶか、ビザの手続きは実際どう進むのか。こういうことを本当に知っているのは、その街で暮らした人だけです。
+              留学の準備は、わからないことだらけです。予備校が教えてくれるのは出願テクニックの一般論、ブログや動画は数年前の情報で止まっています。エッセイに何を書けば刺さるのか、その専攻・研究室の実際はどうか、奨学金はどれが現実的か。こういうことを本当に知っているのは、いまその大学で学んでいる人と、そこを出た人だけです。
             </p>
           </div>
           <div
@@ -146,9 +146,9 @@ export default function AboutPage() {
             aria-hidden
           >
             {[
-              '子連れで住むなら、どのエリア？',
-              '現地校は、どう選ぶ？',
-              'ビザの実務は、実際どう進む？',
+              'エッセイ、何を書けば刺さる？',
+              '研究室は、どう選ぶ？',
+              '奨学金は、どれが現実的？',
             ].map((q) => (
               <span
                 key={q}
@@ -169,43 +169,50 @@ export default function AboutPage() {
           <div className="max-w-[720px]">
             <Kicker>Our answer</Kicker>
             <SectionH>
-              だから、現地の人に<Em>直接聞ける場所</Em>をつくりました。
+              だから、いま通っている先輩に<Em>直接聞ける場所</Em>をつくりました。
             </SectionH>
           </div>
           <div className="mt-11 grid gap-[18px] lg:grid-cols-3">
             {[
               {
-                icon: <MessageCircle className="h-6 w-6" aria-hidden />,
+                icon: <Clock className="h-6 w-6" aria-hidden />,
                 no: '01',
-                t: '現地で暮らした日本人エキスパートに、直接相談',
+                t: '予備校は、出願テクニックの一般論',
                 p: (
                   <>
-                    その街で暮らした先輩に、あなたの状況を話して直接聞けます。検索では出てこない話が、30分でわかります。
+                    合格までのテクニックは教えてくれても、
+                    <b className="font-bold text-foreground">
+                      入ってからの授業・研究室・生活のリアル
+                    </b>
+                    は教えてくれません。しかも高額です。
+                  </>
+                ),
+              },
+              {
+                icon: <MessageCircle className="h-6 w-6" aria-hidden />,
+                no: '02',
+                t: 'ブログや動画は、古くて一方通行',
+                p: (
+                  <>
+                    体験記は数年前の情報で止まりがちで、
+                    <b className="font-bold text-foreground">
+                      「あなたの場合はどうか」には答えてくれません
+                    </b>
+                    。制度もキャンパスも毎年変わります。
                   </>
                 ),
               },
               {
                 icon: <ShieldCheck className="h-6 w-6" aria-hidden />,
-                no: '02',
-                t: '居住認証で、"本当に暮らした人"だけを掲載',
-                p: (
-                  <>
-                    エキスパートは全員、現地での居住実績(現在または過去)を書類で確認しています。
-                    <b className="font-bold text-foreground">
-                      「旅行で立ち寄っただけ」ではなく「実際に暮らした経験がある」
-                    </b>
-                    人の言葉です。
-                  </>
-                ),
-              },
-              {
-                icon: <Clock className="h-6 w-6" aria-hidden />,
                 no: '03',
-                t: '30分の単発から、継続的な伴走まで',
+                t: 'Locoreは、いまのLIVE情報 × 1対1の伴走',
                 p: (
                   <>
-                    まずは30分の相談から。気に入れば、渡航まで継続的に伴走してもらえます。やり取りは
-                    <b className="font-bold text-foreground">日本語で、日本時間で</b>。
+                    居住認証済みの在学生・アルムナイに、
+                    <b className="font-bold text-foreground">
+                      いまの情報を、あなたの状況に合わせて
+                    </b>
+                    。30分の単発から、出願・渡航までの継続伴走まで。
                   </>
                 ),
               },
@@ -276,9 +283,9 @@ export default function AboutPage() {
                     className="h-11 w-11 shrink-0 rounded-full bg-muted object-cover"
                   />
                   <div>
-                    <div className="text-[13.5px] font-extrabold">佐々木 彩</div>
+                    <div className="text-[13.5px] font-extrabold">高村 里奈</div>
                     <div className="mt-px text-[11.5px] text-neutral-500">
-                      🇫🇷 パリ在住 8年 ・ 現地で起業
+                      🇺🇸 ボストン ・ HBS在学中
                     </div>
                   </div>
                   <span className="ml-auto">
@@ -299,10 +306,10 @@ export default function AboutPage() {
             <SectionH>
               商業インフルエンサーではなく、
               <br />
-              その街の<Em>生活者</Em>。
+              その大学の<Em>先輩</Em>。
             </SectionH>
             <p className="mt-4 text-[15.5px] leading-[2.1] text-neutral-500">
-              いまパリで起業している人、ベルリンで子育て中の親、数年前までニューヨークに留学していた先輩。いま住んでいる人も、かつて住んでいた人もいます。フォロワー数ではなく、その街で暮らした経験の深さで選んでいます。
+              いまHBSでMBAに通う人、コロンビアの大学院で研究する人、シアンスポを出てパリで働く先輩。いま通っている人も、かつて学んだ人もいます。フォロワー数ではなく、その大学で学んだ経験の深さで選んでいます。
             </p>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

@@ -1,13 +1,13 @@
 ﻿{
   "app": {
     "name": "Locore",
-    "tagline": "在外邦人がつくる、もう一段深い旅"
+    "tagline": "海外大学の先輩に、留学相談"
   },
   "home": {
     "heroTitle": "Locore",
-    "heroSubtitle": "現地の駐在員が書く、その街の濃い旅。",
-    "ctaPrimary": "記事を見る",
-    "ctaSecondary": "駐在員として参加"
+    "heroSubtitle": "いまその大学に通う先輩に、30分から相談できる。",
+    "ctaPrimary": "エキスパートを探す",
+    "ctaSecondary": "エキスパートとして参加"
   },
   "common": {
     "loading": "読み込み中...",
