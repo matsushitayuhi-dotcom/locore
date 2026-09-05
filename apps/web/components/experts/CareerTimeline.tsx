@@ -54,9 +54,12 @@ function sortItems(items: TimelineItem[]): TimelineItem[] {
 export function CareerTimeline({
   workHistory,
   education,
+  initialCount,
 }: {
   workHistory: WorkEntry[];
   education: EducationEntry[];
+  /** 最初に見せる件数。超えたぶんは <details>「残り N 件を表示」に畳む（縦長対策）。未指定は全件 */
+  initialCount?: number;
 }) {
   const work: TimelineItem[] = workHistory
     .filter((w) => w.company?.trim())
@@ -86,50 +89,58 @@ export function CareerTimeline({
   const items = [...sortItems(work), ...sortItems(edu)];
   if (items.length === 0) return null;
 
+  const cut = initialCount != null && items.length > initialCount ? initialCount : items.length;
+  const shown = items.slice(0, cut);
+  const rest = items.slice(cut);
+
+  const renderItems = (list: TimelineItem[], offset: number) =>
+    list.map((item, j) => {
+      const i = offset + j;
+      const last = i === items.length - 1;
+      const Icon = item.kind === 'work' ? Briefcase : GraduationCap;
+      return (
+        <li
+          key={`${item.kind}-${i}`}
+          className={'relative flex gap-[14px]' + (last ? '' : ' pb-5')}
+        >
+          {!last ? (
+            <span
+              className="absolute bottom-0.5 left-[17px] top-[40px] w-px bg-border"
+              aria-hidden
+            />
+          ) : null}
+          <span className="z-[1] grid h-[35px] w-[35px] shrink-0 place-items-center rounded-full border border-primary-100 bg-primary-50 text-primary-700">
+            <Icon className="h-4 w-4" aria-hidden />
+          </span>
+          <div className="flex min-w-0 flex-1 items-start gap-3 pt-1">
+            <div className="min-w-0">
+              <b className="block text-[14px] font-bold leading-snug">{item.name}</b>
+              {item.sub ? (
+                <span className="mt-0.5 block text-[12.5px] text-neutral-500">{item.sub}</span>
+              ) : null}
+            </div>
+            {item.period ? (
+              <span className="ml-auto shrink-0 pt-px text-[12px] tabular-nums text-neutral-500">
+                {item.period}
+              </span>
+            ) : null}
+          </div>
+        </li>
+      );
+    });
+
   return (
     <div>
-      <ol className="flex flex-col">
-        {items.map((item, i) => {
-          const last = i === items.length - 1;
-          const Icon = item.kind === 'work' ? Briefcase : GraduationCap;
-          return (
-            <li
-              key={`${item.kind}-${i}`}
-              className={'relative flex gap-[14px]' + (last ? '' : ' pb-5')}
-            >
-              {!last ? (
-                <span
-                  className="absolute bottom-0.5 left-[17px] top-[40px] w-px bg-border"
-                  aria-hidden
-                />
-              ) : null}
-              <span className="z-[1] grid h-[35px] w-[35px] shrink-0 place-items-center rounded-full border border-primary-100 bg-primary-50 text-primary-700">
-                <Icon className="h-4 w-4" aria-hidden />
-              </span>
-              <div className="flex min-w-0 flex-1 items-start gap-3 pt-1">
-                <div className="min-w-0">
-                  <b className="block text-[14px] font-bold leading-snug">
-                    {item.name}
-                  </b>
-                  {item.sub ? (
-                    <span className="mt-0.5 block text-[12.5px] text-neutral-500">
-                      {item.sub}
-                    </span>
-                  ) : null}
-                </div>
-                {item.period ? (
-                  <span className="ml-auto shrink-0 pt-px text-[12px] tabular-nums text-neutral-500">
-                    {item.period}
-                  </span>
-                ) : null}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-      <p className="mt-4 text-[10.5px] text-neutral-400">
-        ※経歴は本人申告の情報です
-      </p>
+      <ol className="flex flex-col">{renderItems(shown, 0)}</ol>
+      {rest.length > 0 ? (
+        <details className="group">
+          <summary className="mt-1 inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border-strong px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
+            残り {rest.length} 件の経歴を表示
+          </summary>
+          <ol className="flex flex-col pt-5">{renderItems(rest, shown.length)}</ol>
+        </details>
+      ) : null}
+      <p className="mt-4 text-[10.5px] text-neutral-400">※経歴は本人申告の情報です</p>
     </div>
   );
 }
