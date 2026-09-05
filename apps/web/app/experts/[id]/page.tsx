@@ -31,6 +31,7 @@ import { deriveEnrollment } from '@/lib/experts/enrollment';
 import { getSpecialtiesByUser } from '@/lib/experts/specialtiesByUser';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { ConsultMenuCard } from '@/components/experts/ConsultMenuCard';
+import { PlanCard } from '@/components/experts/PlanCard';
 import { CareerTimeline } from '@/components/experts/CareerTimeline';
 
 /**
@@ -518,6 +519,25 @@ export default async function ExpertDetailPage({
                 </div>
               ))}
             </div>
+
+            {/* 継続プラン（伴走・月額、0083）。単発メニューの下に「または」で続ける */}
+            {profile.plans.length > 0 ? (
+              <div>
+                <div className="my-5 flex items-center gap-3 text-[12.5px] text-neutral-400 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+                  出願完了まで伴走してほしい方に
+                </div>
+                <div className="flex flex-col gap-6">
+                  {profile.plans.map((p) => (
+                    <PlanCard
+                      key={p.id}
+                      plan={p}
+                      expertId={profile.id}
+                      isOwner={me?.id === profile.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {hasSlots ? (
               <div className="mt-6 border-t border-border pt-5">

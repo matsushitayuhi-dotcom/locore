@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BadgeCheck, ShieldCheck } from 'lucide-react';
+import { BadgeCheck, Repeat, ShieldCheck } from 'lucide-react';
 import type { ExpertCard as ExpertCardData } from '@/lib/experts/list';
 import { specialtyLabel } from '@/lib/experts/specialties';
 import type { Enrollment } from '@/lib/experts/enrollment';
@@ -132,6 +132,15 @@ export function ExpertCard({
         ) : (
           <b className="font-semibold text-foreground">応相談</b>
         )}
+        {expert.hasPlan ? (
+          <span
+            className="ml-2 inline-flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-[1px] align-[1px] text-[10.5px] font-bold text-primary-500"
+            title="月額の継続プラン（伴走）があります"
+          >
+            <Repeat className="h-3 w-3" aria-hidden />
+            継続プラン
+          </span>
+        ) : null}
       </div>
       {enrollment?.school ? (
         <div className="mt-0.5 line-clamp-1 text-[12.5px] font-medium text-neutral-700">
