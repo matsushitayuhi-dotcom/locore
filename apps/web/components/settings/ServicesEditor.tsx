@@ -239,17 +239,7 @@ export function ServicesEditor({ initial }: Props) {
   };
 
   return (
-    <section className="space-y-4 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
-      <header>
-        <h3 className="text-[16px] font-semibold tracking-tight">相談メニュー</h3>
-        <p className="mt-1 text-[12px] leading-relaxed text-foreground/60">
-          相談したい人が予約できるメニューを作成します。
-          「単発（30分・60分）」のスポット相談か、「継続プラン（月額）」で
-          出願までまるごと伴走するかを選べます。公開したメニューは
-          エキスパート一覧に掲載されます。
-        </p>
-      </header>
-
+    <section className="space-y-4">
       {rows.length === 0 && !drafting ? (
         <p className="text-[12px] text-foreground/50">
           まだ相談メニューがありません。「相談メニューを追加」から作成してください。
@@ -260,7 +250,7 @@ export function ServicesEditor({ initial }: Props) {
         {rows.map((r, idx) => (
           <li
             key={r.id ?? `draft-${idx}`}
-            className="space-y-4 rounded-md bg-card p-4 ring-1 ring-border"
+            className="space-y-4 rounded-sm border border-border bg-card p-4"
           >
             <MenuBody value={r} onPatch={(patch) => patchRow(idx, patch)} />
 
@@ -291,6 +281,7 @@ export function ServicesEditor({ initial }: Props) {
                   size="sm"
                   onClick={() => onSave(idx)}
                   disabled={isPending}
+                  className="border-transparent bg-foreground text-background hover:bg-foreground/90"
                 >
                   保存
                 </Button>
@@ -301,7 +292,7 @@ export function ServicesEditor({ initial }: Props) {
       </ul>
 
       {drafting ? (
-        <div className="space-y-4 rounded-md bg-primary-500/10 p-4 ring-1 ring-border">
+        <div className="space-y-4 rounded-sm border border-border bg-primary-500/[0.06] p-4">
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
             新しい相談メニュー
           </p>
@@ -327,6 +318,7 @@ export function ServicesEditor({ initial }: Props) {
               size="sm"
               onClick={onAddDraft}
               disabled={isPending}
+              className="border-transparent bg-foreground text-background hover:bg-foreground/90"
             >
               追加する
             </Button>
@@ -387,14 +379,14 @@ function MenuBody({
             }
             aria-pressed={!isMonthly}
             className={
-              'rounded-md px-3 py-2.5 text-left text-[12.5px] ring-1 transition ' +
+              'rounded-sm border-2 px-3 py-2.5 text-left text-[12.5px] text-foreground transition ' +
               (!isMonthly
-                ? 'bg-primary-500/15 text-primary-300 ring-primary-500/50'
-                : 'bg-card text-foreground/70 ring-border hover:text-foreground')
+                ? 'border-foreground bg-foreground/[0.03]'
+                : 'border-border hover:border-foreground/40')
             }
           >
             <span className="block font-semibold">単発セッション</span>
-            <span className="mt-0.5 block text-[11px] text-foreground/55">
+            <span className="mt-0.5 block text-[11px] text-foreground/60">
               30分 / 60分のスポット相談
             </span>
           </button>
@@ -409,14 +401,14 @@ function MenuBody({
             }
             aria-pressed={isMonthly}
             className={
-              'rounded-md px-3 py-2.5 text-left text-[12.5px] ring-1 transition ' +
+              'rounded-sm border-2 px-3 py-2.5 text-left text-[12.5px] text-foreground transition ' +
               (isMonthly
-                ? 'bg-primary-500/15 text-primary-300 ring-primary-500/50'
-                : 'bg-card text-foreground/70 ring-border hover:text-foreground')
+                ? 'border-foreground bg-foreground/[0.03]'
+                : 'border-border hover:border-foreground/40')
             }
           >
             <span className="block font-semibold">継続プラン（月額）</span>
-            <span className="mt-0.5 block text-[11px] text-foreground/55">
+            <span className="mt-0.5 block text-[11px] text-foreground/60">
               出願までまるごと伴走
             </span>
           </button>
@@ -529,10 +521,10 @@ function MenuBody({
                 onClick={() => toggleTopic(t.value)}
                 aria-pressed={on}
                 className={
-                  'rounded-full px-3 py-1 text-[12px] font-medium ring-1 transition ' +
+                  'rounded-sm border px-3 py-1 text-[12px] font-medium transition ' +
                   (on
-                    ? 'bg-primary-500/20 text-primary-300 ring-primary-500/50'
-                    : 'bg-card text-foreground/65 ring-border hover:text-foreground')
+                    ? 'border-foreground bg-foreground text-background'
+                    : 'border-border bg-card text-foreground/65 hover:border-foreground/40 hover:text-foreground')
                 }
               >
                 {t.label}
