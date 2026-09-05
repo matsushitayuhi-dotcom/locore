@@ -38,11 +38,15 @@ export type ExpertCard = {
   /** 相談テーマタグ（'consultation' を除いた集合） */
   topics: string[];
   /** 相談メニューの最低価格 */
+  /** 単発メニューの最低価格（継続プランの月額は混ぜない） */
   minPriceJpy: number | null;
+  /** 単発メニューの数（継続プランは含まない） */
   menuCount: number;
   isVerified: boolean;
   /** 在学生/アルムナイ（users.education から導出）。学歴未記入は null */
   enrollment?: Enrollment | null;
+  /** 継続プラン（plan_kind='monthly'）を 1 本以上持つか（0083）。一覧バッジ用 */
+  hasPlan: boolean;
 };
 
 export type ListExpertsOptions = {
@@ -85,6 +89,25 @@ export async function listExperts(
     sort: 'price_asc',
   });
 
+  // 継続プラン（plan_kind='monthly'）の service id 集合。0083 未適用環境では
+  // 空集合フォールバック（全メニューを単発として扱う = 従来挙動）。
+  const monthlyServiceIds = new Set<string>();
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({ id: schema.userServices.id })
+      .from(schema.userServices)
+      .where(
+        sql`${schema.userServices.planKind} = 'monthly' AND ${schema.userServices.isActive} = true AND ${schema.userServices.tags} && ARRAY[${CONSULTATION_TAG}]::text[]`,
+      );
+    for (const r of rows) monthlyServiceIds.add(r.id);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/does not exist/i.test(msg)) {
+      console.warn('[listExperts] monthly services fetch failed:', err);
+    }
+  }
+
   type Group = {
     ownerId: string;
     displayName: string;
@@ -96,6 +119,7 @@ export async function listExperts(
     topics: Set<string>;
     /** 価格レンジ指定時: レンジ内のメニューを 1 つでも持つか */
     hasPriceInRange: boolean;
+    hasPlan: boolean;
   };
   const hasPriceFilter = minPrice != null || maxPrice != null;
   const inRange = (price: number | null): boolean => {
@@ -118,17 +142,25 @@ export async function listExperts(
         menuCount: 0,
         topics: new Set(),
         hasPriceInRange: false,
+        hasPlan: false,
       };
       groups.set(s.ownerId, g);
     }
-    g.menuCount += 1;
-    if (
-      s.priceJpy != null &&
-      (g.minPriceJpy == null || s.priceJpy < g.minPriceJpy)
-    ) {
-      g.minPriceJpy = s.priceJpy;
+    // 継続プラン（月額）は価格集計・メニュー数から除外し hasPlan だけ立てる
+    // （単発の最低価格・価格フィルタに月額を混ぜない）。テーマ集合には加える。
+    const isMonthly = monthlyServiceIds.has(s.id);
+    if (isMonthly) {
+      g.hasPlan = true;
+    } else {
+      g.menuCount += 1;
+      if (
+        s.priceJpy != null &&
+        (g.minPriceJpy == null || s.priceJpy < g.minPriceJpy)
+      ) {
+        g.minPriceJpy = s.priceJpy;
+      }
+      if (inRange(s.priceJpy)) g.hasPriceInRange = true;
     }
-    if (inRange(s.priceJpy)) g.hasPriceInRange = true;
     g.cityNameJa = g.cityNameJa ?? s.cityNameJa;
     g.citySlug = g.citySlug ?? s.citySlug;
     for (const t of s.tags) {
@@ -245,6 +277,7 @@ export async function listExperts(
       menuCount: g.menuCount,
       isVerified: verifiedIds.has(g.ownerId),
       enrollment: enrollmentById.get(g.ownerId) ?? null,
+      hasPlan: g.hasPlan,
     };
   });
 

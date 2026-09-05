@@ -77,11 +77,25 @@ export type ResidentProfileBundle = {
   isVerified: boolean;
   /** 公開中の記事 (全件)。tab 表示で 1 度に出すが多くなければ問題ない */
   articles: ResidentArticleCard[];
-  /** is_active=true の出品サービス */
+  /** is_active=true の出品サービス（継続プランは除く。プランは plans に分離） */
   services: FeaturedService[];
+  /** 継続プラン（plan_kind='monthly'・0083）。/experts 詳細の PlanCard 用。
+   *  0083 未適用環境は空配列（その場合プランは services 側に混ざる） */
+  plans: ResidentPlanCard[];
   /** 取り扱いカテゴリ — articles.articleType の distinct */
   articleCategories: string[];
   reviewSummary: ResidentReviewSummary;
+};
+
+/** 継続プラン（伴走）1 本分の表示データ。申込導線は /experts/[id]/subscribe?service=<id> */
+export type ResidentPlanCard = {
+  id: string;
+  title: string;
+  description: string | null;
+  monthlyPriceJpy: number | null;
+  sessionsPerMonth: number | null;
+  durationMinutes: number | null;
+  tags: string[];
 };
 
 const uuidPat =
@@ -309,8 +323,9 @@ export async function getResidentProfile(
     }
   }
 
-  // ----- 4. 出品サービス -----
+  // ----- 4. 出品サービス（単発）＋ 継続プラン（monthly・0083） -----
   let services: FeaturedService[] = [];
+  let plans: ResidentPlanCard[] = [];
   try {
     const rows = await db
       .select({
@@ -325,6 +340,9 @@ export async function getResidentProfile(
         audience: schema.userServices.audience,
         coverImageUrl: schema.userServices.coverImageUrl,
         tags: schema.userServices.tags,
+        planKind: schema.userServices.planKind,
+        sessionsPerMonth: schema.userServices.sessionsPerMonth,
+        durationMinutes: schema.userServices.durationMinutes,
         cityNameJa: schema.cities.nameJa,
         citySlug: schema.cities.slug,
       })
@@ -340,24 +358,38 @@ export async function getResidentProfile(
         ),
       )
       .orderBy(asc(schema.userServices.position));
-    services = rows.map((r) => ({
-      id: r.id,
-      title: r.title,
-      description: r.description,
-      category: r.category,
-      priceJpy: r.priceJpy,
-      priceUnit: r.priceUnit,
-      contactMethod: (r.contactMethod ?? 'chat') as 'chat' | 'external_url',
-      externalUrl: r.externalUrl,
-      cityNameJa: r.cityNameJa ?? null,
-      citySlug: r.citySlug ?? null,
-      audience: (r.audience as FeaturedService['audience']) ?? null,
-      coverImageUrl: r.coverImageUrl ?? null,
-      tags: Array.isArray(r.tags) ? r.tags : [],
-      ownerId: userId,
-      ownerDisplayName: u.displayName,
-      ownerAvatarUrl: u.avatarUrl,
-    }));
+    // monthly は plans に分離（単発メニュー一覧に月額を混ぜない）
+    plans = rows
+      .filter((r) => r.planKind === 'monthly')
+      .map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        monthlyPriceJpy: r.priceJpy,
+        sessionsPerMonth: r.sessionsPerMonth,
+        durationMinutes: r.durationMinutes,
+        tags: Array.isArray(r.tags) ? r.tags : [],
+      }));
+    services = rows
+      .filter((r) => r.planKind !== 'monthly')
+      .map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        category: r.category,
+        priceJpy: r.priceJpy,
+        priceUnit: r.priceUnit,
+        contactMethod: (r.contactMethod ?? 'chat') as 'chat' | 'external_url',
+        externalUrl: r.externalUrl,
+        cityNameJa: r.cityNameJa ?? null,
+        citySlug: r.citySlug ?? null,
+        audience: (r.audience as FeaturedService['audience']) ?? null,
+        coverImageUrl: r.coverImageUrl ?? null,
+        tags: Array.isArray(r.tags) ? r.tags : [],
+        ownerId: userId,
+        ownerDisplayName: u.displayName,
+        ownerAvatarUrl: u.avatarUrl,
+      }));
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (!/does not exist/i.test(msg)) {
@@ -507,6 +539,7 @@ export async function getResidentProfile(
     isVerified,
     articles,
     services,
+    plans,
     articleCategories,
     reviewSummary,
   };
