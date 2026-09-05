@@ -176,15 +176,27 @@ export default async function ExpertDetailPage({
 
   return (
     <main className="bg-background text-foreground">
+      {/* 非公開プレビュー帯（0084）。本人 / editor にだけ見える。黒地・ライムの再デザイントーン */}
       {!isPublished ? (
-        <div className="border-b border-warning-500/40 bg-warning-50 px-4 py-2 text-center text-[12px] font-medium text-warning-700">
-          非公開プレビュー — このページはあなたにだけ表示されています。
-          <Link
-            href="/settings"
-            className="ml-1.5 font-bold underline underline-offset-4"
-          >
-            公開設定へ →
-          </Link>
+        <div
+          role="status"
+          className="border-b border-neutral-800 bg-neutral-900 text-white"
+        >
+          <div className="mx-auto flex max-w-[1120px] flex-wrap items-center gap-x-3 gap-y-1 px-5 py-2 text-[12.5px] sm:px-10">
+            <span className="inline-flex items-center gap-1.5 font-bold text-primary-500">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden />
+              非公開プレビュー
+            </span>
+            <span className="text-neutral-300">
+              このページはあなたにだけ表示されています。公開するまで一覧には出ません。
+            </span>
+            <Link
+              href="/settings"
+              className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary-500 px-3 py-0.5 font-bold text-primary-500 transition hover:bg-primary-500 hover:text-neutral-950"
+            >
+              公開設定へ →
+            </Link>
+          </div>
         </div>
       ) : null}
       <script
