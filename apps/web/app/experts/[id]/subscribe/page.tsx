@@ -7,6 +7,7 @@ import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { countryFlagEmoji } from '@/lib/experts/list';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
+import { isProfilePublished } from '@/lib/experts/completeness';
 import { SubscribeForm } from './SubscribeForm';
 
 export const metadata = {
@@ -77,6 +78,10 @@ export default async function PlanSubscribePage({
     plan.sessionsPerMonth == null ||
     plan.durationMinutes == null
   ) {
+    redirect(`/experts/${params.id}`);
+  }
+  // 公開関門（0084）: 未公開エキスパートへの直 URL 申込を塞ぐ
+  if (!(await isProfilePublished(params.id))) {
     redirect(`/experts/${params.id}`);
   }
 

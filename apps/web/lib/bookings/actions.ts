@@ -18,6 +18,7 @@ import {
   notifyBookingRequested,
 } from '@/lib/email/booking-notify';
 import { countUsedSessionsThisMonth } from '@/lib/plans/queries';
+import { isProfilePublished } from '@/lib/experts/completeness';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import {
   BLOCKING_STATUSES,
@@ -402,6 +403,10 @@ export async function requestBooking(
       ok: false,
       error: '継続プランは「プランに申し込む」からお申し込みください',
     };
+  }
+  // 公開関門（0084）: 未公開エキスパートへの直 URL 予約を塞ぐ
+  if (!(await isProfilePublished(service.userId))) {
+    return { ok: false, error: 'このエキスパートは現在公開されていません' };
   }
   if (service.durationMinutes == null) {
     return {

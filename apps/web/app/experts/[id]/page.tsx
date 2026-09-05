@@ -65,6 +65,25 @@ export default async function ExpertDetailPage({
   const menus = profile.services.filter((s) => s.tags.includes(CONSULTATION_TAG));
   if (menus.length === 0) notFound();
 
+  // 公開関門（0084）: 未公開プロフィールは本人と editor 以外に 404。
+  // 本人/editor には表示し、上部に「非公開プレビュー」バナーを出す。
+  // 0084 未適用環境は公開扱い（従来挙動）にフォールバック。
+  let isPublished = true;
+  try {
+    const db = getDb();
+    const pubRows = await db
+      .select({ profilePublished: schema.users.profilePublished })
+      .from(schema.users)
+      .where(eq(schema.users.id, params.id))
+      .limit(1);
+    isPublished = pubRows[0]?.profilePublished ?? false;
+  } catch (err) {
+    console.warn('[experts/[id]] profile_published fetch failed (0084 未適用?):', err);
+  }
+  const canPreviewUnpublished =
+    me != null && (me.id === params.id || me.role === 'editor');
+  if (!isPublished && !canPreviewUnpublished) notFound();
+
   // 価格昇順（30分 → 60分）。最安を「はじめての方に」扱い
   const sortedMenus = [...menus].sort(
     (a, b) => (a.priceJpy ?? Infinity) - (b.priceJpy ?? Infinity),
@@ -166,6 +185,17 @@ export default async function ExpertDetailPage({
 
   return (
     <main className="bg-background text-foreground">
+      {!isPublished ? (
+        <div className="border-b border-warning-500/40 bg-warning-50 px-4 py-2 text-center text-[12px] font-medium text-warning-700">
+          非公開プレビュー — このページはあなたにだけ表示されています。
+          <Link
+            href="/settings"
+            className="ml-1.5 font-bold underline underline-offset-4"
+          >
+            公開設定へ →
+          </Link>
+        </div>
+      ) : null}
       <script
         type="application/ld+json"
         // ユーザー入力を含むため jsonLdScriptText で < > & をエスケープ（stored XSS 防止）

@@ -13,6 +13,7 @@ import {
 } from '@/lib/chat/threads';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import { PLATFORM_FEE_RATE } from '@/lib/bookings/constants';
+import { isProfilePublished } from '@/lib/experts/completeness';
 
 /**
  * 継続プラン（伴走）契約の Server Actions。
@@ -119,6 +120,10 @@ export async function applyToPlan(
       ok: false,
       error: 'このプランは設定が未完了です。チャットでご相談ください',
     };
+  }
+  // 公開関門（0084）: 未公開エキスパートへの直 URL 申込を塞ぐ
+  if (!(await isProfilePublished(service.userId))) {
+    return { ok: false, error: 'このエキスパートは現在公開されていません' };
   }
 
   try {

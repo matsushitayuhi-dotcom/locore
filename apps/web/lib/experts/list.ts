@@ -1,5 +1,5 @@
 import 'server-only';
-import { inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { listServices } from '@/lib/services/list';
@@ -178,6 +178,36 @@ export async function listExperts(
   }
   if (list.length === 0) return [];
 
+  // 公開関門（0084）: profile_published=true のエキスパートだけを掲載する。
+  // 未適用環境では全員掲載（従来挙動）にフォールバック。
+  try {
+    const db = getDb();
+    const pubRows = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(
+        and(
+          inArray(
+            schema.users.id,
+            list.map((g) => g.ownerId),
+          ),
+          eq(schema.users.profilePublished, true),
+        ),
+      );
+    const published = new Set(pubRows.map((r) => r.id));
+    list = list.filter((g) => published.has(g.ownerId));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[listExperts] profile_published 未適用。manual/0084_profile_publishing.sql を適用してください。',
+      );
+    } else {
+      console.warn('[listExperts] published filter failed:', err);
+    }
+  }
+  if (list.length === 0) return [];
+
   const ownerIds = list.map((g) => g.ownerId);
 
   // 2+3. プロフィール（bio / 在住情報 / 言語）と居住認証は独立なので並列取得。
@@ -336,6 +366,11 @@ export async function listExpertCities(
         schema.cities,
         sql`${schema.cities.id} = ${schema.userServices.cityId}`,
       )
+      .innerJoin(
+        // 公開関門（0084）: 公開済みエキスパートの都市だけを選択肢に出す
+        schema.users,
+        sql`${schema.users.id} = ${schema.userServices.userId} AND ${schema.users.profilePublished} = true`,
+      )
       .leftJoin(
         schema.countries,
         sql`${schema.countries.id} = ${schema.cities.countryId}`,
@@ -371,6 +406,7 @@ export async function listExpertCountries(): Promise<ExpertCountry[]> {
              COUNT(DISTINCT us.user_id)::int AS cnt
         FROM user_services us
         INNER JOIN users u ON u.id = us.user_id AND u.deleted_at IS NULL
+          AND u.profile_published = true
         INNER JOIN cities c ON c.id = us.city_id
         INNER JOIN countries co ON co.id = c.country_id
        WHERE us.is_active = true

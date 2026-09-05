@@ -9,6 +9,7 @@ import { listOpenStartTimes } from '@/lib/bookings/availability';
 import { countryFlagEmoji } from '@/lib/experts/list';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import { getEnrollment } from '@/lib/plans/queries';
+import { isProfilePublished } from '@/lib/experts/completeness';
 import { RequestForm } from './RequestForm';
 
 export const metadata = {
@@ -91,6 +92,11 @@ export default async function BookingRequestPage({
   // 所要時間・価格が確定していないメニューは予約不可（チャットで相談のフロー。
   // 30 分フォールバックは実所要より短くカレンダーを塞ぎ二重予約を生むため廃止）
   if (service.durationMinutes == null || service.priceJpy == null) {
+    redirect(`/experts/${params.id}`);
+  }
+  // 公開関門（0084）: 未公開エキスパートへの直 URL 予約を塞ぐ
+  // （プラン内セッション（?enrollment=）は既存契約者なので対象外）
+  if (!(await isProfilePublished(params.id))) {
     redirect(`/experts/${params.id}`);
   }
   const duration = service.durationMinutes;
