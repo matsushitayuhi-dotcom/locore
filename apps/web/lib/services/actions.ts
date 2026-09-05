@@ -82,12 +82,28 @@ const upsertSchema = z
       .array(z.string().trim().min(1).max(40))
       .max(8)
       .default([]),
+    /** ===== 伴走スライス（0083） =====
+     *  'monthly' = 継続プラン（priceJpy は月額、sessionsPerMonth は月回数） */
+    planKind: z.enum(['single', 'monthly']).default('single'),
+    sessionsPerMonth: z.number().int().min(1).max(8).optional().nullable(),
   })
   .refine(
     (v) => v.contactMethod !== 'external_url' || !!v.externalUrl,
     {
       message: '外部 URL でやり取りする場合は URL を入力してください',
       path: ['externalUrl'],
+    },
+  )
+  .refine(
+    (v) =>
+      v.planKind !== 'monthly' ||
+      (v.sessionsPerMonth != null &&
+        v.durationMinutes != null &&
+        v.priceJpy != null),
+    {
+      message:
+        '継続プランは月回数・1回の長さ・月額の3つが必要です',
+      path: ['sessionsPerMonth'],
     },
   );
 
@@ -128,6 +144,13 @@ export async function upsertUserService(
   };
   const isMissingColumn = (err: unknown) =>
     /does not exist/i.test(err instanceof Error ? err.message : String(err));
+
+  // 0083 伴走スライス。未適用環境ではこの 2 列だけ落として再試行する
+  const planCols = {
+    planKind: data.planKind,
+    sessionsPerMonth:
+      data.planKind === 'monthly' ? (data.sessionsPerMonth ?? null) : null,
+  };
 
   /**
    * v2 相談メニュー: 'consultation' + テーマタグはこのアクションが管理し、
@@ -199,23 +222,32 @@ export async function upsertUserService(
     try {
       await db
         .update(schema.userServices)
-        .set({ ...baseSet, ...detailCols, tags })
+        .set({ ...baseSet, ...detailCols, ...planCols, tags })
         .where(eq(schema.userServices.id, data.id));
-    } catch (err) {
-      if (!isMissingColumn(err)) throw err;
-      // 0058 未適用環境: 体験詳細カラムを除いて再試行
+    } catch (errPlan) {
+      if (!isMissingColumn(errPlan)) throw errPlan;
       try {
+        // 0083 未適用環境: plan カラムを除いて再試行
         await db
           .update(schema.userServices)
-          .set({ ...baseSet, tags })
+          .set({ ...baseSet, ...detailCols, tags })
           .where(eq(schema.userServices.id, data.id));
-      } catch (err2) {
-        if (!isMissingColumn(err2)) throw err2;
-        // 0055 (tags) ごと未適用な最古環境
-        await db
-          .update(schema.userServices)
-          .set(baseSet)
-          .where(eq(schema.userServices.id, data.id));
+      } catch (err) {
+        if (!isMissingColumn(err)) throw err;
+        // 0058 未適用環境: 体験詳細カラムを除いて再試行
+        try {
+          await db
+            .update(schema.userServices)
+            .set({ ...baseSet, tags })
+            .where(eq(schema.userServices.id, data.id));
+        } catch (err2) {
+          if (!isMissingColumn(err2)) throw err2;
+          // 0055 (tags) ごと未適用な最古環境
+          await db
+            .update(schema.userServices)
+            .set(baseSet)
+            .where(eq(schema.userServices.id, data.id));
+        }
       }
     }
     revalidateServicePaths(user.id);
@@ -250,23 +282,32 @@ export async function upsertUserService(
   try {
     inserted = await db
       .insert(schema.userServices)
-      .values({ ...baseValues, ...detailCols, tags })
+      .values({ ...baseValues, ...detailCols, ...planCols, tags })
       .returning({ id: schema.userServices.id });
-  } catch (err) {
-    if (!isMissingColumn(err)) throw err;
-    // 0058 未適用環境: 体験詳細カラムを除いて再試行
+  } catch (errPlan) {
+    if (!isMissingColumn(errPlan)) throw errPlan;
     try {
+      // 0083 未適用環境: plan カラムを除いて再試行
       inserted = await db
         .insert(schema.userServices)
-        .values({ ...baseValues, tags })
+        .values({ ...baseValues, ...detailCols, tags })
         .returning({ id: schema.userServices.id });
-    } catch (err2) {
-      if (!isMissingColumn(err2)) throw err2;
-      // 0055 (tags) ごと未適用な最古環境
-      inserted = await db
-        .insert(schema.userServices)
-        .values(baseValues)
-        .returning({ id: schema.userServices.id });
+    } catch (err) {
+      if (!isMissingColumn(err)) throw err;
+      // 0058 未適用環境: 体験詳細カラムを除いて再試行
+      try {
+        inserted = await db
+          .insert(schema.userServices)
+          .values({ ...baseValues, tags })
+          .returning({ id: schema.userServices.id });
+      } catch (err2) {
+        if (!isMissingColumn(err2)) throw err2;
+        // 0055 (tags) ごと未適用な最古環境
+        inserted = await db
+          .insert(schema.userServices)
+          .values(baseValues)
+          .returning({ id: schema.userServices.id });
+      }
     }
   }
 

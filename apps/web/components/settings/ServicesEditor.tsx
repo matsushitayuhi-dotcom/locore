@@ -74,6 +74,11 @@ type Service = {
   topics: string[];
   /** 所要時間（分）。相談メニューは 30 / 60 の 2 択（0061 追加）。'' = 未設定 */
   durationMinutes: number | '';
+  /** ===== 伴走スライス（0083） ===== */
+  /** 'single'=単発 / 'monthly'=継続プラン（priceJpy が月額になる） */
+  planKind: 'single' | 'monthly';
+  /** 継続プランの月回数（1/2/4）。'' = 未設定 */
+  sessionsPerMonth: number | '';
 };
 
 const empty = (): Service => ({
@@ -102,6 +107,8 @@ const empty = (): Service => ({
   consultation: false,
   topics: [],
   durationMinutes: '',
+  planKind: 'single',
+  sessionsPerMonth: '',
 });
 
 /** 改行区切りテキスト → トリム済み配列 (空行は除去) */
@@ -164,6 +171,12 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
     consultation: r.consultation,
     consultationTopics: r.topics,
     durationMinutes: r.durationMinutes === '' ? null : Number(r.durationMinutes),
+    // 伴走スライス（0083）
+    planKind: r.planKind,
+    sessionsPerMonth:
+      r.planKind === 'monthly' && r.sessionsPerMonth !== ''
+        ? Number(r.sessionsPerMonth)
+        : null,
   });
 
   const onSave = (idx: number) => {
@@ -727,8 +740,81 @@ function ConsultationFields({
       </label>
       {value.consultation ? (
         <div>
+          {/* 種別: 単発 / 継続プラン（0083） */}
           <p className="mb-1.5 text-[11px] font-medium text-foreground/70">
-            所要時間（空き枠からの予約リクエストに使われます）
+            種別
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <label className="inline-flex items-center gap-1.5 text-[12.5px] text-foreground/85">
+              <input
+                type="radio"
+                checked={value.planKind === 'single'}
+                onChange={() =>
+                  onPatch({ planKind: 'single', sessionsPerMonth: '' })
+                }
+                className="h-4 w-4 accent-primary-700"
+              />
+              単発セッション
+            </label>
+            <label className="inline-flex items-center gap-1.5 text-[12.5px] text-foreground/85">
+              <input
+                type="radio"
+                checked={value.planKind === 'monthly'}
+                onChange={() =>
+                  onPatch({
+                    planKind: 'monthly',
+                    sessionsPerMonth:
+                      value.sessionsPerMonth === '' ? 2 : value.sessionsPerMonth,
+                    priceUnit: '月額・税込',
+                  })
+                }
+                className="h-4 w-4 accent-primary-700"
+              />
+              継続プラン（月額）— 出願まるごと伴走
+            </label>
+          </div>
+
+          {value.planKind === 'monthly' ? (
+            <div className="mt-2.5 space-y-1.5 rounded-md bg-card p-2.5 ring-1 ring-border">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <label className="text-[11px] font-medium text-foreground/70">
+                  月回数
+                </label>
+                <select
+                  value={
+                    value.sessionsPerMonth === ''
+                      ? ''
+                      : String(value.sessionsPerMonth)
+                  }
+                  onChange={(e) =>
+                    onPatch({
+                      sessionsPerMonth:
+                        e.target.value === '' ? '' : Number(e.target.value),
+                    })
+                  }
+                  className="rounded-sm border border-border bg-card px-3 py-1.5 text-[12.5px] focus:border-primary-500 focus:outline-none"
+                >
+                  <option value="">未設定</option>
+                  <option value="1">月1回</option>
+                  <option value="2">月2回</option>
+                  <option value="4">月4回</option>
+                </select>
+                <label className="text-[11px] font-medium text-foreground/70">
+                  月額（¥・上の「単価」欄）
+                </label>
+              </div>
+              <p className="text-[10.5px] leading-relaxed text-foreground/50">
+                月額は上の「単価（¥）」欄に入力してください（単位は自動で「月額・税込」になります）。
+                <br />
+                出願伴走の目安: 月2回 ¥20,000〜30,000 / 月4回 ¥36,000〜50,000（1回30〜60分）
+              </p>
+            </div>
+          ) : null}
+
+          <p className="mb-1.5 mt-3 text-[11px] font-medium text-foreground/70">
+            {value.planKind === 'monthly'
+              ? '1回の長さ（プラン内セッションの空き枠予約に使われます）'
+              : '所要時間（空き枠からの予約リクエストに使われます）'}
           </p>
           <select
             value={value.durationMinutes === '' ? '' : String(value.durationMinutes)}
@@ -747,9 +833,11 @@ function ConsultationFields({
             <option value="30">30分</option>
             <option value="60">60分</option>
           </select>
-          <p className="mb-1.5 mt-1 text-[10.5px] text-foreground/50">
-            料金の目安: 30分 ¥3,000〜5,000 / 60分 ¥6,000〜9,000
-          </p>
+          {value.planKind === 'single' ? (
+            <p className="mb-1.5 mt-1 text-[10.5px] text-foreground/50">
+              料金の目安: 30分 ¥3,000〜5,000 / 60分 ¥6,000〜9,000
+            </p>
+          ) : null}
           <p className="mb-1.5 mt-3 text-[11px] font-medium text-foreground/70">
             相談テーマ（複数選択可・一覧の絞り込みに使われます）
           </p>

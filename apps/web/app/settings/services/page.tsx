@@ -182,6 +182,37 @@ export default async function ServicesSettingsPage() {
     }
   }
 
+  // 0083 継続プラン。detail と同じく分離クエリ（未適用環境は single 扱い）
+  const planById = new Map<
+    string,
+    { planKind: string; sessionsPerMonth: number | null }
+  >();
+  try {
+    const planRows = await db
+      .select({
+        id: schema.userServices.id,
+        planKind: schema.userServices.planKind,
+        sessionsPerMonth: schema.userServices.sessionsPerMonth,
+      })
+      .from(schema.userServices)
+      .where(eq(schema.userServices.userId, user.id));
+    for (const p of planRows) {
+      planById.set(p.id, {
+        planKind: p.planKind ?? 'single',
+        sessionsPerMonth: p.sessionsPerMonth,
+      });
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/does not exist/i.test(msg)) {
+      console.warn(
+        '[settings/services] plan_kind 未適用。manual/0083_companion_plans.sql を適用してください。',
+      );
+    } else {
+      throw err;
+    }
+  }
+
   const cityOptions = await getActiveCitiesForPicker();
 
   return (
@@ -231,6 +262,10 @@ export default async function ServicesSettingsPage() {
             cancellationPolicy: d?.cancellationPolicy ?? '',
             consultation: tags.includes(CONSULTATION_TAG),
             topics: tags.filter((t) => TOPIC_TAG_VALUES.includes(t)),
+            planKind:
+              (planById.get(r.id)?.planKind as 'single' | 'monthly') ??
+              'single',
+            sessionsPerMonth: planById.get(r.id)?.sessionsPerMonth ?? '',
           };
         })}
       />
