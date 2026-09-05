@@ -3,10 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Input } from '@locore/ui';
 import { GraduationCap } from 'lucide-react';
-import {
-  searchUniversities,
-  type UniversityHit,
-} from '@/lib/universities/search';
+import type { UniversityHit } from '@/lib/universities/search';
 
 /**
  * 大学名オートコンプリート（universities マスタ・0081）。
@@ -54,9 +51,15 @@ export function UniversityAutocomplete({
     }
     timer.current = setTimeout(async () => {
       try {
-        const res = await searchUniversities(q);
-        setHits(res);
-        setOpen(res.length > 0);
+        // GET エンドポイント（キャッシュ可）。Server Action の直列 POST を避ける
+        const res = await fetch(
+          `/api/universities/search?q=${encodeURIComponent(q)}`,
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = (await res.json()) as { hits?: UniversityHit[] };
+        const hitsRes = json.hits ?? [];
+        setHits(hitsRes);
+        setOpen(hitsRes.length > 0);
         setActive(-1);
       } catch {
         setHits([]);
@@ -87,7 +90,13 @@ export function UniversityAutocomplete({
     <div ref={rootRef} className="relative flex-1">
       <Input
         value={value}
-        onChange={(e) => onChange(e.target.value, null)}
+        onChange={(e) => {
+          // 手入力は必ず検索対象にする。pick() 直後に立てたフラグが、
+          // 「選択した表示名 = 入力値」で [value] effect が発火しなかった場合にも
+          // 残らないよう、ここで確実に解除する
+          skipNextSearch.current = false;
+          onChange(e.target.value, null);
+        }}
         onFocus={() => {
           if (hits.length > 0) setOpen(true);
         }}

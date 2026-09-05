@@ -1,7 +1,7 @@
 'use server';
 
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
@@ -74,45 +74,38 @@ export async function becomeWriter(formData: FormData): Promise<void> {
   const now = new Date();
   const isEnrolled = p.enrollmentStatus === 'current';
 
-  // users: role + residencyCountry（大学の国から自動）。
-  await db
-    .update(schema.users)
-    .set({
-      role: 'resident_writer',
-      ...(p.universityCountryCode
-        ? { residencyCountry: p.universityCountryCode.toUpperCase() }
-        : {}),
-      updatedAt: now,
-    })
-    .where(eq(schema.users.id, user.id));
-
-  // education[0] の自動作成（0062 JSONB）。既に学歴がある場合は触らない。
-  // 未適用環境では警告のみ（登録自体は成立させる）。
+  // users: role + residencyCountry + education[0] を 1 回の UPDATE に統合
+  // （SELECT→UPDATE の競合窓を排除）。education は既存があれば触らない
+  // （CASE WHEN jsonb_array_length = 0 のときだけ自動作成）。
+  const initialEducation = JSON.stringify([
+    {
+      school: p.universityName,
+      current: isEnrolled,
+      universityWikidataId: p.universityWikidataId ?? null,
+    },
+  ]);
+  const baseSet = {
+    role: 'resident_writer' as const,
+    ...(p.universityCountryCode
+      ? { residencyCountry: p.universityCountryCode.toUpperCase() }
+      : {}),
+    updatedAt: now,
+  };
   try {
-    const rows = await db
-      .select({ education: schema.users.education })
-      .from(schema.users)
-      .where(eq(schema.users.id, user.id))
-      .limit(1);
-    const existing = Array.isArray(rows[0]?.education)
-      ? rows[0]!.education
-      : [];
-    if (existing.length === 0) {
-      await db
-        .update(schema.users)
-        .set({
-          education: [
-            {
-              school: p.universityName,
-              current: isEnrolled,
-              universityWikidataId: p.universityWikidataId ?? null,
-            },
-          ],
-        })
-        .where(eq(schema.users.id, user.id));
-    }
+    await db
+      .update(schema.users)
+      .set({
+        ...baseSet,
+        education: sql`CASE WHEN jsonb_array_length(${schema.users.education}) = 0 THEN ${initialEducation}::jsonb ELSE ${schema.users.education} END`,
+      })
+      .where(eq(schema.users.id, user.id));
   } catch (err) {
+    // 0062（education）未適用環境: role 等だけ更新して登録自体は成立させる
     console.warn('[becomeWriter] education 自動作成に失敗（0062 未適用?）:', err);
+    await db
+      .update(schema.users)
+      .set(baseSet)
+      .where(eq(schema.users.id, user.id));
   }
 
   // writer_profiles を Tier B で INSERT（重複は無視）。
@@ -123,8 +116,9 @@ export async function becomeWriter(formData: FormData): Promise<void> {
       userId: user.id,
       tier: 'B',
       residencyStatus: isEnrolled ? 'current_resident' : 'past_resident',
-      residencyCountry:
-        p.universityCountryCode?.toUpperCase() ?? p.universityName,
+      // 国コード不明（自由入力の大学）のとき大学名で国フィールドを汚染しない。
+      // 列は NOT NULL のため空文字（表示側は未記入扱い）
+      residencyCountry: p.universityCountryCode?.toUpperCase() ?? '',
       residencyYears: 0,
       commissionRatePct: 25,
     })

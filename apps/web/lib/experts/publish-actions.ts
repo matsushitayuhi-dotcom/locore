@@ -45,7 +45,11 @@ export async function publishProfile(): Promise<PublishActionResult> {
     const db = getDb();
     await db
       .update(schema.users)
-      .set({ profilePublished: true, profilePublishedAt: new Date() })
+      .set({
+        profilePublished: true,
+        profilePublishedAt: new Date(),
+        updatedAt: new Date(),
+      })
       .where(eq(schema.users.id, me.id));
     revalidateProfilePaths(me.id);
     return { ok: true };
@@ -69,7 +73,7 @@ export async function unpublishProfile(): Promise<PublishActionResult> {
     const db = getDb();
     await db
       .update(schema.users)
-      .set({ profilePublished: false })
+      .set({ profilePublished: false, updatedAt: new Date() })
       .where(eq(schema.users.id, me.id));
     revalidateProfilePaths(me.id);
     return { ok: true };

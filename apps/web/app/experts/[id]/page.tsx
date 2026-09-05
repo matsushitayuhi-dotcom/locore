@@ -67,19 +67,9 @@ export default async function ExpertDetailPage({
 
   // 公開関門（0084）: 未公開プロフィールは本人と editor 以外に 404。
   // 本人/editor には表示し、上部に「非公開プレビュー」バナーを出す。
-  // 0084 未適用環境は公開扱い（従来挙動）にフォールバック。
-  let isPublished = true;
-  try {
-    const db = getDb();
-    const pubRows = await db
-      .select({ profilePublished: schema.users.profilePublished })
-      .from(schema.users)
-      .where(eq(schema.users.id, params.id))
-      .limit(1);
-    isPublished = pubRows[0]?.profilePublished ?? false;
-  } catch (err) {
-    console.warn('[experts/[id]] profile_published fetch failed (0084 未適用?):', err);
-  }
+  // published はバンドル（getResidentProfile）から取得 — 追加往復なし。
+  // 0084 未適用環境はバンドル側で公開扱いフォールバック。
+  const isPublished = profile.isProfilePublished;
   const canPreviewUnpublished =
     me != null && (me.id === params.id || me.role === 'editor');
   if (!isPublished && !canPreviewUnpublished) notFound();

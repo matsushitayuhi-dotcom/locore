@@ -1,5 +1,3 @@
-'use server';
-
 import 'server-only';
 import { sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
@@ -9,6 +7,9 @@ import { getDb } from '@/lib/db/client';
  * 大学マスタ（universities・0081）のオートコンプリート検索。
  * 公開読み取り（認証不要）・limit 20。name_ja / name_en の部分一致
  * （0081 の trgm gin を活用）で、前方一致を優先して返す。
+ *
+ * 呼び出しは GET /api/universities/search?q=（Route Handler・キャッシュ可）。
+ * Server Action にしない — キーストロークごとの直列 POST を避けるため。
  */
 
 export type UniversityHit = {

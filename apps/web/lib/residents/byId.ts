@@ -75,6 +75,8 @@ export type ResidentProfileBundle = {
   writerResidencyYears: number | null;
   /** residency_verifications の最新申請が approved */
   isVerified: boolean;
+  /** プロフィール公開フラグ（0084）。未適用環境は true（公開扱い）フォールバック */
+  isProfilePublished: boolean;
   /** 公開中の記事 (全件)。tab 表示で 1 度に出すが多くなければ問題ない */
   articles: ResidentArticleCard[];
   /** is_active=true の出品サービス（継続プランは除く。プランは plans に分離） */
@@ -234,18 +236,43 @@ export async function getResidentProfile(
   // ----- 2. 本人確認（最新申請 approved。共通判定に集約） -----
   const isVerified = await isUserVerified(userId);
 
-  // ----- 2.2 経歴（0062）。未適用環境で本体 SELECT を落とさないよう分離クエリ -----
+  // ----- 2.2 経歴（0062）＋公開フラグ（0084）。未適用環境で本体 SELECT を
+  //       落とさないよう分離クエリ（0084 だけ無い環境は経歴のみで再試行） -----
   let education: EducationEntry[] = [];
   let workHistory: WorkEntry[] = [];
+  let isProfilePublished = true;
   try {
-    const rows = await db
-      .select({
-        education: schema.users.education,
-        workHistory: schema.users.workHistory,
-      })
-      .from(schema.users)
-      .where(eq(schema.users.id, userId))
-      .limit(1);
+    let rows: Array<{
+      education: EducationEntry[] | null;
+      workHistory: WorkEntry[] | null;
+      profilePublished?: boolean | null;
+    }>;
+    try {
+      rows = await db
+        .select({
+          education: schema.users.education,
+          workHistory: schema.users.workHistory,
+          profilePublished: schema.users.profilePublished,
+        })
+        .from(schema.users)
+        .where(eq(schema.users.id, userId))
+        .limit(1);
+      isProfilePublished = rows[0]?.profilePublished ?? false;
+    } catch (errPub) {
+      const msgPub = errPub instanceof Error ? errPub.message : String(errPub);
+      if (!/does not exist/i.test(msgPub)) throw errPub;
+      console.warn(
+        '[getResidentProfile] profile_published 未適用（0084）。公開扱いで続行します。',
+      );
+      rows = await db
+        .select({
+          education: schema.users.education,
+          workHistory: schema.users.workHistory,
+        })
+        .from(schema.users)
+        .where(eq(schema.users.id, userId))
+        .limit(1);
+    }
     education = Array.isArray(rows[0]?.education) ? rows[0]!.education : [];
     workHistory = Array.isArray(rows[0]?.workHistory)
       ? rows[0]!.workHistory
@@ -537,6 +564,7 @@ export async function getResidentProfile(
     tier: (u.tier as 'S' | 'A' | 'B' | null) ?? null,
     writerResidencyYears: u.writerResidencyYears ?? null,
     isVerified,
+    isProfilePublished,
     articles,
     services,
     plans,

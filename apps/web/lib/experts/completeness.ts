@@ -48,7 +48,11 @@ const REQUIRED_LABELS: Record<keyof ProfileCompleteness['required'], string> = {
 
 /**
  * 対象エキスパートが公開済みか（予約・申込アクションのガード用）。
- * 0084 未適用環境は公開扱い（従来挙動）にフォールバック。
+ *
+ * フォールバック方針:
+ *   - 「列が存在しない」（0084 未適用環境）のときだけ true（従来挙動＝全員公開）
+ *   - それ以外のエラー（timeout / プール枯渇等の transient）は **フェイルクローズ**
+ *     — false を返し、下書きエキスパートへの予約/申込をすり抜けさせない
  */
 export async function isProfilePublished(userId: string): Promise<boolean> {
   try {
@@ -60,8 +64,15 @@ export async function isProfilePublished(userId: string): Promise<boolean> {
       .limit(1);
     return rows[0]?.profilePublished ?? false;
   } catch (err) {
-    console.warn('[isProfilePublished] failed (0084 未適用?):', err);
-    return true;
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/column .* does not exist|does not exist/i.test(msg)) {
+      console.warn(
+        '[isProfilePublished] profile_published 未適用（0084）。公開扱いで続行します。',
+      );
+      return true;
+    }
+    console.error('[isProfilePublished] failed (fail-close):', err);
+    return false;
   }
 }
 

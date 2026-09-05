@@ -354,9 +354,11 @@ export type ExpertCity = { slug: string; nameJa: string };
 export async function listExpertCities(
   countryCode?: string,
 ): Promise<ExpertCity[]> {
-  try {
+  // 公開関門（0084）付きで引き、未適用環境では published 条件を外して再試行
+  //（listExperts のフォールバックと整合 —「一覧は出るのに選択肢が空」を防ぐ）。
+  const query = (withPublished: boolean) => {
     const db = getDb();
-    const rows = await db
+    return db
       .selectDistinct({
         slug: schema.cities.slug,
         nameJa: schema.cities.nameJa,
@@ -367,9 +369,10 @@ export async function listExpertCities(
         sql`${schema.cities.id} = ${schema.userServices.cityId}`,
       )
       .innerJoin(
-        // 公開関門（0084）: 公開済みエキスパートの都市だけを選択肢に出す
         schema.users,
-        sql`${schema.users.id} = ${schema.userServices.userId} AND ${schema.users.profilePublished} = true`,
+        withPublished
+          ? sql`${schema.users.id} = ${schema.userServices.userId} AND ${schema.users.profilePublished} = true`
+          : sql`${schema.users.id} = ${schema.userServices.userId}`,
       )
       .leftJoin(
         schema.countries,
@@ -380,6 +383,19 @@ export async function listExpertCities(
           countryCode ? sql` AND ${schema.countries.code} = ${countryCode}` : sql``
         }`,
       );
+  };
+  try {
+    let rows: ExpertCity[];
+    try {
+      rows = await query(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/does not exist/i.test(msg)) throw err;
+      console.warn(
+        '[listExpertCities] profile_published 未適用（0084）。全員分で再試行します。',
+      );
+      rows = await query(false);
+    }
     return rows.sort((a, b) => a.nameJa.localeCompare(b.nameJa, 'ja'));
   } catch (err) {
     console.warn('[listExpertCities] failed:', err);
@@ -399,14 +415,15 @@ export type ExpertCountry = {
 };
 
 export async function listExpertCountries(): Promise<ExpertCountry[]> {
-  try {
+  // 公開関門（0084）付きで引き、未適用環境では published 条件を外して再試行
+  const query = (withPublished: boolean) => {
     const db = getDb();
-    const result = await db.execute(sql`
+    return db.execute(sql`
       SELECT co.code AS code, co.name_ja AS name_ja,
              COUNT(DISTINCT us.user_id)::int AS cnt
         FROM user_services us
         INNER JOIN users u ON u.id = us.user_id AND u.deleted_at IS NULL
-          AND u.profile_published = true
+          ${withPublished ? sql`AND u.profile_published = true` : sql``}
         INNER JOIN cities c ON c.id = us.city_id
         INNER JOIN countries co ON co.id = c.country_id
        WHERE us.is_active = true
@@ -414,6 +431,19 @@ export async function listExpertCountries(): Promise<ExpertCountry[]> {
        GROUP BY co.code, co.name_ja
        ORDER BY cnt DESC, co.code ASC
     `);
+  };
+  try {
+    let result: Awaited<ReturnType<typeof query>>;
+    try {
+      result = await query(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!/does not exist/i.test(msg)) throw err;
+      console.warn(
+        '[listExpertCountries] profile_published 未適用（0084）。全員分で再試行します。',
+      );
+      result = await query(false);
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const raw: any = result;
     const rows: Array<{ code?: unknown; name_ja?: unknown; cnt?: unknown }> =
