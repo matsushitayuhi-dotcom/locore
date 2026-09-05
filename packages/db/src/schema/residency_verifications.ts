@@ -21,6 +21,13 @@ export const residencyVerifications = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     documentType: residencyDocumentTypeEnum('document_type').notNull(),
+    /**
+     * 申請の種別（manual/0085）。identity = 身分証による本人確認（旧来）、
+     * enrollment = 在籍確認（入学証明書 / 学生証 / 卒業証書）。留学特化後の新規申請は enrollment。
+     */
+    kind: text('kind').notNull().default('identity'),
+    /** 在籍確認で申告した学校名（書類との照合用。表示は users.education が正）。manual/0085 */
+    schoolName: text('school_name'),
     /** @deprecated 新規は document_paths を使う。旧データ閲覧用に保持 */
     documentUrlEnc: text('document_url_enc'),
     /**

@@ -61,6 +61,9 @@ export * from './universities';
 // 伴走スライス（継続プラン契約・0083）
 export * from './plan_enrollments';
 
+// 資格・試験スコア（マスタ + ユーザー登録・0086）
+export * from './qualifications';
+
 // Marketplace (skill / network)
 export * from './seller_profiles';
 export * from './listings';

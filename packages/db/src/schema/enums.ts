@@ -40,6 +40,10 @@ export const residencyDocumentTypeEnum = pgEnum('residency_document_type', [
   'passport',
   'my_number_card',
   'driver_license',
+  // manual/0085 で追加（在籍確認: 留学特化）
+  'enrollment_certificate',
+  'student_id',
+  'diploma',
 ]);
 
 export const snsPlatformEnum = pgEnum('sns_platform', [
