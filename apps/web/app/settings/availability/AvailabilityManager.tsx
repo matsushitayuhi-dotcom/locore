@@ -1,6 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import {
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import { toast } from 'sonner';
 import { Check, ChevronLeft, ChevronRight, Globe, Trash2 } from 'lucide-react';
 import {
@@ -237,18 +244,41 @@ export function AvailabilityManager({
   const cellDisabled = (day: DayCol, r: number) =>
     day.isPast || (day.isToday && r < nowRow);
 
-  const startSel = (col: number, r: number, day: DayCol) => {
+  /** 列内の clientY から 30 分行インデックス（0〜47）を求める */
+  const rowFromEvent = (e: ReactPointerEvent, el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    return Math.max(0, Math.min(ROWS - 1, Math.floor(y / ROW_H)));
+  };
+
+  const onColDown = (e: ReactPointerEvent, col: number, day: DayCol) => {
+    // 既存枠の上での押下は選択を始めず、枠側の削除操作に任せる
+    if ((e.target as HTMLElement).closest('[data-block]')) return;
+    if (day.isPast) return;
+    const el = e.currentTarget as HTMLElement;
+    let r = rowFromEvent(e, el);
+    if (day.isToday) r = Math.max(r, nowRow);
     if (cellDisabled(day, r)) return;
+    e.preventDefault();
+    try {
+      el.setPointerCapture(e.pointerId);
+    } catch {
+      /* capture 非対応でも window pointerup で確定するので握りつぶす */
+    }
     draggingRef.current = true;
     const s = { col, r0: r, r1: r };
     selRef.current = s;
     setSel(s);
   };
-  const extendSel = (col: number, r: number, day: DayCol) => {
+
+  const onColMove = (e: ReactPointerEvent, col: number, day: DayCol) => {
     if (!draggingRef.current) return;
     const cur = selRef.current;
-    if (!cur || cur.col !== col) return; // 同じ曜日の列内でのみ
-    if (cellDisabled(day, r)) return;
+    if (!cur || cur.col !== col) return; // 同じ曜日の列内でのみ伸ばす
+    const el = e.currentTarget as HTMLElement;
+    let r = rowFromEvent(e, el);
+    if (day.isToday) r = Math.max(r, nowRow);
+    if (r === cur.r1) return;
     const s = { ...cur, r1: r };
     selRef.current = s;
     setSel(s);
@@ -418,10 +448,12 @@ export function AvailabilityManager({
             {days.map((day, col) => (
               <div
                 key={day.key}
-                className="relative border-l border-border"
+                className="relative touch-none border-l border-border"
                 style={{ height: ROWS * ROW_H }}
+                onPointerDown={(e) => onColDown(e, col, day)}
+                onPointerMove={(e) => onColMove(e, col, day)}
               >
-                {/* 30分セル */}
+                {/* 30分セル（表示専用。操作は列で受ける） */}
                 {Array.from({ length: ROWS }, (_, r) => {
                   const disabled = cellDisabled(day, r);
                   const inSel =
@@ -432,20 +464,15 @@ export function AvailabilityManager({
                   return (
                     <div
                       key={r}
-                      onPointerDown={(e) => {
-                        if (disabled) return;
-                        e.preventDefault();
-                        startSel(col, r, day);
-                      }}
-                      onPointerEnter={() => extendSel(col, r, day)}
                       className={
+                        'pointer-events-none ' +
                         (r % 2 === 0 ? 'border-t border-border' : 'border-t border-border/30') +
                         ' ' +
                         (disabled
-                          ? 'cursor-not-allowed bg-muted/50'
+                          ? 'bg-muted/50'
                           : inSel
                             ? 'bg-primary-500/40'
-                            : 'cursor-pointer hover:bg-primary-500/10')
+                            : '')
                       }
                       style={{ height: ROW_H }}
                     />
@@ -458,6 +485,7 @@ export function AvailabilityManager({
                   .map((b) => (
                     <div
                       key={b.id}
+                      data-block="1"
                       title={`${b.label}（日本時間 ${b.jst}）`}
                       className={
                         'group absolute inset-x-0.5 overflow-hidden rounded-md border px-1.5 py-1 text-left ' +
