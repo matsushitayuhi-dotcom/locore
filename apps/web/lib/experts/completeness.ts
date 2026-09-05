@@ -19,6 +19,22 @@ import { CONSULTATION_TAG } from './constants';
  * /settings ハブの表示と publishProfile のサーバー再検証の両方がここを使う。
  */
 
+export type SectionItem = {
+  key: string;
+  label: string;
+  done: boolean;
+  /** true = 推奨（公開は妨げない） */
+  recommended: boolean;
+};
+
+export type SectionProgress = {
+  items: SectionItem[];
+  done: number;
+  total: number;
+  /** セクション内の均等割（0-100・四捨五入） */
+  percent: number;
+};
+
 export type ProfileCompleteness = {
   required: {
     education: boolean;
@@ -31,13 +47,37 @@ export type ProfileCompleteness = {
     availability: boolean;
     verification: boolean;
   };
-  /** 7 項目均等割（0-100・四捨五入） */
+  /**
+   * セクション別内訳（/settings/services・/settings/availability の
+   * ミニ進捗表示用。overall は従来どおりトップレベルの percent 等）:
+   *   profile      = 学歴 / 得意分野 / 自己紹介 / 写真(推奨) → /settings/profile
+   *   services     = 相談メニュー → /settings/services
+   *   availability = 空き枠(推奨) → /settings/availability
+   *   verification = 本人確認申請(推奨) → /settings/verification
+   */
+  sections: {
+    profile: SectionProgress;
+    services: SectionProgress;
+    availability: SectionProgress;
+    verification: SectionProgress;
+  };
+  /** 7 項目均等割（0-100・四捨五入）= overall percent */
   percent: number;
   canPublish: boolean;
   published: boolean;
   /** 未充足の必須項目ラベル（公開ボタンの不足列挙用） */
   missingLabels: string[];
 };
+
+function toSection(items: SectionItem[]): SectionProgress {
+  const done = items.filter((i) => i.done).length;
+  return {
+    items,
+    done,
+    total: items.length,
+    percent: items.length === 0 ? 100 : Math.round((done / items.length) * 100),
+  };
+}
 
 const REQUIRED_LABELS: Record<keyof ProfileCompleteness['required'], string> = {
   education: '学校・学歴',
@@ -183,9 +223,28 @@ export async function getProfileCompleteness(
     .filter((k) => !required[k])
     .map((k) => REQUIRED_LABELS[k]);
 
+  const sections = {
+    profile: toSection([
+      { key: 'education', label: '学校・学歴', done: required.education, recommended: false },
+      { key: 'specialties', label: '得意分野', done: required.specialties, recommended: false },
+      { key: 'bio', label: '自己紹介', done: required.bio, recommended: false },
+      { key: 'photo', label: '顔写真', done: recommended.photo, recommended: true },
+    ]),
+    services: toSection([
+      { key: 'menu', label: '相談メニュー', done: required.menu, recommended: false },
+    ]),
+    availability: toSection([
+      { key: 'availability', label: '空き時間', done: recommended.availability, recommended: true },
+    ]),
+    verification: toSection([
+      { key: 'verification', label: '本人確認の申請', done: recommended.verification, recommended: true },
+    ]),
+  };
+
   return {
     required,
     recommended,
+    sections,
     percent: Math.round((done / 7) * 100),
     canPublish,
     published,

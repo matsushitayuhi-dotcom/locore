@@ -3,6 +3,8 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { ServicesEditor } from '@/components/settings/ServicesEditor';
+import { SectionProgress } from '@/components/settings/SectionProgress';
+import { getProfileCompleteness } from '@/lib/experts/completeness';
 import { getActiveCitiesForPicker } from '@/lib/geo/countries';
 import { CONSULTATION_TAG, TOPIC_TAG_VALUES } from '@/lib/experts/constants';
 
@@ -210,9 +212,14 @@ export default async function ServicesSettingsPage() {
   }
 
   const cityOptions = await getActiveCitiesForPicker();
+  const completeness = await getProfileCompleteness(user.id);
 
   return (
     <div className="space-y-8">
+      <SectionProgress
+        title="このセクションの進捗"
+        section={completeness.sections.services}
+      />
       <header>
         <h2 className="text-[20px] font-semibold tracking-tight">
           相談メニュー・提供サービス

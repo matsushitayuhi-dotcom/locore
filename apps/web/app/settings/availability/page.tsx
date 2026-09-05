@@ -4,6 +4,8 @@ import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { listAvailability } from '@/lib/bookings/availability';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
+import { getProfileCompleteness } from '@/lib/experts/completeness';
+import { SectionProgress } from '@/components/settings/SectionProgress';
 import { AvailabilityManager } from './AvailabilityManager';
 
 export const metadata = {
@@ -80,18 +82,27 @@ export default async function AvailabilitySettingsPage() {
     console.warn('[settings/availability] timezone lookup failed:', err);
   }
 
-  const slots = await listAvailability(user.id);
+  const [slots, completeness] = await Promise.all([
+    listAvailability(user.id),
+    getProfileCompleteness(user.id),
+  ]);
 
   return (
-    <AvailabilityManager
-      initialTimezone={initialTimezone ?? 'Asia/Tokyo'}
-      initialMeetingRoomUrl={meetingRoomUrl}
-      slots={slots.map((s) => ({
-        id: s.id,
-        startIso: s.startAt.toISOString(),
-        endIso: s.endAt.toISOString(),
-        hasBooking: s.hasBooking,
-      }))}
-    />
+    <div>
+      <SectionProgress
+        title="このセクションの進捗"
+        section={completeness.sections.availability}
+      />
+      <AvailabilityManager
+        initialTimezone={initialTimezone ?? 'Asia/Tokyo'}
+        initialMeetingRoomUrl={meetingRoomUrl}
+        slots={slots.map((s) => ({
+          id: s.id,
+          startIso: s.startAt.toISOString(),
+          endIso: s.endAt.toISOString(),
+          hasBooking: s.hasBooking,
+        }))}
+      />
+    </div>
   );
 }
