@@ -171,10 +171,10 @@ export function ServicesEditor({ initial, cityOptions }: Props) {
     consultation: r.consultation,
     consultationTopics: r.topics,
     durationMinutes: r.durationMinutes === '' ? null : Number(r.durationMinutes),
-    // 伴走スライス（0083）
-    planKind: r.planKind,
+    // 伴走スライス（0083）。相談メニューでない行は必ず single に落とす（保険）
+    planKind: r.consultation ? r.planKind : ('single' as const),
     sessionsPerMonth:
-      r.planKind === 'monthly' && r.sessionsPerMonth !== ''
+      r.consultation && r.planKind === 'monthly' && r.sessionsPerMonth !== ''
         ? Number(r.sessionsPerMonth)
         : null,
   });
@@ -733,7 +733,19 @@ function ConsultationFields({
         <input
           type="checkbox"
           checked={value.consultation}
-          onChange={(e) => onPatch({ consultation: e.target.checked })}
+          onChange={(e) =>
+            // 相談メニューを外したら継続プラン設定も解除する
+            // （consultation タグ無しの月額プランを作らせない）
+            onPatch(
+              e.target.checked
+                ? { consultation: true }
+                : {
+                    consultation: false,
+                    planKind: 'single',
+                    sessionsPerMonth: '',
+                  },
+            )
+          }
           className="h-4 w-4 accent-primary-700"
         />
         相談メニューとして公開する（エキスパート一覧 /experts に掲載）
@@ -750,7 +762,15 @@ function ConsultationFields({
                 type="radio"
                 checked={value.planKind === 'single'}
                 onChange={() =>
-                  onPatch({ planKind: 'single', sessionsPerMonth: '' })
+                  // priceUnit も単発向けに戻す（「月額・税込」の残留防止）
+                  onPatch({
+                    planKind: 'single',
+                    sessionsPerMonth: '',
+                    priceUnit:
+                      value.durationMinutes !== ''
+                        ? `${value.durationMinutes}分・税込`
+                        : '1時間あたり',
+                  })
                 }
                 className="h-4 w-4 accent-primary-700"
               />

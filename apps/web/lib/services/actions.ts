@@ -116,10 +116,15 @@ export async function upsertUserService(
 ): Promise<ServiceActionResult> {
   const parsed = upsertSchema.safeParse(input);
   if (!parsed.success) {
+    // refine の具体メッセージ（例: 継続プランの必須3点）をトーストに出せるよう
+    // error 本文へ載せる（UI は res.error しか表示しないため）
+    const flat = parsed.error.flatten();
+    const firstMsg =
+      Object.values(flat.fieldErrors).flat()[0] ?? flat.formErrors[0];
     return {
       ok: false,
-      error: '入力内容に誤りがあります',
-      fieldErrors: parsed.error.flatten().fieldErrors,
+      error: firstMsg ?? '入力内容に誤りがあります',
+      fieldErrors: flat.fieldErrors,
     };
   }
   const data = parsed.data;
@@ -145,11 +150,33 @@ export async function upsertUserService(
   const isMissingColumn = (err: unknown) =>
     /does not exist/i.test(err instanceof Error ? err.message : String(err));
 
-  // 0083 伴走スライス。未適用環境ではこの 2 列だけ落として再試行する
-  const planCols = {
-    planKind: data.planKind,
-    sessionsPerMonth:
-      data.planKind === 'monthly' ? (data.sessionsPerMonth ?? null) : null,
+  /**
+   * 0083 伴走スライスの 2 列は、detail 列（0058）のフォールバックに巻き込まれて
+   * 無言で落ちないよう本体とは別 UPDATE で書く。0083 未適用環境で monthly を
+   * 保存しようとしたときは黙って single にせずエラーを返す。
+   */
+  const writePlanCols = async (serviceId: string): Promise<string | null> => {
+    try {
+      await db
+        .update(schema.userServices)
+        .set({
+          planKind: data.planKind,
+          sessionsPerMonth:
+            data.planKind === 'monthly'
+              ? (data.sessionsPerMonth ?? null)
+              : null,
+        })
+        .where(eq(schema.userServices.id, serviceId));
+      return null;
+    } catch (err) {
+      if (!isMissingColumn(err)) throw err;
+      console.warn(
+        '[upsertUserService] plan_kind 未適用。manual/0083_companion_plans.sql を適用してください。',
+      );
+      return data.planKind === 'monthly'
+        ? '継続プランの保存には DB マイグレーション（manual/0083_companion_plans.sql）の適用が必要です'
+        : null;
+    }
   };
 
   /**
@@ -222,34 +249,28 @@ export async function upsertUserService(
     try {
       await db
         .update(schema.userServices)
-        .set({ ...baseSet, ...detailCols, ...planCols, tags })
+        .set({ ...baseSet, ...detailCols, tags })
         .where(eq(schema.userServices.id, data.id));
-    } catch (errPlan) {
-      if (!isMissingColumn(errPlan)) throw errPlan;
+    } catch (err) {
+      if (!isMissingColumn(err)) throw err;
+      // 0058 未適用環境: 体験詳細カラムを除いて再試行
       try {
-        // 0083 未適用環境: plan カラムを除いて再試行
         await db
           .update(schema.userServices)
-          .set({ ...baseSet, ...detailCols, tags })
+          .set({ ...baseSet, tags })
           .where(eq(schema.userServices.id, data.id));
-      } catch (err) {
-        if (!isMissingColumn(err)) throw err;
-        // 0058 未適用環境: 体験詳細カラムを除いて再試行
-        try {
-          await db
-            .update(schema.userServices)
-            .set({ ...baseSet, tags })
-            .where(eq(schema.userServices.id, data.id));
-        } catch (err2) {
-          if (!isMissingColumn(err2)) throw err2;
-          // 0055 (tags) ごと未適用な最古環境
-          await db
-            .update(schema.userServices)
-            .set(baseSet)
-            .where(eq(schema.userServices.id, data.id));
-        }
+      } catch (err2) {
+        if (!isMissingColumn(err2)) throw err2;
+        // 0055 (tags) ごと未適用な最古環境
+        await db
+          .update(schema.userServices)
+          .set(baseSet)
+          .where(eq(schema.userServices.id, data.id));
       }
     }
+    // 0083 plan 列は detail のフォールバックと独立に書く
+    const planErr = await writePlanCols(data.id);
+    if (planErr) return { ok: false, error: planErr };
     revalidateServicePaths(user.id);
     return { ok: true, data: { id: data.id } };
   }
@@ -282,34 +303,29 @@ export async function upsertUserService(
   try {
     inserted = await db
       .insert(schema.userServices)
-      .values({ ...baseValues, ...detailCols, ...planCols, tags })
+      .values({ ...baseValues, ...detailCols, tags })
       .returning({ id: schema.userServices.id });
-  } catch (errPlan) {
-    if (!isMissingColumn(errPlan)) throw errPlan;
+  } catch (err) {
+    if (!isMissingColumn(err)) throw err;
+    // 0058 未適用環境: 体験詳細カラムを除いて再試行
     try {
-      // 0083 未適用環境: plan カラムを除いて再試行
       inserted = await db
         .insert(schema.userServices)
-        .values({ ...baseValues, ...detailCols, tags })
+        .values({ ...baseValues, tags })
         .returning({ id: schema.userServices.id });
-    } catch (err) {
-      if (!isMissingColumn(err)) throw err;
-      // 0058 未適用環境: 体験詳細カラムを除いて再試行
-      try {
-        inserted = await db
-          .insert(schema.userServices)
-          .values({ ...baseValues, tags })
-          .returning({ id: schema.userServices.id });
-      } catch (err2) {
-        if (!isMissingColumn(err2)) throw err2;
-        // 0055 (tags) ごと未適用な最古環境
-        inserted = await db
-          .insert(schema.userServices)
-          .values(baseValues)
-          .returning({ id: schema.userServices.id });
-      }
+    } catch (err2) {
+      if (!isMissingColumn(err2)) throw err2;
+      // 0055 (tags) ごと未適用な最古環境
+      inserted = await db
+        .insert(schema.userServices)
+        .values(baseValues)
+        .returning({ id: schema.userServices.id });
     }
   }
+
+  // 0083 plan 列は detail のフォールバックと独立に書く
+  const planErr = await writePlanCols(inserted[0]!.id);
+  if (planErr) return { ok: false, error: planErr };
 
   revalidateServicePaths(user.id);
   return { ok: true, data: { id: inserted[0]!.id } };

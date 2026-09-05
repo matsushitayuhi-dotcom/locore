@@ -158,58 +158,54 @@ export default async function ServicesSettingsPage() {
     }
   }
 
-  // duration_minutes（0061）は detail クエリと分離して取得。未適用環境で detail
-  // クエリごと落とすと tags が空になり、保存時に consultation タグが剥がれて
-  // /experts から消えてしまうため（availability.ts と同じフォールバック思想）。
+  // duration_minutes（0061）＋ plan_kind/sessions_per_month（0083）は detail
+  // クエリと分離して 1 本で取得。未適用環境で detail クエリごと落とすと tags が
+  // 空になり、保存時に consultation タグが剥がれて /experts から消えてしまうため
+  // （availability.ts と同じフォールバック思想）。0083 だけ未適用の環境では
+  // duration のみの再試行に落とす。
   const durationById = new Map<string, number | null>();
-  try {
-    const durationRows = await db
-      .select({
-        id: schema.userServices.id,
-        durationMinutes: schema.userServices.durationMinutes,
-      })
-      .from(schema.userServices)
-      .where(eq(schema.userServices.userId, user.id));
-    for (const d of durationRows) durationById.set(d.id, d.durationMinutes);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (/does not exist/i.test(msg)) {
-      console.warn(
-        '[settings/services] duration_minutes 未適用。manual/0061_booking_availability.sql を適用してください。',
-      );
-    } else {
-      throw err;
-    }
-  }
-
-  // 0083 継続プラン。detail と同じく分離クエリ（未適用環境は single 扱い）
   const planById = new Map<
     string,
     { planKind: string; sessionsPerMonth: number | null }
   >();
   try {
-    const planRows = await db
+    const rows2 = await db
       .select({
         id: schema.userServices.id,
+        durationMinutes: schema.userServices.durationMinutes,
         planKind: schema.userServices.planKind,
         sessionsPerMonth: schema.userServices.sessionsPerMonth,
       })
       .from(schema.userServices)
       .where(eq(schema.userServices.userId, user.id));
-    for (const p of planRows) {
-      planById.set(p.id, {
-        planKind: p.planKind ?? 'single',
-        sessionsPerMonth: p.sessionsPerMonth,
+    for (const d of rows2) {
+      durationById.set(d.id, d.durationMinutes);
+      planById.set(d.id, {
+        planKind: d.planKind ?? 'single',
+        sessionsPerMonth: d.sessionsPerMonth,
       });
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (/does not exist/i.test(msg)) {
+    if (!/does not exist/i.test(msg)) throw err;
+    console.warn(
+      '[settings/services] plan_kind 未適用（manual/0083_companion_plans.sql）。duration のみ再取得します。',
+    );
+    try {
+      const durationRows = await db
+        .select({
+          id: schema.userServices.id,
+          durationMinutes: schema.userServices.durationMinutes,
+        })
+        .from(schema.userServices)
+        .where(eq(schema.userServices.userId, user.id));
+      for (const d of durationRows) durationById.set(d.id, d.durationMinutes);
+    } catch (err2) {
+      const msg2 = err2 instanceof Error ? err2.message : String(err2);
+      if (!/does not exist/i.test(msg2)) throw err2;
       console.warn(
-        '[settings/services] plan_kind 未適用。manual/0083_companion_plans.sql を適用してください。',
+        '[settings/services] duration_minutes 未適用。manual/0061_booking_availability.sql を適用してください。',
       );
-    } else {
-      throw err;
     }
   }
 
