@@ -82,9 +82,9 @@ export function CompletenessChecklist({
     },
     {
       done: c.recommended.verification,
-      label: '本人確認を申請',
+      label: '在籍確認を申請',
       href: '/settings/verification',
-      hrefLabel: '本人確認',
+      hrefLabel: '在籍確認',
       recommended: true,
     },
   ];

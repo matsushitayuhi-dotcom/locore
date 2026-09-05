@@ -237,7 +237,7 @@ export async function getProfileCompleteness(
       { key: 'availability', label: '空き時間', done: recommended.availability, recommended: true },
     ]),
     verification: toSection([
-      { key: 'verification', label: '本人確認の申請', done: recommended.verification, recommended: true },
+      { key: 'verification', label: '在籍確認の申請', done: recommended.verification, recommended: true },
     ]),
   };
 
