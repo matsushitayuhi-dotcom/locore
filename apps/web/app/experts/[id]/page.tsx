@@ -5,7 +5,6 @@ import { eq } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { listOpenStartTimes } from '@/lib/bookings/availability';
-import { formatSlotJst } from '@/lib/bookings/time';
 import type { FeaturedService } from '@/lib/services/featured';
 import { personJsonLd, jsonLdScriptText } from '@/lib/seo/jsonld';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
@@ -14,6 +13,8 @@ import { getCurrentUser } from '@/lib/auth/current-user';
 import { CONSULTATION_TAG, topicLabel } from '@/lib/experts/constants';
 import { isExperienceOnly, specialtyLabel } from '@/lib/experts/specialties';
 import { EnrollmentChip } from '@/components/experts/ExpertCard';
+import { LocalSlotTime, LocalTzLabel } from '@/components/experts/LocalSlotTime';
+import { formatSchoolName } from '@/lib/experts/education';
 import { deriveEnrollment } from '@/lib/experts/enrollment';
 import { getSpecialtiesByUser } from '@/lib/experts/specialtiesByUser';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
@@ -103,6 +104,13 @@ export default async function ExpertDetailPage({
   const hasExperienceOnly = specialties.some(isExperienceOnly);
   // 在学中 / アルムナイ（留学特化）。正式ヘルパ lib/experts/enrollment.ts
   const enrollment = deriveEnrollment(profile.education);
+  // ヒーローの学校表示は「正式名称（English）」。enrollment が指す学歴エントリを引き直す
+  const enrollmentEntry = enrollment
+    ? (profile.education.find(
+        (e) => e.school === enrollment.school && (enrollment.status !== 'current' || !!e.current),
+      ) ?? profile.education.find((e) => e.school === enrollment.school) ?? null)
+    : null;
+  const schoolLabel = enrollmentEntry ? formatSchoolName(enrollmentEntry) : enrollment?.school ?? null;
 
   // 予約可能なメニューの条件（requestBooking のサーバー検証と同一ルール）:
   //   chat メニュー × 価格確定 × 所要時間確定 × その duration で空き候補あり。
@@ -126,10 +134,11 @@ export default async function ExpertDetailPage({
       ? `/experts/${profile.id}/request?service=${s.id}`
       : null;
   };
-  const nextSlotFor = (s: FeaturedService): string | null => {
+  // 直近の空き枠は ISO で渡し、表示は Client 側で相談者の現地 TZ に変換する（LocalSlotTime）
+  const nextSlotIsoFor = (s: FeaturedService): string | null => {
     const d = menuDuration(s);
     const first = d != null ? openByDuration.get(d)?.[0] : undefined;
-    return first ? formatSlotJst(first) : null;
+    return first ? first.toISOString() : null;
   };
   const bookableMenus = sortedMenus.filter((s) => requestHrefFor(s) !== null);
   const hasSlots = bookableMenus.length > 0;
@@ -288,9 +297,9 @@ export default async function ExpertDetailPage({
                     />
                   ) : null}
                 </h1>
-                {enrollment?.school ? (
+                {enrollment && schoolLabel ? (
                   <div className="mt-1 text-[15px] font-medium text-neutral-700 sm:text-[16px]">
-                    {enrollment.school}
+                    {schoolLabel}
                     <span className="ml-2 text-[12.5px] font-normal text-neutral-500">
                       {enrollment.status === 'current'
                         ? '在学中'
@@ -423,7 +432,7 @@ export default async function ExpertDetailPage({
                               : undefined)
                       }
                       requestHref={requestHrefFor(s)}
-                      nextSlotLabel={nextSlotFor(s)}
+                      nextSlotIso={nextSlotIsoFor(s)}
                     />
                   </div>
                 </div>
@@ -453,7 +462,9 @@ export default async function ExpertDetailPage({
               <div className="mt-5 border-t border-border pt-4">
                 <div className="flex items-baseline justify-between">
                   <h2 className="text-[15px] font-semibold">直近の空き枠</h2>
-                  <span className="text-[11px] text-neutral-500">日本時間</span>
+                  <span className="text-[11px] text-neutral-500">
+                    <LocalTzLabel />
+                  </span>
                 </div>
                 <ul className="mt-2 flex flex-wrap gap-1.5">
                   {nextSlots.map((d) => (
@@ -461,7 +472,7 @@ export default async function ExpertDetailPage({
                       key={d.toISOString()}
                       className="rounded-full bg-muted px-3 py-1 text-[12.5px] font-semibold tabular-nums"
                     >
-                      {formatSlotJst(d)}〜
+                      <LocalSlotTime iso={d.toISOString()} />
                     </li>
                   ))}
                   {bookableMenus[0] ? (

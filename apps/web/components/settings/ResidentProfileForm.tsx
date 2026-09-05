@@ -7,6 +7,7 @@ import { ChevronDown, Plus, X } from 'lucide-react';
 import type { EducationEntry, WorkEntry } from '@locore/db';
 import { updateResidentProfile } from '@/app/settings/profile/actions';
 import { SpecialtyPicker } from '@/components/experts/SpecialtyPicker';
+import { formatSchoolName } from '@/lib/experts/education';
 import {
   CareerHistoryEditor,
   type CareerDraft,
@@ -204,6 +205,15 @@ export function ResidentProfileForm({ initial }: Props) {
           {!hasSchool ? (
             <p className="mt-2 text-[11.5px] text-warning-700">
               学校が未登録です。公開には 1 校以上の登録が必要です。
+            </p>
+          ) : null}
+          {eduRows.some((r) => r.name.trim() && r.schoolNameEn) ? (
+            <p className="mt-2 text-[11.5px] text-foreground/55">
+              公開ページの表示:{' '}
+              {eduRows
+                .filter((r) => r.name.trim())
+                .map((r) => formatSchoolName({ school: r.name, schoolNameEn: r.schoolNameEn }))
+                .join(' / ')}
             </p>
           ) : null}
         </Block>

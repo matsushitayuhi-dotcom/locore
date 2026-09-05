@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import type { FeaturedService } from '@/lib/services/featured';
 import { ServiceInquiryButton } from '@/components/services/ServiceInquiryButton';
+import { LocalSlotTime, LocalTzLabel } from '@/components/experts/LocalSlotTime';
 
 /**
  * /experts/[id] の相談メニューカード（Intro 型: 左上に黒タブ、枠線 1px、角丸小さめ）。
@@ -21,7 +22,7 @@ export function ConsultMenuCard({
   variant = 'secondary',
   tabLabel,
   requestHref = null,
-  nextSlotLabel = null,
+  nextSlotIso = null,
 }: {
   service: FeaturedService;
   ownerName: string;
@@ -32,8 +33,8 @@ export function ConsultMenuCard({
   tabLabel?: string;
   /** 空き枠がある場合の予約リクエストページ URL。null = チャット CTA のみ */
   requestHref?: string | null;
-  /** 直近の空き枠（日本時間の整形済み文字列）。primary のときだけ表示 */
-  nextSlotLabel?: string | null;
+  /** 直近の空き枠の開始時刻（ISO）。primary のときだけ、相談者の現地 TZ で表示 */
+  nextSlotIso?: string | null;
 }) {
   const primary = variant === 'primary';
   const chatCls =
@@ -87,20 +88,22 @@ export function ConsultMenuCard({
       {primary ? (
         <p className="mt-0.5 text-[13px] text-neutral-700">
           直近の空き —{' '}
-          {nextSlotLabel && requestHref ? (
+          {nextSlotIso && requestHref ? (
             <Link
               href={requestHref}
               className="text-primary-700 underline underline-offset-4"
             >
-              {nextSlotLabel}〜
+              <LocalSlotTime iso={nextSlotIso} />
             </Link>
           ) : (
             <span className="text-neutral-500">
               空き枠は準備中。チャットで日程をすり合わせてください
             </span>
           )}
-          {nextSlotLabel && requestHref ? (
-            <span className="ml-1 text-[11.5px] text-neutral-500">日本時間</span>
+          {nextSlotIso && requestHref ? (
+            <span className="ml-1 text-[11.5px] text-neutral-500">
+              <LocalTzLabel />
+            </span>
           ) : null}
         </p>
       ) : null}

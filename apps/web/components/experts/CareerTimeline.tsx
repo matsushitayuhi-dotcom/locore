@@ -1,5 +1,6 @@
 import { Briefcase, ChevronUp, GraduationCap } from 'lucide-react';
 import type { EducationEntry, WorkEntry } from '@locore/db';
+import { formatSchoolName } from '@/lib/experts/education';
 
 /**
  * /experts/[id] の「経歴」タイムライン（学歴・職歴スライス）。
@@ -76,7 +77,8 @@ export function CareerTimeline({
     .filter((e) => e.school?.trim())
     .map((e) => ({
       kind: 'education',
-      name: e.school,
+      // 正式名称（English）。大学マスタ経由の学歴は英語名も併記
+      name: formatSchoolName(e),
       sub:
         [e.degree?.trim(), e.field?.trim()].filter(Boolean).join('・') || null,
       // 在学中（EducationEntry.current、留学特化）は「現在」として最上段に
