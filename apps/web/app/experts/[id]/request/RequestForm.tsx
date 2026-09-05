@@ -251,7 +251,7 @@ export function RequestForm({
                           'w-full rounded-[10px] border py-2 text-center text-[13px] font-semibold tabular-nums transition ' +
                           (on
                             ? 'border-primary-500 bg-primary-500 font-bold text-neutral-950 shadow-sm'
-                            : 'border-border-strong bg-card text-neutral-700 hover:border-primary-700 hover:text-primary-700')
+                            : 'border-border-strong bg-card text-neutral-700 hover:border-primary-500 hover:bg-primary-50 hover:text-primary-900 hover:shadow-sm focus-visible:border-primary-500 focus-visible:bg-primary-50 focus-visible:outline-none')
                         }
                       >
                         {s.label}
