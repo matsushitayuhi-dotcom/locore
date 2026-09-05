@@ -47,11 +47,50 @@ const ROWS = 48; // 0:00〜24:00 を 30 分刻み
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const hmFromRow = (r: number) => `${pad(Math.floor(r / 2))}:${r % 2 ? '30' : '00'}`;
+/** 'HH:MM' → 行インデックス（開始行）。'23:59' は 47 */
+const rowFromHm = (hm: string) => {
+  const [h, m] = hm.split(':').map(Number);
+  return Math.min(ROWS - 1, (h ?? 0) * 2 + ((m ?? 0) >= 30 ? 1 : 0));
+};
+/** 'HH:MM' → 終了行（排他）。'23:59' は 48（＝24:00） */
+const endRowExclFromHm = (hm: string) => {
+  if (hm === '23:59') return ROWS;
+  const [h, m] = hm.split(':').map(Number);
+  return (h ?? 0) * 2 + ((m ?? 0) >= 30 ? 1 : 0);
+};
 
 function addDaysYmd(y: number, mo: number, d: number, days: number) {
   const t = new Date(Date.UTC(y, mo - 1, d + days));
   return { y: t.getUTCFullYear(), mo: t.getUTCMonth() + 1, d: t.getUTCDate() };
 }
+
+/** 'YYYY-MM-DD' に days を足した 'YYYY-MM-DD' */
+function ymdKeyPlus(key: string, days: number): string {
+  const [y, mo, d] = key.split('-').map(Number);
+  const p = addDaysYmd(y!, mo!, d!, days);
+  return `${p.y}-${pad(p.mo)}-${pad(p.d)}`;
+}
+
+/** 時刻セレクトの選択肢 */
+const START_OPTS: string[] = Array.from({ length: ROWS }, (_, i) => hmFromRow(i)); // 00:00〜23:30
+const END_OPTS: Array<{ value: string; label: string }> = [
+  ...Array.from({ length: ROWS - 1 }, (_, i) => {
+    const hm = hmFromRow(i + 1);
+    return { value: hm, label: hm };
+  }), // 00:30〜23:30
+  { value: '23:59', label: '24:00' },
+];
+
+/** 曜日チップ（月はじまり）。value は dow(0=日) */
+const WEEKDAY_CHIPS: Array<{ dow: number; label: string }> = [
+  { dow: 1, label: '月' },
+  { dow: 2, label: '火' },
+  { dow: 3, label: '水' },
+  { dow: 4, label: '木' },
+  { dow: 5, label: '金' },
+  { dow: 6, label: '土' },
+  { dow: 0, label: '日' },
+];
 
 type DayCol = {
   key: string; // YYYY-MM-DD
@@ -93,6 +132,17 @@ function computeWeek(tz: string, offset: number): {
 
 type Selection = { col: number; r0: number; r1: number };
 
+/** ドラッグ後に開く「予定を追加」ポップアップの状態 */
+type EditorState = {
+  col: number; // 元ドラッグ列（ハイライト維持用）
+  mode: 'single' | 'weekly';
+  date: string; // 単発の日付 / くり返しの開始日（YYYY-MM-DD）
+  endDate: string; // くり返しの終了日
+  weekdays: number[]; // くり返しの対象曜日（0=日）
+  startHm: string;
+  endHm: string;
+};
+
 const selectCls =
   'appearance-none rounded-full border border-border-strong bg-card px-4 py-2 pr-8 text-[13.5px] font-bold text-foreground outline-none focus:border-primary-500';
 
@@ -108,12 +158,15 @@ export function AvailabilityManager({
   const [pending, startTransition] = useTransition();
   const [timezone, setTimezone] = useState(initialTimezone);
   const [weekOffset, setWeekOffset] = useState(0);
-  const [repeatWeekly, setRepeatWeekly] = useState(false);
   const [sel, setSel] = useState<Selection | null>(null);
+  const [editor, setEditor] = useState<EditorState | null>(null);
 
   const selRef = useRef<Selection | null>(null);
   const draggingRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const patchEditor = (patch: Partial<EditorState>) =>
+    setEditor((e) => (e ? { ...e, ...patch } : e));
 
   const tzOptions = useMemo(() => {
     const opts = [...TIMEZONE_OPTIONS];
@@ -123,7 +176,7 @@ export function AvailabilityManager({
     return opts;
   }, [timezone]);
 
-  const { days, nowRow } = useMemo(
+  const { days, nowRow, todayKey } = useMemo(
     () => computeWeek(timezone, weekOffset),
     [timezone, weekOffset],
   );
@@ -204,34 +257,34 @@ export function AvailabilityManager({
     });
   };
 
-  // ドラッグ確定（window の pointerup / pointercancel で拾う）
+  // ドラッグ完了 → 「予定を追加」ポップアップを開く（window の pointerup で拾う）
   useEffect(() => {
     const finish = () => {
       const s = selRef.current;
       selRef.current = null;
       draggingRef.current = false;
-      setSel(null);
       if (!s) return;
       const { days: freshDays } = computeWeek(timezone, weekOffset);
       const col = freshDays[s.col];
-      if (!col) return;
+      if (!col) {
+        setSel(null);
+        return;
+      }
       const minR = Math.min(s.r0, s.r1);
       const maxR = Math.max(s.r0, s.r1);
       const startHm = hmFromRow(minR);
-      const endRowExcl = maxR + 1;
-      const endHm = endRowExcl >= ROWS ? '23:59' : hmFromRow(endRowExcl);
-      if (repeatWeekly) {
-        runAdd({
-          mode: 'weekly',
-          weekdays: [col.weekday],
-          startHm,
-          endHm,
-          weeks: DEFAULT_BULK_WEEKS,
-          timezone,
-        });
-      } else {
-        runAdd({ mode: 'single', date: col.key, startHm, endHm, timezone });
-      }
+      const endHm = maxR + 1 >= ROWS ? '23:59' : hmFromRow(maxR + 1);
+      // ハイライトはこの後 editor 由来で描くので sel はクリア
+      setSel(null);
+      setEditor({
+        col: s.col,
+        mode: 'single',
+        date: col.key,
+        endDate: ymdKeyPlus(col.key, DEFAULT_BULK_WEEKS * 7),
+        weekdays: [col.weekday],
+        startHm,
+        endHm,
+      });
     };
     window.addEventListener('pointerup', finish);
     window.addEventListener('pointercancel', finish);
@@ -239,7 +292,45 @@ export function AvailabilityManager({
       window.removeEventListener('pointerup', finish);
       window.removeEventListener('pointercancel', finish);
     };
-  }, [timezone, weekOffset, repeatWeekly]);
+  }, [timezone, weekOffset]);
+
+  const closeEditor = () => setEditor(null);
+
+  const onSaveEditor = () => {
+    if (!editor) return;
+    if (editor.endHm <= editor.startHm) {
+      toast.error('終了時刻は開始時刻より後にしてください');
+      return;
+    }
+    if (editor.mode === 'single') {
+      runAdd({
+        mode: 'single',
+        date: editor.date,
+        startHm: editor.startHm,
+        endHm: editor.endHm,
+        timezone,
+      });
+    } else {
+      if (editor.weekdays.length === 0) {
+        toast.error('くり返す曜日を選んでください');
+        return;
+      }
+      if (editor.endDate < editor.date) {
+        toast.error('終了日は開始日以降にしてください');
+        return;
+      }
+      runAdd({
+        mode: 'range',
+        weekdays: editor.weekdays,
+        startDate: editor.date,
+        endDate: editor.endDate,
+        startHm: editor.startHm,
+        endHm: editor.endHm,
+        timezone,
+      });
+    }
+    setEditor(null);
+  };
 
   const cellDisabled = (day: DayCol, r: number) =>
     day.isPast || (day.isToday && r < nowRow);
@@ -284,6 +375,15 @@ export function AvailabilityManager({
     setSel(s);
   };
 
+  // ハイライト: ドラッグ中は sel、ポップアップ表示中は editor の時間帯を反映
+  const highlight: Selection | null = editor
+    ? {
+        col: editor.col,
+        r0: rowFromHm(editor.startHm),
+        r1: Math.max(rowFromHm(editor.startHm), endRowExclFromHm(editor.endHm) - 1),
+      }
+    : sel;
+
   return (
     <div>
       <div>
@@ -322,77 +422,40 @@ export function AvailabilityManager({
       {/* 相談の受け方（固定の相談室 URL） */}
       <MeetingRoomCard initialUrl={initialMeetingRoomUrl} />
 
-      {/* ツールバー: 週送り + くり返しトグル */}
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setWeekOffset((w) => w - 1)}
-            disabled={weekOffset <= 0}
-            aria-label="前の週"
-            className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground disabled:opacity-40"
-          >
-            <ChevronLeft className="h-[18px] w-[18px]" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => setWeekOffset(0)}
-            className="rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold text-neutral-700 transition hover:border-foreground"
-          >
-            今週
-          </button>
-          <button
-            type="button"
-            onClick={() => setWeekOffset((w) => w + 1)}
-            aria-label="次の週"
-            className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground"
-          >
-            <ChevronRight className="h-[18px] w-[18px]" aria-hidden />
-          </button>
-          <span className="ml-2 text-[13.5px] font-bold tabular-nums text-foreground">
-            {rangeLabel}
-          </span>
-        </div>
-
-        <div className="inline-flex overflow-hidden rounded-full border border-border-strong">
-          <button
-            type="button"
-            onClick={() => setRepeatWeekly(false)}
-            aria-pressed={!repeatWeekly}
-            className={
-              'px-3.5 py-2 text-[12.5px] font-bold transition ' +
-              (!repeatWeekly
-                ? 'bg-foreground text-background'
-                : 'bg-card text-neutral-600 hover:text-foreground')
-            }
-          >
-            1回だけ
-          </button>
-          <button
-            type="button"
-            onClick={() => setRepeatWeekly(true)}
-            aria-pressed={repeatWeekly}
-            className={
-              'px-3.5 py-2 text-[12.5px] font-bold transition ' +
-              (repeatWeekly
-                ? 'bg-foreground text-background'
-                : 'bg-card text-neutral-600 hover:text-foreground')
-            }
-          >
-            毎週くり返す
-          </button>
-        </div>
+      {/* ツールバー: 週送り */}
+      <div className="mt-5 flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setWeekOffset((w) => w - 1)}
+          disabled={weekOffset <= 0}
+          aria-label="前の週"
+          className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground disabled:opacity-40"
+        >
+          <ChevronLeft className="h-[18px] w-[18px]" aria-hidden />
+        </button>
+        <button
+          type="button"
+          onClick={() => setWeekOffset(0)}
+          className="rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold text-neutral-700 transition hover:border-foreground"
+        >
+          今週
+        </button>
+        <button
+          type="button"
+          onClick={() => setWeekOffset((w) => w + 1)}
+          aria-label="次の週"
+          className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground"
+        >
+          <ChevronRight className="h-[18px] w-[18px]" aria-hidden />
+        </button>
+        <span className="ml-2 text-[13.5px] font-bold tabular-nums text-foreground">
+          {rangeLabel}
+        </span>
       </div>
 
-      {repeatWeekly ? (
-        <p className="mt-2 text-[11.5px] text-primary-700">
-          ドラッグした時間帯を、その曜日で今後 {DEFAULT_BULK_WEEKS} 週間分まとめて登録します。
-        </p>
-      ) : (
-        <p className="mt-2 text-[11.5px] text-neutral-500">
-          カレンダーを縦にドラッグして、空けたい時間帯を選んでください。既存の枠をクリックすると削除できます。
-        </p>
-      )}
+      <p className="mt-2 text-[11.5px] text-neutral-500">
+        カレンダーを縦にドラッグして時間帯を選ぶと、曜日・くり返し・期間を設定するウィンドウが開きます。既存の枠はマウスを乗せて削除できます。
+      </p>
 
       {/* カレンダー */}
       <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
@@ -457,10 +520,10 @@ export function AvailabilityManager({
                 {Array.from({ length: ROWS }, (_, r) => {
                   const disabled = cellDisabled(day, r);
                   const inSel =
-                    sel &&
-                    sel.col === col &&
-                    r >= Math.min(sel.r0, sel.r1) &&
-                    r <= Math.max(sel.r0, sel.r1);
+                    highlight &&
+                    highlight.col === col &&
+                    r >= Math.min(highlight.r0, highlight.r1) &&
+                    r <= Math.max(highlight.r0, highlight.r1);
                   return (
                     <div
                       key={r}
@@ -545,6 +608,186 @@ export function AvailabilityManager({
           </span>
         </div>
       </div>
+
+      {/* 「予定を追加」ポップアップ（Google カレンダー風） */}
+      {editor ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/40 p-4"
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) closeEditor();
+          }}
+        >
+          <div className="w-full max-w-[400px] rounded-2xl border border-border bg-card p-5 shadow-xl">
+            <h3 className="text-[16px] font-bold">空き枠を追加</h3>
+
+            {/* 時間 */}
+            <div className="mt-4">
+              <label className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
+                時間（{short}）
+              </label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={editor.startHm}
+                  onChange={(e) => patchEditor({ startHm: e.target.value })}
+                  aria-label="開始時刻"
+                  className={selectCls}
+                >
+                  {START_OPTS.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-[13px] text-neutral-500">〜</span>
+                <select
+                  value={editor.endHm}
+                  onChange={(e) => patchEditor({ endHm: e.target.value })}
+                  aria-label="終了時刻"
+                  className={selectCls}
+                >
+                  {END_OPTS.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 種別 */}
+            <div className="mt-4">
+              <div className="inline-flex overflow-hidden rounded-full border border-border-strong">
+                <button
+                  type="button"
+                  onClick={() => patchEditor({ mode: 'single' })}
+                  aria-pressed={editor.mode === 'single'}
+                  className={
+                    'px-4 py-2 text-[12.5px] font-bold transition ' +
+                    (editor.mode === 'single'
+                      ? 'bg-foreground text-background'
+                      : 'bg-card text-neutral-600 hover:text-foreground')
+                  }
+                >
+                  1回だけ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => patchEditor({ mode: 'weekly' })}
+                  aria-pressed={editor.mode === 'weekly'}
+                  className={
+                    'px-4 py-2 text-[12.5px] font-bold transition ' +
+                    (editor.mode === 'weekly'
+                      ? 'bg-foreground text-background'
+                      : 'bg-card text-neutral-600 hover:text-foreground')
+                  }
+                >
+                  毎週くり返す
+                </button>
+              </div>
+            </div>
+
+            {editor.mode === 'single' ? (
+              /* 単発: 日付のみ */
+              <div className="mt-4">
+                <label className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
+                  日付
+                </label>
+                <input
+                  type="date"
+                  value={editor.date}
+                  min={todayKey}
+                  onChange={(e) => patchEditor({ date: e.target.value })}
+                  aria-label="日付"
+                  className="rounded-full border border-border-strong bg-card px-4 py-2 text-[13.5px] font-bold tabular-nums text-foreground outline-none focus:border-primary-500"
+                />
+              </div>
+            ) : (
+              /* 毎週: 曜日 + 開始日 + 終了日 */
+              <>
+                <div className="mt-4">
+                  <label className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
+                    くり返す曜日
+                  </label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {WEEKDAY_CHIPS.map((c) => {
+                      const on = editor.weekdays.includes(c.dow);
+                      return (
+                        <button
+                          key={c.dow}
+                          type="button"
+                          aria-pressed={on}
+                          onClick={() =>
+                            patchEditor({
+                              weekdays: on
+                                ? editor.weekdays.filter((d) => d !== c.dow)
+                                : [...editor.weekdays, c.dow],
+                            })
+                          }
+                          className={
+                            'grid h-9 w-9 place-items-center rounded-full border text-[13px] transition ' +
+                            (on
+                              ? 'border-foreground bg-foreground font-bold text-background'
+                              : 'border-border-strong bg-card font-medium text-neutral-700 hover:border-foreground')
+                          }
+                        >
+                          {c.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
+                      開始日
+                    </label>
+                    <input
+                      type="date"
+                      value={editor.date}
+                      min={todayKey}
+                      onChange={(e) => patchEditor({ date: e.target.value })}
+                      aria-label="開始日"
+                      className="w-full rounded-full border border-border-strong bg-card px-3 py-2 text-[12.5px] font-bold tabular-nums text-foreground outline-none focus:border-primary-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
+                      終了日
+                    </label>
+                    <input
+                      type="date"
+                      value={editor.endDate}
+                      min={editor.date}
+                      onChange={(e) => patchEditor({ endDate: e.target.value })}
+                      aria-label="終了日"
+                      className="w-full rounded-full border border-border-strong bg-card px-3 py-2 text-[12.5px] font-bold tabular-nums text-foreground outline-none focus:border-primary-500"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* フッター */}
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeEditor}
+                className="rounded-full border border-border-strong bg-card px-4 py-2 text-[13px] font-bold text-neutral-700 transition hover:border-foreground"
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={onSaveEditor}
+                disabled={pending}
+                className="rounded-full bg-foreground px-5 py-2 text-[13px] font-bold text-background transition hover:bg-foreground/90 disabled:opacity-50"
+              >
+                保存
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

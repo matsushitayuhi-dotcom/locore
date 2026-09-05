@@ -139,7 +139,23 @@ const addSchema = z.discriminatedUnion('mode', [
     endHm: z.string().regex(hmPat),
     timezone: z.string().min(1).max(64),
   }),
+  z.object({
+    // 曜日 × 開始日〜終了日 の範囲で毎週くり返し登録する
+    mode: z.literal('range'),
+    weekdays: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+    startDate: z.string().regex(datePat),
+    endDate: z.string().regex(datePat),
+    startHm: z.string().regex(hmPat),
+    endHm: z.string().regex(hmPat),
+    timezone: z.string().min(1).max(64),
+  }),
 ]);
+
+/** 'YYYY-MM-DD' → {y,mo,d} */
+function parseYmd(s: string): { y: number; mo: number; d: number } {
+  const [y, mo, d] = s.split('-').map(Number);
+  return { y: y!, mo: mo!, d: d! };
+}
 
 /**
  * 空き枠の追加。weekly = 選んだ曜日 × 今後 weeks 週分を一括、single = 単発 1 枠。
@@ -170,6 +186,19 @@ export async function addAvailabilityBulk(
   const dates: string[] = [];
   if (p.mode === 'single') {
     dates.push(p.date);
+  } else if (p.mode === 'range') {
+    if (p.endDate < p.startDate) {
+      return { ok: false, error: '終了日は開始日以降にしてください' };
+    }
+    const set = new Set(p.weekdays);
+    let cur = parseYmd(p.startDate);
+    let guard = 0;
+    // 最長 366 日ぶんまで（暴発防止）
+    while (dateStr(cur) <= p.endDate && guard < 366) {
+      if (set.has(weekdayOf(cur.y, cur.mo, cur.d))) dates.push(dateStr(cur));
+      cur = addDays(cur.y, cur.mo, cur.d, 1);
+      guard += 1;
+    }
   } else {
     const today = wallPartsInTz(new Date(), p.timezone);
     for (const dow of new Set(p.weekdays)) {
