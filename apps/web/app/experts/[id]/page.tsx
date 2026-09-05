@@ -63,9 +63,6 @@ export default async function ExpertDetailPage({
   ]);
   if (!profile) notFound();
 
-  const menus = profile.services.filter((s) => s.tags.includes(CONSULTATION_TAG));
-  if (menus.length === 0) notFound();
-
   // 公開関門（0084）: 未公開プロフィールは本人と editor 以外に 404。
   // 本人/editor には表示し、上部に「非公開プレビュー」バナーを出す。
   // published はバンドル（getResidentProfile）から取得 — 追加往復なし。
@@ -74,6 +71,12 @@ export default async function ExpertDetailPage({
   const canPreviewUnpublished =
     me != null && (me.id === params.id || me.role === 'editor');
   if (!isPublished && !canPreviewUnpublished) notFound();
+
+  // 相談メニュー 0 件はエキスパートではないので 404。ただし本人 / editor のプレビューは
+  // 下書き→公開の導線として表示し、右カラムに「メニューがまだありません」の空状態を出す。
+  const menus = profile.services.filter((s) => s.tags.includes(CONSULTATION_TAG));
+  const isEmptyPreview = menus.length === 0 && canPreviewUnpublished;
+  if (menus.length === 0 && !canPreviewUnpublished) notFound();
 
   // 価格昇順（30分 → 60分）。最安を「はじめての方に」扱い
   const sortedMenus = [...menus].sort(
@@ -502,6 +505,20 @@ export default async function ExpertDetailPage({
             <div className="mb-3 text-[13px] text-neutral-500">
               相談メニュー — <b className="text-foreground">{profile.displayName}</b>さん
             </div>
+            {isEmptyPreview ? (
+              <div className="mt-3.5 rounded-[6px] border border-dashed border-border-strong px-4 py-6 text-center">
+                <b className="block text-[15px] font-semibold">相談メニューがまだありません</b>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500">
+                  30分・60分の相談メニューを 1 本以上登録すると、このページを公開して一覧に載せられます。
+                </p>
+                <Link
+                  href="/settings/services"
+                  className="mt-4 inline-flex h-[46px] items-center justify-center rounded-[8px] bg-primary-500 px-6 text-[14.5px] font-bold text-neutral-950 transition hover:bg-primary-300"
+                >
+                  提供サービスを登録 →
+                </Link>
+              </div>
+            ) : null}
             <div className="flex flex-col">
               {sortedMenus.map((s, i) => (
                 <div key={s.id}>
@@ -660,12 +677,21 @@ export default async function ExpertDetailPage({
               </span>
             ) : null}
           </div>
-          <a
-            href="#consult-menu"
-            className="inline-flex flex-1 items-center justify-center rounded-[8px] bg-primary-500 py-3 text-[15px] font-bold text-neutral-950 transition hover:bg-primary-300"
-          >
-            {hasSlots ? '空き枠を選ぶ' : 'チャットで相談する'}
-          </a>
+          {isEmptyPreview ? (
+            <Link
+              href="/settings/services"
+              className="inline-flex flex-1 items-center justify-center rounded-[8px] bg-primary-500 py-3 text-[15px] font-bold text-neutral-950 transition hover:bg-primary-300"
+            >
+              提供サービスを登録
+            </Link>
+          ) : (
+            <a
+              href="#consult-menu"
+              className="inline-flex flex-1 items-center justify-center rounded-[8px] bg-primary-500 py-3 text-[15px] font-bold text-neutral-950 transition hover:bg-primary-300"
+            >
+              {hasSlots ? '空き枠を選ぶ' : 'チャットで相談する'}
+            </a>
+          )}
         </div>
       </div>
     </main>
