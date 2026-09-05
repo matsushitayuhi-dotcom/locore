@@ -1,15 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Calendar, Check, MessageCircle } from 'lucide-react';
+import {
+  Calendar,
+  CalendarPlus,
+  Check,
+  Info,
+  MessageCircle,
+  Video,
+} from 'lucide-react';
 import type { ConsultationBookingStatus } from '@locore/db';
 import {
   acceptBooking,
   cancelBooking,
   declineBooking,
+  setBookingMeetUrl,
 } from '@/lib/bookings/actions';
 import { STATUS_LABELS, tzShortLabel } from '@/lib/bookings/constants';
 import {
@@ -36,6 +44,8 @@ export type BookingCardData = {
   priceJpy: number;
   requestMessage: string | null;
   chatThreadId: string | null;
+  /** 参加リンク（未設定は null）。confirmed の 4 状態出し分けに使う */
+  meetUrl: string | null;
   counterpartId: string;
   counterpartName: string;
   counterpartAvatarUrl: string | null;
@@ -44,6 +54,25 @@ export type BookingCardData = {
 };
 
 const JST = 'Asia/Tokyo';
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://locore.app';
+
+/**
+ * Google カレンダーのプリセット済みイベント作成 URL（OAuth 不要）。
+ * dates は UTC の YYYYMMDDTHHMMSSZ 形式。
+ */
+function googleCalendarUrl(b: BookingCardData, start: Date, end: Date): string {
+  const fmt = (d: Date) =>
+    d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `【Locore】${b.serviceTitle}（${b.counterpartName}さん）`,
+    dates: `${fmt(start)}/${fmt(end)}`,
+    details: `${b.meetUrl ? `参加リンク: ${b.meetUrl}\n` : ''}マイ相談: ${APP_URL}/bookings`,
+    ...(b.meetUrl ? { location: b.meetUrl } : {}),
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
 
 export function BookingCard({
   side,
@@ -57,6 +86,9 @@ export function BookingCard({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // 受け側の参加リンク登録フォーム（confirmed × リンク未登録 or 「変更」押下時）
+  const [urlDraft, setUrlDraft] = useState('');
+  const [editingUrl, setEditingUrl] = useState(false);
 
   const start = new Date(b.startIso);
   const end = new Date(b.endIso);
@@ -218,8 +250,19 @@ export function BookingCard({
           </>
         ) : null}
 
-        {isConfirmed ? (
+        {isConfirmed && side === 'mine' ? (
           <>
+            {b.meetUrl ? (
+              <a
+                href={b.meetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-primary-500 px-6 py-2.5 text-[13.5px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
+              >
+                <Video className="h-4 w-4" aria-hidden />
+                参加リンクを開く
+              </a>
+            ) : null}
             {b.chatThreadId ? (
               <Link
                 href={`/chat/${b.chatThreadId}`}
@@ -229,9 +272,15 @@ export function BookingCard({
                 チャットを開く
               </Link>
             ) : null}
-            <span className="ml-auto text-[11px] text-neutral-400">
-              当日の参加リンクはチャットで共有されます
-            </span>
+            <a
+              href={googleCalendarUrl(b, start, end)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-2 text-[12.5px] font-medium text-neutral-500 transition hover:text-foreground"
+            >
+              <CalendarPlus className="h-[15px] w-[15px]" aria-hidden />
+              Googleカレンダーに追加
+            </a>
           </>
         ) : null}
 
@@ -244,6 +293,89 @@ export function BookingCard({
           </Link>
         ) : null}
       </div>
+
+      {/* 依頼側 × 参加リンクなし: 準備中の注記（モック B） */}
+      {isConfirmed && side === 'mine' && !b.meetUrl ? (
+        <div className="mt-2.5 flex items-start gap-2 rounded-[10px] border border-dashed border-border-strong bg-background px-3.5 py-2.5 text-[11.5px] leading-relaxed text-neutral-500">
+          <Info
+            className="mt-0.5 h-[13px] w-[13px] shrink-0 text-neutral-400"
+            aria-hidden
+          />
+          参加リンクは準備でき次第ここに表示されます（メールでもお知らせします）。
+        </div>
+      ) : null}
+
+      {/* 受け側: 参加リンクの表示（モック D）/ インライン登録（モック C） */}
+      {isConfirmed && side === 'received' ? (
+        b.meetUrl && !editingUrl ? (
+          <div className="mt-3 flex min-w-0 items-center gap-2.5 rounded-[10px] border border-primary-100 bg-primary-50 px-3.5 py-2.5">
+            <Video
+              className="h-[14px] w-[14px] shrink-0 text-primary-700"
+              aria-hidden
+            />
+            <a
+              href={b.meetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-w-0 truncate font-mono text-[12px] font-semibold text-primary-900 underline-offset-4 hover:underline"
+            >
+              {b.meetUrl.replace(/^https:\/\//, '')}
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setUrlDraft(b.meetUrl ?? '');
+                setEditingUrl(true);
+              }}
+              className="ml-auto shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium text-neutral-500 transition hover:text-foreground"
+            >
+              変更
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3">
+            <div className="flex items-center gap-1.5 text-[12px] font-bold text-neutral-700">
+              <Video className="h-[14px] w-[14px] text-primary-700" aria-hidden />
+              参加リンクを{b.meetUrl ? '変更' : '登録'}
+            </div>
+            <div className="mt-1.5 flex gap-2">
+              <input
+                type="url"
+                value={urlDraft}
+                onChange={(e) => setUrlDraft(e.target.value)}
+                placeholder="https://meet.google.com/..."
+                aria-label="参加リンクの URL"
+                className="min-w-0 flex-1 rounded-[10px] border border-border-strong bg-card px-3 py-2 font-mono text-[12px] text-foreground outline-none placeholder:text-neutral-400 focus:border-primary-500"
+              />
+              <button
+                type="button"
+                disabled={pending || urlDraft.trim() === ''}
+                onClick={() =>
+                  startTransition(async () => {
+                    const res = await setBookingMeetUrl({
+                      bookingId: b.id,
+                      url: urlDraft.trim(),
+                    });
+                    if (!res.ok) {
+                      toast.error(res.error ?? '保存に失敗しました');
+                      router.refresh();
+                      return;
+                    }
+                    setEditingUrl(false);
+                    toast.success('参加リンクを保存しました');
+                  })
+                }
+                className="shrink-0 rounded-full bg-primary-500 px-5 py-2 text-[13px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300 disabled:opacity-50"
+              >
+                保存
+              </button>
+            </div>
+            <p className="mt-1.5 text-[10.5px] leading-relaxed text-neutral-500">
+              保存すると相手のマイ相談ページとチャットに共有されます。
+            </p>
+          </div>
+        )
+      ) : null}
     </article>
   );
 }

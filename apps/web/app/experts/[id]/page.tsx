@@ -309,7 +309,7 @@ export default async function ExpertDetailPage({
             <div className="flex items-start gap-2 rounded-xl bg-info-50 px-4 py-3 text-[11.5px] leading-relaxed text-info-500">
               <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
               {hasSlots
-                ? '承諾後の決済機能は準備中です。まずはリクエストを送ってみてください。'
+                ? '承諾されると参加リンクが共有され、そのままオンラインで相談できます（決済機能は準備中）。'
                 : '空き枠は準備中です。まずはチャットで相談内容と日程をすり合わせてください。'}
             </div>
             <p className="text-center text-[11px] leading-relaxed text-neutral-400">

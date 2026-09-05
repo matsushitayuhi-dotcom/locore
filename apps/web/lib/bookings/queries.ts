@@ -23,6 +23,8 @@ export type BookingView = {
   priceJpy: number;
   requestMessage: string | null;
   chatThreadId: string | null;
+  /** 参加リンク（承諾時の自動コピー or setBookingMeetUrl）。未設定は null */
+  meetUrl: string | null;
   createdAt: Date;
   /** 相手（依頼側から見ればエキスパート、受け側から見れば相談者） */
   counterpart: {
@@ -73,6 +75,7 @@ export async function listMyBookings(userId: string): Promise<BookingView[]> {
         priceJpy: schema.consultationBookings.priceJpy,
         requestMessage: schema.consultationBookings.requestMessage,
         chatThreadId: schema.consultationBookings.chatThreadId,
+        meetUrl: schema.consultationBookings.meetUrl,
         createdAt: schema.consultationBookings.createdAt,
         otherId: schema.users.id,
         otherName: schema.users.displayName,
@@ -101,6 +104,7 @@ export async function listMyBookings(userId: string): Promise<BookingView[]> {
         priceJpy: r.priceJpy,
         requestMessage: r.requestMessage,
         chatThreadId: r.chatThreadId,
+        meetUrl: r.meetUrl,
         createdAt: r.createdAt,
         counterpart: {
           id: r.otherId ?? '',
@@ -135,6 +139,7 @@ export async function listReceivedBookings(
         priceJpy: schema.consultationBookings.priceJpy,
         requestMessage: schema.consultationBookings.requestMessage,
         chatThreadId: schema.consultationBookings.chatThreadId,
+        meetUrl: schema.consultationBookings.meetUrl,
         createdAt: schema.consultationBookings.createdAt,
         otherId: schema.users.id,
         otherName: schema.users.displayName,
@@ -160,6 +165,7 @@ export async function listReceivedBookings(
         priceJpy: r.priceJpy,
         requestMessage: r.requestMessage,
         chatThreadId: r.chatThreadId,
+        meetUrl: r.meetUrl,
         createdAt: r.createdAt,
         counterpart: {
           id: r.otherId ?? '',
@@ -238,6 +244,7 @@ export async function getBooking(
       priceJpy: b.priceJpy,
       requestMessage: b.requestMessage,
       chatThreadId: b.chatThreadId,
+      meetUrl: b.meetUrl,
       createdAt: b.createdAt,
       counterpart: {
         id: b.requesterId === viewerId ? b.expertId : b.requesterId,

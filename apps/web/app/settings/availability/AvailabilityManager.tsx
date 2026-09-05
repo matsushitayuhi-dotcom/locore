@@ -7,6 +7,7 @@ import {
   addAvailabilityBulk,
   deleteAvailability,
 } from '@/lib/bookings/actions';
+import { MeetingRoomCard } from './MeetingRoomCard';
 import {
   DEFAULT_BULK_WEEKS,
   TIMEZONE_OPTIONS,
@@ -62,9 +63,12 @@ const selectCls =
 
 export function AvailabilityManager({
   initialTimezone,
+  initialMeetingRoomUrl,
   slots,
 }: {
   initialTimezone: string;
+  /** 固定の相談室 URL（users.meeting_room_url）。0082 未適用環境は null */
+  initialMeetingRoomUrl: string | null;
   slots: SlotView[];
 }) {
   const [pending, startTransition] = useTransition();
@@ -190,6 +194,9 @@ export function AvailabilityManager({
           で表示されます。
         </span>
       </div>
+
+      {/* 相談の受け方（固定の相談室 URL） */}
+      <MeetingRoomCard initialUrl={initialMeetingRoomUrl} />
 
       {/* 追加フォーム 2 枚 */}
       <div className="mt-5 grid items-stretch gap-4 lg:grid-cols-[1.5fr_1fr]">

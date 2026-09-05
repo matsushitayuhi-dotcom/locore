@@ -37,6 +37,7 @@ export default async function AvailabilitySettingsPage() {
 
   // 初期タイムゾーン: users.timezone → 相談メニュー都市の cities.timezone → Asia/Tokyo
   let initialTimezone: string | null = null;
+  let meetingRoomUrl: string | null = null;
   try {
     const db = getDb();
     const meRows = await db
@@ -45,6 +46,17 @@ export default async function AvailabilitySettingsPage() {
       .where(eq(schema.users.id, user.id))
       .limit(1);
     initialTimezone = meRows[0]?.timezone ?? null;
+    // 相談室 URL は 0082 の列なので分離クエリ（未適用環境で TZ まで巻き込まない）
+    try {
+      const roomRows = await db
+        .select({ meetingRoomUrl: schema.users.meetingRoomUrl })
+        .from(schema.users)
+        .where(eq(schema.users.id, user.id))
+        .limit(1);
+      meetingRoomUrl = roomRows[0]?.meetingRoomUrl ?? null;
+    } catch (err) {
+      console.warn('[settings/availability] meeting_room_url lookup failed (0082 未適用?):', err);
+    }
     if (!initialTimezone) {
       const cityTz = await db
         .select({ timezone: schema.cities.timezone })
@@ -73,6 +85,7 @@ export default async function AvailabilitySettingsPage() {
   return (
     <AvailabilityManager
       initialTimezone={initialTimezone ?? 'Asia/Tokyo'}
+      initialMeetingRoomUrl={meetingRoomUrl}
       slots={slots.map((s) => ({
         id: s.id,
         startIso: s.startAt.toISOString(),

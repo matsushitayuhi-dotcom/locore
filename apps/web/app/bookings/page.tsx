@@ -69,6 +69,7 @@ export default async function BookingsPage({
     priceJpy: b.priceJpy,
     requestMessage: b.requestMessage,
     chatThreadId: b.chatThreadId,
+    meetUrl: b.meetUrl,
     counterpartId: b.counterpart.id,
     counterpartName: b.counterpart.displayName,
     counterpartAvatarUrl: b.counterpart.avatarUrl,

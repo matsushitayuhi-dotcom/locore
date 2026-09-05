@@ -11,6 +11,12 @@ import {
   findOrCreateDirectThread,
   postThreadMessage,
 } from '@/lib/chat/threads';
+import {
+  notifyBookingCancelled,
+  notifyBookingConfirmed,
+  notifyBookingDeclined,
+  notifyBookingRequested,
+} from '@/lib/email/booking-notify';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import {
   BLOCKING_STATUSES,
@@ -483,7 +489,17 @@ export async function requestBooking(
     revalidatePath('/bookings');
     revalidatePath('/chat');
     revalidatePath(`/experts/${service.userId}`);
-    // TODO(mail): エキスパートへ「新しい相談リクエスト」メール通知（次スライス）
+    // エキスパートへ「新しい相談リクエスト」メール（失敗しても予約は成立済み）
+    await notifyBookingRequested({
+      id: bookingId,
+      expertId: service.userId,
+      requesterId: me.id,
+      startAt: start,
+      endAt: end,
+      serviceTitle: service.title,
+      priceJpy: price,
+      requestMessage: parsed.data.message,
+    });
     return { ok: true, data: { bookingId } };
   } catch (err) {
     console.error('[requestBooking] failed:', err);
@@ -581,11 +597,29 @@ export async function acceptBooking(
     };
   }
 
+  // 固定の相談室 URL（users.meeting_room_url）があれば承諾と同時に参加リンクへコピー
+  // （0082 未適用環境では select が落ちるので握りつぶして無しとして続行）
+  let roomUrl: string | null = null;
+  if (!b.meetUrl) {
+    try {
+      const db = getDb();
+      const rows = await db
+        .select({ meetingRoomUrl: schema.users.meetingRoomUrl })
+        .from(schema.users)
+        .where(eq(schema.users.id, me.id))
+        .limit(1);
+      roomUrl = rows[0]?.meetingRoomUrl ?? null;
+    } catch (err) {
+      console.warn('[acceptBooking] meeting_room_url fetch failed:', err);
+    }
+  }
+
   let accepted: boolean;
   try {
     accepted = await transitionBooking(b.id, ['requested'], {
       status: 'accepted',
       respondedAt: new Date(),
+      ...(roomUrl ? { meetUrl: roomUrl } : {}),
     });
   } catch (err) {
     if (isExclusionViolation(err)) {
@@ -604,13 +638,26 @@ export async function acceptBooking(
     };
   }
 
+  const finalMeetUrl = b.meetUrl ?? roomUrl;
   await postBookingChat(
     b.chatThreadId,
     me.id,
-    `【予約確定】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）を承諾しました。当日の参加方法はこのチャットでご案内します。`,
+    finalMeetUrl
+      ? `【予約確定】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）を承諾しました。\n参加リンク: ${finalMeetUrl}\n当日は時間になったらこのリンクからご参加ください。`
+      : `【予約確定】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）を承諾しました。参加リンクは準備でき次第、マイ相談ページとこのチャットでご案内します。`,
   );
   revalidatePath('/bookings');
-  // TODO(mail): 相談者へ「予約が確定しました」メール通知（次スライス）
+  // 相談者へ「相談が確定しました」メール（失敗しても承諾は成立済み）
+  await notifyBookingConfirmed({
+    id: b.id,
+    expertId: b.expertId,
+    requesterId: b.requesterId,
+    startAt: b.startAt,
+    endAt: b.endAt,
+    serviceTitle: b.serviceTitle,
+    priceJpy: b.priceJpy,
+    meetUrl: finalMeetUrl,
+  });
   return { ok: true };
 }
 
@@ -648,7 +695,16 @@ export async function declineBooking(
     `【リクエスト辞退】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）は今回お受けできませんでした。別の枠でのリクエストをご検討ください。`,
   );
   revalidatePath('/bookings');
-  // TODO(mail): 相談者へ「リクエストが辞退されました」メール通知（次スライス）
+  // 相談者へ「見送り」メール（失敗しても辞退は成立済み）
+  await notifyBookingDeclined({
+    id: b.id,
+    expertId: b.expertId,
+    requesterId: b.requesterId,
+    startAt: b.startAt,
+    endAt: b.endAt,
+    serviceTitle: b.serviceTitle,
+    priceJpy: b.priceJpy,
+  });
   return { ok: true };
 }
 
@@ -686,10 +742,130 @@ export async function cancelBooking(
     `【リクエスト取り下げ】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）のリクエストを取り下げました。`,
   );
   revalidatePath('/bookings');
-  // TODO(mail): エキスパートへ「リクエストが取り下げられました」メール通知（次スライス）
+  // エキスパートへ「取り下げ」メール（失敗しても取り下げは成立済み）
+  await notifyBookingCancelled({
+    id: b.id,
+    expertId: b.expertId,
+    requesterId: b.requesterId,
+    startAt: b.startAt,
+    endAt: b.endAt,
+    serviceTitle: b.serviceTitle,
+    priceJpy: b.priceJpy,
+  });
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// 参加リンク（通知スライス）
+// ---------------------------------------------------------------------------
+
+/** https:// のみ許可する URL 検証（javascript: 等の混入防止） */
+const meetUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .url()
+  .refine((u) => u.startsWith('https://'), {
+    message: 'https:// で始まる URL を入力してください',
+  });
+
+const setMeetUrlSchema = z.object({
+  bookingId: z.string().uuid(),
+  url: meetUrlSchema,
+});
+
+/**
+ * 確定済み予約に参加リンクを設定する（エキスパート本人・accepted/paid のみ）。
+ * 保存すると相手のマイ相談ページに表示され、チャットにも自動投稿される。
+ */
+export async function setBookingMeetUrl(
+  input: unknown,
+): Promise<BookingActionResult> {
+  const parsed = setMeetUrlSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'https:// で始まる会議 URL を入力してください（例: https://meet.google.com/...）',
+    };
+  }
+  const me = await requireUser();
+
+  const b = await loadBooking(parsed.data.bookingId);
+  if (!b || b.expertId !== me.id) {
+    return { ok: false, error: '予約が見つかりません' };
+  }
+  if (b.status !== 'accepted' && b.status !== 'paid') {
+    return { ok: false, error: '確定済みの予約にのみ参加リンクを設定できます' };
+  }
+
+  try {
+    const updated = await transitionBooking(b.id, ['accepted', 'paid'], {
+      meetUrl: parsed.data.url,
+    });
+    if (!updated) {
+      revalidatePath('/bookings');
+      return { ok: false, error: 'この予約はすでに処理されています' };
+    }
+  } catch (err) {
+    console.error('[setBookingMeetUrl] failed:', err);
+    return {
+      ok: false,
+      error: describeDbError('参加リンクの保存に失敗しました', err),
+    };
+  }
+
+  await postBookingChat(
+    b.chatThreadId,
+    me.id,
+    `【参加リンク】${b.serviceTitle} / ${formatSlotJst(b.startAt, b.endAt)}（日本時間）\n${parsed.data.url}\n当日は時間になったらこのリンクからご参加ください。`,
+  );
+  revalidatePath('/bookings');
+  return { ok: true };
+}
+
+const roomUrlSchema = z.object({
+  // 空文字は「削除」
+  url: z.union([z.literal(''), meetUrlSchema]),
+});
+
+/**
+ * 固定の相談室 URL（users.meeting_room_url）を保存する。
+ * 登録しておくと、以後の承諾時に自動で参加リンクへコピー・共有される。
+ */
+export async function updateMeetingRoomUrl(
+  input: unknown,
+): Promise<BookingActionResult> {
+  const parsed = roomUrlSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: 'https:// で始まる URL を入力してください（例: https://meet.google.com/...）',
+    };
+  }
+  const me = await requireUser();
+  if (!isWriterRole(me.role)) {
+    return { ok: false, error: 'エキスパートのみ設定できます' };
+  }
+  try {
+    const db = getDb();
+    await db
+      .update(schema.users)
+      .set({ meetingRoomUrl: parsed.data.url === '' ? null : parsed.data.url })
+      .where(eq(schema.users.id, me.id));
+    revalidatePath('/settings/availability');
+    return { ok: true };
+  } catch (err) {
+    console.error('[updateMeetingRoomUrl] failed:', err);
+    return {
+      ok: false,
+      error: describeDbError(
+        '相談室 URL の保存に失敗しました（0082 未適用の可能性があります）',
+        err,
+      ),
+    };
+  }
 }
 
 // expireStaleBookings（requested 一括 expired 化）は 'use server' から外し、
 // lib/bookings/queries.ts へ移動した（無認証で POST 可能なサーバーアクションに
-// しないため。将来 cron から呼ぶシームはそちら）。
+// しないため。cron（/api/cron/booking-reminder）から認可付きで呼ばれる）。
