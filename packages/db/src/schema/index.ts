@@ -55,6 +55,9 @@ export * from './chat';
 export * from './expert_availability';
 export * from './consultation_bookings';
 
+// 海外大学マスタ（Wikidata 由来・0081）
+export * from './universities';
+
 // Marketplace (skill / network)
 export * from './seller_profiles';
 export * from './listings';

@@ -33,6 +33,7 @@
     "db:seed": "tsx seed/index.ts",
     "db:seed-mock": "tsx seed/seed-mock.ts",
     "db:seed-experts": "tsx seed/seed-experts.ts",
+    "db:import-universities": "tsx seed/import-universities.ts",
     "db:clean-samples": "tsx seed/clean-samples.ts",
     "clean": "rimraf dist .turbo *.tsbuildinfo"
   },
