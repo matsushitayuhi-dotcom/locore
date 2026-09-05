@@ -1,10 +1,10 @@
-import { Briefcase, GraduationCap } from 'lucide-react';
+import { Briefcase, ChevronUp, GraduationCap } from 'lucide-react';
 import type { EducationEntry, WorkEntry } from '@locore/db';
 
 /**
  * /experts/[id] の「経歴」タイムライン（学歴・職歴スライス）。
  *
- * 職歴 → 学歴の順に 1 本のリストで表示。各項目は丸アイコン
+ * 職歴・学歴をまとめて 1 本の時系列で表示（上 = いま、下 = 過去。線は下から上へ流れる）。各項目は丸アイコン
  * （Briefcase / GraduationCap）＋縦ライン、名称太字＋サブ行（役職 or 学位・専攻）、
  * 右端に期間（年未記入の項目は期間非表示）。
  * ソート: 現在（current）先頭 → endYear 降順 → startYear 降順（null は末尾）。
@@ -79,14 +79,15 @@ export function CareerTimeline({
       name: e.school,
       sub:
         [e.degree?.trim(), e.field?.trim()].filter(Boolean).join('・') || null,
-      period: periodOf(e.startYear, e.endYear, false),
-      current: false,
+      // 在学中（EducationEntry.current、留学特化）は「現在」として最上段に
+      period: periodOf(e.startYear, e.endYear, !!e.current),
+      current: !!e.current,
       startYear: e.startYear ?? null,
       endYear: e.endYear ?? null,
     }));
 
-  // 職歴 → 学歴の順に 1 本のリスト（各グループ内でソート）
-  const items = [...sortItems(work), ...sortItems(edu)];
+  // 職歴・学歴をまとめて 1 本の時系列に（現在 → 新しい順）。上が「いま」、下が過去。
+  const items = sortItems([...work, ...edu]);
   if (items.length === 0) return null;
 
   const cut = initialCount != null && items.length > initialCount ? initialCount : items.length;
@@ -96,25 +97,30 @@ export function CareerTimeline({
   const renderItems = (list: TimelineItem[], offset: number) =>
     list.map((item, j) => {
       const i = offset + j;
-      const last = i === items.length - 1;
       const Icon = item.kind === 'work' ? Briefcase : GraduationCap;
+      const now = item.current;
       return (
-        <li
-          key={`${item.kind}-${i}`}
-          className={'relative flex gap-[14px]' + (last ? '' : ' pb-5')}
-        >
-          {!last ? (
-            <span
-              className="absolute bottom-0.5 left-[17px] top-[40px] w-px bg-border"
-              aria-hidden
-            />
-          ) : null}
-          <span className="z-[1] grid h-[35px] w-[35px] shrink-0 place-items-center rounded-full border border-primary-100 bg-primary-50 text-primary-700">
+        <li key={`${item.kind}-${i}`} className="relative flex gap-[14px] pb-5 last:pb-0">
+          <span
+            className={
+              'z-[1] grid h-[35px] w-[35px] shrink-0 place-items-center rounded-full border ' +
+              (now
+                ? 'border-primary-500 bg-primary-500 text-neutral-950'
+                : 'border-border bg-card text-neutral-500')
+            }
+          >
             <Icon className="h-4 w-4" aria-hidden />
           </span>
           <div className="flex min-w-0 flex-1 items-start gap-3 pt-1">
             <div className="min-w-0">
-              <b className="block text-[14px] font-bold leading-snug">{item.name}</b>
+              <b className="block text-[14px] font-bold leading-snug">
+                {item.name}
+                {now ? (
+                  <span className="ml-2 rounded-full bg-primary-100 px-2 py-px text-[10px] font-bold text-primary-900">
+                    現在
+                  </span>
+                ) : null}
+              </b>
               {item.sub ? (
                 <span className="mt-0.5 block text-[12.5px] text-neutral-500">{item.sub}</span>
               ) : null}
@@ -130,17 +136,30 @@ export function CareerTimeline({
     });
 
   return (
-    <div>
+    <div className="relative">
+      {/* 時間の流れ: 下（過去）から上（いま）へ。線はライム（上）→ 罫線色（下）のグラデーション */}
+      <span
+        className="pointer-events-none absolute bottom-[18px] left-[17px] top-[18px] w-px bg-gradient-to-b from-primary-500 via-primary-200 to-border"
+        aria-hidden
+      />
+      <span
+        className="pointer-events-none absolute -top-3 left-[10px] text-primary-700"
+        aria-hidden
+      >
+        <ChevronUp className="h-[14px] w-[14px]" strokeWidth={3} />
+      </span>
       <ol className="flex flex-col">{renderItems(shown, 0)}</ol>
       {rest.length > 0 ? (
         <details className="group">
-          <summary className="mt-1 inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border-strong px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
-            残り {rest.length} 件の経歴を表示
+          <summary className="ml-[49px] mt-4 inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
+            さらに前の経歴 {rest.length} 件を表示
           </summary>
           <ol className="flex flex-col pt-5">{renderItems(rest, shown.length)}</ol>
         </details>
       ) : null}
-      <p className="mt-4 text-[10.5px] text-neutral-400">※経歴は本人申告の情報です</p>
+      <p className="ml-[49px] mt-4 text-[10.5px] text-neutral-400">
+        上が現在、下が過去。※経歴は本人申告の情報です
+      </p>
     </div>
   );
 }

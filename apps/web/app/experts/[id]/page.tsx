@@ -29,8 +29,9 @@ import { CareerTimeline } from '@/components/experts/CareerTimeline';
  * 認証・言語・評価」を 1 画面に。長いリスト（相談できること / 自己紹介 / 経歴 / レビュー）は
  * 最初の数件だけ見せて <details> で展開。使い方・FAQ は /about-service への 1 行リンクに。
  *
- * 左: ヒーロー → ページ内アンカー → こんな相談に乗れます → 自己紹介 → 経歴 → 記事 → レビュー
+ * 左: ヒーロー → ページ内アンカー → こんな相談に乗れます → 自己紹介 → 経歴 → 記事 → レビュー（最後）
  * 右 (sticky、画面より長ければ中でスクロール): 相談メニュー → 継続プラン → 直近の空き枠
+ * モバイル（1 カラム）では DOM 順どおり「ヒーロー → 相談メニュー（サービス）→ 本文 → レビュー」。
  *
  * 留学オンライン相談に合わない項目は表示しない（データは残す）:
  *   在住年数の生表示、オンライン相談 / 30分・60分の汎用メタ、使い方タイル、FAQ 一覧。
@@ -256,8 +257,8 @@ export default async function ExpertDetailPage({
         </nav>
 
         <div className="grid items-start gap-7 pb-28 lg:grid-cols-[1fr_360px] lg:gap-12 lg:pb-16">
-          {/* ===== left ===== */}
-          <div className="min-w-0">
+          {/* ===== left-top: ヒーロー＋アンカー（モバイルでは相談メニューがこの直後に来る）===== */}
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             {/* ===== hero: 写真は小さく横並び、決め手（学校・在学/卒業・得意分野）を 1 画面に ===== */}
             <section className="grid grid-cols-[104px_1fr] gap-4 sm:grid-cols-[168px_1fr] sm:gap-6">
               <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-900">
@@ -375,6 +376,115 @@ export default async function ExpertDetailPage({
                 相談メニュー
               </a>
             </nav>
+          </div>
+
+          {/* ===== right (sticky。画面より長いときは中でスクロール) ===== */}
+          <aside
+            id="consult-menu"
+            className="scroll-mt-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]"
+          >
+            <div className="mb-3 text-[13px] text-neutral-500">
+              相談メニュー — <b className="text-foreground">{profile.displayName}</b>さん
+            </div>
+            {isEmptyPreview ? (
+              <div className="mt-3.5 rounded-[6px] border border-dashed border-border-strong px-4 py-6 text-center">
+                <b className="block text-[15px] font-semibold">相談メニューがまだありません</b>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500">
+                  30分・60分の相談メニューを 1 本以上登録すると、このページを公開して一覧に載せられます。
+                </p>
+                <Link
+                  href="/settings/services"
+                  className="mt-4 inline-flex h-[46px] items-center justify-center rounded-[8px] bg-primary-500 px-6 text-[14.5px] font-bold text-neutral-950 transition hover:bg-primary-300"
+                >
+                  提供サービスを登録 →
+                </Link>
+              </div>
+            ) : null}
+            <div className="flex flex-col">
+              {sortedMenus.map((s, i) => (
+                <div key={s.id}>
+                  {i > 0 ? (
+                    <div className="my-5 flex items-center gap-3 text-[12.5px] text-neutral-400 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+                      または
+                    </div>
+                  ) : null}
+                  <div className={i === 0 ? 'mt-3.5' : ''}>
+                    <ConsultMenuCard
+                      service={s}
+                      ownerName={profile.displayName}
+                      viewerUserId={me?.id ?? null}
+                      expertId={profile.id}
+                      variant={i === 0 ? 'primary' : 'secondary'}
+                      tabLabel={
+                        i === 0 && sortedMenus.length > 1
+                          ? 'はじめての方に'
+                          : (durationByServiceId.get(s.id) != null
+                              ? `${durationByServiceId.get(s.id)}分`
+                              : undefined)
+                      }
+                      requestHref={requestHrefFor(s)}
+                      nextSlotLabel={nextSlotFor(s)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 継続プラン（伴走・月額、0083）。単発メニューの下に続ける */}
+            {profile.plans.length > 0 ? (
+              <div>
+                <div className="my-5 flex items-center gap-3 text-[12.5px] text-neutral-400 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
+                  出願完了まで伴走してほしい方に
+                </div>
+                <div className="flex flex-col gap-6">
+                  {profile.plans.map((p) => (
+                    <PlanCard
+                      key={p.id}
+                      plan={p}
+                      expertId={profile.id}
+                      isOwner={me?.id === profile.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {hasSlots ? (
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-[15px] font-semibold">直近の空き枠</h2>
+                  <span className="text-[11px] text-neutral-500">日本時間</span>
+                </div>
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {nextSlots.map((d) => (
+                    <li
+                      key={d.toISOString()}
+                      className="rounded-full bg-muted px-3 py-1 text-[12.5px] font-semibold tabular-nums"
+                    >
+                      {formatSlotJst(d)}〜
+                    </li>
+                  ))}
+                  {bookableMenus[0] ? (
+                    <li>
+                      <Link
+                        href={`/experts/${profile.id}/request?service=${bookableMenus[0].id}`}
+                        className="inline-flex rounded-full border border-border-strong px-3 py-1 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground"
+                      >
+                        すべて見る →
+                      </Link>
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
+            ) : null}
+
+            <p className="mt-4 text-[11.5px] leading-relaxed text-neutral-400">
+              チャットでの事前相談は無料。承諾後にオンラインで相談します。やり取りはすべて Locore 内で完結し、個人連絡先の交換は不要です（決済機能は準備中）。
+            </p>
+          </aside>
+
+          {/* ===== left-bottom: 本文（レビューは最後）===== */}
+          <div className="min-w-0 lg:col-start-1 lg:row-start-2">
 
             {/* ===== 相談できること（最初の 4 件 + 展開）===== */}
             {profile.offerings.length > 0 ? (
@@ -524,110 +634,6 @@ export default async function ExpertDetailPage({
             </div>
           </div>
 
-          {/* ===== right (sticky。画面より長いときは中でスクロール) ===== */}
-          <aside
-            id="consult-menu"
-            className="scroll-mt-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]"
-          >
-            <div className="mb-3 text-[13px] text-neutral-500">
-              相談メニュー — <b className="text-foreground">{profile.displayName}</b>さん
-            </div>
-            {isEmptyPreview ? (
-              <div className="mt-3.5 rounded-[6px] border border-dashed border-border-strong px-4 py-6 text-center">
-                <b className="block text-[15px] font-semibold">相談メニューがまだありません</b>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-neutral-500">
-                  30分・60分の相談メニューを 1 本以上登録すると、このページを公開して一覧に載せられます。
-                </p>
-                <Link
-                  href="/settings/services"
-                  className="mt-4 inline-flex h-[46px] items-center justify-center rounded-[8px] bg-primary-500 px-6 text-[14.5px] font-bold text-neutral-950 transition hover:bg-primary-300"
-                >
-                  提供サービスを登録 →
-                </Link>
-              </div>
-            ) : null}
-            <div className="flex flex-col">
-              {sortedMenus.map((s, i) => (
-                <div key={s.id}>
-                  {i > 0 ? (
-                    <div className="my-5 flex items-center gap-3 text-[12.5px] text-neutral-400 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-                      または
-                    </div>
-                  ) : null}
-                  <div className={i === 0 ? 'mt-3.5' : ''}>
-                    <ConsultMenuCard
-                      service={s}
-                      ownerName={profile.displayName}
-                      viewerUserId={me?.id ?? null}
-                      expertId={profile.id}
-                      variant={i === 0 ? 'primary' : 'secondary'}
-                      tabLabel={
-                        i === 0 && sortedMenus.length > 1
-                          ? 'はじめての方に'
-                          : (durationByServiceId.get(s.id) != null
-                              ? `${durationByServiceId.get(s.id)}分`
-                              : undefined)
-                      }
-                      requestHref={requestHrefFor(s)}
-                      nextSlotLabel={nextSlotFor(s)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* 継続プラン（伴走・月額、0083）。単発メニューの下に続ける */}
-            {profile.plans.length > 0 ? (
-              <div>
-                <div className="my-5 flex items-center gap-3 text-[12.5px] text-neutral-400 before:h-px before:flex-1 before:bg-border after:h-px after:flex-1 after:bg-border">
-                  出願完了まで伴走してほしい方に
-                </div>
-                <div className="flex flex-col gap-6">
-                  {profile.plans.map((p) => (
-                    <PlanCard
-                      key={p.id}
-                      plan={p}
-                      expertId={profile.id}
-                      isOwner={me?.id === profile.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {hasSlots ? (
-              <div className="mt-5 border-t border-border pt-4">
-                <div className="flex items-baseline justify-between">
-                  <h2 className="text-[15px] font-semibold">直近の空き枠</h2>
-                  <span className="text-[11px] text-neutral-500">日本時間</span>
-                </div>
-                <ul className="mt-2 flex flex-wrap gap-1.5">
-                  {nextSlots.map((d) => (
-                    <li
-                      key={d.toISOString()}
-                      className="rounded-full bg-muted px-3 py-1 text-[12.5px] font-semibold tabular-nums"
-                    >
-                      {formatSlotJst(d)}〜
-                    </li>
-                  ))}
-                  {bookableMenus[0] ? (
-                    <li>
-                      <Link
-                        href={`/experts/${profile.id}/request?service=${bookableMenus[0].id}`}
-                        className="inline-flex rounded-full border border-border-strong px-3 py-1 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground"
-                      >
-                        すべて見る →
-                      </Link>
-                    </li>
-                  ) : null}
-                </ul>
-              </div>
-            ) : null}
-
-            <p className="mt-4 text-[11.5px] leading-relaxed text-neutral-400">
-              チャットでの事前相談は無料。承諾後にオンラインで相談します。やり取りはすべて Locore 内で完結し、個人連絡先の交換は不要です（決済機能は準備中）。
-            </p>
-          </aside>
         </div>
       </div>
 
