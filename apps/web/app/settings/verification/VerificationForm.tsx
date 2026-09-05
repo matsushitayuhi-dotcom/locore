@@ -6,6 +6,7 @@ import { Button, Input } from '@locore/ui';
 import { Upload, X, FileText, Loader2 } from 'lucide-react';
 import { createResidencyVerification } from './actions';
 import { uploadVerificationDoc } from '@/lib/storage/uploadVerificationDoc';
+import { ENROLLMENT_DOCS, type EnrollmentDocType } from './docTypes';
 
 /**
  * 在籍確認の申請フォーム（Client Component）。留学特化。
@@ -20,30 +21,9 @@ import { uploadVerificationDoc } from '@/lib/storage/uploadVerificationDoc';
  * 旧「本人確認」の住所・電話などは聞かない（在籍の確認に不要）。
  */
 
-export const ENROLLMENT_DOCS = [
-  {
-    value: 'enrollment_certificate',
-    label: '入学証明書・在籍証明書',
-    hint: '大学が発行する Enrollment / Admission Letter、在籍証明書。氏名・学校名・年度が読めるもの',
-  },
-  {
-    value: 'student_id',
-    label: '学生証',
-    hint: '有効期限内のもの。氏名・学校名・写真面。学籍番号はマスクして構いません',
-  },
-  {
-    value: 'diploma',
-    label: '卒業証書・学位記（アルムナイ）',
-    hint: '卒業した方向け。Diploma / Degree Certificate。氏名・学校名・学位・年月が読めるもの',
-  },
-  {
-    value: 'other',
-    label: 'その他',
-    hint: '成績証明書・合格通知など。補足欄に書類名を明記してください',
-  },
-] as const;
 
-type DocType = (typeof ENROLLMENT_DOCS)[number]['value'];
+
+type DocType = EnrollmentDocType;
 
 type UploadedFile = { path: string; name: string; size: number };
 

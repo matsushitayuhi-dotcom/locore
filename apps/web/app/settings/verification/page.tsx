@@ -3,7 +3,8 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { getMyLatestVerification } from './actions';
-import { VerificationForm, ENROLLMENT_DOCS } from './VerificationForm';
+import { VerificationForm } from './VerificationForm';
+import { ENROLLMENT_DOCS } from './docTypes';
 import { QualificationForm, QualificationDeleteButton } from './QualificationForm';
 import {
   getUserQualifications,
