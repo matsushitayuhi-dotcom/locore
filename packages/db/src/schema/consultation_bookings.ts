@@ -68,6 +68,12 @@ export const consultationBookings = pgTable(
      * manual/0082_booking_notifications.sql。
      */
     reminderSentAt: timestamp('reminder_sent_at', { withTimezone: true }),
+    /**
+     * 継続プラン契約（plan_enrollments）経由のセッション。NULL = 単発。
+     * price_jpy=0 で作られ、当月残回数の算出対象。manual/0083_companion_plans.sql。
+     * （FK は DB 側で定義。ここで references() すると循環 import になるため持たない）
+     */
+    enrollmentId: uuid('enrollment_id'),
     paidAt: timestamp('paid_at', { withTimezone: true }),
     stripeCheckoutSessionId: text('stripe_checkout_session_id'),
     createdAt: timestamp('created_at', { withTimezone: true })

@@ -35,6 +35,7 @@ import {
   userServices,
   expertAvailability,
   consultationBookings,
+  planEnrollments,
   type EducationEntry,
   type WorkEntry,
   type NewCity,
@@ -45,6 +46,7 @@ import {
   type NewUserService,
   type NewExpertAvailability,
   type NewConsultationBooking,
+  type NewPlanEnrollment,
 } from '../src/schema';
 
 // =============================================================================
@@ -219,6 +221,14 @@ type ExpertSeed = {
   workHistory: WorkEntry[];
   /** 固定の相談室 URL（0082・任意）。承諾時に参加リンクへ自動コピーされるデモ用 */
   meetingRoom?: string;
+  /** 継続プラン（0083・任意）。月定の「出願まるごと伴走」を 1 本追加する */
+  plan?: {
+    title: string;
+    monthlyPrice: number;
+    sessionsPerMonth: number;
+    durationMinutes: number;
+    desc: string;
+  };
   /** 実写アバター（/experts/<key>.jpg・デモ用プレースホルダ） */
   avatar: string;
   price30: number;
@@ -262,6 +272,13 @@ const EXPERTS: ExpertSeed[] = [
     ],
     avatar: '/experts/aya.jpg',
     meetingRoom: 'https://meet.google.com/aya-hbs-room',
+    plan: {
+      title: 'MBA出願まるごと伴走プラン',
+      monthlyPrice: 28000,
+      sessionsPerMonth: 2,
+      durationMinutes: 60,
+      desc: '出願校選定からエッセイ・面接まで、月2回の60分セッションで出願完了まで伴走します。チャットでの質問はいつでもどうぞ。',
+    },
     price30: 6000,
     price60: 12000,
     desc30:
@@ -302,6 +319,13 @@ const EXPERTS: ExpertSeed[] = [
     ],
     avatar: '/experts/kentaro.jpg',
     meetingRoom: 'https://meet.google.com/ren-cu-room',
+    plan: {
+      title: '米大学院出願 伴走プラン',
+      monthlyPrice: 20000,
+      sessionsPerMonth: 2,
+      durationMinutes: 30,
+      desc: 'SoP・推薦状・出願校リストを月2回の30分セッションで前に進めます。CS系の社会人出願が得意です。',
+    },
     price30: 5000,
     price60: 9000,
     desc30:
@@ -342,6 +366,13 @@ const EXPERTS: ExpertSeed[] = [
     ],
     avatar: '/experts/misaki.jpg',
     meetingRoom: 'https://meet.google.com/mizuki-lse-room',
+    plan: {
+      title: '英大学院出願 伴走プラン',
+      monthlyPrice: 18000,
+      sessionsPerMonth: 2,
+      durationMinutes: 30,
+      desc: 'Personal Statement と奨学金応募を月2回の30分セッションで並走します。公共政策・社会科学系に対応。',
+    },
     price30: 4500,
     price60: 8500,
     desc30:
@@ -770,6 +801,7 @@ async function main() {
       durationLabel: '30分',
       durationMinutes: 30,
       languages: e.languageLabels,
+      planKind: 'single',
       isActive: true,
       position: 0,
     },
@@ -788,9 +820,35 @@ async function main() {
       durationLabel: '60分',
       durationMinutes: 60,
       languages: e.languageLabels,
+      planKind: 'single',
       isActive: true,
       position: 1,
     },
+    // 継続プラン（0083・任意）: 月定の「出願まるごと伴走」
+    ...(e.plan
+      ? [
+          {
+            id: stableUuid(`expert-plan:${e.key}`),
+            userId: expertUuid(e.key),
+            title: e.plan.title,
+            description: e.plan.desc,
+            category: 'consulting',
+            priceJpy: e.plan.monthlyPrice,
+            priceUnit: '月額・税込',
+            contactMethod: 'chat',
+            cityId: cityIdBySlug[e.citySlug]!,
+            audience: 'both',
+            tags: ['consultation', ...e.topics],
+            durationLabel: `${e.plan.durationMinutes}分`,
+            durationMinutes: e.plan.durationMinutes,
+            languages: e.languageLabels,
+            planKind: 'monthly',
+            sessionsPerMonth: e.plan.sessionsPerMonth,
+            isActive: true,
+            position: 2,
+          } satisfies NewUserService,
+        ]
+      : []),
   ]);
 
   await db
@@ -811,6 +869,8 @@ async function main() {
         durationLabel: sql`excluded.duration_label`,
         durationMinutes: sql`excluded.duration_minutes`,
         languages: sql`excluded.languages`,
+        planKind: sql`excluded.plan_kind`,
+        sessionsPerMonth: sql`excluded.sessions_per_month`,
         isActive: sql`excluded.is_active`,
         position: sql`excluded.position`,
       },
@@ -909,6 +969,50 @@ async function main() {
         cancelledAt: sql`null`,
       },
     });
+
+  // ---- plan_enrollments（requested 状態のサンプル契約 1 件・0083） -----------
+  // 伊藤（NYC）→ 高村（ボストン）の MBA 伴走プランへの申込中。受信箱の
+  // 要返答カードと、承諾後のプラン内セッション予約フローを確認できるようにする。
+  console.log('[seed-experts] plan_enrollments (sample requested) ...');
+  const ayaPlan = aya.plan!;
+  const sampleEnrollment: NewPlanEnrollment = {
+    id: stableUuid('expert-enrollment:sample-requested'),
+    serviceId: stableUuid('expert-plan:aya'),
+    expertId: expertUuid('aya'),
+    memberId: expertUuid('kentaro'),
+    status: 'requested',
+    planTitle: ayaPlan.title,
+    monthlyPriceJpy: ayaPlan.monthlyPrice,
+    sessionsPerMonth: ayaPlan.sessionsPerMonth,
+    durationMinutes: ayaPlan.durationMinutes,
+    commissionRate: '0.20',
+    platformFeeJpy: Math.round(ayaPlan.monthlyPrice * 0.2),
+    requestMessage:
+      '2027年秋入学でMBAを目指しています。エッセイと出願校選びを月2回ペースで伴走してほしいです。',
+  };
+  try {
+    await db
+      .insert(planEnrollments)
+      .values([sampleEnrollment])
+      .onConflictDoUpdate({
+        target: planEnrollments.id,
+        set: {
+          status: sql`excluded.status`,
+          planTitle: sql`excluded.plan_title`,
+          monthlyPriceJpy: sql`excluded.monthly_price_jpy`,
+          sessionsPerMonth: sql`excluded.sessions_per_month`,
+          durationMinutes: sql`excluded.duration_minutes`,
+          requestMessage: sql`excluded.request_message`,
+          respondedAt: sql`null`,
+          endedAt: sql`null`,
+        },
+      });
+  } catch (err) {
+    console.warn(
+      '[seed-experts] plan_enrollments スキップ（0083 未適用?）:',
+      err instanceof Error ? err.message : err,
+    );
+  }
 
   console.log('[seed-experts] done.');
   console.log(`  - experts: ${EXPERTS.length} / menus: ${svcRows.length}`);

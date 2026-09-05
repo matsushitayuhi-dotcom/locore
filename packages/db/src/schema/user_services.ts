@@ -77,6 +77,10 @@ export const userServices = pgTable(
     meetingPointLng: doublePrecision('meeting_point_lng'),
     /** キャンセルポリシー（安心注記で表示） */
     cancellationPolicy: text('cancellation_policy'),
+    /** 'single'=単発（既存・既定）/ 'monthly'=継続プラン（月額・月N回）。0083 */
+    planKind: text('plan_kind').notNull().default('single'),
+    /** 継続プランの月あたりセッション回数（plan_kind='monthly' のみ）。0083 */
+    sessionsPerMonth: integer('sessions_per_month'),
     isActive: boolean('is_active').notNull().default(true),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true })

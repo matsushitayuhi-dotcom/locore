@@ -14,3 +14,9 @@ export {
   CONSULTATION_BOOKING_STATUSES,
   type ConsultationBookingStatus,
 } from './schema/consultation_bookings';
+
+// 継続プラン（伴走）ステータスも同様に再エクスポート
+export {
+  PLAN_ENROLLMENT_STATUSES,
+  type PlanEnrollmentStatus,
+} from './schema/plan_enrollments';
