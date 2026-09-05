@@ -160,6 +160,7 @@ export function AvailabilityManager({
   const [weekOffset, setWeekOffset] = useState(0);
   const [sel, setSel] = useState<Selection | null>(null);
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [hover, setHover] = useState<{ col: number; r: number } | null>(null);
 
   const selRef = useRef<Selection | null>(null);
   const draggingRef = useRef(false);
@@ -363,16 +364,22 @@ export function AvailabilityManager({
   };
 
   const onColMove = (e: ReactPointerEvent, col: number, day: DayCol) => {
+    const el = e.currentTarget as HTMLElement;
+    let r = rowFromEvent(e, el);
+    // ホバー中の時間帯を常時追跡（ドラッグ有無に関わらず）
+    setHover((h) => (h && h.col === col && h.r === r ? h : { col, r }));
     if (!draggingRef.current) return;
     const cur = selRef.current;
     if (!cur || cur.col !== col) return; // 同じ曜日の列内でのみ伸ばす
-    const el = e.currentTarget as HTMLElement;
-    let r = rowFromEvent(e, el);
     if (day.isToday) r = Math.max(r, nowRow);
     if (r === cur.r1) return;
     const s = { ...cur, r1: r };
     selRef.current = s;
     setSel(s);
+  };
+
+  const onColLeave = () => {
+    if (!draggingRef.current) setHover(null);
   };
 
   // ハイライト: ドラッグ中は sel、ポップアップ表示中は editor の時間帯を反映
@@ -459,38 +466,38 @@ export function AvailabilityManager({
 
       {/* カレンダー */}
       <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
-        {/* 曜日ヘッダー */}
-        <div className="grid grid-cols-[52px_repeat(7,1fr)] border-b border-border bg-background">
-          <div />
-          {days.map((day) => (
-            <div
-              key={day.key}
-              className={
-                'border-l border-border py-2 text-center ' +
-                (day.isToday ? 'bg-primary-50' : '')
-              }
-            >
+        {/* スクロール領域（ヘッダーも中に入れて同一グリッド幅にし、列ズレを防ぐ） */}
+        <div ref={scrollRef} className="max-h-[62vh] overflow-y-auto">
+          {/* 曜日ヘッダー（sticky） */}
+          <div className="sticky top-0 z-20 grid grid-cols-[52px_repeat(7,1fr)] border-b border-border bg-background">
+            <div />
+            {days.map((day) => (
               <div
+                key={day.key}
                 className={
-                  'text-[12px] font-bold ' +
-                  (day.weekday === 0
-                    ? 'text-danger-500'
-                    : day.weekday === 6
-                      ? 'text-primary-700'
-                      : 'text-neutral-700')
+                  'border-l border-border py-2 text-center ' +
+                  (day.isToday ? 'bg-primary-50' : '')
                 }
               >
-                {WEEKDAY_JA[day.weekday]}
+                <div
+                  className={
+                    'text-[12px] font-bold ' +
+                    (day.weekday === 0
+                      ? 'text-danger-500'
+                      : day.weekday === 6
+                        ? 'text-primary-700'
+                        : 'text-neutral-700')
+                  }
+                >
+                  {WEEKDAY_JA[day.weekday]}
+                </div>
+                <div className="text-[11px] tabular-nums text-neutral-500">
+                  {day.mo}/{day.d}
+                </div>
               </div>
-              <div className="text-[11px] tabular-nums text-neutral-500">
-                {day.mo}/{day.d}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* スクロール領域 */}
-        <div ref={scrollRef} className="max-h-[62vh] overflow-y-auto">
           <div className="grid select-none grid-cols-[52px_repeat(7,1fr)]">
             {/* 時間ラベル（0〜23時） */}
             <div className="relative" style={{ height: ROWS * ROW_H }}>
@@ -515,6 +522,7 @@ export function AvailabilityManager({
                 style={{ height: ROWS * ROW_H }}
                 onPointerDown={(e) => onColDown(e, col, day)}
                 onPointerMove={(e) => onColMove(e, col, day)}
+                onPointerLeave={onColLeave}
               >
                 {/* 30分セル（表示専用。操作は列で受ける） */}
                 {Array.from({ length: ROWS }, (_, r) => {
@@ -541,6 +549,22 @@ export function AvailabilityManager({
                     />
                   );
                 })}
+
+                {/* ホバー中の 30 分をハイライト（ドラッグ中・ポップアップ中は出さない） */}
+                {hover &&
+                hover.col === col &&
+                !editor &&
+                !sel &&
+                !cellDisabled(day, hover.r) ? (
+                  <div
+                    className="pointer-events-none absolute inset-x-0 z-10 bg-primary-500/15"
+                    style={{ top: hover.r * ROW_H, height: ROW_H }}
+                  >
+                    <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
+                      {hmFromRow(hover.r)}
+                    </span>
+                  </div>
+                ) : null}
 
                 {/* 既存の空き枠ブロック */}
                 {blocks
