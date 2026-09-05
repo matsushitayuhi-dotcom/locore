@@ -8,6 +8,7 @@ import { requireUser } from '@/lib/auth/require-user';
 import { listOpenStartTimes } from '@/lib/bookings/availability';
 import { countryFlagEmoji } from '@/lib/experts/list';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
+import { getEnrollment } from '@/lib/plans/queries';
 import { RequestForm } from './RequestForm';
 
 export const metadata = {
@@ -30,12 +31,24 @@ export default async function BookingRequestPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams?: { service?: string | string[] };
+  searchParams?: {
+    service?: string | string[];
+    enrollment?: string | string[];
+  };
 }) {
   if (!uuidPat.test(params.id)) return notFound();
   const serviceId = Array.isArray(searchParams?.service)
     ? searchParams?.service[0]
     : searchParams?.service;
+  const enrollmentId = Array.isArray(searchParams?.enrollment)
+    ? searchParams?.enrollment[0]
+    : searchParams?.enrollment;
+
+  // 継続プラン内セッションの予約モード（0083）: ?enrollment=<契約id>
+  if (enrollmentId && uuidPat.test(enrollmentId)) {
+    return PlanSessionRequestPage(params.id, enrollmentId);
+  }
+
   if (!serviceId || !uuidPat.test(serviceId)) {
     redirect(`/experts/${params.id}`);
   }
@@ -157,6 +170,94 @@ export default async function BookingRequestPage({
             expertName={service.ownerName}
             priceJpy={service.priceJpy}
             durationMinutes={duration}
+            slotIsos={slotIsos}
+          />
+        )}
+      </div>
+    </main>
+  );
+}
+
+/**
+ * 継続プラン内セッションの予約モード（伴走スライス・0083）。
+ * 契約者本人（active）だけが入れる。価格表示なし・残回数を明示し、
+ * 送信は requestBooking({ enrollmentId }) の price 0 経路を使う。
+ */
+async function PlanSessionRequestPage(expertId: string, enrollmentId: string) {
+  const me = await requireUser(
+    `/experts/${expertId}/request?enrollment=${enrollmentId}`,
+  );
+  const enrollment = await getEnrollment(enrollmentId, me.id);
+  if (
+    !enrollment ||
+    enrollment.memberId !== me.id ||
+    enrollment.expertId !== expertId ||
+    enrollment.status !== 'active'
+  ) {
+    redirect('/bookings');
+  }
+
+  const openStarts = await listOpenStartTimes(
+    expertId,
+    enrollment.durationMinutes,
+  );
+  const slotIsos = openStarts.map((d) => d.toISOString());
+  const noRemaining = enrollment.remainingThisMonth <= 0;
+
+  return (
+    <main className="bg-background text-foreground">
+      <div className="mx-auto max-w-[640px] px-6 pb-16 pt-8">
+        <Link
+          href="/bookings"
+          className="inline-flex items-center gap-1.5 text-[12.5px] text-neutral-500 hover:text-primary-700"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+          マイ相談に戻る
+        </Link>
+        <h1 className="mt-3 text-[20px] font-bold">プラン内セッションを予約</h1>
+        <p className="mt-1 text-[12.5px] text-neutral-500">
+          {enrollment.counterpart.displayName}さんとの継続プランのセッションです。
+          料金は月額に含まれます。
+        </p>
+
+        {/* プラン概要（価格は月額のみ・セッション単価は出さない） */}
+        <div className="mt-[18px] flex flex-wrap items-center gap-3.5 rounded-2xl border border-primary-200 bg-card px-[18px] py-3.5">
+          <div className="min-w-0 flex-1">
+            <b className="block text-[14.5px] font-bold">
+              {enrollment.planTitle}
+            </b>
+            <span className="text-[11.5px] text-neutral-500">
+              {enrollment.counterpart.displayName} ・ 月
+              {enrollment.sessionsPerMonth}回 × {enrollment.durationMinutes}分
+            </span>
+          </div>
+          <span className="inline-flex items-center rounded-full border border-primary-300 bg-primary-100 px-3 py-1 text-[12px] font-bold text-primary-900">
+            今月あと {enrollment.remainingThisMonth} 回
+          </span>
+        </div>
+
+        {noRemaining ? (
+          <div className="mt-8 rounded-2xl border border-dashed border-border-strong bg-muted px-6 py-10 text-center text-[13px] text-neutral-500">
+            今月のセッションは月{enrollment.sessionsPerMonth}
+            回の上限に達しています。
+            <br />
+            来月分は翌月1日（日本時間）から予約できます。急ぎの相談はチャットへ。
+          </div>
+        ) : slotIsos.length === 0 ? (
+          <div className="mt-8 rounded-2xl border border-dashed border-border-strong bg-muted px-6 py-10 text-center text-[13px] text-neutral-500">
+            いま選べる空き枠がありません。
+            <br />
+            チャットで相談内容と日程をすり合わせてください。
+          </div>
+        ) : (
+          <RequestForm
+            serviceId={null}
+            enrollmentId={enrollment.id}
+            serviceTitle={enrollment.planTitle}
+            expertName={enrollment.counterpart.displayName}
+            priceJpy={null}
+            planSession
+            durationMinutes={enrollment.durationMinutes}
             slotIsos={slotIsos}
           />
         )}

@@ -46,6 +46,8 @@ export type BookingCardData = {
   chatThreadId: string | null;
   /** 参加リンク（未設定は null）。confirmed の 4 状態出し分けに使う */
   meetUrl: string | null;
+  /** 継続プラン内セッション（0083）。価格の代わりに「プラン内」バッジを出す */
+  isPlanSession: boolean;
   counterpartId: string;
   counterpartName: string;
   counterpartAvatarUrl: string | null;
@@ -145,7 +147,8 @@ export function BookingCard({
           <div className="text-[14.5px] font-bold">{b.counterpartName}</div>
           <div className="mt-0.5 text-[12px] text-neutral-500">
             <b className="font-bold text-neutral-700">{b.serviceTitle}</b>
-            {' ・ '}¥{b.priceJpy.toLocaleString('ja-JP')}
+            {' ・ '}
+            {b.isPlanSession ? 'プラン内' : `¥${b.priceJpy.toLocaleString('ja-JP')}`}
             {b.counterpartCity
               ? ` ・ ${b.counterpartFlag ? `${b.counterpartFlag} ` : ''}${b.counterpartCity}`
               : ''}
@@ -186,9 +189,15 @@ export function BookingCard({
             </div>
           ) : null}
         </div>
-        <span className="ml-auto text-[14.5px] font-bold tabular-nums">
-          ¥{b.priceJpy.toLocaleString('ja-JP')}
-        </span>
+        {b.isPlanSession ? (
+          <span className="ml-auto inline-flex items-center rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
+            プラン内
+          </span>
+        ) : (
+          <span className="ml-auto text-[14.5px] font-bold tabular-nums">
+            ¥{b.priceJpy.toLocaleString('ja-JP')}
+          </span>
+        )}
       </div>
 
       {/* リクエスト本文（受け側のみ） */}

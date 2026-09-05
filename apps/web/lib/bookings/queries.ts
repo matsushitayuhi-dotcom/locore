@@ -25,6 +25,8 @@ export type BookingView = {
   chatThreadId: string | null;
   /** 参加リンク（承諾時の自動コピー or setBookingMeetUrl）。未設定は null */
   meetUrl: string | null;
+  /** 継続プラン契約 id（0083）。null = 単発。表示は「プラン内」バッジ */
+  enrollmentId: string | null;
   createdAt: Date;
   /** 相手（依頼側から見ればエキスパート、受け側から見れば相談者） */
   counterpart: {
@@ -76,6 +78,7 @@ export async function listMyBookings(userId: string): Promise<BookingView[]> {
         requestMessage: schema.consultationBookings.requestMessage,
         chatThreadId: schema.consultationBookings.chatThreadId,
         meetUrl: schema.consultationBookings.meetUrl,
+        enrollmentId: schema.consultationBookings.enrollmentId,
         createdAt: schema.consultationBookings.createdAt,
         otherId: schema.users.id,
         otherName: schema.users.displayName,
@@ -105,6 +108,7 @@ export async function listMyBookings(userId: string): Promise<BookingView[]> {
         requestMessage: r.requestMessage,
         chatThreadId: r.chatThreadId,
         meetUrl: r.meetUrl,
+        enrollmentId: r.enrollmentId,
         createdAt: r.createdAt,
         counterpart: {
           id: r.otherId ?? '',
@@ -140,6 +144,7 @@ export async function listReceivedBookings(
         requestMessage: schema.consultationBookings.requestMessage,
         chatThreadId: schema.consultationBookings.chatThreadId,
         meetUrl: schema.consultationBookings.meetUrl,
+        enrollmentId: schema.consultationBookings.enrollmentId,
         createdAt: schema.consultationBookings.createdAt,
         otherId: schema.users.id,
         otherName: schema.users.displayName,
@@ -166,6 +171,7 @@ export async function listReceivedBookings(
         requestMessage: r.requestMessage,
         chatThreadId: r.chatThreadId,
         meetUrl: r.meetUrl,
+        enrollmentId: r.enrollmentId,
         createdAt: r.createdAt,
         counterpart: {
           id: r.otherId ?? '',
@@ -245,6 +251,7 @@ export async function getBooking(
       requestMessage: b.requestMessage,
       chatThreadId: b.chatThreadId,
       meetUrl: b.meetUrl,
+      enrollmentId: b.enrollmentId,
       createdAt: b.createdAt,
       counterpart: {
         id: b.requesterId === viewerId ? b.expertId : b.requesterId,

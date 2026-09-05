@@ -40,16 +40,23 @@ function keyOfMs(ms: number): string {
 
 export function RequestForm({
   serviceId,
+  enrollmentId,
   serviceTitle,
   expertName,
   priceJpy,
+  planSession = false,
   durationMinutes,
   slotIsos,
 }: {
-  serviceId: string;
+  /** 単発メニュー id。プラン内セッション時は null（enrollmentId を使う） */
+  serviceId: string | null;
+  /** 継続プラン契約 id（0083）。指定時は price 0 のプラン内セッション予約 */
+  enrollmentId?: string;
   serviceTitle: string;
   expertName: string;
   priceJpy: number | null;
+  /** true = プラン内セッション（サマリーに価格を出さず「プラン内」表記） */
+  planSession?: boolean;
   durationMinutes: number;
   /** listOpenStartTimes の結果（UTC ISO、昇順） */
   slotIsos: string[];
@@ -125,11 +132,19 @@ export function RequestForm({
       return;
     }
     startTransition(async () => {
-      const res = await requestBooking({
-        serviceId,
-        startAtIso: selectedIso,
-        message: message.trim(),
-      });
+      const res = await requestBooking(
+        enrollmentId
+          ? {
+              enrollmentId,
+              startAtIso: selectedIso,
+              message: message.trim(),
+            }
+          : {
+              serviceId: serviceId ?? undefined,
+              startAtIso: selectedIso,
+              message: message.trim(),
+            },
+      );
       if (!res.ok) {
         toast.error(res.error);
         router.refresh();
@@ -249,7 +264,7 @@ export function RequestForm({
         onChange={(e) => setMessage(e.target.value)}
         rows={5}
         maxLength={2000}
-        placeholder="相談したいことを具体的にお書きください。例:「来年4月にパリ移住予定。ビザ申請の書類と、11区・20区あたりのエリア選びについて相談したいです」"
+        placeholder="相談したいことを具体的にお書きください。例:「来年秋入学で米大学院を目指しています。SoPの構成と、出願校リストの絞り込みについて相談したいです」"
         className="mt-3 w-full resize-y rounded-xl border border-border-strong bg-card px-4 py-3 text-[13.5px] leading-relaxed text-foreground outline-none placeholder:text-neutral-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
       />
 
@@ -259,7 +274,11 @@ export function RequestForm({
           送信する内容: <b className="tabular-nums">{summarySlot}</b>（日本時間）の{' '}
           <b>
             {serviceTitle}
-            {priceJpy != null ? ` ¥${priceJpy.toLocaleString('ja-JP')}` : ''}
+            {planSession
+              ? '（プラン内・追加料金なし）'
+              : priceJpy != null
+                ? ` ¥${priceJpy.toLocaleString('ja-JP')}`
+                : ''}
           </b>{' '}
           — {expertName}さんの承諾後に確定します。
         </div>

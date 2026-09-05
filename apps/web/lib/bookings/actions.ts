@@ -17,6 +17,7 @@ import {
   notifyBookingDeclined,
   notifyBookingRequested,
 } from '@/lib/email/booking-notify';
+import { countUsedSessionsThisMonth } from '@/lib/plans/queries';
 import { CONSULTATION_TAG } from '@/lib/experts/constants';
 import {
   BLOCKING_STATUSES,
@@ -322,13 +323,23 @@ export async function deleteAvailability(
 // 予約リクエスト → 承諾 / 辞退 / 取り下げ
 // ---------------------------------------------------------------------------
 
-const requestSchema = z.object({
-  serviceId: z.string().uuid(),
-  startAtIso: z.string().datetime({ offset: true }),
-  message: z.string().trim().min(1).max(2000),
-});
+const requestSchema = z
+  .object({
+    serviceId: z.string().uuid().optional(),
+    /** 継続プラン契約経由のセッション予約（0083）。指定時は serviceId 不要 */
+    enrollmentId: z.string().uuid().optional(),
+    startAtIso: z.string().datetime({ offset: true }),
+    message: z.string().trim().min(1).max(2000),
+  })
+  .refine((v) => Boolean(v.serviceId) !== Boolean(v.enrollmentId), {
+    message: 'serviceId か enrollmentId のどちらか一方を指定してください',
+  });
 
-/** 相談者が空き枠から予約リクエストを送る */
+/**
+ * 相談者が空き枠から予約リクエストを送る。
+ * enrollmentId 指定時は継続プラン内セッション（price 0・当月残回数を消費）、
+ * serviceId 指定時は従来どおりの単発セッション。
+ */
 export async function requestBooking(
   input: unknown,
 ): Promise<BookingActionResult<{ bookingId: string }>> {
@@ -339,6 +350,16 @@ export async function requestBooking(
   const me = await requireUser();
   const db = getDb();
 
+  if (parsed.data.enrollmentId) {
+    return requestPlanSession(
+      me.id,
+      parsed.data.enrollmentId,
+      parsed.data.startAtIso,
+      parsed.data.message,
+    );
+  }
+  const requestedServiceId = parsed.data.serviceId!;
+
   // 相談メニュー（consultation タグ・active）と所有者を引く
   const svcRows = await db
     .select({
@@ -348,11 +369,12 @@ export async function requestBooking(
       priceJpy: schema.userServices.priceJpy,
       durationMinutes: schema.userServices.durationMinutes,
       contactMethod: schema.userServices.contactMethod,
+      planKind: schema.userServices.planKind,
     })
     .from(schema.userServices)
     .where(
       and(
-        eq(schema.userServices.id, parsed.data.serviceId),
+        eq(schema.userServices.id, requestedServiceId),
         eq(schema.userServices.isActive, true),
         sql`${schema.userServices.tags} && ARRAY[${CONSULTATION_TAG}]::text[]`,
       ),
@@ -372,6 +394,13 @@ export async function requestBooking(
     return {
       ok: false,
       error: 'このメニューは外部サイトでの申し込み専用です',
+    };
+  }
+  if (service.planKind === 'monthly') {
+    // 継続プランは申し込み（applyToPlan）→ 承諾後にプラン内セッション予約のフロー
+    return {
+      ok: false,
+      error: '継続プランは「プランに申し込む」からお申し込みください',
     };
   }
   if (service.durationMinutes == null) {
@@ -503,6 +532,160 @@ export async function requestBooking(
     return { ok: true, data: { bookingId } };
   } catch (err) {
     console.error('[requestBooking] failed:', err);
+    return {
+      ok: false,
+      error: describeDbError('リクエストの送信に失敗しました', err),
+    };
+  }
+}
+
+/**
+ * 継続プラン内セッションの予約（requestBooking の enrollmentId 分岐）。
+ * 本人が active 契約者・当月残回数あり を検証し、price_jpy=0 / platform_fee=0 で
+ * INSERT する。空き枠・重複チェックは単発と同一ルール。
+ */
+async function requestPlanSession(
+  meId: string,
+  enrollmentId: string,
+  startAtIso: string,
+  message: string,
+): Promise<BookingActionResult<{ bookingId: string }>> {
+  const db = getDb();
+
+  const start = new Date(startAtIso);
+  if (Number.isNaN(start.getTime())) {
+    return { ok: false, error: '開始日時が不正です' };
+  }
+  if (start.getTime() < Date.now() + MIN_LEAD_HOURS * 3_600_000) {
+    return {
+      ok: false,
+      error: `開始まで${MIN_LEAD_HOURS}時間を切った枠はリクエストできません。別の枠をお選びください`,
+    };
+  }
+
+  try {
+    const eRows = await db
+      .select()
+      .from(schema.planEnrollments)
+      .where(eq(schema.planEnrollments.id, enrollmentId))
+      .limit(1);
+    const enrollment = eRows[0];
+    if (!enrollment || enrollment.memberId !== meId) {
+      return { ok: false, error: 'プラン契約が見つかりません' };
+    }
+    if (enrollment.status !== 'active') {
+      return {
+        ok: false,
+        error: 'このプランはまだ有効ではありません（承諾待ち、または終了済みです）',
+      };
+    }
+
+    // 当月（JST 暦月）の残回数。繰越なし
+    const used = await countUsedSessionsThisMonth(enrollment.id);
+    if (used >= enrollment.sessionsPerMonth) {
+      return {
+        ok: false,
+        error: `今月のセッションは月${enrollment.sessionsPerMonth}回の上限に達しています。来月分は翌月1日（日本時間）から予約できます`,
+      };
+    }
+
+    const duration = enrollment.durationMinutes;
+    const end = new Date(start.getTime() + duration * 60_000);
+
+    // 空き枠 window 内か（単発と同一ルール）
+    const windows = await db
+      .select({ startAt: schema.expertAvailability.startAt })
+      .from(schema.expertAvailability)
+      .where(
+        and(
+          eq(schema.expertAvailability.userId, enrollment.expertId),
+          lte(schema.expertAvailability.startAt, start),
+          gte(schema.expertAvailability.endAt, end),
+        ),
+      )
+      .limit(1);
+    if (windows.length === 0) {
+      return {
+        ok: false,
+        error: 'この枠は空き時間から外れています。ページを更新して選び直してください',
+      };
+    }
+
+    // 既存予約との重なり
+    const conflicts = await db
+      .select({ id: schema.consultationBookings.id })
+      .from(schema.consultationBookings)
+      .where(
+        and(
+          eq(schema.consultationBookings.expertId, enrollment.expertId),
+          inArray(schema.consultationBookings.status, [...BLOCKING_STATUSES]),
+          lt(schema.consultationBookings.startAt, end),
+          gt(schema.consultationBookings.endAt, start),
+        ),
+      )
+      .limit(1);
+    if (conflicts.length > 0) {
+      return {
+        ok: false,
+        error: 'この枠は他のリクエストで埋まりました。別の枠をお選びください',
+      };
+    }
+
+    const inserted = await db
+      .insert(schema.consultationBookings)
+      .values({
+        serviceId: enrollment.serviceId,
+        expertId: enrollment.expertId,
+        requesterId: meId,
+        status: 'requested',
+        startAt: start,
+        endAt: end,
+        durationMinutes: duration,
+        serviceTitle: enrollment.planTitle,
+        priceJpy: 0, // プラン内（月額に含まれる）
+        commissionRate: enrollment.commissionRate,
+        platformFeeJpy: 0,
+        requestMessage: message,
+        enrollmentId: enrollment.id,
+      })
+      .returning({ id: schema.consultationBookings.id });
+    const bookingId = inserted[0]!.id;
+
+    // チャット連携: 契約のスレッドを優先し、無ければ 1:1 スレッドを確保
+    try {
+      const threadId =
+        enrollment.chatThreadId ??
+        (await findOrCreateDirectThread(meId, enrollment.expertId));
+      await db
+        .update(schema.consultationBookings)
+        .set({ chatThreadId: threadId })
+        .where(eq(schema.consultationBookings.id, bookingId));
+      await postThreadMessage(
+        threadId,
+        meId,
+        `【プラン内セッション予約リクエスト】${enrollment.planTitle} / ${formatSlotJst(start, end)}（日本時間）\n${message}`,
+      );
+      revalidatePath(`/chat/${threadId}`);
+    } catch (err) {
+      console.warn('[requestPlanSession] chat linkage failed:', err);
+    }
+
+    revalidatePath('/bookings');
+    revalidatePath('/chat');
+    // 先輩へ「新しい相談リクエスト」メール（プラン内なので価格 0）
+    await notifyBookingRequested({
+      id: bookingId,
+      expertId: enrollment.expertId,
+      requesterId: meId,
+      startAt: start,
+      endAt: end,
+      serviceTitle: enrollment.planTitle,
+      priceJpy: 0,
+      requestMessage: message,
+    });
+    return { ok: true, data: { bookingId } };
+  } catch (err) {
+    console.error('[requestPlanSession] failed:', err);
     return {
       ok: false,
       error: describeDbError('リクエストの送信に失敗しました', err),

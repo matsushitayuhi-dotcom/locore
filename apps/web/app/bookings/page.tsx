@@ -10,7 +10,13 @@ import {
   listReceivedBookings,
   type BookingView,
 } from '@/lib/bookings/queries';
+import {
+  listMyEnrollments,
+  listReceivedEnrollments,
+  type EnrollmentView,
+} from '@/lib/plans/queries';
 import { BookingCard, type BookingCardData } from './BookingCard';
+import { EnrollmentCard, type EnrollmentCardData } from './EnrollmentCard';
 
 export const metadata = {
   title: 'マイ相談',
@@ -55,9 +61,11 @@ export default async function BookingsPage({
     }
   }
 
-  const [mine, received] = await Promise.all([
+  const [mine, received, myPlans, receivedPlans] = await Promise.all([
     listMyBookings(me.id),
     isExpert ? listReceivedBookings(me.id) : Promise.resolve([]),
+    listMyEnrollments(me.id),
+    isExpert ? listReceivedEnrollments(me.id) : Promise.resolve([]),
   ]);
 
   const toCard = (b: BookingView): BookingCardData => ({
@@ -70,6 +78,7 @@ export default async function BookingsPage({
     requestMessage: b.requestMessage,
     chatThreadId: b.chatThreadId,
     meetUrl: b.meetUrl,
+    isPlanSession: b.enrollmentId != null,
     counterpartId: b.counterpart.id,
     counterpartName: b.counterpart.displayName,
     counterpartAvatarUrl: b.counterpart.avatarUrl,
@@ -77,7 +86,23 @@ export default async function BookingsPage({
     counterpartCity: b.counterpart.cityName,
   });
 
+  const toEnrollmentCard = (e: EnrollmentView): EnrollmentCardData => ({
+    id: e.id,
+    status: e.status,
+    planTitle: e.planTitle,
+    monthlyPriceJpy: e.monthlyPriceJpy,
+    sessionsPerMonth: e.sessionsPerMonth,
+    durationMinutes: e.durationMinutes,
+    requestMessage: e.requestMessage,
+    chatThreadId: e.chatThreadId,
+    expertId: e.expertId,
+    remainingThisMonth: e.remainingThisMonth,
+    counterpartName: e.counterpart.displayName,
+    counterpartAvatarUrl: e.counterpart.avatarUrl,
+  });
+
   const rows = tab === 'mine' ? mine : received;
+  const planRows = tab === 'mine' ? myPlans : receivedPlans;
 
   return (
     <main className="bg-background text-foreground">
@@ -99,6 +124,29 @@ export default async function BookingsPage({
             </TabLink>
           ) : null}
         </nav>
+
+        {/* 継続プラン（伴走）セクション */}
+        {planRows.length > 0 ? (
+          <section className="mt-6">
+            <h2 className="flex items-center gap-2 text-[13px] font-bold text-neutral-700">
+              継続プラン
+              <span className="rounded-full bg-primary-100 px-2 py-px text-[11px] font-semibold tabular-nums text-primary-900">
+                {planRows.length}
+              </span>
+            </h2>
+            {planRows.map((e) => (
+              <EnrollmentCard
+                key={e.id}
+                side={tab}
+                enrollment={toEnrollmentCard(e)}
+              />
+            ))}
+            <div className="mt-6 flex items-center gap-3 text-[12px] font-semibold text-neutral-500">
+              単発・プラン内セッション
+              <span className="h-px flex-1 bg-border" aria-hidden />
+            </div>
+          </section>
+        ) : null}
 
         {rows.length === 0 ? (
           tab === 'mine' ? (
