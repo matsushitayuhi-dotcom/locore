@@ -1,7 +1,11 @@
 import 'server-only';
+import { escapeHtml as escape } from './layout';
 
 /**
  * 本人確認 (旧: 居住確認) フローで使うメール本文テンプレ。
+ *
+ * 注意: envelope/btn はここのローカル版（テラコッタ/cream）。予約系の新テンプレは
+ * lib/email/layout.ts の白基調ライム版を使っており、こちらも将来そちらへ移行する。
  *
  * React Email は導入していないので、シンプルな HTML 文字列で
  * 組み立てる。デザインは「ですます調 + 段落単位 + 安全な link」のみ。
@@ -228,10 +232,3 @@ export function tplRejected(input: RejectedNotificationInput): {
   };
 }
 
-function escape(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
