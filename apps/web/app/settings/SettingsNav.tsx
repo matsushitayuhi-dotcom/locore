@@ -24,6 +24,7 @@ type NavItem = {
 };
 
 const ALL_NAV_ITEMS: readonly NavItem[] = [
+  { href: '/settings', label: '公開ステータス', writerOnly: true },
   { href: '/settings/profile', label: 'プロフィール' },
   { href: '/settings/services', label: '提供サービス', writerOnly: true },
   { href: '/settings/availability', label: '空き時間', writerOnly: true },
@@ -41,8 +42,11 @@ export function SettingsNav({ role }: { role: Role }) {
     <nav aria-label="設定ナビゲーション" className="md:sticky md:top-24 md:h-fit">
       <ul className="flex gap-1 overflow-x-auto md:flex-col md:gap-0.5">
         {items.map((item) => {
+          // '/settings'（ハブ）は完全一致のみ（startsWith だと全タブで光る）
           const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+            item.href === '/settings'
+              ? pathname === '/settings'
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <li key={item.href}>
               <Link
