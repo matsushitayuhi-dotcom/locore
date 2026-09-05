@@ -145,6 +145,13 @@ export const users = pgTable(
     timezone: text('timezone'),
 
     /**
+     * エキスパートの固定の相談室 URL（Meet/Zoom の再利用リンク）。
+     * 承諾時に consultation_bookings.meet_url へ自動コピーされる。
+     * manual/0082_booking_notifications.sql。
+     */
+    meetingRoomUrl: text('meeting_room_url'),
+
+    /**
      * プロフィールのヒーロー（ヘッダー）背景画像の Public URL。
      * NULL = 未設定（表示側はライムのネットワーク演出にフォールバック）。
      * manual/0056_resident_profile_social_cover.sql。

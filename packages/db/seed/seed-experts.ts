@@ -24,7 +24,7 @@
  */
 import 'dotenv/config';
 import { createHash } from 'node:crypto';
-import { sql } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import { createDbClient } from '../src/client';
 import {
   cities,
@@ -217,6 +217,8 @@ type ExpertSeed = {
   /** 経歴（0062）。current=true は在学中（在学生/アルムナイ判定に使用） */
   education: EducationEntry[];
   workHistory: WorkEntry[];
+  /** 固定の相談室 URL（0082・任意）。承諾時に参加リンクへ自動コピーされるデモ用 */
+  meetingRoom?: string;
   /** 実写アバター（/experts/<key>.jpg・デモ用プレースホルダ） */
   avatar: string;
   price30: number;
@@ -259,6 +261,7 @@ const EXPERTS: ExpertSeed[] = [
       { company: '総合商社（東京）', title: '海外営業', startYear: 2017, endYear: 2024 },
     ],
     avatar: '/experts/aya.jpg',
+    meetingRoom: 'https://meet.google.com/aya-hbs-room',
     price30: 6000,
     price60: 12000,
     desc30:
@@ -298,6 +301,7 @@ const EXPERTS: ExpertSeed[] = [
       { company: '事業会社（東京）', title: 'ソフトウェアエンジニア', startYear: 2019, endYear: 2024 },
     ],
     avatar: '/experts/kentaro.jpg',
+    meetingRoom: 'https://meet.google.com/ren-cu-room',
     price30: 5000,
     price60: 9000,
     desc30:
@@ -337,6 +341,7 @@ const EXPERTS: ExpertSeed[] = [
       { company: '中央官庁（東京）', title: '総合職', startYear: 2016, endYear: 2024 },
     ],
     avatar: '/experts/misaki.jpg',
+    meetingRoom: 'https://meet.google.com/mizuki-lse-room',
     price30: 4500,
     price60: 8500,
     desc30:
@@ -599,6 +604,8 @@ async function main() {
     displayName: e.displayName,
     // 実写アバター（デモ用プレースホルダ。public/experts/ 配置済み）
     avatarUrl: e.avatar,
+    // 固定の相談室 URL（0082。承諾時に自動共有されるデモを見せる）
+    meetingRoomUrl: e.meetingRoom ?? null,
     bio: e.bio,
     role: 'resident_writer',
     residencyCountry: e.country,
@@ -633,6 +640,7 @@ async function main() {
         education: sql`excluded.education`,
         workHistory: sql`excluded.work_history`,
         timezone: sql`excluded.timezone`,
+        meetingRoomUrl: sql`excluded.meeting_room_url`,
         isSample: sql`excluded.is_sample`,
       },
     });
@@ -843,17 +851,20 @@ async function main() {
       });
     });
   });
+  // 再実行では日付が前進するため、id は同じでも start_at が入れ替わり、
+  // 多行 upsert の途中で UNIQUE(user_id, start_at) と衝突しうる
+  // （旧 wi0week1 の枠に新 wi0week0 が重なる等）。サンプルの空き枠は
+  // 予約から FK 参照されないので、いったん消してから入れ直すのが安全。
+  await db.delete(expertAvailability).where(
+    inArray(
+      expertAvailability.userId,
+      EXPERTS.map((e) => expertUuid(e.key)),
+    ),
+  );
   await db
     .insert(expertAvailability)
     .values(availRows)
-    .onConflictDoUpdate({
-      target: expertAvailability.id,
-      set: {
-        userId: sql`excluded.user_id`,
-        startAt: sql`excluded.start_at`,
-        endAt: sql`excluded.end_at`,
-      },
-    });
+    .onConflictDoNothing();
 
   // ---- consultation_bookings（requested 状態のサンプル 1 件） --------------
   // is_sample ユーザー間: 伊藤（NYC）→ 高村（ボストン・MBA）の 30 分相談。

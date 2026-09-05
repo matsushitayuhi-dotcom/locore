@@ -58,8 +58,16 @@ export const consultationBookings = pgTable(
     }),
     respondedAt: timestamp('responded_at', { withTimezone: true }),
     cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
-    /** ▼ 次スライス（決済・ビデオ通話）用シーム。本スライスでは常に NULL */
+    /**
+     * 参加リンク（通知スライスで実運用開始）。承諾時に users.meeting_room_url から
+     * 自動コピー、または setBookingMeetUrl でエキスパートが個別設定。
+     */
     meetUrl: text('meet_url'),
+    /**
+     * 前日リマインダー送信済み時刻（冪等キー。NULL = 未送信）。
+     * manual/0082_booking_notifications.sql。
+     */
+    reminderSentAt: timestamp('reminder_sent_at', { withTimezone: true }),
     paidAt: timestamp('paid_at', { withTimezone: true }),
     stripeCheckoutSessionId: text('stripe_checkout_session_id'),
     createdAt: timestamp('created_at', { withTimezone: true })
