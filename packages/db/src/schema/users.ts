@@ -64,6 +64,11 @@ export type EducationEntry = {
   startYear?: number | null;
   endYear?: number | null;
   current?: boolean;
+  /**
+   * 大学マスタ（universities・0081）の QID。オートコンプリートで選択した場合に
+   * 入る（自由入力は null/undefined）。表示は従来どおり school の非正規化文字列。
+   */
+  universityWikidataId?: string | null;
 };
 
 /**
@@ -150,6 +155,16 @@ export const users = pgTable(
      * manual/0082_booking_notifications.sql。
      */
     meetingRoomUrl: text('meeting_room_url'),
+
+    /**
+     * プロフィール公開フラグ（0084）。false = 下書き（/experts に出ない・
+     * 詳細ページは本人と editor のみ）。公開は publishProfile が最低要件を
+     * サーバー再検証してから立てる。
+     */
+    profilePublished: boolean('profile_published').notNull().default(false),
+    profilePublishedAt: timestamp('profile_published_at', {
+      withTimezone: true,
+    }),
 
     /**
      * プロフィールのヒーロー（ヘッダー）背景画像の Public URL。

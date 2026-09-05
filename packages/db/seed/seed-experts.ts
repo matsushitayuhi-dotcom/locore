@@ -647,6 +647,8 @@ async function main() {
     avatarUrl: e.avatar,
     // 固定の相談室 URL（0082。承諾時に自動共有されるデモを見せる）
     meetingRoomUrl: e.meetingRoom ?? null,
+    // 公開関門（0084）。サンプルは常に公開済み（デモが一覧から消えない保険）
+    profilePublished: true,
     bio: e.bio,
     role: 'resident_writer',
     residencyCountry: e.country,
@@ -684,6 +686,7 @@ async function main() {
         specialties: sql`excluded.specialties`,
         timezone: sql`excluded.timezone`,
         meetingRoomUrl: sql`excluded.meeting_room_url`,
+        profilePublished: sql`excluded.profile_published`,
         isSample: sql`excluded.is_sample`,
       },
     });
