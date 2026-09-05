@@ -29,6 +29,15 @@ const becomeWriterSchema = z.object({
     .optional()
     .or(z.literal('').transform(() => null))
     .catch(null),
+  /** 大学の英語名（universities.name_en）。自由入力時は空 */
+  schoolNameEn: z
+    .string()
+    .trim()
+    .max(160)
+    .nullable()
+    .optional()
+    .or(z.literal('').transform(() => null))
+    .catch(null),
   /** 選択した大学の ISO2 国コード（residencyCountry に自動設定）。自由入力時は空 */
   universityCountryCode: z
     .string()
@@ -82,6 +91,7 @@ export async function becomeWriter(formData: FormData): Promise<void> {
       school: p.universityName,
       current: isEnrolled,
       universityWikidataId: p.universityWikidataId ?? null,
+      schoolNameEn: p.schoolNameEn ?? null,
     },
   ]);
   const baseSet = {

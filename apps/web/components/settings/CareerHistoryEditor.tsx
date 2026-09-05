@@ -27,6 +27,8 @@ export type CareerDraft = {
   current: boolean;
   /** 大学マスタの QID（education・オートコンプリート選択時のみ。自由入力は null） */
   universityWikidataId: string | null;
+  /** 大学の英語名（education・オートコンプリート選択時のみ） */
+  schoolNameEn: string | null;
 };
 
 export const emptyCareerDraft = (): CareerDraft => ({
@@ -37,6 +39,7 @@ export const emptyCareerDraft = (): CareerDraft => ({
   endYear: '',
   current: false,
   universityWikidataId: null,
+  schoolNameEn: null,
 });
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -124,8 +127,13 @@ export function CareerHistoryEditor({
                   // 学校名は大学マスタ（0081）のオートコンプリート。自由入力も可
                   <UniversityAutocomplete
                     value={r.name}
-                    onChange={(name, wikidataId) =>
-                      patch(i, { name, universityWikidataId: wikidataId })
+                    onChange={(name, wikidataId, hit) =>
+                      patch(i, {
+                        name,
+                        universityWikidataId: wikidataId,
+                        // 候補選択時のみ英語名を保持（自由入力は null に戻す）
+                        schoolNameEn: hit?.nameEn ?? null,
+                      })
                     }
                     placeholder={namePlaceholder}
                   />

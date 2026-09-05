@@ -70,6 +70,7 @@ function workToDraft(w: WorkEntry): CareerDraft {
     endYear: w.endYear ?? '',
     current: !!w.current,
     universityWikidataId: null,
+    schoolNameEn: null,
   };
 }
 function eduToDraft(e: EducationEntry): CareerDraft {
@@ -81,6 +82,7 @@ function eduToDraft(e: EducationEntry): CareerDraft {
     endYear: e.endYear ?? '',
     current: !!e.current,
     universityWikidataId: e.universityWikidataId ?? null,
+    schoolNameEn: e.schoolNameEn ?? null,
   };
 }
 function draftToWork(d: CareerDraft): WorkEntry {
@@ -101,6 +103,7 @@ function draftToEdu(d: CareerDraft): EducationEntry {
     endYear: d.current || d.endYear === '' ? null : d.endYear,
     current: d.current,
     universityWikidataId: d.universityWikidataId,
+    schoolNameEn: d.schoolNameEn,
   };
 }
 

@@ -69,6 +69,12 @@ export type EducationEntry = {
    * 入る（自由入力は null/undefined）。表示は従来どおり school の非正規化文字列。
    */
   universityWikidataId?: string | null;
+  /**
+   * 大学の英語名（universities.name_en）。オートコンプリート選択時に school
+   * （日本語優先の表示名）とセットで保存。表示は formatSchoolName ヘルパで
+   * 「学校名（English）」形式に（apps/web/lib/experts/education.ts）。
+   */
+  schoolNameEn?: string | null;
 };
 
 /**

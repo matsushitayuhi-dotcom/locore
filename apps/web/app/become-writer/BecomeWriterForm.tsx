@@ -15,6 +15,7 @@ export function BecomeWriterForm() {
   const [universityName, setUniversityName] = useState('');
   const [wikidataId, setWikidataId] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState<string | null>(null);
+  const [schoolNameEn, setSchoolNameEn] = useState<string | null>(null);
 
   return (
     <form
@@ -52,6 +53,7 @@ export function BecomeWriterForm() {
             setUniversityName(name);
             setWikidataId(qid);
             setCountryCode(hit?.countryCode ?? null);
+            setSchoolNameEn(hit?.nameEn ?? null);
           }}
           placeholder="例: ハーバード大学 / Harvard"
         />
@@ -62,6 +64,7 @@ export function BecomeWriterForm() {
         <input type="hidden" name="universityName" value={universityName} />
         <input type="hidden" name="universityWikidataId" value={wikidataId ?? ''} />
         <input type="hidden" name="universityCountryCode" value={countryCode ?? ''} />
+        <input type="hidden" name="schoolNameEn" value={schoolNameEn ?? ''} />
       </div>
 
       <label className="flex items-start gap-2 text-[12px] leading-relaxed text-foreground/75">

@@ -152,6 +152,8 @@ const educationEntrySchema = z
       .nullable()
       .optional()
       .catch(null),
+    /** 大学の英語名（オートコンプリート選択時のみ。表示は formatSchoolName） */
+    schoolNameEn: z.string().trim().max(160).nullable().optional().catch(null),
   })
   .refine(
     (e) =>
