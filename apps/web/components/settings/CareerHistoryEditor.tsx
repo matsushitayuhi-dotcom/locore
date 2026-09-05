@@ -2,6 +2,7 @@
 
 import { Input } from '@locore/ui';
 import { Plus, X } from 'lucide-react';
+import { UniversityAutocomplete } from './UniversityAutocomplete';
 
 /**
  * 経歴（職歴 / 学歴）の行エディタ。ResidentProfileForm から両方で共用する。
@@ -24,6 +25,8 @@ export type CareerDraft = {
   endYear: number | '';
   /** 在職中（work）/ 在学中（education）。true のとき endYear は無効化 */
   current: boolean;
+  /** 大学マスタの QID（education・オートコンプリート選択時のみ。自由入力は null） */
+  universityWikidataId: string | null;
 };
 
 export const emptyCareerDraft = (): CareerDraft => ({
@@ -33,6 +36,7 @@ export const emptyCareerDraft = (): CareerDraft => ({
   startYear: '',
   endYear: '',
   current: false,
+  universityWikidataId: null,
 });
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -116,13 +120,24 @@ export function CareerHistoryEditor({
               className="space-y-2 rounded-md bg-background p-3 ring-1 ring-border"
             >
               <div className="flex items-center gap-2">
-                <Input
-                  value={r.name}
-                  onChange={(e) => patch(i, { name: e.target.value })}
-                  placeholder={namePlaceholder}
-                  maxLength={80}
-                  className="flex-1"
-                />
+                {kind === 'education' ? (
+                  // 学校名は大学マスタ（0081）のオートコンプリート。自由入力も可
+                  <UniversityAutocomplete
+                    value={r.name}
+                    onChange={(name, wikidataId) =>
+                      patch(i, { name, universityWikidataId: wikidataId })
+                    }
+                    placeholder={namePlaceholder}
+                  />
+                ) : (
+                  <Input
+                    value={r.name}
+                    onChange={(e) => patch(i, { name: e.target.value })}
+                    placeholder={namePlaceholder}
+                    maxLength={80}
+                    className="flex-1"
+                  />
+                )}
                 <button
                   type="button"
                   aria-label="この行を削除"

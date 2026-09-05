@@ -144,6 +144,14 @@ const educationEntrySchema = z
     endYear: careerYear,
     /** 在学中（留学特化の在学生/アルムナイ判定）。true 時は endYear を無視 */
     current: z.boolean().optional().default(false),
+    /** 大学マスタ（0081）の QID。オートコンプリート選択時のみ・自由入力は null */
+    universityWikidataId: z
+      .string()
+      .trim()
+      .regex(/^Q\d+$/)
+      .nullable()
+      .optional()
+      .catch(null),
   })
   .refine(
     (e) =>
