@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Check, Globe, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Globe, Trash2 } from 'lucide-react';
 import {
   addAvailabilityBulk,
   deleteAvailability,
@@ -13,19 +13,17 @@ import {
   TIMEZONE_OPTIONS,
   tzShortLabel,
 } from '@/lib/bookings/constants';
-import {
-  formatTimeRangeInTz,
-  localToUtc,
-  formatTimeInTz,
-  wallPartsInTz,
-} from '@/lib/bookings/time';
+import { formatTimeRangeInTz, wallPartsInTz } from '@/lib/bookings/time';
 
 /**
- * 空き時間管理の Client 部分（booking-slice モック 1/5 準拠）。
+ * 空き時間管理 — Outlook 風の週カレンダー。
  *
- * - 入力はエキスパートの現地時間（timezone セレクト）、一覧は現地時間主表示＋日本時間併記
- * - 「毎週◯曜」の一括追加が主役、単発追加は従
- * - 予約が入った枠はライム背景の「予約あり」バッジ付きで削除不可
+ * - 縦 = 0:00〜24:00（30分刻み）、横 = 月〜日。ドラッグで空き枠を作成する。
+ * - 入力はエキスパートの現地時間（timezone セレクト）。相談者には相談者の
+ *   現地時間で表示されるため、海外の早朝・深夜が日本の相談者にとって好都合な
+ *   ケースもある → 24 時間ぶんスクロールで見せる。
+ * - 「1回だけ／毎週くり返す」を切り替え可能（くり返しは今後 N 週分を一括登録）。
+ * - 予約が入った枠はライム背景の「予約あり」で表示し、削除不可。
  */
 
 type SlotView = {
@@ -35,31 +33,61 @@ type SlotView = {
   hasBooking: boolean;
 };
 
-const WEEKDAY_CHIPS: Array<{ dow: number; label: string }> = [
-  { dow: 1, label: '月' },
-  { dow: 2, label: '火' },
-  { dow: 3, label: '水' },
-  { dow: 4, label: '木' },
-  { dow: 5, label: '金' },
-  { dow: 6, label: '土' },
-  { dow: 0, label: '日' },
-];
-
 const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'] as const;
 
-const TIME_OPTIONS: string[] = Array.from({ length: 48 }, (_, i) => {
-  const h = Math.floor(i / 2);
-  const m = i % 2 === 0 ? '00' : '30';
-  return `${String(h).padStart(2, '0')}:${m}`;
-});
+const ROW_H = 22; // 1 行（30分）の高さ px
+const ROWS = 48; // 0:00〜24:00 を 30 分刻み
 
-function todayStrInTz(tz: string): string {
-  const w = wallPartsInTz(new Date(), tz);
-  return `${w.year}-${String(w.month).padStart(2, '0')}-${String(w.day).padStart(2, '0')}`;
+const pad = (n: number) => String(n).padStart(2, '0');
+const hmFromRow = (r: number) => `${pad(Math.floor(r / 2))}:${r % 2 ? '30' : '00'}`;
+
+function addDaysYmd(y: number, mo: number, d: number, days: number) {
+  const t = new Date(Date.UTC(y, mo - 1, d + days));
+  return { y: t.getUTCFullYear(), mo: t.getUTCMonth() + 1, d: t.getUTCDate() };
 }
 
+type DayCol = {
+  key: string; // YYYY-MM-DD
+  y: number;
+  mo: number;
+  d: number;
+  weekday: number; // 0=日
+  isPast: boolean;
+  isToday: boolean;
+};
+
+/** 現在の tz・週オフセットから月曜はじまりの 7 日と今日の情報を返す（純関数）。 */
+function computeWeek(tz: string, offset: number): {
+  days: DayCol[];
+  todayKey: string;
+  nowRow: number;
+} {
+  const today = wallPartsInTz(new Date(), tz);
+  const todayKey = `${today.year}-${pad(today.month)}-${pad(today.day)}`;
+  const back = (today.weekday + 6) % 7; // 月曜はじまり
+  const start = addDaysYmd(today.year, today.month, today.day, -back + offset * 7);
+  const days: DayCol[] = Array.from({ length: 7 }, (_, i) => {
+    const p = addDaysYmd(start.y, start.mo, start.d, i);
+    const key = `${p.y}-${pad(p.mo)}-${pad(p.d)}`;
+    const weekday = new Date(Date.UTC(p.y, p.mo - 1, p.d)).getUTCDay();
+    return {
+      key,
+      y: p.y,
+      mo: p.mo,
+      d: p.d,
+      weekday,
+      isPast: key < todayKey,
+      isToday: key === todayKey,
+    };
+  });
+  const nowRow = today.hour * 2 + (today.minute >= 30 ? 1 : 0);
+  return { days, todayKey, nowRow };
+}
+
+type Selection = { col: number; r0: number; r1: number };
+
 const selectCls =
-  'appearance-none rounded-full border border-border-strong bg-card px-4 py-2 pr-8 text-[13.5px] font-bold tabular-nums text-foreground outline-none focus:border-primary-500';
+  'appearance-none rounded-full border border-border-strong bg-card px-4 py-2 pr-8 text-[13.5px] font-bold text-foreground outline-none focus:border-primary-500';
 
 export function AvailabilityManager({
   initialTimezone,
@@ -67,18 +95,18 @@ export function AvailabilityManager({
   slots,
 }: {
   initialTimezone: string;
-  /** 固定の相談室 URL（users.meeting_room_url）。0082 未適用環境は null */
   initialMeetingRoomUrl: string | null;
   slots: SlotView[];
 }) {
   const [pending, startTransition] = useTransition();
   const [timezone, setTimezone] = useState(initialTimezone);
-  const [weekdays, setWeekdays] = useState<number[]>([]);
-  const [wStart, setWStart] = useState('13:00');
-  const [wEnd, setWEnd] = useState('15:00');
-  const [sDate, setSDate] = useState('');
-  const [sStart, setSStart] = useState('10:00');
-  const [sEnd, setSEnd] = useState('11:00');
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [repeatWeekly, setRepeatWeekly] = useState(false);
+  const [sel, setSel] = useState<Selection | null>(null);
+
+  const selRef = useRef<Selection | null>(null);
+  const draggingRef = useRef(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const tzOptions = useMemo(() => {
     const opts = [...TIMEZONE_OPTIONS];
@@ -88,24 +116,54 @@ export function AvailabilityManager({
     return opts;
   }, [timezone]);
 
-  // 現地→日本時間の目安（今日の日付で換算） e.g. '日本時間 20:00〜22:00'
-  const jstPreview = useMemo(() => {
-    try {
-      const d = todayStrInTz(timezone);
-      const s = formatTimeInTz(localToUtc(timezone, d, wStart), 'Asia/Tokyo');
-      const e = formatTimeInTz(localToUtc(timezone, d, wEnd), 'Asia/Tokyo');
-      return `${s}〜${e}`;
-    } catch {
-      return '';
+  const { days, nowRow } = useMemo(
+    () => computeWeek(timezone, weekOffset),
+    [timezone, weekOffset],
+  );
+
+  const short = tzShortLabel(timezone);
+  const rangeLabel =
+    days.length === 7
+      ? `${days[0]!.mo}/${days[0]!.d} 〜 ${days[6]!.mo}/${days[6]!.d}`
+      : '';
+
+  // 既存の空き枠を「この週の」列にマッピング
+  type Block = {
+    id: string;
+    col: number;
+    topR: number;
+    botR: number;
+    hasBooking: boolean;
+    label: string;
+    jst: string;
+  };
+  const blocks = useMemo<Block[]>(() => {
+    const out: Block[] = [];
+    for (const s of slots) {
+      const st = new Date(s.startIso);
+      const en = new Date(s.endIso);
+      const sw = wallPartsInTz(st, timezone);
+      const key = `${sw.year}-${pad(sw.month)}-${pad(sw.day)}`;
+      const col = days.findIndex((d) => d.key === key);
+      if (col < 0) continue;
+      const topR = sw.hour * 2 + (sw.minute >= 30 ? 1 : 0);
+      const ew = wallPartsInTz(en, timezone);
+      const sameDay = ew.year === sw.year && ew.month === sw.month && ew.day === sw.day;
+      let botR = sameDay ? ew.hour * 2 + (ew.minute >= 30 ? 1 : 0) : ROWS;
+      if (botR <= topR) botR = Math.min(topR + 1, ROWS);
+      out.push({
+        id: s.id,
+        col,
+        topR,
+        botR,
+        hasBooking: s.hasBooking,
+        label: formatTimeRangeInTz(st, en, timezone),
+        jst: formatTimeRangeInTz(st, en, 'Asia/Tokyo'),
+      });
     }
-  }, [timezone, wStart, wEnd]);
+    return out;
+  }, [slots, timezone, days]);
 
-  const toggleDay = (dow: number) =>
-    setWeekdays((ds) =>
-      ds.includes(dow) ? ds.filter((d) => d !== dow) : [...ds, dow],
-    );
-
-  // 一覧の更新はアクション内の revalidatePath('/settings/availability') に任せる
   const runAdd = (input: Parameters<typeof addAvailabilityBulk>[0]) => {
     startTransition(async () => {
       const res = await addAvailabilityBulk(input);
@@ -119,12 +177,11 @@ export function AvailabilityManager({
         extended > 0 ? `${extended} 件を延長` : null,
       ].filter(Boolean);
       if (parts.length === 0) {
-        toast(`すべて登録済みの枠でした（${skipped} 件スキップ）`);
+        toast(`すでに登録済みの枠でした（${skipped} 件）`);
         return;
       }
       toast.success(`空き枠を${parts.join('・')}しました`, {
-        description:
-          skipped > 0 ? `${skipped} 件は登録済みのためスキップ` : undefined,
+        description: skipped > 0 ? `${skipped} 件は登録済みのためスキップ` : undefined,
       });
     });
   };
@@ -140,37 +197,74 @@ export function AvailabilityManager({
     });
   };
 
-  // 週ごとにグルーピング（本人 TZ の月曜はじまり）
-  const weeks = useMemo(() => {
-    const map = new Map<string, { label: string; rows: SlotView[] }>();
-    for (const s of [...slots].sort((a, b) => a.startIso.localeCompare(b.startIso))) {
-      const w = wallPartsInTz(new Date(s.startIso), timezone);
-      // 月曜はじまりの週頭日付
-      const back = (w.weekday + 6) % 7;
-      const monday = new Date(Date.UTC(w.year, w.month - 1, w.day - back));
-      const key = monday.toISOString().slice(0, 10);
-      const label = `${monday.getUTCMonth() + 1}/${monday.getUTCDate()}の週`;
-      const g = map.get(key) ?? { label, rows: [] };
-      g.rows.push(s);
-      map.set(key, g);
-    }
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, g]) => g);
-  }, [slots, timezone]);
+  // ドラッグ確定（window の pointerup / pointercancel で拾う）
+  useEffect(() => {
+    const finish = () => {
+      const s = selRef.current;
+      selRef.current = null;
+      draggingRef.current = false;
+      setSel(null);
+      if (!s) return;
+      const { days: freshDays } = computeWeek(timezone, weekOffset);
+      const col = freshDays[s.col];
+      if (!col) return;
+      const minR = Math.min(s.r0, s.r1);
+      const maxR = Math.max(s.r0, s.r1);
+      const startHm = hmFromRow(minR);
+      const endRowExcl = maxR + 1;
+      const endHm = endRowExcl >= ROWS ? '23:59' : hmFromRow(endRowExcl);
+      if (repeatWeekly) {
+        runAdd({
+          mode: 'weekly',
+          weekdays: [col.weekday],
+          startHm,
+          endHm,
+          weeks: DEFAULT_BULK_WEEKS,
+          timezone,
+        });
+      } else {
+        runAdd({ mode: 'single', date: col.key, startHm, endHm, timezone });
+      }
+    };
+    window.addEventListener('pointerup', finish);
+    window.addEventListener('pointercancel', finish);
+    return () => {
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('pointercancel', finish);
+    };
+  }, [timezone, weekOffset, repeatWeekly]);
 
-  const short = tzShortLabel(timezone);
+  const cellDisabled = (day: DayCol, r: number) =>
+    day.isPast || (day.isToday && r < nowRow);
+
+  const startSel = (col: number, r: number, day: DayCol) => {
+    if (cellDisabled(day, r)) return;
+    draggingRef.current = true;
+    const s = { col, r0: r, r1: r };
+    selRef.current = s;
+    setSel(s);
+  };
+  const extendSel = (col: number, r: number, day: DayCol) => {
+    if (!draggingRef.current) return;
+    const cur = selRef.current;
+    if (!cur || cur.col !== col) return; // 同じ曜日の列内でのみ
+    if (cellDisabled(day, r)) return;
+    const s = { ...cur, r1: r };
+    selRef.current = s;
+    setSel(s);
+  };
 
   return (
     <div>
       <div>
         <h2 className="text-[21px] font-bold">空き時間管理</h2>
-        <p className="mt-1.5 max-w-[52em] text-[13px] text-neutral-500">
-          相談を受けられる時間帯を登録してください。空き枠があると、プロフィールに「予約リクエスト」ボタンが表示されます。
+        <p className="mt-1.5 max-w-[54em] text-[13px] text-neutral-500">
+          相談を受けられる時間帯を、カレンダー上でドラッグして登録します。
+          空き枠があると、プロフィールに「予約リクエスト」ボタンが表示されます。
         </p>
       </div>
 
-      {/* タイムゾーン行 */}
+      {/* タイムゾーン */}
       <div className="mt-5 flex flex-wrap items-center gap-3.5 rounded-2xl border border-border bg-background px-[18px] py-3.5">
         <span className="inline-flex items-center gap-1.5 text-[12.5px] font-bold text-neutral-700">
           <Globe className="h-[15px] w-[15px] text-primary-700" aria-hidden />
@@ -189,209 +283,239 @@ export function AvailabilityManager({
           ))}
         </select>
         <span className="min-w-[220px] flex-1 text-[11.5px] leading-relaxed text-neutral-500">
-          時間は<b className="text-neutral-700">あなたの現地時間</b>
+          時間は<b className="text-neutral-700">あなたの現地時間（{short}）</b>
           で入力します。相談者には
-          <b className="text-neutral-700">相談者の現地時間</b>
-          で表示されます。
+          <b className="text-neutral-700">相談者の現地時間</b>で表示されます。
         </span>
       </div>
 
       {/* 相談の受け方（固定の相談室 URL） */}
       <MeetingRoomCard initialUrl={initialMeetingRoomUrl} />
 
-      {/* 追加フォーム 2 枚 */}
-      <div className="mt-5 grid items-stretch gap-4 lg:grid-cols-[1.5fr_1fr]">
-        {/* weekly */}
-        <div className="rounded-2xl border border-border bg-card px-[22px] py-5 shadow-xs">
-          <div className="flex items-center gap-2 text-[13.5px] font-bold">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.13em] text-primary-700">
-              Weekly
-            </span>
-            毎週の空き時間を一括追加
-          </div>
-          <p className="mt-0.5 text-[11.5px] text-neutral-500">
-            選んだ曜日・時間帯を、今後{DEFAULT_BULK_WEEKS}週間分まとめて登録します。
-          </p>
-          <div className="mt-3.5 flex flex-wrap gap-1.5">
-            {WEEKDAY_CHIPS.map((d) => {
-              const on = weekdays.includes(d.dow);
-              return (
-                <button
-                  key={d.dow}
-                  type="button"
-                  onClick={() => toggleDay(d.dow)}
-                  aria-pressed={on}
-                  className={
-                    'grid h-10 w-10 place-items-center rounded-full border text-[13px] transition ' +
-                    (on
-                      ? 'border-primary-500 bg-primary-500 font-bold text-neutral-950'
-                      : 'border-border-strong bg-card font-medium text-neutral-700 hover:border-primary-700 hover:text-primary-700')
-                  }
-                >
-                  {d.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-3.5 flex flex-wrap items-center gap-2.5">
-            <select value={wStart} onChange={(e) => setWStart(e.target.value)} aria-label="開始時刻" className={selectCls}>
-              {TIME_OPTIONS.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-            <span className="text-[13px] text-neutral-500">〜</span>
-            <select value={wEnd} onChange={(e) => setWEnd(e.target.value)} aria-label="終了時刻" className={selectCls}>
-              {TIME_OPTIONS.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-            {jstPreview ? (
-              <span className="text-[11px] text-neutral-500">
-                {short}（日本時間 {jstPreview}）
-              </span>
-            ) : null}
-          </div>
+      {/* ツールバー: 週送り + くり返しトグル */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex items-center gap-1.5">
           <button
             type="button"
-            disabled={pending || weekdays.length === 0}
-            onClick={() =>
-              runAdd({
-                mode: 'weekly',
-                weekdays,
-                startHm: wStart,
-                endHm: wEnd,
-                weeks: DEFAULT_BULK_WEEKS,
-                timezone,
-              })
-            }
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary-500 py-2.5 text-[13.5px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300 disabled:opacity-50"
+            onClick={() => setWeekOffset((w) => w - 1)}
+            disabled={weekOffset <= 0}
+            aria-label="前の週"
+            className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground disabled:opacity-40"
           >
-            <Plus className="h-4 w-4" aria-hidden />
-            今後{DEFAULT_BULK_WEEKS}週間分に追加
+            <ChevronLeft className="h-[18px] w-[18px]" aria-hidden />
           </button>
+          <button
+            type="button"
+            onClick={() => setWeekOffset(0)}
+            className="rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold text-neutral-700 transition hover:border-foreground"
+          >
+            今週
+          </button>
+          <button
+            type="button"
+            onClick={() => setWeekOffset((w) => w + 1)}
+            aria-label="次の週"
+            className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground"
+          >
+            <ChevronRight className="h-[18px] w-[18px]" aria-hidden />
+          </button>
+          <span className="ml-2 text-[13.5px] font-bold tabular-nums text-foreground">
+            {rangeLabel}
+          </span>
         </div>
 
-        {/* one-off */}
-        <div className="rounded-2xl border border-border bg-card px-[22px] py-5 shadow-xs">
-          <div className="flex items-center gap-2 text-[13.5px] font-bold">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.13em] text-primary-700">
-              One-off
-            </span>
-            単発で追加
-          </div>
-          <p className="mt-0.5 text-[11.5px] text-neutral-500">
-            特定の日だけ空けたいときに。
-          </p>
-          <div className="mt-3.5">
-            <input
-              type="date"
-              value={sDate}
-              min={todayStrInTz(timezone)}
-              onChange={(e) => setSDate(e.target.value)}
-              aria-label="日付"
-              className="rounded-full border border-border-strong bg-card px-4 py-2 text-[13.5px] font-bold tabular-nums text-foreground outline-none focus:border-primary-500"
-            />
-          </div>
-          <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
-            <select value={sStart} onChange={(e) => setSStart(e.target.value)} aria-label="開始時刻" className={selectCls}>
-              {TIME_OPTIONS.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-            <span className="text-[13px] text-neutral-500">〜</span>
-            <select value={sEnd} onChange={(e) => setSEnd(e.target.value)} aria-label="終了時刻" className={selectCls}>
-              {TIME_OPTIONS.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
+        <div className="inline-flex overflow-hidden rounded-full border border-border-strong">
           <button
             type="button"
-            disabled={pending || !sDate}
-            onClick={() =>
-              runAdd({
-                mode: 'single',
-                date: sDate,
-                startHm: sStart,
-                endHm: sEnd,
-                timezone,
-              })
+            onClick={() => setRepeatWeekly(false)}
+            aria-pressed={!repeatWeekly}
+            className={
+              'px-3.5 py-2 text-[12.5px] font-bold transition ' +
+              (!repeatWeekly
+                ? 'bg-foreground text-background'
+                : 'bg-card text-neutral-600 hover:text-foreground')
             }
-            className="mt-4 inline-flex w-full items-center justify-center rounded-full border border-border-strong bg-card py-2.5 text-[13px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground disabled:opacity-50"
           >
-            この日だけ追加
+            1回だけ
+          </button>
+          <button
+            type="button"
+            onClick={() => setRepeatWeekly(true)}
+            aria-pressed={repeatWeekly}
+            className={
+              'px-3.5 py-2 text-[12.5px] font-bold transition ' +
+              (repeatWeekly
+                ? 'bg-foreground text-background'
+                : 'bg-card text-neutral-600 hover:text-foreground')
+            }
+          >
+            毎週くり返す
           </button>
         </div>
       </div>
 
-      {/* 登録済み一覧（週ごと） */}
-      <div className="mt-7">
-        {weeks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border-strong bg-muted px-6 py-9 text-center text-[13px] text-neutral-500">
-            まだ空き枠がありません。まずは週1枠から登録してみましょう。
-          </div>
-        ) : (
-          weeks.map((wk) => (
-            <div key={wk.label}>
-              <div className="mb-2 mt-5 flex items-center gap-3 text-[12px] font-semibold tabular-nums text-neutral-500">
-                {wk.label}
-                <span className="h-px flex-1 bg-border" aria-hidden />
+      {repeatWeekly ? (
+        <p className="mt-2 text-[11.5px] text-primary-700">
+          ドラッグした時間帯を、その曜日で今後 {DEFAULT_BULK_WEEKS} 週間分まとめて登録します。
+        </p>
+      ) : (
+        <p className="mt-2 text-[11.5px] text-neutral-500">
+          カレンダーを縦にドラッグして、空けたい時間帯を選んでください。既存の枠をクリックすると削除できます。
+        </p>
+      )}
+
+      {/* カレンダー */}
+      <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
+        {/* 曜日ヘッダー */}
+        <div className="grid grid-cols-[52px_repeat(7,1fr)] border-b border-border bg-background">
+          <div />
+          {days.map((day) => (
+            <div
+              key={day.key}
+              className={
+                'border-l border-border py-2 text-center ' +
+                (day.isToday ? 'bg-primary-50' : '')
+              }
+            >
+              <div
+                className={
+                  'text-[12px] font-bold ' +
+                  (day.weekday === 0
+                    ? 'text-danger-500'
+                    : day.weekday === 6
+                      ? 'text-primary-700'
+                      : 'text-neutral-700')
+                }
+              >
+                {WEEKDAY_JA[day.weekday]}
               </div>
-              <div className="flex flex-col gap-2">
-                {wk.rows.map((s) => {
-                  const start = new Date(s.startIso);
-                  const end = new Date(s.endIso);
-                  const w = wallPartsInTz(start, timezone);
+              <div className="text-[11px] tabular-nums text-neutral-500">
+                {day.mo}/{day.d}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* スクロール領域 */}
+        <div ref={scrollRef} className="max-h-[62vh] overflow-y-auto">
+          <div className="grid select-none grid-cols-[52px_repeat(7,1fr)]">
+            {/* 時間ラベル（0〜23時） */}
+            <div className="relative" style={{ height: ROWS * ROW_H }}>
+              {Array.from({ length: 24 }, (_, h) => (
+                <div
+                  key={h}
+                  className="relative text-right"
+                  style={{ height: ROW_H * 2 }}
+                >
+                  <span className="absolute -top-2 right-1.5 text-[10.5px] tabular-nums text-neutral-400">
+                    {h === 0 ? '' : `${h}:00`}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* 各曜日の列 */}
+            {days.map((day, col) => (
+              <div
+                key={day.key}
+                className="relative border-l border-border"
+                style={{ height: ROWS * ROW_H }}
+              >
+                {/* 30分セル */}
+                {Array.from({ length: ROWS }, (_, r) => {
+                  const disabled = cellDisabled(day, r);
+                  const inSel =
+                    sel &&
+                    sel.col === col &&
+                    r >= Math.min(sel.r0, sel.r1) &&
+                    r <= Math.max(sel.r0, sel.r1);
                   return (
                     <div
-                      key={s.id}
+                      key={r}
+                      onPointerDown={(e) => {
+                        if (disabled) return;
+                        e.preventDefault();
+                        startSel(col, r, day);
+                      }}
+                      onPointerEnter={() => extendSel(col, r, day)}
                       className={
-                        'flex flex-wrap items-center gap-3.5 rounded-xl border px-4 py-3 shadow-xs ' +
-                        (s.hasBooking
-                          ? 'border-primary-100 bg-primary-50'
-                          : 'border-border bg-card')
+                        (r % 2 === 0 ? 'border-t border-border' : 'border-t border-border/30') +
+                        ' ' +
+                        (disabled
+                          ? 'cursor-not-allowed bg-muted/50'
+                          : inSel
+                            ? 'bg-primary-500/40'
+                            : 'cursor-pointer hover:bg-primary-500/10')
                       }
+                      style={{ height: ROW_H }}
+                    />
+                  );
+                })}
+
+                {/* 既存の空き枠ブロック */}
+                {blocks
+                  .filter((b) => b.col === col)
+                  .map((b) => (
+                    <div
+                      key={b.id}
+                      title={`${b.label}（日本時間 ${b.jst}）`}
+                      className={
+                        'group absolute inset-x-0.5 overflow-hidden rounded-md border px-1.5 py-1 text-left ' +
+                        (b.hasBooking
+                          ? 'border-primary-300 bg-primary-100'
+                          : 'border-primary-700 bg-primary-500')
+                      }
+                      style={{
+                        top: b.topR * ROW_H + 1,
+                        height: (b.botR - b.topR) * ROW_H - 2,
+                      }}
                     >
-                      <span className="w-14 shrink-0 text-center leading-tight">
-                        <b className="block text-[14px]">{WEEKDAY_JA[w.weekday]}</b>
-                        <span className="text-[10.5px] tabular-nums text-neutral-500">
-                          {w.month}/{w.day}
-                        </span>
-                      </span>
-                      <span className="text-[14px] font-semibold tabular-nums">
-                        {formatTimeRangeInTz(start, end, timezone)}
-                        <small className="ml-1 text-[11px] font-normal text-neutral-500">
-                          {short}
-                        </small>
-                      </span>
-                      <span className="text-[11.5px] text-neutral-500">
-                        日本時間 {formatTimeRangeInTz(start, end, 'Asia/Tokyo')}
-                      </span>
-                      {s.hasBooking ? (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
-                          <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+                      <div
+                        className={
+                          'text-[10.5px] font-bold leading-tight tabular-nums ' +
+                          (b.hasBooking ? 'text-primary-900' : 'text-neutral-950')
+                        }
+                      >
+                        {b.label}
+                      </div>
+                      {b.hasBooking ? (
+                        <span className="mt-0.5 inline-flex items-center gap-0.5 text-[9.5px] font-bold text-primary-900">
+                          <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden />
                           予約あり
                         </span>
-                      ) : null}
-                      <span className="flex-1" />
-                      {!s.hasBooking ? (
+                      ) : (
                         <button
                           type="button"
                           disabled={pending}
-                          onClick={() => onDelete(s.id)}
-                          aria-label="削除"
-                          className="grid h-8 w-8 place-items-center rounded-full text-neutral-400 transition hover:bg-danger-50 hover:text-danger-500"
+                          onClick={() => onDelete(b.id)}
+                          aria-label="この枠を削除"
+                          className="absolute right-0.5 top-0.5 hidden h-5 w-5 place-items-center rounded-full bg-neutral-950/15 text-neutral-950 hover:bg-neutral-950/30 group-hover:grid"
                         >
-                          <Trash2 className="h-[15px] w-[15px]" aria-hidden />
+                          <Trash2 className="h-3 w-3" aria-hidden />
                         </button>
-                      ) : null}
+                      )}
                     </div>
-                  );
-                })}
+                  ))}
               </div>
-            </div>
-          ))
-        )}
+            ))}
+          </div>
+        </div>
+
+        {/* 凡例 */}
+        <div className="flex flex-wrap items-center gap-4 border-t border-border bg-background px-4 py-2.5 text-[11px] text-neutral-500">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm border border-primary-700 bg-primary-500" aria-hidden />
+            空き枠
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm border border-primary-300 bg-primary-100" aria-hidden />
+            予約あり（削除不可）
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-muted" aria-hidden />
+            過去（登録不可）
+          </span>
+        </div>
       </div>
     </div>
   );
