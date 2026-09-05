@@ -50,7 +50,7 @@ import { CityPriceSelects } from './FilterSelects';
 export const metadata = {
   title: 'エキスパートを探す',
   description:
-    '海外の大学・大学院に在学中／卒業した日本人に、30分からオンライン相談。全員、書類審査による居住認証済み。留学先の国とテーマで絞り込めます。',
+    '海外の大学・大学院に在学中／卒業した日本人に、30分からオンライン相談。全員、書類（学生証・入学証明書・卒業証書）で在籍確認済み。留学先の国とテーマで絞り込めます。',
 };
 
 type Search = {
@@ -140,7 +140,7 @@ export default async function ExpertsPage({
           <p className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-neutral-700">
             <span className="inline-flex items-center gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5 text-primary-700" aria-hidden />
-              全員、在学生またはアルムナイ。書類審査による居住認証済み
+              全員、在学生またはアルムナイ。書類（学生証・入学証明書・卒業証書）で在籍確認済み
             </span>
             <span className="inline-flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5 text-primary-700" aria-hidden />

@@ -17,6 +17,10 @@ import { LocalSlotTime, LocalTzLabel } from '@/components/experts/LocalSlotTime'
 import { formatSchoolName } from '@/lib/experts/education';
 import { deriveEnrollment } from '@/lib/experts/enrollment';
 import { getSpecialtiesByUser } from '@/lib/experts/specialtiesByUser';
+import {
+  getApprovedQualificationsByUser,
+  qualificationDisplayName,
+} from '@/lib/experts/qualifications';
 import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { ConsultMenuCard } from '@/components/experts/ConsultMenuCard';
 import { PlanCard } from '@/components/experts/PlanCard';
@@ -95,11 +99,14 @@ export default async function ExpertDetailPage({
   const articles = profile.articles.slice(0, 4);
 
   // 得意分野（0080）と国名。どちらも未適用・未設定でも落ちない
-  const [specialtiesMap, countryNameJa, durationByServiceId] = await Promise.all([
+  const [specialtiesMap, countryNameJa, durationByServiceId, qualsMap] = await Promise.all([
     getSpecialtiesByUser([profile.id]),
     fetchCountryNameJa(profile.residencyCountry),
     fetchDurations(profile.id),
+    // 資格・スコア（0086）: 運営が合格証明を確認した approved だけ
+    getApprovedQualificationsByUser([profile.id]),
   ]);
+  const qualifications = qualsMap.get(profile.id) ?? [];
   const specialties = specialtiesMap.get(profile.id) ?? [];
   const hasExperienceOnly = specialties.some(isExperienceOnly);
   // 在学中 / アルムナイ（留学特化）。正式ヘルパ lib/experts/enrollment.ts
@@ -179,6 +186,7 @@ export default async function ExpertDetailPage({
     ...(profile.offerings.length > 0 ? [{ id: 'offerings', label: '相談できること' }] : []),
     ...(bioParagraphs.length > 0 ? [{ id: 'about', label: '自己紹介' }] : []),
     ...(hasCareer ? [{ id: 'career', label: '経歴' }] : []),
+    ...(qualifications.length > 0 ? [{ id: 'qualifications', label: '資格・スコア' }] : []),
     ...(articlesShown.length > 0 ? [{ id: 'articles', label: '記事' }] : []),
     { id: 'reviews', label: 'レビュー' },
   ];
@@ -293,7 +301,7 @@ export default async function ExpertDetailPage({
                   {profile.isVerified ? (
                     <BadgeCheck
                       className="h-[20px] w-[20px] shrink-0 text-primary-700"
-                      aria-label="居住認証済み"
+                      aria-label="在籍確認済み"
                     />
                   ) : null}
                 </h1>
@@ -317,7 +325,7 @@ export default async function ExpertDetailPage({
                   {profile.isVerified ? (
                     <span className="inline-flex items-center gap-1.5 font-semibold">
                       <ShieldCheck className="h-[14px] w-[14px] text-primary-700" aria-hidden />
-                      居住認証済み
+                      在籍確認済み
                     </span>
                   ) : null}
                   {languages.length > 0 ? (
@@ -563,6 +571,30 @@ export default async function ExpertDetailPage({
                     initialCount={3}
                   />
                 </div>
+              </Section>
+            ) : null}
+
+            {/* ===== 資格・スコア（運営が合格証明を確認したものだけ）===== */}
+            {qualifications.length > 0 ? (
+              <Section title="資格・スコア" id="qualifications">
+                <ul className="flex max-w-[36em] flex-wrap gap-2">
+                  {qualifications.map((q) => (
+                    <li
+                      key={q.id}
+                      className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[13px]"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5 text-primary-700" aria-hidden />
+                      <span className="font-semibold">{qualificationDisplayName(q)}</span>
+                      {q.score ? <span className="tabular-nums text-neutral-700">{q.score}</span> : null}
+                      {q.acquiredYear ? (
+                        <span className="text-[11.5px] text-neutral-500">{q.acquiredYear}</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-[11px] text-neutral-400">
+                  合格証明・スコアレポートを運営が確認したものだけを表示しています。
+                </p>
               </Section>
             ) : null}
 

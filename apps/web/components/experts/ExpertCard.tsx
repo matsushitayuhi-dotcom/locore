@@ -11,7 +11,7 @@ import type { Enrollment } from '@/lib/experts/enrollment';
  * - 4:5 の写真（本人アップロードの avatarUrl）。未登録は黒地に大きなイニシャル。
  * - ホバー / フォーカスで写真がズームし、下から「得意分野」チップ（users.specialties）が
  *   せり上がる。タッチ端末（hover 不可）では写真の下に先頭 3 件をそのまま出す。
- * - 写真の上: 左下に「居住認証済み」ピル、右上に都市名。
+ * - 写真の上: 左下に「在籍確認済み」ピル、右上に都市名。
  * - 写真の下: 名前 + 認証チェック / 料金 • 30分〜 / 在住・職業 / 自己紹介 3 行。
  */
 export type ExpertCardExtra = {
@@ -86,7 +86,7 @@ export function ExpertCard({
         {expert.isVerified ? (
           <span className="absolute bottom-2.5 left-2.5 inline-flex items-center gap-1.5 rounded-lg bg-neutral-900/95 px-2.5 py-1.5 text-[11.5px] font-bold text-white transition-opacity duration-200 group-hover:opacity-0">
             <ShieldCheck className="h-3 w-3 text-primary-500" aria-hidden />
-            居住認証済み
+            在籍確認済み
           </span>
         ) : null}
 
@@ -116,7 +116,7 @@ export function ExpertCard({
         {expert.isVerified ? (
           <BadgeCheck
             className="h-[15px] w-[15px] shrink-0 text-primary-700"
-            aria-label="居住認証済み"
+            aria-label="在籍確認済み"
           />
         ) : null}
       </div>

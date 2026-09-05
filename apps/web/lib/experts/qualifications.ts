@@ -51,7 +51,7 @@ export async function listQualificationMaster(): Promise<QualificationMasterRow[
       .where(eq(schema.qualifications.isActive, true))
       .orderBy(asc(schema.qualifications.category), asc(schema.qualifications.sortOrder));
     // category の並びは QUALIFICATION_CATEGORIES 順に揃える
-    const order = new Map(QUALIFICATION_CATEGORIES.map((c, i) => [c.code, i] as const));
+    const order = new Map<string, number>(QUALIFICATION_CATEGORIES.map((c, i) => [c.code, i]));
     return rows.sort(
       (a, b) => (order.get(a.category) ?? 99) - (order.get(b.category) ?? 99),
     );

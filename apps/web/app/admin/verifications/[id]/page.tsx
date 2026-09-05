@@ -21,6 +21,9 @@ import { ReviewForm } from './ReviewForm';
 export const dynamic = 'force-dynamic';
 
 const DOC_LABEL: Record<string, string> = {
+  enrollment_certificate: '入学証明書・在籍証明書',
+  student_id: '学生証',
+  diploma: '卒業証書・学位記',
   passport: 'パスポート',
   my_number_card: 'マイナンバーカード (顔写真面)',
   driver_license: '運転免許証',
@@ -54,6 +57,8 @@ export default async function AdminVerificationDetailPage({
       userId: schema.residencyVerifications.userId,
       status: schema.residencyVerifications.status,
       documentType: schema.residencyVerifications.documentType,
+      kind: schema.residencyVerifications.kind,
+      schoolName: schema.residencyVerifications.schoolName,
       documentPaths: schema.residencyVerifications.documentPaths,
       country: schema.residencyVerifications.country,
       city: schema.residencyVerifications.city,
@@ -122,7 +127,15 @@ export default async function AdminVerificationDetailPage({
           </Meta>
           <Meta icon={FileText} label="書類タイプ">
             {DOC_LABEL[r.documentType] ?? r.documentType}
+            {r.kind === 'enrollment' ? (
+              <span className="ml-2 rounded-full bg-primary-100 px-2 py-px text-[10px] font-bold text-primary-900">在籍確認</span>
+            ) : null}
           </Meta>
+          {r.schoolName ? (
+            <Meta icon={FileText} label="申告した学校名">
+              {r.schoolName}
+            </Meta>
+          ) : null}
           <Meta icon={Calendar} label="申請日">
             {r.submittedAt.toLocaleString('ja-JP')}
           </Meta>

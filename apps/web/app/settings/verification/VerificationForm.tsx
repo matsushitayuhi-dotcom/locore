@@ -6,70 +6,64 @@ import { Button, Input } from '@locore/ui';
 import { Upload, X, FileText, Loader2 } from 'lucide-react';
 import { createResidencyVerification } from './actions';
 import { uploadVerificationDoc } from '@/lib/storage/uploadVerificationDoc';
-import { RESIDENCE_COUNTRIES } from '@/lib/resident/masters';
 
 /**
- * 本人確認の申請フォーム (Client Component)。
+ * 在籍確認の申請フォーム（Client Component）。留学特化。
  *
- * 「居住確認」から「本人確認」へ方針転換。日本ユーザーも海外駐在者も
- * 同じフローで本人確認を行い、信頼バッジを得る。
- *
+ * 確認したい事実は「その学校に在学している / 卒業した」こと。
  * 必須:
- *   - 氏名 (日本語 or 英語、最低どちらか)
- *   - 書類タイプ + ファイル 1〜3 枚
+ *   - 書類タイプ（入学証明書・在籍証明書 / 学生証 / 卒業証書・学位記 / その他）+ ファイル 1〜3 枚
+ *   - 学校名（プロフィールの学歴から選べる。書類と同じ表記）
+ *   - 氏名（日本語 or 英語。書類と同じ表記）
+ * 任意: 補足メモ
  *
- * 任意:
- *   - 居住国 / 居住都市 (海外駐在者がアピールしたい場合用)
- *   - 住所 / 郵便番号 / 電話 (書類との照合補助。空欄でも OK)
- *
- * 送信時:
- *   1. すべてのファイルが path として揃っているか確認
- *   2. createResidencyVerification を呼ぶ
- *   3. 成功 → トースト + ページ自動 revalidate
+ * 旧「本人確認」の住所・電話などは聞かない（在籍の確認に不要）。
  */
 
-const DOC_TYPES = [
-  { value: 'passport', label: 'パスポート', hint: '顔写真ページ。日本・海外どちらも可' },
+export const ENROLLMENT_DOCS = [
   {
-    value: 'my_number_card',
-    label: 'マイナンバーカード (顔写真面)',
-    hint: '番号面は提出不可。顔写真側のみ',
+    value: 'enrollment_certificate',
+    label: '入学証明書・在籍証明書',
+    hint: '大学が発行する Enrollment / Admission Letter、在籍証明書。氏名・学校名・年度が読めるもの',
   },
-  { value: 'driver_license', label: '運転免許証', hint: '顔写真付き。日本・海外いずれも可' },
   {
-    value: 'residence_card',
-    label: '在留カード / 永住者証明書',
-    hint: '日本在住の外国籍の方、または海外の Titre de séjour 等',
+    value: 'student_id',
+    label: '学生証',
+    hint: '有効期限内のもの。氏名・学校名・写真面。学籍番号はマスクして構いません',
   },
-  { value: 'visa', label: 'VISA (滞在許可)', hint: '駐在者の方向け' },
   {
-    value: 'utility_bill',
-    label: '公的支払い情報 (光熱費・水道など)',
-    hint: '駐在者の現地居住を補強したい場合',
+    value: 'diploma',
+    label: '卒業証書・学位記（アルムナイ）',
+    hint: '卒業した方向け。Diploma / Degree Certificate。氏名・学校名・学位・年月が読めるもの',
   },
-  { value: 'tax_certificate', label: '住民税・所得税の証明', hint: '住所証明として' },
-  { value: 'other', label: 'その他', hint: '賃貸契約書など。補足欄で書類名を明記してください' },
+  {
+    value: 'other',
+    label: 'その他',
+    hint: '成績証明書・合格通知など。補足欄に書類名を明記してください',
+  },
 ] as const;
 
-type DocType = (typeof DOC_TYPES)[number]['value'];
+type DocType = (typeof ENROLLMENT_DOCS)[number]['value'];
 
-type UploadedFile = {
-  path: string;
-  name: string;
-  size: number;
-};
+type UploadedFile = { path: string; name: string; size: number };
 
-export function VerificationForm() {
+export function VerificationForm({
+  schools = [],
+  defaultAlumni = false,
+}: {
+  /** プロフィールの学歴（学校名）。学校名の候補に出す */
+  schools?: string[];
+  /** 学歴が「卒業」のみのときは卒業証書を初期選択に */
+  defaultAlumni?: boolean;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [docType, setDocType] = useState<DocType>('passport');
-  const [country, setCountry] = useState<string>('');
-  const [city, setCity] = useState<string>('');
-  const [legalNameRoman, setLegalNameRoman] = useState<string>('');
-  const [legalNameNative, setLegalNameNative] = useState<string>('');
-  const [addressLine, setAddressLine] = useState<string>('');
-  const [postalCode, setPostalCode] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
-  const [userNote, setUserNote] = useState<string>('');
+  const [docType, setDocType] = useState<DocType>(
+    defaultAlumni ? 'diploma' : 'enrollment_certificate',
+  );
+  const [schoolName, setSchoolName] = useState<string>(schools[0] ?? '');
+  const [legalNameNative, setLegalNameNative] = useState('');
+  const [legalNameRoman, setLegalNameRoman] = useState('');
+  const [userNote, setUserNote] = useState('');
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [agreed, setAgreed] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -79,19 +73,15 @@ export function VerificationForm() {
 
   const onFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files ?? []);
-    e.target.value = ''; // 同じファイル再選択可
+    e.target.value = '';
     if (picked.length === 0) return;
-
     const remaining = 3 - files.length;
     if (remaining <= 0) {
       toast.error('書類は最大 3 枚までです');
       return;
     }
     const toUpload = picked.slice(0, remaining);
-    if (picked.length > remaining) {
-      toast.warning(`最初の ${remaining} 枚だけアップロードします`);
-    }
-
+    if (picked.length > remaining) toast.warning(`最初の ${remaining} 枚だけアップロードします`);
     setIsUploading(true);
     const uploaded: UploadedFile[] = [];
     for (const f of toUpload) {
@@ -99,11 +89,8 @@ export function VerificationForm() {
       fd.set('file', f);
       try {
         const res = await uploadVerificationDoc(fd);
-        if (res.ok) {
-          uploaded.push({ path: res.path, name: f.name, size: f.size });
-        } else {
-          toast.error(res.error);
-        }
+        if (res.ok) uploaded.push({ path: res.path, name: f.name, size: f.size });
+        else toast.error(res.error);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : 'アップロード失敗');
       }
@@ -112,46 +99,27 @@ export function VerificationForm() {
     setIsUploading(false);
   };
 
-  const removeFile = (idx: number) => {
-    setFiles(files.filter((_, i) => i !== idx));
-  };
-
-  // 氏名は英語 or 日本語のどちらか必須
-  const hasName = legalNameRoman.trim().length > 0 || legalNameNative.trim().length > 0;
+  const hasName = legalNameNative.trim().length > 0 || legalNameRoman.trim().length > 0;
+  const canSubmit =
+    !isSubmitting && !isUploading && files.length > 0 && hasName && schoolName.trim() && agreed;
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (files.length === 0) {
-      toast.error('書類を 1 枚以上アップロードしてください');
-      return;
-    }
-    if (!hasName) {
-      toast.error('氏名 (英語または日本語) を入力してください');
-      return;
-    }
-    if (!agreed) {
-      toast.error('確認事項にチェックを入れてください');
-      return;
-    }
+    if (!canSubmit) return;
     startSubmit(async () => {
       try {
         const res = await createResidencyVerification({
           documentType: docType,
           documentPaths: files.map((f) => f.path),
-          country: country.trim() || undefined,
-          city: city.trim() || undefined,
-          legalNameRoman: legalNameRoman.trim() || undefined,
+          schoolName: schoolName.trim(),
           legalNameNative: legalNameNative.trim() || undefined,
-          addressLine: addressLine.trim() || undefined,
-          postalCode: postalCode.trim() || undefined,
-          phoneNumber: phoneNumber.trim() || undefined,
+          legalNameRoman: legalNameRoman.trim() || undefined,
           userNote: userNote.trim() || undefined,
         });
         if (res.ok) {
-          toast.success('本人確認の申請を受け付けました', {
-            description: '3〜5 営業日以内に編集チームから結果をお知らせします',
+          toast.success('在籍確認の申請を受け付けました', {
+            description: '3〜5 営業日以内に運営から結果をお知らせします',
           });
-          // form リセット (ステータスカードは Server Component の revalidate で出る)
           setFiles([]);
           setUserNote('');
           setAgreed(false);
@@ -164,80 +132,95 @@ export function VerificationForm() {
     });
   };
 
-  const selectedDocHint = DOC_TYPES.find((t) => t.value === docType)?.hint;
+  const hint = ENROLLMENT_DOCS.find((d) => d.value === docType)?.hint;
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-5 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
-    >
-      {/* 氏名 (どちらか必須) */}
+    <form onSubmit={onSubmit} className="space-y-5 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
+      {/* 1. 書類タイプ（カード選択） */}
+      <div>
+        <p className="mb-2 text-[12px] font-medium text-foreground/70">
+          提出する書類 <span className="text-danger-500">*</span>
+        </p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {ENROLLMENT_DOCS.map((d) => {
+            const on = docType === d.value;
+            return (
+              <button
+                key={d.value}
+                type="button"
+                onClick={() => setDocType(d.value)}
+                aria-pressed={on}
+                className={
+                  'rounded-md border px-3.5 py-2.5 text-left text-[13px] transition ' +
+                  (on
+                    ? 'border-neutral-900 bg-neutral-900 font-bold text-white'
+                    : 'border-border bg-background text-foreground/80 hover:border-foreground')
+                }
+              >
+                {d.label}
+              </button>
+            );
+          })}
+        </div>
+        {hint ? <p className="mt-2 text-[11.5px] text-foreground/55">{hint}</p> : null}
+      </div>
+
+      {/* 2. 学校名 */}
+      <div>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+          学校名 <span className="text-danger-500">*</span>
+        </label>
+        <Input
+          value={schoolName}
+          onChange={(e) => setSchoolName(e.target.value)}
+          placeholder="例: Harvard Business School / ハーバード・ビジネス・スクール"
+          maxLength={160}
+          list={schools.length > 0 ? 'enrollment-school-options' : undefined}
+        />
+        {schools.length > 0 ? (
+          <datalist id="enrollment-school-options">
+            {schools.map((s) => (
+              <option key={s} value={s} />
+            ))}
+          </datalist>
+        ) : null}
+        <p className="mt-1 text-[11px] text-foreground/55">
+          書類に書かれている表記で。プロフィールの学歴に登録した学校が候補に出ます。
+        </p>
+      </div>
+
+      {/* 3. 氏名 */}
       <div>
         <p className="mb-2 text-[12px] font-medium text-foreground/70">
           氏名 <span className="text-danger-500">*</span>
           <span className="ml-1 text-[10px] font-normal text-foreground/50">
-            (英語または日本語、どちらか一方は必須)
+            （書類と同じ表記。日本語か英語のどちらか）
           </span>
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <Input
-              value={legalNameNative}
-              onChange={(e) => setLegalNameNative(e.target.value)}
-              placeholder="田中 みゆき"
-              maxLength={140}
-              aria-label="氏名 (日本語)"
-            />
-            <p className="mt-1 text-[11px] text-foreground/55">
-              漢字・かな表記。書類と同じ表記でお願いします
-            </p>
-          </div>
-          <div>
-            <Input
-              value={legalNameRoman}
-              onChange={(e) => setLegalNameRoman(e.target.value)}
-              placeholder="TANAKA Miyuki"
-              maxLength={140}
-              aria-label="氏名 (英語)"
-            />
-            <p className="mt-1 text-[11px] text-foreground/55">
-              パスポート・在留カードの英字表記
-            </p>
-          </div>
+          <Input
+            value={legalNameNative}
+            onChange={(e) => setLegalNameNative(e.target.value)}
+            placeholder="高村 里奈"
+            maxLength={140}
+            aria-label="氏名 (日本語)"
+          />
+          <Input
+            value={legalNameRoman}
+            onChange={(e) => setLegalNameRoman(e.target.value)}
+            placeholder="TAKAMURA Rina"
+            maxLength={140}
+            aria-label="氏名 (英語)"
+          />
         </div>
       </div>
 
-      {/* 書類タイプ */}
-      <div>
-        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-          書類タイプ <span className="text-danger-500">*</span>
-        </label>
-        <select
-          value={docType}
-          onChange={(e) => setDocType(e.target.value as DocType)}
-          className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px]"
-        >
-          {DOC_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-        {selectedDocHint ? (
-          <p className="mt-1 text-[11px] text-foreground/55">{selectedDocHint}</p>
-        ) : null}
-        <p className="mt-1 text-[11px] text-foreground/50">
-          氏名と顔写真が読める書類をご提出ください。マイナンバー番号面・口座番号・
-          給与額など、本人確認に不要な部分は黒塗りでマスクして頂いて構いません。
-        </p>
-      </div>
-
-      {/* ファイルアップロード */}
+      {/* 4. ファイル */}
       <div>
         <label className="mb-2 block text-[12px] font-medium text-foreground/70">
           書類ファイル <span className="text-danger-500">*</span>
           <span className="ml-1 text-[10px] font-normal text-foreground/50">
-            (1〜3 枚、各 15MB まで、JPEG/PNG/HEIC/PDF)
+            （1〜3 枚、各 15MB まで、JPEG/PNG/HEIC/PDF）
           </span>
         </label>
         <input
@@ -256,16 +239,14 @@ export function VerificationForm() {
                 className="flex items-center gap-2 rounded-md bg-background/40 px-3 py-2 ring-1 ring-border"
               >
                 <FileText className="h-4 w-4 shrink-0 text-foreground/55" />
-                <span className="min-w-0 flex-1 truncate text-[12px]">
-                  {f.name}
-                </span>
-                <span className="shrink-0 text-[10px] tabular text-foreground/55">
+                <span className="min-w-0 flex-1 truncate text-[12px]">{f.name}</span>
+                <span className="shrink-0 text-[10px] tabular-nums text-foreground/55">
                   {(f.size / 1024).toFixed(0)} KB
                 </span>
                 <button
                   type="button"
                   aria-label="削除"
-                  onClick={() => removeFile(i)}
+                  onClick={() => setFiles(files.filter((_, j) => j !== i))}
                   className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -278,7 +259,7 @@ export function VerificationForm() {
           type="button"
           onClick={onPickFiles}
           disabled={isUploading || files.length >= 3}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-border bg-background py-5 text-[13px] font-medium text-foreground/65 transition hover:border-primary-300 hover:bg-primary-500/5 hover:text-primary-300 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-border bg-background py-5 text-[13px] font-medium text-foreground/65 transition hover:border-primary-300 hover:bg-primary-500/5 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isUploading ? (
             <>
@@ -290,114 +271,30 @@ export function VerificationForm() {
           ) : (
             <>
               <Upload className="h-4 w-4" />
-              {files.length === 0
-                ? '書類を選択'
-                : `さらに追加 (残り ${3 - files.length} 枚)`}
+              {files.length === 0 ? '書類を選択' : `さらに追加（残り ${3 - files.length} 枚）`}
             </>
           )}
         </button>
+        <p className="mt-1.5 text-[11px] text-foreground/50">
+          氏名・学校名・年度が読めれば OK。学籍番号・住所など不要な部分は黒塗りで構いません。
+        </p>
       </div>
 
-      {/* 任意項目セクション */}
-      <details className="rounded-md border border-dashed border-border bg-background/40 p-4">
-        <summary className="cursor-pointer text-[12px] font-medium text-foreground/70">
-          任意項目 (居住地・住所・電話)
-          <span className="ml-2 text-[10px] text-foreground/50">
-            駐在者の方や、現地拠点をプロフィールに表示したい方は記入を推奨
-          </span>
-        </summary>
-        <div className="mt-4 space-y-4">
-          {/* 居住地 */}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-[11px] font-medium text-foreground/65">
-                居住国 (任意)
-              </label>
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
-              >
-                <option value="">(指定なし)</option>
-                {RESIDENCE_COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-medium text-foreground/65">
-                居住都市 (任意)
-              </label>
-              <Input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="例: 東京 / パリ / シンガポール"
-                maxLength={80}
-              />
-            </div>
-          </div>
-
-          {/* 住所 */}
-          <div>
-            <label className="mb-1 block text-[11px] font-medium text-foreground/65">
-              住所 (任意)
-            </label>
-            <div className="grid gap-2 sm:grid-cols-[160px_1fr]">
-              <Input
-                value={postalCode}
-                onChange={(e) => setPostalCode(e.target.value)}
-                placeholder="郵便番号"
-                maxLength={20}
-              />
-              <Input
-                value={addressLine}
-                onChange={(e) => setAddressLine(e.target.value)}
-                placeholder="番地・通り名・市区町村"
-                maxLength={300}
-              />
-            </div>
-          </div>
-
-          {/* 電話 */}
-          <div>
-            <label className="mb-1 block text-[11px] font-medium text-foreground/65">
-              電話番号 (任意)
-            </label>
-            <Input
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+81 90 1234 5678 / +33 6 12 34 56 78"
-              maxLength={30}
-            />
-            <p className="mt-1 text-[10px] text-foreground/50">
-              書類との照合補助。記入は任意です
-            </p>
-          </div>
-        </div>
-      </details>
-
-      {/* 補足メモ */}
+      {/* 5. 補足 */}
       <div>
-        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-          補足 (任意)
-        </label>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">補足（任意）</label>
         <textarea
           value={userNote}
           onChange={(e) => setUserNote(e.target.value)}
           maxLength={500}
-          rows={3}
-          placeholder="例: 書類の氏名表記が旧姓のため、別書類で照合をお願いします"
+          rows={2}
+          placeholder="例: 学生証は現在の姓、学位記は旧姓です"
           className="flex w-full rounded-sm border border-border bg-card px-3 py-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
         />
-        <p className="mt-1 text-[11px] text-foreground/50">
-          {userNote.length} / 500
-        </p>
       </div>
 
-      {/* 同意 */}
-      <label className="flex cursor-pointer items-start gap-3 rounded-md bg-primary-500/5 p-3 ring-1 ring-border">
+      {/* 6. 同意 */}
+      <label className="flex cursor-pointer items-start gap-3 rounded-md bg-muted p-3 ring-1 ring-border">
         <input
           type="checkbox"
           checked={agreed}
@@ -405,25 +302,14 @@ export function VerificationForm() {
           className="mt-0.5 h-4 w-4"
         />
         <span className="text-[12px] leading-relaxed text-foreground/75">
-          書類は本人提出であることと、編集チームの目視レビュー後{' '}
-          <strong>30 日以内に物理削除</strong> されることに同意します
-          (確認結果のフラグだけが残ります)。
+          書類は本人のものであること、運営の目視確認後 <strong>30 日以内に物理削除</strong>
+          されること（確認結果のフラグだけが残る）に同意します。
         </span>
       </label>
 
       <div className="flex justify-end">
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={
-            isSubmitting ||
-            isUploading ||
-            files.length === 0 ||
-            !agreed ||
-            !hasName
-          }
-        >
-          {isSubmitting ? '送信中…' : '申請を送信する'}
+        <Button type="submit" variant="primary" disabled={!canSubmit}>
+          {isSubmitting ? '送信中…' : '在籍確認を申請する'}
         </Button>
       </div>
     </form>

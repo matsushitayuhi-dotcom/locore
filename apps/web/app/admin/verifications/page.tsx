@@ -20,6 +20,9 @@ import { AdminPageHeader } from '../_components/AdminPageHeader';
 export const metadata = { title: '本人確認の管理 — Locore' };
 
 const DOC_LABEL: Record<string, string> = {
+  enrollment_certificate: '入学証明書・在籍証明書',
+  student_id: '学生証',
+  diploma: '卒業証書・学位記',
   passport: 'パスポート',
   my_number_card: 'マイナンバーカード',
   driver_license: '運転免許証',
