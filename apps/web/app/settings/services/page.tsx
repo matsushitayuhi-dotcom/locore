@@ -5,7 +5,6 @@ import { requireUser } from '@/lib/auth/require-user';
 import { ServicesEditor } from '@/components/settings/ServicesEditor';
 import { SectionProgress } from '@/components/settings/SectionProgress';
 import { getProfileCompleteness } from '@/lib/experts/completeness';
-import { getActiveCitiesForPicker } from '@/lib/geo/countries';
 import { CONSULTATION_TAG, TOPIC_TAG_VALUES } from '@/lib/experts/constants';
 
 export const metadata = {
@@ -211,7 +210,6 @@ export default async function ServicesSettingsPage() {
     }
   }
 
-  const cityOptions = await getActiveCitiesForPicker();
   const completeness = await getProfileCompleteness(user.id);
 
   return (
@@ -221,17 +219,14 @@ export default async function ServicesSettingsPage() {
         section={completeness.sections.services}
       />
       <header>
-        <h2 className="text-[20px] font-semibold tracking-tight">
-          相談メニュー・提供サービス
-        </h2>
+        <h2 className="text-[20px] font-semibold tracking-tight">相談メニュー</h2>
         <p className="mt-1 text-[12px] text-foreground/60">
-          30分・60分の相談メニューを作成し「相談メニューとして公開」にチェックすると、
-          エキスパート一覧（/experts）に掲載されます。
+          単発（30分・60分）や継続プラン（月額）の相談メニューを作成すると、
+          エキスパート一覧に掲載され、相談したい人が予約できるようになります。
         </p>
       </header>
 
       <ServicesEditor
-        cityOptions={cityOptions}
         initial={rows.map((r) => {
           const d = detailById.get(r.id);
           const tags = Array.isArray(d?.tags) ? d!.tags! : [];
