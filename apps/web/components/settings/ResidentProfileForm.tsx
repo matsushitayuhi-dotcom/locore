@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { Button, Input } from '@locore/ui';
-import { Plus, X } from 'lucide-react';
+import { Input } from '@locore/ui';
+import { ChevronDown, Plus, X } from 'lucide-react';
 import type { EducationEntry, WorkEntry } from '@locore/db';
 import { updateResidentProfile } from '@/app/settings/profile/actions';
 import { SpecialtyPicker } from '@/components/experts/SpecialtyPicker';
@@ -12,30 +12,29 @@ import {
   type CareerDraft,
 } from '@/components/settings/CareerHistoryEditor';
 import {
-  FAMILY_STAGES,
-  FAMILY_STAGE_LABEL,
   COMMON_LANGUAGES,
   LANGUAGE_LEVELS,
   LANGUAGE_LEVEL_LABEL,
-  INTEREST_PRESETS,
-  LOOKING_FOR_PRESETS,
   type FamilyStage,
   type LanguageLevel,
 } from '@/lib/resident/constants';
 import {
-  JP_PREFECTURES,
   RESIDENCE_COUNTRIES,
   RESIDENCE_CITIES_BY_COUNTRY,
-  RESIDENCE_YEAR_OPTIONS,
-  arrivalYearFromBucket,
-  type ResidenceYearBucket,
 } from '@/lib/resident/masters';
 
 /**
- * 駐在員プロフィールの編集フォーム。
+ * エキスパート情報（留学特化）の編集フォーム。/settings/profile の 2 枚目。
  *
- * 既存の ProfileForm（表示名 / bio / avatar）とは別カードで出して、
- * 「交流を促す情報」をオプトインで埋めてもらう設計。
+ * 2026-09 再設計: 縦長で触りにくかった旧「駐在員プロフィール」を、留学の決め手の順に並べた
+ * 1 フォーム＋固定の保存バーに整理。
+ *   1 学校・在学状況（必須） → 2 留学先の国・都市 → 3 得意分野（必須） → 4 相談できること
+ *   → 5 話せる言語 → 6 職歴・職業（任意・折りたたみ）
+ *
+ * 表示から外した項目（データは消さない。既存値をそのまま送り返す）:
+ *   出身（都道府県）/ 在住年数 / 家族構成 / ヘッダー画像 URL / 興味・趣味 / 探していること / 気軽に会える。
+ *   これらは旧「住人検索（/residents）」向けで、留学相談の意思決定には効かないため。
+ * 公開トグルはここには置かない（/settings ハブに一本化。メニュー作成など他タブの充足に依存するため）。
  */
 
 type Lang = { code: string; level: LanguageLevel };
@@ -105,33 +104,13 @@ function draftToEdu(d: CareerDraft): EducationEntry {
   };
 }
 
-/** users.arrival_year（西暦）→ "1-2" 等のバケット */
-function bucketFromArrivalYear(arrivalYear: number | null): ResidenceYearBucket | '' {
-  if (arrivalYear === null || !Number.isFinite(arrivalYear)) return '';
-  const years = Math.max(0, new Date().getFullYear() - arrivalYear);
-  if (years < 1) return '<1';
-  if (years <= 2) return '1-2';
-  if (years <= 5) return '3-5';
-  if (years <= 10) return '6-10';
-  if (years <= 15) return '11-15';
-  if (years <= 20) return '16-20';
-  return '20+';
-}
+const selectCls =
+  'h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50';
 
 export function ResidentProfileForm({ initial }: Props) {
-  const [homeRegion, setHomeRegion] = useState(initial.homeRegion);
-  const [residencyCountry, setResidencyCountry] = useState(
-    initial.residencyCountry,
-  );
+  const [residencyCountry, setResidencyCountry] = useState(initial.residencyCountry);
   const [residencyCity, setResidencyCity] = useState(initial.residencyCity);
-  const [yearBucket, setYearBucket] = useState<ResidenceYearBucket | ''>(
-    bucketFromArrivalYear(initial.arrivalYear),
-  );
-  const [familyStage, setFamilyStage] = useState<FamilyStage | ''>(
-    initial.familyStage,
-  );
   const [occupation, setOccupation] = useState(initial.occupation);
-  const [coverImageUrl, setCoverImageUrl] = useState(initial.coverImageUrl);
   const [offerings, setOfferings] = useState<string[]>(initial.offerings);
   const [specialties, setSpecialties] = useState<string[]>(initial.specialties);
   const [workRows, setWorkRows] = useState<CareerDraft[]>(
@@ -141,44 +120,16 @@ export function ResidentProfileForm({ initial }: Props) {
     initial.education.map(eduToDraft),
   );
   const [languages, setLanguages] = useState<Lang[]>(initial.languages);
-  const [interests, setInterests] = useState<string[]>(initial.interests);
-  const [lookingFor, setLookingFor] = useState<string[]>(initial.lookingFor);
-  const [openToMeetups, setOpenToMeetups] = useState(initial.openToMeetups);
-  const [interestDraft, setInterestDraft] = useState('');
-  const [lookingForDraft, setLookingForDraft] = useState('');
   const [offeringDraft, setOfferingDraft] = useState('');
   const [isPending, startTransition] = useTransition();
 
-  const toggleInterest = (tag: string) => {
-    setInterests((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    );
-  };
-  const toggleLookingFor = (tag: string) => {
-    setLookingFor((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    );
-  };
-
-  const addInterest = () => {
-    const v = interestDraft.trim();
-    if (!v || interests.includes(v) || interests.length >= 20) return;
-    setInterests([...interests, v]);
-    setInterestDraft('');
-  };
-  const addLookingFor = () => {
-    const v = lookingForDraft.trim();
-    if (!v || lookingFor.includes(v) || lookingFor.length >= 10) return;
-    setLookingFor([...lookingFor, v]);
-    setLookingForDraft('');
-  };
   const addOffering = () => {
     const v = offeringDraft.trim();
     if (!v || offerings.includes(v) || offerings.length >= 8) return;
     setOfferings([...offerings, v]);
     setOfferingDraft('');
   };
-  const toggleOffering = (tag: string) =>
+  const removeOffering = (tag: string) =>
     setOfferings((prev) => prev.filter((t) => t !== tag));
 
   const addLanguage = (code: string) => {
@@ -186,39 +137,38 @@ export function ResidentProfileForm({ initial }: Props) {
     if (languages.length >= 8) return;
     setLanguages([...languages, { code, level: 'conversation' }]);
   };
-  const removeLanguage = (code: string) => {
+  const removeLanguage = (code: string) =>
     setLanguages(languages.filter((l) => l.code !== code));
-  };
-  const updateLanguageLevel = (code: string, level: LanguageLevel) => {
+  const updateLanguageLevel = (code: string, level: LanguageLevel) =>
     setLanguages(languages.map((l) => (l.code === code ? { ...l, level } : l)));
-  };
+
+  const hasSchool = eduRows.some((r) => r.name.trim());
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
       const res = await updateResidentProfile({
-        // homeCountry はもう聞かない（駐在員は実質日本固定）。後方互換のため undefined を送る
         homeCountry: undefined,
-        homeRegion: homeRegion || undefined,
         residencyCountry: residencyCountry || undefined,
         residencyCity: residencyCity || undefined,
-        // バケット → 西暦に変換して保存
-        arrivalYear: yearBucket === '' ? undefined : arrivalYearFromBucket(yearBucket),
-        familyStage: familyStage || undefined,
         occupation: occupation || undefined,
-        coverImageUrl: coverImageUrl || undefined,
         offerings,
         specialties,
         // 経歴: 名称が空の行は未入力扱いで除外し、DB のエントリ形に変換して全置換
-        workHistory: workRows.filter((r) => r.name.trim()).map(draftToWork),
         education: eduRows.filter((r) => r.name.trim()).map(draftToEdu),
+        workHistory: workRows.filter((r) => r.name.trim()).map(draftToWork),
         languages,
-        interests,
-        lookingFor,
-        openToMeetups,
+        // ---- 表示から外した項目は既存値をそのまま送る（省略すると空で上書きされる）----
+        homeRegion: initial.homeRegion || undefined,
+        arrivalYear: initial.arrivalYear ?? undefined,
+        familyStage: initial.familyStage || undefined,
+        coverImageUrl: initial.coverImageUrl || undefined,
+        interests: initial.interests,
+        lookingFor: initial.lookingFor,
+        openToMeetups: initial.openToMeetups,
       });
       if (res.ok) {
-        toast.success('駐在員プロフィールを保存しました');
+        toast.success('エキスパート情報を保存しました');
       } else {
         toast.error(res.error);
       }
@@ -226,404 +176,290 @@ export function ResidentProfileForm({ initial }: Props) {
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="space-y-6 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
-    >
-      <header>
-        <h3 className="text-[15px] font-semibold tracking-tight">
-          駐在員プロフィール
-        </h3>
-        <p className="mt-1 text-[12px] text-foreground/60">
-          /residents の住人検索で表示されます。<span className="text-foreground/70 font-medium">埋めるほどマッチしやすくなります</span>が、すべて任意です。
-        </p>
-      </header>
-
-      {/* 出身地 / 在住地（すべてドロップダウン） */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            出身（都道府県）
-          </label>
-          <select
-            value={homeRegion}
-            onChange={(e) => setHomeRegion(e.target.value)}
-            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
-          >
-            <option value="">— 選択しない —</option>
-            {JP_PREFECTURES.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            在住国
-          </label>
-          <select
-            value={residencyCountry}
-            onChange={(e) => {
-              setResidencyCountry(e.target.value);
-              // 国が変わったら都市はリセット（その国に存在しない可能性が高いため）
-              setResidencyCity('');
-            }}
-            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
-          >
-            <option value="">— 選択しない —</option>
-            {RESIDENCE_COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            在住都市
-          </label>
-          <select
-            value={residencyCity}
-            onChange={(e) => setResidencyCity(e.target.value)}
-            disabled={!residencyCountry}
-            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">
-              {residencyCountry ? '— 選択しない —' : '先に在住国を選択'}
-            </option>
-            {(RESIDENCE_CITIES_BY_COUNTRY[residencyCountry] ?? []).map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            在住年数
-          </label>
-          <select
-            value={yearBucket}
-            onChange={(e) =>
-              setYearBucket(e.target.value as ResidenceYearBucket | '')
-            }
-            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
-          >
-            <option value="">— 選択しない —</option>
-            {RESIDENCE_YEAR_OPTIONS.map((y) => (
-              <option key={y.value} value={y.value}>
-                {y.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="sm:col-span-2">
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            家族構成
-          </label>
-          <select
-            value={familyStage}
-            onChange={(e) => setFamilyStage(e.target.value as FamilyStage | '')}
-            className="h-10 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none"
-          >
-            <option value="">— 選択しない —</option>
-            {FAMILY_STAGES.map((s) => (
-              <option key={s} value={s}>
-                {FAMILY_STAGE_LABEL[s]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* 業種 */}
-      <div>
-        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-          業種・職業
-        </label>
-        <Input
-          value={occupation}
-          onChange={(e) => setOccupation(e.target.value)}
-          placeholder="例: ヴィンテージバイヤー / スタイリスト"
-          maxLength={80}
-        />
-        <p className="mt-1 text-[11px] text-foreground/55">
-          プロフィール上部に大きく表示されます。
-        </p>
-      </div>
-
-      {/* 経歴（職歴・学歴） */}
-      <div className="space-y-4">
-        <div>
-          <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-            経歴（任意）
-          </label>
-          <p className="text-[11px] text-foreground/55">
-            相談者が「どんな背景の人か」を知る手がかりになります。書ける範囲でどうぞ（年は任意）。
+    <form onSubmit={onSubmit} className="relative">
+      <div className="space-y-6 rounded-md bg-card p-5 ring-1 ring-border sm:p-6">
+        <header>
+          <h3 className="text-[15px] font-semibold tracking-tight">エキスパート情報</h3>
+          <p className="mt-1 text-[12px] text-foreground/60">
+            相談者が「この人に聞きたい」と決める材料です。学校と得意分野は必須、それ以外は任意。
           </p>
-        </div>
-        <CareerHistoryEditor
-          kind="work"
-          label="職歴"
-          rows={workRows}
-          onChange={setWorkRows}
-        />
-        <CareerHistoryEditor
-          kind="education"
-          label="学歴"
-          rows={eduRows}
-          onChange={setEduRows}
-        />
-      </div>
+        </header>
 
-      {/* ヘッダー画像 */}
-      <div>
-        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-          ヘッダー画像（URL）
-        </label>
-        <Input
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
-          placeholder="https://… プロフィール上部の背景写真"
-          maxLength={2048}
-          type="url"
-        />
-        <p className="mt-1 text-[11px] text-foreground/55">
-          プロフィールのヒーロー背景になります。未設定でもライムのネットワーク演出が表示されます。
-        </p>
-      </div>
+        {/* 1. 学校・在学状況 */}
+        <Block
+          no="1"
+          title="学校・在学状況"
+          required
+          helper="留学先の大学・大学院を最初に。在学中なら「在学中」にチェック（一覧に「在学中」、卒業なら「アルムナイ ’24」と表示されます）。"
+        >
+          <CareerHistoryEditor
+            kind="education"
+            label="学歴"
+            rows={eduRows}
+            onChange={setEduRows}
+          />
+          {!hasSchool ? (
+            <p className="mt-2 text-[11.5px] text-warning-700">
+              学校が未登録です。公開には 1 校以上の登録が必要です。
+            </p>
+          ) : null}
+        </Block>
 
-      {/* 得意分野（統制リスト・2 階層）。/experts のカードのホバーと列・絞り込みに使う */}
-      <div>
-        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-          得意分野
-        </label>
-        <p className="mb-2 text-[11px] text-foreground/55">
-          相談者が探すときの分類です。エキスパート一覧のカードに表示され、テーマの絞り込みに使われます。
-        </p>
-        <SpecialtyPicker value={specialties} onChange={setSpecialties} />
-      </div>
+        {/* 2. 留学先の国・都市 */}
+        <Block
+          no="2"
+          title="いま住んでいる国・都市"
+          helper="一覧の「国で探す」に使います。留学先（または現在の居住地）を選んでください。"
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-[12px] font-medium text-foreground/70">国</label>
+              <select
+                value={residencyCountry}
+                onChange={(e) => {
+                  setResidencyCountry(e.target.value);
+                  setResidencyCity('');
+                }}
+                className={selectCls}
+              >
+                <option value="">— 選択 —</option>
+                {RESIDENCE_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-[12px] font-medium text-foreground/70">都市</label>
+              <select
+                value={residencyCity}
+                onChange={(e) => setResidencyCity(e.target.value)}
+                disabled={!residencyCountry}
+                className={selectCls}
+              >
+                <option value="">{residencyCountry ? '— 選択 —' : '先に国を選択'}</option>
+                {(RESIDENCE_CITIES_BY_COUNTRY[residencyCountry] ?? []).map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </Block>
 
-      {/* こんな相談に乗れます */}
-      <TagPicker
-        label="こんな相談に乗れます"
-        helper="提供できることを短い文で。タグより具体的に書くほど相談につながります（最大 8 個）。"
-        presets={[]}
-        selected={offerings}
-        onToggle={toggleOffering}
-        draft={offeringDraft}
-        setDraft={setOfferingDraft}
-        onAdd={addOffering}
-        limit={8}
-        maxInputLen={120}
-      />
+        {/* 3. 得意分野 */}
+        <Block
+          no="3"
+          title="得意分野"
+          required
+          helper="相談者が探すときの分類です。一覧カードのホバーとテーマの絞り込みに使われます。"
+        >
+          <SpecialtyPicker value={specialties} onChange={setSpecialties} />
+        </Block>
 
-      {/* 言語 */}
-      <div>
-        <label className="mb-2 block text-[12px] font-medium text-foreground/70">
-          話せる言語
-        </label>
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {COMMON_LANGUAGES.filter(
-            (l) => !languages.some((x) => x.code === l.code),
-          ).map((l) => (
-            <button
-              key={l.code}
-              type="button"
-              onClick={() => addLanguage(l.code)}
-              className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-foreground/70 hover:bg-primary-500/15 hover:text-primary-300"
-            >
-              <Plus className="h-3 w-3" /> {l.label}
-            </button>
-          ))}
-        </div>
-        {languages.length > 0 ? (
-          <ul className="space-y-1.5">
-            {languages.map((l) => {
-              const label =
-                COMMON_LANGUAGES.find((x) => x.code === l.code)?.label ?? l.code;
-              return (
-                <li key={l.code} className="flex items-center gap-2">
-                  <span className="w-24 shrink-0 text-[12px] font-medium">
-                    {label}
-                  </span>
-                  <select
-                    value={l.level}
-                    onChange={(e) =>
-                      updateLanguageLevel(l.code, e.target.value as LanguageLevel)
-                    }
-                    className="h-8 flex-1 rounded-sm border border-border bg-background px-2 text-[12px]"
-                  >
-                    {LANGUAGE_LEVELS.map((lv) => (
-                      <option key={lv} value={lv}>
-                        {LANGUAGE_LEVEL_LABEL[lv]}
-                      </option>
-                    ))}
-                  </select>
+        {/* 4. こんな相談に乗れます */}
+        <Block
+          no="4"
+          title="こんな相談に乗れます"
+          helper="短い一文で具体的に。例:「SoP の構成レビュー」「GMAT 700 までの勉強法」（最大 8 個）。"
+          count={`${offerings.length}/8`}
+        >
+          {offerings.length > 0 ? (
+            <ul className="mb-2 flex flex-wrap gap-1.5">
+              {offerings.map((o) => (
+                <li
+                  key={o}
+                  className="inline-flex items-center gap-1 rounded-full bg-neutral-900 px-3 py-1 text-[12px] font-medium text-white"
+                >
+                  {o}
                   <button
                     type="button"
-                    aria-label="削除"
-                    onClick={() => removeLanguage(l.code)}
-                    className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500"
+                    aria-label={`${o} を削除`}
+                    onClick={() => removeOffering(o)}
+                    className="rounded-full p-0.5 text-neutral-400 hover:text-white"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-3 w-3" />
                   </button>
                 </li>
-              );
-            })}
-          </ul>
-        ) : null}
+              ))}
+            </ul>
+          ) : null}
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={offeringDraft}
+              onChange={(e) => setOfferingDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addOffering();
+                }
+              }}
+              maxLength={120}
+              placeholder="入力して Enter で追加"
+              disabled={offerings.length >= 8}
+              className="h-9 flex-1 rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={addOffering}
+              disabled={offerings.length >= 8}
+              className="inline-flex h-9 items-center gap-1 rounded-md border border-border-strong bg-card px-3 text-[12.5px] font-semibold hover:border-foreground disabled:opacity-50"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              追加
+            </button>
+          </div>
+        </Block>
+
+        {/* 5. 言語 */}
+        <Block no="5" title="話せる言語" helper="相談で使える言語とレベル。">
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {COMMON_LANGUAGES.filter((l) => !languages.some((x) => x.code === l.code)).map(
+              (l) => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => addLanguage(l.code)}
+                  className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-2.5 py-1 text-[11.5px] font-medium text-foreground/70 hover:border-foreground hover:text-foreground"
+                >
+                  <Plus className="h-3 w-3" aria-hidden /> {l.label}
+                </button>
+              ),
+            )}
+          </div>
+          {languages.length > 0 ? (
+            <ul className="space-y-1.5">
+              {languages.map((l) => {
+                const label = COMMON_LANGUAGES.find((x) => x.code === l.code)?.label ?? l.code;
+                return (
+                  <li key={l.code} className="flex items-center gap-2">
+                    <span className="w-24 shrink-0 text-[12.5px] font-semibold">{label}</span>
+                    <select
+                      value={l.level}
+                      onChange={(e) => updateLanguageLevel(l.code, e.target.value as LanguageLevel)}
+                      className="h-8 flex-1 rounded-md border border-border bg-background px-2 text-[12px]"
+                    >
+                      {LANGUAGE_LEVELS.map((lv) => (
+                        <option key={lv} value={lv}>
+                          {LANGUAGE_LEVEL_LABEL[lv]}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      aria-label={`${label} を削除`}
+                      onClick={() => removeLanguage(l.code)}
+                      className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </Block>
+
+        {/* 6. 職歴・職業（任意・折りたたみ） */}
+        <details
+          className="group rounded-md border border-border"
+          open={!!occupation || workRows.length > 0}
+        >
+          <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-bold tabular-nums text-neutral-700">
+              6
+            </span>
+            <span className="text-[13.5px] font-semibold">職歴・職業</span>
+            <span className="rounded-full bg-muted px-2 py-px text-[10px] font-semibold text-foreground/55">
+              任意
+            </span>
+            <span className="ml-auto hidden text-[11.5px] text-foreground/50 sm:inline">
+              社会人出願・MBA・キャリア相談を受けるなら
+            </span>
+            <ChevronDown
+              className="h-4 w-4 shrink-0 text-foreground/50 transition-transform group-open:rotate-180"
+              aria-hidden
+            />
+          </summary>
+          <div className="space-y-4 border-t border-border px-4 pb-4 pt-4">
+            <div>
+              <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+                現在の職業・肩書き
+              </label>
+              <Input
+                value={occupation}
+                onChange={(e) => setOccupation(e.target.value)}
+                placeholder="例: MBA 留学中（元総合商社） / 現地企業でデザイナー"
+                maxLength={80}
+              />
+              <p className="mt-1 text-[11px] text-foreground/55">名前の下に表示されます。</p>
+            </div>
+            <CareerHistoryEditor
+              kind="work"
+              label="職歴"
+              rows={workRows}
+              onChange={setWorkRows}
+            />
+          </div>
+        </details>
       </div>
 
-      {/* 興味 */}
-      <TagPicker
-        label="興味・趣味"
-        helper="共通の趣味は最大のアイスブレイク。プリセットから選ぶか、自由入力できます。"
-        presets={[...INTEREST_PRESETS]}
-        selected={interests}
-        onToggle={toggleInterest}
-        draft={interestDraft}
-        setDraft={setInterestDraft}
-        onAdd={addInterest}
-        limit={20}
-      />
-
-      {/* 探していること */}
-      <TagPicker
-        label="探していること"
-        helper="「ママ友募集」「ワイン仲間」など、はっきり書くほど声をかけてもらいやすくなります。"
-        presets={[...LOOKING_FOR_PRESETS]}
-        selected={lookingFor}
-        onToggle={toggleLookingFor}
-        draft={lookingForDraft}
-        setDraft={setLookingForDraft}
-        onAdd={addLookingFor}
-        limit={10}
-      />
-
-      {/* 気軽に会える */}
-      <label className="flex cursor-pointer items-start gap-3 rounded-md bg-primary-500/5 p-3 ring-1 ring-border">
-        <input
-          type="checkbox"
-          checked={openToMeetups}
-          onChange={(e) => setOpenToMeetups(e.target.checked)}
-          className="mt-0.5 h-4 w-4"
-        />
-        <div className="flex-1">
-          <p className="text-[13px] font-semibold">気軽に会える</p>
-          <p className="mt-0.5 text-[11px] text-foreground/65">
-            ON にすると /residents の「会える人だけ」フィルタに引っかかります。コーヒー1杯くらいの軽い交流に OK な人向け。
-          </p>
-        </div>
-      </label>
-
-      <div className="flex justify-end">
-        <Button type="submit" variant="primary" disabled={isPending}>
-          {isPending ? '保存中…' : '駐在員プロフィールを保存'}
-        </Button>
+      {/* 固定の保存バー */}
+      <div className="sticky bottom-0 z-10 mt-3 flex items-center gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-md backdrop-blur-md">
+        <p className="text-[12px] text-foreground/60">
+          {hasSchool && specialties.length > 0
+            ? '必須項目は揃っています。保存後、公開ステータスから公開できます。'
+            : '必須: 学校 1 校以上・得意分野 1 つ以上'}
+        </p>
+        <button
+          type="submit"
+          disabled={isPending}
+          className="ml-auto inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-primary-500 px-6 text-[13.5px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+        >
+          {isPending ? '保存中…' : 'エキスパート情報を保存'}
+        </button>
       </div>
     </form>
   );
 }
 
-function TagPicker({
-  label,
+/** 番号つきのセクション枠。必須 / 件数のバッジと 1 行ヘルプ */
+function Block({
+  no,
+  title,
+  required = false,
   helper,
-  presets,
-  selected,
-  onToggle,
-  draft,
-  setDraft,
-  onAdd,
-  limit,
-  maxInputLen = 30,
+  count,
+  children,
 }: {
-  label: string;
-  helper: string;
-  presets: string[];
-  selected: string[];
-  onToggle: (t: string) => void;
-  draft: string;
-  setDraft: (v: string) => void;
-  onAdd: () => void;
-  limit: number;
-  maxInputLen?: number;
+  no: string;
+  title: string;
+  required?: boolean;
+  helper?: string;
+  count?: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label className="mb-1 block text-[12px] font-medium text-foreground/70">
-        {label}
-        <span className="ml-1 text-[10px] font-normal text-foreground/45">
-          ({selected.length}/{limit})
+    <section>
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-900 text-[11px] font-bold tabular-nums text-primary-500">
+          {no}
         </span>
-      </label>
-      <p className="mb-2 text-[11px] text-foreground/55">{helper}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {presets.map((p) => {
-          const on = selected.includes(p);
-          return (
-            <button
-              key={p}
-              type="button"
-              onClick={() => onToggle(p)}
-              className={
-                'rounded-full px-2.5 py-1 text-[11px] font-medium transition ' +
-                (on
-                  ? 'bg-primary-500 text-neutral-950'
-                  : 'bg-muted text-foreground/70 hover:bg-primary-500/15 hover:text-primary-300')
-              }
-            >
-              {p}
-            </button>
-          );
-        })}
+        <h4 className="text-[13.5px] font-semibold">{title}</h4>
+        {required ? (
+          <span className="rounded-full bg-primary-100 px-2 py-px text-[10px] font-bold text-primary-900">
+            必須
+          </span>
+        ) : null}
+        {count ? (
+          <span className="ml-auto text-[11px] tabular-nums text-foreground/50">{count}</span>
+        ) : null}
       </div>
-      {/* カスタム入力 */}
-      <div className="mt-2 flex items-center gap-2">
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              onAdd();
-            }
-          }}
-          maxLength={maxInputLen}
-          placeholder="自由追加（Enter で確定）"
-          className="h-8 flex-1 rounded-sm border border-border bg-background px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={onAdd}
-          className="rounded-md bg-card px-2.5 py-1 text-[11px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
-        >
-          追加
-        </button>
-      </div>
-      {/* 選択済みのうちプリセット外 = ユーザーが追加したもの */}
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {selected
-          .filter((s) => !presets.includes(s))
-          .map((s) => (
-            <span
-              key={s}
-              className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-medium text-primary-300"
-            >
-              {s}
-              <button
-                type="button"
-                aria-label="削除"
-                onClick={() => onToggle(s)}
-                className="rounded-full p-0.5 hover:bg-primary-500/30"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-      </div>
-    </div>
+      {helper ? <p className="mb-2.5 text-[11.5px] text-foreground/55">{helper}</p> : null}
+      {children}
+    </section>
   );
 }
