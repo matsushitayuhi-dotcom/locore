@@ -1,13 +1,31 @@
 /**
  * 予約スライスのタイムゾーン変換・表示ヘルパ（依存追加なしの Intl ベース）。
  *
- * ルール（booking-slice モック準拠）:
+ * ルール:
  *   - 空き枠の入力はエキスパートの現地時間 → UTC に展開して保存
- *   - 相談者への表示はすべて日本時間（時差の換算をユーザーにさせない）
- *   - エキスパート向け表示は本人の現地時間を主、日本時間を併記
+ *   - 相談者への表示は「相談者の現地時間」— client はブラウザ TZ（browserTz）、
+ *     server / メールは users.timezone（無ければ日本時間フォールバック）
+ *   - エキスパート向け表示は本人の現地時間を主、日本時間を併記（現状維持）
  *
  * server / client 両方から使える純関数のみ。
  */
+
+/**
+ * ブラウザの IANA タイムゾーン。SSR（Node 側）でも呼べるが、hydration 不一致を
+ * 避けるため client では「初期値 JST → useEffect で差し替え」のパターンで使うこと。
+ */
+export function browserTz(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Tokyo';
+  } catch {
+    return 'Asia/Tokyo';
+  }
+}
+
+/** 相談者向け表示 TZ（server/メール用）: users.timezone → 日本時間フォールバック */
+export function viewerTzOf(userTimezone: string | null | undefined): string {
+  return userTimezone || 'Asia/Tokyo';
+}
 
 const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'] as const;
 

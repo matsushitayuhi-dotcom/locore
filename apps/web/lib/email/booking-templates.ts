@@ -17,8 +17,8 @@ import {
 /**
  * 予約通知メール 5 テンプレ（notifications-slice モック 3/4・4/4 準拠、留学トーン）。
  *
- * 時刻の非対称ルール（アプリ内と同じ）:
- *   - 相談者宛 = 日本時間のみ
+ * 時刻のルール（アプリ内と同じ）:
+ *   - 相談者宛 = 相談者の現地時間（users.timezone。無ければ日本時間フォールバック）
  *   - エキスパート（先輩）宛 = 本人の現地時間が主・日本時間を併記
  * ボタンは 1 通に 1 個だけ。チャット等はテキストリンクに降格。
  */
@@ -34,6 +34,8 @@ export type BookingMailInput = {
   expertName: string;
   expertTimezone: string | null;
   requesterName: string;
+  /** 相談者の現地 TZ（users.timezone）。null なら日本時間フォールバック */
+  requesterTimezone?: string | null;
   requestMessage?: string | null;
   meetUrl?: string | null;
 };
@@ -119,7 +121,8 @@ export function tplBookingRequested(input: BookingMailInput): Mail {
 // =============================================================================
 
 export function tplBookingConfirmed(input: BookingMailInput): Mail {
-  const subject = `[Locore] 相談が確定しました — ${input.expertName}さん・${formatSlotInTz(input.startAt, JST)}`;
+  const rtz = input.requesterTimezone ?? JST;
+  const subject = `[Locore] 相談が確定しました — ${input.expertName}さん・${formatSlotInTz(input.startAt, rtz)}`;
   const cta = input.meetUrl
     ? btn('参加リンクを開く', input.meetUrl)
     : btn('マイ相談を開く →', `${APP_URL}/bookings`);
@@ -130,7 +133,7 @@ export function tplBookingConfirmed(input: BookingMailInput): Mail {
     ${heading('相談が確定しました')}
     ${bodyP(`${esc(input.requesterName)}さん、${esc(input.expertName)}さんがリクエストを承諾しました。以下の日時にオンラインでお会いします。`)}
     ${table(
-      tableRow('日時', slotCell(input, JST), true) +
+      tableRow('日時', slotCell(input, rtz), true) +
         tableRow('先輩', `<b>${esc(input.expertName)}さん</b>`) +
         tableRow(
           'メニュー',
@@ -149,6 +152,7 @@ export function tplBookingConfirmed(input: BookingMailInput): Mail {
 // =============================================================================
 
 export function tplBookingDeclined(input: BookingMailInput): Mail {
+  const rtz = input.requesterTimezone ?? JST;
   const subject = `[Locore] リクエストは今回見送りとなりました — ${input.expertName}さん`;
   const html = envelope(`
     ${heading('リクエストは今回見送りとなりました')}
@@ -157,7 +161,7 @@ export function tplBookingDeclined(input: BookingMailInput): Mail {
     )}
     ${table(
       tableRow('メニュー', `<b>${esc(input.serviceTitle)}</b>`, true) +
-        tableRow('希望日時', slotCell(input, JST)),
+        tableRow('希望日時', slotCell(input, rtz)),
     )}
     ${bodyP(
       '別の枠や、同じテーマに強い別の先輩へのリクエストもご検討ください。出願スケジュールが迫っている場合は、チャットで日程を直接相談するのも近道です。',
@@ -201,7 +205,9 @@ export function tplBookingReminder(
   recipient: 'expert' | 'requester',
 ): Mail {
   const isExpert = recipient === 'expert';
-  const tz = isExpert ? (input.expertTimezone ?? JST) : JST;
+  const tz = isExpert
+    ? (input.expertTimezone ?? JST)
+    : (input.requesterTimezone ?? JST);
   const counterpart = isExpert
     ? `${input.requesterName}さん`
     : `${input.expertName}さん`;

@@ -190,7 +190,8 @@ export function AvailabilityManager({
         </select>
         <span className="min-w-[220px] flex-1 text-[11.5px] leading-relaxed text-neutral-500">
           時間は<b className="text-neutral-700">あなたの現地時間</b>
-          で入力します。相談者には<b className="text-neutral-700">日本時間</b>
+          で入力します。相談者には
+          <b className="text-neutral-700">相談者の現地時間</b>
           で表示されます。
         </span>
       </div>

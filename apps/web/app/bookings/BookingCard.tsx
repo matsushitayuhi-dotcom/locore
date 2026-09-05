@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -21,6 +21,7 @@ import {
 } from '@/lib/bookings/actions';
 import { STATUS_LABELS, tzShortLabel } from '@/lib/bookings/constants';
 import {
+  browserTz,
   formatDateShortInTz,
   formatSlotInTz,
   formatTimeRangeInTz,
@@ -99,7 +100,13 @@ export function BookingCard({
   const isConfirmed = st === 'accepted' || st === 'paid';
   const isDim = !isPending && !isConfirmed;
 
-  const mainTz = side === 'received' && viewerTz ? viewerTz : JST;
+  // 依頼側（相談者）はブラウザの現地 TZ を主表示にする。SSR は JST で描画し、
+  // mount 後に差し替え（hydration 不一致回避。日本の相談者は表示が変わらない）
+  const [localTz, setLocalTz] = useState(JST);
+  useEffect(() => {
+    setLocalTz(browserTz());
+  }, []);
+  const mainTz = side === 'received' ? (viewerTz ?? JST) : localTz;
   const showJstSub = mainTz !== JST;
 
   const run = (
@@ -254,7 +261,8 @@ export function BookingCard({
               リクエストを取り消す
             </button>
             <span className="ml-auto text-[11px] text-neutral-400">
-              開始時刻（{formatSlotInTz(start, JST)}）までに返答がないと期限切れ
+              開始時刻（{formatSlotInTz(start, mainTz)} {tzShortLabel(mainTz)}
+              ）までに返答がないと期限切れ
             </span>
           </>
         ) : null}

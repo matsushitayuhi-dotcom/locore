@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ChevronLeft, ChevronRight, Clock, Send } from 'lucide-react';
 import { requestBooking } from '@/lib/bookings/actions';
+import { tzShortLabel } from '@/lib/bookings/constants';
 import {
-  formatSlotJst,
+  browserTz,
+  dateKeyInTz,
+  formatSlotInTz,
   formatTimeInTz,
-  jstDateKey,
   wallPartsInTz,
 } from '@/lib/bookings/time';
 
@@ -25,9 +27,9 @@ const JST = 'Asia/Tokyo';
 const DAY_MS = 86_400_000;
 const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'] as const;
 
-/** 日本時間の「今日」を純カレンダー日付（UTC ms）として返す */
-function jstTodayMs(): number {
-  const w = wallPartsInTz(new Date(), JST);
+/** tz の「今日」を純カレンダー日付（UTC ms）として返す */
+function todayMsInTz(tz: string): number {
+  const w = wallPartsInTz(new Date(), tz);
   return Date.UTC(w.year, w.month - 1, w.day);
 }
 
@@ -66,36 +68,42 @@ export function RequestForm({
   const [selectedIso, setSelectedIso] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [week, setWeek] = useState(0);
+  // 相談者の現地 TZ。SSR は JST で描画し、mount 後にブラウザ TZ へ差し替える
+  // （hydration 不一致回避。日本の相談者は差し替え後も表示が変わらない）
+  const [viewerTz, setViewerTz] = useState(JST);
+  useEffect(() => {
+    setViewerTz(browserTz());
+  }, []);
 
-  // JST 日付キー → その日の開始時刻セル
+  // 相談者現地 TZ の日付キー → その日の開始時刻セル
   const slotsByDay = useMemo(() => {
     const map = new Map<string, Array<{ iso: string; label: string }>>();
     for (const iso of slotIsos) {
       const d = new Date(iso);
-      const key = jstDateKey(d);
+      const key = dateKeyInTz(d, viewerTz);
       const arr = map.get(key) ?? [];
       if (arr.length < 14) {
-        arr.push({ iso, label: formatTimeInTz(d, JST) });
+        arr.push({ iso, label: formatTimeInTz(d, viewerTz) });
       }
       map.set(key, arr);
     }
     return map;
-  }, [slotIsos]);
+  }, [slotIsos, viewerTz]);
 
   // 今日を含む月曜はじまりの週を week=0 とし、最後の空き枠がある週まで送れる
   const { weekStartMs, maxWeek } = useMemo(() => {
-    const today = jstTodayMs();
+    const today = todayMsInTz(viewerTz);
     const dow = new Date(today).getUTCDay();
     const monday = today - ((dow + 6) % 7) * DAY_MS;
     const last = slotIsos[slotIsos.length - 1];
     let max = 0;
     if (last) {
-      const w = wallPartsInTz(new Date(last), JST);
+      const w = wallPartsInTz(new Date(last), viewerTz);
       const lastMs = Date.UTC(w.year, w.month - 1, w.day);
       max = Math.max(0, Math.floor((lastMs - monday) / (7 * DAY_MS)));
     }
     return { weekStartMs: monday, maxWeek: max };
-  }, [slotIsos]);
+  }, [slotIsos, viewerTz]);
 
   const days = useMemo(() => {
     const start = weekStartMs + week * 7 * DAY_MS;
@@ -117,8 +125,10 @@ export function RequestForm({
     if (!selectedIso) return null;
     const start = new Date(selectedIso);
     const end = new Date(start.getTime() + durationMinutes * 60_000);
-    return formatSlotJst(start, end);
-  }, [selectedIso, durationMinutes]);
+    return formatSlotInTz(start, viewerTz, end);
+  }, [selectedIso, durationMinutes, viewerTz]);
+
+  const tzLabel = tzShortLabel(viewerTz);
 
   const canSend = !!selectedIso && message.trim().length > 0 && !pending;
 
@@ -138,11 +148,14 @@ export function RequestForm({
               enrollmentId,
               startAtIso: selectedIso,
               message: message.trim(),
+              // 相談者の現地 TZ（users.timezone が空なら保存 → メール表示に使う）
+              timezone: viewerTz,
             }
           : {
               serviceId: serviceId ?? undefined,
               startAtIso: selectedIso,
               message: message.trim(),
+              timezone: viewerTz,
             },
       );
       if (!res.ok) {
@@ -193,7 +206,7 @@ export function RequestForm({
         </button>
         <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-primary-100 bg-primary-50 px-3 py-1 text-[11px] font-bold text-primary-900">
           <Clock className="h-3 w-3 text-primary-700" aria-hidden />
-          日本時間
+          あなたの現地時間（{tzLabel}）
         </span>
       </div>
 
@@ -271,7 +284,7 @@ export function RequestForm({
       {/* サマリー復唱 */}
       {summarySlot ? (
         <div className="mt-5 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-[12px] leading-relaxed text-neutral-700">
-          送信する内容: <b className="tabular-nums">{summarySlot}</b>（日本時間）の{' '}
+          送信する内容: <b className="tabular-nums">{summarySlot}</b>（{tzLabel}）の{' '}
           <b>
             {serviceTitle}
             {planSession

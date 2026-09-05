@@ -2,7 +2,7 @@
 
 import 'server-only';
 import { z } from 'zod';
-import { and, eq, gt, gte, inArray, lt, lte, sql } from 'drizzle-orm';
+import { and, eq, gt, gte, inArray, isNull, lt, lte, sql } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
@@ -67,6 +67,28 @@ function describeDbError(generic: string, err: unknown): string {
     return `${generic}（開発時詳細: ${msg}）`;
   }
   return generic;
+}
+
+/**
+ * 相談者の現地 TZ を users.timezone が空のときだけ保存する
+ * （エキスパートが空き枠登録で設定した TZ は上書きしない）。失敗は握りつぶす。
+ */
+async function saveRequesterTimezoneIfEmpty(
+  userId: string,
+  tz: string | undefined,
+): Promise<void> {
+  if (!tz || !isValidTimezone(tz)) return;
+  try {
+    const db = getDb();
+    await db
+      .update(schema.users)
+      .set({ timezone: tz })
+      .where(
+        and(eq(schema.users.id, userId), isNull(schema.users.timezone)),
+      );
+  } catch (err) {
+    console.warn('[saveRequesterTimezoneIfEmpty] failed:', err);
+  }
 }
 
 function isValidTimezone(tz: string): boolean {
@@ -331,6 +353,8 @@ const requestSchema = z
     enrollmentId: z.string().uuid().optional(),
     startAtIso: z.string().datetime({ offset: true }),
     message: z.string().trim().min(1).max(2000),
+    /** 相談者のブラウザ TZ。users.timezone が空のとき保存（メール表示に使う） */
+    timezone: z.string().min(1).max(64).optional(),
   })
   .refine((v) => Boolean(v.serviceId) !== Boolean(v.enrollmentId), {
     message: 'serviceId か enrollmentId のどちらか一方を指定してください',
@@ -350,6 +374,9 @@ export async function requestBooking(
   }
   const me = await requireUser();
   const db = getDb();
+
+  // 相談者の現地 TZ を初回だけ保存（既存値は上書きしない。失敗しても予約は続行）
+  await saveRequesterTimezoneIfEmpty(me.id, parsed.data.timezone);
 
   if (parsed.data.enrollmentId) {
     return requestPlanSession(

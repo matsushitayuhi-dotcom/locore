@@ -75,6 +75,7 @@ function toMailInput(
     expertName: expert.displayName,
     expertTimezone: expert.timezone,
     requesterName: requester.displayName,
+    requesterTimezone: requester.timezone,
     requestMessage: booking.requestMessage ?? null,
     meetUrl: booking.meetUrl ?? null,
   };
