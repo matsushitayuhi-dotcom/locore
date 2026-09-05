@@ -182,6 +182,13 @@ export const users = pgTable(
       .default([]),
 
     /**
+     * 得意分野（manual/0080_user_specialties.sql）。統制リストの第 2 階層 code の配列
+     * （apps/web/lib/experts/specialties.ts）。最大 6 件、第 1 階層は 3 つまで。
+     * /experts のカードのホバー表示と、一覧のテーマ列・フィルタで使う。
+     */
+    specialties: text('specialties').array().notNull().default([]),
+
+    /**
      * サンプルデータ識別用フラグ。
      * 投入時 true、`DELETE FROM ... WHERE is_sample = true` で一括クリーンアップ可能。
      * 本番アカウントは常に false。マイグレーション: `manual/0010_is_sample.sql`

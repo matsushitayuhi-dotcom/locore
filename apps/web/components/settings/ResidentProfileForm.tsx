@@ -6,6 +6,7 @@ import { Button, Input } from '@locore/ui';
 import { Plus, X } from 'lucide-react';
 import type { EducationEntry, WorkEntry } from '@locore/db';
 import { updateResidentProfile } from '@/app/settings/profile/actions';
+import { SpecialtyPicker } from '@/components/experts/SpecialtyPicker';
 import {
   CareerHistoryEditor,
   type CareerDraft,
@@ -49,6 +50,8 @@ type Props = {
     occupation: string;
     coverImageUrl: string;
     offerings: string[];
+    /** 得意分野（第 2 階層 code、0080）。lib/experts/specialties.ts */
+    specialties: string[];
     education: EducationEntry[];
     workHistory: WorkEntry[];
     languages: Lang[];
@@ -127,6 +130,7 @@ export function ResidentProfileForm({ initial }: Props) {
   const [occupation, setOccupation] = useState(initial.occupation);
   const [coverImageUrl, setCoverImageUrl] = useState(initial.coverImageUrl);
   const [offerings, setOfferings] = useState<string[]>(initial.offerings);
+  const [specialties, setSpecialties] = useState<string[]>(initial.specialties);
   const [workRows, setWorkRows] = useState<CareerDraft[]>(
     initial.workHistory.map(workToDraft),
   );
@@ -201,6 +205,7 @@ export function ResidentProfileForm({ initial }: Props) {
         occupation: occupation || undefined,
         coverImageUrl: coverImageUrl || undefined,
         offerings,
+        specialties,
         // 経歴: 名称が空の行は未入力扱いで除外し、DB のエントリ形に変換して全置換
         workHistory: workRows.filter((r) => r.name.trim()).map(draftToWork),
         education: eduRows.filter((r) => r.name.trim()).map(draftToEdu),
@@ -384,6 +389,17 @@ export function ResidentProfileForm({ initial }: Props) {
         <p className="mt-1 text-[11px] text-foreground/55">
           プロフィールのヒーロー背景になります。未設定でもライムのネットワーク演出が表示されます。
         </p>
+      </div>
+
+      {/* 得意分野（統制リスト・2 階層）。/experts のカードのホバーと列・絞り込みに使う */}
+      <div>
+        <label className="mb-1 block text-[12px] font-medium text-foreground/70">
+          得意分野
+        </label>
+        <p className="mb-2 text-[11px] text-foreground/55">
+          相談者が探すときの分類です。エキスパート一覧のカードに表示され、テーマの絞り込みに使われます。
+        </p>
+        <SpecialtyPicker value={specialties} onChange={setSpecialties} />
       </div>
 
       {/* こんな相談に乗れます */}

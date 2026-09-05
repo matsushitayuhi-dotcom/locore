@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Locore — /experts/[id] 詳細（Intro ベース）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --lime-50:#F5FBE2;--lime-100:#E3F7B8;--lime-200:#CDF088;--lime-300:#B6E84E;--lime:#A8E01C;--lime-700:#5E8B0E;--lime-900:#3D5E07;
+    --bg:#FFFFFF;--card:#FFFFFF;--muted:#F4F4F5;--bd:#E3E3DA;--bd2:#CCCCC1;
+    --n300:#a5a09a;--n400:#837f78;--n500:#71717a;--n700:#3f3f46;--n900:#18181b;--n950:#0e0e0f;
+    --info-50:#dbeafe;--info:#2563eb;
+    --jp:'Noto Sans JP',system-ui,-apple-system,'Segoe UI','Hiragino Sans','Yu Gothic Medium',sans-serif;
+    --num:'Inter Tight','Noto Sans JP',system-ui,sans-serif;
+    --sh-xs:0 1px 2px rgba(24,24,27,.04);--sh-sm:0 2px 6px rgba(24,24,27,.06);--sh-md:0 6px 16px rgba(24,24,27,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--n900);font-family:var(--jp);-webkit-font-smoothing:antialiased;font-feature-settings:"palt" 1;letter-spacing:.005em;line-height:1.75}
+  a{color:inherit;text-decoration:none}
+  svg{display:block}
+  .num{font-family:var(--num);font-variant-numeric:tabular-nums}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 40px}
+  .note{background:var(--n900);color:#fff;font-size:12px;padding:8px 24px;display:flex;gap:14px;align-items:center}
+  .note b{color:var(--lime)}
+  .note span{color:#a1a1aa}
+  .hdr{background:var(--n900);height:48px;display:flex;align-items:center}
+  .hdr .wrap{display:flex;align-items:center;gap:26px;width:100%}
+  .hdr .logo{color:var(--lime);font-weight:700;font-size:18px}
+  .hdr nav{margin:0 auto;display:flex;gap:26px;font-size:13px;font-weight:600;color:#e4e4e7}
+  .hdr nav .on{color:var(--lime)}
+  .hdr .av{width:26px;height:26px;border-radius:50%;background:#52525b}
+
+  .crumb{padding:22px 0 18px;font-size:13.5px;color:var(--n700)}
+  .crumb i{font-style:normal;margin:0 8px;color:var(--n400)}
+  .crumb .cur{color:var(--n400)}
+
+  /* ===== 2 columns: 左 = 写真+プロフィール / 右 = 予約（sticky）===== */
+  .cols{display:grid;grid-template-columns:1fr 360px;gap:56px;align-items:start;padding-bottom:80px}
+
+  /* 左：大きな正方形の「写真」（Intro の portrait）。人物写真は出さない → 都市写真 + 大きなイニシャル */
+  .hero{position:relative;aspect-ratio:1/1;max-width:360px;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,#2b2f2a,#151615)}
+  .hero img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero .mono{position:absolute;left:14px;top:14px;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;font-size:26px;font-weight:700;backdrop-filter:blur(6px)}
+  .hero .city{position:absolute;right:14px;top:18px;font-family:var(--num);font-size:11px;font-weight:700;letter-spacing:.14em;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .hero .pill{position:absolute;left:14px;bottom:14px;display:inline-flex;align-items:center;gap:6px;background:var(--n900);color:#fff;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700}
+  .hero .pill svg{width:14px;height:14px;color:var(--lime)}
+
+  .who{margin-top:22px}
+  .who h1{display:flex;align-items:center;gap:8px;font-size:30px;font-weight:600;line-height:1.3;letter-spacing:-.01em}
+  .who h1 svg{width:22px;height:22px;color:var(--lime-700)}
+  .who .role{margin-top:4px;font-size:16px;color:var(--n500)}
+  .who .meta{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:13.5px;color:var(--n700)}
+  .who .meta span{display:inline-flex;align-items:center;gap:6px}
+  .who .meta svg{width:15px;height:15px;color:var(--n400)}
+  .who .rev{margin-top:10px;font-size:14px;color:var(--n700)}
+  .who .rev b{color:var(--lime-700);letter-spacing:.06em}
+  .who .rev small{color:var(--n500)}
+
+  .sec{margin-top:38px}
+  .sec h2{font-size:24px;font-weight:500;letter-spacing:-.005em;margin-bottom:14px}
+  .sec p{font-size:15px;line-height:1.9;color:var(--n700);max-width:36em}
+  .sec p+p{margin-top:14px}
+  .more{margin-top:20px;display:inline-flex;border:1.5px solid var(--n900);border-radius:8px;padding:12px 40px;font-size:15px;font-weight:600}
+  .more:hover{background:var(--n900);color:#fff}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chips span{border:1px solid var(--bd2);border-radius:9999px;padding:7px 15px;font-size:13.5px;font-weight:500;color:var(--n700)}
+  .list{list-style:none;display:grid;gap:12px;max-width:36em}
+  .list li{display:flex;gap:12px;align-items:flex-start;font-size:15px;color:var(--n700)}
+  .list li i{flex:0 0 22px;height:22px;margin-top:3px;border-radius:50%;background:var(--n900);color:var(--lime);display:grid;place-items:center;font-style:normal}
+  .list li i svg{width:12px;height:12px}
+  .tl{list-style:none;max-width:36em}
+  .tl li{display:grid;grid-template-columns:22px 1fr auto;gap:14px;padding:12px 0;border-top:1px solid var(--bd);font-size:14.5px}
+  .tl li:first-child{border-top:0;padding-top:0}
+  .tl li .ic{width:22px;height:22px;border-radius:50%;background:var(--muted);display:grid;place-items:center;margin-top:3px}
+  .tl li .ic svg{width:12px;height:12px}
+  .tl li b{display:block;font-weight:600}
+  .tl li small{display:block;font-size:12.5px;color:var(--n500)}
+  .tl li .yr{font-family:var(--num);font-size:12.5px;color:var(--n500);white-space:nowrap}
+  .arts{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:640px}
+  .art{border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+  .art .cv{aspect-ratio:16/9;background:var(--muted)}
+  .art .cv img{width:100%;height:100%;object-fit:cover;display:block}
+  .art .b{padding:12px 14px 14px}
+  .art .b small{display:block;font-size:11px;color:var(--n500);margin-bottom:4px}
+  .art .b b{font-size:14px;font-weight:600;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .rvw{max-width:36em}
+  .rvw .head{display:flex;align-items:baseline;gap:10px;font-size:22px;font-weight:600}
+  .rvw .head b{color:var(--lime-700);letter-spacing:.06em;font-size:18px}
+  .rvw .head small{font-size:13px;color:var(--n500);font-weight:400}
+  .rvw .empty{margin-top:8px;font-size:14px;color:var(--n500)}
+
+  /* 右：予約カード（Intro の "Book a video call" 黒タブ付きカード） */
+  .side{position:sticky;top:20px}
+  .side .by{font-size:13px;color:var(--n500);margin-bottom:10px}
+  .side .by b{color:var(--n900)}
+  .bk{position:relative;border:1px solid var(--n900);border-radius:6px;padding:26px 16px 18px;margin-top:14px;background:var(--card)}
+  .bk .tab{position:absolute;left:-1px;top:-14px;background:var(--n900);color:#fff;font-size:13px;font-weight:600;padding:5px 12px;border-radius:4px 4px 4px 0}
+  .bk .tab.lime{background:var(--lime);color:var(--n950)}
+  .bk h3{font-size:22px;font-weight:600;line-height:1.35;margin-top:4px}
+  .bk p{margin-top:6px;font-size:14.5px;color:var(--n700);line-height:1.7}
+  .bk .pr{margin-top:16px;display:flex;align-items:baseline;gap:8px;font-size:15px;color:var(--n700)}
+  .bk .pr b{font-family:var(--num);font-size:24px;font-weight:600;color:var(--n900)}
+  .bk .pr i{font-style:normal;color:var(--n400);font-size:13px}
+  .bk .next{margin-top:2px;font-size:13.5px;color:var(--n700)}
+  .bk .next a{color:var(--lime-700);text-decoration:underline;text-underline-offset:4px}
+  .bk .cta{display:grid;grid-template-columns:56px 1fr;gap:12px;margin-top:20px}
+  .bk .cta .chat{border:1px solid var(--bd2);border-radius:8px;display:grid;place-items:center;height:54px}
+  .bk .cta .chat svg{width:20px;height:20px}
+  .bk .cta .chat:hover{border-color:var(--n900)}
+  .bk .cta .go{background:var(--lime);color:var(--n950);border-radius:8px;height:54px;display:grid;place-items:center;font-size:17px;font-weight:700}
+  .bk .cta .go:hover{background:var(--lime-300)}
+  .bk.sub h3{font-size:19px}
+  .bk.sub .pr b{font-size:20px}
+  .bk.sub .go2{margin-top:14px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--bd2);border-radius:9999px;padding:10px 18px;font-size:13.5px;font-weight:600}
+  .bk.sub .go2 svg{width:14px;height:14px}
+  .or{display:flex;align-items:center;gap:12px;margin:22px 0 8px;font-size:13px;color:var(--n400)}
+  .or::before,.or::after{content:"";flex:1;height:1px;background:var(--bd)}
+  .slots{margin-top:26px;border-top:1px solid var(--bd);padding-top:22px}
+  .slots h4{font-size:20px;font-weight:500}
+  .slots ul{list-style:none;margin-top:12px;background:var(--muted);border-radius:12px;padding:16px 18px;display:grid;gap:8px}
+  .slots li{display:flex;justify-content:space-between;font-size:14px;font-weight:600}
+  .slots li small{font-weight:400;color:var(--n500)}
+  .slots .n{margin-top:10px;font-size:12px;color:var(--n500)}
+  .expect{margin-top:24px}
+  .expect h4{font-size:20px;font-weight:500}
+  .expect .box{margin-top:12px;background:var(--muted);border-radius:12px;padding:18px}
+  .expect .box b{display:block;font-size:15px;font-weight:600;margin-bottom:8px}
+  .expect .box li{margin-left:2px;font-size:14px;color:var(--n700);list-style:none}
+  .expect .box li::before{content:"– ";color:var(--n400)}
+  .fine{margin-top:16px;font-size:12px;color:var(--n400);line-height:1.6}
+
+  /* 下段：使い方 3 タイル + FAQ（Intro と同じ順） */
+  .bottom{border-top:1px solid var(--bd);padding:44px 0 80px}
+  .bottom h2{font-size:24px;font-weight:500}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+  .tile{background:var(--muted);border-radius:14px;padding:30px 22px 26px;text-align:center}
+  .tile .ic{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;border:1.5px solid var(--n900);display:grid;place-items:center}
+  .tile .ic svg{width:24px;height:24px}
+  .tile b{display:block;font-size:15.5px;font-weight:600}
+  .tile p{margin-top:6px;font-size:13px;color:var(--n500)}
+  .faq{margin-top:48px}
+  .faq details{border-bottom:1px solid var(--bd)}
+  .faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:20px 0;font-size:16px;font-weight:500}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";font-size:24px;font-weight:300;color:var(--n700)}
+  .faq details[open] summary::after{content:"–"}
+  .faq details div{padding:0 0 20px;font-size:14px;color:var(--n700);max-width:44em}
+
+  /* mobile: 右カラムは下に、CTA は固定バー */
+  @media (max-width:900px){.cols{grid-template-columns:1fr;gap:28px}.side{position:static}.hero{max-width:100%}.tiles{grid-template-columns:1fr}.wrap{padding:0 20px}}
+</style>
+</head>
+<body>
+<div class="note"><b>MOCK</b> /experts/[id] 詳細 — Intro ベース <span>— 左に大きな都市写真＋イニシャル、右に黒タブ付きの予約カード（sticky）。数値はシード準拠。レビューは実データのみ（偽レビューなし）。</span></div>
+<header class="hdr"><div class="wrap"><span class="logo">Locore</span><nav><span class="on">エキスパートを探す</span><span>使い方</span></nav><span class="av"></span><span style="color:#fff">≡</span></div></header>
+
+<main class="wrap">
+  <div class="crumb">エキスパート一覧<i>/</i>タイ・バンコク<i>/</i><span class="cur">中村 大輔</span></div>
+
+  <div class="cols">
+    <!-- ===== left ===== -->
+    <div>
+      <div class="hero">
+        <img src="https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=900&q=70" alt="">
+        <span class="mono">中</span>
+        <span class="city">BANGKOK, TH</span>
+        <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>居住認証済み</span>
+      </div>
+
+      <div class="who">
+        <h1>中村 大輔<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 2.1 3.1-.5 1 3 2.9 1.3-.5 3.1 2.1 2.4-2.1 2.4.5 3.1-2.9 1.3-1 3-3.1-.5L12 22l-2.4-2.1-3.1.5-1-3-2.9-1.3.5-3.1L1 10.6l2.1-2.4-.5-3.1 2.9-1.3 1-3 3.1.5z"/><path d="m9 12 2 2 4-4" stroke="#fff" stroke-width="2" fill="none"/></svg></h1>
+        <div class="role">現地法人 経営 ・ バンコク在住 10年</div>
+        <div class="meta">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>日本語・タイ語・英語</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>オンライン相談</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>30分 / 60分</span>
+        </div>
+        <!-- レビューが 1 件以上あるときだけ表示。0 件なら行ごと出さない -->
+      </div>
+
+      <section class="sec">
+        <h2>得意分野</h2>
+        <div class="chips"><span>移住</span><span>住まい</span></div>
+      </section>
+
+      <section class="sec">
+        <h2>こんな相談に乗れます</h2>
+        <ul class="list">
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg></i>バンコクのコンドミニアム選びと賃貸契約の注意点</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg></i>駐在立ち上げ・現地法人設立の実務</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg></i>タイ移住の生活コストシミュレーション</li>
+          <li><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5L20 7"/></svg></i>ビザ・ワークパーミットの基本</li>
+        </ul>
+      </section>
+
+      <section class="sec">
+        <h2>自己紹介</h2>
+        <p>現地法人を経営して10年。駐在の立ち上げ、コンドミニアム選び、タイ移住の生活コスト感覚まで具体的に話せます。</p>
+        <p>数字ベースで「実際いくらかかるか」をお伝えするのが得意です。</p>
+      </section>
+
+      <section class="sec">
+        <h2>経歴</h2>
+        <ul class="tl">
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><span><b>現地法人（バンコク・物流コンサル）</b><small>代表</small></span><span class="yr">2019–現在</span></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><span><b>日系物流会社 バンコク駐在</b><small>現地拠点立ち上げ</small></span><span class="yr">2016–2019</span></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><span><b>日系物流会社（東京）</b><small>海外事業部</small></span><span class="yr">2008–2016</span></li>
+          <li><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span><span><b>大阪大学</b><small>学士・経済学</small></span><span class="yr">2004–2008</span></li>
+        </ul>
+        <div class="fine">※経歴は本人申告の情報です</div>
+      </section>
+
+      <section class="sec">
+        <h2>中村さんの記事</h2>
+        <p style="margin-bottom:14px;font-size:13.5px;color:var(--n500)">現地での暮らしについて、実体験をもとに書いています。相談の前の予習にどうぞ。</p>
+        <div class="arts">
+          <a class="art" href="#"><div class="cv"></div><div class="b"><small>お役立ち情報 ・ 2026.07.14</small><b>バンコクのコンドミニアム、駐在員が見落としがちな契約条項</b></div></a>
+          <a class="art" href="#"><div class="cv"></div><div class="b"><small>お役立ち情報 ・ 2026.06.02</small><b>タイ移住1年目の生活コスト、実際の内訳</b></div></a>
+        </div>
+      </section>
+
+      <section class="sec rvw">
+        <h2>レビュー</h2>
+        <!-- 実データがあるときだけ ★平均 と件数を出す。0 件はこの文言 -->
+        <div class="empty">まだレビューはありません。相談後に最初のレビューを書けます。</div>
+      </section>
+    </div>
+
+    <!-- ===== right (sticky) ===== -->
+    <aside class="side">
+      <div class="by">相談メニュー — <b>中村 大輔</b>さん</div>
+
+      <div class="bk">
+        <span class="tab lime">はじめての方に</span>
+        <h3>バンコクの住まい・生活コスト相談（30分）</h3>
+        <p>住まい選び・生活コストなど、気になるテーマを1つ選んでご相談ください。</p>
+        <div class="pr"><b>¥3,000</b><i>/ 30分・税込</i></div>
+        <div class="next">直近の空き — <a href="#">9/5（土）12:30〜</a> 日本時間</div>
+        <div class="cta">
+          <a class="chat" href="#" title="チャットで相談する"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></a>
+          <a class="go" href="#">空き枠を選ぶ</a>
+        </div>
+      </div>
+
+      <div class="or">または</div>
+
+      <div class="bk sub">
+        <span class="tab">60分</span>
+        <h3>タイ移住・駐在立ち上げの全体設計（60分）</h3>
+        <p>移住・駐在立ち上げの全体設計に。ご予算とご家族構成を伺って具体的なプランに落とします。</p>
+        <div class="pr"><b>¥6,000</b><i>/ 60分・税込</i></div>
+        <a class="go2" href="#">空き枠を選ぶ<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m9 6 6 6-6 6"/></svg></a>
+      </div>
+
+      <div class="slots">
+        <h4>直近の空き枠</h4>
+        <ul>
+          <li>9/5（土）12:30〜<small>日本時間</small></li>
+          <li>9/5（土）13:00〜<small>日本時間</small></li>
+          <li>9/5（土）13:30〜<small>日本時間</small></li>
+        </ul>
+        <div class="n">承諾後の決済機能は準備中です。まずはリクエストを送ってみてください。</div>
+      </div>
+
+      <div class="expect">
+        <h4>相談でできること</h4>
+        <div class="box">
+          <b>30分の相談で</b>
+          <ul>
+            <li>気になるテーマを1つ、深掘り</li>
+            <li>家賃・生活費の実額の目安</li>
+            <li>おすすめのエリアと避けたい契約条件</li>
+            <li>次にやるべきことの整理</li>
+          </ul>
+        </div>
+        <div class="fine">やり取りはすべて Locore 内のチャットで行われます。個人連絡先の交換は相談成立後まで不要です。</div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ===== bottom ===== -->
+  <section class="bottom">
+    <h2>使い方</h2>
+    <div class="tiles">
+      <div class="tile"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><circle cx="11" cy="10" r="2.2"/><path d="M7.5 15.5c.8-1.6 2-2.3 3.5-2.3s2.7.7 3.5 2.3"/></svg></span><b>エキスパートを探す</b><p>国とテーマで絞り込み、プロフィールと相談メニューを見て選びます</p></div>
+      <div class="tile"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 3v3M16 3v3M4 10h16M9 15h3"/></svg></span><b>空き枠を選んで予約</b><p>日本時間の空き枠から選んでリクエスト。チャットでの事前相談は無料です</p></div>
+      <div class="tile"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><rect x="8" y="9.5" width="6" height="5" rx="1"/><path d="m14 11 2.5-1.5v5L14 13"/></svg></span><b>オンラインで話す</b><p>ビデオ通話で、あなたの事情に合わせた「現地のリアル」を聞けます</p></div>
+    </div>
+
+    <div class="faq">
+      <h2>よくある質問</h2>
+      <details><summary>相談はどうやって行われますか？</summary><div>Locore 内のチャットで内容と日程をすり合わせたあと、オンラインのビデオ通話で行います。</div></details>
+      <details><summary>時間はどのくらいですか？</summary><div>メニューごとに 30 分または 60 分です。</div></details>
+      <details><summary>料金はいつ支払いますか？</summary><div>決済機能は準備中です。承諾後の支払い方法はチャットでご案内します。</div></details>
+      <details><summary>時差はどうなりますか？</summary><div>空き枠はすべて日本時間で表示しています。</div></details>
+      <details><summary>同じエキスパートに何度も相談できますか？</summary><div>はい。空き枠があればいつでも再度リクエストできます。</div></details>
+    </div>
+  </section>
+</main>
+</body>
+</html>
