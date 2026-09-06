@@ -25,9 +25,9 @@ AirDrop / USBメモリ / iCloud・Dropbox 等で Mac に運ぶ（**GitHubには�
 # git と Node バージョン管理ツール
 brew install git fnm
 
-# Node 20（このリポジトリは .nvmrc で 20.18.0 を指定）
-fnm install 20.18.0
-fnm default 20.18.0
+# Node 24（このリポジトリは .nvmrc で 24.14.0 を指定。Vercel も Node 24）
+fnm install 24.14.0
+fnm default 24.14.0
 
 # pnpm（このリポジトリのパッケージマネージャ。corepack で package.json 指定版が入る）
 corepack enable pnpm

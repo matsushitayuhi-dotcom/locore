@@ -5,7 +5,7 @@
   "description": "Locore — 在外邦人向け旅行記事マーケットプレイス（パリ先行）モノレポ",
   "packageManager": "pnpm@9.12.3",
   "engines": {
-    "node": ">=20.11.0 <21",
+    "node": ">=24.0.0 <25",
     "pnpm": ">=9.0.0"
   },
   "scripts": {
