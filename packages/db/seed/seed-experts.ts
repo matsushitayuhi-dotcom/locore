@@ -36,6 +36,8 @@ import {
   expertAvailability,
   consultationBookings,
   planEnrollments,
+  snsLinks,
+  type NewSnsLink,
   type EducationEntry,
   type AdmissionEntry,
   type WorkEntry,
@@ -1000,6 +1002,126 @@ async function main() {
         cancelledAt: sql`null`,
       },
     });
+
+  // ---- sns_links（発信・メディアのサンプル・0088） -----------------------------
+  // /experts/[id] の「発信・メディア」（featured / card / button）とヒーローのアイコン列の
+  // 表示確認用。URL はサンプル（実在しない）で、画像は persona の写真を流用。is_sample の
+  // ユーザーに紐づくので `DELETE FROM users WHERE is_sample = true` で一緒に消える。
+  console.log('[seed-experts] sns_links (media samples) ...');
+  const sampleSns: NewSnsLink[] = [
+    {
+      id: stableUuid('expert-sns:aya:yt-video'),
+      userId: expertUuid('aya'),
+      platform: 'youtube',
+      url: 'https://www.youtube.com/watch?v=locore-sample-aya',
+      kind: 'video',
+      title: 'MBA 出願の 1 年間を 10 分で振り返る',
+      description: 'GMAT・エッセイ・推薦状・面接、どの順で何をやったか。実際のスケジュール表つき。',
+      imageUrl: '/experts/aya.jpg',
+      siteName: 'YouTube',
+      display: 'auto',
+      sortOrder: 0,
+      previewFetchedAt: new Date(),
+      previewStatus: 'ok',
+    },
+    {
+      id: stableUuid('expert-sns:aya:note'),
+      userId: expertUuid('aya'),
+      platform: 'note',
+      url: 'https://note.com/locore_sample_aya/n/sample1',
+      kind: 'article',
+      title: 'HBS エッセイ、私が捨てた 3 つの案',
+      description: '最終稿に至るまでに書いた 3 つのボツ案と、なぜ捨てたか。',
+      imageUrl: '/experts/misaki.jpg',
+      siteName: 'note',
+      display: 'auto',
+      sortOrder: 1,
+      previewFetchedAt: new Date(),
+      previewStatus: 'ok',
+    },
+    {
+      id: stableUuid('expert-sns:aya:ig'),
+      userId: expertUuid('aya'),
+      platform: 'instagram',
+      url: 'https://www.instagram.com/locore_sample_aya/',
+      kind: 'profile',
+      title: '@locore_sample_aya',
+      description: null,
+      imageUrl: null,
+      siteName: 'Instagram',
+      display: 'auto',
+      sortOrder: 2,
+      previewFetchedAt: new Date(),
+      previewStatus: 'failed',
+    },
+    {
+      id: stableUuid('expert-sns:aya:x'),
+      userId: expertUuid('aya'),
+      platform: 'x',
+      url: 'https://x.com/locore_sample_aya',
+      kind: 'profile',
+      title: null,
+      description: null,
+      imageUrl: null,
+      siteName: 'X',
+      display: 'icon',
+      sortOrder: 3,
+      previewFetchedAt: new Date(),
+      previewStatus: 'failed',
+    },
+    {
+      id: stableUuid('expert-sns:misaki:note'),
+      userId: expertUuid('misaki'),
+      platform: 'note',
+      url: 'https://note.com/locore_sample_misaki/n/sample1',
+      kind: 'article',
+      title: '英大学院の奨学金、出した 6 件と通った 2 件',
+      description: 'チーヴニング等の申請書で何を書いたか。落ちた 4 件の理由も。',
+      imageUrl: '/experts/kentaro.jpg',
+      siteName: 'note',
+      display: 'auto',
+      sortOrder: 0,
+      previewFetchedAt: new Date(),
+      previewStatus: 'ok',
+    },
+    {
+      id: stableUuid('expert-sns:misaki:blog'),
+      userId: expertUuid('misaki'),
+      platform: 'blog',
+      url: 'https://sample-misaki-london.example.com/2026/06/ielts-plan',
+      kind: 'article',
+      title: 'IELTS 7.5 までの 4 か月プラン',
+      description: null,
+      imageUrl: null,
+      siteName: 'sample-misaki-london.example.com',
+      display: 'auto',
+      sortOrder: 1,
+      previewFetchedAt: new Date(),
+      previewStatus: 'ok',
+    },
+  ];
+  try {
+    await db
+      .insert(snsLinks)
+      .values(sampleSns)
+      .onConflictDoUpdate({
+        target: snsLinks.id,
+        set: {
+          url: sql`excluded.url`,
+          kind: sql`excluded.kind`,
+          title: sql`excluded.title`,
+          description: sql`excluded.description`,
+          imageUrl: sql`excluded.image_url`,
+          siteName: sql`excluded.site_name`,
+          display: sql`excluded.display`,
+          sortOrder: sql`excluded.sort_order`,
+          previewStatus: sql`excluded.preview_status`,
+          updatedAt: sql`now()`,
+        },
+      });
+  } catch (err) {
+    console.warn('[seed-experts] sns_links スキップ（0088 未適用?）:', err instanceof Error ? err.message : err);
+  }
 
   // ---- plan_enrollments（requested 状態のサンプル契約 1 件・0083） -----------
   // 伊藤（NYC）→ 高村（ボストン）の MBA 伴走プランへの申込中。受信箱の

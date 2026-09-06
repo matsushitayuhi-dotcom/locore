@@ -25,6 +25,8 @@ import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { ConsultMenuCard } from '@/components/experts/ConsultMenuCard';
 import { PlanCard } from '@/components/experts/PlanCard';
 import { CareerTimeline } from '@/components/experts/CareerTimeline';
+import { MediaLinks, countMedia, type MediaArticle } from '@/components/experts/MediaLinks';
+import { SocialIcons } from '@/components/residents/SocialIcons';
 import { countAdmissions, groupAdmissions } from '@/lib/experts/admissions';
 
 /**
@@ -35,7 +37,8 @@ import { countAdmissions, groupAdmissions } from '@/lib/experts/admissions';
  * 認証・言語・評価」を 1 画面に。長いリスト（相談できること / 自己紹介 / 経歴 / レビュー）は
  * 最初の数件だけ見せて <details> で展開。使い方・FAQ は /about-service への 1 行リンクに。
  *
- * 左: ヒーロー → ページ内アンカー → こんな相談に乗れます → 合格実績 → 自己紹介 → 経歴 → 資格 → 記事 → レビュー（最後）
+ * 左: ヒーロー（アイコン列つき）→ ページ内アンカー → こんな相談に乗れます → 合格実績 → 自己紹介 → 経歴 → 資格 →
+ *     発信・メディア（Locore 記事が最優先、外部リンクは featured / card / button・0088）→ レビュー（最後）
  * 右 (sticky、画面より長ければ中でスクロール): 相談メニュー → 継続プラン → 直近の空き枠
  * モバイル（1 カラム）では DOM 順どおり「ヒーロー → 相談メニュー（サービス）→ 本文 → レビュー」。
  *
@@ -58,7 +61,7 @@ export default async function ExpertDetailPage({
   params: { id: string };
 }) {
   const [profile, me] = await Promise.all([
-    getResidentProfile(params.id, { includeSns: false }),
+    getResidentProfile(params.id),
     getCurrentUser(),
   ]);
   if (!profile) notFound();
@@ -179,7 +182,15 @@ export default async function ExpertDetailPage({
   const reviewsShown = recent.slice(0, REVIEWS_SHOWN);
   const reviewsRest = recent.slice(REVIEWS_SHOWN);
   const [bioLead, ...bioRest] = bioParagraphs;
-  const articlesShown = articles.slice(0, 2);
+  // 発信・メディア（0088）: Locore 記事（最大 3 件）が最優先、外部リンクはその下
+  const mediaArticles: MediaArticle[] = articles.slice(0, 3).map((a) => ({
+    id: a.id,
+    title: a.title,
+    coverImageUrl: a.coverImageUrl,
+    typeLabel: ARTICLE_TYPE_LABEL[a.articleType] ?? a.articleType,
+    dateLabel: a.publishedAt ? fmtDateDot(a.publishedAt) : null,
+  }));
+  const mediaCount = countMedia(mediaArticles, profile.socialLinks);
   const hasCareer = profile.workHistory.length > 0 || profile.education.length > 0;
   // 合格実績（0087）: 出願年つき学歴（進学）＋ 進学しなかった合格校を出願年ごとに
   const admissionGroups = groupAdmissions(profile.education, profile.admissions);
@@ -192,7 +203,7 @@ export default async function ExpertDetailPage({
     ...(bioParagraphs.length > 0 ? [{ id: 'about', label: '自己紹介' }] : []),
     ...(hasCareer ? [{ id: 'career', label: '経歴' }] : []),
     ...(qualifications.length > 0 ? [{ id: 'qualifications', label: '資格・スコア' }] : []),
-    ...(articlesShown.length > 0 ? [{ id: 'articles', label: '記事' }] : []),
+    ...(mediaCount > 0 ? [{ id: 'media', label: '発信' }] : []),
     { id: 'reviews', label: 'レビュー' },
   ];
 
@@ -347,6 +358,12 @@ export default async function ExpertDetailPage({
                     </a>
                   ) : null}
                 </div>
+                {/* SNS アイコン列（platform ごとに 1 件）。内容は下部の「発信・メディア」で見せる */}
+                {profile.socialLinks.length > 0 ? (
+                  <div className="mt-2.5">
+                    <SocialIcons links={profile.socialLinks} variant="light" size="sm" />
+                  </div>
+                ) : null}
 
                 {/* 得意分野（コンパクトなチップ。第 1 階層のラベルは省く） */}
                 {specialties.length > 0 || menuTopics.length > 0 ? (
@@ -663,39 +680,18 @@ export default async function ExpertDetailPage({
               </Section>
             ) : null}
 
-            {/* ===== 記事（2 件）===== */}
-            {articlesShown.length > 0 ? (
-              <Section title={`${profile.displayName}さんの記事`} id="articles">
-                <div className="grid max-w-[640px] gap-4 sm:grid-cols-2">
-                  {articlesShown.map((a) => (
-                    <Link
-                      key={a.id}
-                      href={`/articles/${a.id}`}
-                      className="flex gap-3.5 overflow-hidden rounded-xl border border-border bg-card p-3 transition hover:border-foreground"
-                    >
-                      <div className="h-[72px] w-[96px] shrink-0 overflow-hidden rounded-lg bg-muted">
-                        {a.coverImageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={a.coverImageUrl}
-                            alt=""
-                            loading="lazy"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <div className="min-w-0">
-                        <small className="block text-[11px] text-neutral-500">
-                          {ARTICLE_TYPE_LABEL[a.articleType] ?? a.articleType}
-                          {a.publishedAt ? ` ・ ${fmtDateDot(a.publishedAt)}` : ''}
-                        </small>
-                        <b className="mt-0.5 line-clamp-2 block text-[13.5px] font-semibold leading-[1.5]">
-                          {a.title}
-                        </b>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+            {/* ===== 発信・メディア（Locore 記事 → featured → card → button・0088）===== */}
+            {mediaCount > 0 ? (
+              <Section title="発信・メディア" id="media">
+                <MediaLinks articles={mediaArticles} links={profile.socialLinks} />
+                {articles.length > 3 ? (
+                  <Link
+                    href={`/users/${profile.id}`}
+                    className="mt-3 inline-flex items-center rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground"
+                  >
+                    記事をすべて見る（{articles.length}件）
+                  </Link>
+                ) : null}
               </Section>
             ) : null}
 

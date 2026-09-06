@@ -17,6 +17,8 @@ type Link = { platform: string; url: string };
 type Props = {
   links: Link[];
   variant?: 'hero' | 'light';
+  /** sm = 36px（/experts 詳細ヒーロー用）。既定 md = 44px */
+  size?: 'sm' | 'md';
 };
 
 const LABEL: Record<string, string> = {
@@ -125,7 +127,7 @@ function hrefFor(platform: string, url: string): string {
   return url;
 }
 
-export function SocialIcons({ links, variant = 'hero' }: Props) {
+export function SocialIcons({ links, variant = 'hero', size = 'md' }: Props) {
   if (!links || links.length === 0) return null;
 
   // 同一 platform は最初の 1 件を採用し、ORDER の順に並べる
@@ -145,7 +147,7 @@ export function SocialIcons({ links, variant = 'hero' }: Props) {
       : 'border-border bg-card text-foreground hover:bg-primary-500 hover:border-primary-500 hover:text-neutral-950';
 
   return (
-    <div className="flex flex-wrap gap-2.5">
+    <div className={size === 'sm' ? 'flex flex-wrap gap-2' : 'flex flex-wrap gap-2.5'}>
       {ordered.map(({ platform, url }) => (
         <a
           key={platform}
@@ -155,8 +157,10 @@ export function SocialIcons({ links, variant = 'hero' }: Props) {
           aria-label={LABEL[platform] ?? platform}
           title={LABEL[platform] ?? platform}
           className={
-            'inline-flex h-11 w-11 items-center justify-center rounded-[14px] border transition ' +
-            'hover:-translate-y-0.5 [&_svg]:h-[21px] [&_svg]:w-[21px] ' +
+            (size === 'sm'
+              ? 'inline-flex h-9 w-9 items-center justify-center rounded-[11px] border transition [&_svg]:h-[17px] [&_svg]:w-[17px] '
+              : 'inline-flex h-11 w-11 items-center justify-center rounded-[14px] border transition [&_svg]:h-[21px] [&_svg]:w-[21px] ') +
+            'hover:-translate-y-0.5 ' +
             base
           }
         >

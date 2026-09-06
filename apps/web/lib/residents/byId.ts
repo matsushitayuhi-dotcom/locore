@@ -44,6 +44,20 @@ export type ResidentReviewSummary = {
   recent: ResidentReviewItem[];
 };
 
+/** sns_links 1 件（0088: kind / title / imageUrl / display …）。旧環境では platform / url 以外は既定値 */
+export type SocialLink = {
+  id: string;
+  platform: string;
+  url: string;
+  kind: string;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  siteName: string | null;
+  display: string;
+  sortOrder: number;
+};
+
 export type ResidentProfileBundle = {
   /** 基本ユーザー情報 */
   id: string;
@@ -67,8 +81,8 @@ export type ResidentProfileBundle = {
   workHistory: WorkEntry[];
   /** 合格校（進学しなかった学校・0087）。未適用環境は空配列 */
   admissions: AdmissionEntry[];
-  /** ソーシャルリンク（sns_links）。登録があるものだけ表示 */
-  socialLinks: Array<{ platform: string; url: string }>;
+  /** ソーシャルリンク（sns_links）。登録があるものだけ表示。0088 のプレビュー列は未適用環境では既定値 */
+  socialLinks: SocialLink[];
   languages: Array<{ code: string; level: LanguageLevel }>;
   interests: string[];
   /** writer_profiles.tier (S/A/B) — 一般住人は null */
@@ -295,23 +309,51 @@ export async function getResidentProfile(
   }
 
   // ----- 2.5 ソーシャルリンク (sns_links) -----
-  let socialLinks: Array<{ platform: string; url: string }> = [];
+  let socialLinks: SocialLink[] = [];
   if (includeSns) {
     try {
       const rows = await db
         .select({
+          id: schema.snsLinks.id,
           platform: schema.snsLinks.platform,
           url: schema.snsLinks.url,
-          createdAt: schema.snsLinks.createdAt,
+          kind: schema.snsLinks.kind,
+          title: schema.snsLinks.title,
+          description: schema.snsLinks.description,
+          imageUrl: schema.snsLinks.imageUrl,
+          siteName: schema.snsLinks.siteName,
+          display: schema.snsLinks.display,
+          sortOrder: schema.snsLinks.sortOrder,
         })
         .from(schema.snsLinks)
         .where(eq(schema.snsLinks.userId, userId))
-        .orderBy(asc(schema.snsLinks.createdAt));
-      socialLinks = rows
-        .filter((r) => r.url)
-        .map((r) => ({ platform: r.platform as string, url: r.url }));
+        .orderBy(asc(schema.snsLinks.sortOrder), asc(schema.snsLinks.createdAt));
+      socialLinks = rows.filter((r) => r.url).map((r) => ({ ...r, platform: r.platform as string }));
     } catch {
-      socialLinks = [];
+      // 0088 未適用: 従来の 2 列にフォールバック
+      try {
+        const rows = await db
+          .select({ id: schema.snsLinks.id, platform: schema.snsLinks.platform, url: schema.snsLinks.url })
+          .from(schema.snsLinks)
+          .where(eq(schema.snsLinks.userId, userId))
+          .orderBy(asc(schema.snsLinks.createdAt));
+        socialLinks = rows
+          .filter((r) => r.url)
+          .map((r) => ({
+            id: r.id,
+            platform: r.platform as string,
+            url: r.url,
+            kind: 'profile',
+            title: null,
+            description: null,
+            imageUrl: null,
+            siteName: null,
+            display: 'auto',
+            sortOrder: 0,
+          }));
+      } catch {
+        socialLinks = [];
+      }
     }
   }
 

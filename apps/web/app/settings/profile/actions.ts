@@ -7,6 +7,8 @@ import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { normalizeSpecialties } from '@/lib/experts/specialties';
+import { fetchLinkPreview } from '@/lib/media/linkPreview';
+import { LINK_DISPLAYS, detectKind } from '@/lib/media/display';
 
 /**
  * プロフィール / SNS リンク 編集 Server Actions。
@@ -302,11 +304,35 @@ const addSnsSchema = z.object({
   url: z.string().trim().min(1).max(2048).url(),
 });
 
+/** 設定画面の行データ（0088 のプレビュー列を含む） */
+export type SnsLinkRow = {
+  id: string;
+  platform: string;
+  url: string;
+  kind: string;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  siteName: string | null;
+  display: string;
+  sortOrder: number;
+  previewStatus: string | null;
+};
+
 export type SnsActionResult =
-  | { ok: true; data?: { id: string } }
+  | { ok: true; data?: SnsLinkRow }
   | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
 
-/** 新規追加（複数登録 OK） */
+function revalidateSns(userId: string) {
+  revalidatePath('/settings/profile');
+  revalidatePath(`/users/${userId}`);
+  revalidatePath(`/experts/${userId}`);
+}
+
+/**
+ * 新規追加（複数登録 OK）。追加時にプレビュー（OG / oEmbed）をサーバー側で 1 回取得して保存する。
+ * 取得に失敗しても行は作る（title 手入力・表示は button に落ちる）。
+ */
 export async function addSnsLink(input: unknown): Promise<SnsActionResult> {
   const parsed = addSnsSchema.safeParse(input);
   if (!parsed.success) {
@@ -320,18 +346,131 @@ export async function addSnsLink(input: unknown): Promise<SnsActionResult> {
   const user = await requireUser();
   const db = getDb();
 
-  const inserted = await db
-    .insert(schema.snsLinks)
-    .values({
-      userId: user.id,
-      platform: platform as SnsPlatform,
-      url,
-    })
-    .returning({ id: schema.snsLinks.id });
+  const preview = await fetchLinkPreview(platform, url).catch(() => null);
+  const kind = preview?.kind ?? detectKind(platform, url);
+  const row = {
+    userId: user.id,
+    platform: platform as SnsPlatform,
+    url,
+    kind,
+    title: preview?.title ?? null,
+    description: preview?.description ?? null,
+    imageUrl: preview?.imageUrl ?? null,
+    siteName: preview?.siteName ?? null,
+    display: 'auto',
+    sortOrder: 0,
+    previewFetchedAt: new Date(),
+    previewStatus: preview?.status ?? 'failed',
+  };
+  let inserted: { id: string }[];
+  try {
+    inserted = await db.insert(schema.snsLinks).values(row).returning({ id: schema.snsLinks.id });
+  } catch (err) {
+    // 0088 未適用環境: 従来の 3 列だけで保存
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/does not exist/i.test(msg)) throw err;
+    inserted = await db
+      .insert(schema.snsLinks)
+      .values({ userId: user.id, platform: platform as SnsPlatform, url })
+      .returning({ id: schema.snsLinks.id });
+  }
 
-  revalidatePath('/settings/profile');
-  revalidatePath(`/users/${user.id}`);
-  return { ok: true, data: { id: inserted[0]!.id } };
+  revalidateSns(user.id);
+  return {
+    ok: true,
+    data: {
+      id: inserted[0]!.id,
+      platform,
+      url,
+      kind,
+      title: row.title,
+      description: row.description,
+      imageUrl: row.imageUrl,
+      siteName: row.siteName,
+      display: 'auto',
+      sortOrder: 0,
+      previewStatus: row.previewStatus,
+    },
+  };
+}
+
+const updateSnsSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().trim().max(160).nullable().optional(),
+  display: z.enum(LINK_DISPLAYS).optional(),
+  sortOrder: z.number().int().min(0).max(999).optional(),
+});
+
+/** タイトル（本人の上書き）・表示形式・並び順の更新 */
+export async function updateSnsLink(input: unknown): Promise<SnsActionResult> {
+  const parsed = updateSnsSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: '入力内容に誤りがあります' };
+  const user = await requireUser();
+  const db = getDb();
+  const { id, ...patch } = parsed.data;
+  const set: Partial<typeof schema.snsLinks.$inferInsert> = { updatedAt: new Date() };
+  if (patch.title !== undefined) set.title = patch.title ? patch.title : null;
+  if (patch.display !== undefined) set.display = patch.display;
+  if (patch.sortOrder !== undefined) set.sortOrder = patch.sortOrder;
+  await db
+    .update(schema.snsLinks)
+    .set(set)
+    .where(and(eq(schema.snsLinks.id, id), eq(schema.snsLinks.userId, user.id)));
+  revalidateSns(user.id);
+  return { ok: true };
+}
+
+/** プレビューの再取得（URL 先の OG 画像やタイトルが変わったとき用） */
+export async function refreshSnsPreview(input: unknown): Promise<SnsActionResult> {
+  const parsed = deleteByIdSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: '不正なリクエスト' };
+  const user = await requireUser();
+  const db = getDb();
+  const rows = await db
+    .select({ id: schema.snsLinks.id, platform: schema.snsLinks.platform, url: schema.snsLinks.url, display: schema.snsLinks.display, sortOrder: schema.snsLinks.sortOrder })
+    .from(schema.snsLinks)
+    .where(and(eq(schema.snsLinks.id, parsed.data.id), eq(schema.snsLinks.userId, user.id)))
+    .limit(1);
+  const r = rows[0];
+  if (!r) return { ok: false, error: 'リンクが見つかりません' };
+  const preview = await fetchLinkPreview(r.platform, r.url).catch(() => null);
+  if (!preview || preview.status !== 'ok') {
+    await db
+      .update(schema.snsLinks)
+      .set({ previewFetchedAt: new Date(), previewStatus: 'failed', updatedAt: new Date() })
+      .where(eq(schema.snsLinks.id, r.id));
+    return { ok: false, error: 'プレビューを取得できませんでした（タイトルは手入力できます）' };
+  }
+  await db
+    .update(schema.snsLinks)
+    .set({
+      kind: preview.kind,
+      title: preview.title,
+      description: preview.description,
+      imageUrl: preview.imageUrl,
+      siteName: preview.siteName,
+      previewFetchedAt: new Date(),
+      previewStatus: 'ok',
+      updatedAt: new Date(),
+    })
+    .where(eq(schema.snsLinks.id, r.id));
+  revalidateSns(user.id);
+  return {
+    ok: true,
+    data: {
+      id: r.id,
+      platform: r.platform,
+      url: r.url,
+      kind: preview.kind,
+      title: preview.title,
+      description: preview.description,
+      imageUrl: preview.imageUrl,
+      siteName: preview.siteName,
+      display: r.display,
+      sortOrder: r.sortOrder,
+      previewStatus: 'ok',
+    },
+  };
 }
 
 const deleteByIdSchema = z.object({
@@ -356,7 +495,6 @@ export async function deleteSnsLink(input: unknown): Promise<SnsActionResult> {
       ),
     );
 
-  revalidatePath('/settings/profile');
-  revalidatePath(`/users/${user.id}`);
+  revalidateSns(user.id);
   return { ok: true };
 }

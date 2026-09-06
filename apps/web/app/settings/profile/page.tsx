@@ -1,10 +1,11 @@
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
 import { ProfileForm } from '@/components/settings/ProfileForm';
 import { ResidentProfileForm } from '@/components/settings/ResidentProfileForm';
 import { SnsLinksEditor } from '@/components/settings/SnsLinksEditor';
+import type { SnsLinkRow } from '@/app/settings/profile/actions';
 import { getProfileCompleteness } from '@/lib/experts/completeness';
 import { SectionProgress } from '@/components/settings/SectionProgress';
 import type { FamilyStage, LanguageLevel } from '@/lib/resident/constants';
@@ -21,14 +22,7 @@ export default async function ProfileSettingsPage() {
   const isWriter = user.role === 'resident_writer' || user.role === 'editor';
 
   const [snsRows, fullUser] = await Promise.all([
-    db
-      .select({
-        id: schema.snsLinks.id,
-        platform: schema.snsLinks.platform,
-        url: schema.snsLinks.url,
-      })
-      .from(schema.snsLinks)
-      .where(eq(schema.snsLinks.userId, user.id)),
+    loadSnsRows(user.id),
     db
       .select({
         homeCountry: schema.users.homeCountry,
@@ -105,13 +99,52 @@ export default async function ProfileSettingsPage() {
         }}
       />
 
-      <SnsLinksEditor
-        initial={snsRows.map((r) => ({
-          id: r.id,
-          platform: r.platform,
-          url: r.url,
-        }))}
-      />
+      <SnsLinksEditor initial={snsRows} />
     </div>
   );
+}
+
+/** sns_links を 0088 のプレビュー列込みで取得。未適用環境は従来 3 列にフォールバック */
+async function loadSnsRows(userId: string): Promise<SnsLinkRow[]> {
+  const db = getDb();
+  try {
+    const rows = await db
+      .select({
+        id: schema.snsLinks.id,
+        platform: schema.snsLinks.platform,
+        url: schema.snsLinks.url,
+        kind: schema.snsLinks.kind,
+        title: schema.snsLinks.title,
+        description: schema.snsLinks.description,
+        imageUrl: schema.snsLinks.imageUrl,
+        siteName: schema.snsLinks.siteName,
+        display: schema.snsLinks.display,
+        sortOrder: schema.snsLinks.sortOrder,
+        previewStatus: schema.snsLinks.previewStatus,
+      })
+      .from(schema.snsLinks)
+      .where(eq(schema.snsLinks.userId, userId))
+      .orderBy(asc(schema.snsLinks.sortOrder), asc(schema.snsLinks.createdAt));
+    return rows.map((r) => ({ ...r, platform: r.platform as string }));
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (!/does not exist/i.test(msg)) throw err;
+    const rows = await db
+      .select({ id: schema.snsLinks.id, platform: schema.snsLinks.platform, url: schema.snsLinks.url })
+      .from(schema.snsLinks)
+      .where(eq(schema.snsLinks.userId, userId));
+    return rows.map((r) => ({
+      id: r.id,
+      platform: r.platform as string,
+      url: r.url,
+      kind: 'profile',
+      title: null,
+      description: null,
+      imageUrl: null,
+      siteName: null,
+      display: 'auto',
+      sortOrder: 0,
+      previewStatus: null,
+    }));
+  }
 }
