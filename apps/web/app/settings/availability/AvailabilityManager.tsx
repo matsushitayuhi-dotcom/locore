@@ -536,26 +536,16 @@ export function AvailabilityManager({
                 onPointerMove={(e) => onColMove(e, col, day)}
                 onPointerLeave={onColLeave}
               >
-                {/* 30分セル（表示専用。操作は列で受ける） */}
+                {/* 30分セル（表示専用・グリッド線。選択/ホバーは下のブロックで描く） */}
                 {Array.from({ length: ROWS }, (_, r) => {
                   const disabled = cellDisabled(day, r);
-                  const inSel =
-                    highlight &&
-                    highlight.col === col &&
-                    r >= Math.min(highlight.r0, highlight.r1) &&
-                    r <= Math.max(highlight.r0, highlight.r1);
                   return (
                     <div
                       key={r}
                       className={
                         'pointer-events-none ' +
                         (r % 2 === 0 ? 'border-t border-border' : 'border-t border-border/30') +
-                        ' ' +
-                        (disabled
-                          ? 'bg-muted/40'
-                          : inSel
-                            ? 'bg-primary-500/40'
-                            : '')
+                        (disabled ? ' bg-muted/40' : '')
                       }
                       style={
                         disabled
@@ -566,14 +556,40 @@ export function AvailabilityManager({
                   );
                 })}
 
-                {/* ホバー中の 30 分をハイライト（ドラッグ中・ポップアップ中は出さない） */}
+                {/* 選択範囲（ドラッグ中／ポップアップ中）を1ブロックで描く */}
+                {highlight && highlight.col === col
+                  ? (() => {
+                      const minR = Math.min(highlight.r0, highlight.r1);
+                      const maxR = Math.max(highlight.r0, highlight.r1);
+                      const endHm = maxR + 1 >= ROWS ? '24:00' : hmFromRow(maxR + 1);
+                      return (
+                        <div
+                          className="pointer-events-none absolute inset-x-0 rounded-sm bg-primary-100 ring-2 ring-inset ring-primary-500"
+                          style={{
+                            top: minR * ROW_H,
+                            height: (maxR - minR + 1) * ROW_H,
+                          }}
+                        >
+                          <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
+                            {hmFromRow(minR)}
+                          </span>
+                          {maxR > minR ? (
+                            <span className="absolute bottom-0 left-0.5 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
+                              {endHm}
+                            </span>
+                          ) : null}
+                        </div>
+                      );
+                    })()
+                  : null}
+
+                {/* ホバー中の 30 分（選択・ポップアップが無いときだけ・同じ見た目） */}
                 {hover &&
                 hover.col === col &&
-                !editor &&
-                !sel &&
+                !highlight &&
                 !cellDisabled(day, hover.r) ? (
                   <div
-                    className="pointer-events-none absolute inset-x-0 z-10 bg-primary-500/25 ring-1 ring-inset ring-primary-500/40"
+                    className="pointer-events-none absolute inset-x-0 rounded-sm bg-primary-100 ring-2 ring-inset ring-primary-500"
                     style={{ top: hover.r * ROW_H, height: ROW_H }}
                   >
                     <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
