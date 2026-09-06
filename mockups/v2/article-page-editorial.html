@@ -80,6 +80,39 @@
   .rel .row .t { font-size:16px; font-weight:700; letter-spacing:-.01em; line-height:1.5; }
   .rel .row .t small { display:block; font-weight:400; font-size:12.5px; color:var(--n500); margin-top:2px; }
   .rel .row .m { font-size:12px; color:var(--n400); white-space:nowrap; }
+  /* ===== 埋め込み・リンクカードの共通ルール（幅は本文と同じ 640px・角丸 12px・薄い罫 1 本） ===== */
+  .embed { margin:2.2em 0; border:1px solid var(--n200); border-radius:12px; overflow:hidden; background:#fff; }
+  .embed .frame { position:relative; background:#f3f3f4; }
+  .embed .frame.r16x9 { aspect-ratio:16/9; }
+  .embed .frame.r16x10 { aspect-ratio:16/10; }
+  .embed .frame .badge { position:absolute; left:10px; top:10px; font-size:10.5px; font-weight:700; background:#fff; border-radius:999px; padding:3px 8px; box-shadow:0 1px 2px rgba(0,0,0,.12); }
+  .embed .frame .play { position:absolute; inset:0; display:grid; place-items:center; }
+  .embed .frame .play span { width:52px; height:52px; border-radius:999px; background:var(--lime); display:grid; place-items:center; box-shadow:0 6px 18px rgba(0,0,0,.2); }
+  .embed .frame .play span::before { content:""; border-left:15px solid var(--n900); border-top:9px solid transparent; border-bottom:9px solid transparent; margin-left:4px; }
+  .embed .bar { display:flex; align-items:center; gap:10px; padding:10px 14px; font-size:12.5px; color:var(--n700); border-top:1px solid var(--hair); }
+  .embed .bar b { color:var(--n900); }
+  .embed .bar .o { margin-left:auto; color:var(--n500); text-decoration:none; white-space:nowrap; }
+  .embed .bar .o::after { content:" ↗"; }
+  .lc { margin:1.8em 0; border:1px solid var(--n200); border-radius:12px; display:grid; grid-template-columns:1fr 168px; overflow:hidden; text-decoration:none; color:inherit; }
+  .lc .b { padding:14px 16px; min-width:0; }
+  .lc .k { font-size:10.5px; letter-spacing:.16em; color:var(--n500); }
+  .lc .t { display:block; font-weight:700; font-size:15px; line-height:1.5; margin-top:4px; letter-spacing:-.01em; }
+  .lc .d { font-size:12.5px; color:var(--n500); margin-top:4px; line-height:1.6; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .lc .m { font-size:11.5px; color:var(--n400); margin-top:8px; }
+  .lc .img { background:#efefef; }
+  .lc.expert { grid-template-columns:96px 1fr; }
+  .lc.expert .img { background:linear-gradient(135deg,#2b3a12,#141513); display:grid; place-items:center; color:var(--lime); font-weight:700; font-size:22px; }
+  .lc.expert .cta { display:inline-block; margin-top:8px; font-size:12.5px; font-weight:700; color:var(--n900); border-bottom:2px solid var(--lime); }
+  .lc.ext .img { display:grid; place-items:center; font-size:11px; color:var(--n400); }
+  .imgs { margin:2.2em 0 .6em; display:grid; gap:8px; }
+  .imgs.two { grid-template-columns:1fr 1fr; }
+  .imgs .ph { background:#efefef; border-radius:12px; aspect-ratio:4/3; }
+  .imgs.two .ph { aspect-ratio:1/1; }
+  .wide { margin:1.6em 0; overflow-x:auto; }
+  .wide table { min-width:720px; }
+  .kit-h { grid-column:2; margin-top:96px; padding-top:24px; border-top:1px solid var(--n900); font-size:11.5px; letter-spacing:.18em; color:var(--n500); }
+  .kit-h b { display:block; font-size:22px; letter-spacing:-.01em; color:var(--n900); margin-top:6px; }
+  .kit-p { grid-column:2; font-size:14px; color:var(--n700); line-height:1.8; margin:8px 0 0; }
   .mobilebar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--hair); padding:10px 16px; display:none; align-items:center; gap:10px; }
   @media (max-width:1000px) { .page { grid-template-columns:1fr; } .page > * { grid-column:1; } .toc { display:none; } .mobilebar { display:flex; } h1 { font-size:30px; } }
   .note { grid-column:1; grid-row:8; font-size:11.5px; line-height:1.7; color:var(--n400); position:sticky; top:32px; align-self:start; }
@@ -150,6 +183,56 @@
     <a href="#h3">罠 3 — Why this school の浅さ</a>
     <a href="#h4">付録 — 出願スケジュール</a>
   </aside>
+
+  <!-- ===== リンクカードと埋め込みの「仕掛け」一覧（本文で使う部品） ===== -->
+  <div class="kit-h">EMBED KIT<b>リンクと埋め込みの部品（本文幅 640px に揃える）</b></div>
+  <p class="kit-p">共通ルール: 幅は本文と同じ、角丸 12px、薄い罫 1 本、比率は種類ごとに固定（崩れない）、読み込みは facade（サムネ → クリックで本物）、失敗時は同じ枠の中にフォールバック。URL を貼るだけで自動判定する。</p>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">1. リンクカード</b> — 記事内のリンクは文中の下線ではなくカードで出す（他の記事 / エキスパート / 外部サイト）</p>
+  <a class="lc" href="#">
+    <div class="b"><div class="k">LOCORE の記事</div><span class="t">推薦状、誰に頼むかで 8 割決まる</span><div class="d">上司・教授・取引先、それぞれに頼むときの依頼メールの実例と、断られたときの次の一手。</div><div class="m">高村 里奈 · MBA · 5 分</div></div>
+    <div class="img"></div>
+  </a>
+  <a class="lc expert" href="#">
+    <div class="img">佐</div>
+    <div class="b"><div class="k">エキスパート</div><span class="t">佐藤 みく <span style="font-weight:400;color:var(--n500);font-size:13px">ウォートン・スクール 在学中 · 在籍確認済み</span></span><div class="d">MBA エッセイ · 面接対策 · 奨学金。30 分 ¥5,500〜、直近の空き 9/11（木）。</div><span class="cta">この人に相談する →</span></div>
+  </a>
+  <a class="lc ext" href="#">
+    <div class="b"><div class="k">外部サイト · HBS.EDU</div><span class="t">MBA Admissions — Essay Questions 2026</span><div class="d">As we review your application, what more would you like us to know as we consider your candidacy…</div><div class="m">hbs.edu · OG 画像とタイトルを自動取得。取れないときは右の面がドメインの頭文字になる</div></div>
+    <div class="img">og:image</div>
+  </a>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">2. 動画（YouTube）</b> — 16:9 固定。サムネと再生ボタンだけ先に出し、クリックで iframe に差し替える。下のバーにタイトルと外部リンク</p>
+  <div class="embed">
+    <div class="frame r16x9"><span class="badge">YouTube</span><div class="play"><span></span></div></div>
+    <div class="bar"><b>MBA 出願の 1 年間を 10 分で振り返る</b><a class="o" href="#">YouTube で開く</a></div>
+  </div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">3. 地図（Google マップ）</b> — 16:10 固定。静止画を先に出し、クリックで埋め込み地図を読む。バーに場所名と「経路」</p>
+  <div class="embed">
+    <div class="frame r16x10" style="background:linear-gradient(135deg,#e8eef2,#d5dee6)"><span class="badge">Google マップ</span><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:999px;background:var(--n900);box-shadow:0 0 0 6px rgba(24,24,27,.15)"></div></div>
+    <div class="bar"><b>Harvard Business School</b><span style="color:var(--n500)">Boston, MA</span><a class="o" href="#">経路を見る</a></div>
+  </div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">4. SNS の投稿（X / Instagram / TikTok）</b> — iframe を使わず、取得したテキストと画像を同じ枠で。高さが暴れない</p>
+  <div class="embed">
+    <div class="bar" style="border-top:0"><span style="width:28px;height:28px;border-radius:999px;background:#ddd;display:inline-block"></span><b>高村 里奈</b><span style="color:var(--n500)">@rina_boston · 3月21日</span><a class="o" href="#">X で見る</a></div>
+    <div style="padding:0 14px 14px;font-size:15px;line-height:1.8;color:var(--n800)">エッセイの第 1 稿、半分を捨てた。「チームで」を数えたら 11 回あった。主語を I に戻すだけで、文章が急に人の顔をし始める。</div>
+    <div class="frame r16x9" style="margin:0 14px 14px;border-radius:8px;overflow:hidden"></div>
+  </div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">5. 画像</b> — 単体は 4:3、2 枚並びは正方形に揃えて object-fit。キャプションは下に 12px</p>
+  <div class="imgs"><div class="ph"></div></div>
+  <p class="cap">単体の画像。縦長・横長どちらを貼っても 4:3 の枠で切り取られ、ページの高さが変わらない。</p>
+  <div class="imgs two"><div class="ph"></div><div class="ph"></div></div>
+  <p class="cap">2 枚並び。正方形に揃える。</p>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">6. 幅の広い表・埋め込みが失敗したとき</b> — 表は本文幅を超えたら横スクロールの箱に入れる。埋め込みが取れないときは同じ枠のまま「外部リンク」に落とす</p>
+  <div class="wide body" style="margin-top:.6em"><table style="margin:0"><tr><th>学校</th><th>Round 1 締切</th><th>Round 2 締切</th><th style="text-align:right">出願料</th><th>エッセイ</th><th>推薦状</th></tr><tr><td>HBS</td><td>9/4</td><td>1/6</td><td class="num">$250</td><td>1 本 · 上限なし</td><td>2 通</td></tr><tr><td>Wharton</td><td>9/3</td><td>1/6</td><td class="num">$275</td><td>2 本</td><td>2 通</td></tr></table></div>
+  <div class="embed">
+    <div class="frame r16x9" style="display:grid;place-items:center;color:var(--n500);font-size:13px">この埋め込みは表示できませんでした</div>
+    <div class="bar"><b>Instagram の投稿</b><a class="o" href="#">Instagram で開く</a></div>
+  </div>
 
   <section class="end">
     <div class="av">里</div>
