@@ -1,5 +1,4 @@
 import type { AdmissionEntry, EducationEntry } from '@locore/db';
-import { formatSchoolName } from '@/lib/experts/education';
 
 /**
  * 「合格実績」の表示データ（0087）。
@@ -11,7 +10,10 @@ import { formatSchoolName } from '@/lib/experts/education';
  */
 
 export type AdmissionItem = {
+  /** 表示名（日本語優先。formatSchoolName と同じ元データ） */
   name: string;
+  /** 英語名（日本語名と異なるときだけ。チップでは小さく併記） */
+  nameEn: string | null;
   degree: string | null;
   /** 進学した学校（education 由来） */
   enrolled: boolean;
@@ -22,6 +24,14 @@ export type AdmissionYearGroup = {
   year: number | null;
   items: AdmissionItem[];
 };
+
+/** 日本語名と英語名を分ける（英語名が無い / 同じなら nameEn は null）。1 行に収まらない長い英語名対策 */
+function splitName(e: { school: string; schoolNameEn?: string | null }): { name: string; nameEn: string | null } {
+  const ja = e.school.trim();
+  const en = e.schoolNameEn?.trim() ?? '';
+  if (ja && en && ja !== en) return { name: ja, nameEn: en };
+  return { name: ja || en, nameEn: null };
+}
 
 export function groupAdmissions(
   education: EducationEntry[],
@@ -35,19 +45,11 @@ export function groupAdmissions(
   };
   for (const e of education) {
     if (!e.school?.trim() || e.applicationYear == null) continue;
-    push(e.applicationYear, {
-      name: formatSchoolName(e),
-      degree: e.degree?.trim() || null,
-      enrolled: true,
-    });
+    push(e.applicationYear, { ...splitName(e), degree: e.degree?.trim() || null, enrolled: true });
   }
   for (const a of admissions) {
     if (!a.school?.trim()) continue;
-    push(a.applicationYear ?? null, {
-      name: formatSchoolName(a),
-      degree: a.degree?.trim() || null,
-      enrolled: false,
-    });
+    push(a.applicationYear ?? null, { ...splitName(a), degree: a.degree?.trim() || null, enrolled: false });
   }
   return Array.from(map.entries())
     .map(([year, items]) => ({

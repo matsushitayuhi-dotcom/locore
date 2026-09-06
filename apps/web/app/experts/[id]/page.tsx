@@ -313,7 +313,7 @@ export default async function ExpertDetailPage({
                 {enrollment && schoolLabel ? (
                   <div className="mt-1 text-[15px] font-medium text-neutral-700 sm:text-[16px]">
                     {schoolLabel}
-                    <span className="ml-2 text-[12.5px] font-normal text-neutral-500">
+                    <span className="ml-2 inline-block whitespace-nowrap text-[12.5px] font-normal text-neutral-500">
                       {enrollment.status === 'current'
                         ? '在学中'
                         : `アルムナイ${enrollment.year != null ? `（${enrollment.year}年卒）` : ''}`}
@@ -557,18 +557,37 @@ export default async function ExpertDetailPage({
                           <span
                             key={`${it.name}-${i}`}
                             className={
-                              'inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] ' +
+                              'inline-flex max-w-full items-center gap-2.5 rounded-xl border px-3.5 py-2 text-[13px] ' +
                               (it.enrolled
                                 ? 'border-neutral-900 bg-neutral-900 text-white'
                                 : 'border-border-strong bg-card text-neutral-800')
                             }
                           >
-                            <span className="font-semibold">{it.name}</span>
+                            <span className="min-w-0">
+                              <span className="block font-semibold leading-snug">{it.name}</span>
+                              {it.nameEn ? (
+                                <span
+                                  className={
+                                    'block text-[11px] leading-snug ' +
+                                    (it.enrolled ? 'text-white/60' : 'text-neutral-500')
+                                  }
+                                >
+                                  {it.nameEn}
+                                </span>
+                              ) : null}
+                            </span>
                             {it.degree ? (
-                              <span className={it.enrolled ? 'text-white/70' : 'text-neutral-500'}>{it.degree}</span>
+                              <span
+                                className={
+                                  'shrink-0 whitespace-nowrap text-[12px] ' +
+                                  (it.enrolled ? 'text-white/70' : 'text-neutral-500')
+                                }
+                              >
+                                {it.degree}
+                              </span>
                             ) : null}
                             {it.enrolled ? (
-                              <span className="rounded-full bg-primary-500 px-1.5 py-px text-[10px] font-bold text-neutral-950">
+                              <span className="shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-1.5 py-px text-[10px] font-bold text-neutral-950">
                                 進学
                               </span>
                             ) : null}

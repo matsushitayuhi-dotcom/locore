@@ -37,6 +37,7 @@ import {
   consultationBookings,
   planEnrollments,
   type EducationEntry,
+  type AdmissionEntry,
   type WorkEntry,
   type NewCity,
   type NewUser,
@@ -221,6 +222,8 @@ type ExpertSeed = {
   /** 経歴（0062）。current=true は在学中（在学生/アルムナイ判定に使用） */
   education: EducationEntry[];
   workHistory: WorkEntry[];
+  /** 合格校（進学しなかった学校・0087・任意）。出願年ごとに「合格実績」で表示 */
+  admissions?: AdmissionEntry[];
   /** 固定の相談室 URL（0082・任意）。承諾時に参加リンクへ自動コピーされるデモ用 */
   meetingRoom?: string;
   /** 継続プラン（0083・任意）。月定の「出願まるごと伴走」を 1 本追加する */
@@ -267,8 +270,12 @@ const EXPERTS: ExpertSeed[] = [
     title30: 'MBA出願の作戦会議（30分）',
     title60: 'MBAエッセイ骨子レビュー（60分）',
     education: [
-      { school: 'ハーバード・ビジネス・スクール', degree: 'MBA', field: '経営学', startYear: 2025, current: true },
+      { school: 'ハーバード・ビジネス・スクール', schoolNameEn: 'Harvard Business School', degree: 'MBA', field: '経営学', startYear: 2025, current: true, applicationYear: 2024 },
       { school: '慶應義塾大学', degree: '学士', field: '商学', startYear: 2013, endYear: 2017 },
+    ],
+    admissions: [
+      { school: 'ウォートン・スクール', schoolNameEn: 'The Wharton School', degree: 'MBA', applicationYear: 2024 },
+      { school: 'INSEAD', schoolNameEn: 'INSEAD', degree: 'MBA', applicationYear: 2024 },
     ],
     workHistory: [
       { company: '総合商社（東京）', title: '海外営業', startYear: 2017, endYear: 2024 },
@@ -315,8 +322,11 @@ const EXPERTS: ExpertSeed[] = [
     title30: '米大学院出願の作戦会議（30分）',
     title60: 'SoP・研究計画の壁打ち（60分）',
     education: [
-      { school: 'コロンビア大学', degree: '修士', field: 'コンピュータサイエンス', startYear: 2024, current: true },
+      { school: 'コロンビア大学', schoolNameEn: 'Columbia University', universityWikidataId: 'Q49088', degree: '修士', field: 'コンピュータサイエンス', startYear: 2024, current: true, applicationYear: 2023 },
       { school: '東京工業大学', degree: '学士', field: '情報工学', startYear: 2015, endYear: 2019 },
+    ],
+    admissions: [
+      { school: 'カーネギーメロン大学', schoolNameEn: 'Carnegie Mellon University', degree: 'MS', applicationYear: 2023 },
     ],
     workHistory: [
       { company: '事業会社（東京）', title: 'ソフトウェアエンジニア', startYear: 2019, endYear: 2024 },
@@ -363,8 +373,12 @@ const EXPERTS: ExpertSeed[] = [
     title30: '英大学院出願の作戦会議（30分）',
     title60: '出願書類と奨学金の段取り整理（60分）',
     education: [
-      { school: 'LSE（ロンドン・スクール・オブ・エコノミクス）', degree: '修士', field: '公共政策', startYear: 2024, current: true },
+      { school: 'ロンドン・スクール・オブ・エコノミクス', schoolNameEn: 'London School of Economics and Political Science', universityWikidataId: 'Q174570', degree: '修士', field: '公共政策', startYear: 2024, current: true, applicationYear: 2023 },
       { school: '東京大学', degree: '学士', field: '法学', startYear: 2012, endYear: 2016 },
+    ],
+    admissions: [
+      { school: 'ユニヴァーシティ・カレッジ・ロンドン', schoolNameEn: 'University College London', degree: 'MSc Public Policy', applicationYear: 2023 },
+      { school: 'シンガポール国立大学', schoolNameEn: 'National University of Singapore', degree: 'MPP', applicationYear: 2023 },
     ],
     workHistory: [
       { company: '中央官庁（東京）', title: '総合職', startYear: 2016, endYear: 2024 },
@@ -412,7 +426,7 @@ const EXPERTS: ExpertSeed[] = [
     title30: '仏大学院（英語プログラム）出願相談（30分）',
     title60: '面接対策の模擬セッション（60分）',
     education: [
-      { school: 'シアンスポ（パリ政治学院）', degree: '修士', field: '国際関係', startYear: 2019, endYear: 2021 },
+      { school: 'パリ政治学院', schoolNameEn: 'Paris Institute of Political Studies', universityWikidataId: 'Q859363', degree: '修士', field: '国際関係', startYear: 2019, endYear: 2021, applicationYear: 2018 },
       { school: '上智大学', degree: '学士', field: '外国語学部', startYear: 2013, endYear: 2017 },
     ],
     workHistory: [
@@ -454,7 +468,7 @@ const EXPERTS: ExpertSeed[] = [
     title30: '博士留学・研究室選び相談（30分）',
     title60: '研究計画書の壁打ち（60分）',
     education: [
-      { school: 'ベルリン工科大学', degree: '博士課程', field: '機械学習', startYear: 2022, current: true },
+      { school: 'ベルリン工科大学', schoolNameEn: 'Technische Universität Berlin', universityWikidataId: 'Q51985', degree: '博士課程', field: '機械学習', startYear: 2022, current: true, applicationYear: 2021 },
       { school: '東北大学', degree: '修士', field: '情報科学', startYear: 2019, endYear: 2021 },
       { school: '東北大学', degree: '学士', field: '工学', startYear: 2015, endYear: 2019 },
     ],
@@ -496,7 +510,7 @@ const EXPERTS: ExpertSeed[] = [
     title30: 'カナダ学部出願の作戦会議（30分）',
     title60: '出願からキャンパス生活まで相談（60分）',
     education: [
-      { school: 'ブリティッシュコロンビア大学', degree: '学士課程', field: '経済学', startYear: 2023, current: true },
+      { school: 'ブリティッシュコロンビア大学', schoolNameEn: 'University of British Columbia', universityWikidataId: 'Q391028', degree: '学士課程', field: '経済学', startYear: 2023, current: true, applicationYear: 2022 },
     ],
     workHistory: [],
     avatar: '/experts/eri.jpg',
@@ -533,7 +547,7 @@ const EXPERTS: ExpertSeed[] = [
     title30: '米学部出願エッセイ相談（30分）',
     title60: '学部出願の全体設計（60分）',
     education: [
-      { school: 'ニューヨーク大学', degree: '学士', field: 'マーケティング', startYear: 2019, endYear: 2023 },
+      { school: 'ニューヨーク大学', schoolNameEn: 'New York University', universityWikidataId: 'Q49210', degree: '学士', field: 'マーケティング', startYear: 2019, endYear: 2023, applicationYear: 2018 },
     ],
     workHistory: [
       { company: 'NYのマーケティング企業', title: 'アナリスト', startYear: 2023, current: true },
@@ -573,7 +587,7 @@ const EXPERTS: ExpertSeed[] = [
     title30: '語学・交換留学のはじめ方相談（30分）',
     title60: '交換留学1年のプラン設計（60分）',
     education: [
-      { school: 'メルボルン大学（交換留学）', degree: null, field: '国際関係', startYear: 2023, endYear: 2023 },
+      { school: 'メルボルン大学', schoolNameEn: 'University of Melbourne', universityWikidataId: 'Q319078', degree: '交換留学', field: '国際関係', startYear: 2023, endYear: 2023 },
       { school: '明治大学', degree: '学士', field: '国際日本学', startYear: 2020, endYear: 2024 },
     ],
     workHistory: [
@@ -659,6 +673,7 @@ async function main() {
     languages: e.languages,
     education: e.education,
     workHistory: e.workHistory,
+    admissions: e.admissions ?? [],
     specialties: e.specialties,
     timezone: CITY_TZ[e.citySlug] ?? null,
     isSample: true,
@@ -683,6 +698,7 @@ async function main() {
         languages: sql`excluded.languages`,
         education: sql`excluded.education`,
         workHistory: sql`excluded.work_history`,
+        admissions: sql`excluded.admissions`,
         specialties: sql`excluded.specialties`,
         timezone: sql`excluded.timezone`,
         meetingRoomUrl: sql`excluded.meeting_room_url`,
