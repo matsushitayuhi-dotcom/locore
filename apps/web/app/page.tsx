@@ -69,7 +69,7 @@ export default async function HomePage() {
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[12.5px] text-neutral-500">
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-primary-700" aria-hidden />
-                全員、居住認証済み
+                全員、在籍確認済み
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-primary-700" aria-hidden />
@@ -101,7 +101,7 @@ export default async function HomePage() {
                 </div>
                 <span className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
                   <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden />
-                  居住認証済み
+                  在籍確認済み
                 </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -193,7 +193,7 @@ export default async function HomePage() {
                   その大学の「先輩」に聞く。
                 </h2>
                 <p className="mt-3 text-[14.5px] text-neutral-500">
-                  全員が書類審査による居住認証済み。いま、本当に現地で学んでいる・学んだ人たちです。
+                  全員が学生証・入学証明書・卒業証書による在籍確認済み。いま、本当にその学校で学んでいる・学んだ人たちです。
                 </p>
               </div>
               <Link
@@ -226,17 +226,17 @@ export default async function HomePage() {
               答えられることがある。
             </h2>
             <p className="mt-3 max-w-[640px] text-[14.5px] text-neutral-500">
-              SNSで見つけた「合格者」は本物でしょうか。Locoreのエキスパートは全員、書類審査で現地在住（在学・勤務）の実態を確認しています。
+              SNSで見つけた「合格者」は本物でしょうか。Locoreのエキスパートは全員、学生証・入学証明書・卒業証書で在学・卒業の実態を運営が確認しています。
             </p>
             <div className="mt-7 flex flex-col">
-              <TrustStep n={1} title="居住を証明する書類の提出" last={false}>
-                現地の滞在許可証・公共料金の請求書・賃貸契約書などを提出してもらいます。
+              <TrustStep n={1} title="在学・卒業を証明する書類の提出" last={false}>
+                入学証明書・在籍証明書、学生証、卒業証書・学位記のいずれかを提出してもらいます。
               </TrustStep>
               <TrustStep n={2} title="運営による審査" last={false}>
-                書類と申告内容（都市・在住年数）を運営が照合。基準を満たした人だけが登録されます。
+                書類と申告内容（学校名・在学中か卒業か）を運営が照合。基準を満たした人だけが登録されます。
               </TrustStep>
               <TrustStep n={3} title="認証バッジの付与" last>
-                審査を通過したエキスパートに「居住認証済み」バッジを表示。相談後のレビューと合わせて、信頼の目印になります。
+                審査を通過したエキスパートに「在籍確認済み」バッジを表示。在学中かアルムナイかも分かり、相談後のレビューと合わせて信頼の目印になります。
               </TrustStep>
             </div>
           </div>
@@ -246,10 +246,10 @@ export default async function HomePage() {
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-300 bg-primary-100 px-[18px] py-1.5 text-[13.5px] font-bold text-primary-900">
               <ShieldCheck className="h-[15px] w-[15px]" aria-hidden />
-              居住認証済み
+              在籍確認済み
             </span>
             <p className="mt-4 text-[13px] leading-relaxed text-neutral-500">
-              このバッジは、運営が書類で居住実態を確認したエキスパートだけに表示されます。「行ったことがある」ではなく「いま住んでいる」人の言葉です。
+              このバッジは、運営が書類で在学・卒業を確認したエキスパートだけに表示されます。「詳しいらしい」ではなく「本当にその学校で学んだ」人の言葉です。
             </p>
           </div>
         </div>

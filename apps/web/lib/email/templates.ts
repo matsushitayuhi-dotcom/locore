@@ -2,7 +2,7 @@ import 'server-only';
 import { escapeHtml as escape } from './layout';
 
 /**
- * 本人確認 (旧: 居住確認) フローで使うメール本文テンプレ。
+ * 在籍確認（旧: 本人確認 / 居住確認）フローで使うメール本文テンプレ。留学特化。
  *
  * 注意: envelope/btn はここのローカル版（テラコッタ/cream）。予約系の新テンプレは
  * lib/email/layout.ts の白基調ライム版を使っており、こちらも将来そちらへ移行する。
@@ -64,13 +64,13 @@ export type SubmittedNotificationInput = {
 export function tplSubmittedNotification(
   input: SubmittedNotificationInput,
 ): { subject: string; html: string } {
-  const subject = `[Locore] 本人確認の新規申請 — ${input.userDisplayName} さん`;
+  const subject = `[Locore] 在籍確認の新規申請 — ${input.userDisplayName} さん`;
   const html = envelope(`
     <h2 style="font-size:20px;font-weight:600;margin:0 0 12px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;">
-      本人確認の申請が届きました
+      在籍確認の申請が届きました
     </h2>
     <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
-      編集チームによるレビューをお願いします。
+      運営による書類（入学証明書・学生証・卒業証書など）の確認をお願いします。
     </p>
 
     <table cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;background:#F3E9D2;border-radius:12px;font-size:13px;">
@@ -162,19 +162,18 @@ export function tplApproved(input: ApprovedNotificationInput): {
   html: string;
 } {
   return {
-    subject: `[Locore] 本人確認が承認されました`,
+    subject: `[Locore] 在籍確認が完了しました`,
     html: envelope(`
       <h2 style="font-size:20px;font-weight:600;margin:0 0 12px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;">
-        本人確認が承認されました
+        在籍確認が完了しました
       </h2>
       <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
         ${escape(input.userDisplayName)} さん、お待たせいたしました。
-        ご提出いただいた書類を編集チームが確認し、本人確認を完了いたしました。
+        ご提出いただいた書類を運営が確認し、在学・卒業の確認（在籍確認）を完了いたしました。
       </p>
       <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
-        プロフィールに <strong style="color:#0F9F6E;">✓ 本人確認済み</strong>
-        の緑バッジが表示されます。投稿者としての信頼度が高まり、
-        記事執筆や Founders 申請など各機能をご利用いただけます。
+        プロフィールとエキスパート一覧に <strong style="color:#0F9F6E;">✓ 在籍確認済み</strong>
+        のバッジが表示されます。相談者が「本当にその学校の在学生・卒業生か」を確かめられる、信頼の目印です。
       </p>
 
       <div style="margin:24px 0;">
@@ -204,19 +203,19 @@ export function tplRejected(input: RejectedNotificationInput): {
   html: string;
 } {
   return {
-    subject: `[Locore] 本人確認について — 再申請のお願い`,
+    subject: `[Locore] 在籍確認について — 再申請のお願い`,
     html: envelope(`
       <h2 style="font-size:20px;font-weight:600;margin:0 0 12px;font-family:'Hiragino Mincho ProN','Yu Mincho',serif;">
         ご提出書類の確認が完了しませんでした
       </h2>
       <p style="font-size:14px;line-height:1.85;margin:0 0 16px;">
         ${escape(input.userDisplayName)} さん、
-        いただいた書類だけでは本人確認を完了することができませんでした。
+        いただいた書類だけでは在籍確認（在学・卒業の確認）を完了することができませんでした。
         お手数ですが、内容をご確認のうえ再度ご提出いただけますでしょうか。
       </p>
 
       <div style="background:#F3E9D2;border-left:4px solid #B5453A;padding:14px 18px;margin:16px 0;border-radius:4px;">
-        <p style="font-size:12px;color:#5C6470;margin:0 0 6px;font-weight:600;">編集チームから</p>
+        <p style="font-size:12px;color:#5C6470;margin:0 0 6px;font-weight:600;">運営から</p>
         <p style="font-size:14px;line-height:1.85;margin:0;white-space:pre-line;">${escape(input.reason)}</p>
       </div>
 

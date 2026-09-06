@@ -22,7 +22,7 @@ import { AboutHowTabs } from './AboutHowTabs';
  * mockups/v2/about-service-v7.html を忠実に実装:
  *   hero（写真帯 + プレイヤーカード + アバタースタック）/ 使い方（左ヘアライン
  *   タイムライン + マイルストンピル・2タブ・時系列5ステップ×2 + UI 画面モック）/
- *   よくある相談 / 居住認証ダーク帯 / 料金（コピー修正済み）/ 30分でここまで /
+ *   よくある相談 / 在籍確認ダーク帯 / 料金（コピー修正済み）/ 30分でここまで /
  *   FAQ / 最終CTA（写真帯）。
  * 写真（/about/*.jpg・/experts/*.jpg）はデモ用プレースホルダ（Pexels 商用可素材。
  * 特定の実在人物・エキスパートではない）。白カードには text-foreground を明示して
@@ -32,7 +32,7 @@ import { AboutHowTabs } from './AboutHowTabs';
 export const metadata = {
   title: '使い方',
   description:
-    '留学のことは、通っている先輩と。学部・大学院・MBA・語学・交換留学の「あなたの場合はどうか」を、居住認証済みの在学生・アルムナイに30分からオンラインで相談できます。ご利用方法・居住認証・料金の説明ページです。',
+    '留学のことは、通っている先輩と。学部・大学院・MBA・語学・交換留学の「あなたの場合はどうか」を、在籍確認済みの在学生・アルムナイに30分からオンラインで相談できます。ご利用方法・在籍確認・料金の説明ページです。',
 };
 
 /* ===== 小物 ===== */
@@ -72,7 +72,7 @@ function Em({ children }: { children: React.ReactNode }) {
   return <span className="font-black text-primary-700">{children}</span>;
 }
 
-function VBadge({ label = '居住認証済み' }: { label?: string }) {
+function VBadge({ label = '在籍確認済み' }: { label?: string }) {
   return (
     <span className="inline-flex items-center gap-[5px] whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-[3px] text-[11px] font-bold text-primary-900">
       <ShieldCheck className="h-[11px] w-[11px] shrink-0" aria-hidden />
@@ -202,7 +202,7 @@ function UserFlowPanel() {
             <>
               <StepH>志望校の先輩を探す</StepH>
               <StepP>
-                学校・専攻・相談テーマで絞り込んだり、検索したり。先輩のプロフィールや相談メニュー、レビューを見ながらコンタクトを取りたい人を決めます。表示されるエキスパートは全員、当サイトで現地の居住実績（在学・勤務）の認定を行っているのでご安心してご相談いただけます。
+                学校・専攻・相談テーマで絞り込んだり、検索したり。先輩のプロフィールや相談メニュー、レビューを見ながらコンタクトを取りたい人を決めます。表示されるエキスパートは全員、学生証や入学証明書・卒業証書で在学・卒業の実態を運営が確認しているので、安心して相談できます。
               </StepP>
             </>
           }
@@ -572,23 +572,23 @@ function ExpertFlowPanel() {
         />
       </div>
 
-      {/* ② 居住認証 */}
+      {/* ② 在籍確認 */}
       <div className="pb-[72px] pt-2">
-        <Milestone n={2}>居住認証を受ける</Milestone>
+        <Milestone n={2}>在籍確認を受ける</Milestone>
         <StepRow
           small
           cop={
             <>
-              <StepH>書類で、居住実態を証明</StepH>
+              <StepH>書類で、在学・卒業を証明</StepH>
               <StepP>
-                滞在許可証・在学証明などの書類を提出し、運営が審査します。
+                入学証明書・学生証・卒業証書のいずれかを提出し、運営が確認します。
                 <b>通過した人だけ</b>が一覧に掲載され、バッジが付きます。
               </StepP>
             </>
           }
           shot={
             <div className={`${shotCls} about-shot-fade p-5`}>
-              {['滞在許可証.pdf', '公共料金の請求書.pdf'].map((doc) => (
+              {['入学証明書.pdf', '学生証.jpg'].map((doc) => (
                 <div
                   key={doc}
                   className="mt-2 flex items-center gap-[9px] rounded-xl border-[1.5px] border-dashed border-border-strong bg-card px-[13px] py-[11px] text-[11.5px] text-neutral-700 first:mt-0"
@@ -805,7 +805,7 @@ export default function AboutServicePage() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary-500/50 bg-white/10 px-4 py-[5px] text-[12.5px] font-bold text-primary-500">
               <i className="h-[7px] w-[7px] rounded-full bg-primary-500 not-italic" aria-hidden />
-              居住認証つき・在学生/アルムナイへの留学相談
+              在籍確認つき・在学生/アルムナイへの留学相談
             </span>
             <h1 className="mt-[22px] text-[clamp(31px,4.8vw,52px)] font-black leading-[1.3] tracking-[-0.03em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]">
               留学のことは、
@@ -853,7 +853,7 @@ export default function AboutServicePage() {
               </span>
               <p className="text-[13.5px] leading-[1.8] text-white/80">
                 <b className="font-bold text-white">ボストンからロンドンまで。</b>
-                世界の大学の「先輩」が、全員・居住認証済みで待っています。
+                世界の大学の「先輩」が、全員・在籍確認済みで待っています。
               </p>
             </div>
           </div>
@@ -954,17 +954,17 @@ export default function AboutServicePage() {
         </div>
       </section>
 
-      {/* ===== 居住認証（ダーク帯） ===== */}
+      {/* ===== 在籍確認（ダーク帯） ===== */}
       <section className="about-trust-bg px-6 pb-[84px] pt-[76px] text-white">
         <div className="mx-auto max-w-[1080px]">
           <Kicker dark>Trust — Locoreの核</Kicker>
           <h2 className="mt-5 text-[clamp(25px,3.6vw,38px)] font-black leading-[1.4] tracking-[-0.028em] text-white">
             誰でもは、載れません。
             <br />
-            <b className="font-black text-primary-500">居住認証</b>という関門。
+            <b className="font-black text-primary-500">在籍確認</b>という関門。
           </h2>
           <p className="mt-3.5 max-w-[38em] text-[15.5px] leading-[2.05] text-white/75">
-            SNSで見つけた「現地在住」は、本当にいまその街に住んでいるでしょうか。Locoreに掲載される全エキスパートは、現地の居住実態を書類で確認済みです。
+            SNSで見つけた「合格者」「在学生」は、本当にその学校の人でしょうか。Locoreに掲載される全エキスパートは、在学・卒業の実態を書類で確認済みです。
           </p>
           <div className="mt-10 grid items-center gap-9 lg:grid-cols-[1.04fr_.96fr] lg:gap-14">
             {/* 3ステップ縦タイムライン（丸数字 + 縦ライン） */}
@@ -972,20 +972,20 @@ export default function AboutServicePage() {
               {[
                 {
                   n: 1,
-                  t: '居住を証明する書類の提出',
-                  p: '現地の滞在許可証・公共料金の請求書・賃貸契約書など、「いま住んでいる」ことを示す書類を提出。',
+                  t: '在学・卒業を証明する書類の提出',
+                  p: '入学証明書・在籍証明書、学生証、卒業証書・学位記のいずれかを提出。氏名と学校名が読めれば、学籍番号などはマスクして構いません。',
                   gate: null,
                 },
                 {
                   n: 2,
                   t: '運営による審査',
-                  p: '書類と申告内容（都市・在住年数）を運営が照合します。',
+                  p: '書類と申告内容（学校名・在学中か卒業か）を運営が照合します。',
                   gate: '基準を満たさなければ、掲載されません',
                 },
                 {
                   n: 3,
                   t: '認証バッジの付与',
-                  p: '通過した人だけに「居住認証済み」バッジ。相談後の公開レビューと合わせて、信頼の目印に。',
+                  p: '通過した人だけに「在籍確認済み」バッジ。在学中かアルムナイかも表示され、相談後の公開レビューと合わせて信頼の目印に。',
                   gate: null,
                 },
               ].map((s, i, arr) => (
@@ -1026,11 +1026,11 @@ export default function AboutServicePage() {
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-300 bg-primary-100 px-[18px] py-1.5 text-[13.5px] font-bold text-primary-900">
                 <ShieldCheck className="h-[13px] w-[13px]" aria-hidden />
-                居住認証済み
+                在籍確認済み
               </span>
               <p className="mt-[15px] text-[14px] leading-[2] text-neutral-500">
-                このバッジは、運営が書類で居住実態を確認したエキスパートだけのもの。「行ったことがある」ではなく、
-                <b className="font-bold text-foreground">「いま住んでいる」</b>
+                このバッジは、運営が書類で在学・卒業を確認したエキスパートだけのもの。「詳しいらしい」ではなく、
+                <b className="font-bold text-foreground">「本当にその学校で学んだ」</b>
                 人の言葉です。
               </p>
               <div className="mt-5 border-t border-dashed border-border-strong pt-4 text-left">
@@ -1172,10 +1172,10 @@ export default function AboutServicePage() {
               <b>決済機能は現在準備中</b>
               のため、料金の支払いが必要になる段階の前で止まります。まずはチャットでの相談内容のすり合わせからお試しください。
             </FaqItem>
-            <FaqItem q="「居住認証」は何を確認しているのですか？">
-              現地の滞在許可証・公共料金の請求書・賃貸契約書などの書類で、
-              <b>「いま、その街に実際に住んでいる」こと</b>
-              を運営が確認しています。経歴や肩書きの審査ではなく、居住実態の審査です。確認済みのエキスパートだけにバッジが表示されます。
+            <FaqItem q="「在籍確認」は何を確認しているのですか？">
+              入学証明書・在籍証明書、学生証、卒業証書・学位記のいずれかで、
+              <b>「本当にその学校に在学している / 卒業した」こと</b>
+              を運営が確認しています。相談内容の良し悪しを審査するものではなく、在籍実態の確認です。確認済みのエキスパートだけにバッジが表示されます。TOEFL・GMAT などのスコアや資格も、合格証明を確認したものだけを「確認済み」として表示しています。
             </FaqItem>
             <FaqItem q="無料でできることはありますか？">
               会員登録・エキスパート探し・記事（読みもの）・
@@ -1186,8 +1186,8 @@ export default function AboutServicePage() {
               学部・大学院・MBA・語学・交換留学の出願準備、エッセイや研究計画のレビュー、面接対策、奨学金、渡航後の住まいやキャンパス生活まで。各エキスパートの「こんな相談に乗れます」を見て選んでください。医療・法律・税務など資格が必要な業務のアドバイスは対象外です（経験談としてのお話は可能です）。
             </FaqItem>
             <FaqItem q="エキスパートは海外在住。時差は大丈夫？">
-              空き枠も確定日時も<b>すべて日本時間で表示</b>
-              されるので、時差の計算は不要です。エキスパート側には現地時間で表示され、換算はLocoreが自動で行います。多くのエキスパートが日本時間の夜・週末に枠を設定しています。
+              空き枠も確定日時も<b>あなたの現地時間で表示</b>
+              されるので、時差の計算は不要です。エキスパート側にも相手の現地時間で表示され、換算はLocoreが自動で行います。多くのエキスパートが日本時間の夜・週末に枠を設定しています。
             </FaqItem>
             <FaqItem q="キャンセルはできますか？">
               エキスパートが承諾する前のリクエストは、いつでも取り消せます。確定後に都合が悪くなった場合は、できるだけ早くチャットで相手に連絡して日程を調整してください。決済導入にあわせて、キャンセルポリシーを正式に整備する予定です。
