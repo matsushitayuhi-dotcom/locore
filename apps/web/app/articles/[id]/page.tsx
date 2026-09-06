@@ -28,6 +28,9 @@ import { and } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { listServicesByUserId } from '@/lib/services/list';
+import { getEditorialArticleRow } from '@/lib/articles/editorial';
+import { parseBlocks, legacyBodyToBlocks } from '@/lib/articles/blocks';
+import { EditorialArticle } from './EditorialArticle';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +74,24 @@ export default async function ArticleDetailPage({
 }: {
   params: { id: string };
 }) {
+  // ===== エディトリアル版（bodyStyle='blocks'・0091）: 先に軽い行を引いて分岐 =====
+  const ed = await getEditorialArticleRow(params.id);
+  if (ed && ed.bodyStyle === 'blocks') {
+    const viewer = await getCurrentUser();
+    const owner = !!viewer && (viewer.id === ed.writerId || viewer.role === 'editor');
+    if (ed.status !== 'published' && !owner) return notFound();
+    const blocks = parseBlocks(ed.blocks);
+    return (
+      <EditorialArticle
+        article={{ id: ed.id, title: ed.title, subtitle: ed.subtitle, lead: ed.lead, topic: ed.topic, coverImageUrl: ed.coverImageUrl, publishedAt: ed.publishedAt, status: ed.status }}
+        blocks={blocks.length > 0 ? blocks : legacyBodyToBlocks(ed.body)}
+        writerId={ed.writerId}
+        countryNameJa={ed.countryNameJa}
+        isOwner={owner}
+      />
+    );
+  }
+
   // DB ファースト：mock を経由せず直接 DB を引く（generateMetadata と共有キャッシュ）
   const bundle = await getArticleBundleCached(params.id);
   if (!bundle) return notFound();

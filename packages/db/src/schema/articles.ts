@@ -139,6 +139,15 @@ export const articles = pgTable(
      */
     bodyStyle: text('body_style').notNull().default('photo_journal'),
     /**
+     * ブログ記事の刷新（manual/0091_article_blocks.sql）。
+     * subtitle = 1 文の要約、lead = リード文、topic = 得意分野の第 1 階層 code、
+     * blocks = 本文のブロック配列（bodyStyle='blocks' のとき。型は apps/web/lib/articles/blocks.ts）。
+     */
+    subtitle: text('subtitle'),
+    lead: text('lead'),
+    topic: text('topic'),
+    blocks: jsonb('blocks').$type<unknown[]>(),
+    /**
      * 旅程プラン用の構造化ブロック配列（articleType='itinerary' のとき使う）。
      * { startTime, endTime, spotId|freeName, transportToNext, travelMinutesAfter, notes }[]
      * マイグレーション: `manual/0018_itinerary_blocks.sql`

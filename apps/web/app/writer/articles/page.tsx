@@ -136,7 +136,7 @@ export default async function WriterArticlesPage({
               >
                 {/* カード全体クリックの「下敷き」リンク（編集ボタンより z-index 下） */}
                 <Link
-                  href={`/writer/articles/${a.id}/edit`}
+                  href={`/writer/articles/${a.id}/${a.bodyStyle === 'blocks' ? 'write' : 'edit'}`}
                   aria-label={`${a.title || '（無題）'} を編集`}
                   className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 />
@@ -217,7 +217,7 @@ export default async function WriterArticlesPage({
                       size="sm"
                       className="relative z-20 h-8 px-3 text-[12px]"
                     >
-                      <Link href={`/writer/articles/${a.id}/edit`}>編集</Link>
+                      <Link href={`/writer/articles/${a.id}/${a.bodyStyle === 'blocks' ? 'write' : 'edit'}`}>編集</Link>
                     </Button>
                   </div>
                 </div>

@@ -49,15 +49,18 @@ export async function createArticleDraft(input: unknown = {}): Promise<never> {
       cityId: cityRows[0]!.id,
       title: parsed.title?.trim() || '新しい記事',
       body: '',
-      priceJpy: 800,
+      // 2026-09: 新規記事はブロック形式のエディトリアル記事（無料・留学テーマ）
+      priceJpy: 0,
       status: 'draft',
       tags: [],
+      articleType: 'expat_info',
+      bodyStyle: 'blocks',
     })
     .returning({ id: schema.articles.id });
 
   const newId = inserted[0]!.id;
   revalidatePath('/writer/articles');
-  redirect(`/writer/articles/${newId}/edit`);
+  redirect(`/writer/articles/${newId}/write`);
 }
 
 /** 自分の記事一覧（status 別）。 */
@@ -71,6 +74,8 @@ export type WriterArticleSummary = {
   updatedAt: Date;
   warned: boolean;
   moderationScore: number | null;
+  /** 'blocks' = 新エディタ（/write）。それ以外は旧ウィザード（/edit） */
+  bodyStyle: string;
 };
 
 export async function listMyArticles(): Promise<WriterArticleSummary[]> {
@@ -88,6 +93,7 @@ export async function listMyArticles(): Promise<WriterArticleSummary[]> {
       updatedAt: schema.articles.updatedAt,
       warned: schema.articles.warned,
       moderationScore: schema.articles.moderationScore,
+      bodyStyle: schema.articles.bodyStyle,
     })
     .from(schema.articles)
     .where(
