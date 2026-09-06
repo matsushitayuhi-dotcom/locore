@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>エキスパートのマイページ — ダッシュボード案</title>
+<style>
+  :root {
+    --lime: #A8E01C; --lime-700: #5E8B0E; --lime-100: #EEF9CF; --lime-50: #F6FCE3;
+    --n900: #18181b; --n700: #3f3f46; --n500: #71717a; --n400: #a1a1aa; --n200: #e4e4e7; --n100: #f4f4f5; --n50: #fafafa;
+    --border: #e4e4e7; --border-strong: #d4d4d8; --amber: #b45309; --amber-bg: #fef3c7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: var(--n900); font-family: "Noto Sans JP", "Hiragino Sans", system-ui, sans-serif; font-feature-settings: "palt"; }
+  .top { background: var(--n900); color: #fff; height: 44px; display: flex; align-items: center; padding: 0 20px; font-weight: 700; }
+  .top b { color: var(--lime); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 100px; display: grid; grid-template-columns: 200px 1fr; gap: 32px; }
+  /* 左ナビ */
+  .nav { position: sticky; top: 24px; align-self: start; }
+  .nav .who { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .nav .who .av { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg,#2b3a12,#141513); color: var(--lime); font-weight: 700; display: grid; place-items: center; }
+  .nav .who b { font-size: 14px; display: block; }
+  .nav .who small { font-size: 11px; color: var(--n500); }
+  .nav ul { list-style: none; margin: 0; padding: 0; }
+  .nav li a { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: var(--n700); text-decoration: none; }
+  .nav li a.on { background: var(--n900); color: #fff; font-weight: 700; }
+  .nav li a .dot { margin-left: auto; min-width: 18px; height: 18px; border-radius: 999px; background: var(--lime); color: var(--n900); font-size: 10px; font-weight: 800; display: grid; place-items: center; padding: 0 5px; }
+  .nav .grp { font-size: 10px; letter-spacing: .16em; color: var(--n400); font-weight: 700; margin: 14px 10px 4px; }
+  /* 本文 */
+  h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+  .sub { color: var(--n500); font-size: 13px; margin: 4px 0 0; }
+  .head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+  .head .sp { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .pill { border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700; border: 1px solid var(--border-strong); background: #fff; }
+  .pill.on { background: var(--lime-100); border-color: var(--lime); color: var(--lime-700); }
+  .btn { border-radius: 999px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; background: var(--n900); color: #fff; border: 0; }
+  .btn.ghost { background: #fff; color: var(--n900); border: 1px solid var(--border-strong); }
+  .sec { margin-top: 26px; }
+  .sec h2 { font-size: 15px; margin: 0 0 10px; display: flex; align-items: baseline; gap: 10px; }
+  .sec h2 small { font-weight: 400; font-size: 12px; color: var(--n500); }
+  /* 今週やること */
+  .todo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .todo a { display: block; border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; text-decoration: none; color: inherit; background: #fff; }
+  .todo a.hot { border-color: var(--n900); background: var(--n900); color: #fff; }
+  .todo .n { font-size: 26px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+  .todo a.hot .n { color: var(--lime); }
+  .todo .l { font-size: 12px; margin-top: 6px; }
+  .todo .h { font-size: 11px; color: var(--n500); margin-top: 3px; }
+  .todo a.hot .h { color: rgba(255,255,255,.65); }
+  .todo a.warn { border-color: #f59e0b; background: var(--amber-bg); }
+  .todo a.warn .n { color: var(--amber); }
+  /* KPI */
+  .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .kpi .c { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: #fff; }
+  .kpi .k { font-size: 11px; color: var(--n500); font-weight: 700; letter-spacing: .04em; }
+  .kpi .v { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .kpi .v small { font-size: 12px; font-weight: 600; color: var(--n500); margin-left: 2px; }
+  .kpi .d { font-size: 11.5px; margin-top: 6px; display: flex; gap: 6px; align-items: center; }
+  .kpi .d b { color: var(--lime-700); }
+  .kpi .d.neg b { color: var(--amber); }
+  .spark { height: 26px; margin-top: 8px; display: flex; align-items: flex-end; gap: 2px; }
+  .spark i { flex: 1; background: var(--n200); border-radius: 2px 2px 0 0; }
+  .spark i.now { background: var(--lime); }
+  /* 目標・マイルストーン */
+  .two { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+  .card { border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; background: #fff; }
+  .goal .row { display: flex; align-items: baseline; gap: 10px; }
+  .goal .row b { font-size: 30px; letter-spacing: -.02em; }
+  .goal .row span { color: var(--n500); font-size: 13px; }
+  .bar { height: 10px; border-radius: 999px; background: var(--n100); overflow: hidden; margin-top: 10px; }
+  .bar i { display: block; height: 100%; width: 60%; background: linear-gradient(90deg, var(--lime-700), var(--lime)); border-radius: 999px; }
+  .goal p { font-size: 12.5px; color: var(--n700); margin: 10px 0 0; line-height: 1.7; }
+  .goal .edit { font-size: 11.5px; color: var(--n500); text-decoration: underline; margin-left: 8px; }
+  .badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .badge { text-align: center; border: 1px solid var(--border); border-radius: 12px; padding: 10px 6px; }
+  .badge .ic { width: 34px; height: 34px; margin: 0 auto 6px; border-radius: 999px; display: grid; place-items: center; background: var(--lime-100); color: var(--lime-700); font-weight: 800; font-size: 13px; }
+  .badge.off { opacity: .45; }
+  .badge.off .ic { background: var(--n100); color: var(--n500); }
+  .badge b { font-size: 11px; display: block; }
+  .badge small { font-size: 10px; color: var(--n500); }
+  .next { font-size: 12px; color: var(--n700); margin-top: 10px; background: var(--lime-50); border-radius: 10px; padding: 10px 12px; }
+  .next b { color: var(--lime-700); }
+  /* 予定・レビュー */
+  .list { display: grid; gap: 8px; }
+  .item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+  .item .t { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .item .t small { display: block; font-weight: 400; font-size: 11px; color: var(--n500); }
+  .item .m { color: var(--n500); font-size: 11.5px; }
+  .item .tag { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--n100); color: var(--n700); }
+  .item .tag.req { background: var(--amber-bg); color: var(--amber); }
+  .rev { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; font-size: 13px; }
+  .rev .st { color: var(--lime-700); font-weight: 800; }
+  .rev p { margin: 6px 0 0; color: var(--n700); line-height: 1.7; }
+  .rev small { color: var(--n500); font-size: 11px; }
+  /* 比較 */
+  .cmp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .cmp .c { border: 1px dashed var(--border-strong); border-radius: 12px; padding: 12px 14px; font-size: 12px; color: var(--n700); }
+  .cmp .c b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .fn { color: var(--n400); font-size: 11px; margin-top: 8px; }
+  .legend { border-top: 1px solid var(--border); margin-top: 36px; padding-top: 16px; font-size: 12px; color: var(--n500); line-height: 1.8; }
+  .legend b { color: var(--n900); }
+</style>
+</head>
+<body>
+<div class="top">Lo<b>core</b>&nbsp;&nbsp;<span style="font-weight:400;font-size:12px;opacity:.7">エキスパートのマイページ — ダッシュボード案（数字はダミー）</span></div>
+<div class="wrap">
+  <!-- 左ナビ: 設定ページ群をエキスパート目線で並べ直す -->
+  <aside class="nav">
+    <div class="who"><div class="av">里</div><div><b>高村 里奈</b><small>HBS ・ 在学中</small></div></div>
+    <ul>
+      <li><a class="on" href="#">ダッシュボード</a></li>
+      <li><a href="#">相談リクエスト <span class="dot">2</span></a></li>
+      <li><a href="#">予定・履歴</a></li>
+      <li><a href="#">メッセージ <span class="dot">1</span></a></li>
+    </ul>
+    <div class="grp">出品</div>
+    <ul>
+      <li><a href="#">相談メニュー・プラン</a></li>
+      <li><a href="#">空き時間</a></li>
+    </ul>
+    <div class="grp">見せ方</div>
+    <ul>
+      <li><a href="#">プロフィール</a></li>
+      <li><a href="#">発信・メディア</a></li>
+      <li><a href="#">在籍確認・資格</a></li>
+      <li><a href="#">公開ステータス</a></li>
+    </ul>
+    <div class="grp">その他</div>
+    <ul>
+      <li><a href="#">売上・振込</a></li>
+      <li><a href="#">通知・アカウント</a></li>
+    </ul>
+  </aside>
+
+  <main>
+    <div class="head">
+      <div>
+        <h1>おはようございます、里奈さん</h1>
+        <p class="sub">今週は相談 2 件・リクエスト 2 件。プロフィールは先週より 38% 多く見られています。</p>
+      </div>
+      <div class="sp">
+        <span class="pill on">● 公開中</span>
+        <button class="btn ghost">公開プロフィールを見る</button>
+      </div>
+    </div>
+
+    <!-- 1. 今やること（行動につながる数字を最上段に） -->
+    <section class="sec">
+      <h2>今やること <small>返答が早いほど成約率が上がります</small></h2>
+      <div class="todo">
+        <a class="hot" href="#"><div class="n">2</div><div class="l">未返答の相談リクエスト</div><div class="h">最古 5 時間前 ・ 24 時間以内に返答を</div></a>
+        <a href="#"><div class="n">1</div><div class="l">未読メッセージ</div><div class="h">田中さんから事前質問</div></a>
+        <a class="warn" href="#"><div class="n">3</div><div class="l">今週の空き枠</div><div class="h">少なめ。空き枠が多いほど予約されやすい</div></a>
+        <a href="#"><div class="n">1</div><div class="l">プロフィールの未完了</div><div class="h">得意分野が 2 つだけ（あと 4 つ選べます）</div></a>
+      </div>
+    </section>
+
+    <!-- 2. 数字（今月／先週比＋30日スパークライン） -->
+    <section class="sec">
+      <h2>今月の数字 <small>9 月 1 日〜今日 ・ 先月同期間比</small></h2>
+      <div class="kpi">
+        <div class="c"><div class="k">相談件数（確定）</div><div class="v">6<small>件</small></div><div class="d"><b>▲ 2</b> 先月同期 4 件</div>
+          <div class="spark"><i style="height:30%"></i><i style="height:10%"></i><i style="height:40%"></i><i style="height:20%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:30%"></i><i style="height:70%"></i><i style="height:40%"></i><i style="height:80%"></i><i style="height:60%"></i><i class="now" style="height:100%"></i></div></div>
+        <div class="c"><div class="k">売上</div><div class="v">¥42,000</div><div class="d"><b>▲ ¥12,000</b> 確定 ¥36,000 ・ 見込み ¥6,000</div>
+          <div class="spark"><i style="height:20%"></i><i style="height:20%"></i><i style="height:40%"></i><i style="height:40%"></i><i style="height:40%"></i><i style="height:60%"></i><i style="height:60%"></i><i style="height:70%"></i><i style="height:70%"></i><i style="height:80%"></i><i style="height:90%"></i><i class="now" style="height:100%"></i></div></div>
+        <div class="c"><div class="k">プロフィール閲覧</div><div class="v">312<small>回</small></div><div class="d"><b>▲ 38%</b> 一覧からの流入が増加</div>
+          <div class="spark"><i style="height:40%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:45%"></i><i style="height:55%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:75%"></i><i style="height:70%"></i><i style="height:85%"></i><i style="height:80%"></i><i class="now" style="height:100%"></i></div></div>
+        <div class="c"><div class="k">お気に入り登録</div><div class="v">27<small>人</small></div><div class="d"><b>▲ 5</b> 閲覧 → お気に入り 8.7%</div>
+          <div class="spark"><i style="height:20%"></i><i style="height:20%"></i><i style="height:30%"></i><i style="height:30%"></i><i style="height:40%"></i><i style="height:40%"></i><i style="height:55%"></i><i style="height:55%"></i><i style="height:70%"></i><i style="height:80%"></i><i style="height:90%"></i><i class="now" style="height:100%"></i></div></div>
+      </div>
+      <div class="cmp" style="margin-top:10px">
+        <div class="c"><b>★ 4.8 <span style="font-size:11px;color:var(--n500)">（12 件）</span></b>レビュー平均。直近 5 件はすべて ★5</div>
+        <div class="c"><b>3.2 時間</b>リクエストへの平均返答時間。アメリカのエキスパート中央値 9 時間</div>
+        <div class="c"><b>92%</b>承諾率。辞退 1 件（日程都合）</div>
+      </div>
+    </section>
+
+    <!-- 3. 目標とマイルストーン（頑張りたくなる要素） -->
+    <section class="sec two">
+      <div class="card goal">
+        <h2 style="margin-bottom:4px">今月の目標 <a class="edit" href="#">目標を変える</a></h2>
+        <div class="row"><b>6</b><span>/ 10 件の相談</span><span style="margin-left:auto">あと 4 件 ・ 残り 24 日</span></div>
+        <div class="bar"><i></i></div>
+        <p>このペースなら <b>9 月 26 日</b> 頃に達成見込み。今週の空き枠を 3 → 6 に増やすと、過去の実績から相談が <b>+1.5 件</b> 見込めます。</p>
+        <button class="btn" style="margin-top:8px">空き枠を追加する</button>
+      </div>
+      <div class="card">
+        <h2 style="margin-bottom:10px">マイルストーン</h2>
+        <div class="badges">
+          <div class="badge"><div class="ic">✓</div><b>在籍確認済み</b><small>5/18</small></div>
+          <div class="badge"><div class="ic">1</div><b>初めての相談</b><small>6/02</small></div>
+          <div class="badge"><div class="ic">★</div><b>初レビュー ★5</b><small>6/04</small></div>
+          <div class="badge"><div class="ic">10</div><b>相談 10 件</b><small>8/21</small></div>
+          <div class="badge off"><div class="ic">25</div><b>相談 25 件</b><small>あと 11 件</small></div>
+          <div class="badge off"><div class="ic">◎</div><b>返答 24h 以内 ×10</b><small>あと 3 回</small></div>
+          <div class="badge off"><div class="ic">♥</div><b>お気に入り 50 人</b><small>あと 23 人</small></div>
+          <div class="badge off"><div class="ic">∞</div><b>継続プラン初契約</b><small>—</small></div>
+        </div>
+        <div class="next"><b>次の一歩:</b> 返答 24 時間以内をあと 3 回続けると「返答が早い」バッジが公開プロフィールに付きます。</div>
+      </div>
+    </section>
+
+    <!-- 4. 予定と最近のレビュー -->
+    <section class="sec two">
+      <div>
+        <h2>これからの予定 <small>日本時間</small></h2>
+        <div class="list">
+          <div class="item"><div class="t">9/8<small>月 21:00</small></div><div>田中 さん ・ MBA出願の作戦会議（30分）<div class="m">事前質問あり ・ Zoom</div></div><span class="tag">確定</span></div>
+          <div class="item"><div class="t">9/10<small>水 07:30</small></div><div>佐藤 さん ・ MBAエッセイ骨子レビュー（60分）<div class="m">継続プラン 2 回目</div></div><span class="tag">確定</span></div>
+          <div class="item"><div class="t">9/12<small>金 22:00</small></div><div>鈴木 さん ・ MBA出願の作戦会議（30分）<div class="m">5 時間前にリクエスト</div></div><span class="tag req">要返答</span></div>
+        </div>
+        <p class="fn">過去の相談と売上の明細は「予定・履歴」「売上・振込」へ。</p>
+      </div>
+      <div>
+        <h2>最近のレビュー</h2>
+        <div class="list">
+          <div class="rev"><span class="st">★★★★★</span> <small>9/3 ・ 30分相談</small><p>推薦者の選び方が具体的で、依頼メールの文面まで一緒に作ってもらえました。</p></div>
+          <div class="rev"><span class="st">★★★★★</span> <small>8/28 ・ 継続プラン</small><p>毎回「次に何をやるか」が明確になるので迷わなくなりました。</p></div>
+        </div>
+        <p class="fn">レビューは公開プロフィールにもそのまま表示されます。</p>
+      </div>
+    </section>
+
+    <div class="legend">
+      <b>データの出どころ（実装メモ）</b><br />
+      いま DB にある: 相談件数・売上（consultation_bookings の status × price_jpy、plan_enrollments の monthly_price）、レビュー（reviews）、お気に入り登録（user_follows）、未読（chat）、空き枠（expert_availability）、プロフィール完成度（completeness）、承諾率・返答時間（bookings の requested → accepted の時刻差）。<br />
+      新たに計測が必要: <b>プロフィール閲覧数</b>（/experts/[id] の表示を日次で集計するテーブル。本人と bot は除外）、<b>一覧での表示回数</b>（任意）。目標値（今月の相談件数）はユーザー設定として users に 1 列。<br />
+      「アメリカのエキスパート中央値」のような比較は同じ国のエキスパートの集計から算出（個人は特定しない）。
+    </div>
+  </main>
+</div>
+</body>
+</html>
