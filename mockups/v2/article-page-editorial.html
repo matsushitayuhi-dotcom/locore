@@ -29,9 +29,7 @@
   /* 本文 */
   .body { margin-top:36px; font-size:16.5px; line-height:2; color:var(--n800); }
   .body p { margin:0 0 1.4em; }
-  .body h2 { font-size:25px; line-height:1.45; letter-spacing:-.015em; font-weight:700; margin:3em 0 .9em; color:var(--n900); display:flex; align-items:baseline; gap:14px; }
-  .body h2 .n { font-size:15px; font-weight:700; color:var(--n400); font-variant-numeric:tabular-nums; letter-spacing:.04em; flex:none; }
-  .body h2 .n::after { content:""; display:inline-block; width:22px; height:1px; background:var(--n300); vertical-align:middle; margin-left:12px; }
+  .body h2 { font-size:24px; line-height:1.45; letter-spacing:-.015em; font-weight:700; margin:3em 0 .9em; color:var(--n900); }
   .body h3 { font-size:17.5px; font-weight:700; margin:2.2em 0 .6em; }
   .body ul { padding-left:1.2em; margin:0 0 1.4em; }
   .body li { margin:.35em 0; }
@@ -118,12 +116,6 @@
   .tl { margin:1.6em 0 2em; padding:22px 24px; background:var(--n100); border-radius:12px; }
   .tl b { display:block; font-size:11.5px; letter-spacing:.18em; color:var(--n500); margin-bottom:10px; }
   .tl ul { margin:0; padding-left:1.2em; font-size:15px; line-height:1.9; color:var(--n800); }
-  .steps { margin:1.6em 0 2em; padding:0; list-style:none; counter-reset:st; }
-  .steps li { counter-increment:st; display:grid; grid-template-columns:44px 1fr; gap:14px; padding:16px 0; border-top:1px solid var(--hair); }
-  .steps li:last-child { border-bottom:1px solid var(--hair); }
-  .steps li::before { content:counter(st, decimal-leading-zero); font-size:22px; font-weight:700; color:var(--n300); font-variant-numeric:tabular-nums; line-height:1; padding-top:4px; }
-  .steps li b { display:block; font-size:16px; margin-bottom:2px; }
-  .steps li span { font-size:14.5px; line-height:1.8; color:var(--n700); }
   .check { margin:1.6em 0 2em; padding:0; list-style:none; }
   .check li { display:flex; gap:12px; align-items:flex-start; padding:9px 0; font-size:15.5px; line-height:1.7; }
   .check li::before { content:""; width:18px; height:18px; border:1.5px solid var(--n900); border-radius:5px; flex:none; margin-top:5px; }
@@ -160,7 +152,39 @@
   .series a small { display:block; font-size:11px; color:var(--n500); letter-spacing:.1em; margin-bottom:4px; }
   .series a.next { text-align:right; }
   .mobilebar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--hair); padding:10px 16px; display:none; align-items:center; gap:10px; }
-  @media (max-width:1000px) { .page { grid-template-columns:1fr; } .page > * { grid-column:1; } .toc { display:none; } .mobilebar { display:flex; } h1 { font-size:30px; } }
+  @media (max-width:1000px) { .page { grid-template-columns:1fr; } .page > * { grid-column:1; } .toc, .note { display:none; } .mobilebar { display:flex; } h1 { font-size:30px; } }
+  /* ===== スマホ（〜640px）: 業界標準に合わせる。本文 16px / 行間 1.85、H1 26px、H2 20px、H3 17px、左右 20px ===== */
+  @media (max-width:640px) {
+    .page { padding:28px 20px 120px; }
+    .kicker { font-size:11px; }
+    h1 { font-size:26px; line-height:1.38; letter-spacing:-.02em; margin-top:12px; }
+    .sub { font-size:15.5px; line-height:1.7; margin-top:12px; }
+    .byline { flex-wrap:wrap; gap:8px 10px; font-size:12px; margin-top:20px; }
+    .byline .meta { margin-left:0; width:100%; padding-left:46px; }
+    .hero { margin-top:24px; }
+    .lead { font-size:17px; line-height:1.85; margin-top:28px; }
+    .body { font-size:16px; line-height:1.85; margin-top:24px; }
+    .body h2 { font-size:20px; margin:2.4em 0 .8em; }
+    .body h3 { font-size:17px; }
+    .body blockquote { font-size:17px; padding-left:16px; margin:1.8em 0; }
+    .body table { font-size:13.5px; }
+    .aside { font-size:14.5px; }
+    .mid { flex-wrap:wrap; gap:10px 12px; }
+    .mid a { margin-left:44px; }
+    .end { grid-template-columns:1fr; gap:14px; margin-top:56px; }
+    .end .av { width:64px; height:64px; font-size:20px; }
+    .end h3 { font-size:20px; }
+    .lc { grid-template-columns:1fr 112px; }
+    .lc .t { font-size:14px; }
+    .lc.expert { grid-template-columns:72px 1fr; }
+    .pc { grid-template-columns:1fr; gap:16px; }
+    .num { gap:14px; }
+    .num b { font-size:22px; }
+    .term { grid-template-columns:1fr; gap:2px 0; }
+    .term dd { margin-bottom:10px; }
+    .series { grid-template-columns:1fr; }
+    .kit-h b { font-size:18px; }
+  }
   .note { grid-column:1; grid-row:8; font-size:11.5px; line-height:1.7; color:var(--n400); position:sticky; top:32px; align-self:start; }
 </style>
 </head>
@@ -182,7 +206,7 @@
   <div class="note">左は空ける。目次は右。<br>線は「罫 1 本」までにして、色は黒・グレー・白＋ライム 1 か所。</div>
 
   <article class="body">
-    <h2 id="h1"><span class="n">01</span>罠 1 — 実績の列挙</h2>
+    <h2 id="h1">罠 1 — 実績の列挙</h2>
     <p>日本の職務経歴書の感覚でプロジェクトを並べると、審査側には何も残りません。エッセイで見られているのは実績の大きさではなく、意思決定の理由と、そこからの変化です。</p>
     <ul>
       <li>「何をしたか」ではなく「なぜそう決めたか」を先に書く</li>
@@ -197,7 +221,7 @@
       <a href="#">相談する →</a>
     </div>
 
-    <h2 id="h2"><span class="n">02</span>罠 2 — 謙遜</h2>
+    <h2 id="h2">罠 2 — 謙遜</h2>
     <p>文化的にどうしても「チームのおかげ」と書きたくなりますが、adcom が知りたいのはあなた個人が何を判断し、何を動かしたか。主語を I に戻す作業が最初のドラフトの半分を占めました。</p>
     <div class="aside"><b>やること</b>「私たちは」で始まる段落を数えて、半分以下にする。残りは「私は」に書き換えるか、削る。</div>
     <h3>直す前・直した後</h3>
@@ -207,12 +231,12 @@
       <tr><td>上司の指導のもと、業務改善に取り組んだ</td><td>週次の会議を廃止し、代わりに私が 1 対 1 を 12 人と回した</td></tr>
     </table>
 
-    <h2 id="h3"><span class="n">03</span>罠 3 — Why this school の浅さ</h2>
+    <h2 id="h3">罠 3 — Why this school の浅さ</h2>
     <p>ランキングやブランドではなく、その学校の具体的な授業・クラブ・プログラムと自分のゴールを接続できているか。ここは在校生に聞くのが一番早いです。</p>
     <figure class="fig"><div class="img"></div><p class="cap">出願前に作った「授業 × ゴール」の対応表（一部）。授業名は実在のもので、シラバスの URL まで控えた。</p></figure>
     <div class="aside"><b>注意</b>学校の公式サイトの文言をそのまま引用すると、読み手にはすぐ分かります。授業を取った人の言葉で書く。</div>
 
-    <h2 id="h4"><span class="n">04</span>出願スケジュールの目安</h2>
+    <h2 id="h4">出願スケジュールの目安</h2>
     <table>
       <tr><th>時期</th><th>やること</th><th style="text-align:right">費用の目安</th></tr>
       <tr><td>5〜7 月</td><td>GMAT / GRE、推薦者に打診</td><td class="num">¥120,000</td></tr>
@@ -236,26 +260,19 @@
   <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">1. この記事で分かること</b> — 冒頭に置く要点 3〜5 行。検索から来た人の離脱を止める</p>
   <div class="tl"><b>この記事で分かること</b><ul><li>日本人が MBA エッセイで最初にやりがちな 3 つの書き方</li><li>直す順番と、直す前後の実例</li><li>出願スケジュールと費用の目安</li></ul></div>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">2. 手順（ステップ）</b> — 出願・ビザ・家探しなど「順番がある」話に。番号を大きく、本文は 2 行まで</p>
-  <ol class="steps">
-    <li><b>推薦者に打診する（出願の 4 か月前）</b><span>上司と教授に 1 人ずつ。依頼メールには締切・学校名・自分が書いてほしい 3 点を添える。</span></li>
-    <li><b>エッセイの第 1 稿を書く</b><span>完成度は問わない。「私は」で始まる段落を数えるところから。</span></li>
-    <li><b>在校生に壁打ちする</b><span>構成の段階で 1 回。書き終えてからでは直せる範囲が狭い。</span></li>
-  </ol>
-
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">3. チェックリスト</b> — 持ち物・提出書類・出発前の確認に</p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">2. チェックリスト</b> — 持ち物・提出書類・出発前の確認に</p>
   <ul class="check"><li class="on">パスポート（有効期限が入学から 6 か月以上）</li><li class="on">合格通知書（原本）と I-20</li><li>SEVIS 費用の支払い控え</li><li>海外送金の上限額を銀行に確認</li></ul>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">4. Q&amp;A（よくある質問）</b> — 開閉式。記事の末尾か、見出しごとの補足に</p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">3. Q&amp;A（よくある質問）</b> — 開閉式。記事の末尾か、見出しごとの補足に</p>
   <div class="faq">
     <details open><summary>GMAT と GRE、どちらで出すべき？</summary><p>学校が指定しない限りどちらでも。数学が得意なら GRE の方が伸びやすい人が多いです。私は GMAT 690 → GRE 換算で出しました。</p></details>
     <details><summary>推薦状は日本語で書いてもらってもいい？</summary><p>翻訳を添えれば可の学校が多いですが、推薦者本人の英語で書いてもらう方が信頼されます。</p></details>
   </div>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">5. 用語</b> — 留学特有の言葉（adcom、SoP、I-20 …）の短い解説。左に語、右に説明</p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">4. 用語</b> — 留学特有の言葉（adcom、SoP、I-20 …）の短い解説。左に語、右に説明</p>
   <dl class="term"><dt>adcom</dt><dd>Admissions Committee。出願書類を審査する入学審査委員会。</dd><dt>Why this school</dt><dd>その学校を選ぶ理由を問うエッセイ設問。授業名・教授名まで具体的に書くのが定石。</dd><dt>Round 1 / 2</dt><dd>出願締切の回。R1 は 9 月、R2 は 1 月が多い。</dd></dl>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">6. タイムライン</b> — 出願から渡航までの流れ。縦の線と点だけ</p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">5. タイムライン</b> — 出願から渡航までの流れ。縦の線と点だけ</p>
   <ul class="tline">
     <li><b>2024.05</b>推薦者に打診。GMAT の勉強を再開</li>
     <li><b>2024.08</b>エッセイ第 1 稿。在校生 2 人に壁打ち</li>
@@ -264,16 +281,16 @@
     <li><b>2025.08</b>渡米。Cambridge に入居</li>
   </ul>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">7. 良い点・気になる点（比較）</b> — 学校・寮・保険などの比較に。表より読みやすい 2 列</p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">6. 良い点・気になる点（比較）</b> — 学校・寮・保険などの比較に。表より読みやすい 2 列</p>
   <div class="pc"><div><b>良い点</b><ul><li>ケース中心で議論の量が圧倒的</li><li>同級生の業種が広い</li><li>奨学金の枠が大きい</li></ul></div><div><b>気になる点</b><ul><li>学費と生活費で年 1,400 万円前後</li><li>冬が長い</li><li>就活が早く始まる</li></ul></div></div>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">8. 数字の見出し</b> — 費用・期間・件数を 3 つ並べる。本文で長く説明する前に置く</p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">7. 数字の見出し</b> — 費用・期間・件数を 3 つ並べる。本文で長く説明する前に置く</p>
   <div class="num"><div><b>¥1,400 万</b><small>1 年の学費＋生活費（2025 年・ボストン）</small></div><div><b>4 か月</b><small>推薦者打診から提出まで</small></div><div><b>2 / 2 校</b><small>出願した学校と合格した学校</small></div></div>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">9. 先輩のひとこと（経験メモ）</b> — 本文の一般論に、書き手の実体験を差し込む。ライムはここに使ってよい</p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">8. 先輩のひとこと（経験メモ）</b> — 本文の一般論に、書き手の実体験を差し込む。ライムはここに使ってよい</p>
   <div class="memo"><b>私の場合</b>第 1 稿は 3 週間で書いて、その後 12 回直しました。一番効いたのは、母に日本語で読んでもらって「あなたが何をしたか分からない」と言われたことです。</div>
 
-  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">10. 脚注・更新日・前後の記事</b></p>
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">9. 脚注・更新日・前後の記事</b></p>
   <p class="body" style="margin:0;font-size:15.5px">出願料は 2026 年 9 月時点の公式サイトの金額です<sup>1</sup>。為替は 1 ドル 150 円で計算しています<sup>2</sup>。</p>
   <div class="fn">1. HBS Admissions, Application Fee（2026-09-01 閲覧）<br>2. 三菱 UFJ 銀行 TTM、2026-09-01</div>
   <p class="upd">最終更新: 2026 年 9 月 1 日 · 初出: 2026 年 3 月 21 日</p>

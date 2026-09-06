@@ -107,3 +107,30 @@ embed:     { url, provider: 'youtube' | 'gmap' | 'x' | 'instagram' | 'tiktok' | 
 ```
 
 執筆側は「段落に URL を貼る → 自動でブロック化」、表示側はブロックごとの React コンポーネント（Prose 内で同じ幅）。既存記事の本文（プレーンテキスト）は paragraph に分割して読む。
+
+## 6. 追記（2026-09-07）: スマホの標準サイズと部品の整理
+
+### 6.1 スマホ（〜640px）の文字サイズ — 業界標準に合わせる
+
+| 要素 | PC（640px カラム） | スマホ | 根拠 |
+| --- | --- | --- | --- |
+| 本文 | 16.5px / 行間 2.0 | **16px / 行間 1.85** | Google 推奨と日本の主要サイトの最頻値が 16px、行間は 1.6〜2.0 で最頻 1.8。Medium・Substack は 16〜18px |
+| タイトル（H1） | 40px | **26px** | スマホの記事タイトルは 18〜28px で最頻 24px。H1 24〜32px の範囲の中央 |
+| H2 | 24px | **20px** | H2 20〜28px の下限（本文との差を 4px に抑えて詰まりを防ぐ） |
+| H3 | 17.5px | **17px** | H3 18〜24px の下限より少し小さく（本文 16px との差 1px＋太字で区別） |
+| サブタイトル / リード | 18 / 19px | **15.5 / 17px** | 本文より 1〜2 段階だけ大きく |
+| 引用 | 18.5px | 17px | 本文より少しだけ大きく |
+| 表 | 14.5px | 13.5px | 14px 未満は 1 段階まで。列が多いものは横スクロール |
+| キャプション・脚注 | 11.5〜12.5px | 同じ | 12px 前後が下限 |
+| 左右の余白 | — | **20px** | 16〜24px の中央。画像・埋め込みは余白の内側いっぱい |
+| 2 列の部品（良い点・気になる点、用語、前後の記事） | 2 列 | **1 列** | 320〜390px 幅では 2 列は読めない |
+
+出典: [Font Size Guidelines for Responsive Websites（Learn UI Design）](https://www.learnui.design/blog/mobile-desktop-website-font-size-guidelines.html)、[Web Font Size Guide: Body, Headings, A11y](https://madegooddesigns.com/web-font-size-guide/)、[What Font Size Should Body Text Be? 16px Minimum](https://www.greadme.com/blog/seo/best-font-sizes-for-readability-complete-guide)、[Typography Matters（Substack）](https://substackcourse.com/typography-matters-choosing-the-right-font-for-your-substack-articles/)、[スマホの文字サイズと行間の最適値](https://omniweb.jp/74-2/)、[【2026年最新】Webデザインのフォントサイズ完全ガイド](https://withcode.tech/media/webdesign-fontsize-optimization-description/)、[フォントサイズ・行間の早見表（TANE-be）](https://tane-be.co.jp/knowledge/web-design/2601/)
+
+実装では px ではなく rem（本文 1rem = 16px）で書き、ブラウザの文字サイズ設定に追従させる。
+
+### 6.2 部品の整理（2026-09-07 の決定）
+
+- **手順（ステップ）は廃止**。順番のある話はタイムラインで書く
+- **H2 の番号（01, 02 …）は既定でなし**。付けたい記事だけ執筆側で ON にする（ブロックの属性）
+- 残す部品: この記事で分かること / チェックリスト / Q&A / 用語 / タイムライン / 良い点・気になる点 / 数字の見出し / 先輩のひとこと / 脚注・更新日・前後の記事、＋ リンクカード 3 種と埋め込み
