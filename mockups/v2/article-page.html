@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>記事ページ案 — MBAエッセイ、日本人がいちばん最初につまずく3つの罠</title>
+<style>
+  :root { --lime:#A8E01C; --lime-700:#5E8B0E; --lime-100:#EEF9CF; --lime-50:#F6FCE3; --n900:#18181b; --n800:#27272a; --n700:#3f3f46; --n500:#71717a; --n400:#a1a1aa; --n200:#e4e4e7; --n100:#f4f4f5; --border:#e4e4e7; --amber-bg:#fff7e6; --amber:#92400e; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; color:var(--n900); font-family:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif; font-feature-settings:"palt"; }
+  .top { background:var(--n900); color:#fff; height:44px; display:flex; align-items:center; padding:0 20px; font-weight:700; }
+  .top b { color:var(--lime); }
+  .wrap { max-width:1080px; margin:0 auto; padding:28px 24px 120px; display:grid; grid-template-columns: 1fr 660px 1fr; column-gap:32px; }
+  .wrap > * { grid-column: 2; }
+  .crumb { font-size:12px; color:var(--n500); }
+  .crumb a { color:inherit; text-decoration:none; }
+  .chips { margin-top:14px; display:flex; gap:6px; }
+  .chip { font-size:11.5px; font-weight:700; border:1px solid var(--n900); border-radius:999px; padding:3px 10px; }
+  .chip.soft { border-color:var(--border); color:var(--n700); font-weight:600; }
+  h1 { font-size:30px; line-height:1.4; letter-spacing:-.01em; margin:12px 0 0; }
+  .sub { font-size:16px; color:var(--n500); line-height:1.7; margin:10px 0 0; }
+  .author { display:flex; align-items:center; gap:10px; margin-top:16px; font-size:12.5px; color:var(--n700); flex-wrap:wrap; }
+  .author .av { width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,#2b3a12,#141513); color:var(--lime); display:grid; place-items:center; font-weight:700; }
+  .author b { display:block; font-size:13.5px; color:var(--n900); }
+  .author .v { color:var(--lime-700); font-weight:700; }
+  .author .meta { margin-left:auto; color:var(--n400); font-size:12px; }
+  .share { display:flex; gap:6px; margin-top:12px; }
+  .share span { width:30px; height:30px; border:1px solid var(--border); border-radius:999px; display:grid; place-items:center; font-size:11px; color:var(--n700); }
+  .hero { margin-top:18px; aspect-ratio:16/9; border-radius:12px; background:linear-gradient(135deg,#1f1f24 0%,#3f3f46 60%,#71717a 100%); position:relative; }
+  .hero::after { content:"アイキャッチ（任意・無ければ出さない）"; position:absolute; right:10px; bottom:8px; font-size:10px; color:#fff; background:rgba(0,0,0,.5); padding:2px 6px; border-radius:999px; }
+  .lead { margin-top:22px; font-size:17px; line-height:1.9; color:var(--n800); border-left:3px solid var(--lime); padding-left:16px; }
+  .body { margin-top:28px; font-size:16.5px; line-height:1.9; color:var(--n800); }
+  .body p { margin:0 0 1.2em; }
+  .body h2 { font-size:20px; margin:2.4em 0 .8em; padding-left:12px; border-left:4px solid var(--lime); line-height:1.5; color:var(--n900); }
+  .body h3 { font-size:17px; margin:1.8em 0 .6em; color:var(--n900); }
+  .body ul, .body ol { padding-left:1.4em; margin:0 0 1.2em; }
+  .body li { margin:.3em 0; }
+  .body blockquote { margin:1.4em 0; padding:12px 16px; border-left:3px solid var(--lime); background:var(--n100); border-radius:0 10px 10px 0; color:var(--n700); }
+  .box { border-radius:12px; padding:14px 16px; margin:1.4em 0; font-size:15px; line-height:1.8; }
+  .box.point { background:var(--lime-50); }
+  .box.caution { background:var(--amber-bg); color:var(--amber); }
+  .box b { display:block; font-size:11px; letter-spacing:.14em; margin-bottom:4px; }
+  .body table { border-collapse:collapse; width:100%; font-size:14px; margin:1.2em 0; }
+  .body th, .body td { border:1px solid var(--border); padding:8px 10px; text-align:left; }
+  .body th { background:var(--n100); font-weight:700; }
+  .body td.num { font-variant-numeric:tabular-nums; text-align:right; }
+  .fig { margin:1.6em 0; }
+  .fig .img { aspect-ratio:16/9; border-radius:12px; background:linear-gradient(135deg,#eef2f7,#cfd8e6); }
+  .fig figcaption { font-size:12px; color:var(--n500); margin-top:6px; }
+  .body a { color:var(--n900); text-decoration:underline; text-underline-offset:3px; }
+  /* 途中の小さな著者カード */
+  .mid { margin:2.2em 0; border:1px solid var(--border); border-radius:14px; padding:14px 16px; display:grid; grid-template-columns:44px 1fr auto; gap:12px; align-items:center; background:#fff; }
+  .mid .av { width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#2b3a12,#141513); color:var(--lime); display:grid; place-items:center; font-weight:700; }
+  .mid b { font-size:13.5px; display:block; }
+  .mid small { font-size:12px; color:var(--n500); }
+  .btn { background:var(--lime); color:var(--n900); border:0; border-radius:999px; padding:10px 16px; font-weight:800; font-size:13px; white-space:nowrap; }
+  .btn.dark { background:var(--n900); color:#fff; }
+  /* 右レール目次 */
+  .toc { grid-column:3; grid-row:9; position:sticky; top:24px; align-self:start; font-size:12px; color:var(--n500); }
+  .toc b { display:block; font-size:10px; letter-spacing:.16em; color:var(--n400); margin-bottom:8px; }
+  .toc a { display:block; padding:4px 0 4px 10px; border-left:2px solid var(--n200); color:inherit; text-decoration:none; }
+  .toc a.on { border-color:var(--lime); color:var(--n900); font-weight:700; }
+  /* 末尾の著者カード */
+  .end { margin-top:44px; border:1px solid var(--border); border-radius:16px; padding:20px; display:grid; grid-template-columns:96px 1fr; gap:18px; }
+  .end .av { width:96px; height:96px; border-radius:14px; background:linear-gradient(135deg,#2b3a12,#141513); color:var(--lime); display:grid; place-items:center; font-weight:700; font-size:28px; }
+  .end h3 { margin:0; font-size:17px; }
+  .end .l { font-size:13px; color:var(--n700); margin-top:2px; }
+  .end .tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .end .tags span { font-size:11.5px; border:1px solid var(--border); border-radius:999px; padding:3px 9px; }
+  .end .menus { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+  .end .menu { border:1px solid var(--border); border-radius:10px; padding:10px 12px; font-size:13px; }
+  .end .menu small { display:block; color:var(--n500); font-size:11.5px; }
+  .end .cta { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .end .cta small { font-size:11.5px; color:var(--n500); }
+  .rel { margin-top:36px; }
+  .rel h2 { font-size:15px; margin:0 0 10px; }
+  .rel .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .rel .card { border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+  .rel .card .img { aspect-ratio:16/9; background:linear-gradient(135deg,#eef2f7,#cfd8e6); }
+  .rel .card .t { padding:10px 12px; font-size:13px; font-weight:700; line-height:1.5; }
+  .rel .card .m { padding:0 12px 10px; font-size:11px; color:var(--n500); }
+  .mobilebar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--border); padding:10px 16px; display:none; align-items:center; gap:10px; }
+  @media (max-width:1000px) { .wrap { grid-template-columns:1fr; } .wrap > * { grid-column:1; } .toc { display:none; } .mobilebar { display:flex; } }
+  .note { grid-column:1; font-size:11px; color:var(--n400); position:sticky; top:24px; align-self:start; }
+</style>
+</head>
+<body>
+<div class="top">Lo<b>core</b>&nbsp;&nbsp;<span style="font-weight:400;font-size:12px;opacity:.7">記事ページ案（白基調・縦組みヒーロー・途中の著者カード・右レール目次）</span></div>
+<div class="wrap">
+  <div class="note">← 左は空ける（PC）。<br>Every は著者をここに置く案もある</div>
+
+  <nav class="crumb"><a href="#">読みもの</a> › <a href="#">MBA</a> › MBAエッセイ、日本人が…</nav>
+  <div class="chips"><span class="chip">MBA</span><span class="chip soft">アメリカ</span><span class="chip soft">エッセイ・出願書類</span></div>
+  <h1>MBAエッセイ、日本人がいちばん最初につまずく3つの罠</h1>
+  <p class="sub">実績の列挙・謙遜・浅い Why this school。2024 年出願で HBS と Wharton に受かるまでに直した順番で書きます。</p>
+  <div class="author">
+    <div class="av">里</div>
+    <div><b>高村 里奈</b>ハーバード・ビジネス・スクール 在学中 ・ <span class="v">✓ 在籍確認済み</span></div>
+    <div class="meta">2026.03.21 ・ 読了 6 分</div>
+  </div>
+  <div class="share"><span>X</span><span>in</span><span>⧉</span></div>
+  <div class="hero"></div>
+  <p class="lead">MBA 出願のエッセイで、日本人受験者が最初につまずくポイントはだいたい共通しています。私自身が 2024 年の出願でハマりかけ、合格者仲間と答え合わせをして見えてきた「3 つの罠」を、直した順番で書きます。</p>
+
+  <article class="body">
+    <h2 id="h1">罠 1: 実績の列挙</h2>
+    <p>日本の職務経歴書の感覚でプロジェクトを並べると、審査側には何も残りません。エッセイで見られているのは実績の大きさではなく、意思決定の理由と、そこからの変化です。</p>
+    <ul>
+      <li>「何をしたか」ではなく「なぜそう決めたか」を先に書く</li>
+      <li>数字は 1 段落に 1 つまで。多いほど印象が薄まる</li>
+      <li>失敗した判断を 1 つ入れると、残りの実績が立体的になる</li>
+    </ul>
+    <blockquote>「あなたが主語の文章を読みたい」— 添削してくれた HBS 2 年生の一言で、第 1 稿の半分を捨てました。</blockquote>
+
+    <div class="mid">
+      <div class="av">里</div>
+      <div><b>この記事を書いた先輩に相談できます</b><small>高村 里奈 ・ HBS 在学中 ・ 30 分 ¥6,000〜 ・ 直近の空き 9/10（水）</small></div>
+      <button class="btn">30 分で相談する</button>
+    </div>
+
+    <h2 id="h2">罠 2: 謙遜</h2>
+    <p>文化的にどうしても「チームのおかげ」と書きたくなりますが、adcom が知りたいのはあなた個人が何を判断し、何を動かしたか。主語を I に戻す作業が最初のドラフトの半分を占めました。</p>
+    <div class="box point"><b>POINT</b>「私たちは」で始まる段落を数えて、半分以下にする。残りは「私は」に書き換えるか、削る。</div>
+    <h3>直す前・直した後</h3>
+    <table>
+      <tr><th>直す前</th><th>直した後</th></tr>
+      <tr><td>チームで新規事業を立ち上げ、売上 3 億円を達成した</td><td>反対が多かった B 案を私が選び、根拠として 2 週間で顧客 40 社に会った</td></tr>
+      <tr><td>上司の指導のもと、業務改善に取り組んだ</td><td>週次の会議を廃止し、代わりに私が 1 対 1 を 12 人と回した</td></tr>
+    </table>
+
+    <h2 id="h3">罠 3: Why this school の浅さ</h2>
+    <p>ランキングやブランドではなく、その学校の具体的な授業・クラブ・プログラムと自分のゴールを接続できているか。ここは在校生に聞くのが一番早いです。</p>
+    <figure class="fig"><div class="img"></div><figcaption>私が出願前に作った「授業 × ゴール」の対応表（一部）。授業名は実在のもので、シラバスの URL まで控えた。</figcaption></figure>
+    <div class="box caution"><b>注意</b>学校の公式サイトの文言をそのまま引用すると、読み手にはすぐ分かります。授業を取った人の言葉で書く。</div>
+
+    <h2 id="h4">出願スケジュールの目安</h2>
+    <table>
+      <tr><th>時期</th><th>やること</th><th class="num">費用の目安</th></tr>
+      <tr><td>5〜7 月</td><td>GMAT / GRE、推薦者に打診</td><td class="num">¥120,000</td></tr>
+      <tr><td>8〜9 月</td><td>エッセイ第 1〜3 稿、在校生に壁打ち</td><td class="num">¥30,000</td></tr>
+      <tr><td>10〜12 月</td><td>Round 1 提出、面接練習</td><td class="num">¥60,000</td></tr>
+    </table>
+    <p>自分の職歴でどう書くべきかは人によって全く違います。ドラフト前の構成段階で一度壁打ちするのがおすすめです。</p>
+  </article>
+
+  <!-- 末尾の著者カード -->
+  <section class="end">
+    <div class="av">里</div>
+    <div>
+      <h3>高村 里奈</h3>
+      <div class="l">ハーバード・ビジネス・スクール（Harvard Business School）在学中 ・ アメリカ・ボストン ・ <span style="color:var(--lime-700);font-weight:700">✓ 在籍確認済み</span></div>
+      <div class="tags"><span>MBA エッセイ</span><span>GMAT・GRE</span><span>キャリア・職務経歴の整理</span><span>模擬面接</span></div>
+      <div class="menus">
+        <div class="menu">MBA出願の作戦会議（30分）<small>¥6,000 ・ 直近の空き 9/10（水）07:30〜</small></div>
+        <div class="menu">MBAエッセイ骨子レビュー（60分）<small>¥12,000</small></div>
+      </div>
+      <div class="cta"><button class="btn dark">この先輩に相談する</button><button class="btn" style="background:#fff;border:1px solid var(--n200)">プロフィールを見る</button><small>チャットでの事前相談は無料</small></div>
+    </div>
+  </section>
+
+  <section class="rel">
+    <h2>高村さんの他の記事</h2>
+    <div class="grid">
+      <div class="card"><div class="img"></div><div class="t">推薦状、誰に頼むかで 8 割決まる</div><div class="m">MBA ・ 2026.02</div></div>
+      <div class="card"><div class="img"></div><div class="t">私費 MBA の資金計画、奨学金 4 件の実際</div><div class="m">奨学金・費用 ・ 2026.01</div></div>
+      <div class="card"><div class="img"></div><div class="t">HBS 1 年目、平日のリアル</div><div class="m">現地生活 ・ 2025.11</div></div>
+    </div>
+  </section>
+  <section class="rel">
+    <h2>同じテーマの記事</h2>
+    <div class="grid">
+      <div class="card"><div class="img"></div><div class="t">Wharton のエッセイで聞かれる「貢献」の正体</div><div class="m">MBA ・ 佐藤 さん</div></div>
+      <div class="card"><div class="img"></div><div class="t">GMAT 700 までにやめたこと</div><div class="m">MBA ・ 伊藤 さん</div></div>
+      <div class="card"><div class="img"></div><div class="t">社費と私費、出願書類で変わる 3 点</div><div class="m">MBA ・ 森 さん</div></div>
+    </div>
+  </section>
+
+  <aside class="toc">
+    <b>目次</b>
+    <a class="on" href="#h1">罠 1: 実績の列挙</a>
+    <a href="#h2">罠 2: 謙遜</a>
+    <a href="#h3">罠 3: Why this school の浅さ</a>
+    <a href="#h4">出願スケジュールの目安</a>
+  </aside>
+</div>
+<div class="mobilebar"><div style="font-size:12.5px"><b>高村 里奈</b> さんに相談<br><span style="color:var(--n500);font-size:11px">30 分 ¥6,000〜</span></div><button class="btn" style="margin-left:auto">相談する</button></div>
+</body>
+</html>
