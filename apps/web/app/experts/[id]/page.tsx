@@ -10,6 +10,8 @@ import { personJsonLd, jsonLdScriptText } from '@/lib/seo/jsonld';
 import { getSiteUrl } from '@/lib/seo/siteUrl';
 import { getResidentProfile } from '@/lib/residents/byId';
 import { getCurrentUser } from '@/lib/auth/current-user';
+import { isFollowing } from '@/lib/follow/actions';
+import { FavoriteExpertButton } from '@/components/experts/FavoriteExpertButton';
 import { CONSULTATION_TAG, topicLabel } from '@/lib/experts/constants';
 import { isExperienceOnly, specialtyLabel } from '@/lib/experts/specialties';
 import { EnrollmentChip } from '@/components/experts/ExpertCard';
@@ -111,6 +113,9 @@ export default async function ExpertDetailPage({
     getApprovedQualificationsByUser([profile.id]),
   ]);
   const qualifications = qualsMap.get(profile.id) ?? [];
+  // お気に入り（= フォロー）。本人には出さない
+  const isMe = me?.id === profile.id;
+  const favorited = me && !isMe ? await isFollowing(profile.id) : false;
   const specialties = specialtiesMap.get(profile.id) ?? [];
   const hasExperienceOnly = specialties.some(isExperienceOnly);
   // 在学中 / アルムナイ（留学特化）。正式ヘルパ lib/experts/enrollment.ts
@@ -319,6 +324,15 @@ export default async function ExpertDetailPage({
                       className="h-[20px] w-[20px] shrink-0 text-primary-700"
                       aria-label="在籍確認済み"
                     />
+                  ) : null}
+                  {!isMe ? (
+                    <span className="ml-auto">
+                      <FavoriteExpertButton
+                        targetUserId={profile.id}
+                        initialFavorited={favorited}
+                        viewerLoggedIn={!!me}
+                      />
+                    </span>
                   ) : null}
                 </h1>
                 {enrollment && schoolLabel ? (

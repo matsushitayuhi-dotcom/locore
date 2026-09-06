@@ -9,7 +9,7 @@ import {
   Menu,
   X,
   Search,
-  Bookmark,
+  Heart,
   Briefcase,
   PenSquare,
   MessageCircle,
@@ -17,17 +17,26 @@ import {
   Bell,
   Settings,
   Info,
+  BookOpen,
   CalendarCheck,
   CalendarClock,
   Inbox,
+  Sparkles,
 } from 'lucide-react';
 
 /**
  * グローバル左サイドメニュー。
  *
  * - ヘッダーのハンバーガーボタンで開閉
- * - 「見る」「駐在員」「アカウント」「Locore について」の 4 セクション
- * - 駐在員セクションは isWriter のときだけ表示
+ * - 2026-09-06 に並びを設計し直した（上ほど日常的に使うもの）:
+ *     1. さがす           エキスパートを探す
+ *     2. マイページ       マイ相談 / メッセージ / お気に入りのエキスパート（ログイン時）
+ *     3. エキスパート向け 相談リクエスト / 相談メニュー / 空き時間 / ブログを書く（isWriter 時。
+ *                         未登録のログインユーザーには「エキスパートとして参加」）
+ *     4. 設定             プロフィール編集 / 通知 / アカウント / ログアウト
+ *     5. Locore について  使い方 / Locore について（いちばん下）
+ *   重複していた「メッセージ」「プロフィール」（エキスパート向けと設定の両方にあった）は 1 か所に。
+ *   お気に入りは旧「保存ライブラリ」（記事・スポット）から「お気に入りのエキスパート」（/favorites）に。
  * - ナビゲーション後は自動で閉じる（pathname 変化を監視）
  * - 開いている間は body のスクロールをロック
  *
@@ -55,7 +64,9 @@ type MenuItem = {
 // 駐在員: ホーム / 場所 (※ /world) / アパート / 売買 / 求人 / イベント / 習い事 / 助け合い / 検索
 
 // 2026-09 (v2): エキスパート相談のナビに刷新。旧コンセプト（記事 / コミュニティ /
-// サービス / 地図）はナビから外して非表示にする（ページ自体は残す）。
+// サービス / 地図 / 保存ライブラリ）はナビから外して非表示にする（ページ自体は残す）。
+
+/** 1. さがす */
 const NAV_ITEMS: MenuItem[] = [
   {
     href: '/experts',
@@ -63,20 +74,9 @@ const NAV_ITEMS: MenuItem[] = [
     icon: Search,
     matchPrefix: '/experts',
   },
-  {
-    href: '/chat',
-    label: 'メッセージ',
-    icon: MessageCircle,
-    matchPrefix: '/chat',
-  },
-  {
-    href: '/about-service',
-    label: '使い方',
-    icon: Info,
-    matchPrefix: '/about-service',
-  },
 ];
 
+/** 2. マイページ（ログイン時） */
 const USER_ITEMS: MenuItem[] = [
   {
     href: '/bookings',
@@ -85,30 +85,37 @@ const USER_ITEMS: MenuItem[] = [
     matchPrefix: '/bookings',
   },
   {
-    href: '/library',
-    label: 'お気に入り',
-    icon: Bookmark,
-    matchPrefix: '/library',
+    href: '/chat',
+    label: 'メッセージ',
+    icon: MessageCircle,
+    matchPrefix: '/chat',
+  },
+  {
+    href: '/favorites',
+    label: 'お気に入りのエキスパート',
+    icon: Heart,
+    matchPrefix: '/favorites',
   },
 ];
 
+/** 3. エキスパート向け（isWriter 時）。メッセージ・プロフィール編集は他セクションと重複するので置かない */
 const WRITER_ITEMS: MenuItem[] = [
   {
+    href: '/bookings?tab=received',
+    label: '相談リクエスト',
+    icon: Inbox,
+  },
+  {
     href: '/settings/services',
-    label: '相談メニュー管理',
+    label: '相談メニュー',
     icon: Briefcase,
     matchPrefix: '/settings/services',
   },
   {
     href: '/settings/availability',
-    label: '空き時間管理',
+    label: '空き時間',
     icon: CalendarClock,
     matchPrefix: '/settings/availability',
-  },
-  {
-    href: '/bookings?tab=received',
-    label: '相談リクエスト',
-    icon: Inbox,
   },
   {
     href: '/writer/articles/new',
@@ -116,24 +123,13 @@ const WRITER_ITEMS: MenuItem[] = [
     icon: PenSquare,
     matchPrefix: '/writer/articles/new',
   },
-  {
-    href: '/chat',
-    label: 'メッセージ',
-    icon: MessageCircle,
-    matchPrefix: '/chat',
-  },
-  {
-    href: '/settings/profile',
-    label: 'プロフィール編集',
-    icon: User,
-    matchPrefix: '/settings/profile',
-  },
 ];
 
+/** 4. 設定 */
 const ACCOUNT_ITEMS: MenuItem[] = [
   {
     href: '/settings/profile',
-    label: 'プロフィール',
+    label: 'プロフィール編集',
     icon: User,
     matchPrefix: '/settings/profile',
   },
@@ -151,7 +147,14 @@ const ACCOUNT_ITEMS: MenuItem[] = [
   },
 ];
 
+/** 5. Locore について（いちばん下） */
 const ABOUT_ITEMS: MenuItem[] = [
+  {
+    href: '/about-service',
+    label: '使い方',
+    icon: BookOpen,
+    matchPrefix: '/about-service',
+  },
   {
     href: '/about',
     label: 'Locore について',
@@ -306,27 +309,17 @@ function DrawerPanel({
           aria-label="サイトナビゲーション"
           className="flex-1 overflow-y-auto px-2 py-3"
         >
-          {/* PC では SiteHeader 中央 nav と冗長だが、モバイルではここが唯一のナビ。 */}
-          <Section title="ナビゲーション">
+          {/* 1. さがす（PC では SiteHeader 中央 nav と冗長だが、モバイルではここが唯一のナビ） */}
+          <Section title="さがす">
             {NAV_ITEMS.map((it) => (
-              <NavLink
-                key={it.href}
-                item={it}
-                pathname={pathname}
-                badge={it.href === '/chat' ? unreadChatCount : 0}
-              />
-            ))}
-          </Section>
-
-          <Section title="あなたの本棚">
-            {USER_ITEMS.map((it) => (
               <NavLink key={it.href} item={it} pathname={pathname} />
             ))}
           </Section>
 
-          {viewerLoggedIn && isWriter ? (
-            <Section title="エキスパート向け">
-              {WRITER_ITEMS.map((it) => (
+          {/* 2. マイページ */}
+          {viewerLoggedIn ? (
+            <Section title="マイページ">
+              {USER_ITEMS.map((it) => (
                 <NavLink
                   key={it.href}
                   item={it}
@@ -335,20 +328,30 @@ function DrawerPanel({
                 />
               ))}
             </Section>
+          ) : null}
+
+          {/* 3. エキスパート向け */}
+          {viewerLoggedIn && isWriter ? (
+            <Section title="エキスパート向け">
+              {WRITER_ITEMS.map((it) => (
+                <NavLink key={it.href} item={it} pathname={pathname} />
+              ))}
+            </Section>
           ) : viewerLoggedIn ? (
             <Section title="エキスパート">
               <Link
                 href="/become-writer"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
+                className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
               >
-                <PenSquare className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
                 エキスパートとして参加
               </Link>
             </Section>
           ) : null}
 
+          {/* 4. 設定 / アカウント */}
           {viewerLoggedIn ? (
-            <Section title="アカウント">
+            <Section title="設定">
               {ACCOUNT_ITEMS.map((it) => (
                 <NavLink key={it.href} item={it} pathname={pathname} />
               ))}
@@ -365,21 +368,22 @@ function DrawerPanel({
             <Section title="アカウント">
               <Link
                 href="/auth/login"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
+                className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
               >
                 <User className="h-4 w-4" />
                 ログイン
               </Link>
               <Link
-                href="/auth/signup"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
+                href="/auth/signup?redirect_to=%2Fexperts"
+                className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
               >
-                <PenSquare className="h-4 w-4" />
-                サインアップ
+                <Sparkles className="h-4 w-4" />
+                無料ではじめる
               </Link>
             </Section>
           )}
 
+          {/* 5. Locore について（いちばん下） */}
           <Section title="Locore について">
             {ABOUT_ITEMS.map((it) => (
               <NavLink key={it.href} item={it} pathname={pathname} />
@@ -388,7 +392,7 @@ function DrawerPanel({
         </nav>
 
         <footer className="border-t border-border px-4 py-3 text-[10px] text-foreground/45">
-          © Locore — 在外邦人がつくる、もう一段深い旅
+          © Locore — 留学先の先輩に、30分から相談
         </footer>
       </aside>
     </>
