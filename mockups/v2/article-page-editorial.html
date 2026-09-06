@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>記事ページ案 B（エディトリアル）— MBAエッセイ、日本人がいちばん最初につまずく3つの罠</title>
+<style>
+  :root { --lime:#A8E01C; --lime-700:#5E8B0E; --n900:#18181b; --n800:#27272a; --n700:#3f3f46; --n500:#71717a; --n400:#a1a1aa; --n300:#d4d4d8; --n200:#e4e4e7; --n100:#f4f4f5; --hair:#ebebee; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; color:var(--n900); font-family:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif; font-feature-settings:"palt"; -webkit-font-smoothing:antialiased; }
+  .top { background:var(--n900); color:#fff; height:44px; display:flex; align-items:center; padding:0 20px; font-weight:700; }
+  .top b { color:var(--lime); }
+  .page { max-width:1120px; margin:0 auto; padding:56px 32px 140px; display:grid; grid-template-columns:200px 640px 1fr; column-gap:56px; }
+  .page > * { grid-column:2; }
+  /* 冒頭: 線なし。文字の大きさと余白だけで階層をつくる */
+  .kicker { font-size:11.5px; letter-spacing:.18em; color:var(--n500); text-transform:uppercase; }
+  .kicker b { color:var(--n900); font-weight:700; letter-spacing:.06em; }
+  h1 { font-size:40px; line-height:1.32; letter-spacing:-.025em; font-weight:700; margin:18px 0 0; }
+  .sub { font-size:18px; line-height:1.75; color:var(--n700); margin:18px 0 0; font-weight:400; }
+  .byline { margin-top:28px; padding-top:18px; border-top:1px solid var(--hair); display:flex; align-items:center; gap:12px; font-size:12.5px; color:var(--n500); }
+  .byline .av { width:36px; height:36px; border-radius:999px; background:linear-gradient(135deg,#2b3a12,#141513); color:var(--lime); display:grid; place-items:center; font-weight:700; font-size:13px; }
+  .byline b { color:var(--n900); font-weight:700; font-size:13.5px; }
+  .byline .sep { color:var(--n300); }
+  .byline .meta { margin-left:auto; }
+  .hero { margin:36px 0 0; aspect-ratio:3/2; background:#efefef; border-radius:4px; }
+  .cap { font-size:11.5px; color:var(--n400); margin-top:8px; }
+  .lead { margin-top:44px; font-size:19px; line-height:1.85; color:var(--n800); }
+  .lead::first-letter { font-weight:700; }
+  /* 本文 */
+  .body { margin-top:36px; font-size:16.5px; line-height:2; color:var(--n800); }
+  .body p { margin:0 0 1.4em; }
+  .body h2 { font-size:24px; line-height:1.45; letter-spacing:-.015em; font-weight:700; margin:3em 0 .9em; color:var(--n900); }
+  .body h2 .n { display:block; font-size:11.5px; letter-spacing:.18em; color:var(--n500); font-weight:600; margin-bottom:10px; }
+  .body h3 { font-size:17.5px; font-weight:700; margin:2.2em 0 .6em; }
+  .body ul { padding-left:1.2em; margin:0 0 1.4em; }
+  .body li { margin:.35em 0; }
+  .body li::marker { color:var(--n400); }
+  /* 引用: 背景なし。大きめの文字と細い縦線 */
+  .body blockquote { margin:2.2em 0; padding:0 0 0 22px; border-left:1px solid var(--n900); font-size:18.5px; line-height:1.8; color:var(--n900); }
+  .body blockquote cite { display:block; font-style:normal; font-size:12.5px; color:var(--n500); margin-top:10px; }
+  /* ポイント: 囲まず、太い見出し語＋本文 */
+  .aside { margin:2em 0; padding:18px 0; border-top:1px solid var(--hair); border-bottom:1px solid var(--hair); font-size:15px; line-height:1.85; color:var(--n700); }
+  .aside b { display:block; font-size:11.5px; letter-spacing:.18em; color:var(--n900); margin-bottom:6px; }
+  /* 表: 横罫のみ */
+  .body table { width:100%; border-collapse:collapse; font-size:14.5px; margin:1.6em 0 2em; }
+  .body th { text-align:left; font-weight:600; color:var(--n500); font-size:12px; letter-spacing:.06em; padding:0 0 10px; border-bottom:1px solid var(--n900); }
+  .body td { padding:12px 0; border-bottom:1px solid var(--hair); vertical-align:top; line-height:1.7; }
+  .body td.num { font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+  .fig { margin:2.4em 0; }
+  .fig .img { aspect-ratio:16/10; background:#efefef; border-radius:4px; }
+  .body a { color:var(--n900); text-decoration:underline; text-decoration-color:var(--n300); text-underline-offset:4px; }
+  /* 途中の相談導線: 1 行。上下に細い罫だけ */
+  .mid { margin:3em 0; padding:18px 0; border-top:1px solid var(--hair); border-bottom:1px solid var(--hair); display:flex; align-items:center; gap:14px; font-size:13.5px; }
+  .mid .av { width:32px; height:32px; border-radius:999px; background:linear-gradient(135deg,#2b3a12,#141513); color:var(--lime); display:grid; place-items:center; font-weight:700; font-size:12px; }
+  .mid .t b { display:block; }
+  .mid .t small { color:var(--n500); font-size:12px; }
+  .mid a { margin-left:auto; font-weight:700; font-size:13px; color:var(--n900); text-decoration:none; border-bottom:2px solid var(--lime); padding-bottom:2px; white-space:nowrap; }
+  /* 右レール目次 */
+  .toc { grid-column:3; grid-row:8; position:sticky; top:32px; align-self:start; font-size:12.5px; line-height:1.6; color:var(--n500); padding-top:6px; }
+  .toc b { display:block; font-size:11px; letter-spacing:.18em; color:var(--n400); margin-bottom:12px; }
+  .toc a { display:block; padding:5px 0; color:inherit; text-decoration:none; }
+  .toc a.on { color:var(--n900); font-weight:700; }
+  /* 末尾: 著者。線で囲わず、大きな余白と 1 本の罫 */
+  .end { margin-top:72px; padding-top:32px; border-top:1px solid var(--n900); display:grid; grid-template-columns:88px 1fr; gap:24px; }
+  .end .av { width:88px; height:88px; border-radius:999px; background:linear-gradient(135deg,#2b3a12,#141513); color:var(--lime); display:grid; place-items:center; font-weight:700; font-size:26px; }
+  .end .k { font-size:11px; letter-spacing:.18em; color:var(--n500); }
+  .end h3 { margin:6px 0 0; font-size:22px; letter-spacing:-.01em; }
+  .end .l { font-size:13.5px; color:var(--n700); margin-top:4px; line-height:1.7; }
+  .end .l .v { color:var(--n900); font-weight:700; }
+  .end .tags { margin-top:12px; font-size:12.5px; color:var(--n500); }
+  .end .cta { display:flex; align-items:center; gap:18px; margin-top:22px; flex-wrap:wrap; }
+  .btn { background:var(--lime); color:var(--n900); border:0; border-radius:999px; padding:12px 20px; font-weight:800; font-size:13.5px; }
+  .end .cta .alt { font-size:13px; color:var(--n700); text-decoration:underline; text-underline-offset:4px; text-decoration-color:var(--n300); }
+  .end .cta small { font-size:12px; color:var(--n500); }
+  /* 関連: 画像なしのテキスト行。番号と細い罫 */
+  .rel { margin-top:64px; }
+  .rel h2 { font-size:11.5px; letter-spacing:.18em; color:var(--n500); margin:0 0 6px; font-weight:600; }
+  .rel .row { display:grid; grid-template-columns:36px 1fr auto; gap:14px; align-items:baseline; padding:16px 0; border-bottom:1px solid var(--hair); }
+  .rel .row .i { font-size:12px; color:var(--n400); font-variant-numeric:tabular-nums; }
+  .rel .row .t { font-size:16px; font-weight:700; letter-spacing:-.01em; line-height:1.5; }
+  .rel .row .t small { display:block; font-weight:400; font-size:12.5px; color:var(--n500); margin-top:2px; }
+  .rel .row .m { font-size:12px; color:var(--n400); white-space:nowrap; }
+  .mobilebar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--hair); padding:10px 16px; display:none; align-items:center; gap:10px; }
+  @media (max-width:1000px) { .page { grid-template-columns:1fr; } .page > * { grid-column:1; } .toc { display:none; } .mobilebar { display:flex; } h1 { font-size:30px; } }
+  .note { grid-column:1; grid-row:8; font-size:11.5px; line-height:1.7; color:var(--n400); position:sticky; top:32px; align-self:start; }
+</style>
+</head>
+<body>
+<div class="top">Lo<b>core</b>&nbsp;&nbsp;<span style="font-weight:400;font-size:12px;opacity:.7">記事ページ案 B — エディトリアル（線を消す・ライムは 1 か所・余白で区切る）</span></div>
+<div class="page">
+  <p class="kicker"><b>MBA</b> &nbsp;·&nbsp; アメリカ &nbsp;·&nbsp; エッセイ・出願書類</p>
+  <h1>MBAエッセイ、日本人が<br>いちばん最初につまずく3つの罠</h1>
+  <p class="sub">実績の列挙、謙遜、浅い Why this school。2024 年出願で HBS と Wharton に受かるまでに、直した順番で書きます。</p>
+  <div class="byline">
+    <div class="av">里</div>
+    <div><b>高村 里奈</b> <span class="sep">/</span> ハーバード・ビジネス・スクール 在学中 <span class="sep">/</span> 在籍確認済み</div>
+    <div class="meta">2026.03.21 · 6 分</div>
+  </div>
+  <div class="hero"></div>
+  <p class="cap">出願直前、ボストンのカフェで最終稿を読み返していた頃。写真は任意。</p>
+  <p class="lead">MBA 出願のエッセイで、日本人受験者が最初につまずくポイントはだいたい共通しています。私自身が 2024 年の出願でハマりかけ、合格者仲間と答え合わせをして見えてきた「3 つの罠」を、直した順番で書きます。</p>
+
+  <div class="note">左は空ける。目次は右。<br>線は「罫 1 本」までにして、色は黒・グレー・白＋ライム 1 か所。</div>
+
+  <article class="body">
+    <h2 id="h1"><span class="n">罠 1</span>実績の列挙</h2>
+    <p>日本の職務経歴書の感覚でプロジェクトを並べると、審査側には何も残りません。エッセイで見られているのは実績の大きさではなく、意思決定の理由と、そこからの変化です。</p>
+    <ul>
+      <li>「何をしたか」ではなく「なぜそう決めたか」を先に書く</li>
+      <li>数字は 1 段落に 1 つまで。多いほど印象が薄まる</li>
+      <li>失敗した判断を 1 つ入れると、残りの実績が立体的になる</li>
+    </ul>
+    <blockquote>あなたが主語の文章を読みたい。<cite>— 添削してくれた HBS 2 年生。この一言で第 1 稿の半分を捨てました</cite></blockquote>
+
+    <div class="mid">
+      <div class="av">里</div>
+      <div class="t"><b>この記事を書いた先輩に、30 分で相談できます</b><small>高村 里奈 · HBS 在学中 · ¥6,000〜 · 直近の空き 9/10（水）</small></div>
+      <a href="#">相談する →</a>
+    </div>
+
+    <h2 id="h2"><span class="n">罠 2</span>謙遜</h2>
+    <p>文化的にどうしても「チームのおかげ」と書きたくなりますが、adcom が知りたいのはあなた個人が何を判断し、何を動かしたか。主語を I に戻す作業が最初のドラフトの半分を占めました。</p>
+    <div class="aside"><b>やること</b>「私たちは」で始まる段落を数えて、半分以下にする。残りは「私は」に書き換えるか、削る。</div>
+    <h3>直す前・直した後</h3>
+    <table>
+      <tr><th>直す前</th><th>直した後</th></tr>
+      <tr><td>チームで新規事業を立ち上げ、売上 3 億円を達成した</td><td>反対が多かった B 案を私が選び、根拠として 2 週間で顧客 40 社に会った</td></tr>
+      <tr><td>上司の指導のもと、業務改善に取り組んだ</td><td>週次の会議を廃止し、代わりに私が 1 対 1 を 12 人と回した</td></tr>
+    </table>
+
+    <h2 id="h3"><span class="n">罠 3</span>Why this school の浅さ</h2>
+    <p>ランキングやブランドではなく、その学校の具体的な授業・クラブ・プログラムと自分のゴールを接続できているか。ここは在校生に聞くのが一番早いです。</p>
+    <figure class="fig"><div class="img"></div><p class="cap">出願前に作った「授業 × ゴール」の対応表（一部）。授業名は実在のもので、シラバスの URL まで控えた。</p></figure>
+    <div class="aside"><b>注意</b>学校の公式サイトの文言をそのまま引用すると、読み手にはすぐ分かります。授業を取った人の言葉で書く。</div>
+
+    <h2 id="h4"><span class="n">付録</span>出願スケジュールの目安</h2>
+    <table>
+      <tr><th>時期</th><th>やること</th><th style="text-align:right">費用の目安</th></tr>
+      <tr><td>5〜7 月</td><td>GMAT / GRE、推薦者に打診</td><td class="num">¥120,000</td></tr>
+      <tr><td>8〜9 月</td><td>エッセイ第 1〜3 稿、在校生に壁打ち</td><td class="num">¥30,000</td></tr>
+      <tr><td>10〜12 月</td><td>Round 1 提出、面接練習</td><td class="num">¥60,000</td></tr>
+    </table>
+    <p>自分の職歴でどう書くべきかは人によって全く違います。ドラフト前の構成段階で一度壁打ちするのがおすすめです。</p>
+  </article>
+
+  <aside class="toc">
+    <b>目次</b>
+    <a class="on" href="#h1">罠 1 — 実績の列挙</a>
+    <a href="#h2">罠 2 — 謙遜</a>
+    <a href="#h3">罠 3 — Why this school の浅さ</a>
+    <a href="#h4">付録 — 出願スケジュール</a>
+  </aside>
+
+  <section class="end">
+    <div class="av">里</div>
+    <div>
+      <div class="k">この記事を書いた先輩</div>
+      <h3>高村 里奈</h3>
+      <div class="l">ハーバード・ビジネス・スクール（Harvard Business School）在学中 · アメリカ・ボストン · <span class="v">在籍確認済み</span></div>
+      <div class="tags">MBA エッセイ · GMAT・GRE · キャリア・職務経歴の整理 · 模擬面接</div>
+      <div class="cta"><button class="btn">30 分で相談する · ¥6,000〜</button><a class="alt" href="#">プロフィールを見る</a><small>直近の空き 9/10（水）07:30 · チャットでの事前相談は無料</small></div>
+    </div>
+  </section>
+
+  <section class="rel">
+    <h2>高村さんの他の記事</h2>
+    <div class="row"><span class="i">01</span><span class="t">推薦状、誰に頼むかで 8 割決まる<small>MBA · 2026.02</small></span><span class="m">5 分</span></div>
+    <div class="row"><span class="i">02</span><span class="t">私費 MBA の資金計画、奨学金 4 件の実際<small>奨学金・費用 · 2026.01</small></span><span class="m">7 分</span></div>
+    <div class="row"><span class="i">03</span><span class="t">HBS 1 年目、平日のリアル<small>現地生活 · 2025.11</small></span><span class="m">4 分</span></div>
+  </section>
+  <section class="rel">
+    <h2>同じテーマの記事</h2>
+    <div class="row"><span class="i">01</span><span class="t">Wharton のエッセイで聞かれる「貢献」の正体<small>MBA · 佐藤 さん · ウォートン 在学中</small></span><span class="m">6 分</span></div>
+    <div class="row"><span class="i">02</span><span class="t">GMAT 700 までにやめたこと<small>MBA · 伊藤 さん · コロンビア 在学中</small></span><span class="m">5 分</span></div>
+    <div class="row"><span class="i">03</span><span class="t">社費と私費、出願書類で変わる 3 点<small>MBA · 森 さん · ベルリン工科大 在学中</small></span><span class="m">4 分</span></div>
+  </section>
+</div>
+<div class="mobilebar"><div style="font-size:12.5px"><b>高村 里奈</b> さんに相談 <span style="color:var(--n500);font-size:11px">30 分 ¥6,000〜</span></div><button class="btn" style="margin-left:auto">相談する</button></div>
+</body>
+</html>
