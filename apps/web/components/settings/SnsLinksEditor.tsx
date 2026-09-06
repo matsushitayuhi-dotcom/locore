@@ -37,11 +37,10 @@ type Platform =
   | 'youtube'
   | 'x'
   | 'threads'
+  | 'linkedin'
   | 'blog'
-  | 'facebook'
   | 'note'
-  | 'website'
-  | 'email';
+  | 'website';
 
 const PLATFORMS: { value: Platform; label: string; hint: string }[] = [
   { value: 'youtube', label: 'YouTube', hint: '動画 URL ならサムネ付きで大きく表示' },
@@ -52,8 +51,7 @@ const PLATFORMS: { value: Platform; label: string; hint: string }[] = [
   { value: 'x', label: 'X', hint: '投稿 URL なら本文をタイトルに' },
   { value: 'threads', label: 'Threads', hint: '' },
   { value: 'tiktok', label: 'TikTok', hint: '動画 URL ならサムネ付き' },
-  { value: 'facebook', label: 'Facebook', hint: '' },
-  { value: 'email', label: 'メール', hint: '上部のアイコン列だけに表示' },
+  { value: 'linkedin', label: 'LinkedIn', hint: 'プロフィール URL はボタン表示。投稿 URL ならカード' },
 ];
 
 const RESOLVED_LABEL: Record<string, string> = {
@@ -292,14 +290,14 @@ export function SnsLinksEditor({ initial }: { initial: SnsLinkRow[] }) {
           ))}
         </select>
         <Input
-          type={draftPlatform === 'email' ? 'text' : 'url'}
+          type="url"
           value={draftUrl}
           onChange={(e) => setDraftUrl(e.target.value)}
           placeholder={
             draftPlatform === 'youtube'
               ? 'https://www.youtube.com/watch?v=…（動画）または チャンネル URL'
-              : draftPlatform === 'email'
-                ? 'you@example.com'
+              : draftPlatform === 'linkedin'
+                ? 'https://www.linkedin.com/in/…'
                 : 'https://…'
           }
         />

@@ -42,6 +42,7 @@ export const PLATFORM_LABEL: Record<string, string> = {
   note: 'note',
   youtube: 'YouTube',
   tiktok: 'TikTok',
+  linkedin: 'LinkedIn',
   facebook: 'Facebook',
   blog: 'Blog',
   website: 'Web',
@@ -119,6 +120,11 @@ export function detectKind(platform: string, url: string): LinkKind {
   }
   if (host.endsWith('threads.net') || host.endsWith('threads.com')) {
     return /\/post\//.test(path) ? 'post' : 'profile';
+  }
+  if (host.endsWith('linkedin.com')) {
+    if (/^\/(posts|feed\/update)\//.test(path)) return 'post';
+    if (/^\/pulse\//.test(path)) return 'article';
+    return 'profile';
   }
   if (host.endsWith('facebook.com')) {
     return /\/(posts|videos|reel)\//.test(path) ? 'post' : 'profile';

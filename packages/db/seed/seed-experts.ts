@@ -474,6 +474,7 @@ const EXPERTS: ExpertSeed[] = [
       { platform: 'instagram', url: 'https://www.instagram.com/p/locore-sample-chinatsu-1/', kind: 'post', title: 'シアンスポの卒業式と、2 年間で歩いたパリの 12 区', image: '/experts/chinatsu.jpg', siteName: 'Instagram' },
       { platform: 'note', url: 'https://note.com/locore_sample_chinatsu', kind: 'profile', title: 'note — パリ生活と出願の記録', siteName: 'note' },
       { platform: 'threads', url: 'https://www.threads.net/@locore_sample_chinatsu', kind: 'profile', siteName: 'Threads', display: 'icon' },
+      { platform: 'linkedin', url: 'https://www.linkedin.com/in/locore-sample-chinatsu/', kind: 'profile', siteName: 'LinkedIn', display: 'icon' },
     ],
     workHistory: [
       { company: 'パリの国際機関系企業', title: 'プログラムオフィサー', startYear: 2021, current: true },
@@ -524,6 +525,7 @@ const EXPERTS: ExpertSeed[] = [
       { platform: 'youtube', url: 'https://www.youtube.com/@locore_sample_daisuke', kind: 'profile', title: '研究室選びチャンネル', description: '欧州の ML 研究室を訪ねる動画シリーズ', siteName: 'YouTube' },
       { platform: 'website', url: 'https://scholar.google.com/citations?user=locore-sample-daisuke', kind: 'profile', title: 'Google Scholar', siteName: 'Google Scholar' },
       { platform: 'x', url: 'https://x.com/locore_sample_daisuke', kind: 'profile', title: '@locore_sample_daisuke — 研究と Berlin 生活', siteName: 'X' },
+      { platform: 'linkedin', url: 'https://www.linkedin.com/in/locore-sample-daisuke/', kind: 'profile', title: 'LinkedIn — 研究歴・共同研究の連絡先', siteName: 'LinkedIn' },
     ],
     workHistory: [
       { company: '研究所（東京）', title: 'リサーチアシスタント', startYear: 2021, endYear: 2022 },

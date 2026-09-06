@@ -17,6 +17,7 @@ const TONE: Record<string, string> = {
   x: 'from-neutral-100 to-neutral-300 text-neutral-800',
   threads: 'from-neutral-100 to-neutral-300 text-neutral-800',
   tiktok: 'from-neutral-800 to-neutral-600 text-white',
+  linkedin: 'from-sky-50 to-sky-200 text-sky-900',
   facebook: 'from-blue-50 to-blue-200 text-blue-900',
   email: 'from-neutral-100 to-neutral-200 text-neutral-700',
 };
@@ -29,6 +30,7 @@ const MONOGRAM: Record<string, string> = {
   note: 'note',
   youtube: 'YT',
   tiktok: 'TT',
+  linkedin: 'in',
   facebook: 'FB',
   blog: 'Blog',
   website: 'Web',

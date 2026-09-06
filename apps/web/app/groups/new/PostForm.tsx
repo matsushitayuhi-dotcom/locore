@@ -54,7 +54,8 @@ function linesToArray(text: string, max = 10): string[] {
  */
 function parseSchedule(text: string): { time: string; title: string }[] {
   return linesToArray(text, 12).map((line) => {
-    const m = line.match(/^(\d{1,2}[:：]\d{2})\s*[ 　\-–—]*\s*(.*)$/);
+    // 全角スペースはエスケープで書く（no-irregular-whitespace 対策。挙動は同じ）
+    const m = line.match(/^(\d{1,2}[:：]\d{2})\s*[ \u3000\-–—]*\s*(.*)$/);
     if (m) {
       return { time: m[1]!.replace('：', ':'), title: (m[2] ?? '').slice(0, 120) || m[1]! };
     }

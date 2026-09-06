@@ -58,6 +58,8 @@ export const snsPlatformEnum = pgEnum('sns_platform', [
   'note',
   'website',
   'email',
+  // 2026-09 追加（manual/0089）。facebook / email は UI から外した（既存行のため enum 値は残す）
+  'linkedin',
 ]);
 
 export const foundingStatusEnum = pgEnum('founding_status', [

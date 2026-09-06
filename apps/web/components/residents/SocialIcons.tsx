@@ -28,13 +28,14 @@ const LABEL: Record<string, string> = {
   note: 'note',
   youtube: 'YouTube',
   tiktok: 'TikTok',
+  linkedin: 'LinkedIn',
   facebook: 'Facebook',
   blog: 'Blog',
   website: 'Website',
   email: 'メール',
 };
 
-/** 表示順（登録の有無に関わらずこの順で並べる） */
+/** 表示順（登録の有無に関わらずこの順で並べる）。facebook / email は 2026-09 に表示対象から外した */
 const ORDER = [
   'instagram',
   'x',
@@ -42,10 +43,9 @@ const ORDER = [
   'note',
   'youtube',
   'tiktok',
-  'facebook',
+  'linkedin',
   'blog',
   'website',
-  'email',
 ];
 
 function Icon({ platform }: { platform: string }): ReactNode {
@@ -91,6 +91,12 @@ function Icon({ platform }: { platform: string }): ReactNode {
       return (
         <svg viewBox="0 0 24 24" fill="currentColor">
           <path d="M16.6 5.8c.55 1.4 1.75 2.5 3.25 2.75v2.7c-1.35.03-2.6-.4-3.65-1.15v5.45a5.05 5.05 0 1 1-5.05-5.05c.28 0 .56.02.83.07v2.75a2.35 2.35 0 1 0 1.62 2.23V3h2.6c0 1 .12 1.95.4 2.8Z" />
+        </svg>
+      );
+    case 'linkedin':
+      return (
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.26 2.37 4.26 5.45v6.29ZM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0Z" />
         </svg>
       );
     case 'facebook':

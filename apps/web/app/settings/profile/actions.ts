@@ -18,17 +18,17 @@ import { LINK_DISPLAYS, detectKind } from '@/lib/media/display';
  *   - writer 用 bio 編集は廃止（駐在員 / 読者でフォームを分けない方針）
  */
 
+/** 新規登録で選べるプラットフォーム（facebook / email は 2026-09 に廃止。既存行は残る） */
 const SNS_PLATFORMS = [
   'tiktok',
   'instagram',
   'youtube',
   'x',
   'threads',
+  'linkedin',
   'blog',
-  'facebook',
   'note',
   'website',
-  'email',
 ] as const;
 type SnsPlatform = (typeof SNS_PLATFORMS)[number];
 
