@@ -23,9 +23,9 @@ import {
 import { formatTimeRangeInTz, wallPartsInTz } from '@/lib/bookings/time';
 
 /**
- * 空き時間管理 — Outlook 風の週カレンダー。
+ * 空き時間管理 — Outlook / Google カレンダー風の週カレンダー。
  *
- * - 縦 = 0:00〜24:00（30分刻み）、横 = 月〜日。ドラッグで空き枠を作成する。
+ * - 縦 = 0:00〜24:00（30分刻み）、横 = 今日から 7 日（ローリング）。ドラッグで空き枠を作成する。
  * - 入力はエキスパートの現地時間（timezone セレクト）。相談者には相談者の
  *   現地時間で表示されるため、海外の早朝・深夜が日本の相談者にとって好都合な
  *   ケースもある → 24 時間ぶんスクロールで見せる。
@@ -44,6 +44,10 @@ const WEEKDAY_JA = ['日', '月', '火', '水', '木', '金', '土'] as const;
 
 const ROW_H = 22; // 1 行（30分）の高さ px
 const ROWS = 48; // 0:00〜24:00 を 30 分刻み
+
+/** 過去セルの斜線ハッチ（選べないことを視覚的に示す） */
+const HATCH =
+  'repeating-linear-gradient(45deg, rgba(0,0,0,0.045) 0, rgba(0,0,0,0.045) 1px, transparent 1px, transparent 6px)';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const hmFromRow = (r: number) => `${pad(Math.floor(r / 2))}:${r % 2 ? '30' : '00'}`;
@@ -102,7 +106,11 @@ type DayCol = {
   isToday: boolean;
 };
 
-/** 現在の tz・週オフセットから月曜はじまりの 7 日と今日の情報を返す（純関数）。 */
+/**
+ * 現在の tz・週オフセットから「今日はじまりのローリング 7 日」と今日の情報を返す（純関数）。
+ * 月曜はじまりにすると週の後半では過去日ばかりの週が初期表示になり操作できないため、
+ * 常に今日から 7 日を見せる。offset は 7 日単位で前後にページングする。
+ */
 function computeWeek(tz: string, offset: number): {
   days: DayCol[];
   todayKey: string;
@@ -110,8 +118,7 @@ function computeWeek(tz: string, offset: number): {
 } {
   const today = wallPartsInTz(new Date(), tz);
   const todayKey = `${today.year}-${pad(today.month)}-${pad(today.day)}`;
-  const back = (today.weekday + 6) % 7; // 月曜はじまり
-  const start = addDaysYmd(today.year, today.month, today.day, -back + offset * 7);
+  const start = addDaysYmd(today.year, today.month, today.day, offset * 7);
   const days: DayCol[] = Array.from({ length: 7 }, (_, i) => {
     const p = addDaysYmd(start.y, start.mo, start.d, i);
     const key = `${p.y}-${pad(p.mo)}-${pad(p.d)}`;
@@ -168,6 +175,11 @@ export function AvailabilityManager({
 
   const patchEditor = (patch: Partial<EditorState>) =>
     setEditor((e) => (e ? { ...e, ...patch } : e));
+
+  // 初期表示スクロールを 8:00 付近に（早朝から見えるように）
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 8 * ROW_H * 2;
+  }, []);
 
   const tzOptions = useMemo(() => {
     const opts = [...TIMEZONE_OPTIONS];
@@ -445,7 +457,7 @@ export function AvailabilityManager({
           onClick={() => setWeekOffset(0)}
           className="rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold text-neutral-700 transition hover:border-foreground"
         >
-          今週
+          今日から
         </button>
         <button
           type="button"
@@ -540,12 +552,16 @@ export function AvailabilityManager({
                         (r % 2 === 0 ? 'border-t border-border' : 'border-t border-border/30') +
                         ' ' +
                         (disabled
-                          ? 'bg-muted/50'
+                          ? 'bg-muted/40'
                           : inSel
                             ? 'bg-primary-500/40'
                             : '')
                       }
-                      style={{ height: ROW_H }}
+                      style={
+                        disabled
+                          ? { height: ROW_H, backgroundImage: HATCH }
+                          : { height: ROW_H }
+                      }
                     />
                   );
                 })}
@@ -557,7 +573,7 @@ export function AvailabilityManager({
                 !sel &&
                 !cellDisabled(day, hover.r) ? (
                   <div
-                    className="pointer-events-none absolute inset-x-0 z-10 bg-primary-500/15"
+                    className="pointer-events-none absolute inset-x-0 z-10 bg-primary-500/25 ring-1 ring-inset ring-primary-500/40"
                     style={{ top: hover.r * ROW_H, height: ROW_H }}
                   >
                     <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
