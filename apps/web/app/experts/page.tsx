@@ -28,7 +28,7 @@ import { CityPriceSelects } from './FilterSelects';
 /**
  * /experts — エキスパート一覧（Intro 型）。mockups/v2/experts-list-intro.html の実装。
  *
- * 構成: 大見出し → 国の円形カテゴリ（リンク）→ 都市・料金・テーマの絞り込み行 →
+ * 構成: 大見出し → 国のタブ（テキストのリスト・リンク）→ 都市・料金・テーマの絞り込み行 →
  *   絞り込み無し: 得意分野の第 1 階層ごとの横スクロール列（Intro の "Top Experts." 列）
  *   絞り込み有り: 1 つのグリッド
  * → 使い方 3 タイル → 登録 CTA。
@@ -149,29 +149,29 @@ export default async function ExpertsPage({
           </p>
         </section>
 
-        {/* ===== 2. 国の円形カテゴリ ===== */}
-        <div className="flex items-start border-b border-border">
-          <div className="flex flex-1 gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <CountryCircle
+        {/* ===== 2. 国のタブ（テキストのリスト。写真・旗は使わない）===== */}
+        <div className="flex items-end border-b border-border">
+          <nav
+            aria-label="留学先の国"
+            className="flex flex-1 gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <CountryTab
               href={href({ ...base, country: '', city: '' })}
               active={!country}
-              code="ALL"
               label="すべての国"
               count={countryOptions.reduce((n, c) => n + c.expertCount, 0)}
-              all
             />
             {countryOptions.map((c) => (
-              <CountryCircle
+              <CountryTab
                 key={c.code}
                 href={href({ ...base, country: c.code, city: '' })}
                 active={country === c.code}
-                code={c.code.toUpperCase()}
                 label={c.nameJa}
                 count={c.expertCount}
               />
             ))}
-          </div>
-          <div className="mb-3 ml-4 hidden self-center border-l border-border pl-4 md:block">
+          </nav>
+          <div className="mb-2 ml-4 hidden self-center border-l border-border pl-4 md:block">
             <a
               href="#filters"
               className="inline-flex items-center gap-2 rounded-xl border border-border-strong bg-card px-4 py-3 text-[13px] font-semibold transition hover:border-foreground"
@@ -319,48 +319,31 @@ export default async function ExpertsPage({
   );
 }
 
-function CountryCircle({
+/** 国のタブ（テキスト）。選択中は下線＋太字、人数を薄く添える */
+function CountryTab({
   href,
   active,
-  code,
   label,
   count,
-  all = false,
 }: {
   href: { pathname: string; query: Record<string, string> };
   active: boolean;
-  code: string;
   label: string;
   count: number;
-  all?: boolean;
 }) {
   return (
     <Link
       href={href}
       className={
-        'flex shrink-0 flex-col items-center gap-2 whitespace-nowrap border-b-2 px-3 pb-3 pt-0.5 text-[12px] transition ' +
+        'inline-flex shrink-0 items-baseline gap-1.5 whitespace-nowrap border-b-2 px-3 pb-3 pt-2 text-[14px] transition ' +
         (active
           ? 'border-foreground font-bold text-foreground'
-          : 'border-transparent font-medium text-neutral-500 hover:text-foreground')
+          : 'border-transparent font-medium text-neutral-500 hover:border-border-strong hover:text-foreground')
       }
-      aria-current={active ? 'true' : undefined}
+      aria-current={active ? 'page' : undefined}
     >
-      <span
-        className={
-          'grid h-[62px] w-[62px] place-items-center rounded-full text-[15px] font-bold tracking-[0.08em] transition sm:h-[70px] sm:w-[70px] ' +
-          (all
-            ? 'bg-neutral-900 text-primary-500'
-            : 'border border-border bg-muted text-neutral-700') +
-          (active ? ' ring-[3px] ring-primary-500 ring-offset-2 ring-offset-background' : '')
-        }
-        aria-hidden
-      >
-        {code}
-      </span>
       {label}
-      <small className="-mt-1.5 text-[10.5px] font-normal tabular-nums text-neutral-400">
-        {count}名
-      </small>
+      <span className="text-[11.5px] font-normal tabular-nums text-neutral-400">{count}</span>
     </Link>
   );
 }
