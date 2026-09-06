@@ -165,7 +165,10 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sans-jp);
-    color: var(--color-neutral-900);
+    /* 見出しの色は親から継承する。body は neutral-900 なので白背景では従来どおり黒。
+       黒背景（bg-neutral-900 + text-white）の中の見出しが黒で「保護色」になる不具合の根本対策
+       （2026-09-06。以前は color: var(--color-neutral-900) を固定していた） */
+    color: inherit;
     font-weight: 600;
     letter-spacing: -0.01em;
   }
