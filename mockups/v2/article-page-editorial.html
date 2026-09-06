@@ -29,8 +29,9 @@
   /* 本文 */
   .body { margin-top:36px; font-size:16.5px; line-height:2; color:var(--n800); }
   .body p { margin:0 0 1.4em; }
-  .body h2 { font-size:24px; line-height:1.45; letter-spacing:-.015em; font-weight:700; margin:3em 0 .9em; color:var(--n900); }
-  .body h2 .n { display:block; font-size:11.5px; letter-spacing:.18em; color:var(--n500); font-weight:600; margin-bottom:10px; }
+  .body h2 { font-size:25px; line-height:1.45; letter-spacing:-.015em; font-weight:700; margin:3em 0 .9em; color:var(--n900); display:flex; align-items:baseline; gap:14px; }
+  .body h2 .n { font-size:15px; font-weight:700; color:var(--n400); font-variant-numeric:tabular-nums; letter-spacing:.04em; flex:none; }
+  .body h2 .n::after { content:""; display:inline-block; width:22px; height:1px; background:var(--n300); vertical-align:middle; margin-left:12px; }
   .body h3 { font-size:17.5px; font-weight:700; margin:2.2em 0 .6em; }
   .body ul { padding-left:1.2em; margin:0 0 1.4em; }
   .body li { margin:.35em 0; }
@@ -113,6 +114,51 @@
   .kit-h { grid-column:2; margin-top:96px; padding-top:24px; border-top:1px solid var(--n900); font-size:11.5px; letter-spacing:.18em; color:var(--n500); }
   .kit-h b { display:block; font-size:22px; letter-spacing:-.01em; color:var(--n900); margin-top:6px; }
   .kit-p { grid-column:2; font-size:14px; color:var(--n700); line-height:1.8; margin:8px 0 0; }
+  /* ===== COMPONENT KIT ===== */
+  .tl { margin:1.6em 0 2em; padding:22px 24px; background:var(--n100); border-radius:12px; }
+  .tl b { display:block; font-size:11.5px; letter-spacing:.18em; color:var(--n500); margin-bottom:10px; }
+  .tl ul { margin:0; padding-left:1.2em; font-size:15px; line-height:1.9; color:var(--n800); }
+  .steps { margin:1.6em 0 2em; padding:0; list-style:none; counter-reset:st; }
+  .steps li { counter-increment:st; display:grid; grid-template-columns:44px 1fr; gap:14px; padding:16px 0; border-top:1px solid var(--hair); }
+  .steps li:last-child { border-bottom:1px solid var(--hair); }
+  .steps li::before { content:counter(st, decimal-leading-zero); font-size:22px; font-weight:700; color:var(--n300); font-variant-numeric:tabular-nums; line-height:1; padding-top:4px; }
+  .steps li b { display:block; font-size:16px; margin-bottom:2px; }
+  .steps li span { font-size:14.5px; line-height:1.8; color:var(--n700); }
+  .check { margin:1.6em 0 2em; padding:0; list-style:none; }
+  .check li { display:flex; gap:12px; align-items:flex-start; padding:9px 0; font-size:15.5px; line-height:1.7; }
+  .check li::before { content:""; width:18px; height:18px; border:1.5px solid var(--n900); border-radius:5px; flex:none; margin-top:5px; }
+  .check li.on::before { background:var(--n900); box-shadow:inset 0 0 0 3px #fff; }
+  .faq { margin:1.6em 0 2em; }
+  .faq details { border-top:1px solid var(--hair); }
+  .faq details:last-child { border-bottom:1px solid var(--hair); }
+  .faq summary { cursor:pointer; list-style:none; padding:16px 0; font-size:16px; font-weight:700; display:flex; gap:12px; align-items:baseline; }
+  .faq summary::-webkit-details-marker { display:none; }
+  .faq summary::before { content:"Q"; font-size:12px; color:var(--n400); letter-spacing:.1em; flex:none; }
+  .faq details p { margin:0 0 18px 26px; font-size:15px; line-height:1.85; color:var(--n700); }
+  .term { margin:1.6em 0 2em; display:grid; grid-template-columns:140px 1fr; gap:10px 20px; font-size:15px; line-height:1.8; }
+  .term dt { font-weight:700; color:var(--n900); }
+  .term dd { margin:0; color:var(--n700); }
+  .tline { margin:1.6em 0 2em; padding:0; list-style:none; position:relative; }
+  .tline::before { content:""; position:absolute; left:6px; top:8px; bottom:8px; width:1px; background:var(--n300); }
+  .tline li { position:relative; padding:0 0 18px 30px; font-size:15px; line-height:1.7; }
+  .tline li::before { content:""; position:absolute; left:2px; top:8px; width:9px; height:9px; border-radius:999px; background:#fff; border:1.5px solid var(--n900); }
+  .tline li b { display:block; font-size:12.5px; color:var(--n500); letter-spacing:.06em; margin-bottom:2px; }
+  .pc { margin:1.6em 0 2em; display:grid; grid-template-columns:1fr 1fr; gap:24px; font-size:14.5px; line-height:1.8; }
+  .pc b { display:block; font-size:11.5px; letter-spacing:.18em; color:var(--n500); margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--n900); }
+  .pc ul { margin:0; padding-left:1.1em; color:var(--n700); }
+  .num { margin:1.6em 0 2em; display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .num div { border-top:1px solid var(--n900); padding-top:12px; }
+  .num b { display:block; font-size:30px; letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums; }
+  .num small { display:block; font-size:12.5px; color:var(--n500); margin-top:6px; line-height:1.6; }
+  .memo { margin:1.6em 0 2em; padding-left:18px; border-left:3px solid var(--lime); font-size:15px; line-height:1.85; color:var(--n700); }
+  .memo b { display:block; color:var(--n900); font-size:12.5px; margin-bottom:4px; }
+  .fn { margin:2em 0; font-size:12.5px; color:var(--n500); line-height:1.8; border-top:1px solid var(--hair); padding-top:12px; }
+  .fn sup, .body sup { font-size:11px; color:var(--n500); margin-left:1px; }
+  .upd { margin:1.6em 0; font-size:12.5px; color:var(--n500); }
+  .series { margin:1.6em 0 2em; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .series a { display:block; padding:14px 16px; border:1px solid var(--n200); border-radius:12px; text-decoration:none; color:inherit; font-size:14px; line-height:1.5; }
+  .series a small { display:block; font-size:11px; color:var(--n500); letter-spacing:.1em; margin-bottom:4px; }
+  .series a.next { text-align:right; }
   .mobilebar { position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--hair); padding:10px 16px; display:none; align-items:center; gap:10px; }
   @media (max-width:1000px) { .page { grid-template-columns:1fr; } .page > * { grid-column:1; } .toc { display:none; } .mobilebar { display:flex; } h1 { font-size:30px; } }
   .note { grid-column:1; grid-row:8; font-size:11.5px; line-height:1.7; color:var(--n400); position:sticky; top:32px; align-self:start; }
@@ -136,7 +182,7 @@
   <div class="note">左は空ける。目次は右。<br>線は「罫 1 本」までにして、色は黒・グレー・白＋ライム 1 か所。</div>
 
   <article class="body">
-    <h2 id="h1"><span class="n">罠 1</span>実績の列挙</h2>
+    <h2 id="h1"><span class="n">01</span>罠 1 — 実績の列挙</h2>
     <p>日本の職務経歴書の感覚でプロジェクトを並べると、審査側には何も残りません。エッセイで見られているのは実績の大きさではなく、意思決定の理由と、そこからの変化です。</p>
     <ul>
       <li>「何をしたか」ではなく「なぜそう決めたか」を先に書く</li>
@@ -151,7 +197,7 @@
       <a href="#">相談する →</a>
     </div>
 
-    <h2 id="h2"><span class="n">罠 2</span>謙遜</h2>
+    <h2 id="h2"><span class="n">02</span>罠 2 — 謙遜</h2>
     <p>文化的にどうしても「チームのおかげ」と書きたくなりますが、adcom が知りたいのはあなた個人が何を判断し、何を動かしたか。主語を I に戻す作業が最初のドラフトの半分を占めました。</p>
     <div class="aside"><b>やること</b>「私たちは」で始まる段落を数えて、半分以下にする。残りは「私は」に書き換えるか、削る。</div>
     <h3>直す前・直した後</h3>
@@ -161,12 +207,12 @@
       <tr><td>上司の指導のもと、業務改善に取り組んだ</td><td>週次の会議を廃止し、代わりに私が 1 対 1 を 12 人と回した</td></tr>
     </table>
 
-    <h2 id="h3"><span class="n">罠 3</span>Why this school の浅さ</h2>
+    <h2 id="h3"><span class="n">03</span>罠 3 — Why this school の浅さ</h2>
     <p>ランキングやブランドではなく、その学校の具体的な授業・クラブ・プログラムと自分のゴールを接続できているか。ここは在校生に聞くのが一番早いです。</p>
     <figure class="fig"><div class="img"></div><p class="cap">出願前に作った「授業 × ゴール」の対応表（一部）。授業名は実在のもので、シラバスの URL まで控えた。</p></figure>
     <div class="aside"><b>注意</b>学校の公式サイトの文言をそのまま引用すると、読み手にはすぐ分かります。授業を取った人の言葉で書く。</div>
 
-    <h2 id="h4"><span class="n">付録</span>出願スケジュールの目安</h2>
+    <h2 id="h4"><span class="n">04</span>出願スケジュールの目安</h2>
     <table>
       <tr><th>時期</th><th>やること</th><th style="text-align:right">費用の目安</th></tr>
       <tr><td>5〜7 月</td><td>GMAT / GRE、推薦者に打診</td><td class="num">¥120,000</td></tr>
@@ -183,6 +229,55 @@
     <a href="#h3">罠 3 — Why this school の浅さ</a>
     <a href="#h4">付録 — 出願スケジュール</a>
   </aside>
+
+  <div class="kit-h">COMPONENT KIT<b>ブログでよく使う部品（本文幅に揃える）</b></div>
+  <p class="kit-p">見出し（H2 / H3）、段落、箇条書き、引用、やること／注意の段、表、画像は本文に出したとおり。以下は留学記事で出番が多い残りの部品。すべて「罫 1 本・余白・文字サイズ」だけで作り、色はライム 1 か所まで。</p>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">1. この記事で分かること</b> — 冒頭に置く要点 3〜5 行。検索から来た人の離脱を止める</p>
+  <div class="tl"><b>この記事で分かること</b><ul><li>日本人が MBA エッセイで最初にやりがちな 3 つの書き方</li><li>直す順番と、直す前後の実例</li><li>出願スケジュールと費用の目安</li></ul></div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">2. 手順（ステップ）</b> — 出願・ビザ・家探しなど「順番がある」話に。番号を大きく、本文は 2 行まで</p>
+  <ol class="steps">
+    <li><b>推薦者に打診する（出願の 4 か月前）</b><span>上司と教授に 1 人ずつ。依頼メールには締切・学校名・自分が書いてほしい 3 点を添える。</span></li>
+    <li><b>エッセイの第 1 稿を書く</b><span>完成度は問わない。「私は」で始まる段落を数えるところから。</span></li>
+    <li><b>在校生に壁打ちする</b><span>構成の段階で 1 回。書き終えてからでは直せる範囲が狭い。</span></li>
+  </ol>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">3. チェックリスト</b> — 持ち物・提出書類・出発前の確認に</p>
+  <ul class="check"><li class="on">パスポート（有効期限が入学から 6 か月以上）</li><li class="on">合格通知書（原本）と I-20</li><li>SEVIS 費用の支払い控え</li><li>海外送金の上限額を銀行に確認</li></ul>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">4. Q&amp;A（よくある質問）</b> — 開閉式。記事の末尾か、見出しごとの補足に</p>
+  <div class="faq">
+    <details open><summary>GMAT と GRE、どちらで出すべき？</summary><p>学校が指定しない限りどちらでも。数学が得意なら GRE の方が伸びやすい人が多いです。私は GMAT 690 → GRE 換算で出しました。</p></details>
+    <details><summary>推薦状は日本語で書いてもらってもいい？</summary><p>翻訳を添えれば可の学校が多いですが、推薦者本人の英語で書いてもらう方が信頼されます。</p></details>
+  </div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">5. 用語</b> — 留学特有の言葉（adcom、SoP、I-20 …）の短い解説。左に語、右に説明</p>
+  <dl class="term"><dt>adcom</dt><dd>Admissions Committee。出願書類を審査する入学審査委員会。</dd><dt>Why this school</dt><dd>その学校を選ぶ理由を問うエッセイ設問。授業名・教授名まで具体的に書くのが定石。</dd><dt>Round 1 / 2</dt><dd>出願締切の回。R1 は 9 月、R2 は 1 月が多い。</dd></dl>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">6. タイムライン</b> — 出願から渡航までの流れ。縦の線と点だけ</p>
+  <ul class="tline">
+    <li><b>2024.05</b>推薦者に打診。GMAT の勉強を再開</li>
+    <li><b>2024.08</b>エッセイ第 1 稿。在校生 2 人に壁打ち</li>
+    <li><b>2024.09</b>Round 1 で HBS・Wharton に提出</li>
+    <li><b>2024.12</b>合格通知。奨学金の申請を開始</li>
+    <li><b>2025.08</b>渡米。Cambridge に入居</li>
+  </ul>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">7. 良い点・気になる点（比較）</b> — 学校・寮・保険などの比較に。表より読みやすい 2 列</p>
+  <div class="pc"><div><b>良い点</b><ul><li>ケース中心で議論の量が圧倒的</li><li>同級生の業種が広い</li><li>奨学金の枠が大きい</li></ul></div><div><b>気になる点</b><ul><li>学費と生活費で年 1,400 万円前後</li><li>冬が長い</li><li>就活が早く始まる</li></ul></div></div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">8. 数字の見出し</b> — 費用・期間・件数を 3 つ並べる。本文で長く説明する前に置く</p>
+  <div class="num"><div><b>¥1,400 万</b><small>1 年の学費＋生活費（2025 年・ボストン）</small></div><div><b>4 か月</b><small>推薦者打診から提出まで</small></div><div><b>2 / 2 校</b><small>出願した学校と合格した学校</small></div></div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">9. 先輩のひとこと（経験メモ）</b> — 本文の一般論に、書き手の実体験を差し込む。ライムはここに使ってよい</p>
+  <div class="memo"><b>私の場合</b>第 1 稿は 3 週間で書いて、その後 12 回直しました。一番効いたのは、母に日本語で読んでもらって「あなたが何をしたか分からない」と言われたことです。</div>
+
+  <p class="kit-p" style="margin-top:28px"><b style="color:var(--n900)">10. 脚注・更新日・前後の記事</b></p>
+  <p class="body" style="margin:0;font-size:15.5px">出願料は 2026 年 9 月時点の公式サイトの金額です<sup>1</sup>。為替は 1 ドル 150 円で計算しています<sup>2</sup>。</p>
+  <div class="fn">1. HBS Admissions, Application Fee（2026-09-01 閲覧）<br>2. 三菱 UFJ 銀行 TTM、2026-09-01</div>
+  <p class="upd">最終更新: 2026 年 9 月 1 日 · 初出: 2026 年 3 月 21 日</p>
+  <div class="series"><a href="#"><small>← 前の記事</small>推薦状、誰に頼むかで 8 割決まる</a><a class="next" href="#"><small>次の記事 →</small>面接で聞かれた 12 問と、答えを作った順番</a></div>
 
   <!-- ===== リンクカードと埋め込みの「仕掛け」一覧（本文で使う部品） ===== -->
   <div class="kit-h">EMBED KIT<b>リンクと埋め込みの部品（本文幅 640px に揃える）</b></div>
