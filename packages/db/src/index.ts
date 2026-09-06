@@ -6,6 +6,7 @@ export {
   DEFAULT_NOTIFICATION_PREFERENCES,
   type NotificationPreferences,
   type EducationEntry,
+  type AdmissionEntry,
   type WorkEntry,
 } from './schema/users';
 

@@ -9,9 +9,11 @@ import { UniversityAutocomplete } from './UniversityAutocomplete';
  *
  * 行の形は共通（CareerDraft）にして kind でラベルと表示項目を切り替える:
  *   - work:      name=会社・組織* / sub1=役職 / 開始年〜終了年 or「現在」
- *   - education: name=学校* / sub1=学位 / sub2=専攻 / 開始年〜終了年 or「在学中」
+ *   - education: name=学校* / sub1=学位 / sub2=専攻 / 出願年 / 開始年〜終了年 or「在学中」
+ *   - admission: name=学校* / sub1=学位・プログラム / 出願年（進学しなかった合格校・0087）
  * 年は任意（'' = 未記入）。上限 10 行。保存時の payload 変換は親側で行う。
  * education の「在学中」は留学特化の在学生/アルムナイ判定（EducationEntry.current）。
+ * 出願年は /experts/[id] の「合格実績」で年ごとにまとめる材料（applicationYear）。
  */
 
 export type CareerDraft = {
@@ -29,6 +31,8 @@ export type CareerDraft = {
   universityWikidataId: string | null;
   /** 大学の英語名（education・オートコンプリート選択時のみ） */
   schoolNameEn: string | null;
+  /** 出願年（education / admission）。'' = 未記入 */
+  applicationYear: number | '';
 };
 
 export const emptyCareerDraft = (): CareerDraft => ({
@@ -40,6 +44,7 @@ export const emptyCareerDraft = (): CareerDraft => ({
   current: false,
   universityWikidataId: null,
   schoolNameEn: null,
+  applicationYear: '',
 });
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -89,11 +94,14 @@ export function CareerHistoryEditor({
   label,
   rows,
   onChange,
+  helper,
 }: {
-  kind: 'work' | 'education';
+  kind: 'work' | 'education' | 'admission';
   label: string;
   rows: CareerDraft[];
   onChange: (rows: CareerDraft[]) => void;
+  /** 見出し下の補足（任意） */
+  helper?: string;
 }) {
   const patch = (idx: number, p: Partial<CareerDraft>) =>
     onChange(rows.map((r, i) => (i === idx ? { ...r, ...p } : r)));
@@ -104,8 +112,19 @@ export function CareerHistoryEditor({
   };
 
   const namePlaceholder =
-    kind === 'work' ? '例: 日系総合商社 パリ駐在' : '例: 早稲田大学';
-  const sub1Placeholder = kind === 'work' ? '役職（例: 消費財部門）' : '学位（例: 学士）';
+    kind === 'work'
+      ? '例: 日系総合商社 パリ駐在'
+      : kind === 'admission'
+        ? '例: London School of Economics'
+        : '例: 早稲田大学';
+  const sub1Placeholder =
+    kind === 'work'
+      ? '役職（例: 消費財部門）'
+      : kind === 'admission'
+        ? '学位・プログラム（例: MSc Finance）'
+        : '学位（例: 学士）';
+  // 学校名は大学マスタ（0081）のオートコンプリート（education / admission）。自由入力も可
+  const isSchool = kind !== 'work';
 
   return (
     <div>
@@ -115,6 +134,7 @@ export function CareerHistoryEditor({
           ({rows.length}/{MAX_ROWS})
         </span>
       </p>
+      {helper ? <p className="mb-2 text-[11.5px] text-foreground/55">{helper}</p> : null}
       {rows.length > 0 ? (
         <ul className="space-y-2">
           {rows.map((r, i) => (
@@ -123,8 +143,7 @@ export function CareerHistoryEditor({
               className="space-y-2 rounded-md bg-background p-3 ring-1 ring-border"
             >
               <div className="flex items-center gap-2">
-                {kind === 'education' ? (
-                  // 学校名は大学マスタ（0081）のオートコンプリート。自由入力も可
+                {isSchool ? (
                   <UniversityAutocomplete
                     value={r.name}
                     onChange={(name, wikidataId, hit) =>
@@ -172,27 +191,42 @@ export function CareerHistoryEditor({
                 ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <YearSelect
-                  value={r.startYear}
-                  onChange={(v) => patch(i, { startYear: v })}
-                  ariaLabel="開始年"
-                />
-                <span className="text-[12px] text-foreground/50">〜</span>
-                <YearSelect
-                  value={r.endYear}
-                  onChange={(v) => patch(i, { endYear: v })}
-                  ariaLabel="終了年"
-                  disabled={r.current}
-                />
-                <label className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] text-foreground/70">
-                  <input
-                    type="checkbox"
-                    checked={r.current}
-                    onChange={(e) => patch(i, { current: e.target.checked })}
-                    className="h-3.5 w-3.5"
-                  />
-                  {kind === 'work' ? '現在' : '在学中'}
-                </label>
+                {isSchool ? (
+                  <label className="inline-flex items-center gap-1.5 text-[12px] text-foreground/70">
+                    出願
+                    <YearSelect
+                      value={r.applicationYear}
+                      onChange={(v) => patch(i, { applicationYear: v })}
+                      ariaLabel="出願年"
+                    />
+                  </label>
+                ) : null}
+                {kind !== 'admission' ? (
+                  <>
+                    {isSchool ? <span className="mx-1 h-4 w-px bg-border" aria-hidden /> : null}
+                    <YearSelect
+                      value={r.startYear}
+                      onChange={(v) => patch(i, { startYear: v })}
+                      ariaLabel="開始年"
+                    />
+                    <span className="text-[12px] text-foreground/50">〜</span>
+                    <YearSelect
+                      value={r.endYear}
+                      onChange={(v) => patch(i, { endYear: v })}
+                      ariaLabel="終了年"
+                      disabled={r.current}
+                    />
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] text-foreground/70">
+                      <input
+                        type="checkbox"
+                        checked={r.current}
+                        onChange={(e) => patch(i, { current: e.target.checked })}
+                        className="h-3.5 w-3.5"
+                      />
+                      {kind === 'work' ? '現在' : '在学中'}
+                    </label>
+                  </>
+                ) : null}
               </div>
             </li>
           ))}

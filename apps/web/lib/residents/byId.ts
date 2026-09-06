@@ -3,7 +3,7 @@ import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import type { FeaturedService } from '@/lib/services/featured';
-import type { EducationEntry, WorkEntry } from '@locore/db';
+import type { AdmissionEntry, EducationEntry, WorkEntry } from '@locore/db';
 import type { LanguageLevel } from '@/lib/resident/constants';
 import { isUserVerified } from '@/lib/residents/verification';
 
@@ -65,6 +65,8 @@ export type ResidentProfileBundle = {
   /** 学歴・職歴（0062。本人申告）。未適用環境は空配列 */
   education: EducationEntry[];
   workHistory: WorkEntry[];
+  /** 合格校（進学しなかった学校・0087）。未適用環境は空配列 */
+  admissions: AdmissionEntry[];
   /** ソーシャルリンク（sns_links）。登録があるものだけ表示 */
   socialLinks: Array<{ platform: string; url: string }>;
   languages: Array<{ code: string; level: LanguageLevel }>;
@@ -240,11 +242,13 @@ export async function getResidentProfile(
   //       落とさないよう分離クエリ（0084 だけ無い環境は経歴のみで再試行） -----
   let education: EducationEntry[] = [];
   let workHistory: WorkEntry[] = [];
+  let admissions: AdmissionEntry[] = [];
   let isProfilePublished = true;
   try {
     let rows: Array<{
       education: EducationEntry[] | null;
       workHistory: WorkEntry[] | null;
+      admissions?: AdmissionEntry[] | null;
       profilePublished?: boolean | null;
     }>;
     try {
@@ -252,6 +256,7 @@ export async function getResidentProfile(
         .select({
           education: schema.users.education,
           workHistory: schema.users.workHistory,
+          admissions: schema.users.admissions,
           profilePublished: schema.users.profilePublished,
         })
         .from(schema.users)
@@ -262,7 +267,7 @@ export async function getResidentProfile(
       const msgPub = errPub instanceof Error ? errPub.message : String(errPub);
       if (!/does not exist/i.test(msgPub)) throw errPub;
       console.warn(
-        '[getResidentProfile] profile_published 未適用（0084）。公開扱いで続行します。',
+        '[getResidentProfile] profile_published（0084）または admissions（0087）未適用。公開扱い・合格校なしで続行します。',
       );
       rows = await db
         .select({
@@ -277,6 +282,7 @@ export async function getResidentProfile(
     workHistory = Array.isArray(rows[0]?.workHistory)
       ? rows[0]!.workHistory
       : [];
+    admissions = Array.isArray(rows[0]?.admissions) ? rows[0]!.admissions! : [];
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (/does not exist/i.test(msg)) {
@@ -555,6 +561,7 @@ export async function getResidentProfile(
     offerings: (u.offerings ?? []) as string[],
     education,
     workHistory,
+    admissions,
     socialLinks,
     languages: (u.languages ?? []) as Array<{
       code: string;

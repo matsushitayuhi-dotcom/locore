@@ -25,6 +25,7 @@ import { COMMON_LANGUAGES } from '@/lib/resident/constants';
 import { ConsultMenuCard } from '@/components/experts/ConsultMenuCard';
 import { PlanCard } from '@/components/experts/PlanCard';
 import { CareerTimeline } from '@/components/experts/CareerTimeline';
+import { countAdmissions, groupAdmissions } from '@/lib/experts/admissions';
 
 /**
  * /experts/[id] — エキスパート詳細（Intro 型）。id は users.id。
@@ -34,7 +35,7 @@ import { CareerTimeline } from '@/components/experts/CareerTimeline';
  * 認証・言語・評価」を 1 画面に。長いリスト（相談できること / 自己紹介 / 経歴 / レビュー）は
  * 最初の数件だけ見せて <details> で展開。使い方・FAQ は /about-service への 1 行リンクに。
  *
- * 左: ヒーロー → ページ内アンカー → こんな相談に乗れます → 自己紹介 → 経歴 → 記事 → レビュー（最後）
+ * 左: ヒーロー → ページ内アンカー → こんな相談に乗れます → 合格実績 → 自己紹介 → 経歴 → 資格 → 記事 → レビュー（最後）
  * 右 (sticky、画面より長ければ中でスクロール): 相談メニュー → 継続プラン → 直近の空き枠
  * モバイル（1 カラム）では DOM 順どおり「ヒーロー → 相談メニュー（サービス）→ 本文 → レビュー」。
  *
@@ -180,10 +181,14 @@ export default async function ExpertDetailPage({
   const [bioLead, ...bioRest] = bioParagraphs;
   const articlesShown = articles.slice(0, 2);
   const hasCareer = profile.workHistory.length > 0 || profile.education.length > 0;
+  // 合格実績（0087）: 出願年つき学歴（進学）＋ 進学しなかった合格校を出願年ごとに
+  const admissionGroups = groupAdmissions(profile.education, profile.admissions);
+  const admissionCount = countAdmissions(admissionGroups);
 
   // ページ内アンカー（存在するセクションだけ）
   const anchors: Array<{ id: string; label: string }> = [
     ...(profile.offerings.length > 0 ? [{ id: 'offerings', label: '相談できること' }] : []),
+    ...(admissionCount > 0 ? [{ id: 'admissions', label: '合格実績' }] : []),
     ...(bioParagraphs.length > 0 ? [{ id: 'about', label: '自己紹介' }] : []),
     ...(hasCareer ? [{ id: 'career', label: '経歴' }] : []),
     ...(qualifications.length > 0 ? [{ id: 'qualifications', label: '資格・スコア' }] : []),
@@ -535,6 +540,47 @@ export default async function ExpertDetailPage({
                     </ul>
                   </details>
                 ) : null}
+              </Section>
+            ) : null}
+
+            {/* ===== 合格実績（出願年ごと。進学校にはタグ）===== */}
+            {admissionCount > 0 ? (
+              <Section title="合格実績" id="admissions">
+                <dl className="max-w-[36em] divide-y divide-border">
+                  {admissionGroups.map((g) => (
+                    <div key={g.year ?? 'none'} className="flex flex-col gap-2 py-3 first:pt-0 sm:flex-row sm:gap-4">
+                      <dt className="w-[84px] shrink-0 pt-1 text-[12.5px] font-bold tabular-nums text-neutral-500">
+                        {g.year != null ? `${g.year} 出願` : '年未記入'}
+                      </dt>
+                      <dd className="flex flex-wrap gap-2">
+                        {g.items.map((it, i) => (
+                          <span
+                            key={`${it.name}-${i}`}
+                            className={
+                              'inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] ' +
+                              (it.enrolled
+                                ? 'border-neutral-900 bg-neutral-900 text-white'
+                                : 'border-border-strong bg-card text-neutral-800')
+                            }
+                          >
+                            <span className="font-semibold">{it.name}</span>
+                            {it.degree ? (
+                              <span className={it.enrolled ? 'text-white/70' : 'text-neutral-500'}>{it.degree}</span>
+                            ) : null}
+                            {it.enrolled ? (
+                              <span className="rounded-full bg-primary-500 px-1.5 py-px text-[10px] font-bold text-neutral-950">
+                                進学
+                              </span>
+                            ) : null}
+                          </span>
+                        ))}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-2 text-[11px] text-neutral-400">
+                  ※合格実績は本人申告の情報です。在籍は「在籍確認済み」バッジ、スコアは「資格・スコア」で運営が確認しています。
+                </p>
               </Section>
             ) : null}
 

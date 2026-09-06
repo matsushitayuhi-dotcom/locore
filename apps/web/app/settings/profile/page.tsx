@@ -42,6 +42,7 @@ export default async function ProfileSettingsPage() {
         offerings: schema.users.offerings,
         specialties: schema.users.specialties,
         education: schema.users.education,
+        admissions: schema.users.admissions,
         workHistory: schema.users.workHistory,
         languages: schema.users.languages,
         interests: schema.users.interests,
@@ -92,6 +93,7 @@ export default async function ProfileSettingsPage() {
           offerings: (me?.offerings ?? []) as string[],
           specialties: (me?.specialties ?? []) as string[],
           education: me?.education ?? [],
+          admissions: me?.admissions ?? [],
           workHistory: me?.workHistory ?? [],
           languages: (me?.languages ?? []) as Array<{
             code: string;

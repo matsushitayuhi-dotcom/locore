@@ -154,6 +154,8 @@ const educationEntrySchema = z
       .catch(null),
     /** 大学の英語名（オートコンプリート選択時のみ。表示は formatSchoolName） */
     schoolNameEn: z.string().trim().max(160).nullable().optional().catch(null),
+    /** 出願年（留学特化・0087）。「合格実績」で年ごとにまとめる。任意 */
+    applicationYear: careerYear,
   })
   .refine(
     (e) =>
@@ -164,6 +166,21 @@ const educationEntrySchema = z
     { message: '開始年は終了年以前にしてください', path: ['startYear'] },
   )
   .transform((e) => (e.current ? { ...e, endYear: null } : e));
+
+/** 合格校（進学しなかった学校・0087）。進学校は education 側に applicationYear 付きで持つ */
+const admissionEntrySchema = z.object({
+  school: z.string().trim().min(1, '学校名を入力してください').max(80),
+  degree: careerText,
+  applicationYear: careerYear,
+  universityWikidataId: z
+    .string()
+    .trim()
+    .regex(/^Q\d+$/)
+    .nullable()
+    .optional()
+    .catch(null),
+  schoolNameEn: z.string().trim().max(160).nullable().optional().catch(null),
+});
 
 const workEntrySchema = z
   .object({
@@ -218,6 +235,8 @@ const updateResidentProfileSchema = z.object({
     .default([])
     .transform((v) => normalizeSpecialties(v)),
   education: z.array(educationEntrySchema).max(10).default([]),
+  /** 合格校（進学しなかった学校・0087）。進学校は education 側（applicationYear） */
+  admissions: z.array(admissionEntrySchema).max(10).default([]),
   workHistory: z.array(workEntrySchema).max(10).default([]),
   languages: z.array(languageSchema).max(8).default([]),
   interests: z.array(z.string().trim().min(1).max(30)).max(20).default([]),
@@ -255,6 +274,7 @@ export async function updateResidentProfile(
       specialties: data.specialties,
       education: data.education,
       workHistory: data.workHistory,
+      admissions: data.admissions,
       languages: data.languages,
       interests: data.interests,
       lookingFor: data.lookingFor,

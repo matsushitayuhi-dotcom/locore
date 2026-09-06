@@ -79,8 +79,14 @@ export function CareerTimeline({
       kind: 'education',
       // 正式名称（English）。大学マスタ経由の学歴は英語名も併記
       name: formatSchoolName(e),
+      // 学位・専攻に加え、出願年があれば「2024 出願」を添える（合格実績セクションと対応）
       sub:
-        [e.degree?.trim(), e.field?.trim()].filter(Boolean).join('・') || null,
+        [
+          [e.degree?.trim(), e.field?.trim()].filter(Boolean).join('・'),
+          e.applicationYear != null ? `${e.applicationYear} 出願` : '',
+        ]
+          .filter(Boolean)
+          .join(' ｜ ') || null,
       // 在学中（EducationEntry.current、留学特化）は「現在」として最上段に
       period: periodOf(e.startYear, e.endYear, !!e.current),
       current: !!e.current,

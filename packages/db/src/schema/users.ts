@@ -75,6 +75,26 @@ export type EducationEntry = {
    * 「学校名（English）」形式に（apps/web/lib/experts/education.ts）。
    */
   schoolNameEn?: string | null;
+  /**
+   * 出願年（西暦）。留学特化: 「いつの出願サイクルの経験か」を相談者が見る。
+   * 任意。/experts/[id] の「合格実績」で year ごとにまとめ、進学校として表示。
+   */
+  applicationYear?: number | null;
+};
+
+/**
+ * 合格校 1 件（users.admissions・manual/0087_user_admissions.sql）。
+ * 「合格したが進学しなかった学校」を本人申告で持つ。進学した学校は education 側
+ * （applicationYear 付き）が正で、ここには重複させない。
+ */
+export type AdmissionEntry = {
+  school: string;
+  /** 学位・プログラム（例: MSc Finance / MBA） */
+  degree?: string | null;
+  /** 出願年（西暦・任意） */
+  applicationYear?: number | null;
+  universityWikidataId?: string | null;
+  schoolNameEn?: string | null;
 };
 
 /**
@@ -201,6 +221,13 @@ export const users = pgTable(
       .$type<WorkEntry[]>()
       .notNull()
       .default([]),
+
+    /**
+     * 合格校（進学しなかった学校・manual/0087_user_admissions.sql）。本人申告の配列。
+     * 進学した学校は education（applicationYear 付き）が正。/experts/[id] の「合格実績」で
+     * 出願年ごとにまとめて表示する。
+     */
+    admissions: jsonb('admissions').$type<AdmissionEntry[]>().notNull().default([]),
 
     /**
      * 得意分野（manual/0080_user_specialties.sql）。統制リストの第 2 階層 code の配列

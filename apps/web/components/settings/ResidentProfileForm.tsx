@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Input } from '@locore/ui';
 import { ChevronDown, Plus, X } from 'lucide-react';
-import type { EducationEntry, WorkEntry } from '@locore/db';
+import type { AdmissionEntry, EducationEntry, WorkEntry } from '@locore/db';
 import { updateResidentProfile } from '@/app/settings/profile/actions';
 import { SpecialtyPicker } from '@/components/experts/SpecialtyPicker';
 import { formatSchoolName } from '@/lib/experts/education';
@@ -53,6 +53,8 @@ type Props = {
     /** 得意分野（第 2 階層 code、0080）。lib/experts/specialties.ts */
     specialties: string[];
     education: EducationEntry[];
+    /** 合格校（進学しなかった学校・0087） */
+    admissions: AdmissionEntry[];
     workHistory: WorkEntry[];
     languages: Lang[];
     interests: string[];
@@ -72,6 +74,7 @@ function workToDraft(w: WorkEntry): CareerDraft {
     current: !!w.current,
     universityWikidataId: null,
     schoolNameEn: null,
+    applicationYear: '',
   };
 }
 function eduToDraft(e: EducationEntry): CareerDraft {
@@ -84,6 +87,20 @@ function eduToDraft(e: EducationEntry): CareerDraft {
     current: !!e.current,
     universityWikidataId: e.universityWikidataId ?? null,
     schoolNameEn: e.schoolNameEn ?? null,
+    applicationYear: e.applicationYear ?? '',
+  };
+}
+function admissionToDraft(a: AdmissionEntry): CareerDraft {
+  return {
+    name: a.school,
+    sub1: a.degree ?? '',
+    sub2: '',
+    startYear: '',
+    endYear: '',
+    current: false,
+    universityWikidataId: a.universityWikidataId ?? null,
+    schoolNameEn: a.schoolNameEn ?? null,
+    applicationYear: a.applicationYear ?? '',
   };
 }
 function draftToWork(d: CareerDraft): WorkEntry {
@@ -105,6 +122,16 @@ function draftToEdu(d: CareerDraft): EducationEntry {
     current: d.current,
     universityWikidataId: d.universityWikidataId,
     schoolNameEn: d.schoolNameEn,
+    applicationYear: d.applicationYear === '' ? null : d.applicationYear,
+  };
+}
+function draftToAdmission(d: CareerDraft): AdmissionEntry {
+  return {
+    school: d.name.trim(),
+    degree: d.sub1.trim() || null,
+    applicationYear: d.applicationYear === '' ? null : d.applicationYear,
+    universityWikidataId: d.universityWikidataId,
+    schoolNameEn: d.schoolNameEn,
   };
 }
 
@@ -122,6 +149,9 @@ export function ResidentProfileForm({ initial }: Props) {
   );
   const [eduRows, setEduRows] = useState<CareerDraft[]>(
     initial.education.map(eduToDraft),
+  );
+  const [admissionRows, setAdmissionRows] = useState<CareerDraft[]>(
+    initial.admissions.map(admissionToDraft),
   );
   const [languages, setLanguages] = useState<Lang[]>(initial.languages);
   const [offeringDraft, setOfferingDraft] = useState('');
@@ -160,6 +190,7 @@ export function ResidentProfileForm({ initial }: Props) {
         specialties,
         // 経歴: 名称が空の行は未入力扱いで除外し、DB のエントリ形に変換して全置換
         education: eduRows.filter((r) => r.name.trim()).map(draftToEdu),
+        admissions: admissionRows.filter((r) => r.name.trim()).map(draftToAdmission),
         workHistory: workRows.filter((r) => r.name.trim()).map(draftToWork),
         languages,
         // ---- 表示から外した項目は既存値をそのまま送る（省略すると空で上書きされる）----
@@ -194,7 +225,7 @@ export function ResidentProfileForm({ initial }: Props) {
           no="1"
           title="学校・在学状況"
           required
-          helper="留学先の大学・大学院を最初に。在学中なら「在学中」にチェック（一覧に「在学中」、卒業なら「アルムナイ ’24」と表示されます）。"
+          helper="留学先の大学・大学院を最初に。在学中なら「在学中」にチェック（一覧に「在学中」、卒業なら「アルムナイ ’24」と表示されます）。出願年を入れると「合格実績」に出願サイクルごとに表示されます。"
         >
           <CareerHistoryEditor
             kind="education"
@@ -216,6 +247,15 @@ export function ResidentProfileForm({ initial }: Props) {
                 .join(' / ')}
             </p>
           ) : null}
+                  <div className="mt-5 border-t border-border pt-4">
+            <CareerHistoryEditor
+              kind="admission"
+              label="ほかの合格校（進学しなかった学校）"
+              helper="合格したけれど進学しなかった学校があれば。上の学歴と合わせて「合格実績」として出願年ごとに表示されます。合格通知の提出は不要ですが、本人申告である旨を明記します。"
+              rows={admissionRows}
+              onChange={setAdmissionRows}
+            />
+          </div>
         </Block>
 
         {/* 2. 留学先の国・都市 */}
