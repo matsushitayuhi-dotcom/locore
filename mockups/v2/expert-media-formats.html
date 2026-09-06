@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>発信・メディアの表示形式 — 比較モック</title>
+<style>
+  :root {
+    --lime: #A8E01C; --lime-900: #5E8B0E; --lime-100: #EEF9CF;
+    --n900: #18181b; --n700: #3f3f46; --n500: #71717a; --n400: #a1a1aa; --n200: #e4e4e7; --n100: #f4f4f5;
+    --border: #e4e4e7; --border-strong: #d4d4d8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #fff; color: var(--n900); font-family: "Noto Sans JP", "Hiragino Sans", system-ui, sans-serif; font-feature-settings: "palt"; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 120px; }
+  h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .lede { color: var(--n500); font-size: 13.5px; margin: 0 0 28px; line-height: 1.7; }
+  .fmt { margin-top: 44px; padding-top: 22px; border-top: 1px solid var(--border); }
+  .fmt > .k { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .fmt > .k b { font-size: 11px; letter-spacing: .16em; color: var(--lime-900); }
+  .fmt > .k h2 { font-size: 17px; margin: 0; }
+  .fmt > .note { color: var(--n500); font-size: 12.5px; margin: 0 0 16px; line-height: 1.7; }
+  .sec-title { font-size: 20px; font-weight: 700; margin: 0 0 14px; }
+
+  /* 共通パーツ */
+  .thumb { background: linear-gradient(135deg, #2b2b30, #52525b); position: relative; overflow: hidden; }
+  .thumb.yt { background: linear-gradient(135deg, #1f1f24 0%, #3f3f46 60%, #71717a 100%); }
+  .thumb.note { background: linear-gradient(135deg, #e6f2ea, #bfe3cf); }
+  .thumb.blog { background: linear-gradient(135deg, #eef2f7, #cfd8e6); }
+  .thumb.ig { background: linear-gradient(135deg, #fde7ef, #fbd0d9); }
+  .thumb::after { content: attr(data-label); position: absolute; inset: auto 8px 8px auto; font-size: 10px; color: #fff; background: rgba(0,0,0,.55); padding: 2px 6px; border-radius: 999px; }
+  .badge { position: absolute; top: 8px; left: 8px; font-size: 10px; font-weight: 700; background: #fff; color: var(--n900); border-radius: 999px; padding: 3px 8px; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .play { position: absolute; inset: 0; display: grid; place-items: center; }
+  .play span { width: 46px; height: 46px; border-radius: 999px; background: var(--lime); display: grid; place-items: center; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+  .play span::before { content: ""; border-left: 14px solid var(--n900); border-top: 9px solid transparent; border-bottom: 9px solid transparent; margin-left: 3px; }
+  .t { font-weight: 700; font-size: 14px; line-height: 1.45; }
+  .d { color: var(--n500); font-size: 12px; line-height: 1.6; }
+  .m { color: var(--n400); font-size: 11px; margin-top: 4px; }
+
+  /* A アイコン列 */
+  .icons { display: flex; gap: 8px; }
+  .icons a { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border-strong); display: grid; place-items: center; font-size: 11px; font-weight: 700; color: var(--n700); text-decoration: none; }
+  .icons a:hover { border-color: var(--n900); }
+
+  /* B ボタンリスト */
+  .btns { display: grid; gap: 8px; }
+  .btn { display: grid; grid-template-columns: 52px 1fr auto; align-items: center; gap: 12px; border: 1px solid var(--border-strong); border-radius: 12px; padding: 8px 12px 8px 8px; text-decoration: none; color: inherit; }
+  .btn:hover { border-color: var(--n900); }
+  .btn .thumb { width: 52px; height: 52px; border-radius: 8px; }
+  .btn .t, .btn .m { display: block; }
+  .btn .arrow { color: var(--n400); font-size: 14px; }
+
+  /* C フィーチャード */
+  .featured { border: 1px solid var(--border); border-radius: 14px; overflow: hidden; text-decoration: none; color: inherit; display: block; }
+  .featured .thumb { aspect-ratio: 16/9; }
+  .featured .body { padding: 12px 14px 14px; }
+
+  /* D OG カード */
+  .cards { display: grid; gap: 10px; }
+  .card { display: grid; grid-template-columns: 1fr 160px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; }
+  .card .body { padding: 12px 14px; min-width: 0; }
+  .card .thumb { aspect-ratio: 16/10; }
+  .card:hover { border-color: var(--n900); }
+
+  /* E グリッド */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .grid3 .thumb { aspect-ratio: 1/1; border-radius: 8px; }
+
+  /* F カルーセル */
+  .rail { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+  .rail::-webkit-scrollbar { display: none; }
+  .rail .item { flex: 0 0 236px; text-decoration: none; color: inherit; }
+  .rail .thumb { aspect-ratio: 16/9; border-radius: 10px; margin-bottom: 8px; }
+
+  /* G 埋め込み（facade） */
+  .embed { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+  .embed .thumb { aspect-ratio: 16/9; }
+  .embed .cap { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+
+  /* 混在（推奨） */
+  .mix { display: grid; gap: 12px; }
+  .mix .cards { grid-template-columns: 1fr 1fr; }
+  .mix .card { grid-template-columns: 1fr; }
+  .mix .card .thumb { aspect-ratio: 16/9; }
+  .pill { display: inline-flex; gap: 6px; align-items: center; font-size: 11px; color: var(--n500); }
+  .pill i { width: 8px; height: 8px; border-radius: 999px; background: var(--lime); }
+  .fn { color: var(--n400); font-size: 11px; margin-top: 10px; }
+  .chooser { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+  .chooser span { border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px 10px; font-size: 12px; color: var(--n700); }
+  .chooser span.on { background: var(--n900); color: #fff; border-color: var(--n900); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>発信・メディアの表示形式</h1>
+  <p class="lede">同じ 4 本のリンク（YouTube 動画・note 記事・個人ブログ・Instagram）を、世の中にある方式 A〜G で並べたもの。最後に Locore 向けの推奨（混在）を置いた。画像はダミー。</p>
+
+  <!-- A -->
+  <section class="fmt">
+    <div class="k"><b>A</b><h2>アイコン列</h2></div>
+    <p class="note">現状の SocialIcons。場所を取らないが「何を発信している人か」は伝わらない。ヒーローの補助として残す用。</p>
+    <div class="icons"><a href="#">YT</a><a href="#">note</a><a href="#">Blog</a><a href="#">IG</a><a href="#">X</a></div>
+  </section>
+
+  <!-- B -->
+  <section class="fmt">
+    <div class="k"><b>B</b><h2>ボタンリスト（Linktree Classic）</h2></div>
+    <p class="note">1 行 1 リンク。左に 1:1 サムネ、タイトルは手入力でも成立する。全プラットフォームに使える保険。Instagram / X など自動サムネが取れないものはこれ。</p>
+    <div class="btns">
+      <a class="btn" href="#"><span class="thumb yt" data-label="YouTube"></span><span><span class="t">MBA 出願の 1 年間を 10 分で振り返る</span><span class="m">YouTube ・ 12:34</span></span><span class="arrow">→</span></a>
+      <a class="btn" href="#"><span class="thumb note" data-label="note"></span><span><span class="t">HBS エッセイ、私が捨てた 3 つの案</span><span class="m">note ・ 2026/06</span></span><span class="arrow">→</span></a>
+      <a class="btn" href="#"><span class="thumb blog" data-label="Blog"></span><span><span class="t">ボストン生活の初期費用まとめ</span><span class="m">rina-boston.com</span></span><span class="arrow">→</span></a>
+      <a class="btn" href="#"><span class="thumb ig" data-label="Instagram"></span><span><span class="t">@rina.boston</span><span class="m">Instagram</span></span><span class="arrow">→</span></a>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="fmt">
+    <div class="k"><b>C</b><h2>フィーチャードカード（Linktree Featured）</h2></div>
+    <p class="note">16:9 の大きな画像で 1 本を目立たせる。YouTube は video id からサムネが取れる（API 不要）。「まずこれを見て」に最適。</p>
+    <a class="featured" href="#">
+      <div class="thumb yt" data-label="1280×720"><span class="badge">YouTube</span><div class="play"><span></span></div></div>
+      <div class="body"><div class="t">MBA 出願の 1 年間を 10 分で振り返る</div><div class="d">GMAT・エッセイ・推薦状・面接、どの順で何をやったか。実際のスケジュール表つき。</div><div class="m">youtube.com ・ 12:34</div></div>
+    </a>
+  </section>
+
+  <!-- D -->
+  <section class="fmt">
+    <div class="k"><b>D</b><h2>リンクカード（OG unfurl）</h2></div>
+    <p class="note">Slack / Notion に URL を貼ったときの見た目。OG 画像＋タイトル＋説明＋ドメイン。note・Zenn・Medium・個人ブログなど「ページ単位」のリンクはこれで揃う。画像比率のばらつきは 16:10 cover で吸収。</p>
+    <div class="cards">
+      <a class="card" href="#"><div class="body"><div class="t">HBS エッセイ、私が捨てた 3 つの案</div><div class="d">最終稿に至るまでに書いた 3 つのボツ案と、なぜ捨てたか。エッセイの「軸」の決め方。</div><div class="m">note.com ・ 2026/06/12</div></div><div class="thumb note" data-label="og:image"></div></a>
+      <a class="card" href="#"><div class="body"><div class="t">ボストン生活の初期費用まとめ（2025 年版）</div><div class="d">家賃・デポジット・保険・通信。着任 1 か月で実際に払った額を全部出します。</div><div class="m">rina-boston.com</div></div><div class="thumb blog" data-label="og:image"></div></a>
+    </div>
+  </section>
+
+  <!-- E -->
+  <section class="fmt">
+    <div class="k"><b>E</b><h2>サムネイルグリッド（Instagram feed 型）</h2></div>
+    <p class="note">正方形 3 列。写真で「現地の空気」を見せる。Instagram の自動取得は Meta の App 審査が必要なので、当面は本人アップ画像。</p>
+    <div class="grid3">
+      <div class="thumb ig" data-label="写真"></div><div class="thumb ig" data-label="写真"></div><div class="thumb ig" data-label="写真"></div>
+      <div class="thumb blog" data-label="写真"></div><div class="thumb note" data-label="写真"></div><div class="thumb yt" data-label="写真"></div>
+    </div>
+  </section>
+
+  <!-- F -->
+  <section class="fmt">
+    <div class="k"><b>F</b><h2>横スクロール・カルーセル</h2></div>
+    <p class="note">動画やエピソードが 3 本以上あるとき。既存の ExpertRail（矢印つき）をそのまま流用できる。</p>
+    <div class="rail">
+      <a class="item" href="#"><div class="thumb yt" data-label="12:34"><span class="badge">YouTube</span></div><div class="t">MBA 出願の 1 年間を 10 分で振り返る</div><div class="m">2026/05</div></a>
+      <a class="item" href="#"><div class="thumb yt" data-label="08:10"><span class="badge">YouTube</span></div><div class="t">GMAT 700 までにやめたこと</div><div class="m">2026/03</div></a>
+      <a class="item" href="#"><div class="thumb yt" data-label="15:02"><span class="badge">YouTube</span></div><div class="t">HBS 1 年目、平日のリアル</div><div class="m">2026/01</div></a>
+      <a class="item" href="#"><div class="thumb note" data-label="note"><span class="badge">note</span></div><div class="t">HBS エッセイ、私が捨てた 3 つの案</div><div class="m">2026/06</div></a>
+    </div>
+  </section>
+
+  <!-- G -->
+  <section class="fmt">
+    <div class="k"><b>G</b><h2>埋め込みプレイヤー（facade）</h2></div>
+    <p class="note">その場で再生。iframe は重いので、最初はサムネ＋再生ボタンだけ出し、クリックで iframe に差し替える（lite-youtube 方式）。YouTube のみ許可の想定。</p>
+    <div class="embed">
+      <div class="thumb yt" data-label="クリックで再生"><div class="play"><span></span></div></div>
+      <div class="cap"><span class="t" style="font-size:13px">MBA 出願の 1 年間を 10 分で振り返る</span><span class="pill"><i></i>YouTube で開く</span></div>
+    </div>
+  </section>
+
+  <!-- 推奨 -->
+  <section class="fmt">
+    <div class="k"><b>推奨</b><h2>混在 — 「発信・メディア」セクション</h2></div>
+    <p class="note">リンクごとに形式を選ぶ（既定は platform から自動: YouTube → featured / note・blog → card / Instagram・X → button）。1 件だけ featured、残りは card を 2 列、自動サムネが無いものは button。Locore 内記事も同じ card 文法で混ぜる。</p>
+    <div class="chooser"><span class="on">おすすめ（自動）</span><span>リスト</span><span>グリッド</span><span>横スクロール</span></div>
+    <div class="sec-title">発信・メディア</div>
+    <div class="mix">
+      <a class="featured" href="#">
+        <div class="thumb yt" data-label="featured"><span class="badge">YouTube</span><div class="play"><span></span></div></div>
+        <div class="body"><div class="t">MBA 出願の 1 年間を 10 分で振り返る</div><div class="m">youtube.com ・ 12:34</div></div>
+      </a>
+      <div class="cards">
+        <a class="card" href="#"><div class="thumb note" data-label="card"><span class="badge">note</span></div><div class="body"><div class="t">HBS エッセイ、私が捨てた 3 つの案</div><div class="m">note.com ・ 2026/06</div></div></a>
+        <a class="card" href="#"><div class="thumb blog" data-label="card"><span class="badge">Locore 記事</span></div><div class="body"><div class="t">ボストンの家探し、最初の 2 週間でやること</div><div class="m">locore ・ 2026/04</div></div></a>
+      </div>
+      <div class="btns">
+        <a class="btn" href="#"><span class="thumb ig" data-label="IG"></span><span><span class="t">@rina.boston</span><span class="m">Instagram ・ 現地の写真</span></span><span class="arrow">→</span></a>
+      </div>
+    </div>
+    <p class="fn">※ 外部リンクは本人登録。タイトル・画像は自動取得を初期値にし、本人が上書きできる。</p>
+  </section>
+</div>
+</body>
+</html>
