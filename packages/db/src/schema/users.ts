@@ -229,6 +229,9 @@ export const users = pgTable(
      */
     admissions: jsonb('admissions').$type<AdmissionEntry[]>().notNull().default([]),
 
+    /** ダッシュボードの「今月の目標」（相談件数・manual/0090）。null = 未設定 */
+    monthlyGoalBookings: integer('monthly_goal_bookings'),
+
     /**
      * 得意分野（manual/0080_user_specialties.sql）。統制リストの第 2 階層 code の配列
      * （apps/web/lib/experts/specialties.ts）。最大 6 件、第 1 階層は 3 つまで。

@@ -12,6 +12,8 @@ import { getResidentProfile } from '@/lib/residents/byId';
 import { getCurrentUser } from '@/lib/auth/current-user';
 import { isFollowing } from '@/lib/follow/actions';
 import { FavoriteExpertButton } from '@/components/experts/FavoriteExpertButton';
+import { recordProfileView } from '@/lib/dashboard/views';
+import { getPublicBadges } from '@/lib/dashboard/milestones';
 import { CONSULTATION_TAG, topicLabel } from '@/lib/experts/constants';
 import { isExperienceOnly, specialtyLabel } from '@/lib/experts/specialties';
 import { EnrollmentChip } from '@/components/experts/ExpertCard';
@@ -115,7 +117,12 @@ export default async function ExpertDetailPage({
   const qualifications = qualsMap.get(profile.id) ?? [];
   // お気に入り（= フォロー）。本人には出さない
   const isMe = me?.id === profile.id;
-  const favorited = me && !isMe ? await isFollowing(profile.id) : false;
+  const [favorited, publicBadges] = await Promise.all([
+    me && !isMe ? isFollowing(profile.id) : Promise.resolve(false),
+    getPublicBadges(profile.id),
+  ]);
+  // 閲覧数（0090）: 本人・editor は数えない。失敗しても描画は続く
+  if (!isMe && me?.role !== 'editor') await recordProfileView(profile.id);
   const specialties = specialtiesMap.get(profile.id) ?? [];
   const hasExperienceOnly = specialties.some(isExperienceOnly);
   // 在学中 / アルムナイ（留学特化）。正式ヘルパ lib/experts/enrollment.ts
@@ -358,6 +365,11 @@ export default async function ExpertDetailPage({
                       在籍確認済み
                     </span>
                   ) : null}
+                  {publicBadges.map((b) => (
+                    <span key={b} className="inline-flex items-center rounded-full bg-primary-100 px-2 py-px text-[11px] font-bold text-primary-900">
+                      {b}
+                    </span>
+                  ))}
                   {languages.length > 0 ? (
                     <span className="inline-flex items-center gap-1.5">
                       <Globe className="h-[14px] w-[14px] text-neutral-400" aria-hidden />

@@ -22,6 +22,7 @@ import {
   CalendarClock,
   Inbox,
   Sparkles,
+  LayoutDashboard,
 } from 'lucide-react';
 
 /**
@@ -100,6 +101,12 @@ const USER_ITEMS: MenuItem[] = [
 
 /** 3. エキスパート向け（isWriter 時）。メッセージ・プロフィール編集は他セクションと重複するので置かない */
 const WRITER_ITEMS: MenuItem[] = [
+  {
+    href: '/dashboard',
+    label: 'ダッシュボード',
+    icon: LayoutDashboard,
+    matchPrefix: '/dashboard',
+  },
   {
     href: '/bookings?tab=received',
     label: '相談リクエスト',

@@ -12,6 +12,7 @@ export * from './users';
 export * from './writer_profiles';
 export * from './residency_verifications';
 export * from './sns_links';
+export * from './expert_dashboard';
 
 // Catalog
 export * from './countries';

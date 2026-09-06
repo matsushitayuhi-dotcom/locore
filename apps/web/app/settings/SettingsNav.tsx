@@ -24,6 +24,7 @@ type NavItem = {
 };
 
 const ALL_NAV_ITEMS: readonly NavItem[] = [
+  { href: '/dashboard', label: '← ダッシュボード', writerOnly: true },
   { href: '/settings', label: '公開ステータス', writerOnly: true },
   { href: '/settings/profile', label: 'プロフィール' },
   { href: '/settings/services', label: '提供サービス', writerOnly: true },
