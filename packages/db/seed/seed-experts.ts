@@ -200,6 +200,18 @@ const CITY_TZ: Record<string, string> = {
 // key は写真ファイル名（/experts/<key>.jpg）と決定論的 UUID に対応 — 変更しない
 // =============================================================================
 
+type MediaSeed = {
+  platform: NewSnsLink['platform'];
+  url: string;
+  kind: 'profile' | 'video' | 'article' | 'post' | 'podcast';
+  title?: string | null;
+  description?: string | null;
+  /** /experts/*.jpg を流用。null = 画像なし（フォールバックの面が出る） */
+  image?: string | null;
+  siteName?: string | null;
+  display?: 'auto' | 'icon' | 'button' | 'card' | 'featured' | 'embed';
+};
+
 type ExpertSeed = {
   key: string;
   displayName: string;
@@ -226,6 +238,12 @@ type ExpertSeed = {
   workHistory: WorkEntry[];
   /** 合格校（進学しなかった学校・0087・任意）。出願年ごとに「合格実績」で表示 */
   admissions?: AdmissionEntry[];
+  /**
+   * 発信・メディアのサンプル（sns_links・0088・任意）。/experts/[id] の「発信・メディア」と
+   * ヒーローのアイコン列の表示確認用。URL は実在しないサンプル、画像は persona の写真を流用。
+   * display を省略すると auto（YouTube 動画 → featured、記事 → card、アカウント → button）。
+   */
+  media?: MediaSeed[];
   /** 固定の相談室 URL（0082・任意）。承諾時に参加リンクへ自動コピーされるデモ用 */
   meetingRoom?: string;
   /** 継続プラン（0083・任意）。月定の「出願まるごと伴走」を 1 本追加する */
@@ -279,6 +297,13 @@ const EXPERTS: ExpertSeed[] = [
       { school: 'ウォートン・スクール', schoolNameEn: 'The Wharton School', degree: 'MBA', applicationYear: 2024 },
       { school: 'INSEAD', schoolNameEn: 'INSEAD', degree: 'MBA', applicationYear: 2024 },
     ],
+    // 発信: YouTube 動画（featured）・note 記事（card）・Instagram（button）・X（アイコンのみ）
+    media: [
+      { platform: 'youtube', url: 'https://www.youtube.com/watch?v=locore-sample-aya', kind: 'video', title: 'MBA 出願の 1 年間を 10 分で振り返る', description: 'GMAT・エッセイ・推薦状・面接、どの順で何をやったか。実際のスケジュール表つき。', image: '/experts/aya.jpg', siteName: 'YouTube' },
+      { platform: 'note', url: 'https://note.com/locore_sample_aya/n/sample1', kind: 'article', title: 'HBS エッセイ、私が捨てた 3 つの案', description: '最終稿に至るまでに書いた 3 つのボツ案と、なぜ捨てたか。', image: '/experts/misaki.jpg', siteName: 'note' },
+      { platform: 'instagram', url: 'https://www.instagram.com/locore_sample_aya/', kind: 'profile', title: '@locore_sample_aya', siteName: 'Instagram' },
+      { platform: 'x', url: 'https://x.com/locore_sample_aya', kind: 'profile', siteName: 'X', display: 'icon' },
+    ],
     workHistory: [
       { company: '総合商社（東京）', title: '海外営業', startYear: 2017, endYear: 2024 },
     ],
@@ -329,6 +354,13 @@ const EXPERTS: ExpertSeed[] = [
     ],
     admissions: [
       { school: 'カーネギーメロン大学', schoolNameEn: 'Carnegie Mellon University', degree: 'MS', applicationYear: 2023 },
+    ],
+    // 発信: YouTube 動画を「埋め込み」（facade）・Zenn 記事（card）・GitHub（button）・X（アイコンのみ）
+    media: [
+      { platform: 'youtube', url: 'https://www.youtube.com/watch?v=locore-sample-kentaro', kind: 'video', title: '社会人からの米大学院出願 — SoP の書き方を 15 分で', description: '職務経歴を研究興味につなげる構成と、推薦者への依頼メールの実例。', image: '/experts/kentaro.jpg', siteName: 'YouTube', display: 'embed' },
+      { platform: 'blog', url: 'https://zenn.dev/locore_sample_kentaro/articles/sop-12-drafts', kind: 'article', title: 'SoP を 12 回書き直した記録（全稿つき）', description: '第 1 稿から最終稿までの差分と、各回で受けたフィードバック。', image: '/experts/daisuke.jpg', siteName: 'Zenn' },
+      { platform: 'website', url: 'https://github.com/locore-sample-kentaro', kind: 'profile', title: 'GitHub — 出願書類テンプレート集', description: null, siteName: 'GitHub' },
+      { platform: 'x', url: 'https://x.com/locore_sample_kentaro', kind: 'profile', siteName: 'X', display: 'icon' },
     ],
     workHistory: [
       { company: '事業会社（東京）', title: 'ソフトウェアエンジニア', startYear: 2019, endYear: 2024 },
@@ -382,6 +414,12 @@ const EXPERTS: ExpertSeed[] = [
       { school: 'ユニヴァーシティ・カレッジ・ロンドン', schoolNameEn: 'University College London', degree: 'MSc Public Policy', applicationYear: 2023 },
       { school: 'シンガポール国立大学', schoolNameEn: 'National University of Singapore', degree: 'MPP', applicationYear: 2023 },
     ],
+    // 発信: note 記事（card）・Podcast（Spotify・card）・ブログ記事（画像なし → button）
+    media: [
+      { platform: 'note', url: 'https://note.com/locore_sample_misaki/n/sample1', kind: 'article', title: '英大学院の奨学金、出した 6 件と通った 2 件', description: 'チーヴニング等の申請書で何を書いたか。落ちた 4 件の理由も。', image: '/experts/chinatsu.jpg', siteName: 'note' },
+      { platform: 'website', url: 'https://open.spotify.com/episode/locore-sample-misaki-12', kind: 'podcast', title: '英国留学ラジオ #12 — 奨学金エッセイ、審査員は何を見るか', description: '元審査側のゲストと 40 分。', image: '/experts/misaki.jpg', siteName: 'Spotify' },
+      { platform: 'blog', url: 'https://sample-misaki-london.example.com/2026/06/ielts-plan', kind: 'article', title: 'IELTS 7.5 までの 4 か月プラン', siteName: 'sample-misaki-london.example.com' },
+    ],
     workHistory: [
       { company: '中央官庁（東京）', title: '総合職', startYear: 2016, endYear: 2024 },
     ],
@@ -431,6 +469,12 @@ const EXPERTS: ExpertSeed[] = [
       { school: 'パリ政治学院', schoolNameEn: 'Paris Institute of Political Studies', universityWikidataId: 'Q859363', degree: '修士', field: '国際関係', startYear: 2019, endYear: 2021, applicationYear: 2018 },
       { school: '上智大学', degree: '学士', field: '外国語学部', startYear: 2013, endYear: 2017 },
     ],
+    // 発信: Instagram の投稿（画像あり → card）・note アカウント（button）・Threads（アイコンのみ）
+    media: [
+      { platform: 'instagram', url: 'https://www.instagram.com/p/locore-sample-chinatsu-1/', kind: 'post', title: 'シアンスポの卒業式と、2 年間で歩いたパリの 12 区', image: '/experts/chinatsu.jpg', siteName: 'Instagram' },
+      { platform: 'note', url: 'https://note.com/locore_sample_chinatsu', kind: 'profile', title: 'note — パリ生活と出願の記録', siteName: 'note' },
+      { platform: 'threads', url: 'https://www.threads.net/@locore_sample_chinatsu', kind: 'profile', siteName: 'Threads', display: 'icon' },
+    ],
     workHistory: [
       { company: 'パリの国際機関系企業', title: 'プログラムオフィサー', startYear: 2021, current: true },
     ],
@@ -474,6 +518,13 @@ const EXPERTS: ExpertSeed[] = [
       { school: '東北大学', degree: '修士', field: '情報科学', startYear: 2019, endYear: 2021 },
       { school: '東北大学', degree: '学士', field: '工学', startYear: 2015, endYear: 2019 },
     ],
+    // 発信: ブログ記事（card）・YouTube チャンネル（button）・Google Scholar（button）・X（button）
+    media: [
+      { platform: 'blog', url: 'https://sample-daisuke-berlin.example.com/2026/03/paid-phd-positions', kind: 'article', title: '欧州 PhD の「給与付きポジション」の探し方', description: 'EURAXESS・研究室サイト・学会 ML の 3 経路と、応募メールの実例。', image: '/experts/daisuke.jpg', siteName: 'sample-daisuke-berlin.example.com' },
+      { platform: 'youtube', url: 'https://www.youtube.com/@locore_sample_daisuke', kind: 'profile', title: '研究室選びチャンネル', description: '欧州の ML 研究室を訪ねる動画シリーズ', siteName: 'YouTube' },
+      { platform: 'website', url: 'https://scholar.google.com/citations?user=locore-sample-daisuke', kind: 'profile', title: 'Google Scholar', siteName: 'Google Scholar' },
+      { platform: 'x', url: 'https://x.com/locore_sample_daisuke', kind: 'profile', title: '@locore_sample_daisuke — 研究と Berlin 生活', siteName: 'X' },
+    ],
     workHistory: [
       { company: '研究所（東京）', title: 'リサーチアシスタント', startYear: 2021, endYear: 2022 },
     ],
@@ -514,6 +565,12 @@ const EXPERTS: ExpertSeed[] = [
     education: [
       { school: 'ブリティッシュコロンビア大学', schoolNameEn: 'University of British Columbia', universityWikidataId: 'Q391028', degree: '学士課程', field: '経済学', startYear: 2023, current: true, applicationYear: 2022 },
     ],
+    // 発信: YouTube 動画（featured）・TikTok 動画（card）・Instagram（button）
+    media: [
+      { platform: 'youtube', url: 'https://www.youtube.com/watch?v=locore-sample-eri', kind: 'video', title: 'UBC の寮ルームツアーと 1 か月の食費', description: 'Totem Park の部屋・食堂・洗濯事情。実際に払った額つき。', image: '/experts/eri.jpg', siteName: 'YouTube' },
+      { platform: 'tiktok', url: 'https://www.tiktok.com/@locore_sample_eri/video/1234567890', kind: 'video', title: 'バンクーバーの大学生の 1 日', image: '/experts/haruka.jpg', siteName: 'TikTok' },
+      { platform: 'instagram', url: 'https://www.instagram.com/locore_sample_eri/', kind: 'profile', title: '@locore_sample_eri', siteName: 'Instagram' },
+    ],
     workHistory: [],
     avatar: '/experts/eri.jpg',
     price30: 3500,
@@ -550,6 +607,13 @@ const EXPERTS: ExpertSeed[] = [
     title60: '学部出願の全体設計（60分）',
     education: [
       { school: 'ニューヨーク大学', schoolNameEn: 'New York University', universityWikidataId: 'Q49210', degree: '学士', field: 'マーケティング', startYear: 2019, endYear: 2023, applicationYear: 2018 },
+    ],
+    // 発信: note 記事（card）・ブログ記事（画像なし → button）・Instagram（button）・X（アイコンのみ）
+    media: [
+      { platform: 'note', url: 'https://note.com/locore_sample_mayu/n/sample1', kind: 'article', title: 'Common App エッセイ、私の書き方（650 語の使い方）', description: '日本の高校から NYU に出したときの構成と、添削で直された 5 点。', image: '/experts/mayu.jpg', siteName: 'note' },
+      { platform: 'blog', url: 'https://sample-mayu-nyc.example.com/financial-aid', kind: 'article', title: 'Financial Aid 申請、CSS Profile で迷ったところ全部', siteName: 'sample-mayu-nyc.example.com' },
+      { platform: 'instagram', url: 'https://www.instagram.com/locore_sample_mayu/', kind: 'profile', title: '@locore_sample_mayu', siteName: 'Instagram' },
+      { platform: 'x', url: 'https://x.com/locore_sample_mayu', kind: 'profile', siteName: 'X', display: 'icon' },
     ],
     workHistory: [
       { company: 'NYのマーケティング企業', title: 'アナリスト', startYear: 2023, current: true },
@@ -591,6 +655,12 @@ const EXPERTS: ExpertSeed[] = [
     education: [
       { school: 'メルボルン大学', schoolNameEn: 'University of Melbourne', universityWikidataId: 'Q319078', degree: '交換留学', field: '国際関係', startYear: 2023, endYear: 2023 },
       { school: '明治大学', degree: '学士', field: '国際日本学', startYear: 2020, endYear: 2024 },
+    ],
+    // 発信: YouTube 動画（featured）・note 記事（画像なし → button）・Instagram（button）
+    media: [
+      { platform: 'youtube', url: 'https://www.youtube.com/watch?v=locore-sample-haruka', kind: 'video', title: '交換留学の学内選考、私が準備した 3 つのこと', description: '志望理由書・語学スコア・面接。落ちた友人との違いも正直に。', image: '/experts/haruka.jpg', siteName: 'YouTube' },
+      { platform: 'note', url: 'https://note.com/locore_sample_haruka/n/sample1', kind: 'article', title: 'メルボルンでシェアハウスを 2 週間で決めた記録', siteName: 'note' },
+      { platform: 'instagram', url: 'https://www.instagram.com/locore_sample_haruka/', kind: 'profile', title: '@locore_sample_haruka', siteName: 'Instagram' },
     ],
     workHistory: [
       { company: 'メルボルンの人材系企業', title: 'コーディネーター', startYear: 2024, current: true },
@@ -1008,99 +1078,27 @@ async function main() {
   // 表示確認用。URL はサンプル（実在しない）で、画像は persona の写真を流用。is_sample の
   // ユーザーに紐づくので `DELETE FROM users WHERE is_sample = true` で一緒に消える。
   console.log('[seed-experts] sns_links (media samples) ...');
-  const sampleSns: NewSnsLink[] = [
-    {
-      id: stableUuid('expert-sns:aya:yt-video'),
-      userId: expertUuid('aya'),
-      platform: 'youtube',
-      url: 'https://www.youtube.com/watch?v=locore-sample-aya',
-      kind: 'video',
-      title: 'MBA 出願の 1 年間を 10 分で振り返る',
-      description: 'GMAT・エッセイ・推薦状・面接、どの順で何をやったか。実際のスケジュール表つき。',
-      imageUrl: '/experts/aya.jpg',
-      siteName: 'YouTube',
-      display: 'auto',
-      sortOrder: 0,
+  const sampleSns: NewSnsLink[] = EXPERTS.flatMap((e) =>
+    (e.media ?? []).map((m, i) => ({
+      id: stableUuid(`expert-sns:${e.key}:${i}`),
+      userId: expertUuid(e.key),
+      platform: m.platform,
+      url: m.url,
+      kind: m.kind,
+      title: m.title ?? null,
+      description: m.description ?? null,
+      imageUrl: m.image ?? null,
+      siteName: m.siteName ?? null,
+      display: m.display ?? 'auto',
+      sortOrder: i,
       previewFetchedAt: new Date(),
-      previewStatus: 'ok',
-    },
-    {
-      id: stableUuid('expert-sns:aya:note'),
-      userId: expertUuid('aya'),
-      platform: 'note',
-      url: 'https://note.com/locore_sample_aya/n/sample1',
-      kind: 'article',
-      title: 'HBS エッセイ、私が捨てた 3 つの案',
-      description: '最終稿に至るまでに書いた 3 つのボツ案と、なぜ捨てたか。',
-      imageUrl: '/experts/misaki.jpg',
-      siteName: 'note',
-      display: 'auto',
-      sortOrder: 1,
-      previewFetchedAt: new Date(),
-      previewStatus: 'ok',
-    },
-    {
-      id: stableUuid('expert-sns:aya:ig'),
-      userId: expertUuid('aya'),
-      platform: 'instagram',
-      url: 'https://www.instagram.com/locore_sample_aya/',
-      kind: 'profile',
-      title: '@locore_sample_aya',
-      description: null,
-      imageUrl: null,
-      siteName: 'Instagram',
-      display: 'auto',
-      sortOrder: 2,
-      previewFetchedAt: new Date(),
-      previewStatus: 'failed',
-    },
-    {
-      id: stableUuid('expert-sns:aya:x'),
-      userId: expertUuid('aya'),
-      platform: 'x',
-      url: 'https://x.com/locore_sample_aya',
-      kind: 'profile',
-      title: null,
-      description: null,
-      imageUrl: null,
-      siteName: 'X',
-      display: 'icon',
-      sortOrder: 3,
-      previewFetchedAt: new Date(),
-      previewStatus: 'failed',
-    },
-    {
-      id: stableUuid('expert-sns:misaki:note'),
-      userId: expertUuid('misaki'),
-      platform: 'note',
-      url: 'https://note.com/locore_sample_misaki/n/sample1',
-      kind: 'article',
-      title: '英大学院の奨学金、出した 6 件と通った 2 件',
-      description: 'チーヴニング等の申請書で何を書いたか。落ちた 4 件の理由も。',
-      imageUrl: '/experts/kentaro.jpg',
-      siteName: 'note',
-      display: 'auto',
-      sortOrder: 0,
-      previewFetchedAt: new Date(),
-      previewStatus: 'ok',
-    },
-    {
-      id: stableUuid('expert-sns:misaki:blog'),
-      userId: expertUuid('misaki'),
-      platform: 'blog',
-      url: 'https://sample-misaki-london.example.com/2026/06/ielts-plan',
-      kind: 'article',
-      title: 'IELTS 7.5 までの 4 か月プラン',
-      description: null,
-      imageUrl: null,
-      siteName: 'sample-misaki-london.example.com',
-      display: 'auto',
-      sortOrder: 1,
-      previewFetchedAt: new Date(),
-      previewStatus: 'ok',
-    },
-  ];
+      previewStatus: m.title || m.image ? 'ok' : 'failed',
+    })),
+  );
+  // サンプルユーザーの既存行（旧 ID 形式を含む）を消してから入れ直す
+  const sampleUserIds = EXPERTS.map((e) => expertUuid(e.key));
   try {
+    await db.delete(snsLinks).where(inArray(snsLinks.userId, sampleUserIds));
     await db
       .insert(snsLinks)
       .values(sampleSns)

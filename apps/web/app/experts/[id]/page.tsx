@@ -37,7 +37,7 @@ import { countAdmissions, groupAdmissions } from '@/lib/experts/admissions';
  * 認証・言語・評価」を 1 画面に。長いリスト（相談できること / 自己紹介 / 経歴 / レビュー）は
  * 最初の数件だけ見せて <details> で展開。使い方・FAQ は /about-service への 1 行リンクに。
  *
- * 左: ヒーロー（アイコン列つき）→ ページ内アンカー → こんな相談に乗れます → 合格実績 → 自己紹介 → 経歴 → 資格 →
+ * 左: ヒーロー（アイコン列つき）→ ページ内アンカー → こんな相談に乗れます → 自己紹介 → 合格実績 → 経歴 → 資格 →
  *     発信・メディア（Locore 記事が最優先、外部リンクは featured / card / button・0088）→ レビュー（最後）
  * 右 (sticky、画面より長ければ中でスクロール): 相談メニュー → 継続プラン → 直近の空き枠
  * モバイル（1 カラム）では DOM 順どおり「ヒーロー → 相談メニュー（サービス）→ 本文 → レビュー」。
@@ -199,8 +199,8 @@ export default async function ExpertDetailPage({
   // ページ内アンカー（存在するセクションだけ）
   const anchors: Array<{ id: string; label: string }> = [
     ...(profile.offerings.length > 0 ? [{ id: 'offerings', label: '相談できること' }] : []),
-    ...(admissionCount > 0 ? [{ id: 'admissions', label: '合格実績' }] : []),
     ...(bioParagraphs.length > 0 ? [{ id: 'about', label: '自己紹介' }] : []),
+    ...(admissionCount > 0 ? [{ id: 'admissions', label: '合格実績' }] : []),
     ...(hasCareer ? [{ id: 'career', label: '経歴' }] : []),
     ...(qualifications.length > 0 ? [{ id: 'qualifications', label: '資格・スコア' }] : []),
     ...(mediaCount > 0 ? [{ id: 'media', label: '発信' }] : []),
@@ -560,6 +560,29 @@ export default async function ExpertDetailPage({
               </Section>
             ) : null}
 
+            {/* ===== 自己紹介（先頭段落 + 続きを読む）===== */}
+            {bioLead ? (
+              <Section title="自己紹介" id="about">
+                <div className="max-w-[36em]">
+                  <p className="text-[14.5px] leading-[1.85] text-neutral-700">{bioLead}</p>
+                  {bioRest.length > 0 ? (
+                    <details className="group mt-2.5">
+                      <summary className="inline-flex cursor-pointer list-none items-center rounded-full border border-border-strong px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
+                        続きを読む
+                      </summary>
+                      <div className="space-y-3 pt-3">
+                        {bioRest.map((p, i) => (
+                          <p key={i} className="text-[14.5px] leading-[1.85] text-neutral-700">
+                            {p}
+                          </p>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
+                </div>
+              </Section>
+            ) : null}
+
             {/* ===== 合格実績（出願年ごと。進学校にはタグ）===== */}
             {admissionCount > 0 ? (
               <Section title="合格実績" id="admissions">
@@ -617,29 +640,6 @@ export default async function ExpertDetailPage({
                 <p className="mt-2 text-[11px] text-neutral-400">
                   ※合格実績は本人申告の情報です。在籍は「在籍確認済み」バッジ、スコアは「資格・スコア」で運営が確認しています。
                 </p>
-              </Section>
-            ) : null}
-
-            {/* ===== 自己紹介（先頭段落 + 続きを読む）===== */}
-            {bioLead ? (
-              <Section title="自己紹介" id="about">
-                <div className="max-w-[36em]">
-                  <p className="text-[14.5px] leading-[1.85] text-neutral-700">{bioLead}</p>
-                  {bioRest.length > 0 ? (
-                    <details className="group mt-2.5">
-                      <summary className="inline-flex cursor-pointer list-none items-center rounded-full border border-border-strong px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
-                        続きを読む
-                      </summary>
-                      <div className="space-y-3 pt-3">
-                        {bioRest.map((p, i) => (
-                          <p key={i} className="text-[14.5px] leading-[1.85] text-neutral-700">
-                            {p}
-                          </p>
-                        ))}
-                      </div>
-                    </details>
-                  ) : null}
-                </div>
               </Section>
             ) : null}
 

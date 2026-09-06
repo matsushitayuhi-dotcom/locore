@@ -46,6 +46,14 @@ function hostOf(url: string): string {
   }
 }
 
+/** 左上の小バッジ。website / blog は取得したサイト名（Spotify・Zenn・GitHub …）を優先 */
+function badgeLabel(l: Pick<SocialLink, 'platform' | 'siteName'>): string {
+  if ((l.platform === 'website' || l.platform === 'blog') && l.siteName && l.siteName.length <= 16 && !l.siteName.includes('.')) {
+    return l.siteName;
+  }
+  return PLATFORM_LABEL[l.platform] ?? l.platform;
+}
+
 function PlatformBadge({ platform, label }: { platform: string; label?: string }) {
   return (
     <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-[3px] text-[10px] font-bold text-neutral-900 shadow-sm">
@@ -65,7 +73,7 @@ function FeaturedItem({ l }: { l: SocialLink }) {
     >
       <div className="relative aspect-video">
         <MediaThumb src={l.imageUrl} platform={l.platform} className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]" />
-        <PlatformBadge platform={l.platform} />
+        <PlatformBadge platform={l.platform} label={badgeLabel(l)} />
         {isVideo ? (
           <span className="absolute inset-0 grid place-items-center">
             <span className="grid h-12 w-12 place-items-center rounded-full bg-primary-500 text-neutral-950 shadow-lg">
@@ -130,7 +138,7 @@ function CardItem({ l }: { l: SocialLink }) {
     >
       <div className="relative aspect-[16/9]">
         <MediaThumb src={l.imageUrl} platform={l.platform} className="h-full w-full object-cover" />
-        <PlatformBadge platform={l.platform} />
+        <PlatformBadge platform={l.platform} label={badgeLabel(l)} />
       </div>
       <div className="p-3">
         <b className="line-clamp-2 block text-[13.5px] font-semibold leading-[1.5]">{l.title ?? l.url}</b>
@@ -172,7 +180,7 @@ function ArticleCard({ a }: { a: MediaArticle }) {
 }
 
 function ButtonItem({ l }: { l: SocialLink }) {
-  const label = PLATFORM_LABEL[l.platform] ?? l.platform;
+  const label = badgeLabel(l);
   return (
     <a
       href={l.url}
