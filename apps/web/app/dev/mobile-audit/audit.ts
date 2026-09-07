@@ -14,7 +14,7 @@
  */
 
 export type Finding = {
-  kind: 'はみ出し' | '縦積み' | 'タップ領域';
+  kind: 'はみ出し' | '縦積み' | '窮屈' | 'タップ領域';
   tag: string;
   text: string;
   detail: string;
@@ -69,18 +69,28 @@ export function inspect(doc: Document, width: number): { overflow: number; findi
     const leaf = el.children.length === 0;
     const text = (el.textContent || '').trim();
 
-    // 2. 縦積み（テキストだけを持つ要素で、幅が数文字ぶんしか無いのに何行にもなっている）
-    if (leaf && text.length >= 4) {
+    // 2. 縦積み / 窮屈
+    //    getBoundingClientRect の高さには padding と border が入るので、そのまま
+    //    行数に換算すると py-2（16px）が 1 行に化けて誤検知する。文字が実際に入る
+    //    箱（content box）で測ること。
+    if (leaf && text.length >= 5) {
       const cs = getComputedStyle(el);
       const fs = parseFloat(cs.fontSize) || 16;
       const lh = parseFloat(cs.lineHeight) || fs * 1.5;
-      const lines = Math.round(b.height / lh);
-      if (lines >= 3 && b.width < fs * 3.2) {
+      const innerH =
+        b.height -
+        parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) -
+        parseFloat(cs.borderTopWidth) - parseFloat(cs.borderBottomWidth);
+      const innerW = b.width - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const lines = Math.max(1, Math.round(innerH / lh));
+      const perLine = innerW / fs; // 1 行に何文字入るか
+      if (lines >= 2 && perLine < 6) {
+        const severe = lines >= 3 && perLine < 3.2;
         findings.push({
-          kind: '縦積み',
+          kind: severe ? '縦積み' : '窮屈',
           tag: el.tagName.toLowerCase(),
           text: text.slice(0, 24),
-          detail: `幅 ${Math.round(b.width)}px に ${lines} 行（文字サイズ ${Math.round(fs)}px）`,
+          detail: `中身 ${Math.round(innerW)}px に ${lines} 行（文字 ${Math.round(fs)}px → 1 行 ${perLine.toFixed(1)} 文字）`,
           className: cls(el),
         });
       }

@@ -51,7 +51,8 @@ export function AuditClient() {
       <p className="mt-2 max-w-[70ch] text-[13.5px] leading-[1.9] text-neutral-600">
         各ページを指定した幅の iframe で開いて、
         <b>横スクロール</b>・<b>画面からのはみ出し</b>・
-        <b>日本語が 1 文字ずつ縦積みになっている箇所</b>を数えます。
+        <b>日本語が 1 文字ずつ縦積みになっている箇所</b>を数えます
+        （2 行以上かつ 1 行 6 文字未満なら「窮屈」、3 行以上かつ 3 文字未満なら「縦積み」）。
         ログインが要るページも、いまのセッションのまま検査できます。
         開発サーバーだと各ページの初回コンパイルで数秒かかるので、
         <b>プレビューや本番のデプロイ先で開くほうが速く、実データも入ります</b>。
@@ -116,7 +117,9 @@ export function AuditClient() {
                           ? 'bg-danger-500 text-white'
                           : f.kind === 'はみ出し'
                             ? 'bg-neutral-900 text-white'
-                            : 'bg-muted text-neutral-600')
+                            : f.kind === '窮屈'
+                              ? 'bg-neutral-200 text-neutral-800'
+                              : 'bg-muted text-neutral-600')
                       }
                     >
                       {f.kind}

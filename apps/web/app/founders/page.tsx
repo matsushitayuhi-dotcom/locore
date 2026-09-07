@@ -104,23 +104,26 @@ export default function FoundersPage() {
           <p className="mt-2 text-[13px] text-foreground/60">
             Founders 枠は通常 70% に +5% の優遇あり（合計 75% 取り分の想定）。
           </p>
+          {/* overflow-x-auto の中で w-full だけだと、はみ出さずにセルが潰れる
+              （スマホでは「月50本売れた場合」が 56px 幅の 9 行になっていた）。
+              min-w を与えて実際にはみ出させ、横スワイプで読ませる。 */}
           <div className="mt-6 overflow-x-auto rounded-md border border-border">
-            <table className="w-full text-[14px]">
+            <table className="w-full min-w-[560px] text-[14px]">
               <thead className="bg-muted">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-foreground/70">
+                  <th className="whitespace-nowrap px-4 py-3 text-left font-semibold text-foreground/70">
                     シナリオ
                   </th>
-                  <th className="px-4 py-3 text-right font-semibold tabular">
+                  <th className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular">
                     1本価格
                   </th>
-                  <th className="px-4 py-3 text-right font-semibold tabular">
+                  <th className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular">
                     月販売数
                   </th>
-                  <th className="px-4 py-3 text-right font-semibold tabular">
+                  <th className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular">
                     Gross
                   </th>
-                  <th className="px-4 py-3 text-right font-semibold tabular text-secondary-700">
+                  <th className="whitespace-nowrap px-4 py-3 text-right font-semibold tabular text-secondary-700">
                     クリエイター取り分（75%）
                   </th>
                 </tr>
@@ -131,17 +134,17 @@ export default function FoundersPage() {
                   const writer = Math.floor(gross * 0.75);
                   return (
                     <tr key={r.label}>
-                      <td className="px-4 py-3 text-foreground/80">{r.label}</td>
-                      <td className="px-4 py-3 text-right tabular">
+                      <td className="whitespace-nowrap px-4 py-3 text-foreground/80">{r.label}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular">
                         ¥{r.price.toLocaleString('ja-JP')}
                       </td>
-                      <td className="px-4 py-3 text-right tabular">
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular">
                         {r.sales}本
                       </td>
-                      <td className="px-4 py-3 text-right tabular">
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular">
                         ¥{gross.toLocaleString('ja-JP')}
                       </td>
-                      <td className="px-4 py-3 text-right tabular font-semibold text-secondary-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-right tabular font-semibold text-secondary-700">
                         ¥{writer.toLocaleString('ja-JP')}
                       </td>
                     </tr>
