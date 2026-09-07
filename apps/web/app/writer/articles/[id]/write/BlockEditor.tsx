@@ -281,7 +281,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   return (
     <main className="bg-background text-foreground">
       {/* ===== ヘッダー（固定） ===== */}
-      <div className="sticky top-0 z-30 border-b border-neutral-900 bg-white">
+      <div className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1120px] items-center gap-3 px-5 py-2.5 sm:px-8">
           <Link href={demo ? '/' : '/writer/articles'} className="text-[12.5px] text-neutral-500 hover:text-foreground">
             {demo ? '← Locore' : '← 記事一覧'}
@@ -289,28 +289,28 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
           <span className="text-[12px] text-neutral-400">
             {saving ? '保存中…' : dirty ? '未保存の変更' : savedAt ? `保存済み ${fmtTime(savedAt)}` : ''}
           </span>
-          <span className={'border px-2.5 py-1 text-[11px] font-bold ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-neutral-900 text-neutral-900')}>
+          <span className={'rounded-full border px-2.5 py-1 text-[11px] font-bold ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong text-neutral-600')}>
             {demo ? 'デモ（保存されません）' : status === 'published' ? '公開中' : '下書き'}
           </span>
           <div className="ml-auto flex items-center gap-2">
             {demo ? (
-              <Link href="/articles/e9cc342f-e475-5161-a3b4-006706e81c6d" target="_blank" className="inline-flex items-center gap-1 border border-neutral-900 bg-white px-3 py-1.5 text-[12px] font-bold hover:bg-neutral-100">
+              <Link href="/articles/e9cc342f-e475-5161-a3b4-006706e81c6d" target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
                 記事ページの例 <ExternalLink className="h-3 w-3" aria-hidden />
               </Link>
             ) : (
-              <Link href={`/articles/${initial.id}`} target="_blank" className="inline-flex items-center gap-1 border border-neutral-900 bg-white px-3 py-1.5 text-[12px] font-bold hover:bg-neutral-100">
+              <Link href={`/articles/${initial.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
                 プレビュー <ExternalLink className="h-3 w-3" aria-hidden />
               </Link>
             )}
-            <button type="button" onClick={() => void save()} disabled={saving || !dirty} className="border border-neutral-900 bg-white px-3 py-1.5 text-[12px] font-bold hover:bg-neutral-100 disabled:opacity-40">
+            <button type="button" onClick={() => void save()} disabled={saving || !dirty} className="rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40">
               保存
             </button>
             {status === 'published' ? (
-              <button type="button" onClick={onUnpublish} disabled={pending} className="border border-neutral-300 px-3 py-1.5 text-[12px] font-bold text-neutral-600 hover:border-neutral-900 hover:text-foreground">
+              <button type="button" onClick={onUnpublish} disabled={pending} className="rounded-full px-3 py-1.5 text-[12px] font-bold text-neutral-500 hover:text-foreground">
                 非公開にする
               </button>
             ) : (
-              <button type="button" onClick={onPublish} disabled={pending} className="border border-neutral-900 bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700 disabled:opacity-60">
+              <button type="button" onClick={onPublish} disabled={pending} className="rounded-full bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700 disabled:opacity-60">
                 {pending ? '処理中…' : '公開する'}
               </button>
             )}
@@ -318,50 +318,47 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-[1120px] grid-cols-1 gap-x-14 px-5 pb-40 pt-10 sm:px-8 lg:grid-cols-[200px_640px_1fr]">
-        {/* ===== 左: 設定 ===== */}
-        <aside className="lg:sticky lg:top-20 lg:self-start">
-          <div className="space-y-4 text-[12.5px]">
-            <div>
-              <label className="mb-1 block text-[11px] font-bold tracking-[0.14em] text-neutral-500">テーマ</label>
-              <select value={topic} onChange={(e) => (setTopic(e.target.value), touch())} className="h-9 w-full border border-neutral-300 bg-white px-2 text-[13px] focus:border-neutral-900 focus:outline-none">
-                <option value="">— 選ぶ —</option>
-                {SPECIALTY_GROUPS.map((g) => (
-                  <option key={g.code} value={g.code}>
-                    {g.label}
-                  </option>
-                ))}
-              </select>
-              <p className="mt-1 text-[11px] text-neutral-400">一覧のテーマタブと「同じテーマの記事」に使います</p>
+      <div className="mx-auto max-w-[720px] px-5 pb-40 pt-8 sm:px-8">
+        {/* ===== 一番上: テーマとカバー写真（本文と同じ列） ===== */}
+        <div className="mb-6 flex flex-wrap items-start gap-3 text-[12.5px]">
+          <label className="flex items-center gap-2">
+            <span className="text-[11px] font-bold tracking-[0.14em] text-neutral-500">テーマ</span>
+            <select value={topic} onChange={(e) => (setTopic(e.target.value), touch())} className="h-9 rounded-md border border-border bg-background px-2 text-[13px] focus:border-primary-500 focus:outline-none">
+              <option value="">— 選ぶ —</option>
+              {SPECIALTY_GROUPS.map((g) => (
+                <option key={g.code} value={g.code}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {cover ? (
+            <div className="relative h-9 w-[54px] overflow-hidden rounded-md bg-neutral-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={cover} alt="" className="h-full w-full object-cover" />
+              <button type="button" onClick={() => (setCover(''), touch())} className="absolute inset-0 grid place-items-center bg-black/0 text-white opacity-0 transition hover:bg-black/50 hover:opacity-100" aria-label="カバーを外す">
+                <X className="h-3.5 w-3.5" />
+              </button>
             </div>
-            <div>
-              <label className="mb-1 block text-[11px] font-bold tracking-[0.14em] text-neutral-500">カバー写真（任意）</label>
-              {cover ? (
-                <div className="relative overflow-hidden border border-neutral-300 bg-neutral-100 aspect-[3/2]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cover} alt="" className="h-full w-full object-cover" />
-                  <button type="button" onClick={() => (setCover(''), touch())} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border border-neutral-900 bg-white text-neutral-700" aria-label="削除">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ) : (
-                <label className="flex cursor-pointer items-center justify-center gap-2 border border-dashed border-neutral-400 py-5 text-[12px] text-neutral-500 hover:border-neutral-900 hover:text-foreground">
-                  <ImagePlus className="h-4 w-4" /> 画像を選ぶ
-                  <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && void onCover(e.target.files[0])} />
-                </label>
-              )}
-            </div>
-            <div className="border-t border-border pt-3 text-[11px] leading-[1.7] text-neutral-400">
-              <p>{chars.toLocaleString('ja-JP')} 文字 · 読了 約 {Math.max(1, Math.round(chars / 500))} 分</p>
-              <p className="mt-2">空の行で「/」を打つとブロックを選べます。URL を 1 行貼って Enter でブックマーク・埋め込みになります。</p>
-              <p className="mt-1">**太字**、[文字](URL) が使えます。</p>
-            </div>
+          ) : (
+            <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-border px-3 text-[12px] text-neutral-500 hover:border-primary-300 hover:text-primary-700">
+              <ImagePlus className="h-3.5 w-3.5" /> カバー写真
+              <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && void onCover(e.target.files[0])} />
+            </label>
+          )}
+          <span className="ml-auto self-center text-[11px] text-neutral-400">
+            {chars.toLocaleString('ja-JP')} 文字 · 読了 約 {Math.max(1, Math.round(chars / 500))} 分
+          </span>
+        </div>
+        {cover ? (
+          <div className="mb-6 overflow-hidden rounded-xl bg-neutral-100 aspect-[3/2]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt="" className="h-full w-full object-cover" />
           </div>
-        </aside>
+        ) : null}
 
-        {/* ===== 中央: 本文（枠で囲う・角丸なし・行ごとの罫） ===== */}
-        <div className="min-w-0 border border-neutral-900 bg-white">
-          <div className="border-b border-neutral-900 px-6 py-5">
+        {/* ===== 本文 ===== */}
+        <div className="min-w-0">
           <textarea
             value={title}
             onChange={(e) => (setTitle(e.target.value.replace(/\n/g, '')), touch())}
@@ -376,16 +373,14 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
             rows={2}
             className="mt-2 w-full resize-none border-0 bg-transparent p-0 text-[18px] leading-[1.75] text-neutral-700 placeholder:text-neutral-300 focus:outline-none"
           />
-          </div>
-          <div className="border-b border-neutral-900 px-6 py-5">
-            <AutoTextarea
-              value={lead}
-              onChange={(v) => (setLead(v), touch())}
-              placeholder="リード文 — 読む理由を 3 行以内で（任意）"
-              className="text-[19px] leading-[1.85] text-neutral-800"
-            />
-          </div>
-          <div className="divide-y divide-neutral-200">
+          <div className="my-6 border-t border-border" />
+          <AutoTextarea
+            value={lead}
+            onChange={(v) => (setLead(v), touch())}
+            placeholder="リード文 — 読む理由を 3 行以内で（任意）"
+            className="text-[19px] leading-[1.85] text-neutral-800"
+          />
+          <div className="mt-8 space-y-1">
             {blocks.map((b, i) => (
               <BlockRow
                 key={b.id}
@@ -406,10 +401,11 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
           <button
             type="button"
             onClick={() => insertAfter(blocks[blocks.length - 1]?.id ?? null, { id: newBlockId(), type: 'paragraph', text: '' })}
-            className="flex w-full items-center justify-center gap-1.5 border-t border-neutral-900 px-3.5 py-3 text-[12.5px] font-semibold text-neutral-700 hover:bg-neutral-100"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 hover:border-foreground"
           >
             <Plus className="h-3.5 w-3.5" /> ブロックを追加
           </button>
+          <p className="mt-4 text-[11px] leading-[1.7] text-neutral-400">空の行で「/」を打つとブロックを選べます。URL を 1 行貼って Enter でブックマーク・埋め込みになります。**太字**、[文字](URL) が使えます。</p>
         </div>
       </div>
     </main>
@@ -480,7 +476,7 @@ function BlockRow({
               }}
             />
             {menu ? (
-              <div className="absolute left-0 top-full z-20 mt-1 w-[300px] overflow-hidden border border-neutral-900 bg-white shadow-xl">
+              <div className="absolute left-0 top-full z-20 mt-1 w-[300px] overflow-hidden rounded-xl border border-border bg-white shadow-xl">
                 <div className="max-h-[320px] overflow-y-auto py-1">
                   {filtered.length === 0 ? <p className="px-3 py-2 text-[12px] text-neutral-400">該当なし</p> : null}
                   {filtered.map((m, i) => (
@@ -571,16 +567,16 @@ function BlockRow({
   })();
 
   return (
-    <div className="group relative grid grid-cols-[92px_1fr] max-sm:grid-cols-1">
-      <div className="whitespace-nowrap border-r border-neutral-200 px-2.5 pt-3 text-[10.5px] tracking-[0.06em] text-neutral-400 max-sm:border-r-0 max-sm:pb-0 max-sm:pt-2">{label}</div>
-      <div className="relative px-5 py-3">
-        <div className="absolute right-2 top-2 flex items-center border border-neutral-300 bg-white opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
-          <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="border-r border-neutral-300 p-1 text-neutral-500 hover:bg-neutral-100 hover:text-foreground disabled:opacity-30" aria-label="上へ"><ArrowUp className="h-3.5 w-3.5" /></button>
-          <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} className="border-r border-neutral-300 p-1 text-neutral-500 hover:bg-neutral-100 hover:text-foreground disabled:opacity-30" aria-label="下へ"><ArrowDown className="h-3.5 w-3.5" /></button>
-          <button type="button" onClick={onRemove} className="p-1 text-neutral-500 hover:bg-neutral-100 hover:text-danger-500" aria-label="削除"><Trash2 className="h-3.5 w-3.5" /></button>
-        </div>
-        {body}
+    <div className="group relative rounded-lg px-3 py-1.5 transition hover:bg-neutral-50">
+      <div className="pointer-events-none absolute -left-1 top-1.5 whitespace-nowrap text-[10px] tracking-[0.1em] text-neutral-300 opacity-0 transition group-hover:opacity-100 max-lg:hidden" style={{ transform: 'translateX(-100%)' }}>
+        {label}
       </div>
+      <div className="absolute right-2 top-1 flex items-center gap-0.5 opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
+        <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="上へ"><ArrowUp className="h-3.5 w-3.5" /></button>
+        <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="下へ"><ArrowDown className="h-3.5 w-3.5" /></button>
+        <button type="button" onClick={onRemove} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-danger-500" aria-label="削除"><Trash2 className="h-3.5 w-3.5" /></button>
+      </div>
+      {body}
     </div>
   );
 }
@@ -674,7 +670,7 @@ function Lines({ value, onChange, placeholder, autoFocus, minRows = 2, mono = fa
         onChange(e.target.value);
       }}
       placeholder={placeholder}
-      className={'block w-full resize-none overflow-hidden border border-neutral-300 bg-white px-3 py-2 text-[14.5px] leading-[1.8] placeholder:text-neutral-300 focus:border-neutral-900 focus:outline-none ' + (mono ? 'font-mono text-[13px]' : '')}
+      className={'block w-full resize-none overflow-hidden rounded-md border border-border bg-white px-3 py-2 text-[14.5px] leading-[1.8] placeholder:text-neutral-300 focus:border-primary-500 focus:outline-none ' + (mono ? 'font-mono text-[13px]' : '')}
     />
   );
 }
@@ -699,14 +695,14 @@ function ImageField({ urls, max, caption, onChange }: { urls: string[]; max: num
     <div>
       <div className={'grid gap-2 ' + (max > 1 ? 'grid-cols-3' : 'grid-cols-1')}>
         {urls.map((u, i) => (
-          <div key={i} className={'relative overflow-hidden border border-neutral-300 bg-neutral-100 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
+          <div key={i} className={'relative overflow-hidden rounded-xl bg-neutral-100 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={u} alt="" className="h-full w-full object-cover" />
-            <button type="button" onClick={() => onChange(urls.filter((_, j) => j !== i), caption)} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border border-neutral-900 bg-white text-neutral-700" aria-label="削除"><X className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => onChange(urls.filter((_, j) => j !== i), caption)} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-neutral-700 shadow" aria-label="削除"><X className="h-3.5 w-3.5" /></button>
           </div>
         ))}
         {urls.length < max ? (
-          <label className={'flex cursor-pointer items-center justify-center gap-2 border border-dashed border-neutral-400 text-[12.5px] text-neutral-500 hover:border-neutral-900 hover:text-foreground ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
+          <label className={'flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-[12.5px] text-neutral-500 hover:border-primary-300 hover:text-primary-700 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} {busy ? 'アップロード中' : max > 1 ? `追加（${urls.length}/${max}）` : '画像を選ぶ'}
             <input type="file" accept="image/*" multiple={max > 1} hidden onChange={(e) => void pick(e.target.files)} />
           </label>
@@ -734,17 +730,17 @@ function UrlField({ block, onReplace }: { block: Extract<ArticleBlock, { type: '
   };
   const p = block.preview;
   return (
-    <div className="border border-neutral-300 bg-white p-3">
+    <div className="rounded-xl border border-border bg-white p-3">
       <div className="flex items-center gap-2">
-        <span className="border border-neutral-300 px-2 py-[3px] text-[10.5px] font-bold">{block.type === 'embed' ? `埋め込み · ${block.provider}` : `ブックマーク · ${block.kind}`}</span>
-        <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder="https://…（記事 / エキスパート / YouTube / Google マップ / X / 外部サイト）" className="h-9 min-w-0 flex-1 border border-neutral-300 px-2 text-[13px] focus:border-neutral-900 focus:outline-none" />
-        <button type="button" onClick={resolve} disabled={pending} className="border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-60">{pending ? '取得中…' : '取得'}</button>
+        <span className="rounded-full bg-neutral-100 px-2 py-[3px] text-[10.5px] font-bold">{block.type === 'embed' ? `埋め込み · ${block.provider}` : `ブックマーク · ${block.kind}`}</span>
+        <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder="https://…（記事 / エキスパート / YouTube / Google マップ / X / 外部サイト）" className="h-9 min-w-0 flex-1 rounded-md border border-border px-2 text-[13px] focus:border-primary-500 focus:outline-none" />
+        <button type="button" onClick={resolve} disabled={pending} className="rounded-full bg-neutral-900 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-60">{pending ? '取得中…' : '取得'}</button>
       </div>
       {block.url ? (
         <div className="mt-2 flex items-center gap-3 text-[12.5px] text-neutral-600">
           {p?.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.imageUrl} alt="" referrerPolicy="no-referrer" className="h-12 w-16 object-cover" />
+            <img src={p.imageUrl} alt="" referrerPolicy="no-referrer" className="h-12 w-16 rounded-md object-cover" />
           ) : null}
           <span className="min-w-0 truncate">{p?.title ?? (block.type === 'link_card' && block.kind !== 'external' ? `${block.kind === 'article' ? '記事' : 'エキスパート'}のカード（表示時に最新情報を出します）` : block.url)}</span>
         </div>
