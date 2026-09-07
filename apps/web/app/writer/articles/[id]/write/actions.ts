@@ -41,8 +41,6 @@ const TOPIC_CODES = SPECIALTY_GROUPS.map((g) => g.code);
 const saveSchema = z.object({
   id: z.string().uuid(),
   title: z.string().trim().max(120),
-  subtitle: z.string().trim().max(200).optional(),
-  lead: z.string().trim().max(600).optional(),
   topic: z.string().trim().max(40).optional(),
   coverImageUrl: z.string().url().max(2048).optional().or(z.literal('')),
   blocks: blocksSchema,
@@ -61,8 +59,6 @@ export async function saveArticleBlocks(input: unknown): Promise<Result<{ savedA
       .update(schema.articles)
       .set({
         title: d.title || '新しい記事',
-        subtitle: d.subtitle || null,
-        lead: d.lead || null,
         topic,
         coverImageUrl: d.coverImageUrl || null,
         blocks: d.blocks,

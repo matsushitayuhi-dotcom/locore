@@ -27,8 +27,6 @@ import { publishBlocksArticle, resolveUrlBlock, saveArticleBlocks, unpublishBloc
 type Initial = {
   id: string;
   title: string;
-  subtitle: string;
-  lead: string;
   topic: string;
   coverImageUrl: string;
   blocks: ArticleBlock[];
@@ -131,7 +129,7 @@ const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
 const cells = (l: string) => l.split('|').map((c) => c.trim());
 
 /** 履歴（元に戻す / やり直す）で扱う記事全体のスナップショット */
-type Doc = { title: string; subtitle: string; lead: string; topic: string; cover: string; blocks: ArticleBlock[] };
+type Doc = { title: string; topic: string; cover: string; blocks: ArticleBlock[] };
 const HISTORY_LIMIT = 100;
 const same = (a: Doc, b: Doc) => JSON.stringify(a) === JSON.stringify(b);
 /** ブロックの並びと種類だけを見る鍵。ここが変わったら「構造の変更」として即座に履歴へ積む */
@@ -140,8 +138,6 @@ const shape = (d: Doc) => d.blocks.map((b) => `${b.id}:${b.type}`).join(',');
 export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?: boolean }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial.title);
-  const [subtitle, setSubtitle] = useState(initial.subtitle);
-  const [lead, setLead] = useState(initial.lead);
   const [topic, setTopic] = useState(initial.topic);
   const [cover, setCover] = useState(initial.coverImageUrl);
   const [blocks, setBlocks] = useState<ArticleBlock[]>(initial.blocks.length ? initial.blocks : [{ id: newBlockId(), type: 'paragraph', text: '' }]);
@@ -154,7 +150,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ===== 履歴（⌘Z / ⇧⌘Z） =====
-  const doc = useMemo<Doc>(() => ({ title, subtitle, lead, topic, cover, blocks }), [title, subtitle, lead, topic, cover, blocks]);
+  const doc = useMemo<Doc>(() => ({ title, topic, cover, blocks }), [title, topic, cover, blocks]);
   const docRef = useRef(doc);
   const prevDoc = useRef(doc);
   const past = useRef<Doc[]>([]);
@@ -170,8 +166,8 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   const [dropAt, setDropAt] = useState<{ id: string; place: 'before' | 'after' } | null>(null);
 
   const payload = useCallback(
-    () => ({ id: initial.id, title, subtitle, lead, topic, coverImageUrl: cover, blocks: compact(blocks) }),
-    [initial.id, title, subtitle, lead, topic, cover, blocks],
+    () => ({ id: initial.id, title, topic, coverImageUrl: cover, blocks: compact(blocks) }),
+    [initial.id, title, topic, cover, blocks],
   );
 
   const save = useCallback(async () => {
@@ -201,7 +197,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [dirty, title, subtitle, lead, topic, cover, blocks, save]);
+  }, [dirty, title, topic, cover, blocks, save]);
 
   const touch = () => setDirty(true);
 
@@ -252,8 +248,6 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   const apply = useCallback((d: Doc) => {
     restoring.current = true;
     setTitle(d.title);
-    setSubtitle(d.subtitle);
-    setLead(d.lead);
     setTopic(d.topic);
     setCover(d.cover);
     setBlocks(d.blocks);
@@ -423,7 +417,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
     } else toast.error(res.error);
   };
 
-  const chars = useMemo(() => blocks.reduce((n, b) => n + ('text' in b && typeof b.text === 'string' ? b.text.length : 0), 0) + lead.length, [blocks, lead]);
+  const chars = useMemo(() => blocks.reduce((n, b) => n + ('text' in b && typeof b.text === 'string' ? b.text.length : 0), 0), [blocks]);
 
   return (
     <main className="bg-background text-foreground">
@@ -520,20 +514,6 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
             placeholder="タイトル"
             rows={2}
             className="w-full resize-none border-0 bg-transparent p-0 text-[36px] font-bold leading-[1.32] tracking-[-0.025em] placeholder:text-neutral-300 focus:outline-none max-sm:text-[26px]"
-          />
-          <textarea
-            value={subtitle}
-            onChange={(e) => (setSubtitle(e.target.value.replace(/\n/g, '')), touch())}
-            placeholder="サブタイトル — この記事で何が分かるか、1 文で"
-            rows={2}
-            className="mt-2 w-full resize-none border-0 bg-transparent p-0 text-[18px] leading-[1.75] text-neutral-700 placeholder:text-neutral-300 focus:outline-none"
-          />
-          <div className="my-6 border-t border-border" />
-          <AutoTextarea
-            value={lead}
-            onChange={(v) => (setLead(v), touch())}
-            placeholder="リード文 — 読む理由を 3 行以内で（任意）"
-            className="text-[19px] leading-[1.85] text-neutral-800"
           />
           <div className="mt-8 space-y-1">
             {blocks.map((b, i) => (
