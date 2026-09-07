@@ -79,10 +79,25 @@ Mac の Safari の開発メニューから実機のページを直接インス�
 iPhone は Chrome アプリでも中身は WebKit なので、Chrome での確認は保証にならない。
 
 ```bash
-xcodebuild -downloadPlatform iOS     # 初回のみ。7〜10GB
-xcrun simctl list devices            # 使えるデバイスを確認
+xcodebuild -downloadPlatform iOS                    # 初回のみ。7〜10GB
+xcrun simctl list devices available | grep iPhone   # デバイス ID を調べる
+xcrun simctl boot <デバイスID>
 open -a Simulator
+
+# URL を開いてスクリーンショットを撮る（CLI で完結する）
+xcrun simctl openurl booted "http://localhost:3000/"
+xcrun simctl io booted screenshot /tmp/shot.png
 ```
+
+シミュレータは Mac とネットワークを共有するので、**`localhost:3000` にそのまま届く**。
+開発中のコードを実機と同じ WebKit で確認できる。
+
+計測しておくと、**iPhone 17 の CSS 幅は 402px**（物理 1206px / DPR 3）。
+13〜15 の 390px より広いので、両方で見ること。
+
+`simctl` でできるのは URL を開くこととスクリーンショットまでで、
+**タップとスクロールはできない**。ページの下の方を見たいときは
+シミュレータのウィンドウを直接操作する。
 
 ### 一括検査
 

@@ -8,7 +8,8 @@ import { ROUTES } from './routes';
 const WIDTHS = [
   { w: 320, label: '320 — 画面表示「拡大」' },
   { w: 375, label: '375 — SE / mini' },
-  { w: 390, label: '390 — 14〜17' },
+  { w: 390, label: '390 — 14 / 15' },
+  { w: 402, label: '402 — 17（実測）' },
   { w: 430, label: '430 — Plus / Pro Max' },
 ];
 
