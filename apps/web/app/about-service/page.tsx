@@ -102,15 +102,18 @@ function SfHit({ shadow = true }: { shadow?: boolean }) {
     >
       <div className="flex items-center gap-[11px]">
         <PhotoAva src="/experts/aya.jpg" size="h-11 w-11" />
-        <div>
-          <div className="text-[13.5px] font-extrabold">高村 里奈</div>
-          <div className="mt-px text-[11.5px] text-neutral-500">
+        {/* バッジは肩書きの行から外して名前の隣へ（320px での縦積み対策） */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="min-w-0 truncate text-[13.5px] font-extrabold">高村 里奈</span>
+            <span className="shrink-0">
+              <VBadge label="認証済み" />
+            </span>
+          </div>
+          <div className="mt-px truncate text-[11.5px] text-neutral-500">
             🇺🇸 ボストン ・ HBS在学中
           </div>
         </div>
-        <span className="ml-auto">
-          <VBadge label="認証済み" />
-        </span>
       </div>
       <div className="mt-2.5 flex items-center gap-2 border-t border-dashed border-border pt-2.5">
         <span className="text-[14px] font-extrabold tabular-nums">
@@ -878,16 +881,16 @@ export default function AboutServicePage() {
             <div className="rounded-[14px] border border-border bg-card px-[15px] py-[13px] shadow-xs">
               <div className="flex items-center gap-[11px]">
                 <PhotoAva src="/experts/aya.jpg" size="h-11 w-11" />
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-[14px] font-bold">
                     高村 里奈
                     <VBadge />
                   </div>
-                  <div className="mt-0.5 text-[12px] text-neutral-500">
+                  <div className="mt-0.5 truncate text-[12px] text-neutral-500">
                     🇺🇸 ボストン ・ HBS在学中（元総合商社）
                   </div>
                 </div>
-                <div className="ml-auto text-right leading-[1.3]">
+                <div className="ml-auto shrink-0 text-right leading-[1.3]">
                   <b className="block text-[15px] font-bold tabular-nums">¥6,000</b>
                   <span className="text-[10px] text-neutral-500">/ 30分〜</span>
                 </div>

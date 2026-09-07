@@ -282,15 +282,19 @@ export default function AboutPage() {
                     alt=""
                     className="h-11 w-11 shrink-0 rounded-full bg-muted object-cover"
                   />
-                  <div>
-                    <div className="text-[13.5px] font-extrabold">高村 里奈</div>
-                    <div className="mt-px text-[11.5px] text-neutral-500">
+                  {/* バッジは肩書きの行から外して名前の隣へ。肩書きが 1 行を丸ごと使える。
+                      320px では、この形にしないと「ボ / ス / ト / ン」と縦積みになる */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="min-w-0 truncate text-[13.5px] font-extrabold">高村 里奈</span>
+                      <span className="shrink-0">
+                        <VBadge label="認証済み" />
+                      </span>
+                    </div>
+                    <div className="mt-px truncate text-[11.5px] text-neutral-500">
                       🇺🇸 ボストン ・ HBS在学中
                     </div>
                   </div>
-                  <span className="ml-auto">
-                    <VBadge label="認証済み" />
-                  </span>
                 </div>
               </div>
             </div>
