@@ -439,9 +439,11 @@ function UserFlowPanel() {
                 推薦者への依頼メール送付（今週）
               </span>
             </div>
-            <div className="mt-4 flex items-center gap-2.5 border-t border-dashed border-border-strong pt-3.5">
+            {/* 行の幅が 189px しかなく、114px のボタンを入れると文が 23px に潰れて
+                1 文字ずつ縦積みになる。入り切らないときはボタンを次の行へ落とす。 */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-2.5 border-t border-dashed border-border-strong pt-3.5">
               <PhotoAva src="/experts/aya.jpg" size="h-8 w-8" />
-              <p className="text-[11.5px] leading-[1.6] text-neutral-500">
+              <p className="min-w-[8rem] flex-1 text-[11.5px] leading-[1.6] text-neutral-500">
                 続きの相談も、同じ流れで。
               </p>
               <span className="ml-auto shrink-0 rounded-full bg-primary-500 px-[15px] py-1.5 text-[11px] font-extrabold text-neutral-950">
