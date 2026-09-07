@@ -571,8 +571,8 @@ function BlockRow({
   })();
 
   return (
-    <div className="group relative grid grid-cols-[76px_1fr] max-sm:grid-cols-1">
-      <div className="border-r border-neutral-200 px-2.5 pt-3 text-[10.5px] tracking-[0.08em] text-neutral-400 max-sm:border-r-0 max-sm:pb-0 max-sm:pt-2">{label}</div>
+    <div className="group relative grid grid-cols-[92px_1fr] max-sm:grid-cols-1">
+      <div className="whitespace-nowrap border-r border-neutral-200 px-2.5 pt-3 text-[10.5px] tracking-[0.06em] text-neutral-400 max-sm:border-r-0 max-sm:pb-0 max-sm:pt-2">{label}</div>
       <div className="relative px-5 py-3">
         <div className="absolute right-2 top-2 flex items-center border border-neutral-300 bg-white opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
           <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="border-r border-neutral-300 p-1 text-neutral-500 hover:bg-neutral-100 hover:text-foreground disabled:opacity-30" aria-label="上へ"><ArrowUp className="h-3.5 w-3.5" /></button>
