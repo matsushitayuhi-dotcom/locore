@@ -85,14 +85,14 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
       if (b.kind === 'memo') {
         return (
           <div className="my-[1.8em] border-l-[3px] border-primary-500 pl-[18px] text-[15px] leading-[1.85] text-neutral-700">
-            <b className="mb-1 block text-[12.5px] text-foreground">{b.label ?? '私の場合'}</b>
+            {b.label ? <b className="mb-1 block text-[12.5px] text-foreground">{b.label}</b> : null}
             <Inline text={b.text} />
           </div>
         );
       }
       return (
         <div className="my-[2em] border-y border-border py-[18px] text-[15px] leading-[1.85] text-neutral-700 max-sm:text-[14.5px]">
-          <b className="mb-1.5 block text-[11.5px] tracking-[0.18em] text-foreground">{b.label ?? (b.kind === 'caution' ? '注意' : 'ポイント')}</b>
+          {b.label ? <b className="mb-1.5 block text-[11.5px] tracking-[0.18em] text-foreground">{b.label}</b> : null}
           <Inline text={b.text} />
         </div>
       );
@@ -156,7 +156,7 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
     case 'takeaways':
       return (
         <div className="my-[1.6em] mb-[2.2em] border-l-[3px] border-primary-500 py-1 pl-[18px]">
-          <b className="mb-2 block text-[11.5px] tracking-[0.18em] text-foreground">この記事で分かること</b>
+          {b.label !== '' ? <b className="mb-2 block text-[11.5px] tracking-[0.18em] text-foreground">{b.label ?? 'サマリー'}</b> : null}
           <ul className="list-disc pl-[1.2em] text-[15px] leading-[1.9] text-neutral-800 marker:text-primary-700">
             {b.items.map((it, i) => (
               <li key={i}>
@@ -223,8 +223,8 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
       return (
         <div className="my-[1.6em] mb-[2em] grid grid-cols-2 gap-6 text-[14.5px] leading-[1.8] max-sm:grid-cols-1 max-sm:gap-4">
           {[
-            ['良い点', b.pros],
-            ['気になる点', b.cons],
+            [b.prosLabel ?? 'メリット', b.pros],
+            [b.consLabel ?? 'デメリット', b.cons],
           ].map(([label, items]) => (
             <div key={label as string}>
               <b className="mb-2 block border-b border-foreground pb-2 text-[11.5px] tracking-[0.18em] text-neutral-500">{label as string}</b>

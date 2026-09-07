@@ -17,7 +17,7 @@ const BLOCKS: ArticleBlock[] = [
   { id: 'd-h2', type: 'heading', level: 2, text: '罠 2 — 謙遜' },
   { id: 'd-p2', type: 'paragraph', text: '文化的にどうしても「チームのおかげ」と書きたくなりますが、adcom が知りたいのはあなた個人が何を判断し、何を動かしたか。' },
   { id: 'd-a1', type: 'aside', kind: 'point', label: 'やること', text: '「私たちは」で始まる段落を数えて、半分以下にする。残りは「私は」に書き換えるか、削る。' },
-  { id: 'd-memo', type: 'aside', kind: 'memo', label: '私の場合', text: '第 1 稿は 3 週間で書いて、その後 12 回直しました。' },
+  { id: 'd-memo', type: 'aside', kind: 'memo', text: '第 1 稿は 3 週間で書いて、その後 12 回直しました。' },
   { id: 'd-tl', type: 'timeline', items: [{ date: '2024.05', text: '推薦者に打診。GMAT の勉強を再開' }, { date: '2024.08', text: 'エッセイ第 1 稿。在校生 2 人に壁打ち' }, { date: '2024.09', text: 'Round 1 で HBS・Wharton に提出' }] },
   { id: 'd-t1', type: 'table', rows: [['時期', 'やること', '費用の目安'], ['5〜7 月', 'GMAT / GRE、推薦者に打診', '¥120,000'], ['8〜9 月', 'エッセイ第 1〜3 稿、在校生に壁打ち', '¥30,000']] },
   { id: 'd-emb', type: 'embed', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', provider: 'youtube', videoId: 'dQw4w9WgXcQ', preview: { title: '（デモ）YouTube の埋め込み', description: null, imageUrl: null, siteName: 'YouTube' } },

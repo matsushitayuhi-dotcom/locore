@@ -842,7 +842,7 @@ async function main() {
         { id: 'b-h3', type: 'heading', level: 2, text: '罠 3 — Why this school の浅さ' },
         { id: 'b-p3', type: 'paragraph', text: 'ランキングやブランドではなく、その学校の具体的な授業・クラブ・プログラムと自分のゴールを接続できているか。ここは在校生に聞くのが一番早いです。' },
         { id: 'b-a2', type: 'aside', kind: 'caution', text: '学校の公式サイトの文言をそのまま引用すると、読み手にはすぐ分かります。授業を取った人の言葉で書く。' },
-        { id: 'b-memo', type: 'aside', kind: 'memo', label: '私の場合', text: '第 1 稿は 3 週間で書いて、その後 12 回直しました。一番効いたのは、母に日本語で読んでもらって「あなたが何をしたか分からない」と言われたことです。' },
+        { id: 'b-memo', type: 'aside', kind: 'memo', text: '第 1 稿は 3 週間で書いて、その後 12 回直しました。一番効いたのは、母に日本語で読んでもらって「あなたが何をしたか分からない」と言われたことです。' },
         { id: 'b-lc1', type: 'link_card', url: 'https://www.hbs.edu/mba/admissions/application-process/', kind: 'external', preview: { title: 'MBA Admissions — Application Process', description: 'What we look for, essay questions, and deadlines for the HBS MBA program.', imageUrl: null, siteName: 'Harvard Business School' } },
         { id: 'b-h4', type: 'heading', level: 2, text: '出願スケジュールの目安' },
         { id: 'b-tl', type: 'timeline', items: [{ date: '2024.05', text: '推薦者に打診。GMAT の勉強を再開' }, { date: '2024.08', text: 'エッセイ第 1 稿。在校生 2 人に壁打ち' }, { date: '2024.09', text: 'Round 1 で HBS・Wharton に提出' }, { date: '2024.12', text: '合格通知。奨学金の申請を開始' }] },

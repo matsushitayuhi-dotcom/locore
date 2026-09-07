@@ -40,25 +40,25 @@ type Initial = {
 type MenuItem = { type: BlockType | 'aside_point' | 'aside_caution' | 'aside_memo' | 'list_number' | 'heading3'; label: string; hint: string; keys: string };
 
 const MENU: MenuItem[] = [
-  { type: 'heading', label: '見出し', hint: '章の見出し（H2）', keys: 'h2 見出し midashi' },
-  { type: 'heading3', label: '小見出し', hint: '節の見出し（H3）', keys: 'h3 小見出し' },
-  { type: 'list', label: '箇条書き', hint: '1 行 1 項目', keys: 'list ul 箇条書き' },
+  { type: 'heading', label: '見出し 2', hint: '大きな見出し', keys: 'h2 見出し heading' },
+  { type: 'heading3', label: '見出し 3', hint: '小さな見出し', keys: 'h3 見出し heading' },
+  { type: 'list', label: '箇条書きリスト', hint: '1 行 1 項目', keys: 'list ul 箇条書き bullet' },
   { type: 'list_number', label: '番号付きリスト', hint: '1 行 1 項目', keys: 'ol 番号 number' },
+  { type: 'checklist', label: 'ToDo リスト', hint: '1 行 1 項目。先頭に [x] で済み', keys: 'todo check チェック' },
+  { type: 'faq', label: 'トグルリスト', hint: 'Q: 見出し / A: 中身（開閉式）', keys: 'toggle faq qa トグル 質問' },
   { type: 'quote', label: '引用', hint: '言葉と出典', keys: 'quote 引用' },
-  { type: 'aside_point', label: 'ポイント', hint: '罫で区切った補足', keys: 'point ポイント やること' },
-  { type: 'aside_caution', label: '注意', hint: '気をつけること', keys: 'caution 注意' },
-  { type: 'aside_memo', label: '先輩のひとこと', hint: '自分の実体験（ライムの縦線）', keys: 'memo ひとこと 私の場合' },
-  { type: 'takeaways', label: 'この記事で分かること', hint: '冒頭の要点 3〜5 行', keys: 'takeaways 分かること 要点' },
-  { type: 'checklist', label: 'チェックリスト', hint: '1 行 1 項目。先頭に [x] で済み', keys: 'check チェック' },
-  { type: 'faq', label: 'Q&A', hint: 'Q: と A: の行', keys: 'faq qa 質問' },
-  { type: 'terms', label: '用語', hint: '語 | 説明', keys: 'terms 用語' },
-  { type: 'timeline', label: 'タイムライン', hint: '日付 | 出来事', keys: 'timeline 時系列 手順' },
-  { type: 'proscons', label: '良い点・気になる点', hint: '2 列の比較', keys: 'pros cons 比較 良い点' },
-  { type: 'stats', label: '数字の見出し', hint: '値 | ラベル（3 つまで）', keys: 'stats 数字' },
-  { type: 'table', label: '表', hint: '1 行 1 段。列は | で区切る。1 行目は見出し', keys: 'table 表' },
+  { type: 'aside_point', label: 'コールアウト', hint: '上下の罫で区切った補足', keys: 'callout コールアウト 補足' },
+  { type: 'aside_caution', label: 'コールアウト（注意）', hint: '注意書き', keys: 'callout caution 注意' },
+  { type: 'aside_memo', label: 'コールアウト（強調）', hint: '左にアクセントの縦線', keys: 'callout 強調 memo' },
+  { type: 'takeaways', label: 'サマリー', hint: '要点を 3〜5 行', keys: 'summary サマリー 要点 takeaways' },
+  { type: 'terms', label: '定義リスト', hint: '語 | 説明', keys: 'terms 定義 用語 dl' },
+  { type: 'timeline', label: 'タイムライン', hint: '日付 | 出来事', keys: 'timeline 時系列' },
+  { type: 'proscons', label: '比較リスト', hint: '2 列（メリット / デメリット）', keys: 'pros cons 比較' },
+  { type: 'stats', label: '数値', hint: '値 | ラベル（3 つまで）', keys: 'stats 数値 数字' },
+  { type: 'table', label: 'テーブル', hint: '1 行 1 段。列は | で区切る。1 行目は見出し', keys: 'table テーブル 表' },
   { type: 'image', label: '画像', hint: 'アップロード＋キャプション', keys: 'image 画像 写真' },
-  { type: 'images', label: '画像 2〜3 枚', hint: '正方形で並べる', keys: 'images 画像 並べ' },
-  { type: 'link_card', label: 'リンクカード', hint: '記事 / エキスパート / 外部サイト', keys: 'link card リンク' },
+  { type: 'images', label: 'ギャラリー', hint: '画像 2〜3 枚を並べる', keys: 'gallery ギャラリー 画像' },
+  { type: 'link_card', label: 'ブックマーク', hint: 'URL をカードで表示（記事 / エキスパート / 外部）', keys: 'bookmark link ブックマーク リンク' },
   { type: 'embed', label: '埋め込み', hint: 'YouTube / Google マップ / X / Instagram', keys: 'embed youtube map 埋め込み 動画 地図' },
   { type: 'footnotes', label: '脚注', hint: '出典を 1 行 1 つ', keys: 'footnote 脚注 出典' },
   { type: 'divider', label: '区切り線', hint: '短い罫', keys: 'divider hr 区切り' },
@@ -281,7 +281,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   return (
     <main className="bg-background text-foreground">
       {/* ===== ヘッダー（固定） ===== */}
-      <div className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+      <div className="sticky top-0 z-30 border-b border-neutral-900 bg-white">
         <div className="mx-auto flex max-w-[1120px] items-center gap-3 px-5 py-2.5 sm:px-8">
           <Link href={demo ? '/' : '/writer/articles'} className="text-[12.5px] text-neutral-500 hover:text-foreground">
             {demo ? '← Locore' : '← 記事一覧'}
@@ -289,28 +289,28 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
           <span className="text-[12px] text-neutral-400">
             {saving ? '保存中…' : dirty ? '未保存の変更' : savedAt ? `保存済み ${fmtTime(savedAt)}` : ''}
           </span>
-          <span className={'rounded-full border px-2.5 py-1 text-[11px] font-bold ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong text-neutral-600')}>
+          <span className={'border px-2.5 py-1 text-[11px] font-bold ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-neutral-900 text-neutral-900')}>
             {demo ? 'デモ（保存されません）' : status === 'published' ? '公開中' : '下書き'}
           </span>
           <div className="ml-auto flex items-center gap-2">
             {demo ? (
-              <Link href="/articles/e9cc342f-e475-5161-a3b4-006706e81c6d" target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
+              <Link href="/articles/e9cc342f-e475-5161-a3b4-006706e81c6d" target="_blank" className="inline-flex items-center gap-1 border border-neutral-900 bg-white px-3 py-1.5 text-[12px] font-bold hover:bg-neutral-100">
                 記事ページの例 <ExternalLink className="h-3 w-3" aria-hidden />
               </Link>
             ) : (
-              <Link href={`/articles/${initial.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
+              <Link href={`/articles/${initial.id}`} target="_blank" className="inline-flex items-center gap-1 border border-neutral-900 bg-white px-3 py-1.5 text-[12px] font-bold hover:bg-neutral-100">
                 プレビュー <ExternalLink className="h-3 w-3" aria-hidden />
               </Link>
             )}
-            <button type="button" onClick={() => void save()} disabled={saving || !dirty} className="rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40">
+            <button type="button" onClick={() => void save()} disabled={saving || !dirty} className="border border-neutral-900 bg-white px-3 py-1.5 text-[12px] font-bold hover:bg-neutral-100 disabled:opacity-40">
               保存
             </button>
             {status === 'published' ? (
-              <button type="button" onClick={onUnpublish} disabled={pending} className="rounded-full px-3 py-1.5 text-[12px] font-bold text-neutral-500 hover:text-foreground">
+              <button type="button" onClick={onUnpublish} disabled={pending} className="border border-neutral-300 px-3 py-1.5 text-[12px] font-bold text-neutral-600 hover:border-neutral-900 hover:text-foreground">
                 非公開にする
               </button>
             ) : (
-              <button type="button" onClick={onPublish} disabled={pending} className="rounded-full bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700 disabled:opacity-60">
+              <button type="button" onClick={onPublish} disabled={pending} className="border border-neutral-900 bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700 disabled:opacity-60">
                 {pending ? '処理中…' : '公開する'}
               </button>
             )}
@@ -324,7 +324,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
           <div className="space-y-4 text-[12.5px]">
             <div>
               <label className="mb-1 block text-[11px] font-bold tracking-[0.14em] text-neutral-500">テーマ</label>
-              <select value={topic} onChange={(e) => (setTopic(e.target.value), touch())} className="h-9 w-full rounded-md border border-border bg-background px-2 text-[13px] focus:border-primary-500 focus:outline-none">
+              <select value={topic} onChange={(e) => (setTopic(e.target.value), touch())} className="h-9 w-full border border-neutral-300 bg-white px-2 text-[13px] focus:border-neutral-900 focus:outline-none">
                 <option value="">— 選ぶ —</option>
                 {SPECIALTY_GROUPS.map((g) => (
                   <option key={g.code} value={g.code}>
@@ -337,15 +337,15 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
             <div>
               <label className="mb-1 block text-[11px] font-bold tracking-[0.14em] text-neutral-500">カバー写真（任意）</label>
               {cover ? (
-                <div className="relative overflow-hidden rounded-lg bg-neutral-100 aspect-[3/2]">
+                <div className="relative overflow-hidden border border-neutral-300 bg-neutral-100 aspect-[3/2]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cover} alt="" className="h-full w-full object-cover" />
-                  <button type="button" onClick={() => (setCover(''), touch())} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-neutral-700 shadow" aria-label="削除">
+                  <button type="button" onClick={() => (setCover(''), touch())} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border border-neutral-900 bg-white text-neutral-700" aria-label="削除">
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ) : (
-                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-5 text-[12px] text-neutral-500 hover:border-primary-300 hover:text-primary-700">
+                <label className="flex cursor-pointer items-center justify-center gap-2 border border-dashed border-neutral-400 py-5 text-[12px] text-neutral-500 hover:border-neutral-900 hover:text-foreground">
                   <ImagePlus className="h-4 w-4" /> 画像を選ぶ
                   <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && void onCover(e.target.files[0])} />
                 </label>
@@ -353,14 +353,15 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
             </div>
             <div className="border-t border-border pt-3 text-[11px] leading-[1.7] text-neutral-400">
               <p>{chars.toLocaleString('ja-JP')} 文字 · 読了 約 {Math.max(1, Math.round(chars / 500))} 分</p>
-              <p className="mt-2">空の行で「/」を打つと部品を選べます。URL を 1 行貼って Enter でカード・埋め込みになります。</p>
+              <p className="mt-2">空の行で「/」を打つとブロックを選べます。URL を 1 行貼って Enter でブックマーク・埋め込みになります。</p>
               <p className="mt-1">**太字**、[文字](URL) が使えます。</p>
             </div>
           </div>
         </aside>
 
-        {/* ===== 中央: 本文 ===== */}
-        <div className="min-w-0">
+        {/* ===== 中央: 本文（枠で囲う・角丸なし・行ごとの罫） ===== */}
+        <div className="min-w-0 border border-neutral-900 bg-white">
+          <div className="border-b border-neutral-900 px-6 py-5">
           <textarea
             value={title}
             onChange={(e) => (setTitle(e.target.value.replace(/\n/g, '')), touch())}
@@ -375,14 +376,16 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
             rows={2}
             className="mt-2 w-full resize-none border-0 bg-transparent p-0 text-[18px] leading-[1.75] text-neutral-700 placeholder:text-neutral-300 focus:outline-none"
           />
-          <div className="my-6 border-t border-border" />
-          <AutoTextarea
-            value={lead}
-            onChange={(v) => (setLead(v), touch())}
-            placeholder="リード文 — 読む理由を 3 行以内で（任意）"
-            className="text-[19px] leading-[1.85] text-neutral-800"
-          />
-          <div className="mt-8 space-y-1">
+          </div>
+          <div className="border-b border-neutral-900 px-6 py-5">
+            <AutoTextarea
+              value={lead}
+              onChange={(v) => (setLead(v), touch())}
+              placeholder="リード文 — 読む理由を 3 行以内で（任意）"
+              className="text-[19px] leading-[1.85] text-neutral-800"
+            />
+          </div>
+          <div className="divide-y divide-neutral-200">
             {blocks.map((b, i) => (
               <BlockRow
                 key={b.id}
@@ -403,9 +406,9 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
           <button
             type="button"
             onClick={() => insertAfter(blocks[blocks.length - 1]?.id ?? null, { id: newBlockId(), type: 'paragraph', text: '' })}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 hover:border-foreground"
+            className="flex w-full items-center justify-center gap-1.5 border-t border-neutral-900 px-3.5 py-3 text-[12.5px] font-semibold text-neutral-700 hover:bg-neutral-100"
           >
-            <Plus className="h-3.5 w-3.5" /> 段落を追加
+            <Plus className="h-3.5 w-3.5" /> ブロックを追加
           </button>
         </div>
       </div>
@@ -452,7 +455,7 @@ function BlockRow({
             <AutoTextarea
               value={block.text}
               autoFocus={autoFocus}
-              placeholder={index === 0 ? '本文を書く。空の行で「/」を打つと部品を選べます' : ''}
+              placeholder={index === 0 ? 'テキストを入力。「/」でブロックを選択' : ''}
               className="text-[16.5px] leading-[2] text-neutral-800"
               onChange={(v) => {
                 if (v === '/' ) setMenu({ q: '', cursor: 0 });
@@ -477,7 +480,7 @@ function BlockRow({
               }}
             />
             {menu ? (
-              <div className="absolute left-0 top-full z-20 mt-1 w-[300px] overflow-hidden rounded-xl border border-border bg-white shadow-xl">
+              <div className="absolute left-0 top-full z-20 mt-1 w-[300px] overflow-hidden border border-neutral-900 bg-white shadow-xl">
                 <div className="max-h-[320px] overflow-y-auto py-1">
                   {filtered.length === 0 ? <p className="px-3 py-2 text-[12px] text-neutral-400">該当なし</p> : null}
                   {filtered.map((m, i) => (
@@ -521,14 +524,14 @@ function BlockRow({
       case 'aside':
         return (
           <div className={block.kind === 'memo' ? 'border-l-[3px] border-primary-500 pl-[18px]' : 'border-y border-border py-3'}>
-            <input value={block.label ?? ''} onChange={(e) => onChange({ label: e.target.value } as Partial<ArticleBlock>)} placeholder={block.kind === 'memo' ? '私の場合' : block.kind === 'caution' ? '注意' : 'ポイント'} className="mb-1 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] placeholder:text-neutral-300 focus:outline-none" />
+            <input value={block.label ?? ''} onChange={(e) => onChange({ label: e.target.value } as Partial<ArticleBlock>)} placeholder="ラベル（任意）" className="mb-1 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] placeholder:text-neutral-300 focus:outline-none" />
             <AutoTextarea value={block.text} autoFocus={autoFocus} placeholder="本文" className="text-[15px] leading-[1.85] text-neutral-700" onChange={(v) => onChange({ text: v })} />
           </div>
         );
       case 'takeaways':
         return (
           <div className="border-l-[3px] border-primary-500 py-1 pl-[18px]">
-            <b className="mb-1.5 block text-[11.5px] tracking-[0.18em] text-foreground">この記事で分かること</b>
+            <input value={block.label ?? 'サマリー'} onChange={(e) => onChange({ label: e.target.value } as Partial<ArticleBlock>)} placeholder="見出し（空にすると出ない）" className="mb-1.5 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] placeholder:text-neutral-300 focus:outline-none" />
             <Lines value={block.items.join('\n')} placeholder="1 行 1 項目（3〜5 行）" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v) } as Partial<ArticleBlock>)} />
           </div>
         );
@@ -543,8 +546,8 @@ function BlockRow({
       case 'proscons':
         return (
           <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-            <div><b className="mb-1 block text-[11.5px] tracking-[0.18em] text-neutral-500">良い点</b><Lines value={block.pros.join('\n')} placeholder="1 行 1 つ" autoFocus={autoFocus} onChange={(v) => onChange({ pros: lines(v) } as Partial<ArticleBlock>)} /></div>
-            <div><b className="mb-1 block text-[11.5px] tracking-[0.18em] text-neutral-500">気になる点</b><Lines value={block.cons.join('\n')} placeholder="1 行 1 つ" onChange={(v) => onChange({ cons: lines(v) } as Partial<ArticleBlock>)} /></div>
+            <div><input value={block.prosLabel ?? 'メリット'} onChange={(e) => onChange({ prosLabel: e.target.value } as Partial<ArticleBlock>)} className="mb-1 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] text-neutral-500 focus:outline-none" /><Lines value={block.pros.join('\n')} placeholder="1 行 1 つ" autoFocus={autoFocus} onChange={(v) => onChange({ pros: lines(v) } as Partial<ArticleBlock>)} /></div>
+            <div><input value={block.consLabel ?? 'デメリット'} onChange={(e) => onChange({ consLabel: e.target.value } as Partial<ArticleBlock>)} className="mb-1 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] text-neutral-500 focus:outline-none" /><Lines value={block.cons.join('\n')} placeholder="1 行 1 つ" onChange={(v) => onChange({ cons: lines(v) } as Partial<ArticleBlock>)} /></div>
           </div>
         );
       case 'stats':
@@ -568,39 +571,39 @@ function BlockRow({
   })();
 
   return (
-    <div className="group relative rounded-lg px-3 py-1.5 transition hover:bg-neutral-50">
-      <div className="pointer-events-none absolute -left-1 top-1.5 text-[10px] tracking-[0.1em] text-neutral-300 opacity-0 transition group-hover:opacity-100 max-lg:hidden" style={{ transform: 'translateX(-100%)' }}>
-        {label}
+    <div className="group relative grid grid-cols-[76px_1fr] max-sm:grid-cols-1">
+      <div className="border-r border-neutral-200 px-2.5 pt-3 text-[10.5px] tracking-[0.08em] text-neutral-400 max-sm:border-r-0 max-sm:pb-0 max-sm:pt-2">{label}</div>
+      <div className="relative px-5 py-3">
+        <div className="absolute right-2 top-2 flex items-center border border-neutral-300 bg-white opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
+          <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="border-r border-neutral-300 p-1 text-neutral-500 hover:bg-neutral-100 hover:text-foreground disabled:opacity-30" aria-label="上へ"><ArrowUp className="h-3.5 w-3.5" /></button>
+          <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} className="border-r border-neutral-300 p-1 text-neutral-500 hover:bg-neutral-100 hover:text-foreground disabled:opacity-30" aria-label="下へ"><ArrowDown className="h-3.5 w-3.5" /></button>
+          <button type="button" onClick={onRemove} className="p-1 text-neutral-500 hover:bg-neutral-100 hover:text-danger-500" aria-label="削除"><Trash2 className="h-3.5 w-3.5" /></button>
+        </div>
+        {body}
       </div>
-      <div className="absolute right-2 top-1 flex items-center gap-0.5 opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
-        <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="上へ"><ArrowUp className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="下へ"><ArrowDown className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={onRemove} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-danger-500" aria-label="削除"><Trash2 className="h-3.5 w-3.5" /></button>
-      </div>
-      {body}
     </div>
   );
 }
 
 const LABEL: Record<ArticleBlock['type'], string> = {
-  paragraph: '段落',
+  paragraph: 'テキスト',
   heading: '見出し',
   list: 'リスト',
   quote: '引用',
-  aside: '補足',
-  table: '表',
+  aside: 'コールアウト',
+  table: 'テーブル',
   image: '画像',
-  images: '画像',
-  takeaways: '要点',
-  checklist: 'チェック',
-  faq: 'Q&A',
-  terms: '用語',
-  timeline: '時系列',
+  images: 'ギャラリー',
+  takeaways: 'サマリー',
+  checklist: 'ToDo',
+  faq: 'トグル',
+  terms: '定義',
+  timeline: 'タイムライン',
   proscons: '比較',
-  stats: '数字',
+  stats: '数値',
   footnotes: '脚注',
   divider: '区切り',
-  link_card: 'リンク',
+  link_card: 'ブックマーク',
   embed: '埋め込み',
 };
 
@@ -671,7 +674,7 @@ function Lines({ value, onChange, placeholder, autoFocus, minRows = 2, mono = fa
         onChange(e.target.value);
       }}
       placeholder={placeholder}
-      className={'block w-full resize-none overflow-hidden rounded-md border border-border bg-white px-3 py-2 text-[14.5px] leading-[1.8] placeholder:text-neutral-300 focus:border-primary-500 focus:outline-none ' + (mono ? 'font-mono text-[13px]' : '')}
+      className={'block w-full resize-none overflow-hidden border border-neutral-300 bg-white px-3 py-2 text-[14.5px] leading-[1.8] placeholder:text-neutral-300 focus:border-neutral-900 focus:outline-none ' + (mono ? 'font-mono text-[13px]' : '')}
     />
   );
 }
@@ -696,14 +699,14 @@ function ImageField({ urls, max, caption, onChange }: { urls: string[]; max: num
     <div>
       <div className={'grid gap-2 ' + (max > 1 ? 'grid-cols-3' : 'grid-cols-1')}>
         {urls.map((u, i) => (
-          <div key={i} className={'relative overflow-hidden rounded-xl bg-neutral-100 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
+          <div key={i} className={'relative overflow-hidden border border-neutral-300 bg-neutral-100 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={u} alt="" className="h-full w-full object-cover" />
-            <button type="button" onClick={() => onChange(urls.filter((_, j) => j !== i), caption)} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-neutral-700 shadow" aria-label="削除"><X className="h-3.5 w-3.5" /></button>
+            <button type="button" onClick={() => onChange(urls.filter((_, j) => j !== i), caption)} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center border border-neutral-900 bg-white text-neutral-700" aria-label="削除"><X className="h-3.5 w-3.5" /></button>
           </div>
         ))}
         {urls.length < max ? (
-          <label className={'flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-[12.5px] text-neutral-500 hover:border-primary-300 hover:text-primary-700 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
+          <label className={'flex cursor-pointer items-center justify-center gap-2 border border-dashed border-neutral-400 text-[12.5px] text-neutral-500 hover:border-neutral-900 hover:text-foreground ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} {busy ? 'アップロード中' : max > 1 ? `追加（${urls.length}/${max}）` : '画像を選ぶ'}
             <input type="file" accept="image/*" multiple={max > 1} hidden onChange={(e) => void pick(e.target.files)} />
           </label>
@@ -731,17 +734,17 @@ function UrlField({ block, onReplace }: { block: Extract<ArticleBlock, { type: '
   };
   const p = block.preview;
   return (
-    <div className="rounded-xl border border-border bg-white p-3">
+    <div className="border border-neutral-300 bg-white p-3">
       <div className="flex items-center gap-2">
-        <span className="rounded-full bg-neutral-100 px-2 py-[3px] text-[10.5px] font-bold">{block.type === 'embed' ? `埋め込み · ${block.provider}` : `リンクカード · ${block.kind}`}</span>
-        <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder="https://…（記事 / エキスパート / YouTube / Google マップ / X / 外部サイト）" className="h-9 min-w-0 flex-1 rounded-md border border-border px-2 text-[13px] focus:border-primary-500 focus:outline-none" />
-        <button type="button" onClick={resolve} disabled={pending} className="rounded-full bg-neutral-900 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-60">{pending ? '取得中…' : '取得'}</button>
+        <span className="border border-neutral-300 px-2 py-[3px] text-[10.5px] font-bold">{block.type === 'embed' ? `埋め込み · ${block.provider}` : `ブックマーク · ${block.kind}`}</span>
+        <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder="https://…（記事 / エキスパート / YouTube / Google マップ / X / 外部サイト）" className="h-9 min-w-0 flex-1 border border-neutral-300 px-2 text-[13px] focus:border-neutral-900 focus:outline-none" />
+        <button type="button" onClick={resolve} disabled={pending} className="border border-neutral-900 bg-neutral-900 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-60">{pending ? '取得中…' : '取得'}</button>
       </div>
       {block.url ? (
         <div className="mt-2 flex items-center gap-3 text-[12.5px] text-neutral-600">
           {p?.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.imageUrl} alt="" referrerPolicy="no-referrer" className="h-12 w-16 rounded-md object-cover" />
+            <img src={p.imageUrl} alt="" referrerPolicy="no-referrer" className="h-12 w-16 object-cover" />
           ) : null}
           <span className="min-w-0 truncate">{p?.title ?? (block.type === 'link_card' && block.kind !== 'external' ? `${block.kind === 'article' ? '記事' : 'エキスパート'}のカード（表示時に最新情報を出します）` : block.url)}</span>
         </div>
