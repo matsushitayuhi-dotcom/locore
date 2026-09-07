@@ -37,31 +37,23 @@ type Initial = {
   updatedAt: string;
 };
 
-type MenuItem = { type: BlockType | 'aside_point' | 'aside_caution' | 'aside_memo' | 'list_number' | 'heading3'; label: string; hint: string; keys: string };
+type MenuItem = { type: BlockType | 'aside_point' | 'aside_caution' | 'aside_memo' | 'list_number' | 'heading3' | 'video'; label: string; hint: string; keys: string };
 
 const MENU: MenuItem[] = [
-  { type: 'heading', label: '見出し 2', hint: '大きな見出し', keys: 'h2 見出し heading' },
-  { type: 'heading3', label: '見出し 3', hint: '小さな見出し', keys: 'h3 見出し heading' },
+  { type: 'heading', label: 'H2', hint: '大きな見出し', keys: 'h2 見出し heading' },
+  { type: 'heading3', label: 'H3', hint: '小さな見出し', keys: 'h3 見出し heading' },
+  { type: 'paragraph', label: '本文', hint: 'テキスト', keys: 'text 本文 段落 p' },
   { type: 'list', label: '箇条書きリスト', hint: '1 行 1 項目', keys: 'list ul 箇条書き bullet' },
   { type: 'list_number', label: '番号付きリスト', hint: '1 行 1 項目', keys: 'ol 番号 number' },
-  { type: 'checklist', label: 'ToDo リスト', hint: '1 行 1 項目。先頭に [x] で済み', keys: 'todo check チェック' },
-  { type: 'faq', label: 'トグルリスト', hint: 'Q: 見出し / A: 中身（開閉式）', keys: 'toggle faq qa トグル 質問' },
+  { type: 'aside_point', label: 'コールアウト', hint: '補足・注意・強調（ブロック内で切替）', keys: 'callout コールアウト 補足 注意 強調' },
   { type: 'quote', label: '引用', hint: '言葉と出典', keys: 'quote 引用' },
-  { type: 'aside_point', label: 'コールアウト', hint: '上下の罫で区切った補足', keys: 'callout コールアウト 補足' },
-  { type: 'aside_caution', label: 'コールアウト（注意）', hint: '注意書き', keys: 'callout caution 注意' },
-  { type: 'aside_memo', label: 'コールアウト（強調）', hint: '左にアクセントの縦線', keys: 'callout 強調 memo' },
-  { type: 'takeaways', label: 'サマリー', hint: '要点を 3〜5 行', keys: 'summary サマリー 要点 takeaways' },
-  { type: 'terms', label: '定義リスト', hint: '語 | 説明', keys: 'terms 定義 用語 dl' },
-  { type: 'timeline', label: 'タイムライン', hint: '日付 | 出来事', keys: 'timeline 時系列' },
-  { type: 'proscons', label: '比較リスト', hint: '2 列（メリット / デメリット）', keys: 'pros cons 比較' },
-  { type: 'stats', label: '数値', hint: '値 | ラベル（3 つまで）', keys: 'stats 数値 数字' },
   { type: 'table', label: 'テーブル', hint: '1 行 1 段。列は | で区切る。1 行目は見出し', keys: 'table テーブル 表' },
-  { type: 'image', label: '画像', hint: 'アップロード＋キャプション', keys: 'image 画像 写真' },
-  { type: 'images', label: 'ギャラリー', hint: '画像 2〜3 枚を並べる', keys: 'gallery ギャラリー 画像' },
-  { type: 'link_card', label: 'ブックマーク', hint: 'URL をカードで表示（記事 / エキスパート / 外部）', keys: 'bookmark link ブックマーク リンク' },
-  { type: 'embed', label: '埋め込み', hint: 'YouTube / Google マップ / X / Instagram', keys: 'embed youtube map 埋め込み 動画 地図' },
-  { type: 'footnotes', label: '脚注', hint: '出典を 1 行 1 つ', keys: 'footnote 脚注 出典' },
+  { type: 'timeline', label: 'タイムライン', hint: '日付 | 出来事', keys: 'timeline 時系列' },
   { type: 'divider', label: '区切り線', hint: '短い罫', keys: 'divider hr 区切り' },
+  { type: 'image', label: '画像', hint: 'アップロード＋キャプション', keys: 'image 画像 写真' },
+  { type: 'video', label: '動画', hint: 'YouTube の URL', keys: 'video youtube 動画' },
+  { type: 'link_card', label: '埋め込み 1 · リンク', hint: '記事 / エキスパート / 外部サイトの URL をカードに', keys: 'embed1 link bookmark リンク 埋め込み' },
+  { type: 'embed', label: '埋め込み 2 · SNS・地図', hint: 'Google マップ / X / Instagram / TikTok / Spotify', keys: 'embed2 sns map 地図 埋め込み' },
 ];
 
 function make(type: MenuItem['type']): ArticleBlock {
@@ -105,6 +97,8 @@ function make(type: MenuItem['type']): ArticleBlock {
       return { id, type: 'images', urls: [] } as unknown as ArticleBlock;
     case 'link_card':
       return { id, type: 'link_card', url: '', kind: 'external' } as unknown as ArticleBlock;
+    case 'video':
+      return { id, type: 'embed', url: '', provider: 'youtube' } as unknown as ArticleBlock;
     case 'embed':
       return { id, type: 'embed', url: '', provider: 'other' } as unknown as ArticleBlock;
     case 'footnotes':
@@ -520,7 +514,14 @@ function BlockRow({
       case 'aside':
         return (
           <div className={block.kind === 'memo' ? 'border-l-[3px] border-primary-500 pl-[18px]' : 'border-y border-border py-3'}>
-            <input value={block.label ?? ''} onChange={(e) => onChange({ label: e.target.value } as Partial<ArticleBlock>)} placeholder="ラベル（任意）" className="mb-1 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] placeholder:text-neutral-300 focus:outline-none" />
+            <div className="mb-1 flex items-center gap-2">
+              <input value={block.label ?? ''} onChange={(e) => onChange({ label: e.target.value } as Partial<ArticleBlock>)} placeholder="ラベル（任意）" className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] placeholder:text-neutral-300 focus:outline-none" />
+              <select value={block.kind} onChange={(e) => onChange({ kind: e.target.value } as Partial<ArticleBlock>)} className="h-7 rounded-md border border-border bg-white px-1.5 text-[11px] text-neutral-600 focus:border-primary-500 focus:outline-none" aria-label="コールアウトの種類">
+                <option value="point">標準</option>
+                <option value="caution">注意</option>
+                <option value="memo">強調</option>
+              </select>
+            </div>
             <AutoTextarea value={block.text} autoFocus={autoFocus} placeholder="本文" className="text-[15px] leading-[1.85] text-neutral-700" onChange={(v) => onChange({ text: v })} />
           </div>
         );
@@ -582,7 +583,7 @@ function BlockRow({
 }
 
 const LABEL: Record<ArticleBlock['type'], string> = {
-  paragraph: 'テキスト',
+  paragraph: '本文',
   heading: '見出し',
   list: 'リスト',
   quote: '引用',
@@ -599,8 +600,8 @@ const LABEL: Record<ArticleBlock['type'], string> = {
   stats: '数値',
   footnotes: '脚注',
   divider: '区切り',
-  link_card: 'ブックマーク',
-  embed: '埋め込み',
+  link_card: '埋め込み 1',
+  embed: '埋め込み 2',
 };
 
 function parseFaq(v: string): Array<{ q: string; a: string }> {
@@ -732,8 +733,8 @@ function UrlField({ block, onReplace }: { block: Extract<ArticleBlock, { type: '
   return (
     <div className="rounded-xl border border-border bg-white p-3">
       <div className="flex items-center gap-2">
-        <span className="rounded-full bg-neutral-100 px-2 py-[3px] text-[10.5px] font-bold">{block.type === 'embed' ? `埋め込み · ${block.provider}` : `ブックマーク · ${block.kind}`}</span>
-        <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder="https://…（記事 / エキスパート / YouTube / Google マップ / X / 外部サイト）" className="h-9 min-w-0 flex-1 rounded-md border border-border px-2 text-[13px] focus:border-primary-500 focus:outline-none" />
+        <span className="rounded-full bg-neutral-100 px-2 py-[3px] text-[10.5px] font-bold">{block.type === 'embed' ? (block.provider === 'youtube' ? '動画' : `埋め込み 2 · ${block.provider}`) : `埋め込み 1 · ${block.kind}`}</span>
+        <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder={block.type === 'embed' && block.provider === 'youtube' ? 'https://www.youtube.com/watch?v=…' : block.type === 'embed' ? 'https://…（Google マップ / X / Instagram / TikTok / Spotify）' : 'https://…（記事 / エキスパート / 外部サイト）'} className="h-9 min-w-0 flex-1 rounded-md border border-border px-2 text-[13px] focus:border-primary-500 focus:outline-none" />
         <button type="button" onClick={resolve} disabled={pending} className="rounded-full bg-neutral-900 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-60">{pending ? '取得中…' : '取得'}</button>
       </div>
       {block.url ? (
