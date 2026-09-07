@@ -423,27 +423,35 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
     <main className="bg-background text-foreground">
       {/* ===== ヘッダー（固定） ===== */}
       <div className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1120px] items-center gap-3 px-5 py-2.5 sm:px-8">
-          <Link href={demo ? '/' : '/writer/articles'} className="text-[12.5px] text-neutral-500 hover:text-foreground">
-            {demo ? '← Locore' : '← 記事一覧'}
+        {/* 携帯では文字が 1 文字ずつ折り返さないよう、全部 nowrap + shrink-0。
+            入り切らないものは畳む（戻る先とプレビューはアイコンだけ、状態バッジと保存ボタンは隠す）。
+            保存ボタンを隠しても 1.5 秒の自動保存と左の「保存済み …」で足りる。 */}
+        <div className="mx-auto flex max-w-[1120px] items-center gap-3 px-5 py-2.5 max-sm:gap-2 sm:px-8">
+          <Link
+            href={demo ? '/' : '/writer/articles'}
+            aria-label={demo ? 'Locore へ戻る' : '記事一覧へ戻る'}
+            className="shrink-0 whitespace-nowrap text-[12.5px] text-neutral-500 hover:text-foreground"
+          >
+            <span aria-hidden>←</span>
+            <span className="ml-1 max-sm:hidden">{demo ? 'Locore' : '記事一覧'}</span>
           </Link>
-          <span className="text-[12px] text-neutral-400">
+          <span className="min-w-0 truncate whitespace-nowrap text-[12px] text-neutral-400">
             {saving ? '保存中…' : dirty ? '未保存の変更' : savedAt ? `保存済み ${fmtTime(savedAt)}` : ''}
           </span>
-          <span className={'rounded-full border px-2.5 py-1 text-[11px] font-bold ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong text-neutral-600')}>
+          <span className={'shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold max-sm:hidden ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong text-neutral-600')}>
             {demo ? 'デモ（保存されません）' : status === 'published' ? '公開中' : '下書き'}
           </span>
-          <div className="ml-auto flex items-center gap-2">
-            {demo ? (
-              <Link href="/articles/e9cc342f-e475-5161-a3b4-006706e81c6d" target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
-                記事ページの例 <ExternalLink className="h-3 w-3" aria-hidden />
-              </Link>
-            ) : (
-              <Link href={`/articles/${initial.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
-                プレビュー <ExternalLink className="h-3 w-3" aria-hidden />
-              </Link>
-            )}
-            <div className="flex items-center">
+          <div className="ml-auto flex shrink-0 items-center gap-2 max-sm:gap-1">
+            <Link
+              href={demo ? '/articles/e9cc342f-e475-5161-a3b4-006706e81c6d' : `/articles/${initial.id}`}
+              target="_blank"
+              aria-label={demo ? '記事ページの例を開く' : 'プレビューを開く'}
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground max-sm:px-2"
+            >
+              <span className="max-sm:hidden">{demo ? '記事ページの例' : 'プレビュー'}</span>
+              <ExternalLink className="h-3 w-3" aria-hidden />
+            </Link>
+            <div className="flex shrink-0 items-center">
               <button type="button" onClick={undo} disabled={hist.undo === 0} className="rounded-full p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-foreground disabled:opacity-25 disabled:hover:bg-transparent" aria-label="元に戻す" title="元に戻す（⌘Z）">
                 <Undo2 className="h-4 w-4" aria-hidden />
               </button>
@@ -451,15 +459,15 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
                 <Redo2 className="h-4 w-4" aria-hidden />
               </button>
             </div>
-            <button type="button" onClick={() => void save()} disabled={saving || !dirty} title="保存（⌘S）" className="rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40">
+            <button type="button" onClick={() => void save()} disabled={saving || !dirty} title="保存（⌘S）" className="shrink-0 whitespace-nowrap rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40 max-sm:hidden">
               保存
             </button>
             {status === 'published' ? (
-              <button type="button" onClick={onUnpublish} disabled={pending} className="rounded-full px-3 py-1.5 text-[12px] font-bold text-neutral-500 hover:text-foreground">
+              <button type="button" onClick={onUnpublish} disabled={pending} className="shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-bold text-neutral-500 hover:text-foreground max-sm:px-2">
                 非公開にする
               </button>
             ) : (
-              <button type="button" onClick={onPublish} disabled={pending} className="rounded-full bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700 disabled:opacity-60">
+              <button type="button" onClick={onPublish} disabled={pending} className="shrink-0 whitespace-nowrap rounded-full bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700 disabled:opacity-60 max-sm:px-3">
                 {pending ? '処理中…' : '公開する'}
               </button>
             )}
