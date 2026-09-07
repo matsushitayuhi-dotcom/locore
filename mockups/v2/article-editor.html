@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>記事エディタ — /writer/articles/[id]/write の見た目</title>
+<style>
+  :root { --lime:#A8E01C; --lime-700:#5E8B0E; --lime-100:#EEF9CF; --n900:#18181b; --n800:#27272a; --n700:#3f3f46; --n500:#71717a; --n400:#a1a1aa; --n300:#d4d4d8; --n200:#e4e4e7; --n100:#f4f4f5; --n50:#fafafa; --border:#e4e4e7; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#fff; color:var(--n900); font-family:"Noto Sans JP","Hiragino Sans",system-ui,sans-serif; font-feature-settings:"palt"; }
+  .top { background:var(--n900); color:#fff; height:44px; display:flex; align-items:center; padding:0 20px; font-weight:700; }
+  .top b { color:var(--lime); }
+  /* 固定ヘッダー */
+  .bar { position:sticky; top:0; z-index:30; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border-bottom:1px solid var(--border); }
+  .bar .in { max-width:1120px; margin:0 auto; padding:10px 32px; display:flex; align-items:center; gap:12px; font-size:12.5px; }
+  .bar .back { color:var(--n500); }
+  .bar .st { color:var(--n400); font-size:12px; }
+  .pill { border-radius:999px; border:1px solid var(--n300); padding:4px 10px; font-size:11px; font-weight:700; color:var(--n700); }
+  .pill.on { border-color:var(--lime); background:var(--lime-100); color:var(--lime-700); }
+  .bar .r { margin-left:auto; display:flex; gap:8px; align-items:center; }
+  .btn { border-radius:999px; padding:6px 12px; font-size:12px; font-weight:700; border:1px solid var(--n300); background:#fff; }
+  .btn.dark { background:var(--n900); color:#fff; border-color:var(--n900); padding:6px 16px; }
+  .btn.dis { opacity:.4; }
+  .page { max-width:1120px; margin:0 auto; padding:40px 32px 160px; display:grid; grid-template-columns:200px 640px 1fr; column-gap:56px; }
+  /* 左: 設定 */
+  .side { font-size:12.5px; position:sticky; top:80px; align-self:start; }
+  .side label { display:block; font-size:11px; font-weight:700; letter-spacing:.14em; color:var(--n500); margin-bottom:4px; }
+  .side select { width:100%; height:36px; border:1px solid var(--border); border-radius:6px; background:#fff; padding:0 8px; font-size:13px; }
+  .side .hint { font-size:11px; color:var(--n400); margin-top:4px; }
+  .side .drop { margin-top:16px; border:2px dashed var(--border); border-radius:10px; padding:20px; text-align:center; color:var(--n500); font-size:12px; }
+  .side .help { border-top:1px solid var(--border); margin-top:16px; padding-top:12px; font-size:11px; line-height:1.7; color:var(--n400); }
+  /* 中央: 本文 */
+  .title { font-size:36px; font-weight:700; line-height:1.32; letter-spacing:-.025em; }
+  .sub { font-size:18px; line-height:1.75; color:var(--n700); margin-top:8px; }
+  .ph { color:var(--n300); }
+  .rule { border-top:1px solid var(--border); margin:24px 0; }
+  .lead { font-size:19px; line-height:1.85; color:var(--n800); }
+  .blocks { margin-top:32px; display:grid; gap:4px; }
+  .blk { position:relative; border-radius:8px; padding:6px 12px; }
+  .blk:hover { background:var(--n50); }
+  .blk .lab { position:absolute; left:-8px; top:6px; transform:translateX(-100%); font-size:10px; letter-spacing:.1em; color:var(--n300); }
+  .blk .tools { position:absolute; right:8px; top:4px; display:flex; gap:2px; opacity:0; }
+  .blk:hover .tools, .blk.focus .tools { opacity:1; }
+  .blk .tools span { width:22px; height:22px; border-radius:4px; display:grid; place-items:center; font-size:11px; color:var(--n400); background:#fff; border:1px solid var(--border); }
+  .p { font-size:16.5px; line-height:2; color:var(--n800); }
+  .h2 { font-size:24px; font-weight:700; line-height:1.45; letter-spacing:-.015em; }
+  .h2 .opt { display:block; font-size:11px; font-weight:400; color:var(--n500); margin-top:4px; }
+  .lines { border:1px solid var(--border); border-radius:6px; background:#fff; padding:8px 12px; font-size:14.5px; line-height:1.8; white-space:pre-line; color:var(--n800); }
+  .lines.mono { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px; }
+  .memo { border-left:3px solid var(--lime); padding-left:18px; }
+  .memo .l { font-size:11.5px; font-weight:700; letter-spacing:.18em; }
+  .memo .t { font-size:15px; line-height:1.85; color:var(--n700); }
+  .take { border-left:3px solid var(--lime); padding:4px 0 4px 18px; }
+  .take .l { font-size:11.5px; letter-spacing:.18em; font-weight:700; margin-bottom:6px; }
+  .quote { border-left:1px solid var(--n900); padding-left:22px; }
+  .quote .t { font-size:18.5px; line-height:1.8; }
+  .quote .c { font-size:12.5px; color:var(--n500); margin-top:4px; }
+  .url { border:1px solid var(--border); border-radius:12px; background:#fff; padding:12px; }
+  .url .row { display:flex; gap:8px; align-items:center; }
+  .url .tag { background:var(--n100); border-radius:999px; padding:3px 8px; font-size:10.5px; font-weight:700; white-space:nowrap; }
+  .url input { flex:1; height:36px; border:1px solid var(--border); border-radius:6px; padding:0 8px; font-size:13px; }
+  .url .prev { margin-top:8px; display:flex; gap:12px; align-items:center; font-size:12.5px; color:var(--n700); }
+  .url .prev .img { width:64px; height:48px; border-radius:6px; background:linear-gradient(135deg,#1f1f24,#71717a); }
+  /* スラッシュメニュー */
+  .menu { position:absolute; left:12px; top:100%; margin-top:4px; width:300px; background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:0 14px 40px rgba(0,0,0,.14); overflow:hidden; z-index:20; }
+  .menu div { display:flex; gap:8px; align-items:baseline; padding:8px 12px; font-size:13px; }
+  .menu div.on { background:var(--n100); }
+  .menu div b { width:128px; flex:none; }
+  .menu div span { font-size:11.5px; color:var(--n500); }
+  .add { margin-top:16px; display:inline-flex; gap:6px; align-items:center; border:1px solid var(--n300); border-radius:999px; padding:6px 14px; font-size:12.5px; font-weight:600; color:var(--n700); }
+  .note { grid-column:3; font-size:12px; line-height:1.8; color:var(--n500); position:sticky; top:80px; align-self:start; }
+  .note b { display:block; color:var(--n900); font-size:11.5px; letter-spacing:.14em; margin-bottom:6px; }
+  .note ul { padding-left:1.1em; margin:0 0 14px; }
+</style>
+</head>
+<body>
+<div class="top">Lo<b>core</b>&nbsp;&nbsp;<span style="font-weight:400;font-size:12px;opacity:.7">記事エディタ — 実装した /writer/articles/[id]/write と同じ構成（スラッシュメニューを開いた状態）</span></div>
+
+<div class="bar"><div class="in">
+  <span class="back">← 記事一覧</span>
+  <span class="st">保存済み 14:32</span>
+  <span class="pill">下書き</span>
+  <div class="r"><span class="btn">プレビュー ↗</span><span class="btn dis">保存</span><span class="btn dark">公開する</span></div>
+</div></div>
+
+<div class="page">
+  <aside class="side">
+    <label>テーマ</label>
+    <select><option>MBA</option></select>
+    <div class="hint">一覧のテーマタブと「同じテーマの記事」に使います</div>
+    <label style="margin-top:16px">カバー写真（任意）</label>
+    <div class="drop">＋ 画像を選ぶ</div>
+    <div class="help"><p>1,860 文字 · 読了 約 4 分</p><p>空の行で「/」を打つと部品を選べます。URL を 1 行貼って Enter でカード・埋め込みになります。</p><p>**太字**、[文字](URL) が使えます。</p></div>
+  </aside>
+
+  <div>
+    <div class="title">MBAエッセイ、日本人がいちばん最初につまずく3つの罠</div>
+    <div class="sub">実績の列挙、謙遜、浅い Why this school。2024 年出願で HBS と Wharton に受かるまでに、直した順番で書きます。</div>
+    <div class="rule"></div>
+    <div class="lead">MBA 出願のエッセイで、日本人受験者が最初につまずくポイントはだいたい共通しています。私自身が 2024 年の出願でハマりかけ、合格者仲間と答え合わせをして見えてきた「3 つの罠」を、直した順番で書きます。</div>
+
+    <div class="blocks">
+      <div class="blk"><span class="lab">要点</span><div class="take"><div class="l">この記事で分かること</div><div class="lines">日本人が MBA エッセイで最初にやりがちな 3 つの書き方
+直す順番と、直す前後の実例
+出願スケジュールと費用の目安</div></div></div>
+
+      <div class="blk"><span class="lab">見出し</span><div class="h2">罠 1 — 実績の列挙<span class="opt">☐ 番号を付ける</span></div></div>
+
+      <div class="blk"><span class="lab">段落</span><div class="p">日本の職務経歴書の感覚でプロジェクトを並べると、審査側には何も残りません。エッセイで見られているのは実績の大きさではなく、**意思決定の理由と、そこからの変化**です。</div></div>
+
+      <div class="blk"><span class="lab">リスト</span><div class="lines">「何をしたか」ではなく「なぜそう決めたか」を先に書く
+数字は 1 段落に 1 つまで。多いほど印象が薄まる
+失敗した判断を 1 つ入れると、残りの実績が立体的になる</div></div>
+
+      <div class="blk"><span class="lab">引用</span><div class="quote"><div class="t">あなたが主語の文章を読みたい。</div><div class="c">— 添削してくれた HBS 2 年生。この一言で第 1 稿の半分を捨てました</div></div></div>
+
+      <div class="blk focus" style="background:var(--n50)"><span class="lab">段落</span>
+        <div class="tools"><span>↑</span><span>↓</span><span>🗑</span></div>
+        <div class="p">/</div>
+        <div class="menu">
+          <div class="on"><b>見出し</b><span>章の見出し（H2）</span></div>
+          <div><b>小見出し</b><span>節の見出し（H3）</span></div>
+          <div><b>箇条書き</b><span>1 行 1 項目</span></div>
+          <div><b>番号付きリスト</b><span>1 行 1 項目</span></div>
+          <div><b>引用</b><span>言葉と出典</span></div>
+          <div><b>ポイント</b><span>罫で区切った補足</span></div>
+          <div><b>注意</b><span>気をつけること</span></div>
+          <div><b>先輩のひとこと</b><span>自分の実体験（ライムの縦線）</span></div>
+          <div><b>この記事で分かること</b><span>冒頭の要点 3〜5 行</span></div>
+          <div><b>チェックリスト</b><span>1 行 1 項目。先頭に [x] で済み</span></div>
+          <div><b>Q&amp;A</b><span>Q: と A: の行</span></div>
+          <div><b>用語</b><span>語 | 説明</span></div>
+          <div><b>タイムライン</b><span>日付 | 出来事</span></div>
+          <div><b>良い点・気になる点</b><span>2 列の比較</span></div>
+          <div><b>数字の見出し</b><span>値 | ラベル（3 つまで）</span></div>
+          <div><b>表</b><span>1 行 1 段。列は | で区切る</span></div>
+          <div><b>画像</b><span>アップロード＋キャプション</span></div>
+          <div><b>リンクカード</b><span>記事 / エキスパート / 外部サイト</span></div>
+          <div><b>埋め込み</b><span>YouTube / Google マップ / X / Instagram</span></div>
+        </div>
+      </div>
+
+      <div class="blk" style="margin-top:420px"><span class="lab">補足</span><div class="memo"><div class="l">私の場合</div><div class="t">第 1 稿は 3 週間で書いて、その後 12 回直しました。一番効いたのは、母に日本語で読んでもらって「あなたが何をしたか分からない」と言われたことです。</div></div></div>
+
+      <div class="blk"><span class="lab">時系列</span><div class="lines">2024.05 | 推薦者に打診。GMAT の勉強を再開
+2024.08 | エッセイ第 1 稿。在校生 2 人に壁打ち
+2024.09 | Round 1 で HBS・Wharton に提出</div></div>
+
+      <div class="blk"><span class="lab">表</span><div class="lines mono">時期 | やること | 費用の目安
+5〜7 月 | GMAT / GRE、推薦者に打診 | ¥120,000
+8〜9 月 | エッセイ第 1〜3 稿、在校生に壁打ち | ¥30,000</div></div>
+
+      <div class="blk"><span class="lab">リンク</span><div class="url"><div class="row"><span class="tag">リンクカード · external</span><input value="https://www.hbs.edu/mba/admissions/application-process/" /><span class="btn dark">取得</span></div><div class="prev"><div class="img"></div><span>MBA Admissions — Application Process</span></div></div></div>
+
+      <div class="blk"><span class="lab">埋め込み</span><div class="url"><div class="row"><span class="tag">埋め込み · youtube</span><input value="https://www.youtube.com/watch?v=…" /><span class="btn dark">取得</span></div><div class="prev"><div class="img"></div><span>MBA 出願の 1 年間を 10 分で振り返る</span></div></div></div>
+    </div>
+    <div class="add">＋ 段落を追加</div>
+  </div>
+
+  <aside class="note">
+    <b>操作</b>
+    <ul><li>空の段落で「/」→ 部品メニュー。↑↓ で選び Enter、文字で絞り込み</li><li>Enter で次の段落。空の段落で Backspace で削除</li><li>URL を 1 行貼って Enter → カード・埋め込みに自動変換</li><li>各ブロックの右上に ↑ ↓ 削除（ホバーで表示）</li><li>1.5 秒後に自動保存</li></ul>
+    <b>複数行の部品</b>
+    <ul><li>箇条書き・チェック・脚注: 1 行 1 項目</li><li>表・用語・タイムライン・数字: 列を | で区切る</li><li>Q&amp;A: Q: と A: の行</li></ul>
+    <b>装飾</b>
+    <ul><li>**太字**、[文字](URL)</li><li>見出しの「番号を付ける」は任意</li></ul>
+  </aside>
+</div>
+</body>
+</html>

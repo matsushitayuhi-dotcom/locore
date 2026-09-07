@@ -155,9 +155,9 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
       );
     case 'takeaways':
       return (
-        <div className="my-[1.6em] mb-[2em] rounded-xl bg-neutral-100 px-6 py-5">
-          <b className="mb-2.5 block text-[11.5px] tracking-[0.18em] text-neutral-500">この記事で分かること</b>
-          <ul className="list-disc pl-[1.2em] text-[15px] leading-[1.9] text-neutral-800 marker:text-neutral-400">
+        <div className="my-[1.6em] mb-[2.2em] border-l-[3px] border-primary-500 py-1 pl-[18px]">
+          <b className="mb-2 block text-[11.5px] tracking-[0.18em] text-foreground">この記事で分かること</b>
+          <ul className="list-disc pl-[1.2em] text-[15px] leading-[1.9] text-neutral-800 marker:text-primary-700">
             {b.items.map((it, i) => (
               <li key={i}>
                 <Inline text={it} />
@@ -210,9 +210,9 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
       );
     case 'timeline':
       return (
-        <ul className="relative my-[1.6em] mb-[2em] list-none p-0 before:absolute before:bottom-2 before:left-[6px] before:top-2 before:w-px before:bg-neutral-300">
+        <ul className="relative my-[1.6em] mb-[2em] list-none p-0 before:absolute before:bottom-2 before:left-[6px] before:top-2 before:w-[2px] before:bg-primary-500">
           {b.items.map((it, i) => (
-            <li key={i} className="relative pb-[18px] pl-[30px] text-[15px] leading-[1.7] before:absolute before:left-[2px] before:top-2 before:h-[9px] before:w-[9px] before:rounded-full before:border-[1.5px] before:border-foreground before:bg-white">
+            <li key={i} className="relative pb-[18px] pl-[30px] text-[15px] leading-[1.7] before:absolute before:left-[2px] before:top-2 before:h-[10px] before:w-[10px] before:rounded-full before:border-2 before:border-primary-500 before:bg-white">
               <b className="mb-0.5 block text-[12.5px] tracking-[0.06em] text-neutral-500">{it.date}</b>
               <Inline text={it.text} />
             </li>
