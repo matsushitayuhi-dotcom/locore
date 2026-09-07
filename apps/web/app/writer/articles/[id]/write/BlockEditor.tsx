@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowUp, ExternalLink, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ExternalLink, GripVertical, ImagePlus, Loader2, Plus, Redo2, Trash2, Undo2, X } from 'lucide-react';
 import { newBlockId, type ArticleBlock, type BlockType } from '@/lib/articles/blocks';
 import { SPECIALTY_GROUPS } from '@/lib/experts/specialties';
 import { uploadImage } from '@/lib/storage/uploadImage';
@@ -130,6 +130,13 @@ function compact(blocks: ArticleBlock[]): ArticleBlock[] {
 const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
 const cells = (l: string) => l.split('|').map((c) => c.trim());
 
+/** 履歴（元に戻す / やり直す）で扱う記事全体のスナップショット */
+type Doc = { title: string; subtitle: string; lead: string; topic: string; cover: string; blocks: ArticleBlock[] };
+const HISTORY_LIMIT = 100;
+const same = (a: Doc, b: Doc) => JSON.stringify(a) === JSON.stringify(b);
+/** ブロックの並びと種類だけを見る鍵。ここが変わったら「構造の変更」として即座に履歴へ積む */
+const shape = (d: Doc) => d.blocks.map((b) => `${b.id}:${b.type}`).join(',');
+
 export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?: boolean }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial.title);
@@ -145,6 +152,22 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   const [pending, start] = useTransition();
   const [focusId, setFocusId] = useState<string | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ===== 履歴（⌘Z / ⇧⌘Z） =====
+  const doc = useMemo<Doc>(() => ({ title, subtitle, lead, topic, cover, blocks }), [title, subtitle, lead, topic, cover, blocks]);
+  const docRef = useRef(doc);
+  const prevDoc = useRef(doc);
+  const past = useRef<Doc[]>([]);
+  const future = useRef<Doc[]>([]);
+  const pendingBase = useRef<Doc | null>(null); // まだ履歴に積んでいない編集の起点
+  const restoring = useRef(false);
+  const histTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hist, setHist] = useState({ undo: 0, redo: 0 });
+  const [rev, setRev] = useState(0); // 履歴を戻したら各行を作り直す（行内のローカル state を同期させるため）
+
+  // ===== ドラッグでの並べ替え =====
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropAt, setDropAt] = useState<{ id: string; place: 'before' | 'after' } | null>(null);
 
   const payload = useCallback(
     () => ({ id: initial.id, title, subtitle, lead, topic, coverImageUrl: cover, blocks: compact(blocks) }),
@@ -181,6 +204,122 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   }, [dirty, title, subtitle, lead, topic, cover, blocks, save]);
 
   const touch = () => setDirty(true);
+
+  /** 溜めていた編集を 1 手として履歴に積む。upto を渡すとそこまでを 1 手にする */
+  const flush = useCallback((upto?: Doc) => {
+    if (histTimer.current) {
+      clearTimeout(histTimer.current);
+      histTimer.current = null;
+    }
+    const base = pendingBase.current;
+    pendingBase.current = null;
+    if (!base) return;
+    if (same(base, upto ?? docRef.current)) return;
+    past.current = [...past.current, base].slice(-HISTORY_LIMIT);
+    future.current = [];
+    setHist({ undo: past.current.length, redo: 0 });
+  }, []);
+
+  // 変更を見張って履歴に積む。文字入力は 600ms まとめて 1 手、構造の変更は即座に 1 手
+  useEffect(() => {
+    const prev = prevDoc.current;
+    prevDoc.current = doc;
+    docRef.current = doc;
+    if (restoring.current) {
+      restoring.current = false;
+      pendingBase.current = null;
+      if (histTimer.current) {
+        clearTimeout(histTimer.current);
+        histTimer.current = null;
+      }
+      return;
+    }
+    if (same(doc, prev)) return;
+    if (pendingBase.current === null) pendingBase.current = prev;
+    if (histTimer.current) {
+      clearTimeout(histTimer.current);
+      histTimer.current = null;
+    }
+    if (shape(doc) !== shape(prev)) {
+      flush(prev); // 直前までの文字入力を先に 1 手として確定させる
+      pendingBase.current = prev;
+      flush(doc);
+    } else {
+      histTimer.current = setTimeout(() => flush(), 600);
+    }
+  }, [doc, flush]);
+
+  const apply = useCallback((d: Doc) => {
+    restoring.current = true;
+    setTitle(d.title);
+    setSubtitle(d.subtitle);
+    setLead(d.lead);
+    setTopic(d.topic);
+    setCover(d.cover);
+    setBlocks(d.blocks);
+    setFocusId(null);
+    setRev((n) => n + 1);
+    setDirty(true);
+  }, []);
+
+  const undo = useCallback(() => {
+    flush();
+    if (past.current.length === 0) return;
+    const target = past.current[past.current.length - 1]!;
+    past.current = past.current.slice(0, -1);
+    future.current = [...future.current, docRef.current];
+    setHist({ undo: past.current.length, redo: future.current.length });
+    apply(target);
+  }, [flush, apply]);
+
+  const redo = useCallback(() => {
+    if (pendingBase.current) {
+      flush(); // 新しい編集が入っていたら、やり直しは捨てる
+      return;
+    }
+    if (future.current.length === 0) return;
+    const target = future.current[future.current.length - 1]!;
+    future.current = future.current.slice(0, -1);
+    past.current = [...past.current, docRef.current].slice(-HISTORY_LIMIT);
+    setHist({ undo: past.current.length, redo: future.current.length });
+    apply(target);
+  }, [flush, apply]);
+
+  // ⌘S 保存 / ⌘Z 元に戻す / ⇧⌘Z・⌘Y やり直す
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === 's') {
+        e.preventDefault();
+        void save();
+        return;
+      }
+      if (k === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+        return;
+      }
+      if ((k === 'z' && e.shiftKey) || k === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [save, undo, redo]);
+
+  // 未保存のまま離れようとしたら止める
+  useEffect(() => {
+    if (demo || !dirty) return;
+    const onLeave = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onLeave);
+    return () => window.removeEventListener('beforeunload', onLeave);
+  }, [demo, dirty]);
+
   const update = (id: string, patch: Partial<ArticleBlock>) => {
     setBlocks((prev) => prev.map((b) => (b.id === id ? ({ ...b, ...patch } as ArticleBlock) : b)));
     touch();
@@ -217,6 +356,20 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
       const copy = [...prev];
       [copy[i], copy[j]] = [copy[j]!, copy[i]!];
       return copy;
+    });
+    touch();
+  };
+  /** ドラッグした fromId を toId の前 / 後ろへ差し込む */
+  const reorder = (fromId: string, toId: string, place: 'before' | 'after') => {
+    if (fromId === toId) return;
+    setBlocks((prev) => {
+      const item = prev.find((b) => b.id === fromId);
+      if (!item) return prev;
+      const rest = prev.filter((b) => b.id !== fromId);
+      const i = rest.findIndex((b) => b.id === toId);
+      if (i < 0) return prev;
+      const at = place === 'after' ? i + 1 : i;
+      return [...rest.slice(0, at), item, ...rest.slice(at)];
     });
     touch();
   };
@@ -296,7 +449,15 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
                 プレビュー <ExternalLink className="h-3 w-3" aria-hidden />
               </Link>
             )}
-            <button type="button" onClick={() => void save()} disabled={saving || !dirty} className="rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40">
+            <div className="flex items-center">
+              <button type="button" onClick={undo} disabled={hist.undo === 0} className="rounded-full p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-foreground disabled:opacity-25 disabled:hover:bg-transparent" aria-label="元に戻す" title="元に戻す（⌘Z）">
+                <Undo2 className="h-4 w-4" aria-hidden />
+              </button>
+              <button type="button" onClick={redo} disabled={hist.redo === 0} className="rounded-full p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-foreground disabled:opacity-25 disabled:hover:bg-transparent" aria-label="やり直す" title="やり直す（⇧⌘Z）">
+                <Redo2 className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+            <button type="button" onClick={() => void save()} disabled={saving || !dirty} title="保存（⌘S）" className="rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40">
               保存
             </button>
             {status === 'published' ? (
@@ -377,7 +538,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
           <div className="mt-8 space-y-1">
             {blocks.map((b, i) => (
               <BlockRow
-                key={b.id}
+                key={`${b.id}:${rev}`}
                 block={b}
                 index={i}
                 total={blocks.length}
@@ -387,8 +548,23 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
                 onEnter={() => insertAfter(b.id, { id: newBlockId(), type: 'paragraph', text: '' })}
                 onRemove={() => remove(b.id)}
                 onMove={(d) => move(b.id, d)}
+                onInsertAfter={() => insertAfter(b.id, { id: newBlockId(), type: 'paragraph', text: '' })}
                 onUrl={(url) => convertUrl(b.id, url)}
                 onPick={(t) => replace(b.id, make(t))}
+                dragging={dragId === b.id}
+                dragActive={dragId !== null}
+                dropHint={dropAt && dropAt.id === b.id ? dropAt.place : null}
+                onDragStart={() => setDragId(b.id)}
+                onDragOver={(place) => setDropAt((cur) => (cur && cur.id === b.id && cur.place === place ? cur : { id: b.id, place }))}
+                onDrop={() => {
+                  if (dragId) reorder(dragId, b.id, dropAt?.place ?? 'before');
+                  setDragId(null);
+                  setDropAt(null);
+                }}
+                onDragEnd={() => {
+                  setDragId(null);
+                  setDropAt(null);
+                }}
               />
             ))}
           </div>
@@ -399,7 +575,7 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
           >
             <Plus className="h-3.5 w-3.5" /> ブロックを追加
           </button>
-          <p className="mt-4 text-[11px] leading-[1.7] text-neutral-400">空の行で「/」を打つとブロックを選べます。URL を 1 行貼って Enter でブックマーク・埋め込みになります。**太字**、[文字](URL) が使えます。</p>
+          <p className="mt-4 text-[11px] leading-[1.7] text-neutral-400">空の行で「/」を打つとブロックを選べます。URL を 1 行貼って Enter でブックマーク・埋め込みになります。**太字**、[文字](URL) が使えます。行の右にある ⠿ をつかむと並べ替え、＋ で下に段落を足せます。⌘Z で元に戻す、⇧⌘Z でやり直す、⌘S で保存。</p>
         </div>
       </div>
     </main>
@@ -418,8 +594,16 @@ function BlockRow({
   onEnter,
   onRemove,
   onMove,
+  onInsertAfter,
   onUrl,
   onPick,
+  dragging,
+  dragActive,
+  dropHint,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
 }: {
   block: ArticleBlock;
   index: number;
@@ -430,10 +614,19 @@ function BlockRow({
   onEnter: () => void;
   onRemove: () => void;
   onMove: (d: -1 | 1) => void;
+  onInsertAfter: () => void;
   onUrl: (url: string) => void;
   onPick: (t: MenuItem['type']) => void;
+  dragging: boolean;
+  dragActive: boolean;
+  dropHint: 'before' | 'after' | null;
+  onDragStart: () => void;
+  onDragOver: (place: 'before' | 'after') => void;
+  onDrop: () => void;
+  onDragEnd: () => void;
 }) {
   const [menu, setMenu] = useState<{ q: string; cursor: number } | null>(null);
+  const [grab, setGrab] = useState(false); // ⠿ を押している間だけ draggable にする（本文の選択を邪魔しない）
   const label = LABEL[block.type];
   const filtered = useMemo(() => (menu ? MENU.filter((m) => !menu.q || (m.label + ' ' + m.keys).toLowerCase().includes(menu.q.toLowerCase())) : []), [menu]);
 
@@ -568,11 +761,49 @@ function BlockRow({
   })();
 
   return (
-    <div className="group relative rounded-lg px-3 py-1.5 transition hover:bg-neutral-50">
+    <div
+      draggable={grab}
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', block.id); // Firefox は setData しないとドラッグが始まらない
+        onDragStart();
+      }}
+      onDragEnd={() => {
+        setGrab(false);
+        onDragEnd();
+      }}
+      onDragOver={(e) => {
+        if (!dragActive || dragging) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const r = e.currentTarget.getBoundingClientRect();
+        onDragOver(e.clientY < r.top + r.height / 2 ? 'before' : 'after');
+      }}
+      onDrop={(e) => {
+        if (!dragActive) return;
+        e.preventDefault();
+        setGrab(false);
+        onDrop();
+      }}
+      className={'group relative rounded-lg px-3 py-1.5 transition hover:bg-neutral-50' + (dragging ? ' opacity-40' : '')}
+    >
+      {dropHint ? <div className={'pointer-events-none absolute inset-x-2 z-10 h-[2px] rounded-full bg-primary-500 ' + (dropHint === 'before' ? '-top-px' : '-bottom-px')} aria-hidden /> : null}
       <div className="pointer-events-none absolute -left-1 top-1.5 whitespace-nowrap text-[10px] tracking-[0.1em] text-neutral-300 opacity-0 transition group-hover:opacity-100 max-lg:hidden" style={{ transform: 'translateX(-100%)' }}>
         {label}
       </div>
       <div className="absolute right-2 top-1 flex items-center gap-0.5 opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
+        <span
+          role="button"
+          tabIndex={-1}
+          aria-label="ドラッグして並べ替え"
+          title="ドラッグして並べ替え"
+          onPointerDown={() => setGrab(true)}
+          onPointerUp={() => setGrab(false)}
+          className="cursor-grab rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground active:cursor-grabbing max-lg:hidden"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </span>
+        <button type="button" onClick={onInsertAfter} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground" aria-label="下に段落を追加" title="下に段落を追加"><Plus className="h-3.5 w-3.5" /></button>
         <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="上へ"><ArrowUp className="h-3.5 w-3.5" /></button>
         <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="下へ"><ArrowDown className="h-3.5 w-3.5" /></button>
         <button type="button" onClick={onRemove} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-danger-500" aria-label="削除"><Trash2 className="h-3.5 w-3.5" /></button>
