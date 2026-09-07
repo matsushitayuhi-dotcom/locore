@@ -22,6 +22,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 //   '/about-service' は巻き込まれない（そちらは既存エントリで公開済み）。
 const PUBLIC_PREFIXES = [
   '/auth',
+  // 記事エディタのデモ（保存されない・ログイン不要）
+  '/demo',
   '/experts',
   '/about',
   '/about-service',

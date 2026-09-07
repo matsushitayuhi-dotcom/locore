@@ -136,7 +136,7 @@ function compact(blocks: ArticleBlock[]): ArticleBlock[] {
 const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
 const cells = (l: string) => l.split('|').map((c) => c.trim());
 
-export function BlockEditor({ initial }: { initial: Initial }) {
+export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?: boolean }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial.title);
   const [subtitle, setSubtitle] = useState(initial.subtitle);
@@ -158,6 +158,12 @@ export function BlockEditor({ initial }: { initial: Initial }) {
   );
 
   const save = useCallback(async () => {
+    if (demo) {
+      // デモ: サーバーに送らず「保存済み」扱いにする
+      setSavedAt(new Date().toISOString());
+      setDirty(false);
+      return true;
+    }
     setSaving(true);
     const res = await saveArticleBlocks(payload());
     setSaving(false);
@@ -166,7 +172,7 @@ export function BlockEditor({ initial }: { initial: Initial }) {
       setDirty(false);
     } else toast.error(res.error);
     return res.ok;
-  }, [payload]);
+  }, [payload, demo]);
 
   // 自動保存（1.5 秒）
   useEffect(() => {
@@ -233,6 +239,10 @@ export function BlockEditor({ initial }: { initial: Initial }) {
   };
 
   const onPublish = () => {
+    if (demo) {
+      toast('デモでは公開できません', { description: 'ログインして「ブログを書く」から実際の記事を作成できます' });
+      return;
+    }
     start(async () => {
       const ok = await save();
       if (!ok) return;
@@ -245,6 +255,7 @@ export function BlockEditor({ initial }: { initial: Initial }) {
     });
   };
   const onUnpublish = () => {
+    if (demo) return;
     if (!confirm('非公開（下書き）に戻しますか？')) return;
     start(async () => {
       const res = await unpublishBlocksArticle({ id: initial.id });
@@ -272,19 +283,25 @@ export function BlockEditor({ initial }: { initial: Initial }) {
       {/* ===== ヘッダー（固定） ===== */}
       <div className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1120px] items-center gap-3 px-5 py-2.5 sm:px-8">
-          <Link href="/writer/articles" className="text-[12.5px] text-neutral-500 hover:text-foreground">
-            ← 記事一覧
+          <Link href={demo ? '/' : '/writer/articles'} className="text-[12.5px] text-neutral-500 hover:text-foreground">
+            {demo ? '← Locore' : '← 記事一覧'}
           </Link>
           <span className="text-[12px] text-neutral-400">
             {saving ? '保存中…' : dirty ? '未保存の変更' : savedAt ? `保存済み ${fmtTime(savedAt)}` : ''}
           </span>
           <span className={'rounded-full border px-2.5 py-1 text-[11px] font-bold ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong text-neutral-600')}>
-            {status === 'published' ? '公開中' : '下書き'}
+            {demo ? 'デモ（保存されません）' : status === 'published' ? '公開中' : '下書き'}
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <Link href={`/articles/${initial.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
-              プレビュー <ExternalLink className="h-3 w-3" aria-hidden />
-            </Link>
+            {demo ? (
+              <Link href="/articles/e9cc342f-e475-5161-a3b4-006706e81c6d" target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
+                記事ページの例 <ExternalLink className="h-3 w-3" aria-hidden />
+              </Link>
+            ) : (
+              <Link href={`/articles/${initial.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground">
+                プレビュー <ExternalLink className="h-3 w-3" aria-hidden />
+              </Link>
+            )}
             <button type="button" onClick={() => void save()} disabled={saving || !dirty} className="rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40">
               保存
             </button>
@@ -510,8 +527,8 @@ function BlockRow({
         );
       case 'takeaways':
         return (
-          <div className="rounded-xl bg-neutral-100 px-5 py-4">
-            <b className="mb-1 block text-[11.5px] tracking-[0.18em] text-neutral-500">この記事で分かること</b>
+          <div className="border-l-[3px] border-primary-500 py-1 pl-[18px]">
+            <b className="mb-1.5 block text-[11.5px] tracking-[0.18em] text-foreground">この記事で分かること</b>
             <Lines value={block.items.join('\n')} placeholder="1 行 1 項目（3〜5 行）" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v) } as Partial<ArticleBlock>)} />
           </div>
         );
@@ -624,18 +641,13 @@ function AutoTextarea({
   extra?: React.ReactNode;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = '0px';
-    el.style.height = `${el.scrollHeight}px`;
-  }, [value]);
+  useAutoHeight(ref, value, 0);
   useEffect(() => {
     if (autoFocus) ref.current?.focus();
   }, [autoFocus]);
   return (
     <div>
-      <textarea ref={ref} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKeyDown} placeholder={placeholder} rows={1} className={'block w-full resize-none overflow-hidden border-0 bg-transparent p-0 placeholder:text-neutral-300 focus:outline-none ' + className} />
+      <textarea ref={ref} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKeyDown} placeholder={placeholder} rows={1} style={FIELD_SIZING} className={'block w-full resize-none overflow-hidden border-0 bg-transparent p-0 placeholder:text-neutral-300 focus:outline-none ' + className} />
       {extra ? <div className="mt-1">{extra}</div> : null}
     </div>
   );
@@ -645,18 +657,14 @@ function AutoTextarea({
 function Lines({ value, onChange, placeholder, autoFocus, minRows = 2, mono = false }: { value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean; minRows?: number; mono?: boolean }) {
   const [local, setLocal] = useState(value);
   const ref = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = '0px';
-    el.style.height = `${Math.max(el.scrollHeight, minRows * 28)}px`;
-  }, [local, minRows]);
+  useAutoHeight(ref, local, minRows * 28);
   useEffect(() => {
     if (autoFocus) ref.current?.focus();
   }, [autoFocus]);
   return (
     <textarea
       ref={ref}
+      style={FIELD_SIZING}
       value={local}
       onChange={(e) => {
         setLocal(e.target.value);
@@ -740,6 +748,34 @@ function UrlField({ block, onReplace }: { block: Extract<ArticleBlock, { type: '
       ) : null}
     </div>
   );
+}
+
+/** textarea の高さを内容に合わせる。フォント読み込み後と幅変更時にも測り直す（初回の測定ずれ対策） */
+const FIELD_SIZING = { fieldSizing: 'content' } as React.CSSProperties;
+function useAutoHeight(ref: React.RefObject<HTMLTextAreaElement>, value: string, min: number) {
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const fit = () => {
+      el.style.height = '0px';
+      el.style.height = `${Math.max(el.scrollHeight, min)}px`;
+    };
+    fit();
+    const raf = requestAnimationFrame(fit);
+    const onResize = () => fit();
+    window.addEventListener('resize', onResize);
+    let cancelled = false;
+    if (typeof document !== 'undefined' && 'fonts' in document) {
+      void (document as Document & { fonts: FontFaceSet }).fonts.ready.then(() => {
+        if (!cancelled) fit();
+      });
+    }
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [ref, value, min]);
 }
 
 function fmtTime(iso: string): string {

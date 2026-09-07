@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { schema } from '@locore/db';
 import { getDb } from '@/lib/db/client';
 import { requireUser } from '@/lib/auth/require-user';
+import { getCurrentUser } from '@/lib/auth/current-user';
 import { blocksSchema, blocksToPlainText, blocksHaveContent, newBlockId, type ArticleBlock } from '@/lib/articles/blocks';
 import { classifyUrl } from '@/lib/articles/embeds';
 import { fetchPreviewLite } from '@/lib/articles/editorial';
@@ -122,7 +123,9 @@ export async function unpublishBlocksArticle(input: unknown): Promise<Result> {
 export async function resolveUrlBlock(input: unknown): Promise<Result<ArticleBlock>> {
   const parsed = z.object({ url: z.string().url().max(2048) }).safeParse(input);
   if (!parsed.success) return { ok: false, error: 'URL の形式が正しくありません' };
-  await requireUser();
+  // 未ログイン（/demo/editor）は種類の判定だけ行い、外部へのプレビュー取得はしない
+  const viewer = await getCurrentUser();
+  const canFetch = !!viewer;
   let siteHost: string | null = null;
   try {
     siteHost = new URL(getSiteUrl()).hostname;
@@ -137,9 +140,9 @@ export async function resolveUrlBlock(input: unknown): Promise<Result<ArticleBlo
   if (k.kind === 'expert') return { ok: true, data: { id, type: 'link_card', url, kind: 'expert', targetId: k.id } };
   if (k.kind === 'embed') {
     // YouTube / 地図はプレビュー無しでも描ける。SNS 系は oEmbed / OG を試す
-    const preview = k.provider === 'gmap' ? null : await fetchPreviewLite(url);
+    const preview = k.provider === 'gmap' || !canFetch ? null : await fetchPreviewLite(url);
     return { ok: true, data: { id, type: 'embed', url, provider: k.provider, videoId: k.videoId, preview: preview ?? undefined } };
   }
-  const preview = await fetchPreviewLite(url);
+  const preview = canFetch ? await fetchPreviewLite(url) : null;
   return { ok: true, data: { id, type: 'link_card', url, kind: 'external', preview: preview ?? undefined } };
 }
