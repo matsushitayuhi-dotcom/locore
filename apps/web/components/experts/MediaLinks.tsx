@@ -118,10 +118,21 @@ function EmbedItem({ l }: { l: SocialLink }) {
           />
         </div>
       </details>
+      {/* 402px（本文幅 370px）だと「YouTube で開く」が 108px を占めてタイトルが読めないので、
+          スマホでは「開く」だけにする（PC は従来どおり。リンクの意味は aria-label に残す）。
+          文字が減るとタップ領域も縮むので、スマホだけ min-h-9（36px）を確保し、
+          行が間延びしないよう負マージンで相殺する */}
       <div className="flex items-center justify-between gap-3 p-3.5">
-        <b className="line-clamp-1 text-[13.5px] font-semibold">{l.title ?? l.url}</b>
-        <a href={l.url} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1 text-[11.5px] text-neutral-500 hover:text-foreground">
-          YouTube で開く <ArrowUpRight className="h-3 w-3" aria-hidden />
+        <b className="min-w-0 line-clamp-1 text-[13.5px] font-semibold">{l.title ?? l.url}</b>
+        <a
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="YouTube で開く"
+          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[11.5px] text-neutral-500 hover:text-foreground max-sm:-my-1.5 max-sm:min-h-9 max-sm:py-1.5"
+        >
+          <span className="max-sm:hidden">YouTube で</span>開く
+          <ArrowUpRight className="h-3 w-3 shrink-0" aria-hidden />
         </a>
       </div>
     </div>
@@ -199,7 +210,7 @@ function ButtonItem({ l }: { l: SocialLink }) {
           {!l.title ? ` ・ ${hostOf(l.url)}` : ''}
         </small>
       </span>
-      <ArrowUpRight className="h-4 w-4 text-neutral-400 transition group-hover:text-foreground" aria-hidden />
+      <ArrowUpRight className="h-4 w-4 shrink-0 text-neutral-400 transition group-hover:text-foreground" aria-hidden />
     </a>
   );
 }

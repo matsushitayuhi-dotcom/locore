@@ -106,7 +106,8 @@ export default async function PlanSubscribePage({
 
         {/* プラン概要 */}
         <div className="mt-[18px] rounded-2xl border border-primary-200 bg-card px-[18px] py-4 shadow-xs">
-          <div className="flex items-center gap-3.5">
+          {/* 402px: タイトルに min-w を与えて折り返しの引き金にし、価格は縮まない側にする */}
+          <div className="flex flex-wrap items-center gap-3.5">
             {plan.ownerAvatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -119,7 +120,7 @@ export default async function PlanSubscribePage({
                 {plan.ownerName.charAt(0)}
               </span>
             )}
-            <div className="min-w-0">
+            <div className="min-w-[8rem] flex-1">
               <b className="block text-[14.5px] font-bold">{plan.title}</b>
               <span className="text-[11.5px] text-neutral-500">
                 {plan.ownerName}
@@ -128,16 +129,16 @@ export default async function PlanSubscribePage({
                   : ''}
               </span>
             </div>
-            <div className="ml-auto text-right leading-snug">
-              <b className="block text-[19px] font-bold tabular-nums">
+            <div className="ml-auto shrink-0 text-right leading-snug">
+              <b className="block whitespace-nowrap text-[19px] font-bold tabular-nums">
                 ¥{plan.priceJpy.toLocaleString('ja-JP')}
               </b>
-              <span className="text-[10.5px] text-neutral-500">/ 月・税込</span>
+              <span className="whitespace-nowrap text-[10.5px] max-sm:text-[11px] text-neutral-500">/ 月・税込</span>
             </div>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3 text-[12px] text-neutral-700">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary-100 bg-primary-50 px-3 py-1 font-bold text-primary-900">
-              <Repeat className="h-3 w-3 text-primary-700" aria-hidden />
+            <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-100 bg-primary-50 px-3 py-1 font-bold text-primary-900">
+              <Repeat className="h-3 w-3 shrink-0 text-primary-700" aria-hidden />
               月{plan.sessionsPerMonth}回 × {plan.durationMinutes}分
             </span>
             <span className="text-neutral-500">

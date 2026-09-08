@@ -717,14 +717,14 @@ export function JobsBrowser({
                     view: f.view,
                   }))
                 }
-                className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
               >
                 リセット
               </button>
               <button
                 type="button"
                 onClick={() => setSheetOpen(false)}
-                className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                className="ml-auto inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
               >
                 適用
               </button>
@@ -860,8 +860,11 @@ function SelectField({
 }
 
 /** カード/リスト共通のタグ群 (急募・契約形態・ビザ・リモート) */
-function JobTags({ meta, small }: { meta: JobMeta; small?: boolean }) {
-  const sz = small ? 'text-[9px]' : 'text-[9px]';
+function JobTags({ meta }: { meta: JobMeta }) {
+  // 9px は実機で読めないのでスマホだけ 11px に上げる（PC は従来どおり 9px）。
+  // 旧 small プロパティは 9px 同士で差が無かったので廃止した。
+  // バッジは「縮まない側」。中で 2 行に割れないよう whitespace-nowrap を付ける。
+  const sz = 'whitespace-nowrap text-[9px] max-sm:text-[11px]';
   return (
     <>
       {meta.urgent ? (
@@ -885,7 +888,7 @@ function JobTags({ meta, small }: { meta: JobMeta; small?: boolean }) {
       ) : null}
       {isRemote(meta) ? (
         <span className={`inline-flex items-center gap-0.5 rounded-sm bg-accent-500/90 px-1.5 py-0.5 ${sz} font-bold uppercase tracking-wider text-neutral-950 shadow-sm`}>
-          <Wifi className="h-2.5 w-2.5" />
+          <Wifi className="h-2.5 w-2.5 shrink-0" />
           Remote
         </span>
       ) : null}
@@ -923,9 +926,9 @@ function JobListItem({ post }: { post: JobListPost }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1">
-            <JobTags meta={meta} small />
+            <JobTags meta={meta} />
             {meta.category ? (
-              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
+              <span className="whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/65">
                 {JOB_CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
@@ -935,18 +938,24 @@ function JobListItem({ post }: { post: JobListPost }) {
             {post.title}
           </h2>
 
+          {/* 給与は truncate（= nowrap + 省略記号）。サムネの右は 320px で 150px
+              程度しか無く、素のままだと「年収 €35 000〜€60 000」が 1 文字ずつ
+              縦積みになる。入り切らない時は途中で切れず「…」で終わる。
+              アイコンは shrink-0（長い地名でアイコンが潰れるため） */}
           <dl className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {salary ? (
-              <div className="font-semibold text-primary-300">{salary}</div>
-            ) : null}
-            {post.locationText ? (
-              <div className="inline-flex items-center gap-0.5">
-                <MapPin className="h-3 w-3" />
-                {post.locationText}
+              <div className="min-w-0 truncate font-semibold text-primary-300">
+                {salary}
               </div>
             ) : null}
-            <div className="inline-flex items-center gap-0.5 text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            {post.locationText ? (
+              <div className="inline-flex min-w-0 items-center gap-0.5">
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{post.locationText}</span>
+              </div>
+            ) : null}
+            <div className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </div>
           </dl>
@@ -993,20 +1002,31 @@ function JobCard({ post }: { post: JobListPost }) {
             </div>
           )}
 
-          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
-            <JobTags meta={meta} />
-            {meta.category ? (
-              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
-                {JOB_CATEGORY_LABEL[meta.category]}
+          {/*
+            タグ群と給与は 1 本の flex にまとめる。左上と右上で別々の absolute に
+            すると、タグが最大 5 個あるため 402px / 320px で折り返した行が右上の
+            給与ピルの下に潜り込んで重なる。タグ側は min-w-0、給与は
+            shrink-0 whitespace-nowrap（「年収 €35 000〜€60 000」が 1 文字ずつ縦積みになるのを防ぐ）。
+            320px ではオーバーレイ幅 272px から給与ピル約 180px を引くとタグ側に
+            84px しか残らず、「パート / アルバイト」等のバッジが 2 行に割れる。
+            外側にも flex-wrap を持たせ、足りなければ給与ピルごと次の行の右端へ落とす。
+          */}
+          <div className="absolute inset-x-2 top-2 flex flex-wrap items-start gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1">
+              <JobTags meta={meta} />
+              {meta.category ? (
+                <span className="whitespace-nowrap rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                  {JOB_CATEGORY_LABEL[meta.category]}
+                </span>
+              ) : null}
+            </div>
+
+            {salary ? (
+              <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
+                {salary}
               </span>
             ) : null}
           </div>
-
-          {salary ? (
-            <span className="absolute right-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
-              {salary}
-            </span>
-          ) : null}
         </div>
 
         <div className="p-3">
@@ -1014,23 +1034,26 @@ function JobCard({ post }: { post: JobListPost }) {
             {post.title}
           </h2>
 
+          {/* アイコンは shrink-0、締切など短い項目は whitespace-nowrap で縦積みを防ぐ */}
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
-            {!salary && <li className="text-foreground/45">給与情報なし</li>}
+            {!salary && (
+              <li className="shrink-0 whitespace-nowrap text-foreground/45">給与情報なし</li>
+            )}
             {post.locationText ? (
-              <li className="inline-flex items-center gap-0.5 text-foreground/55">
-                <MapPin className="h-3 w-3" />
-                {post.locationText}
+              <li className="inline-flex min-w-0 items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{post.locationText}</span>
               </li>
             ) : null}
             {meta.language_requirements && meta.language_requirements.length > 0 ? (
-              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+              <li className="min-w-0 truncate text-foreground/55">
                 {meta.language_requirements.map((l) => LANG_LABEL[l]).join(' / ')}
               </li>
             ) : null}
             {expDays !== null && expDays >= 0 ? (
               <li
                 className={
-                  'inline-flex items-center gap-0.5 tabular ' +
+                  'inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap tabular ' +
                   (expiringSoon ? 'font-bold text-danger-500' : 'text-foreground/55')
                 }
               >
@@ -1059,8 +1082,8 @@ function JobCard({ post }: { post: JobListPost }) {
           ) : null}
 
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>
           </div>

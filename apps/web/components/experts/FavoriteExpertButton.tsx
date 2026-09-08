@@ -47,7 +47,7 @@ export function FavoriteExpertButton({
     });
   };
 
-  const iconCls = 'h-4 w-4 transition ' + (fav ? 'fill-current text-primary-700' : '');
+  const iconCls = 'h-4 w-4 shrink-0 transition ' + (fav ? 'fill-current text-primary-700' : '');
   if (variant === 'icon') {
     return (
       <button
@@ -58,7 +58,7 @@ export function FavoriteExpertButton({
         aria-label={fav ? 'お気に入りから外す' : 'お気に入りに追加'}
         title={fav ? 'お気に入りから外す' : 'お気に入りに追加'}
         className={
-          'grid h-9 w-9 place-items-center rounded-full border bg-card transition hover:border-foreground disabled:opacity-60 ' +
+          'grid h-9 w-9 shrink-0 place-items-center rounded-full border bg-card transition hover:border-foreground disabled:opacity-60 ' +
           (fav ? 'border-primary-500' : 'border-border-strong')
         }
       >
@@ -73,7 +73,9 @@ export function FavoriteExpertButton({
       disabled={isPending}
       aria-pressed={fav}
       className={
-        'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] font-semibold transition hover:border-foreground disabled:opacity-60 ' +
+        // 隣に名前が並ぶ行に置かれるので縮まない（shrink-0 / nowrap）。
+        // py-1.5 だと高さ約 31px でタップ領域が足りないため、スマホだけ 36px を確保する
+        'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12.5px] font-semibold transition hover:border-foreground disabled:opacity-60 max-sm:min-h-9 ' +
         (fav ? 'border-primary-500 bg-primary-50 text-primary-900' : 'border-border-strong bg-card text-neutral-700')
       }
     >

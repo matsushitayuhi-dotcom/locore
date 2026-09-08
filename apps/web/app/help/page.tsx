@@ -385,11 +385,12 @@ function HelpListItem({ post }: { post: CommunityPostListItem }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
+          {/* バッジ: 9px はスマホ実機で読めないので 11px に上げる。潰れないよう nowrap */}
           <div className="flex flex-wrap items-center gap-1">
             {meta.request_type ? (
               <span
                 className={
-                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                  'whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider max-sm:text-[11px] ' +
                   (meta.request_type === 'offer'
                     ? 'bg-primary-500 text-neutral-950'
                     : 'bg-accent-500 text-neutral-950')
@@ -401,7 +402,7 @@ function HelpListItem({ post }: { post: CommunityPostListItem }) {
             {meta.urgency ? (
               <span
                 className={
-                  'inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                  'inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider max-sm:text-[11px] ' +
                   (meta.urgency === 'now'
                     ? 'bg-danger-500 text-white'
                     : meta.urgency === 'this_week'
@@ -409,12 +410,12 @@ function HelpListItem({ post }: { post: CommunityPostListItem }) {
                       : 'bg-foreground/10 text-foreground/65')
                 }
               >
-                {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5" /> : null}
+                {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5 shrink-0" /> : null}
                 {URGENCY_LABEL[meta.urgency]}
               </span>
             ) : null}
             {meta.category ? (
-              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
+              <span className="whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65 max-sm:text-[11px]">
                 {CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
@@ -423,20 +424,21 @@ function HelpListItem({ post }: { post: CommunityPostListItem }) {
             {post.title}
           </h2>
           <dl className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {/* アイコンとお礼は潰さない。地名だけが縮んで折り返す */}
             {meta.compensation ? (
-              <div className="inline-flex items-center gap-0.5">
-                <Gift className="h-3 w-3" />
+              <div className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                <Gift className="h-3 w-3 shrink-0" />
                 {COMPENSATION_LABEL[meta.compensation]}
               </div>
             ) : null}
             {post.locationText ? (
-              <div className="inline-flex items-center gap-0.5">
-                <MapPin className="h-3 w-3" />
+              <div className="inline-flex min-w-0 items-center gap-0.5">
+                <MapPin className="h-3 w-3 shrink-0" />
                 {post.locationText}
               </div>
             ) : null}
-            <div className="inline-flex items-center gap-0.5 text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <div className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </div>
           </dl>
@@ -489,11 +491,12 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
             </div>
           )}
 
-          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+          {/* 狭い幅では右端に余白を残し、バッジが写真の縁に貼り付く前に折り返させる */}
+          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1 max-sm:right-2">
             {meta.request_type ? (
               <span
                 className={
-                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
+                  'whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm max-sm:text-[11px] ' +
                   (meta.request_type === 'offer'
                     ? 'bg-primary-500 text-neutral-950'
                     : 'bg-accent-500 text-neutral-950')
@@ -505,7 +508,7 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
             {meta.urgency ? (
               <span
                 className={
-                  'inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
+                  'inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm max-sm:text-[11px] ' +
                   (meta.urgency === 'now'
                     ? 'bg-danger-500 text-white'
                     : meta.urgency === 'this_week'
@@ -513,12 +516,12 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
                       : 'bg-card/95 text-foreground/75 ring-1 ring-border/60 backdrop-blur')
                 }
               >
-                {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5" /> : null}
+                {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5 shrink-0" /> : null}
                 {URGENCY_LABEL[meta.urgency]}
               </span>
             ) : null}
             {meta.category ? (
-              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+              <span className="whitespace-nowrap rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur max-sm:text-[11px]">
                 {CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
@@ -532,21 +535,21 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
 
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {meta.compensation ? (
-              <li className="inline-flex items-center gap-0.5">
-                <Gift className="h-3 w-3" />
+              <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                <Gift className="h-3 w-3 shrink-0" />
                 {COMPENSATION_LABEL[meta.compensation]}
               </li>
             ) : null}
             {post.locationText ? (
-              <li className="inline-flex items-center gap-0.5 text-foreground/55">
-                <MapPin className="h-3 w-3" />
+              <li className="inline-flex min-w-0 items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3 shrink-0" />
                 {post.locationText}
               </li>
             ) : null}
             {expDays !== null && expDays >= 0 ? (
               <li
                 className={
-                  'inline-flex items-center gap-0.5 tabular ' +
+                  'inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap tabular ' +
                   (expDays <= 3 ? 'font-bold text-danger-500' : 'text-foreground/55')
                 }
               >
@@ -556,8 +559,8 @@ function HelpCard({ post }: { post: CommunityPostListItem }) {
           </ul>
 
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>
           </div>

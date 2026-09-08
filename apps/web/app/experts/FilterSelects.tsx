@@ -12,8 +12,11 @@ import type { ChangeEvent } from 'react';
 
 export type SelectOption = { value: string; label: string };
 
+// min-w-0 / max-w-full: 選択肢の日本語が長い（都市名など）と select の実寸が 320px を
+// はみ出すことがあるので、はみ出さずに縮む側に倒す。行に入り切らないときは親の
+// flex-wrap で次の行に落ちる
 const selCls =
-  'appearance-none rounded-xl border border-border-strong bg-card bg-[url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%233f3f46%27%20stroke-width%3D%272.5%27%3E%3Cpath%20d%3D%27m6%209%206%206%206-6%27/%3E%3C/svg%3E")] bg-[length:12px_12px] bg-[position:right_12px_center] bg-no-repeat py-2.5 pl-3.5 pr-8 text-[13px] font-semibold text-foreground outline-none transition focus:border-foreground ';
+  'min-w-0 max-w-full appearance-none rounded-xl border border-border-strong bg-card bg-[url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2712%27%20height%3D%2712%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%233f3f46%27%20stroke-width%3D%272.5%27%3E%3Cpath%20d%3D%27m6%209%206%206%206-6%27/%3E%3C/svg%3E")] bg-[length:12px_12px] bg-[position:right_12px_center] bg-no-repeat py-2.5 pl-3.5 pr-8 text-[13px] font-semibold text-foreground outline-none transition focus:border-foreground ';
 
 export function CityPriceSelects({
   country,

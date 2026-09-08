@@ -33,13 +33,15 @@ export function HeaderUserArea() {
         <>
           <Link
             href="/auth/login"
-            className="hidden text-[14px] font-medium text-white/85 transition hover:text-white sm:inline"
+            className="hidden whitespace-nowrap text-[14px] font-medium text-white/85 transition hover:text-white sm:inline"
           >
             ログイン
           </Link>
           <Link
             href="/auth/signup?redirect_to=%2Fexperts"
-            className="inline-flex items-center rounded-full bg-primary-500 px-3.5 py-1.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-400 active:scale-[0.98]"
+            // ボタンは縮ませない。日本語は 1 文字まで潰れるので、幅が足りないと
+            // 「無 / 料 / で…」と縦積みになる（320px 幅で発生）
+            className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-primary-500 px-3.5 py-1.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-400 active:scale-[0.98]"
           >
             無料ではじめる
           </Link>

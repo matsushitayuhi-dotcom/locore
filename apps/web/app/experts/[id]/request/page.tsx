@@ -123,7 +123,8 @@ export default async function BookingRequestPage({
         </p>
 
         {/* メニュー概要 */}
-        <div className="mt-[18px] flex items-center gap-3.5 rounded-2xl border border-border bg-muted px-[18px] py-3.5">
+        {/* 402px: タイトルに min-w を与えて折り返しの引き金にし、価格は縮まない側にする */}
+        <div className="mt-[18px] flex flex-wrap items-center gap-3.5 rounded-2xl border border-border bg-muted px-[18px] py-3.5">
           {service.ownerAvatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -136,20 +137,20 @@ export default async function BookingRequestPage({
               {service.ownerName.charAt(0)}
             </span>
           )}
-          <div className="min-w-0">
+          <div className="min-w-[8rem] flex-1">
             <b className="block text-[14.5px] font-bold">{service.title}</b>
             <span className="text-[11.5px] text-neutral-500">
               {service.ownerName}
               {service.ownerCity ? ` ・ ${flag ? `${flag} ` : ''}${service.ownerCity}` : ''}
             </span>
           </div>
-          <div className="ml-auto text-right leading-snug">
-            <b className="block text-[19px] font-bold tabular-nums">
+          <div className="ml-auto shrink-0 text-right leading-snug">
+            <b className="block whitespace-nowrap text-[19px] font-bold tabular-nums">
               {service.priceJpy != null
                 ? `¥${service.priceJpy.toLocaleString('ja-JP')}`
                 : '応相談'}
             </b>
-            <span className="text-[10.5px] text-neutral-500">
+            <span className="text-[10.5px] max-sm:text-[11px] text-neutral-500">
               / {service.priceUnit ?? `${duration}分`}
             </span>
           </div>
@@ -228,7 +229,7 @@ async function PlanSessionRequestPage(expertId: string, enrollmentId: string) {
 
         {/* プラン概要（価格は月額のみ・セッション単価は出さない） */}
         <div className="mt-[18px] flex flex-wrap items-center gap-3.5 rounded-2xl border border-primary-200 bg-card px-[18px] py-3.5">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-[10rem] flex-1">
             <b className="block text-[14.5px] font-bold">
               {enrollment.planTitle}
             </b>
@@ -237,7 +238,8 @@ async function PlanSessionRequestPage(expertId: string, enrollmentId: string) {
               {enrollment.sessionsPerMonth}回 × {enrollment.durationMinutes}分
             </span>
           </div>
-          <span className="inline-flex items-center rounded-full border border-primary-300 bg-primary-100 px-3 py-1 text-[12px] font-bold text-primary-900">
+          {/* 320px では確実に 2 行目へ落ちる。落ちた先でも右寄せを保つ（上のメニュー概要と同じ） */}
+          <span className="ml-auto inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-3 py-1 text-[12px] font-bold text-primary-900">
             今月あと {enrollment.remainingThisMonth} 回
           </span>
         </div>

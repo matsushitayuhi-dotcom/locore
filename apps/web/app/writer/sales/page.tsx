@@ -186,22 +186,23 @@ export default async function WriterSalesPage({
             日付をクリックすると、その日の記事別の内訳が表示されます。
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* 月送り 2 つ + CSV は縮ませない（320px で「C S V」「出 力」に潰れる）。入らなければ折り返す */}
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/writer/sales?month=${prevMonth}`}
-            className="rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted"
+            className="shrink-0 whitespace-nowrap rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted"
           >
             ← {prevMonth}
           </Link>
           <Link
             href={`/writer/sales?month=${nextMonth}`}
-            className="rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted"
+            className="shrink-0 whitespace-nowrap rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted"
           >
             {nextMonth} →
           </Link>
           <a
             href={csvHref}
-            className="inline-flex items-center gap-1 rounded-md bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
           >
             CSV 出力
           </a>
@@ -225,10 +226,12 @@ export default async function WriterSalesPage({
 
       {/* ① 日別 */}
       <section className="rounded-xl border border-border bg-card">
-        <header className="flex items-baseline justify-between border-b border-border px-4 py-3 sm:px-6">
-          <h3 className="text-[14px] font-semibold tracking-tight">日別の売上</h3>
-          <p className="text-[11px] text-foreground/55">
-            {allDays.length} 日間 / 購入のあった日: {daily.length} 日
+        {/* 320px では見出しと補足が 1 行に収まらない。折り返しを許可し、スマホは補足を短縮 */}
+        <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border px-4 py-3 sm:px-6">
+          <h3 className="shrink-0 text-[14px] font-semibold tracking-tight">日別の売上</h3>
+          <p className="ml-auto text-[11px] text-foreground/55">
+            {allDays.length} 日間 / 購入
+            <span className="max-sm:hidden">のあった日</span>: {daily.length} 日
           </p>
         </header>
         <ul className="divide-y divide-border">
@@ -251,21 +254,27 @@ export default async function WriterSalesPage({
               <li key={d}>
                 <Link
                   href={href}
-                  className={`flex items-center gap-3 px-4 py-2.5 transition hover:bg-muted/40 sm:px-6 ${
+                  className={`flex flex-wrap items-center gap-x-3 gap-y-0.5 px-4 py-2.5 transition hover:bg-muted/40 max-sm:gap-x-2 sm:px-6 ${
                     isOpen ? 'bg-primary-500/10' : ''
                   } ${!hasSales ? 'opacity-50' : ''}`}
                 >
-                  <span className="w-20 shrink-0 text-[13px] tabular text-foreground/80">
+                  {/* 日付・件数・金額はどれも縮ませない（320px で「件」が下段に落ちる）。
+                      縮まない代わりに逃げ道として flex-wrap を持たせ、桁が増えたら
+                      「金額 + 詳細」がまとまって 2 行目に落ちる（ml-auto で右寄せのまま）。
+                      日付は固定幅ではなく min-w にして、はみ出す時は箱の方を広げる */}
+                  <span className="min-w-[5rem] shrink-0 whitespace-nowrap text-[13px] tabular text-foreground/80">
                     {dayLabel}
                   </span>
-                  <span className="flex-1 text-[13px] tabular text-foreground/70">
+                  <span className="shrink-0 whitespace-nowrap text-[13px] tabular text-foreground/70">
                     {hasSales ? `${row!.purchases} 件` : '—'}
                   </span>
-                  <span className="shrink-0 text-[13px] font-semibold tabular">
-                    {hasSales ? `¥${row!.payoutJpy.toLocaleString('ja-JP')}` : '¥0'}
-                  </span>
-                  <span className="ml-2 shrink-0 text-[10px] text-foreground/40">
-                    {isOpen ? '▲ 閉じる' : hasSales ? '▼ 詳細' : ''}
+                  <span className="ml-auto flex shrink-0 items-center gap-2">
+                    <span className="whitespace-nowrap text-[13px] font-semibold tabular">
+                      {hasSales ? `¥${row!.payoutJpy.toLocaleString('ja-JP')}` : '¥0'}
+                    </span>
+                    <span className="whitespace-nowrap text-[10px] text-foreground/40">
+                      {isOpen ? '▲ 閉じる' : hasSales ? '▼ 詳細' : ''}
+                    </span>
                   </span>
                 </Link>
 

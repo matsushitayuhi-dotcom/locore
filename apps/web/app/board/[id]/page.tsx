@@ -26,27 +26,29 @@ export default async function BoardDetailPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
+      {/* スマホでは上下に余白を足してタップ領域を 36px 以上にする（見た目は -my で据え置き） */}
       <Link
         href="/board"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
+        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline max-sm:-my-2.5 max-sm:py-2.5"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         新着ニュースに戻る
       </Link>
 
       <header className="mt-4">
+        {/* バッジと日付は割らない（「AI 自動収集」は半角スペースで割れる） */}
         <div className="flex flex-wrap items-center gap-2">
           {post.autoCollected ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-500">
-              <Sparkles className="h-3 w-3" />
+            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-accent-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-500">
+              <Sparkles className="h-3 w-3 shrink-0" />
               AI 自動収集
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-300">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-300">
               編集部
             </span>
           )}
-          <span className="text-[11px] text-foreground/50">
+          <span className="shrink-0 whitespace-nowrap text-[11px] text-foreground/50">
             {formatPublishedAt(post.publishedAt)}
           </span>
         </div>
@@ -66,8 +68,9 @@ export default async function BoardDetailPage({ params }: Props) {
               const isRange = !!end && start !== end;
               return (
                 <div className="flex items-start gap-2">
-                  <Calendar className="mt-0.5 h-3.5 w-3.5 text-primary-300" />
-                  <div>
+                  {/* アイコンは潰さない / 日本語のラベルは縮む側 */}
+                  <Calendar className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
+                  <div className="min-w-0">
                     <dt className="font-semibold text-foreground/60">
                       {isRange ? '開催期間' : '開催日'}
                     </dt>
@@ -82,8 +85,8 @@ export default async function BoardDetailPage({ params }: Props) {
             })()}
             {post.eventLocation ? (
               <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 text-primary-300" />
-                <div>
+                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
+                <div className="min-w-0">
                   <dt className="font-semibold text-foreground/60">場所</dt>
                   <dd className="mt-0.5 font-medium text-foreground">
                     {post.eventLocation}
@@ -105,6 +108,7 @@ export default async function BoardDetailPage({ params }: Props) {
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/50">
             参照元
           </p>
+          {/* リンクは上下に余白を足してタップ領域を確保（-my で行間の増分を抑える） */}
           <ul className="mt-2 space-y-1">
             {post.sourceUrls.map((s, i) => (
               <li key={i}>
@@ -112,9 +116,9 @@ export default async function BoardDetailPage({ params }: Props) {
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[12px] text-primary-300 hover:underline"
+                  className="inline-flex items-center gap-1 text-[12px] text-primary-300 hover:underline max-sm:-my-1.5 max-sm:py-2.5"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-3 w-3 shrink-0" />
                   {s.name}
                 </a>
               </li>

@@ -24,9 +24,10 @@ export default function ResidentError({
     <main className="bg-background">
       <div className="mx-auto max-w-screen-md px-4 py-10 sm:px-6 sm:py-14">
         <div className="rounded-2xl bg-danger-50 p-6 ring-1 ring-danger-500/30 sm:p-8">
-          <div className="flex items-center gap-2 text-danger-500">
-            <AlertTriangle className="h-5 w-5" />
-            <h1 className="text-[18px] font-bold">
+          {/* 見出しは 402px で 2 行になる。アイコンに shrink-0 が無いと三角が横に潰れる */}
+          <div className="flex items-start gap-2 text-danger-500">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+            <h1 className="min-w-0 text-[18px] font-bold">
               駐在員プロフィールの読み込みでエラー
             </h1>
           </div>

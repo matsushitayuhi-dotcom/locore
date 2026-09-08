@@ -82,7 +82,8 @@ export function SpecialtyPicker({
                       disabled={disabled}
                       aria-pressed={on}
                       className={
-                        'rounded-full border px-3 py-1.5 text-[12.5px] transition disabled:cursor-not-allowed ' +
+                        // py-1.5 だと高さ約 31px でタップ領域が足りない。スマホだけ 36px 確保する
+                        'rounded-full border px-3 py-1.5 text-[12.5px] transition disabled:cursor-not-allowed max-sm:min-h-9 ' +
                         (on
                           ? 'border-neutral-900 bg-neutral-900 font-bold text-white'
                           : 'border-border-strong bg-card font-medium text-neutral-700 hover:border-foreground disabled:hover:border-border-strong')

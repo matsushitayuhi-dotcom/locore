@@ -67,14 +67,15 @@ export function OwnerActions({
       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
         投稿者メニュー
       </p>
+      {/* スマホは py を増やしてタップ領域を 36px 以上に。ラベルは折らない */}
       <div className="grid grid-cols-2 gap-1.5">
         <button
           type="button"
           disabled
           title="編集機能は近日公開"
-          className="inline-flex items-center justify-center gap-1 rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] font-medium text-foreground/45"
+          className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] font-medium text-foreground/45 max-sm:py-2.5"
         >
-          <Pencil className="h-3 w-3" />
+          <Pencil className="h-3 w-3 shrink-0" />
           編集
         </button>
         {closed ? (
@@ -82,9 +83,9 @@ export function OwnerActions({
             type="button"
             onClick={onReopen}
             disabled={isPending}
-            className="inline-flex items-center justify-center gap-1 rounded-md border border-primary-500/40 bg-primary-500/10 px-2.5 py-1.5 text-[11px] font-bold text-primary-300 hover:bg-primary-500/15 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-primary-500/40 bg-primary-500/10 px-2.5 py-1.5 text-[11px] font-bold text-primary-300 hover:bg-primary-500/15 disabled:opacity-50 max-sm:py-2.5"
           >
-            <RefreshCw className="h-3 w-3" />
+            <RefreshCw className="h-3 w-3 shrink-0" />
             再公開
           </button>
         ) : (
@@ -92,9 +93,9 @@ export function OwnerActions({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="inline-flex items-center justify-center gap-1 rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] font-medium text-foreground/80 hover:bg-muted disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-border bg-card px-2.5 py-1.5 text-[11px] font-medium text-foreground/80 hover:bg-muted disabled:opacity-50 max-sm:py-2.5"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3 shrink-0" />
             取り下げる
           </button>
         )}
@@ -102,9 +103,9 @@ export function OwnerActions({
           type="button"
           onClick={onDelete}
           disabled={isPending}
-          className="col-span-2 inline-flex items-center justify-center gap-1 rounded-md border border-danger-500/30 bg-danger-500/5 px-2.5 py-1.5 text-[11px] font-bold text-danger-500 hover:bg-danger-500/10 disabled:opacity-50"
+          className="col-span-2 inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md border border-danger-500/30 bg-danger-500/5 px-2.5 py-1.5 text-[11px] font-bold text-danger-500 hover:bg-danger-500/10 disabled:opacity-50 max-sm:py-2.5"
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-3 w-3 shrink-0" />
           削除する
         </button>
       </div>

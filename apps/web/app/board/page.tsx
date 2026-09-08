@@ -62,9 +62,10 @@ export default async function BoardIndexPage({ searchParams }: Props) {
 
   return (
     <main className="mx-auto max-w-screen-md px-4 py-8 sm:px-6 sm:py-12">
+      {/* スマホでは上下に余白を足してタップ領域を 36px 以上にする（見た目は -my で据え置き） */}
       <Link
         href="/"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
+        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline max-sm:-my-2.5 max-sm:py-2.5"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         ホームに戻る
@@ -117,9 +118,10 @@ export default async function BoardIndexPage({ searchParams }: Props) {
                       )}
                     </span>
                     <div className="min-w-0 flex-1">
+                      {/* カテゴリラベル: 9px はスマホ実機で読めないので 11px に上げる */}
                       <div className="mb-1 flex flex-wrap items-center gap-1.5">
                         <span
-                          className={`rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${chipColor}`}
+                          className={`rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider max-sm:text-[11px] ${chipColor}`}
                         >
                           {BOARD_CATEGORY_LABEL[cat] ?? cat}
                         </span>
@@ -129,27 +131,29 @@ export default async function BoardIndexPage({ searchParams }: Props) {
                       </h2>
                       <p className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground/60">
                         {(() => {
+                          // 日付は「12 / 24」と割れないよう縮ませない
                           const range = formatEventRange(
                             p.eventStartDate ?? p.eventDate,
                             p.eventEndDate ?? p.eventDate,
                           );
                           return range ? (
-                            <span className="rounded-full bg-primary-500/10 px-2 py-0.5 tabular font-semibold text-primary-300">
+                            <span className="shrink-0 whitespace-nowrap rounded-full bg-primary-500/10 px-2 py-0.5 tabular font-semibold text-primary-300">
                               開催 {range}
                             </span>
                           ) : null;
                         })()}
+                        {/* 地名が縮む側 (min-w-0)、ピンは潰さない (shrink-0) */}
                         {p.eventLocation ? (
-                          <span className="inline-flex items-center gap-0.5">
-                            <MapPin className="h-3 w-3" />
+                          <span className="inline-flex min-w-0 items-center gap-0.5">
+                            <MapPin className="h-3 w-3 shrink-0" />
                             {p.eventLocation}
                           </span>
                         ) : null}
-                        <span className="text-foreground/40">
+                        <span className="shrink-0 whitespace-nowrap text-foreground/40">
                           {formatPublishedAt(p.publishedAt)}
                         </span>
                         {p.autoCollected ? (
-                          <span className="ml-auto rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500">
+                          <span className="ml-auto shrink-0 whitespace-nowrap rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent-500 max-sm:text-[11px]">
                             AI 自動
                           </span>
                         ) : null}

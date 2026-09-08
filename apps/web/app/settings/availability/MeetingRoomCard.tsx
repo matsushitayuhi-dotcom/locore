@@ -74,9 +74,13 @@ export function MeetingRoomCard({ initialUrl }: { initialUrl: string | null }) {
         </span>
       </div>
       {savedUrl ? (
-        <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-neutral-500">
-          <Video className="h-3.5 w-3.5 text-primary-700" aria-hidden />
-          登録済み: {savedUrl.replace(/^https:\/\//, '')}
+        // 長い URL は途中で折り返せず 320px をはみ出すので、アイコンは shrink-0、
+        // URL 側は max-w-full + break-all で親の幅に収める
+        <p className="mt-2 inline-flex max-w-full items-start gap-1.5 text-[11px] text-neutral-500">
+          <Video className="mt-px h-3.5 w-3.5 shrink-0 text-primary-700" aria-hidden />
+          <span className="min-w-0 break-all">
+            登録済み: {savedUrl.replace(/^https:\/\//, '')}
+          </span>
         </p>
       ) : null}
     </div>

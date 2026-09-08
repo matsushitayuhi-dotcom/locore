@@ -106,26 +106,30 @@ export default async function DashboardPage() {
           <div className="min-w-0">
             {/* ===== ヘッダー ===== */}
             {/* flex-1 は flex-basis 0 なので、min-w を与えないと右側に押されて
-                挨拶（22px）が 74px 幅の 4 行まで潰れる。入り切らないときは右側を次の行へ。 */}
+                挨拶（22px）が 74px 幅の 4 行まで潰れる。入り切らないときは右側を次の行へ。
+                md 幅（右カラム 456px）では折り返さず 1 行だったので、引き金は max-sm: に限定する。 */}
             <header className="flex flex-wrap items-start gap-3">
-              <div className="min-w-[15rem] flex-1">
+              <div className="flex-1 max-sm:min-w-[15rem]">
                 <h1 className="text-[22px] font-semibold tracking-[-0.01em] sm:text-[24px]">{msg.greeting}</h1>
                 <p className="mt-1 text-[13px] leading-[1.7] text-neutral-500">{msg.summary}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span
                   className={
-                    'shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] font-bold ' +
+                    // 隣のリンクをスマホで 38px に上げるので、並びが揃うようバッジも同じ高さにする（PC は据え置き）
+                    'shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] font-bold max-sm:py-2.5 ' +
                     (m.profilePublished ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong bg-card text-neutral-600')
                   }
                 >
                   {m.profilePublished ? '● 公開中' : '○ 非公開'}
                 </span>
+                {/* py-1.5 だと実高さ 30px でタップ領域 36px に届かないので、スマホだけ縦を足す（幅は変わらない） */}
                 <Link
                   href={`/experts/${me.id}`}
-                  className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12px] font-bold transition hover:border-foreground"
+                  className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12px] font-bold transition hover:border-foreground max-sm:py-2.5"
                 >
-                  公開プロフィールを見る <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  {/* 320px では「公開中」バッジと並べると右の塊が 272px になり収まらないので「を見る」を省く */}
+                  公開プロフィール<span className="max-sm:hidden">を見る</span> <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 </Link>
               </div>
             </header>
@@ -214,8 +218,10 @@ export default async function DashboardPage() {
                       <div className={'mx-auto mb-1.5 grid h-8 w-8 place-items-center rounded-full text-[12px] font-extrabold ' + (s.achieved ? 'bg-primary-100 text-primary-900' : 'bg-muted text-neutral-500')}>
                         {s.glyph}
                       </div>
-                      <b className="block text-[10.5px] leading-tight">{s.label}</b>
-                      <small className="block text-[9.5px] text-neutral-500">
+                      {/* 10px 未満は実機で読めないので 11px に。2 列なら 402px で 142px 幅あり収まる。
+                          PC は 4 列でタイルが 75px しかなく、上げると折り返し行数が変わるので従来のサイズに戻す */}
+                      <b className="block text-[11px] leading-tight sm:text-[10.5px]">{s.label}</b>
+                      <small className="block text-[11px] text-neutral-500 max-sm:mt-0.5 max-sm:leading-tight sm:text-[9.5px]">
                         {s.achieved ? (s.achievedAt ? fmtJst(s.achievedAt).md : '達成') : s.remaining > 0 ? `あと ${s.remaining}${s.unit}` : '—'}
                       </small>
                     </div>
@@ -244,7 +250,7 @@ export default async function DashboardPage() {
                           <Link href="/bookings" className="grid grid-cols-[56px_1fr_auto] items-center gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-[13px] transition hover:border-foreground">
                             <span className="font-extrabold tabular-nums">
                               {t.md}
-                              <small className="block text-[11px] font-normal text-neutral-500">{t.sub}</small>
+                              <small className="block whitespace-nowrap text-[11px] font-normal text-neutral-500">{t.sub}</small>
                             </span>
                             <span className="min-w-0">
                               <span className="block truncate">
@@ -254,7 +260,9 @@ export default async function DashboardPage() {
                                 {[b.hasMessage ? '事前メッセージあり' : null, b.isPlan ? '継続プラン' : null].filter(Boolean).join(' ・ ') || ' '}
                               </small>
                             </span>
-                            <span className={'rounded-full px-2 py-[3px] text-[10.5px] font-bold ' + (b.status === 'requested' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-neutral-700')}>
+                            {/* 402px だと本文に押されて「要/返/答」と縦積みになるので縮ませない。
+                                文字サイズを上げると PC でも auto トラックが広がるのでスマホ限定にする */}
+                            <span className={'shrink-0 whitespace-nowrap rounded-full px-2 py-[3px] text-[11px] font-bold sm:text-[10.5px] ' + (b.status === 'requested' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-neutral-700')}>
                               {b.status === 'requested' ? '要返答' : '確定'}
                             </span>
                           </Link>
@@ -293,9 +301,11 @@ export default async function DashboardPage() {
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="mt-7">
-      <h2 className="mb-2.5 flex items-baseline gap-2.5 text-[15px] font-bold">
-        {title}
-        {hint ? <small className="text-[12px] font-normal text-neutral-500">{hint}</small> : null}
+      {/* 320px だと見出し + 補足で 277px になり、補足（日本語）が 1 文字ずつ潰れる。
+          入り切らないときは補足だけ次の行へ落とす（PC は 1 行のままで見た目は変わらない）。 */}
+      <h2 className="mb-2.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-[15px] font-bold">
+        <span className="shrink-0">{title}</span>
+        {hint ? <small className="min-w-0 text-[12px] font-normal text-neutral-500">{hint}</small> : null}
       </h2>
       {children}
     </section>
@@ -330,13 +340,16 @@ function KpiCard({ label, value, suffix, delta, deltaFmt, deltaNote, series }: {
   return (
     <div className="rounded-xl border border-border bg-card px-4 py-3.5">
       <div className="text-[11px] font-bold tracking-wide text-neutral-500">{label}</div>
-      <div className="mt-1 text-[26px] font-extrabold leading-none tracking-[-0.02em] tabular-nums">
+      {/* スマホは 2 列でカード内幅が 144px（320px 幅では 103px）しかなく、¥1,234,567 が 26px だとはみ出す。
+          320px は 22px でも 7 桁が入り切らないので、最狭幅だけさらに落とす */}
+      <div className="mt-1 text-[22px] font-extrabold leading-none tracking-[-0.02em] tabular-nums max-[359px]:text-[18px] sm:text-[26px]">
         {value}
         {suffix ? <span className="ml-0.5 text-[12px] font-semibold text-neutral-500">{suffix}</span> : null}
       </div>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[11.5px] text-neutral-600">
-        {!flat ? <b className={up ? 'text-primary-700' : 'text-amber-700'}>{up ? '▲' : '▼'} {d}</b> : <b className="text-neutral-400">±0</b>}
-        <span>{deltaNote}</span>
+        {!flat ? <b className={'shrink-0 whitespace-nowrap ' + (up ? 'text-primary-700' : 'text-amber-700')}>{up ? '▲' : '▼'} {d}</b> : <b className="shrink-0 text-neutral-400">±0</b>}
+        {/* 差分は縮ませず、補足（日本語）を min-w-0 で次の行に流す */}
+        <span className="min-w-0">{deltaNote}</span>
       </div>
       <Sparkline points={series} />
     </div>
@@ -345,8 +358,9 @@ function KpiCard({ label, value, suffix, delta, deltaFmt, deltaNote, series }: {
 
 function Sparkline({ points }: { points: DailyPoint[] }) {
   const max = Math.max(1, ...points.map((p) => p.value));
+  // 30 本のバー。スマホのカード内幅（320px で 103px）だと gap 2px では隙間の方が太くなるので詰める
   return (
-    <div className="mt-2 flex h-[26px] items-end gap-[2px]" aria-hidden>
+    <div className="mt-2 flex h-[26px] items-end gap-[2px] max-sm:gap-[1px]" aria-hidden>
       {points.map((p, i) => (
         <i
           key={p.day}

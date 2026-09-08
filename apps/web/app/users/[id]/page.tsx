@@ -93,9 +93,9 @@ export default async function ResidentHubPage({ params }: Params) {
       <div className="mx-auto max-w-screen-lg px-4 py-4 sm:px-6 sm:py-6">
         <Link
           href="/users"
-          className="mb-3 inline-flex items-center gap-1 font-mono text-[12px] font-medium text-primary-700 hover:underline"
+          className="mb-3 inline-flex items-center gap-1 font-mono text-[12px] font-medium text-primary-700 hover:underline max-sm:min-h-9"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
           ユーザー一覧に戻る
         </Link>
 
@@ -154,10 +154,10 @@ export default async function ResidentHubPage({ params }: Params) {
 function SectionHead({ num, title }: { num: string; title: string }) {
   return (
     <div className="mb-7 flex items-baseline gap-4">
-      <span className="font-mono text-[13px] font-semibold text-primary-700">
+      <span className="shrink-0 font-mono text-[13px] font-semibold text-primary-700">
         {num}
       </span>
-      <h2 className="text-[22px] font-bold tracking-tight sm:text-[27px]">
+      <h2 className="min-w-0 text-[22px] font-bold tracking-tight sm:text-[27px]">
         {title}
       </h2>
     </div>
@@ -312,14 +312,15 @@ function ContactSection({
   return (
     <section id="contact" className="scroll-mt-20 border-t border-border py-12">
       <SectionHead num="05" title="問い合わせ" />
-      <div className="overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary-500/15 via-card to-card p-8 text-center sm:p-12">
+      {/* 320px では p-8 が左右 64px を食う。スマホだけ余白を詰めて本文に幅を返す */}
+      <div className="overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-primary-500/15 via-card to-card p-8 text-center max-sm:p-5 sm:p-12">
         {isMe ? (
           <p className="text-[13px] text-foreground/65">
             これは自分自身のプロフィールです。問い合わせは他の駐在員のプロフィールから行えます。
           </p>
         ) : (
           <>
-            <h3 className="text-[22px] font-bold tracking-tight sm:text-[26px]">
+            <h3 className="break-words text-[22px] font-bold tracking-tight sm:text-[26px]">
               {r.displayName} さんに話を聞く
             </h3>
             <p className="mx-auto mt-3 max-w-md text-[14px] leading-[1.85] text-foreground/70">
@@ -330,9 +331,10 @@ function ContactSection({
               <ContactButton ownerUserId={r.id} viewerUserId={viewerId} />
             </div>
             {r.reviewSummary.count > 0 && r.reviewSummary.avgStars != null ? (
-              <p className="mt-5 inline-flex items-center gap-1 font-mono text-[12px] text-foreground/55">
+              <p className="mt-5 inline-flex max-w-full items-center gap-1 font-mono text-[12px] text-foreground/55">
+                {/* アイコンに shrink-0 が無いと、狭い幅で星が縦につぶれる */}
                 <Star
-                  className="h-3.5 w-3.5 text-primary-500"
+                  className="h-3.5 w-3.5 shrink-0 text-primary-500"
                   fill="currentColor"
                   strokeWidth={0}
                 />

@@ -223,11 +223,12 @@ export function VerificationForm({
                 <span className="shrink-0 text-[10px] tabular-nums text-foreground/55">
                   {(f.size / 1024).toFixed(0)} KB
                 </span>
+                {/* 縮まない側。タップ領域が 22px しか無かったのでスマホだけ 36px に */}
                 <button
                   type="button"
                   aria-label="削除"
                   onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                  className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500"
+                  className="inline-flex shrink-0 items-center justify-center rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500 max-sm:h-9 max-sm:w-9"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -275,11 +276,12 @@ export function VerificationForm({
 
       {/* 6. 同意 */}
       <label className="flex cursor-pointer items-start gap-3 rounded-md bg-muted p-3 ring-1 ring-border">
+        {/* 同意文の横で潰れないよう shrink-0 */}
         <input
           type="checkbox"
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
-          className="mt-0.5 h-4 w-4"
+          className="mt-0.5 h-4 w-4 shrink-0"
         />
         <span className="text-[12px] leading-relaxed text-foreground/75">
           書類は本人のものであること、運営の目視確認後 <strong>30 日以内に物理削除</strong>

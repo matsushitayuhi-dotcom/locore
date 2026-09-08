@@ -65,7 +65,8 @@ export function ConsultMenuCard({
         </p>
       ) : null}
 
-      <div className="mt-4 flex items-baseline gap-2">
+      {/* 金額と単位。320px でも単位が途中で折れないよう nowrap、入り切らなければ次の行へ */}
+      <div className="mt-4 flex flex-wrap items-baseline gap-2">
         {service.priceJpy != null ? (
           <>
             <b
@@ -76,7 +77,7 @@ export function ConsultMenuCard({
             >
               ¥{service.priceJpy.toLocaleString()}
             </b>
-            <span className="text-[12.5px] text-neutral-400">
+            <span className="shrink-0 whitespace-nowrap text-[12.5px] text-neutral-400">
               / {service.priceUnit ?? '1回'}
             </span>
           </>
@@ -128,7 +129,7 @@ export function ConsultMenuCard({
             />
             <Link
               href={requestHref}
-              className="grid h-[54px] place-items-center rounded-[8px] bg-primary-500 text-[16px] font-bold text-neutral-950 transition hover:bg-primary-300"
+              className="grid h-[54px] place-items-center whitespace-nowrap rounded-[8px] bg-primary-500 text-[16px] font-bold text-neutral-950 transition hover:bg-primary-300"
             >
               空き枠を選ぶ
             </Link>
@@ -137,10 +138,10 @@ export function ConsultMenuCard({
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
               href={requestHref}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border-strong px-[18px] py-2.5 text-[13.5px] font-semibold transition hover:border-foreground"
+              className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border-strong px-[18px] py-2.5 text-[13.5px] font-semibold transition hover:border-foreground"
             >
               空き枠を選ぶ
-              <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
             </Link>
             <ServiceInquiryButton
               serviceId={service.id}
@@ -152,7 +153,7 @@ export function ConsultMenuCard({
               externalUrl={service.externalUrl}
               ctaLabel="チャットで相談"
               redirectPath={`/experts/${expertId}`}
-              buttonClassName="inline-flex items-center gap-1.5 rounded-full px-3 py-2.5 text-[13px] font-semibold text-neutral-500 transition hover:text-foreground"
+              buttonClassName="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2.5 text-[13px] font-semibold text-neutral-500 transition hover:text-foreground"
             />
           </div>
         ) : (

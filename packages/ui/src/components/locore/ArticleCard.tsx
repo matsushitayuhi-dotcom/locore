@@ -172,8 +172,9 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               <span
                 data-locore-article-type={articleType}
                 className={cn(
-                  "inline-flex items-center rounded-full px-2 py-0.5 backdrop-blur-md",
-                  "text-[9px] font-bold uppercase tracking-wider",
+                  "inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 backdrop-blur-md",
+                  // 9px は実機（402px の 2 列 = カード 174px）で読めないので、スマホだけ 11px に上げる
+                  "text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider",
                   articleType === "itinerary"
                     ? "bg-primary-500 text-neutral-950"
                     : "bg-neutral-950/70 text-neutral-50",
@@ -192,7 +193,8 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               aria-label={bookmarked ? "保存を外す" : "保存"}
               aria-pressed={bookmarked}
               className={cn(
-                "absolute right-2 top-2 inline-flex size-7 items-center justify-center",
+                // 28px はタップ領域として小さいので、スマホだけ 36px（size-9）にする
+                "absolute right-2 top-2 inline-flex size-7 max-sm:size-9 items-center justify-center",
                 "rounded-full backdrop-blur-md transition-transform duration-fast ease-out",
                 "hover:scale-110 active:scale-95",
                 bookmarked

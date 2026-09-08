@@ -259,7 +259,9 @@ export default function AboutPage() {
             </Link>
           </div>
           {/* 白カード。text-foreground 明示でダーク帯の白文字継承を遮断 */}
-          <div className="rounded-[22px] bg-card px-8 py-[34px] text-center text-foreground shadow-[0_26px_60px_-20px_rgba(0,0,0,0.5)]">
+          {/* スマホは px-8 だと中のサンプルカードの名前が 320px で 1 文字まで削られる。
+              max-sm だけパディングを詰めて幅を返す（PC は px-8 のまま） */}
+          <div className="rounded-[22px] bg-card px-8 py-[34px] text-center text-foreground shadow-[0_26px_60px_-20px_rgba(0,0,0,0.5)] max-sm:px-5">
             <div className="mx-auto mb-4 grid h-[84px] w-[84px] place-items-center rounded-full border-[1.5px] border-primary-200 bg-primary-50 text-primary-700">
               <ShieldCheck className="h-10 w-10" strokeWidth={1.8} aria-hidden />
             </div>
@@ -271,7 +273,8 @@ export default function AboutPage() {
               このバッジは、現地での居住実績を運営が書類で確認したエキスパートだけのものです。
             </p>
             <div className="mt-5 border-t border-dashed border-border-strong pt-4 text-left">
-              <div className="mb-2.5 text-[9.5px] tracking-[0.12em] text-neutral-500">
+              {/* 9.5px は実機で読めないのでスマホだけ 11px に。字間も少し詰めて 1 行に収める（PC は 9.5px のまま） */}
+              <div className="mb-2.5 text-[9.5px] tracking-[0.12em] text-neutral-500 max-sm:text-[11px] max-sm:tracking-[0.08em]">
                 ▼ 一覧でもプロフィールでも
               </div>
               <div className="rounded-[14px] border border-border bg-card px-4 py-3.5">
@@ -285,7 +288,9 @@ export default function AboutPage() {
                   {/* バッジは肩書きの行から外して名前の隣へ。肩書きが 1 行を丸ごと使える。
                       320px では、この形にしないと「ボ / ス / ト / ン」と縦積みになる */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    {/* 320px では名前 + バッジが 1 行に入らず氏名が truncate される。
+                        スマホだけ折り返してバッジを次の行へ落とす（402px / PC は 1 行のまま） */}
+                    <div className="flex items-center gap-2 max-sm:flex-wrap">
                       <span className="min-w-0 truncate text-[13.5px] font-extrabold">高村 里奈</span>
                       <span className="shrink-0">
                         <VBadge label="認証済み" />

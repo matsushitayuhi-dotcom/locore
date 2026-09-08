@@ -51,7 +51,7 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
       return b.level === 2 ? (
         <h2 className="mb-[0.9em] mt-[3em] flex items-baseline gap-3.5 text-[24px] font-bold leading-[1.45] tracking-[-0.015em] text-foreground max-sm:mt-[2.4em] max-sm:text-[20px]">
           {b.numbered ? <span className="flex-none text-[15px] font-bold tabular-nums tracking-[0.04em] text-neutral-400">{String(h2Index).padStart(2, '0')}</span> : null}
-          <span>{b.text}</span>
+          <span className="min-w-0">{b.text}</span>
         </h2>
       ) : (
         <h3 className="mb-[0.6em] mt-[2.2em] text-[17.5px] font-bold text-foreground max-sm:text-[17px]">{b.text}</h3>
@@ -101,8 +101,13 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
       const rest: string[][] = b.header === false ? b.rows : b.rows.slice(1);
       const cols = Math.max(...b.rows.map((r) => r.length), 1);
       const wide = cols >= 5;
+      // 3〜4 列の表は 402px だとセルが 1 文字ずつに潰れる。スマホだけ min-w を与えて
+      // はみ出させ、横スワイプで読ませる（PC は今までどおり w-full のまま）。
+      // 幅は列数ぶんだけ: 3 列に 4 列と同じ 560px を掛けると不要な横スワイプが増える
+      const swipe = !wide && cols >= 3;
+      const swipeTable = cols === 3 ? 'max-sm:my-0 max-sm:min-w-[460px]' : 'max-sm:my-0 max-sm:min-w-[560px]';
       const table = (
-        <table className={'my-[1.6em] mb-[2em] w-full border-collapse text-[14.5px] max-sm:text-[13.5px] ' + (wide ? 'min-w-[720px]' : '')}>
+        <table className={'my-[1.6em] mb-[2em] w-full border-collapse text-[14.5px] max-sm:text-[13.5px] ' + (wide ? 'min-w-[720px]' : swipe ? swipeTable : '')}>
           {head ? (
             <thead>
               <tr>
@@ -127,7 +132,9 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
           </tbody>
         </table>
       );
-      return wide ? <div className="my-[1.6em] overflow-x-auto">{table}</div> : table;
+      // overflow-x-auto のラッパは BFC を作るので、table 側の縦マージンが中に閉じ込められて
+      // 前後の段落と相殺しなくなる（表の上だけ余白が倍になる）。マージンはラッパに持たせる
+      return wide ? <div className="my-[1.6em] overflow-x-auto">{table}</div> : swipe ? <div className="max-sm:my-[1.6em] max-sm:mb-[2em] max-sm:overflow-x-auto">{table}</div> : table;
     }
     case 'image':
       return (
@@ -172,7 +179,7 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
           {b.items.map((it, i) => (
             <li key={i} className="flex items-start gap-3 py-2 text-[15.5px] leading-[1.7]">
               <span className={'mt-[5px] h-[18px] w-[18px] flex-none rounded-[5px] border-[1.5px] border-foreground ' + (it.done ? 'bg-foreground shadow-[inset_0_0_0_3px_#fff]' : '')} aria-hidden />
-              <span>
+              <span className="min-w-0">
                 <Inline text={it.text} />
               </span>
             </li>
@@ -186,7 +193,7 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
             <details key={i} open={i === 0} className="group border-t border-border last:border-b">
               <summary className="flex cursor-pointer list-none items-baseline gap-3 py-4 text-[16px] font-bold [&::-webkit-details-marker]:hidden">
                 <span className="flex-none text-[12px] tracking-[0.1em] text-neutral-400">Q</span>
-                {it.q}
+                <span className="min-w-0">{it.q}</span>
               </summary>
               <p className="mb-[18px] ml-[26px] text-[15px] leading-[1.85] text-neutral-700">
                 <Inline text={it.a} />
@@ -241,7 +248,7 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
       );
     case 'stats':
       return (
-        <div className={'my-[1.6em] mb-[2em] grid gap-6 max-sm:gap-3.5 ' + (b.items.length === 2 ? 'grid-cols-2' : b.items.length === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3')}>
+        <div className={'my-[1.6em] mb-[2em] grid gap-6 max-sm:gap-3.5 ' + (b.items.length === 2 ? 'grid-cols-2' : b.items.length === 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3')}>
           {b.items.map((it, i) => (
             <div key={i} className="border-t border-foreground pt-3">
               <b className="block text-[30px] leading-none tracking-[-0.02em] tabular-nums max-sm:text-[22px]">{it.value}</b>
@@ -274,9 +281,9 @@ function renderBlock(b: ArticleBlock, linkCards: Map<string, LinkCardData> | und
 function LinkCard({ block, data }: { block: Extract<ArticleBlock, { type: 'link_card' }>; data?: LinkCardData }) {
   if (data?.kind === 'article') {
     return (
-      <Link href={`/articles/${data.id}`} className="my-[1.8em] grid grid-cols-[1fr_168px] overflow-hidden rounded-xl border border-border bg-card no-underline transition hover:border-foreground max-sm:grid-cols-[1fr_112px]">
+      <Link href={`/articles/${data.id}`} className="my-[1.8em] grid grid-cols-[1fr_168px] overflow-hidden rounded-xl border border-border bg-card no-underline transition hover:border-foreground max-sm:grid-cols-[1fr_96px]">
         <div className="min-w-0 px-4 py-3.5">
-          <div className="text-[10.5px] tracking-[0.16em] text-neutral-500">LOCORE の記事</div>
+          <div className="text-[10.5px] tracking-[0.16em] text-neutral-500 max-sm:text-[11px]">LOCORE の記事</div>
           <span className="mt-1 block text-[15px] font-bold leading-[1.5] tracking-[-0.01em] text-foreground max-sm:text-[14px]">{data.title}</span>
           {data.subtitle ? <div className="mt-1 line-clamp-2 text-[12.5px] leading-[1.6] text-neutral-500">{data.subtitle}</div> : null}
           <div className="mt-2 text-[11.5px] text-neutral-400">
@@ -304,7 +311,7 @@ function LinkCard({ block, data }: { block: Extract<ArticleBlock, { type: 'link_
           )}
         </div>
         <div className="min-w-0 px-4 py-3.5">
-          <div className="text-[10.5px] tracking-[0.16em] text-neutral-500">エキスパート</div>
+          <div className="text-[10.5px] tracking-[0.16em] text-neutral-500 max-sm:text-[11px]">エキスパート</div>
           <span className="mt-1 block text-[15px] font-bold leading-[1.5] text-foreground">
             {data.name}{' '}
             <span className="text-[13px] font-normal text-neutral-500">
@@ -323,10 +330,10 @@ function LinkCard({ block, data }: { block: Extract<ArticleBlock, { type: 'link_
   const host = data?.kind === 'external' ? data.host : (() => { try { return new URL(block.url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
   const p = data?.kind === 'external' ? data.preview : block.preview ?? null;
   return (
-    <a href={block.url} target="_blank" rel="noopener noreferrer" className="my-[1.8em] grid grid-cols-[1fr_168px] overflow-hidden rounded-xl border border-border bg-card no-underline transition hover:border-foreground max-sm:grid-cols-[1fr_112px]">
+    <a href={block.url} target="_blank" rel="noopener noreferrer" className="my-[1.8em] grid grid-cols-[1fr_168px] overflow-hidden rounded-xl border border-border bg-card no-underline transition hover:border-foreground max-sm:grid-cols-[1fr_96px]">
       <div className="min-w-0 px-4 py-3.5">
-        <div className="text-[10.5px] uppercase tracking-[0.16em] text-neutral-500">{host || '外部サイト'}</div>
-        <span className="mt-1 block text-[15px] font-bold leading-[1.5] tracking-[-0.01em] text-foreground max-sm:text-[14px]">{p?.title ?? block.url}</span>
+        <div className="text-[10.5px] uppercase tracking-[0.16em] text-neutral-500 max-sm:text-[11px]">{host || '外部サイト'}</div>
+        <span className="mt-1 block break-words text-[15px] font-bold leading-[1.5] tracking-[-0.01em] text-foreground max-sm:text-[14px]">{p?.title ?? block.url}</span>
         {p?.description ? <div className="mt-1 line-clamp-2 text-[12.5px] leading-[1.6] text-neutral-500">{p.description}</div> : null}
         <div className="mt-2 inline-flex items-center gap-1 text-[11.5px] text-neutral-400">
           {p?.siteName ?? host} <ArrowUpRight className="h-3 w-3" aria-hidden />

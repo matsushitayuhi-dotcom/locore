@@ -206,16 +206,17 @@ export default async function WriterDashboardPage() {
               月末締め・翌月 15 日のお振込予定額もここで確認できます。
             </p>
           </div>
-          <div className="flex gap-2">
+          {/* 2 つのピルは縮ませない（狭幅で「記 事 を 管 理」に潰れる）。入らなければ折り返す */}
+          <div className="flex flex-wrap gap-2">
             <Link
               href="/writer/articles"
-              className="inline-flex items-center gap-1 rounded-full bg-card px-4 py-2 text-[12px] font-medium text-foreground ring-1 ring-border transition hover:bg-muted"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-card px-4 py-2 text-[12px] font-medium text-foreground ring-1 ring-border transition hover:bg-muted"
             >
               記事を管理
             </Link>
             <Link
               href="/writer/articles/new"
-              className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary-500 px-4 py-2 text-[12px] font-bold text-neutral-950 transition hover:bg-primary-300"
             >
               + 新規記事
             </Link>
@@ -264,25 +265,32 @@ export default async function WriterDashboardPage() {
               </p>
             ) : (
               <ul className="space-y-1">
+                {/* 320px では「タイトル + 件数 + 金額」が 1 行に入らない。
+                    flex-1 は basis:0 で折り返しの引き金にならないため、タイトルに
+                    min-w-[8rem] を与えて数字を次行へ落とす。件数と金額は 1 つの
+                    span にまとめ、その span の ml-auto で 2 行目でも右寄せを保つ
+                    （個々に ml-auto を付けると 2 行目で左寄せに取り残される） */}
                 {perArticle.map((row, i) => (
                   <li
                     key={row.articleId}
-                    className="flex items-center gap-3 py-2"
+                    className="flex flex-wrap items-center gap-x-3 gap-y-0.5 py-2"
                   >
                     <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold tabular text-foreground/70">
                       {i + 1}
                     </span>
                     <Link
                       href={`/articles/${row.articleId}`}
-                      className="min-w-0 flex-1 truncate text-[13px] font-medium text-foreground hover:text-primary-300"
+                      className="min-w-[8rem] flex-1 truncate text-[13px] font-medium text-foreground hover:text-primary-300"
                     >
                       {row.title}
                     </Link>
-                    <span className="shrink-0 text-[12px] tabular text-foreground/60">
-                      {row.purchases} 件
-                    </span>
-                    <span className="shrink-0 text-[13px] font-semibold tabular text-foreground">
-                      ¥{row.payoutJpy.toLocaleString('ja-JP')}
+                    <span className="ml-auto flex shrink-0 items-center gap-3">
+                      <span className="whitespace-nowrap text-[12px] tabular text-foreground/60">
+                        {row.purchases} 件
+                      </span>
+                      <span className="whitespace-nowrap text-[13px] font-semibold tabular text-foreground">
+                        ¥{row.payoutJpy.toLocaleString('ja-JP')}
+                      </span>
                     </span>
                   </li>
                 ))}
@@ -335,8 +343,9 @@ export default async function WriterDashboardPage() {
 
         {/* My articles list */}
         <section className="mt-8 rounded-xl border border-border bg-card p-5 sm:p-6">
-          <header className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-[18px] font-semibold tracking-tight">
+          {/* 見出しとリンクの間に隙間が無く 320px で接触するため gap + 折り返しを許可 */}
+          <header className="mb-4 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 className="min-w-0 text-[18px] font-semibold tracking-tight">
               すべての記事
               <span className="ml-2 text-[12px] font-normal tabular text-foreground/55">
                 {myArticles.length} 件
@@ -344,7 +353,7 @@ export default async function WriterDashboardPage() {
             </h2>
             <Link
               href="/writer/articles"
-              className="text-[12px] text-primary-300 underline-offset-4 hover:underline"
+              className="ml-auto shrink-0 whitespace-nowrap text-[12px] text-primary-300 underline-offset-4 hover:underline"
             >
               管理画面へ →
             </Link>

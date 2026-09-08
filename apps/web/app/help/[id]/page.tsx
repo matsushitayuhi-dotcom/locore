@@ -112,9 +112,10 @@ export default async function HelpDetailPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
+      {/* スマホでは上下に余白を足してタップ領域を 36px 以上にする（見た目は -my で据え置き） */}
       <Link
         href="/help"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
+        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline max-sm:-my-2.5 max-sm:py-2.5"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         一覧に戻る
@@ -134,7 +135,7 @@ export default async function HelpDetailPage({ params }: Props) {
       {/* 緊急投稿には警告バー */}
       {isUrgent && !closed ? (
         <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-danger-500 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-white">
-          <Zap className="h-3 w-3" />
+          <Zap className="h-3 w-3 shrink-0" />
           緊急: 今すぐ対応希望
         </div>
       ) : null}
@@ -142,11 +143,12 @@ export default async function HelpDetailPage({ params }: Props) {
       <div className="mt-5 grid grid-cols-1 gap-8 sm:grid-cols-[1fr_280px]">
         <article className="min-w-0">
           <header>
+            {/* バッジのラベルは割らない（日本語はどこでも改行できる） */}
             <div className="flex flex-wrap items-center gap-1.5">
               {meta.request_type ? (
                 <span
                   className={
-                    'rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
+                    'whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
                     (meta.request_type === 'offer'
                       ? 'bg-primary-500 text-neutral-950'
                       : 'bg-accent-500 text-neutral-950')
@@ -156,14 +158,14 @@ export default async function HelpDetailPage({ params }: Props) {
                 </span>
               ) : null}
               {meta.category ? (
-                <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/65">
+                <span className="whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/65">
                   {CATEGORY_LABEL[meta.category]}
                 </span>
               ) : null}
               {meta.urgency ? (
                 <span
                   className={
-                    'inline-flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
+                    'inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
                     (meta.urgency === 'now'
                       ? 'bg-danger-500 text-white'
                       : meta.urgency === 'this_week'
@@ -171,7 +173,7 @@ export default async function HelpDetailPage({ params }: Props) {
                         : 'bg-foreground/10 text-foreground/65')
                   }
                 >
-                  {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5" /> : null}
+                  {meta.urgency === 'now' ? <Zap className="h-2.5 w-2.5 shrink-0" /> : null}
                   {URGENCY_LABEL[meta.urgency]}
                 </span>
               ) : null}
@@ -184,11 +186,12 @@ export default async function HelpDetailPage({ params }: Props) {
             </h1>
           </header>
 
+          {/* アイコンは shrink-0 済み。中身は min-w-0 にして日本語が 1 文字ずつ積まれないようにする */}
           <dl className="mt-5 grid grid-cols-1 gap-3 rounded-lg bg-card p-4 text-[12px] ring-1 ring-border sm:grid-cols-2">
             {post.locationText ? (
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     場所
                   </dt>
@@ -201,7 +204,7 @@ export default async function HelpDetailPage({ params }: Props) {
             {meta.compensation ? (
               <div className="flex items-start gap-2">
                 <Gift className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     お礼
                   </dt>
@@ -214,7 +217,7 @@ export default async function HelpDetailPage({ params }: Props) {
             {meta.urgency ? (
               <div className="flex items-start gap-2">
                 <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     緊急度
                   </dt>
@@ -227,7 +230,7 @@ export default async function HelpDetailPage({ params }: Props) {
             {meta.category ? (
               <div className="flex items-start gap-2">
                 <Hand className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     カテゴリ
                   </dt>

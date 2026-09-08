@@ -170,8 +170,9 @@ export function RequestForm({
     });
   };
 
+  // スマホはタップ領域を 36px に（PC は従来どおり 34px）
   const navBtnCls =
-    'grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-primary-700 hover:text-primary-700 disabled:cursor-default disabled:border-border disabled:text-border-strong';
+    'grid h-[34px] w-[34px] shrink-0 place-items-center rounded-full max-sm:h-9 max-sm:w-9 border border-border-strong bg-card text-neutral-700 transition hover:border-primary-700 hover:text-primary-700 disabled:cursor-default disabled:border-border disabled:text-border-strong';
 
   return (
     <div>
@@ -184,7 +185,8 @@ export function RequestForm({
       </div>
 
       {/* 週送りナビ */}
-      <div className="mt-3.5 flex items-center gap-2.5">
+      {/* 402px では 1 行に収まらないので、週レンジと TZ チップは縮めず次の行へ落とす */}
+      <div className="mt-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-2">
         <button
           type="button"
           onClick={() => setWeek((w) => Math.max(0, w - 1))}
@@ -194,7 +196,9 @@ export function RequestForm({
         >
           <ChevronLeft className="h-[15px] w-[15px]" aria-hidden />
         </button>
-        <span className="text-[14px] font-bold tabular-nums">{rangeLabel}</span>
+        <span className="shrink-0 whitespace-nowrap text-[14px] font-bold tabular-nums">
+          {rangeLabel}
+        </span>
         <button
           type="button"
           onClick={() => setWeek((w) => Math.min(maxWeek, w + 1))}
@@ -204,9 +208,12 @@ export function RequestForm({
         >
           <ChevronRight className="h-[15px] w-[15px]" aria-hidden />
         </button>
-        <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-primary-100 bg-primary-50 px-3 py-1 text-[11px] font-bold text-primary-900">
-          <Clock className="h-3 w-3 text-primary-700" aria-hidden />
-          あなたの現地時間（{tzLabel}）
+        <span className="ml-auto inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-primary-100 bg-primary-50 px-3 py-1 text-[11px] font-bold text-primary-900">
+          <Clock className="h-3 w-3 shrink-0 text-primary-700" aria-hidden />
+          {/* スマホは「あなたの」を省いて 1 行に収める（PC は従来どおり） */}
+          <span>
+            <span className="max-sm:hidden">あなたの</span>現地時間（{tzLabel}）
+          </span>
         </span>
       </div>
 

@@ -239,6 +239,36 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mon
 .aj-end{text-align:center;padding:44px 0 0}
 .aj-more{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;color:var(--ink);border:1px solid var(--line);padding:14px 30px;border-radius:999px;transition:.25s}
 .aj-more:hover{border-color:var(--lime);color:var(--lime-d);background:var(--lime-soft)}
+
+/* ---- スマホ幅（402px 基準・狭い側 320px）の詰め。docs/mobile-layout.md ---- */
+/* 1 カラム化に連動する余白・gap は、このファイル既存の 680px に合わせる */
+@media(max-width:680px){
+  /* 左右 26px はスマホだと効きすぎる（320px で本文が 268px しか残らない） */
+  .aj .wrap{padding:0 18px}
+  .aj-finner{padding-left:18px;padding-right:18px}
+  /* カバー写真の上のタグ: 余白を詰めて 1 行に収まりやすくする。
+     left:16px だけの絶対配置は「カード幅 - 16px」を使えるので、right は足さない
+     （right:16px を足すと利用可能幅が「カード幅 - 32px」に減って、逆に折り返しやすくなる） */
+  .aj-tags{gap:6px}
+  /* 件数は縮んでよい側 / 表示切替は縮まない側 */
+  .aj-count{min-width:0}
+  .aj-view{flex:none}
+  /* リスト表示は 320px だと本文に 118px しか残らないので、余白を詰める */
+  .aj-lrow{gap:12px}
+  .aj-lmeta{gap:4px 10px}
+}
+/* 極小フォントの引き上げとタップ領域は Tailwind の sm(640px) と揃える。
+   641〜680px は PC 扱いなので従来の見た目のままにする */
+@media(max-width:639.98px){
+  /* 10px は実機で読めないので 11px に上げる */
+  .aj-tags span{font-size:11px;padding:4px 9px}
+  .aj-lcat,.aj-rcat,.aj-adv .lab,.aj-adv-btn .badge{font-size:11px}
+  /* タップ領域 36px 以上。上下 padding を負マージンで打ち消して見た目の余白は変えない */
+  .aj-lexp{margin-top:5px;margin-bottom:-9px;padding:9px 0}
+  .aj-view button{width:40px;height:36px}
+  .aj-sbox .x{width:36px;height:36px}
+}
+@media(max-width:400px){.aj-lthumb{width:88px}}
 `;
 
 function BigCard({ a, lead = false }: { a: Article; lead?: boolean }) {

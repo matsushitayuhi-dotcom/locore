@@ -159,7 +159,8 @@ export function CareerTimeline({
       <ol className="flex flex-col">{renderItems(shown, 0)}</ol>
       {rest.length > 0 ? (
         <details className="group">
-          <summary className="ml-[49px] mt-4 inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
+          {/* スマホで実際に押す要素なので 36px（min-h-9）を確保する。PC の高さは従来どおり */}
+          <summary className="ml-[49px] mt-4 inline-flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground max-sm:min-h-9 [&::-webkit-details-marker]:hidden group-open:hidden">
             さらに前の経歴 {rest.length} 件を表示
           </summary>
           <ol className="flex flex-col pt-5">{renderItems(rest, shown.length)}</ol>

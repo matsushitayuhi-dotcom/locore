@@ -113,8 +113,8 @@ export function ServiceInquiryButton({
   const className =
     buttonClassName ??
     (variant === 'footer'
-      ? 'inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-500 px-5 py-3 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300'
-      : 'inline-flex items-center justify-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300');
+      ? 'inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-primary-500 px-5 py-3 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300'
+      : 'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300');
 
   return (
     <>
@@ -125,9 +125,9 @@ export function ServiceInquiryButton({
         className={className}
       >
         {isExternal ? (
-          <ExternalLink className="h-4 w-4" aria-hidden />
+          <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
         ) : (
-          <MessageCircle className="h-4 w-4" aria-hidden />
+          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
         )}
         {ctaLabel}
       </button>
@@ -144,16 +144,17 @@ export function ServiceInquiryButton({
         >
           <div className="w-full max-w-md overflow-hidden rounded-t-2xl bg-card shadow-xl ring-1 ring-border sm:rounded-2xl">
             <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-              <h2 className="text-[15px] font-semibold">
+              <h2 className="min-w-0 text-[15px] font-semibold">
                 {ownerName} さんに問い合わせる
               </h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="閉じる"
-                className="rounded-full p-1.5 text-foreground/60 hover:bg-muted hover:text-foreground"
+                // p-1.5 だと 28px でタップ領域が足りないので、スマホだけ 36px にする
+                className="shrink-0 rounded-full p-1.5 text-foreground/60 hover:bg-muted hover:text-foreground max-sm:p-2.5"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 shrink-0" />
               </button>
             </div>
             <div className="space-y-3 p-5">

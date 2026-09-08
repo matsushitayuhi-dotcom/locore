@@ -17,7 +17,12 @@ import { ExpertsNavLink } from './nav/ExpertsNavLink';
 export function SiteHeader() {
   return (
     <header className="w-full border-b border-white/10 bg-[#0b0d13]">
-      <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-3 px-4 sm:gap-6 sm:px-6">
+      {/* h-14 固定 + flex-wrap 無しで、ロゴも右の CTA も shrink-0。つまり溢れたら
+          折り返さず横にはみ出す（ヘッダーは layout.tsx の overflow-x-hidden の外なので
+          ページ全体が横スクロールする）。320px での実測は約 289px とほぼ余裕が無いため、
+          スマホだけ gap / px を詰めて 10px 強の逃げ場を作る。PC は据え置き。
+          ※ CTA「無料ではじめる」の文言を伸ばすとすぐ溢れるので注意 */}
+      <div className="mx-auto flex h-14 max-w-screen-xl items-center gap-3 px-4 max-sm:gap-2 max-sm:px-3 sm:gap-6 sm:px-6">
         <Link
           href="/"
           className="shrink-0 text-[22px] font-bold tracking-tight text-white"

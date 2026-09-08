@@ -158,7 +158,7 @@ export default async function MarketplaceDetailPage({ params }: Props) {
             {post.locationText ? (
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     受け渡し場所
                   </dt>
@@ -171,7 +171,7 @@ export default async function MarketplaceDetailPage({ params }: Props) {
             {meta.pickup_required ? (
               <div className="flex items-start gap-2">
                 <PackageCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     引き取り
                   </dt>
@@ -182,7 +182,7 @@ export default async function MarketplaceDetailPage({ params }: Props) {
             {meta.delivery_available ? (
               <div className="flex items-start gap-2">
                 <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     配達
                   </dt>
@@ -245,7 +245,7 @@ export default async function MarketplaceDetailPage({ params }: Props) {
               <p
                 className="mt-1 inline-flex items-baseline gap-1 text-[22px] font-bold leading-tight text-primary-300"
               >
-                <Tag className="h-4 w-4 self-center" />
+                <Tag className="h-4 w-4 shrink-0 self-center" />
                 {price ?? '応相談'}
               </p>
             </div>

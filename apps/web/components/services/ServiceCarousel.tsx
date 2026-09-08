@@ -90,8 +90,10 @@ export function ServiceCarousel({ services }: Props) {
                   +{rest}
                 </span>
               ) : null}
+              {/* 価格は縮ませない（ml-auto を残したまま flex-wrap で次行に落ちる）。
+                  ServiceCard.tsx と同じ扱いに揃える */}
               {s.priceJpy != null ? (
-                <span className="ml-auto text-[14px] font-bold tabular text-primary-300">
+                <span className="ml-auto shrink-0 whitespace-nowrap text-[14px] font-bold tabular text-primary-300">
                   ¥{s.priceJpy.toLocaleString('ja-JP')}
                   {s.priceUnit ? (
                     <span className="ml-0.5 text-[10px] font-medium text-foreground/60">
@@ -100,7 +102,7 @@ export function ServiceCarousel({ services }: Props) {
                   ) : null}
                 </span>
               ) : (
-                <span className="ml-auto text-[12px] font-medium text-foreground/50">
+                <span className="ml-auto shrink-0 whitespace-nowrap text-[12px] font-medium text-foreground/50">
                   応相談
                 </span>
               )}
@@ -130,8 +132,8 @@ export function ServiceCarousel({ services }: Props) {
                 </span>
               </div>
               {s.cityNameJa ? (
-                <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground/60">
-                  <MapPin className="h-2.5 w-2.5" />
+                <span className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground/60">
+                  <MapPin className="h-2.5 w-2.5 shrink-0" />
                   {s.cityNameJa}
                 </span>
               ) : null}

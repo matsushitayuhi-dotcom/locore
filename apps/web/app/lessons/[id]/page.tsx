@@ -196,7 +196,7 @@ export default async function LessonDetailPage({ params }: Props) {
             {post.locationText ? (
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     場所
                   </dt>
@@ -209,7 +209,7 @@ export default async function LessonDetailPage({ params }: Props) {
             {meta.format ? (
               <div className="flex items-start gap-2">
                 <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     形式
                   </dt>
@@ -222,7 +222,7 @@ export default async function LessonDetailPage({ params }: Props) {
             {meta.level ? (
               <div className="flex items-start gap-2">
                 <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     対象レベル
                   </dt>
@@ -235,7 +235,7 @@ export default async function LessonDetailPage({ params }: Props) {
             {meta.max_students ? (
               <div className="flex items-start gap-2">
                 <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
+                <div className="min-w-0">
                   <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     最大人数
                   </dt>
@@ -297,7 +297,7 @@ export default async function LessonDetailPage({ params }: Props) {
               <p
                 className="mt-1 inline-flex items-baseline gap-1 text-[22px] font-bold leading-tight text-primary-300"
               >
-                <Tag className="h-4 w-4 self-center" />
+                <Tag className="h-4 w-4 shrink-0 self-center" />
                 {price ?? '応相談'}
               </p>
             </div>

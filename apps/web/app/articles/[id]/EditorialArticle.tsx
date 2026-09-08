@@ -41,7 +41,10 @@ export async function EditorialArticle({
     author && consultHref ? (
       <div className="my-[3em] flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-y border-border py-[18px] text-[13.5px]">
         <Avatar author={author} size={32} />
-        <div className="min-w-0 flex-1">
+        {/* flex-1 は basis:0 なので、min-w が無いと 320px でも折り返さず文字が細長く潰れる。
+            スマホは basis を「1 行目の残り幅」ちょうどにして、CTA を必ず次行へ落とす
+            （rem 固定だと 402px では折り返しの引き金にならず、ml-[44px] が行中の空白として残る） */}
+        <div className="min-w-[11rem] flex-1 max-sm:basis-[calc(100%_-_48px)]">
           <b className="block">この記事を書いた先輩に、30 分で相談できます</b>
           <small className="text-[12px] text-neutral-500">
             {[author.name, author.schoolLabel ? `${shortSchool(author.schoolLabel)} ${author.enrollmentLabel ?? ''}`.trim() : null, price].filter(Boolean).join(' · ')}
@@ -72,9 +75,10 @@ export async function EditorialArticle({
 
           {author ? (
             <div className="mt-7 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border pt-[18px] text-[12.5px] text-neutral-500 max-sm:mt-5 max-sm:text-[12px]">
-              <Link href={consultHref ?? `/users/${author.id}`} className="flex items-center gap-3 no-underline">
+              <Link href={consultHref ?? `/users/${author.id}`} className="flex min-w-0 items-center gap-3 no-underline">
                 <Avatar author={author} size={36} />
-                <span>
+                {/* 学校名が長いと 1 文字ずつ縦積みになるので、縮む側に min-w-0 */}
+                <span className="min-w-0">
                   <b className="text-[13.5px] font-bold text-foreground">{author.name}</b>
                   {author.schoolLabel ? (
                     <>
@@ -89,7 +93,7 @@ export async function EditorialArticle({
                   ) : null}
                 </span>
               </Link>
-              <span className="ml-auto max-sm:ml-0 max-sm:w-full max-sm:pl-[48px]">
+              <span className="ml-auto shrink-0 whitespace-nowrap max-sm:ml-0 max-sm:w-full max-sm:pl-[48px]">
                 {[date, `${minutes} 分`].filter(Boolean).join(' · ')}
               </span>
             </div>
@@ -136,7 +140,7 @@ export async function EditorialArticle({
                       30 分で相談する{price ? ` · ${price}` : ''}
                     </Link>
                   ) : null}
-                  <Link href={consultHref ?? `/users/${author.id}`} className="text-[13px] text-neutral-700 underline decoration-neutral-300 underline-offset-4">
+                  <Link href={consultHref ?? `/users/${author.id}`} className="-my-2 py-2 text-[13px] text-neutral-700 underline decoration-neutral-300 underline-offset-4">
                     プロフィールを見る
                   </Link>
                   {consultHref ? <small className="text-[12px] text-neutral-500">チャットでの事前相談は無料</small> : null}
@@ -165,11 +169,14 @@ export async function EditorialArticle({
 
       {/* ===== スマホ: 下部固定バー ===== */}
       {author && consultHref ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2.5 border-t border-border bg-white/95 px-4 py-2.5 backdrop-blur lg:hidden">
-          <div className="min-w-0 text-[12.5px]">
+        // md 未満はルートレイアウトの BottomNav（border 1 + pt 4 + h-14 56 + safe-area）が
+        // bottom:0 を覆うので、その分だけ持ち上げる。md 以上は BottomNav が消えるので従来位置。
+        <div className="fixed inset-x-0 bottom-[calc(61px_+_env(safe-area-inset-bottom,0px))] z-40 flex items-center gap-2.5 border-t border-border bg-white/95 px-4 py-2.5 backdrop-blur md:bottom-0 lg:hidden">
+          {/* 名前が長くても「相談する」が 1 文字ずつに割れないよう、ボタンは shrink-0 */}
+          <div className="min-w-0 flex-1 text-[12.5px] leading-[1.45]">
             <b>{author.name}</b> さんに相談 {price ? <span className="text-[11px] text-neutral-500">30 分 {price}</span> : null}
           </div>
-          <Link href={consultHref} className="ml-auto rounded-full bg-primary-500 px-4 py-2.5 text-[13px] font-extrabold text-neutral-900 no-underline">
+          <Link href={consultHref} className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-4 py-2.5 text-[13px] font-extrabold text-neutral-900 no-underline">
             相談する
           </Link>
         </div>
@@ -183,9 +190,9 @@ function RelatedList({ title, items, showAuthor }: { title: string; items: Relat
     <section className="mt-16 max-sm:mt-12">
       <h2 className="mb-1.5 text-[11.5px] font-semibold tracking-[0.18em] text-neutral-500">{title}</h2>
       {items.map((a, i) => (
-        <Link key={a.id} href={`/articles/${a.id}`} className="grid grid-cols-[36px_1fr_auto] items-baseline gap-3.5 border-b border-border py-4 no-underline">
+        <Link key={a.id} href={`/articles/${a.id}`} className="grid grid-cols-[36px_1fr_auto] items-baseline gap-3.5 border-b border-border py-4 no-underline max-sm:grid-cols-[22px_1fr_auto] max-sm:gap-2.5">
           <span className="text-[12px] tabular-nums text-neutral-400">{String(i + 1).padStart(2, '0')}</span>
-          <span className="text-[16px] font-bold leading-[1.5] tracking-[-0.01em] text-foreground">
+          <span className="min-w-0 text-[16px] font-bold leading-[1.5] tracking-[-0.01em] text-foreground">
             {a.title}
             <small className="mt-0.5 block text-[12.5px] font-normal text-neutral-500">
               {[a.topic ? SPECIALTY_GROUPS.find((g) => g.code === a.topic)?.label ?? a.topic : null, showAuthor ? a.writerName : null, a.publishedAt ? fmtDate(new Date(a.publishedAt)) : null].filter(Boolean).join(' · ')}

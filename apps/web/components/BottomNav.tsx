@@ -89,7 +89,7 @@ export function BottomNav() {
               : 'text-foreground/55 hover:text-foreground active:text-primary-500');
 
           return (
-            <li key={i} className="flex-1">
+            <li key={i} className="min-w-0 flex-1">
               <Link
                 href={href}
                 aria-current={isActive ? 'page' : undefined}
@@ -113,9 +113,13 @@ export function BottomNav() {
                     fillOpacity={isActive ? 0.18 : 0}
                   />
                 </div>
+                {/* 320px だと 1 タブ 78px しかない。折り返しを許すと
+                    「エ / キ / ス…」と縦積みになるので nowrap で 1 行に固定する。
+                    10px は実機で読めないのでスマホだけ 11px に上げる（最長「エキスパート」でも
+                    11px なら約 66px で 78px に収まる。溢れても truncate が保険）。 */}
                 <span
                   className={
-                    'text-[10px] font-semibold tracking-tight ' +
+                    'max-w-full truncate whitespace-nowrap text-[10px] font-semibold tracking-tight max-sm:text-[11px] ' +
                     (isActive ? '' : 'opacity-80')
                   }
                 >

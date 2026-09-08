@@ -89,16 +89,16 @@ export function ServiceCard({ service: s, href }: Props) {
             </span>
           ) : null}
           {s.priceJpy != null ? (
-            <span className="ml-auto text-[12px] font-bold tabular text-primary-300 sm:text-[14px]">
+            <span className="ml-auto shrink-0 whitespace-nowrap text-[12px] font-bold tabular text-primary-300 sm:text-[14px]">
               ¥{s.priceJpy.toLocaleString('ja-JP')}
               {s.priceUnit ? (
-                <span className="ml-0.5 text-[9px] font-medium text-foreground/60 sm:text-[10px]">
+                <span className="ml-0.5 text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                   / {s.priceUnit}
                 </span>
               ) : null}
             </span>
           ) : (
-            <span className="ml-auto text-[11px] font-medium text-foreground/50 sm:text-[12px]">
+            <span className="ml-auto shrink-0 whitespace-nowrap text-[11px] font-medium text-foreground/50 sm:text-[12px]">
               応相談
             </span>
           )}
@@ -128,8 +128,8 @@ export function ServiceCard({ service: s, href }: Props) {
             </span>
           </div>
           {s.cityNameJa ? (
-            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-medium text-foreground/60 sm:px-2 sm:text-[10px]">
-              <MapPin className="h-2.5 w-2.5" />
+            <span className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-medium text-foreground/60 sm:px-2 sm:text-[10px]">
+              <MapPin className="h-2.5 w-2.5 shrink-0" />
               {s.cityNameJa}
             </span>
           ) : null}
