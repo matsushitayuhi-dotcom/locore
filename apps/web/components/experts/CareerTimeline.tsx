@@ -124,7 +124,8 @@ export function CareerTimeline({
               <b className="block text-[14px] font-bold leading-snug">
                 {item.name}
                 {now ? (
-                  <span className="ml-2 rounded-full bg-primary-100 px-2 py-px text-[10px] font-bold text-primary-900">
+                  // 会社名の行末に来ると「現 / 在」と縦に割れるので nowrap。10px は実機で読めないので 11px
+                  <span className="ml-2 whitespace-nowrap rounded-full bg-primary-100 px-2 py-px text-[11px] font-bold text-primary-900 sm:text-[10px]">
                     現在
                   </span>
                 ) : null}
@@ -166,7 +167,8 @@ export function CareerTimeline({
           <ol className="flex flex-col pt-5">{renderItems(rest, shown.length)}</ol>
         </details>
       ) : null}
-      <p className="ml-[49px] mt-4 text-[10.5px] text-neutral-400">
+      {/* 10.5px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+      <p className="ml-[49px] mt-4 text-[11px] text-neutral-400 sm:text-[10.5px]">
         上が現在、下が過去。※経歴は本人申告の情報です
       </p>
     </div>

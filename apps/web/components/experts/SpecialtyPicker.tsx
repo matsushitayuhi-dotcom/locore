@@ -91,7 +91,8 @@ export function SpecialtyPicker({
                     >
                       {c.label}
                       {isExperienceOnly(c.code) ? (
-                        <span className="ml-1 text-[10px] opacity-70">※</span>
+                        // 10px は実機で潰れて見えないのでスマホだけ 11px（PC は据え置き）
+                        <span className="ml-1 text-[11px] opacity-70 sm:text-[10px]">※</span>
                       ) : null}
                     </button>
                   );

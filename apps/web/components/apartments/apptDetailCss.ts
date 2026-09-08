@@ -33,8 +33,9 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .apt-status.live{color:var(--lime-d)}
 .apt-status.live i{width:7px;height:7px;border-radius:50%;background:var(--lime);display:inline-block;box-shadow:0 0 0 3px rgba(168,224,28,.25)}
 .apt-status.closed{color:var(--mu);background:rgba(0,0,0,.05);border-radius:999px;padding:3px 11px}
-.apt-acts{margin-left:auto;display:flex;gap:6px}
-.apt-acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px}
+/* スマホ: .apt-sub は wrap するので acts は縮ませず丸ごと次行へ落とす (ボタン内の文字が1文字ずつ折れるのを防ぐ) */
+.apt-acts{margin-left:auto;display:flex;gap:6px;flex:none}
+.apt-acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px;white-space:nowrap}
 .apt-acts button:hover{background:rgba(0,0,0,.05)}
 .apt-acts button.on{color:var(--lime-d)}
 .apt-acts button.on svg{fill:var(--lime);stroke:var(--lime-d)}
@@ -52,7 +53,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .apt-gallery.one .cell.big,.apt-gallery.two .cell.big{grid-row:auto}
 .apt-ph{display:grid;place-items:center;width:100%;height:100%;color:var(--mu)}
 .apt-ph svg{width:48px;height:48px;opacity:.5}
-.apt-allphotos{position:absolute;bottom:16px;right:16px;display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+/* 絶対配置のボタン。狭幅で1文字ずつ折れないよう nowrap + 画面内に収まる上限幅 */
+.apt-allphotos{position:absolute;bottom:16px;right:16px;display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;max-width:calc(100% - 32px);box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
 .apt-allphotos svg{width:15px;height:15px}
 
 /* ===== two-column ===== */
@@ -71,15 +73,17 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 /* status banner (closed/expired) */
 .apt-banner{display:flex;align-items:center;gap:10px;margin-top:18px;padding:14px 16px;border:1px solid var(--bd);background:var(--bg2);border-radius:14px}
 .apt-banner svg{width:20px;height:20px;color:var(--mu);flex:none}
+.apt-banner>div{min-width:0} /* アイコンは縮まない側、テキスト側は min-width:0 */
 .apt-banner b{font-weight:700;font-size:14px;color:var(--ink2)}
 .apt-banner p{font-size:12px;color:var(--mu)}
 
 /* owner controls bar */
 .apt-owner{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:12px 16px;border:1px solid rgba(94,139,14,.3);background:rgba(168,224,28,.08);border-radius:14px}
-.apt-owner p{font-size:12px;color:var(--ink2)}
+.apt-owner p{font-size:12px;color:var(--ink2);min-width:0}
 
 /* overview header */
 .apt-ovr{display:flex;align-items:flex-start;gap:18px;padding-bottom:6px}
+.apt-ovr>div:first-child{min-width:0} /* アバターは flex:none、見出し側は min-width:0 で縮ませる */
 .apt-ovr .ttl{font-family:var(--jp);font-weight:900;font-size:21px;line-height:1.4;color:var(--ink)}
 .apt-ovr .specs{margin-top:7px;font-size:14px;color:var(--ink2)}
 .apt-ovr .specs b{font-weight:700}
@@ -90,6 +94,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 /* highlight bullets */
 .apt-hl{display:flex;flex-direction:column;gap:18px;list-style:none}
 .apt-hl li{display:flex;gap:15px;align-items:flex-start}
+.apt-hl li>div{min-width:0} /* アイコンは flex:none、本文側は min-width:0 */
 .apt-hl .ic{flex:none;width:26px;height:26px;color:var(--ink);margin-top:2px}
 .apt-hl .ic svg{width:26px;height:26px;stroke-width:1.5}
 .apt-hl b{font-weight:700;font-size:15px}
@@ -127,7 +132,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .apt-hostcard{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:22px}
 .apt-hostcard .ava{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--lime);background:var(--lime-l)}
 .apt-hostcard .avaf{width:72px;height:72px;border-radius:50%;flex:none;border:2px solid var(--lime);background:var(--lime-l);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:26px;color:var(--lime-d)}
-.apt-hostcard .nm{font-weight:700;font-size:17px;color:var(--ink)}
+.apt-hostcard>div{min-width:0} /* アバターは flex:none、貸主情報側は min-width:0 でカードからはみ出させない */
+.apt-hostcard .nm{font-weight:700;font-size:17px;color:var(--ink);overflow-wrap:anywhere}
 .apt-hostcard .badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--lime-d);margin-left:8px}
 .apt-hostcard .badge svg{width:13px;height:13px}
 .apt-hostcard .meta{color:var(--mu);font-size:12.5px;font-family:var(--mono);margin:3px 0 10px}
@@ -144,8 +150,10 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .apt-book .avail{margin-top:6px;font-size:12.5px;color:var(--lime-d);font-weight:700;display:inline-flex;align-items:center;gap:6px}
 .apt-book .avail svg{width:14px;height:14px}
 .apt-book .brk{margin:18px 0;border:1px solid var(--bd);border-radius:14px;overflow:hidden}
-.apt-book .brk .row{display:flex;justify-content:space-between;padding:12px 16px;font-size:13.5px;color:var(--ink2);border-bottom:1px solid var(--bd)}
-.apt-book .brk .row span:last-child{font-weight:700;color:var(--ink);font-family:var(--mono)}
+/* 内訳の行: 項目名は縮む側 (min-width:0)、金額は縮まない側 (nowrap)。gap が無いと狭幅で密着する */
+.apt-book .brk .row{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;font-size:13.5px;color:var(--ink2);border-bottom:1px solid var(--bd)}
+.apt-book .brk .row span:first-child{min-width:0}
+.apt-book .brk .row span:last-child{font-weight:700;color:var(--ink);font-family:var(--mono);flex:none;white-space:nowrap}
 .apt-book .brk .row.sum{border-bottom:0;background:var(--bg2);font-weight:800}
 .apt-book .brk .row.sum span:first-child{color:var(--ink);font-weight:800}
 .apt-book .brk .row .mu{color:var(--mu);font-size:11px;font-weight:500;font-family:var(--jp)}
@@ -178,6 +186,32 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
   .apt-amen,.apt-below .apt-amen{grid-template-columns:1fr 1fr}
   .apt-below{margin-top:0}
   .apt-below .apt-mapframe{aspect-ratio:16/8}
+}
+/* スマホ (402px / 320px 実測基準)。生 CSS なので Tailwind の max-sm: は届かず、ここで面倒を見る */
+@media(max-width:640px){
+  /* 投稿者バー: 説明文とボタン列を横に並べると 320px でどちらも潰れるので行を分ける */
+  .apt-owner{flex-wrap:wrap;gap:10px}
+  .apt-owner p{flex:1 1 100%}
+  /* 概要見出し: アバターと横並びのままだと見出しが 1 文字ずつ折れる。文字とアバターを縮めて幅を作る */
+  .apt-ovr{gap:12px}
+  .apt-ovr .ttl{font-size:18px}
+  .apt-ovr .ava,.apt-ovr .avaf{width:46px;height:46px}
+  .apt-ovr .avaf{font-size:18px}
+  /* 問い合わせカード: 320px では padding 24 + 家賃 28px が入りきらない */
+  .apt-book{padding:18px}
+  .apt-book .price b{font-size:24px}
+  .apt-book .brk .row{padding:11px 13px}
+  /* 貸主カード: アバターを小さくして名前・自己紹介に幅を残す */
+  .apt-hostcard{padding:16px;gap:13px}
+  .apt-hostcard .ava,.apt-hostcard .avaf{width:56px;height:56px}
+  .apt-hostcard .avaf{font-size:21px}
+  /* テキストだけのボタンはタップ領域が 25px しかないので 44px 確保する */
+  .apt-morebtn{min-height:44px;padding:8px 0}
+  /* 貸主プロフィールへの唯一の導線。文字だけだと高さ 23px しかないので同じく 44px 確保する */
+  .apt-hostcard .link{min-height:44px}
+  /* 上限幅は実際の inset (10px) に合わせる。32px のままだと nowrap の文字が白箱からはみ出て切れる */
+  .apt-allphotos{bottom:10px;right:10px;padding:8px 12px;font-size:12px;gap:6px;max-width:calc(100% - 20px)}
+  .apt-fraud{padding:16px}
 }
 @media(max-width:560px){
   .apt-head h1{font-size:22px}

@@ -143,12 +143,15 @@ export default async function HelpDetailPage({ params }: Props) {
       <div className="mt-5 grid grid-cols-1 gap-8 sm:grid-cols-[1fr_280px]">
         <article className="min-w-0">
           <header>
-            {/* バッジのラベルは割らない（日本語はどこでも改行できる） */}
+            {/*
+              バッジのラベルは割らない（日本語はどこでも改行できる）。
+              小さいラベル類はスマホだけ 11px に上げる（10px は実機で読めない）。PC は sm: で据え置き。
+            */}
             <div className="flex flex-wrap items-center gap-1.5">
               {meta.request_type ? (
                 <span
                   className={
-                    'whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
+                    'whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider ' +
                     (meta.request_type === 'offer'
                       ? 'bg-primary-500 text-neutral-950'
                       : 'bg-accent-500 text-neutral-950')
@@ -158,14 +161,14 @@ export default async function HelpDetailPage({ params }: Props) {
                 </span>
               ) : null}
               {meta.category ? (
-                <span className="whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/65">
+                <span className="whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/65">
                   {CATEGORY_LABEL[meta.category]}
                 </span>
               ) : null}
               {meta.urgency ? (
                 <span
                   className={
-                    'inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
+                    'inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider ' +
                     (meta.urgency === 'now'
                       ? 'bg-danger-500 text-white'
                       : meta.urgency === 'this_week'
@@ -180,7 +183,7 @@ export default async function HelpDetailPage({ params }: Props) {
             </div>
 
             <h1
-              className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
+              className="mt-3 break-words text-[28px] font-bold leading-tight tracking-tight text-foreground"
             >
               {post.title}
             </h1>
@@ -192,7 +195,7 @@ export default async function HelpDetailPage({ params }: Props) {
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
                 <div className="min-w-0">
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     場所
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -205,7 +208,7 @@ export default async function HelpDetailPage({ params }: Props) {
               <div className="flex items-start gap-2">
                 <Gift className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
                 <div className="min-w-0">
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     お礼
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -218,7 +221,7 @@ export default async function HelpDetailPage({ params }: Props) {
               <div className="flex items-start gap-2">
                 <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
                 <div className="min-w-0">
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     緊急度
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -231,7 +234,7 @@ export default async function HelpDetailPage({ params }: Props) {
               <div className="flex items-start gap-2">
                 <Hand className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
                 <div className="min-w-0">
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     カテゴリ
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -264,7 +267,7 @@ export default async function HelpDetailPage({ params }: Props) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+              <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
                 投稿者
               </p>
               {post.authorId ? (
@@ -295,7 +298,7 @@ export default async function HelpDetailPage({ params }: Props) {
                     : 'bg-primary-500/5')
                 }
               >
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+                <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
                   掲載期限
                 </p>
                 <p
@@ -307,7 +310,7 @@ export default async function HelpDetailPage({ params }: Props) {
                   {expDays >= 0 ? `あと ${expDays} 日` : '期限切れ'}
                 </p>
                 {expDays >= 0 && expDays <= 3 ? (
-                  <p className="mt-1 text-[10px] text-danger-500">まもなく終了します</p>
+                  <p className="mt-1 text-[11px] sm:text-[10px] text-danger-500">まもなく終了します</p>
                 ) : null}
               </div>
             ) : null}
@@ -336,7 +339,7 @@ export default async function HelpDetailPage({ params }: Props) {
               </div>
             </dl>
 
-            <div className="rounded-md border border-amber-500/30 bg-amber-50/60 p-2.5 text-[10px] leading-relaxed text-amber-900">
+            <div className="rounded-md border border-amber-500/30 bg-amber-50/60 p-2.5 text-[11px] sm:text-[10px] leading-relaxed text-amber-900">
               <p className="flex items-start gap-1 font-bold">
                 <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
                 やり取り前に

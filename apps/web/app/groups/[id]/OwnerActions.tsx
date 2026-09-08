@@ -63,7 +63,8 @@ export function OwnerActions({
 
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+      {/* 10px は実機で読めない。スマホは 11px、PC は sm: で据え置き */}
+      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55 sm:text-[10px]">
         投稿者メニュー
       </p>
       {/* スマホは py を増やしてタップ領域を 36px 以上に。ラベルは折らない */}

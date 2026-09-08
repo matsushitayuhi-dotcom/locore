@@ -152,7 +152,7 @@ export default async function VerificationPage() {
 /** 状態バッジ。横並びの中では縮まない側なので shrink-0 + nowrap（「確 / 認 / 待 / ち」を防ぐ） */
 function QualStatus({ status }: { status: 'pending' | 'approved' | 'rejected' }) {
   const base =
-    'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[10.5px] font-bold';
+    'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[10.5px] max-sm:text-[11px] font-bold';
   if (status === 'approved') {
     return (
       <span className={`${base} bg-primary-100 text-primary-900`}>
@@ -205,7 +205,7 @@ function StatusCard({
           </p>
           {latest.status === 'rejected' && latest.rejectedReason ? (
             <div className="mt-3 rounded-md bg-card p-3 text-[12px] leading-relaxed text-foreground/80 ring-1 ring-border">
-              <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-foreground/55">運営から</p>
+              <p className="mb-1 text-[10px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/55">運営から</p>
               <p className="whitespace-pre-line">{latest.rejectedReason}</p>
             </div>
           ) : null}

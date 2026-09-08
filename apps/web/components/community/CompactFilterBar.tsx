@@ -96,22 +96,27 @@ export async function CompactFilterBar({
       className="sticky top-[100px] z-10 -mx-4 border-b border-border bg-background/95 px-4 py-2 backdrop-blur sm:mx-0"
       data-community-filterbar
     >
+      {/* flex-wrap のまま。ここは <details> の絶対配置ドロップダウンを持つので、
+          overflow-x-auto にするとメニューが切れる。320px では 2 行に折り返す。
+          チップの縦は max-sm:min-h-[36px] でタップ領域 36px を確保。 */}
       <div className="flex flex-wrap items-center gap-1.5">
         {/* 都市 ドロップダウン */}
         <details className="group relative shrink-0">
           <summary
             className={
-              'inline-flex cursor-pointer list-none items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
+              'inline-flex cursor-pointer list-none items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-semibold transition max-sm:min-h-[36px] ' +
               (activeRegionSlug
                 ? 'bg-primary-500 text-neutral-950'
                 : 'bg-muted text-foreground/75 hover:bg-foreground/10')
             }
           >
-            <MapPin className="h-3.5 w-3.5" />
-            <span className="max-w-[7rem] truncate">{regionLabel}</span>
-            <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
+            {/* アイコンと ▾ は縮まない側、都市名だけが縮む側 */}
+            <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <span className="min-w-0 max-w-[7rem] truncate">{regionLabel}</span>
+            <ChevronDown className="h-3 w-3 shrink-0 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="absolute left-0 top-full z-30 mt-1 max-h-[60vh] w-56 overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-xl">
+          {/* w-56 = 224px。320px 幅でも画面外に出ないよう max-w も併記 */}
+          <div className="absolute left-0 top-full z-30 mt-1 max-h-[60vh] w-56 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-xl">
             <DropdownItem
               href={buildRegionHref(basePath, undefined, preserveQuery)}
               active={!activeRegionSlug}
@@ -164,14 +169,15 @@ function DropdownItem({
     <Link
       href={href}
       className={
-        'flex items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-[12px] transition ' +
+        'flex items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-[12px] transition max-sm:min-h-[40px] ' +
         (active
           ? 'bg-primary-500/15 font-semibold text-primary-300'
           : 'text-foreground/80 hover:bg-muted')
       }
     >
-      <span>{label}</span>
-      {active ? <Check className="h-3.5 w-3.5" /> : null}
+      {/* 都市名が縮む側、チェックは縮まない側 */}
+      <span className="min-w-0 truncate">{label}</span>
+      {active ? <Check className="h-3.5 w-3.5 shrink-0" /> : null}
     </Link>
   );
 }
@@ -193,7 +199,8 @@ function ViewToggleButton({
       aria-label={label}
       title={label}
       className={
-        'inline-flex items-center rounded-full p-1.5 transition ' +
+        // p-1.5 + 14px アイコン = 26px でタップ領域が足りないので、スマホだけ 36px 角に
+        'inline-flex items-center justify-center rounded-full p-1.5 transition max-sm:h-9 max-sm:w-9 ' +
         (active
           ? 'bg-primary-500 text-neutral-950 shadow-sm'
           : 'text-foreground/60 hover:text-foreground')

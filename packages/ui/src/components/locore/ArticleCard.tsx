@@ -260,12 +260,15 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
           ) : null}
 
           {/* Line 4: price (右端の "旅程に追加" は画像上のハートで代替済み) */}
-          <div className="mt-0.5 flex items-center justify-between gap-1">
+          {/* 320px（カード幅 約133px）では価格とメタが 1 行に収まらないことがあるので、
+              スマホだけ折り返しを許す。PC は 1 行のまま */}
+          <div className="mt-0.5 flex items-center justify-between gap-1 max-sm:flex-wrap">
             <p className="text-[13px] font-semibold tabular text-foreground">
               ¥{priceJpy.toLocaleString("ja-JP")}
             </p>
             {durationLabel || typeof spotsCount === "number" ? (
-              <p className="shrink-0 text-[10px] text-foreground/50">
+              // 10px は 402px の 2 列（カード 174px）で読めないのでスマホだけ 11px
+              <p className="shrink-0 whitespace-nowrap text-[11px] text-foreground/50 sm:text-[10px]">
                 {durationLabel}
                 {durationLabel && typeof spotsCount === "number" ? " · " : ""}
                 {typeof spotsCount === "number" ? `${spotsCount}箇所` : ""}
@@ -281,7 +284,8 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               onClick={handleAddToTrip}
               aria-label="旅程に追加"
               className={cn(
-                "mt-1 inline-flex w-full items-center justify-center gap-1 rounded-full px-2 py-1",
+                // py-1 だと高さ約 26px でタップ領域が足りないので、スマホだけ 36px を確保する
+                "mt-1 inline-flex w-full items-center justify-center gap-1 rounded-full px-2 py-1 max-sm:min-h-9",
                 "bg-muted text-[11px] font-medium text-foreground/80",
                 "ring-1 ring-border transition-colors duration-fast ease-out",
                 "hover:bg-card hover:text-foreground",

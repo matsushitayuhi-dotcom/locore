@@ -633,7 +633,7 @@ function GroupBottomSheet({
 }) {
   return (
     <SheetShell onClose={onClose}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/50">
+      <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/50">
         スポット
       </p>
       {unlocked ? (
@@ -657,7 +657,7 @@ function GroupBottomSheet({
         </a>
       ) : null}
 
-      <p className="mt-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/50">
+      <p className="mt-3 text-[11px] sm:text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground/50">
         この場所に紐づく記事（{group.articles.length}）
       </p>
       <ul className="mt-1 space-y-2 pr-1">
@@ -699,13 +699,13 @@ function GroupBottomSheet({
                   >
                     {a.title}
                   </p>
-                  <p className="mt-0.5 flex items-center gap-2 text-[10px] text-foreground/60">
+                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] sm:text-[10px] text-foreground/60">
                     {ul ? (
-                      <span className="rounded-full bg-foreground px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-card">
+                      <span className="shrink-0 whitespace-nowrap rounded-full bg-foreground px-1.5 py-0.5 text-[11px] sm:text-[9px] font-bold uppercase tracking-wider text-card">
                         Unlocked
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[9px] font-semibold text-foreground/50">
+                      <span className="inline-flex items-center gap-0.5 shrink-0 whitespace-nowrap rounded-full bg-neutral-100 px-1.5 py-0.5 text-[11px] sm:text-[9px] font-semibold text-foreground/50">
                         <Lock className="h-2.5 w-2.5" />
                         ロック
                       </span>
@@ -722,7 +722,7 @@ function GroupBottomSheet({
       </ul>
 
       {!unlocked ? (
-        <p className="mt-3 rounded-lg bg-primary-500/5 px-2 py-1.5 text-[10px] leading-relaxed text-foreground/70">
+        <p className="mt-3 rounded-lg bg-primary-500/5 px-2 py-1.5 text-[11px] sm:text-[10px] leading-relaxed text-foreground/70">
           地図のヘキサは「この区画のどこかに記事がある」とだけ伝えます。
           購入後に、店名・住所・正確な位置・営業時間が
           <strong className="text-foreground">開きます</strong>。
@@ -741,7 +741,7 @@ function HexBottomSheet({
 }) {
   return (
     <SheetShell onClose={onClose}>
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/50">
+      <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/50">
         このエリア
       </p>
       <h4 className="mt-0.5 inline-flex items-center gap-1.5 text-[16px] font-bold leading-snug text-foreground">
@@ -775,8 +775,8 @@ function HexBottomSheet({
                 <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-foreground/80">
                   {a.title}
                 </p>
-                <p className="mt-0.5 flex items-center gap-2 text-[10px] text-foreground/60">
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[9px] font-semibold text-foreground/50">
+                <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] sm:text-[10px] text-foreground/60">
+                  <span className="inline-flex items-center gap-0.5 shrink-0 whitespace-nowrap rounded-full bg-neutral-100 px-1.5 py-0.5 text-[11px] sm:text-[9px] font-semibold text-foreground/50">
                     <Lock className="h-2.5 w-2.5" />
                     ロック
                   </span>

@@ -33,7 +33,7 @@ export function MeetingRoomCard({ initialUrl }: { initialUrl: string | null }) {
   return (
     <div className="mt-5 rounded-2xl border border-border bg-card px-[22px] py-5 shadow-xs">
       <div className="flex items-center gap-2 text-[13.5px] font-bold">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.13em] text-primary-700">
+        <span className="text-[10px] max-sm:text-[11px] font-semibold uppercase tracking-[0.13em] text-primary-700">
           Meeting
         </span>
         相談の受け方

@@ -18,7 +18,8 @@ export function SpotsSection({
 }: Props) {
   return (
     <section
-      className="space-y-4 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
+      // 402px / 320px では p-5 (左右 40px) が中身の幅を削るので詰める
+      className="space-y-4 rounded-md bg-card p-4 ring-1 ring-border sm:p-6"
       aria-labelledby="spots-section-title"
     >
       <div>

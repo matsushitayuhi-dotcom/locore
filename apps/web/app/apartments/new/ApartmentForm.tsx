@@ -166,7 +166,9 @@ export function ApartmentForm() {
       >
         <div className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-rose-700" />
-          <div>
+          {/* 本文は和文だけなので実測では潰れないが、min-w-0 は URL や英字の長い語が
+              入った場合にトラックを押し広げないための保険 */}
+          <div className="min-w-0">
             <p className="font-bold">住宅差別は禁止されています</p>
             <p className="mt-1">
               国籍 / 出身 / 家族構成 / 年齢 / 性別 / 性的指向 / 宗教 / 障害 等を理由とした
@@ -184,7 +186,9 @@ export function ApartmentForm() {
       >
         <div className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
-          <div>
+          {/* 本文は和文だけなので実測では潰れないが、min-w-0 は URL や英字の長い語が
+              入った場合にトラックを押し広げないための保険 */}
+          <div className="min-w-0">
             <p className="font-bold">詐欺応募の典型パターン</p>
             <ul className="mt-1 list-disc space-y-0.5 pl-4">
               <li>「内見前に手付金を振り込みたい」と急かす</li>
@@ -213,7 +217,8 @@ export function ApartmentForm() {
               <label
                 key={t}
                 className={
-                  'cursor-pointer rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
+                  // ピル内で文字を割らせない。入り切らないときは flex-wrap で次の行へ送る
+                  'cursor-pointer whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
                   (on
                     ? 'bg-primary-500 text-neutral-950'
                     : 'border border-border bg-background text-foreground/75 hover:border-foreground/30')
@@ -248,7 +253,8 @@ export function ApartmentForm() {
           placeholder='例: "11区 République 1LDK 家具付き 即入居可"'
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-[14px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
         />
-        <p className="mt-1 text-right text-[10px] text-foreground/45 tabular">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-1 text-right text-[11px] text-foreground/45 tabular sm:text-[10px]">
           {title.length} / 140
         </p>
       </div>
@@ -367,7 +373,8 @@ export function ApartmentForm() {
       <fieldset>
         <legend className="mb-2 text-[12px] font-bold text-foreground/75">
           設備
-          <span className="ml-2 text-[10px] font-normal text-foreground/45">
+          {/* 10px は実機で読めないのでスマホだけ 11px に上げ、見出しと同じ行に詰め込まず改行する */}
+          <span className="ml-2 text-[11px] font-normal text-foreground/45 max-sm:ml-0 max-sm:block sm:text-[10px]">
             該当するものを選択（詳細ページに一覧表示されます）
           </span>
         </legend>
@@ -378,7 +385,9 @@ export function ApartmentForm() {
               <label
                 key={a.key}
                 className={
-                  'inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-[12px] font-medium transition ' +
+                  // 2 列タイルは 320px だと 1 枚 140px。「フル装備キッチン」等が入らないので
+                  // スマホだけ左右の余白を詰め、行間を締めて 2 行に折る
+                  'inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-[12px] font-medium transition max-sm:px-2 max-sm:leading-tight ' +
                   (on
                     ? 'border-primary-500 bg-primary-500/10 text-foreground'
                     : 'border-border bg-background text-foreground/75 hover:border-foreground/30')
@@ -388,7 +397,7 @@ export function ApartmentForm() {
                   type="checkbox"
                   checked={on}
                   onChange={() => toggleAmenity(a.key)}
-                  className="h-4 w-4 rounded border-border accent-primary-500"
+                  className="h-4 w-4 shrink-0 rounded border-border accent-primary-500"
                 />
                 {a.label}
               </label>
@@ -470,7 +479,8 @@ export function ApartmentForm() {
       <div>
         <label htmlFor="body" className="mb-1 block text-[12px] font-bold text-foreground/75">
           物件紹介文 <span className="text-rose-600">*</span>
-          <span className="ml-2 text-[10px] font-normal text-foreground/45">
+          {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+          <span className="ml-2 text-[11px] font-normal text-foreground/45 sm:text-[10px]">
             Markdown 可
           </span>
         </label>
@@ -486,7 +496,8 @@ export function ApartmentForm() {
           }
           className="w-full rounded-md border border-border bg-background px-3 py-2 text-[13px] leading-relaxed focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
         />
-        <p className="mt-1 text-right text-[10px] text-foreground/45 tabular">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-1 text-right text-[11px] text-foreground/45 tabular sm:text-[10px]">
           {body.length} / 8000
         </p>
       </div>
@@ -519,17 +530,18 @@ export function ApartmentForm() {
 
       {/* 送信 */}
       <div className="flex items-center justify-end gap-2 border-t border-border pt-5">
+        {/* ボタンは縮ませない（文字が 1 文字ずつ縦に積まれるのを防ぐ） */}
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-md px-3 py-2 text-[13px] font-medium text-foreground/65 hover:bg-muted"
+          className="shrink-0 whitespace-nowrap rounded-md px-3 py-2 text-[13px] font-medium text-foreground/65 hover:bg-muted"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+          className="shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
         >
           {isPending ? '公開中…' : '物件を公開する'}
         </button>
@@ -590,12 +602,14 @@ function CheckboxField({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-[12px] font-medium text-foreground/75 transition hover:border-foreground/30">
+    // 2 列タイルは 320px だと 1 枚 140px。「光熱費込み」等が入るようスマホだけ余白を詰め、
+    // チェックボックスは shrink-0 で固定して文字側だけを折り返させる
+    <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-[12px] font-medium text-foreground/75 transition hover:border-foreground/30 max-sm:px-2 max-sm:leading-tight">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-border accent-primary-500"
+        className="h-4 w-4 shrink-0 rounded border-border accent-primary-500"
       />
       {label}
     </label>

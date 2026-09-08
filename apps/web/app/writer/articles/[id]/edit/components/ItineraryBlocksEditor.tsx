@@ -106,7 +106,8 @@ export function ItineraryBlocksEditor({
 
   const inner = (
     <section
-      className="space-y-3 rounded-md bg-card p-5 ring-1 ring-border sm:p-6"
+      // 402px / 320px では p-5 (40px) が効いて中身の幅が足りなくなるので詰める
+      className="space-y-3 rounded-md bg-card p-4 ring-1 ring-border sm:p-6"
       aria-labelledby="itinerary-blocks-title"
     >
       <header className="flex flex-wrap items-baseline justify-between gap-2">
@@ -135,7 +136,8 @@ export function ItineraryBlocksEditor({
               }));
               onChange(next);
             }}
-            className="rounded-full bg-primary-500/10 px-3 py-1.5 text-[11px] font-bold text-primary-300 ring-1 ring-border hover:bg-primary-500/15"
+            // max-sm:min-h-9: スマホのタップ領域確保
+            className="whitespace-nowrap rounded-full bg-primary-500/10 px-3 py-1.5 text-[11px] font-bold text-primary-300 ring-1 ring-border hover:bg-primary-500/15 max-sm:min-h-9"
           >
             登録したスポットから自動生成
           </button>
@@ -164,7 +166,7 @@ export function ItineraryBlocksEditor({
                   {/* 時刻 2 つ — モバイルでも横並び（小さく） */}
                   <div className="flex flex-1 gap-2">
                     <div className="min-w-0 flex-1">
-                      <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+                      <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                         開始
                       </label>
                       <input
@@ -177,7 +179,7 @@ export function ItineraryBlocksEditor({
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+                      <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                         終了
                       </label>
                       <input
@@ -194,7 +196,8 @@ export function ItineraryBlocksEditor({
                     type="button"
                     aria-label="このブロックを削除"
                     onClick={() => remove(idx)}
-                    className="mt-4 shrink-0 rounded-sm p-1.5 text-foreground/50 transition hover:bg-muted hover:text-danger-500"
+                    // max-sm: タップ領域を 36px 確保（PC は従来の p-1.5 のまま）
+                    className="mt-4 shrink-0 rounded-sm p-1.5 text-foreground/50 transition hover:bg-muted hover:text-danger-500 max-sm:inline-flex max-sm:h-9 max-sm:w-9 max-sm:items-center max-sm:justify-center max-sm:p-0"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -202,7 +205,7 @@ export function ItineraryBlocksEditor({
 
                 {/* 場所 — 時刻の下に独立行で */}
                 <div className="mt-2">
-                  <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+                  <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                     場所
                   </label>
                   {spots.length > 0 ? (
@@ -251,7 +254,7 @@ export function ItineraryBlocksEditor({
 
                 {/* 補足：メモ */}
                 <div className="sm:col-span-4">
-                  <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+                  <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                     メモ（食べたもの / 体験 / 注意点）
                   </label>
                   <textarea
@@ -268,8 +271,8 @@ export function ItineraryBlocksEditor({
 
               {/* 移動手段（最後のブロック以外で表示） */}
               {!isLast ? (
-                <div className="ml-2 space-y-2 border-l-2 border-dashed border-primary-500/40 pl-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary-300/70">
+                <div className="ml-2 space-y-2 border-l-2 border-dashed border-primary-500/40 pl-4 max-sm:ml-0 max-sm:pl-2.5">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300/70 sm:text-[10px]">
                     次のスポットへの移動
                   </p>
                   <TransportPicker

@@ -27,7 +27,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-hero h1 em{font-style:normal;color:var(--lime)}
 .tj-hsub{margin-top:22px;max-width:560px;font-size:clamp(15px,1.7vw,18px);line-height:1.85;color:rgba(255,255,255,.84)}
 .tj-hauthor{margin-top:30px;display:flex;align-items:center;gap:13px}
-.tj-hauthor img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.4)}
+.tj-hauthor img{flex:none;width:46px;height:46px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.4)}
+.tj-hauthor>div{min-width:0}
 .tj-hauthor .nm{font-weight:700;color:#fff;font-size:14.5px}
 .tj-hauthor .meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.7);margin-top:2px}
 .tj-hauthor .tier{color:var(--lime)}
@@ -71,10 +72,10 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-ctime .dot{width:5px;height:5px;border-radius:50%;background:var(--lime)}
 .tj-cbody{padding:22px 24px 24px}
 .tj-chead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
-.tj-cbody h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(20px,2.4vw,26px);letter-spacing:-.015em;line-height:1.22}
+.tj-cbody h3{min-width:0;color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(20px,2.4vw,26px);letter-spacing:-.015em;line-height:1.22}
 .tj-maplink{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--lime-d);background:var(--lime-l);border:1px solid rgba(168,224,28,.5);padding:7px 12px;border-radius:999px;white-space:nowrap;transition:background .2s,transform .2s}
 .tj-maplink:hover{background:#d6f29a;transform:translateY(-1px)}
-.tj-maplink svg{width:13px;height:13px}
+.tj-maplink svg{width:13px;height:13px;flex:none}
 .tj-cplace{margin-top:7px;font-family:var(--mono);font-size:11.5px;color:var(--mu);display:flex;align-items:center;gap:6px}
 .tj-cplace svg{width:12px;height:12px;color:var(--lime-d);flex:none}
 .tj-ctxt{margin-top:13px;font-size:14.5px;line-height:1.95;color:var(--ink2)}
@@ -89,12 +90,13 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-cost{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);background:var(--lime-l);border:1px solid rgba(168,224,28,.45);padding:6px 13px;border-radius:999px}
 .tj-tipline{margin-top:14px;display:flex;gap:11px;align-items:flex-start;padding:12px 15px;border-radius:12px;background:var(--bg);border:1px dashed var(--bd2);font-size:12.5px;line-height:1.7;color:var(--ink2)}
 .tj-tipline .ic,.tj-tipline>svg{flex:none;color:var(--lime-d);margin-top:1px;width:16px;height:16px}
+.tj-tipline>div{min-width:0}
 .tj-tipline b{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);display:block;margin-bottom:2px}
 .tj-tipline .tx{white-space:pre-line}
 .tj-conn{position:relative;padding-left:74px;margin:6px 0 18px}
 @media(min-width:721px){.tj-conn{padding-left:92px}}
 .tj-conn .pill{display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--ink2);background:var(--white);border:1px solid var(--bd);border-radius:999px;padding:8px 16px;box-shadow:0 4px 14px -8px rgba(17,17,17,.2)}
-.tj-conn .pill .ic{color:var(--lime-d)}
+.tj-conn .pill .ic{color:var(--lime-d);flex:none}
 .tj-conn .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-right:2px}
 
 .tj-mapsec{padding:84px 0}
@@ -102,6 +104,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-maphead h2{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(24px,3.2vw,38px);letter-spacing:-.02em;margin-top:10px}
 .tj-maphead p{color:var(--mu);font-size:14px;margin-top:10px}
 .tj-mapgrid{display:grid;grid-template-columns:1.3fr .7fr;gap:36px;align-items:stretch}
+.tj-mapgrid>*{min-width:0}
 .tj-mapframe{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--bd);min-height:420px;background:#dfe4e8;box-shadow:0 18px 44px -26px rgba(17,17,17,.3)}
 .tj-mapframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .tj-mapframe .locore-map-canvas{position:absolute;inset:0}
@@ -114,7 +117,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-mlrow .nm{flex:1;min-width:0;font-size:13.5px;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tj-mlrow .tm{font-family:var(--mono);font-size:11px;color:var(--mu);flex:none}
 .tj-mlrow a.pin{flex:none;color:var(--lime-d)}
-.tj-mlrow a.pin svg{width:16px;height:16px}
+.tj-mlrow a.pin svg{width:16px;height:16px;flex:none}
 
 .tj-authsec{padding:60px 0 56px}
 .tj-authcard{display:flex;gap:26px;align-items:center;background:var(--white);border:1px solid var(--bd);border-radius:24px;padding:32px 34px;box-shadow:0 18px 44px -26px rgba(17,17,17,.22)}
@@ -127,11 +130,11 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-authcard .body{flex:1;min-width:0}
 .tj-authcta{margin-top:16px;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:var(--lime);padding:11px 22px;border-radius:999px;transition:transform .2s,box-shadow .2s;box-shadow:0 12px 28px -10px var(--glow)}
 .tj-authcta:hover{transform:translateY(-2px)}
-.tj-authcta svg{width:14px;height:14px}
+.tj-authcta svg{width:14px;height:14px;flex:none}
 .tj-authlinks{margin-top:14px;display:flex;flex-wrap:wrap;gap:16px;align-items:center}
 .tj-authlink{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
 .tj-authlink:hover{text-decoration:underline}
-.tj-authlink svg{width:12px;height:12px}
+.tj-authlink svg{width:12px;height:12px;flex:none}
 /* 著者の他のサービス（自前クリーンカード・ランディングのトーン）*/
 .tj-svcsec{margin-top:22px}
 .tj-svcsec .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -155,7 +158,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-hact{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:#fff;border:1px solid rgba(255,255,255,.7);padding:10px 18px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s,box-shadow .2s;box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
 .tj-hact:hover{transform:translateY(-1px)}
 .tj-hact:disabled{opacity:.7;cursor:default}
-.tj-hact svg{width:16px;height:16px}
+.tj-hact svg{width:16px;height:16px;flex:none}
 .tj-hact .ct{font-variant-numeric:tabular-nums}
 .tj-hact.on{background:var(--lime);color:#0b0c09;border-color:var(--lime);box-shadow:0 10px 26px -10px var(--glow)}
 .tj-body{padding:48px 0 20px}
@@ -177,7 +180,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-revsec .who .dt{font-family:var(--mono);font-size:11px;color:var(--mu);margin-top:3px}
 .tj-revsec .sc{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .tj-revsec .stars{display:inline-flex;gap:2px}
-.tj-revsec .stars svg{width:16px;height:16px;fill:var(--bd2)}
+.tj-revsec .stars svg{width:16px;height:16px;fill:var(--bd2);flex:none}
 .tj-revsec .stars svg.on{fill:var(--lime)}
 .tj-revsec .local{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--mu)}
 .tj-revsec .local b{color:var(--lime-d);font-weight:700}
@@ -189,7 +192,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-revcta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--lime-l);border:1px solid rgba(168,224,28,.5);border-radius:14px;padding:15px 18px;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 10px 26px -18px var(--glow)}
 .tj-revcta:hover{background:#d6f29a;transform:translateY(-1px)}
 .tj-revcta .left{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:14.5px;color:var(--lime-d)}
-.tj-revcta .left svg{width:18px;height:18px;fill:var(--lime-d)}
+.tj-revcta .left svg{width:18px;height:18px;fill:var(--lime-d);flex:none}
 .tj-revcta .right{font-family:var(--mono);font-size:11px;color:var(--mu)}
 .tj-revform{display:flex;flex-direction:column;gap:8px}
 .tj-revform .closeRow{display:flex;justify-content:flex-end}
@@ -217,7 +220,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .tj-rb .c{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);font-weight:600}
 .tj-rb h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:17px;line-height:1.35;margin-top:9px}
 .tj-rb .go{margin-top:14px;font-family:var(--mono);font-size:12px;color:var(--mu);display:inline-flex;align-items:center;gap:7px}
-.tj-rb .go svg{width:14px;height:14px;color:var(--lime-d);transition:transform .25s}
+.tj-rb .go svg{width:14px;height:14px;flex:none;color:var(--lime-d);transition:transform .25s}
 .tj-rcard:hover .go svg{transform:translateX(4px)}
 
 .tj-rev{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease),transform .9s var(--ease)}
@@ -241,5 +244,38 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
   .tj-conn{padding-left:64px}
   .tj-line::before{left:24px}
   .tj-chead{flex-direction:column;gap:10px}
+}
+
+/* ===== スマホ（≤640px）調整 =====
+   日本語はどこでも改行できるため、flex の子は放っておくと min-content（＝1文字幅）
+   まで潰れて縦一列になる。PC（≥641px）の見た目は変えずに
+   (1) 11px 未満を 11px 以上へ、(2) 左右余白とカード内 padding を詰めて
+   タイムライン（左 64px はノード用に固定）の本文幅を稼ぎ、(3) 表を横スワイプに、
+   (4) タップ領域を 36px 以上にする。 */
+@media(max-width:640px){
+  /* .tj-stop は padding-left:64px 固定。320px では左右 24px を引くと本文が 208px しか
+     残らないため、ラッパとカード内側を詰める */
+  .tj-wrap,.tj-wide,.tj-bodywrap{padding-left:16px;padding-right:16px}
+  /* ≤720 で 10px に落ちるノード番号は実機で読めない。11px 下限へ戻す */
+  .tj-node .n{font-size:11px}
+  .tj-cbody{padding:18px 16px 20px}
+  /* 10〜10.5px は実機で読めない。11px 以上へ（PC 側は据え置き） */
+  .tj-ctag,.tj-tipline b,.tj-conn .lbl,.tj-mapbadge,.tj-svccard .cat{font-size:11px}
+  .tj-revsec .local,.tj-revsec .rvtag,.tj-rb .c{font-size:11px}
+  /* 「Next 徒歩 12分 · メモ」の pill は nowrap だと注記が 1 文字幅に潰れる */
+  .tj-conn .pill{flex-wrap:wrap;max-width:100%}
+  /* 本文 HTML（block notes / 有料パート）の表は潰さず横スワイプ */
+  .tj-ctxt table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .tj-ctxt th,.tj-ctxt td{min-width:7em}
+  .tj-ctxt pre{overflow-x:auto}
+  /* 長い URL などが画面外へ出ないように（.tj は overflow-x:clip） */
+  .tj-ctxt,.tj-leadbody,.tj-revsec .rvbody{overflow-wrap:anywhere}
+  /* 著者ブロックは ≤720px で中央寄せになるため、リンク行も揃える */
+  .tj-authlinks{justify-content:center}
+  /* タップ領域 36px 以上 */
+  .tj-maplink{padding:10px 14px}
+  .tj-authlink{min-height:36px}
+  .tj-mlrow a.pin{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center}
+  .tj-revform .closeRow button{padding:10px 6px}
 }
 `;

@@ -63,7 +63,8 @@ export function CommunityDisclaimer({ kind }: { kind: CommunityKind }) {
     >
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
-        <div>
+        {/* 本文側が縮む側。min-w-0 が無いと長い注意文でトラックがはみ出す */}
+        <div className="min-w-0">
           <p className="font-bold text-amber-900">{KIND_TITLE[kind]}</p>
           <ul className="mt-1.5 list-disc space-y-1 pl-4">
             {notices.map((n, i) => (

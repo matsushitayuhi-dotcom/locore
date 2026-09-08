@@ -36,7 +36,8 @@ export function ContactEmailField({ value, onChange }: Props) {
         maxLength={254}
         className="mt-2 h-10 w-full rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
       />
-      <p className="mt-1 text-[10px] text-foreground/45">
+      {/* 10px は実機で読めないのでスマホは 11px、PC は据え置き */}
+      <p className="mt-1 text-[11px] text-foreground/45 sm:text-[10px]">
         ※ 公開されるアドレスです。スパム対策として使い捨てや別アドレスを推奨します。
       </p>
     </div>

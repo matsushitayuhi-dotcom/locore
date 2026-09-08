@@ -238,6 +238,7 @@ export function ImageUploader({
               type="button"
               variant="outline"
               size="sm"
+              className="max-sm:h-9"
               onClick={() => inputRef.current?.click()}
               disabled={isPending}
             >
@@ -250,13 +251,20 @@ export function ImageUploader({
                 '差し替える'
               )}
             </Button>
-            <Button type="button" variant="ghost" size="sm" onClick={onRemove}>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="max-sm:h-9"
+              onClick={onRemove}
+            >
               削除
             </Button>
             <Button
               type="button"
               variant="ghost"
               size="sm"
+              className="max-sm:h-9"
               onClick={() => setShowUrlInput((v) => !v)}
             >
               URL を直接入力
@@ -323,12 +331,14 @@ export function ImageUploader({
             value={urlDraft}
             onChange={(e) => setUrlDraft(e.target.value)}
             placeholder={placeholder}
-            className="flex h-9 w-full rounded-sm border border-border bg-card px-3 text-[12px] text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
+            className="flex h-9 w-full min-w-0 rounded-sm border border-border bg-card px-3 text-[12px] text-foreground placeholder:text-neutral-400 focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           />
+          {/* shrink-0: URL 欄に押されて「適 / 用」と縦積みにならないように */}
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="shrink-0 max-sm:h-9"
             onClick={() => {
               onChange(urlDraft.trim());
               setShowUrlInput(false);

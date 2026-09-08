@@ -87,7 +87,9 @@ export function UniversityAutocomplete({
   };
 
   return (
-    <div ref={rootRef} className="relative flex-1">
+    // min-w-0: 親（経歴の 1 行）の flex で削除ボタンと並ぶ。これが無いと
+    // 中の input の既定幅(約 176px)で止まり、320px で行ごと右へはみ出す
+    <div ref={rootRef} className="relative min-w-0 flex-1">
       <Input
         value={value}
         onChange={(e) => {
@@ -123,7 +125,11 @@ export function UniversityAutocomplete({
       {open ? (
         <ul
           role="listbox"
-          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-card py-1 shadow-md"
+          // z-20 だと BottomNav（fixed・z-40・md:hidden）の下に潜り、
+          // フォーム下部の学歴行で候補リストの下端が隠れる。
+          // HeaderShell は z-30 なので z-50 で前に出す。
+          // 併せてスマホはリスト高を抑え、ナビに掛かる面積そのものを減らす
+          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-card py-1 shadow-md max-sm:max-h-48"
         >
           {hits.map((h, i) => (
             <li key={`${h.wikidataId}-${i}`} role="option" aria-selected={i === active}>
@@ -148,7 +154,7 @@ export function UniversityAutocomplete({
                   <span className="block truncate font-medium">
                     {h.nameJa ?? h.nameEn}
                   </span>
-                  <span className="block truncate text-[10.5px] text-foreground/50">
+                  <span className="block truncate text-[10.5px] text-foreground/50 max-sm:text-[11px]">
                     {h.nameJa && h.nameEn ? `${h.nameEn} ・ ` : ''}
                     {h.country ?? h.countryCode ?? ''}
                   </span>
@@ -156,7 +162,7 @@ export function UniversityAutocomplete({
               </button>
             </li>
           ))}
-          <li className="border-t border-border px-3 py-1.5 text-[10.5px] text-foreground/45">
+          <li className="border-t border-border px-3 py-1.5 text-[10.5px] text-foreground/45 max-sm:text-[11px]">
             リストに無い学校は、そのまま入力して構いません
           </li>
         </ul>

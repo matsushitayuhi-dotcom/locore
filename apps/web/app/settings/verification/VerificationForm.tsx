@@ -173,7 +173,7 @@ export function VerificationForm({
       <div>
         <p className="mb-2 text-[12px] font-medium text-foreground/70">
           氏名 <span className="text-danger-500">*</span>
-          <span className="ml-1 text-[10px] font-normal text-foreground/50">
+          <span className="ml-1 text-[10px] max-sm:text-[11px] font-normal text-foreground/50">
             （書類と同じ表記。日本語か英語のどちらか）
           </span>
         </p>
@@ -199,7 +199,7 @@ export function VerificationForm({
       <div>
         <label className="mb-2 block text-[12px] font-medium text-foreground/70">
           書類ファイル <span className="text-danger-500">*</span>
-          <span className="ml-1 text-[10px] font-normal text-foreground/50">
+          <span className="ml-1 text-[10px] max-sm:text-[11px] font-normal text-foreground/50">
             （1〜3 枚、各 15MB まで、JPEG/PNG/HEIC/PDF）
           </span>
         </label>
@@ -220,7 +220,7 @@ export function VerificationForm({
               >
                 <FileText className="h-4 w-4 shrink-0 text-foreground/55" />
                 <span className="min-w-0 flex-1 truncate text-[12px]">{f.name}</span>
-                <span className="shrink-0 text-[10px] tabular-nums text-foreground/55">
+                <span className="shrink-0 text-[10px] max-sm:text-[11px] tabular-nums text-foreground/55">
                   {(f.size / 1024).toFixed(0)} KB
                 </span>
                 {/* 縮まない側。タップ領域が 22px しか無かったのでスマホだけ 36px に */}

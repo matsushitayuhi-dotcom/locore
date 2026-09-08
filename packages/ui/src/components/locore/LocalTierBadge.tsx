@@ -99,7 +99,9 @@ export const LocalTierBadge = React.forwardRef<
     const sizeClass =
       size === "md"
         ? "px-2.5 py-0.5 text-[11px] gap-1.5"
-        : "px-2 py-0.5 text-[10px] gap-1";
+        // sm は記事カードの写真の上（スマホ 2 列 = カード 174px）で使う。10px は実機で
+        // 読めないのでスマホだけ 11px に上げ、PC は sm: で従来どおり 10px に戻す
+        : "px-2 py-0.5 text-[11px] sm:text-[10px] gap-1";
     const dotSize = size === "md" ? "size-1.5" : "size-1";
 
     return (

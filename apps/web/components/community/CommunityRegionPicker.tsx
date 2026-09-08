@@ -83,8 +83,9 @@ export async function CommunityRegionPicker({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
-        <MapPin className="h-3 w-3" />
+      {/* 「都市」ラベルは縮まない側。1 文字ずつ縦に潰れるのを防ぐ */}
+      <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+        <MapPin className="h-3 w-3 shrink-0" />
         都市
       </span>
       <RegionChip
@@ -118,7 +119,9 @@ function RegionChip({
       href={href}
       aria-current={active ? 'true' : undefined}
       className={
-        'rounded-full px-3 py-1 text-[11px] font-semibold transition ' +
+        // 都市名は「パ / リ」と 1 文字ずつ折れないよう縮まない側に固定。
+        // py-1 だと 24px しかないので、スマホだけ 36px のタップ領域を確保
+        'inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-semibold transition max-sm:min-h-[36px] ' +
         (active
           ? 'bg-primary-500 text-neutral-950'
           : 'bg-muted text-foreground/65 hover:bg-foreground/10')

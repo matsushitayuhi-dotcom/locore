@@ -76,7 +76,7 @@ export function EnrollmentCard({
   return (
     <article
       className={
-        'mt-3.5 rounded-2xl border bg-card px-5 py-[18px] shadow-xs ' +
+        'mt-3.5 rounded-2xl border bg-card px-4 py-[18px] shadow-xs sm:px-5 ' +
         (isPendingStatus
           ? 'border-warning-500/40'
           : isActive
@@ -84,7 +84,7 @@ export function EnrollmentCard({
             : 'border-border opacity-60')
       }
     >
-      <div className="flex items-start gap-3.5">
+      <div className="flex flex-wrap items-start gap-x-3.5 gap-y-2 sm:flex-nowrap">
         {e.counterpartAvatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -97,10 +97,10 @@ export function EnrollmentCard({
             {e.counterpartName.charAt(0) || '？'}
           </span>
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 max-sm:min-w-[8.5rem]">
           <div className="text-[14.5px] font-bold">{e.counterpartName}</div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12px] text-neutral-500">
-            <Repeat className="h-3 w-3 text-primary-700" aria-hidden />
+            <Repeat className="h-3 w-3 shrink-0 text-primary-700" aria-hidden />
             <b className="font-bold text-neutral-700">{e.planTitle}</b>
             {' ・ '}¥{e.monthlyPriceJpy.toLocaleString('ja-JP')}/月{' ・ '}月
             {e.sessionsPerMonth}回×{e.durationMinutes}分
@@ -128,7 +128,7 @@ export function EnrollmentCard({
           <span className="text-[15px] font-bold tabular-nums text-primary-700">
             {e.remainingThisMonth}回
           </span>
-          <span className="text-[11px] text-neutral-500">
+          <span className="w-full text-[11px] text-neutral-500 sm:w-auto">
             / 月{e.sessionsPerMonth}回（繰越なし・翌月1日に回復）
           </span>
         </div>
@@ -219,7 +219,7 @@ export function EnrollmentCard({
                 isActive ? 'プランを解約しました' : '申し込みを取り下げました',
               );
             }}
-            className="ml-auto rounded-full px-3.5 py-2.5 text-[12.5px] font-medium text-neutral-500 transition hover:text-foreground disabled:opacity-50"
+            className="shrink-0 whitespace-nowrap rounded-full px-3.5 py-2.5 text-[12.5px] font-medium text-neutral-500 transition hover:text-foreground disabled:opacity-50 sm:ml-auto"
           >
             {isActive ? '解約する' : '申し込みを取り消す'}
           </button>

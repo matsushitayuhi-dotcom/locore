@@ -266,7 +266,8 @@ export default async function CalendarPage({
     <main className="bg-background">
       <div className="mx-auto max-w-screen-lg px-4 py-6 sm:px-6 sm:py-10">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
+          {/* 見出し側は縮んでよい (min-w-0)、月送りは縮めない (shrink-0) と役割を決める */}
+          <div className="min-w-0">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
               Calendar
             </p>
@@ -277,10 +278,10 @@ export default async function CalendarPage({
               AI 自動収集と手動投稿を合わせた、パリの今月のイベント・交通障害・食季節情報。
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Link
               href={buildHref({ y: prev.year, m: prev.month, date: null })}
-              className="rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted"
+              className="whitespace-nowrap rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted max-sm:inline-flex max-sm:min-h-[40px] max-sm:items-center"
               aria-label="前の月"
             >
               <ChevronLeft className="inline h-3.5 w-3.5" />
@@ -288,7 +289,7 @@ export default async function CalendarPage({
             </Link>
             <Link
               href={buildHref({ y: next.year, m: next.month, date: null })}
-              className="rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted"
+              className="whitespace-nowrap rounded-md bg-card px-3 py-1.5 text-[12px] ring-1 ring-border hover:bg-muted max-sm:inline-flex max-sm:min-h-[40px] max-sm:items-center"
               aria-label="次の月"
             >
               {next.year}/{next.month}
@@ -324,7 +325,7 @@ export default async function CalendarPage({
         {/* 月グリッド */}
         <section className="overflow-hidden rounded-xl bg-card ring-1 ring-border">
           {/* 曜日ヘッダ */}
-          <div className="grid grid-cols-7 border-b border-border bg-background/40 text-center text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+          <div className="grid grid-cols-7 border-b border-border bg-background/40 text-center text-[11px] font-bold uppercase tracking-wider text-foreground/55 sm:text-[10px]">
             {['日', '月', '火', '水', '木', '金', '土'].map((d, i) => (
               <div
                 key={i}
@@ -344,25 +345,35 @@ export default async function CalendarPage({
                 return (
                   <div
                     key={i}
-                    className="aspect-square border-b border-r border-border/60 bg-background/20"
+                    // 日付セルと同じ最低高さ (行の高さを揃える)
+                    className="aspect-square border-b border-r border-border/60 bg-background/20 max-sm:min-h-[52px]"
                   />
                 );
               }
               const dayEvents = byDay.get(c.date) ?? [];
               const isToday = c.date === today;
               const isSelected = c.date === selectedDate;
+              // 402px で 1 セル約 53px / 320px で約 41px しかなく、ドット 3 個 + "+N" が
+              // 1 行に収まらない。スマホはドットを 2 個までにして残り件数を別に数える。
+              const extraSm = dayEvents.length - 2;
+              const extraPc = dayEvents.length - 3;
               return (
                 <Link
                   key={c.date}
                   href={buildHref({ date: isSelected ? null : c.date })}
                   className={
-                    'group relative flex aspect-square flex-col gap-0.5 border-b border-r border-border/60 p-1.5 transition hover:bg-primary-500/5 sm:p-2 ' +
+                    // 320px だと aspect-square で 1 セル 41px にしかならず日付とドットが
+                    // 入らない。max-sm で最低 52px を確保し、padding も p-1 に詰めて
+                    // 中身に使える幅を稼ぐ (タップ領域としても 52px は確保できる)。
+                    'group relative flex aspect-square flex-col gap-0.5 border-b border-r border-border/60 p-1 transition hover:bg-primary-500/5 max-sm:min-h-[52px] sm:p-2 ' +
                     (isSelected ? 'bg-primary-500/10 ring-1 ring-inset ring-primary-300' : '')
                   }
                 >
                   <span
                     className={
-                      'text-[10px] font-bold tabular sm:text-[12px] ' +
+                      // スマホの方が小さい (10px) 逆転になっていたので 12px に統一。
+                      // PC は元から 12px なので見た目は変わらない。
+                      'text-[12px] font-bold tabular ' +
                       (isToday
                         ? 'inline-flex h-5 w-5 items-center justify-center self-start rounded-full bg-primary-500 text-neutral-950 sm:h-6 sm:w-6'
                         : c.date.endsWith('') && new Date(c.date).getDay() === 0
@@ -374,22 +385,30 @@ export default async function CalendarPage({
                   >
                     {c.dayNum}
                   </span>
-                  {/* イベントドット (最大 3 個) */}
+                  {/* イベントドット (スマホ 2 個 / PC 3 個まで) */}
                   {dayEvents.length > 0 ? (
-                    <div className="flex flex-wrap gap-0.5 sm:gap-1">
-                      {dayEvents.slice(0, 3).map((e) => (
+                    <div className="flex flex-wrap gap-0.5 max-sm:items-center sm:gap-1">
+                      {dayEvents.slice(0, 3).map((e, idx) => (
                         <span
                           key={e.id}
                           className={
-                            'h-1.5 w-1.5 rounded-full ' +
+                            // 3 個目はスマホでは幅が足りないので隠す (PC は従来どおり 3 個)
+                            'h-1.5 w-1.5 shrink-0 rounded-full ' +
+                            (idx === 2 ? 'hidden sm:block ' : '') +
                             CATEGORY_COLOR[e.category].dot
                           }
                           aria-label={BOARD_CATEGORY_LABEL[e.category]}
                         />
                       ))}
-                      {dayEvents.length > 3 ? (
-                        <span className="text-[8px] tabular text-foreground/55">
-                          +{dayEvents.length - 3}
+                      {/* 溢れ件数。8px は実機で読めないのでスマホだけ 11px に上げる */}
+                      {extraSm > 0 ? (
+                        <span className="text-[11px] leading-none tabular text-foreground/55 sm:hidden">
+                          +{extraSm}
+                        </span>
+                      ) : null}
+                      {extraPc > 0 ? (
+                        <span className="hidden text-[8px] tabular text-foreground/55 sm:inline">
+                          +{extraPc}
                         </span>
                       ) : null}
                     </div>
@@ -409,7 +428,7 @@ export default async function CalendarPage({
         {/* 選択中の日の詳細 */}
         {selectedDate ? (
           <section
-            className="mt-6 rounded-xl bg-card p-5 ring-1 ring-border sm:p-6"
+            className="mt-6 rounded-xl bg-card p-4 ring-1 ring-border sm:p-6"
             id="detail"
           >
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
@@ -418,7 +437,8 @@ export default async function CalendarPage({
               </h2>
               <Link
                 href={buildHref({ date: null })}
-                className="text-[11px] text-foreground/55 hover:underline"
+                // タップ領域 36px を確保 (PC は inline のまま)
+                className="text-[11px] text-foreground/55 hover:underline max-sm:inline-flex max-sm:min-h-[36px] max-sm:items-center"
               >
                 閉じる
               </Link>
@@ -493,14 +513,16 @@ function FilterChip({
     <Link
       href={href}
       className={
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
+        // タップ領域 36px を max-sm でだけ確保。ラベル (「子育て・教育」等) は
+        // 縮む側ではないので nowrap で 1 行に固定する。
+        'inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold transition max-sm:min-h-[36px] ' +
         (active
           ? 'bg-foreground text-background'
           : 'bg-card text-foreground/65 ring-1 ring-border hover:bg-muted')
       }
     >
       {colorDot ? (
-        <span className={`h-1.5 w-1.5 rounded-full ${colorDot}`} />
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${colorDot}`} />
       ) : null}
       {label}
     </Link>
@@ -515,7 +537,8 @@ function EventCard({ event, compact }: { event: CalEvent; compact?: boolean }) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-2">
           <span
-            className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${color.chip} ${color.text}`}
+            // 10px は実機で読めないのでスマホだけ 11px。チップは縮まない側なので nowrap
+            className={`shrink-0 whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider sm:text-[10px] ${color.chip} ${color.text}`}
           >
             {BOARD_CATEGORY_LABEL[event.category]}
           </span>
@@ -532,23 +555,28 @@ function EventCard({ event, compact }: { event: CalEvent; compact?: boolean }) {
           </p>
         ) : null}
         {event.eventLocation ? (
-          <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-foreground/55">
-            <MapPin className="h-3 w-3" />
+          // 会場名が長いとアイコンが潰れるのでアイコンは shrink-0 (縮まない側)
+          <p className="mt-1 inline-flex max-w-full items-center gap-1 text-[11px] text-foreground/55">
+            <MapPin className="h-3 w-3 shrink-0" />
             {event.eventLocation}
           </p>
         ) : null}
         {!compact && event.sourceUrls.length > 0 ? (
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {event.sourceUrls.map((s, i) => (
-              <li key={i}>
+              // 出典名が長いと 1 文字ずつ縦積みになるので max-w-full + truncate で
+              // 1 行に収める。文字は 10px -> スマホ 11px、タップ領域も 36px 確保。
+              <li key={i} className="min-w-0 max-w-full">
                 <a
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground/65 hover:bg-primary-500/10 hover:text-primary-300"
+                  className="inline-flex max-w-full items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground/65 hover:bg-primary-500/10 hover:text-primary-300 max-sm:min-h-[36px] sm:text-[10px]"
                 >
-                  {s.name}
-                  <ExternalLink className="h-2.5 w-2.5" />
+                  <span className="min-w-0 max-sm:truncate" title={s.name}>
+                    {s.name}
+                  </span>
+                  <ExternalLink className="h-2.5 w-2.5 shrink-0" />
                 </a>
               </li>
             ))}

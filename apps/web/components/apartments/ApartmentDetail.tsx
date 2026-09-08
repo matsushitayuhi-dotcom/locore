@@ -579,16 +579,20 @@ export function ApartmentDetail({ post, viewerUserId, isOwner }: Props) {
             {specRows.length > 0 ? (
               <div className="apt-sec">
                 <h2>物件の概要</h2>
-                <dl className="grid grid-cols-2 gap-y-3 rounded-xl bg-card p-4 text-[12px] ring-1 ring-border sm:grid-cols-3">
+                {/* スマホは 2 カラム。列間 gap が無いと 320px で値どうしが密着するので max-sm: で足す */}
+                <dl className="grid grid-cols-2 gap-y-3 rounded-xl bg-card p-4 text-[12px] ring-1 ring-border max-sm:gap-x-3 sm:grid-cols-3">
                   {specRows.map((r, i) => (
-                    <div key={i}>
-                      <dt className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/50">
+                    /* グリッドの子。min-w-0 が無いと長い値でトラックごと画面外へ出る */
+                    <div key={i} className="min-w-0">
+                      {/* ラベルは 10px だと実機で読めない。スマホだけ 11px に上げ、字間も詰める (PC は据え置き) */}
+                      <dt className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-[0.06em] text-foreground/50 sm:text-[10px] sm:tracking-[0.12em]">
                         {r.icon ? (
-                          <span className="inline-flex [&>svg]:h-3 [&>svg]:w-3">{r.icon}</span>
+                          <span className="inline-flex shrink-0 [&>svg]:h-3 [&>svg]:w-3">{r.icon}</span>
                         ) : null}
                         {r.k}
                       </dt>
-                      <dd className="mt-0.5 text-[13px] font-medium text-foreground/85">
+                      {/* 値は自由入力 (最寄駅・エリア)。min-w-0 と対で折り返しを入れないと隣の列に食い込む */}
+                      <dd className="mt-0.5 break-words text-[13px] font-medium text-foreground/85">
                         {r.v}
                         {r.small ? (
                           <span className="ml-1 font-normal text-foreground/55">{r.small}</span>

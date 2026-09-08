@@ -44,11 +44,12 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Goth
 .ccp h1{font-family:var(--jp);font-weight:900;color:var(--ink);font-size:clamp(30px,5.6vw,56px);line-height:1.16;letter-spacing:.01em;margin:18px 0 0}
 .ccp h1 em{font-style:normal;color:var(--lime-d)}
 .ccp-lead{color:var(--mu);font-size:clamp(13px,1.55vw,15.5px);line-height:1.85;margin-top:15px;font-weight:500}
-.ccp-picker{position:relative;margin:36px auto 0;width:min(380px,90vw)}
+/* 90vw だと .ccp-stage の左右 padding(24px) を無視して親からはみ出すので 100% に */
+.ccp-picker{position:relative;margin:36px auto 0;width:min(380px,100%)}
 .ccp-pbtn{width:100%;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;cursor:pointer;font-family:var(--jp);box-shadow:0 18px 46px -30px rgba(20,20,15,.4);transition:.16s}
 .ccp-pbtn:hover{border-color:var(--lime);box-shadow:0 22px 50px -28px rgba(94,139,14,.4)}
 .ccp-pbtn .pin{flex:none;color:var(--lime-d);display:flex}
-.ccp-pbtn .val{flex:1;text-align:left;font-weight:700;font-size:18px;color:var(--ink);letter-spacing:.02em}
+.ccp-pbtn .val{flex:1;min-width:0;text-align:left;font-weight:700;font-size:18px;color:var(--ink);letter-spacing:.02em}
 .ccp-pbtn .val.ph{color:#b6b6ad;font-weight:500}
 .ccp-pbtn .chev{flex:none;color:var(--mu);transition:.2s}
 .ccp-picker.open .ccp-pbtn .chev{transform:rotate(180deg)}
@@ -59,7 +60,8 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Goth
 .ccp-mhead{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#b0b0a6;padding:13px 18px 6px;position:sticky;top:0;background:var(--card)}
 .ccp-mrow{display:flex;align-items:center;width:100%;padding:12px 18px;cursor:pointer;transition:.1s;font-weight:500;font-size:15px;color:var(--ink);background:none;border:0;font-family:var(--jp);text-align:left}
 .ccp-mrow:hover{background:#f6f9ee}
-.ccp-mrow .tag{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--lime-d)}
+/* 「選ぶ →」「近日」は縮まない側。国名側だけが縮む */
+.ccp-mrow .tag{margin-left:auto;flex:none;white-space:nowrap;font-family:var(--mono);font-size:11px;color:var(--lime-d)}
 .ccp-mrow.soon{color:#b6b6ad;cursor:default}
 .ccp-mrow.soon:hover{background:none}
 .ccp-mrow.soon .tag{color:#c8c8bf}
@@ -70,6 +72,26 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Goth
 @keyframes ccprise{to{opacity:1;transform:none}}
 .ccp-rise{opacity:0;transform:translateY(14px);animation:ccprise .9s cubic-bezier(.2,.7,.2,1) forwards}
 .ccp-d1{animation-delay:.04s}.ccp-d2{animation-delay:.15s}.ccp-d3{animation-delay:.3s}
+
+/* --- スマホ (402px / 320px) 用。生の CSS 文字列なので Tailwind の max-sm: は届かない --- */
+@media(max-width:640px){
+  /* /community は BottomNav (h-14 + safe-area ≒ 72px) が出るルート。
+     .ccp は 100vh-56px を align-items:center で埋めるので、下に 72px 分の
+     padding を積んで中身ごと持ち上げ、開いたメニューの下端がナビに潜らないようにする。 */
+  .ccp-stage{padding:40px 16px calc(40px + 72px)}
+  /* 縦の短い端末では 300px 固定だとメニューが画面外にはみ出す。vh でも頭打ちに */
+  .ccp-mscroll{max-height:min(300px,38vh)}
+  /* 10px は実機で読めない。11px まで上げ、字間も詰めて 1 行に収める */
+  .ccp-mhead{font-size:11px;letter-spacing:.12em;padding:12px 16px 6px}
+  /* タップ領域を 44px 以上に */
+  .ccp-mrow{padding:14px 16px;font-size:15px;gap:8px;min-width:0}
+  .ccp-pbtn{padding:15px 16px;gap:10px}
+  .ccp-kick{font-size:11px;letter-spacing:.2em}
+  .ccp-kick::before{width:18px;margin-right:8px}
+  /* 矢印は縮まない側。ラベルが長い国名でも「→」が潰れないようにする */
+  .ccp-cta{padding:14px 22px;font-size:14px;text-align:left}
+  .ccp-cta svg{flex:none}
+}
 `;
 
 export function CommunityCountryPicker() {

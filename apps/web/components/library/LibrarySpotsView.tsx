@@ -289,7 +289,7 @@ function SpotRowItem({ row }: { row: SpotRow }) {
         <p className="line-clamp-1 text-[13px] font-semibold text-foreground">
           {row.name}
         </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/60">
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-[10px] text-foreground/60">
           {row.category ? (
             <span className="rounded-sm bg-primary-500/10 px-1.5 py-0.5 font-semibold text-primary-300">
               {CATEGORY_LABEL[row.category] ?? row.category}
@@ -310,7 +310,7 @@ function SpotRowItem({ row }: { row: SpotRow }) {
         {row.articleId ? (
           <Link
             href={`/articles/${row.articleId}`}
-            className="mt-1 inline-block text-[10px] text-primary-300 underline-offset-4 hover:underline"
+            className="mt-1 inline-block text-[11px] sm:text-[10px] text-primary-300 underline-offset-4 hover:underline"
           >
             元の記事を見る
           </Link>

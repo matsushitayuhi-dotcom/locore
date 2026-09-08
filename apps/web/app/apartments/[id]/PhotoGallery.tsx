@@ -72,7 +72,8 @@ export function PhotoGallery({ photos, title }: { photos: string[]; title: strin
 
         {/* サムネイル列（右 1/4） */}
         {rest.length > 0 ? (
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-1 sm:grid-rows-3">
+          /* 描画するのは最大 3 枚。スマホで 4 列だと空トラックが 1 本余り、1 枚も小さくなるので 3 列に */
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-1 sm:grid-rows-3">
             {rest.slice(0, 3).map((src, i) => {
               const idx = i + 1;
               const isLast = i === 2 && rest.length > 3;

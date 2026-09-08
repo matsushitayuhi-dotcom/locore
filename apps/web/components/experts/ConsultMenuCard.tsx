@@ -129,7 +129,9 @@ export function ConsultMenuCard({
             />
             <Link
               href={requestHref}
-              className="grid h-[54px] place-items-center whitespace-nowrap rounded-[8px] bg-primary-500 text-[16px] font-bold text-neutral-950 transition hover:bg-primary-300"
+              // grid の子は既定で min-content 未満に縮まない。1fr トラックが押し出されて
+              // カードから飛び出さないよう min-w-0 を付ける（320px 対策）
+              className="grid h-[54px] min-w-0 place-items-center whitespace-nowrap rounded-[8px] bg-primary-500 text-[16px] font-bold text-neutral-950 transition hover:bg-primary-300"
             >
               空き枠を選ぶ
             </Link>

@@ -38,7 +38,9 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .gr-head .acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px}
 .gr-head .acts button:hover{background:rgba(0,0,0,.05)}
 .gr-head .acts button.on{color:var(--lime-d)}
-.gr-head .acts svg{width:17px;height:17px}
+.gr-head .acts svg{width:17px;height:17px;flex:none}
+/* 小アイコンは flex の子として縮ませない（潰れて丸/矢印が歪む） */
+.gr-head .status i,.gr-allphotos svg,.gr-hostcard .badge svg,.gr-hostcard .link svg{flex:none}
 
 /* ===== gallery 1+4 ===== */
 .gr-gallery{position:relative;display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;border-radius:20px;overflow:hidden;aspect-ratio:24/11;background:#e9e9e1}
@@ -79,6 +81,9 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 
 /* ===== two-column ===== */
 .gr-cols{display:grid;grid-template-columns:1fr 360px;gap:0 54px;padding:30px 0 70px;align-items:start}
+/* grid の子は既定で min-content 未満に縮まない。長い本文や URL でトラックごと
+   画面外へ出るのを防ぐため min-width:0 を明示する。 */
+.gr-cols>*{min-width:0}
 .gr-sec{padding:26px 0;border-top:1px solid var(--bd)}
 .gr-sec:first-child{border-top:0;padding-top:8px}
 
@@ -88,7 +93,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .gr-below .gr-mapframe{aspect-ratio:16/6}
 .gr-sec h2{font-family:var(--jp);font-weight:800;font-size:20px;margin-bottom:14px}
 
-.gr-lead{font-size:15px;line-height:2.05;color:var(--ink2)}
+.gr-lead{font-size:15px;line-height:2.05;color:var(--ink2);overflow-wrap:break-word}
 .gr-lead p+p{margin-top:14px}
 .gr-lead ul,.gr-lead ol{margin:12px 0 12px 1.3em}
 .gr-lead li{margin:4px 0}
@@ -110,12 +115,16 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .gr-step .dot{position:relative;flex:none;width:12px}
 .gr-step .dot i{position:absolute;left:2px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--lime);z-index:1}
 .gr-step:not(:last-child) .dot::before{content:"";position:absolute;left:6px;top:6px;bottom:-14px;width:2px;background:var(--bd)}
+/* 時刻(56px)とドットは固定、テキスト側だけ縮ませる */
+.gr-step>div:last-child{min-width:0}
 .gr-step .t{font-weight:700;font-size:14.5px}
 .gr-step .d{color:var(--mu);font-size:13px;margin-top:1px}
 
 /* participants */
+/* アバター列＝縮まない側、テキスト＝縮む側（両方 auto だと文字が 1 文字ずつ潰れる） */
 .gr-parts{display:flex;align-items:center;gap:14px}
-.gr-ava-stack{display:flex}
+.gr-parts .ptxt{min-width:0}
+.gr-ava-stack{display:flex;flex:none}
 .gr-ava-stack img,.gr-ava-stack .ava-f,.gr-ava-stack .more{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--bg);object-fit:cover;margin-left:-10px}
 .gr-ava-stack img:first-child,.gr-ava-stack .ava-f:first-child{margin-left:0}
 .gr-ava-stack .ava-f{display:grid;place-items:center;background:var(--card);color:var(--mu);font-family:var(--disp);font-weight:700;font-size:14px}
@@ -136,6 +145,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 
 /* host card */
 .gr-hostcard{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:22px}
+.gr-hostcard>div{min-width:0}
 .gr-hostcard .ava{width:66px;height:66px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--lime)}
 .gr-hostcard .avaf{width:66px;height:66px;border-radius:50%;flex:none;border:2px solid var(--lime);background:var(--lime-l);color:var(--lime-d);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:26px}
 .gr-hostcard .nm{font-weight:700;font-size:17px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
@@ -154,6 +164,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .gr-join .feev span{color:var(--mu);font-size:13px}
 .gr-join .when{margin-top:16px;display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--bd);border-radius:14px;background:var(--bg2)}
 .gr-join .when .cal{flex:none;width:46px;text-align:center;border-radius:10px;overflow:hidden;border:1px solid var(--bd);background:#fff}
+/* 日付チップは flex:none 済み。右のテキスト側が縮む側なので min-width:0 */
+.gr-join .when .wt{min-width:0}
 .gr-join .when .cal .m{background:var(--lime);color:var(--ink);font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 0}
 .gr-join .when .cal .d{font-family:var(--disp);font-weight:700;font-size:20px;padding:3px 0 4px}
 .gr-join .when .wt b{font-weight:700;font-size:14.5px}
@@ -162,7 +174,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .gr-join .seats{margin:14px 0;display:flex;align-items:center;gap:10px;font-size:13px}
 .gr-join .seats .trk{flex:1;height:7px;border-radius:4px;background:var(--bd);overflow:hidden}
 .gr-join .seats .trk i{display:block;height:100%;background:var(--lime);border-radius:4px}
-.gr-join .seats b{font-weight:700}.gr-join .seats .left{color:var(--lime-d);font-weight:700;white-space:nowrap}
+.gr-join .seats b{font-weight:700;white-space:nowrap}.gr-join .seats .left{color:var(--lime-d);font-weight:700;white-space:nowrap}
 .gr-join .seatsline{margin:14px 0 0;font-size:13px;color:var(--ink2)}
 .gr-join .seatsline b{font-weight:700}
 .gr-join .cta{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;text-align:center;background:var(--lime);color:var(--ink);font-weight:800;font-size:15.5px;border:0;border-radius:13px;padding:15px;cursor:pointer;box-shadow:0 10px 22px -10px rgba(94,139,14,.6)}
@@ -199,15 +211,30 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 @media(max-width:640px){
   .gr-wrap{padding:0 16px}
   .gr-head h1{font-size:22px}
+  /* パンくず / プロフィールリンクのタップ領域を 36px 以上に */
+  .gr-crumb a{display:inline-block;padding:7px 0}
+  .gr-hostcard .link{min-height:36px}
+  /* 共有/保存は縮まない側。縮むと「共 / 有」と 1 文字ずつ縦積みになる */
+  .gr-head .acts{flex:none}
+  .gr-head .acts button{white-space:nowrap}
   .gr-band{grid-template-columns:1fr 1fr;border-radius:14px;gap:1px}
   .gr-band .c{padding:11px 12px;gap:8px;flex-direction:column}
   .gr-band .c .ic{width:18px;height:18px;margin-top:0}
   .gr-band .c .ic svg{width:18px;height:18px;stroke-width:1.8}
-  .gr-band .c .k{font-size:9.5px;letter-spacing:.02em}
+  /* 9.5/10/10.5px は実機で読めないので 11px を下限にする */
+  .gr-band .c .k{font-size:11px;letter-spacing:.02em}
   .gr-band .c .v{font-size:13px;margin-top:1px}
-  .gr-band .c .v small{font-size:10.5px}
+  .gr-band .c .v small{font-size:11px}
   .gr-band .c .ph{margin-top:4px}
   .gr-band .c .ph .bar{height:7px}
-  .gr-band .c .ph small{font-size:10px;margin-top:4px}
+  .gr-band .c .ph small{font-size:11px;margin-top:4px}
+  /* カレンダーチップの月表示は 10px だと実機で読めないので 11px に（PC は据え置き） */
+  .gr-join .when .cal .m{font-size:11px}
+  .gr-join .when{gap:10px}
+  /* アバターは最大 9 個 = 約 280px。402px では文言と横に並ばないので
+     アバターを一回り小さくし、入り切らない時は文言を次行へ折り返す */
+  .gr-parts{flex-wrap:wrap;gap:10px 12px}
+  .gr-ava-stack img,.gr-ava-stack .ava-f,.gr-ava-stack .more{width:34px;height:34px;margin-left:-11px}
+  .gr-ava-stack .ava-f{font-size:13px}
 }
 `;

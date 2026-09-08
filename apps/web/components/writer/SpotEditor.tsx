@@ -250,7 +250,7 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
     : [];
 
   return (
-    <div className="space-y-4 rounded-md border border-border bg-card p-4">
+    <div className="space-y-4 rounded-md border border-border bg-card p-3 sm:p-4">
       <SpotPlacesPicker apiKey={googleMapsApiKey} onPick={handlePick} />
 
       {v.googlePlaceId ? (
@@ -307,7 +307,8 @@ export function SpotEditor({ initial, onSaved, onDeleted, onCancel, googleMapsAp
         </label>
         {isAutoFetched ? (
           <div className="flex items-center gap-2 rounded-sm border border-border bg-background px-3 py-2 text-body-md text-foreground/80">
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-bold text-primary-300">
+            {/* shrink-0 + nowrap: 住所側に押されて「自 / 動 / 取…」と縦積みになるのを防ぐ */}
+            <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-bold text-primary-300 sm:text-[10px]">
               ✓ 自動取得済み
             </span>
             <span className="flex-1 truncate">{v.address}</span>
@@ -518,10 +519,12 @@ function SpotPhotos({
               <img
                 src={url}
                 alt=""
-                className="h-20 w-28 rounded-sm object-cover ring-1 ring-border"
+                // max-sm: 操作ボタンを 36px にすると 80x112 では画像が埋まるので、
+                // スマホだけサムネを一回り大きくする（402px でも 2 枚並ぶ）
+                className="h-20 w-28 rounded-sm object-cover ring-1 ring-border max-sm:h-24 max-sm:w-32"
               />
               {i === 0 ? (
-                <span className="absolute bottom-0 left-0 rounded-tr-sm bg-primary-700/90 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                <span className="absolute bottom-0 left-0 rounded-tr-sm bg-primary-700/90 px-1.5 py-0.5 text-[11px] font-bold text-white sm:text-[9px]">
                   代表
                 </span>
               ) : null}
@@ -529,7 +532,9 @@ function SpotPhotos({
                 type="button"
                 onClick={() => remove(i)}
                 aria-label="この写真を削除"
-                className="absolute right-0 top-0 -translate-y-1 translate-x-1 rounded-full bg-card/95 px-1.5 py-0.5 text-[11px] font-bold text-danger-500 shadow-sm ring-1 ring-border hover:bg-card"
+                // max-sm: タップ領域 36px を確保（PC は従来のまま）。
+                // はみ出した分が隣のサムネに被らないよう translate も戻す
+                className="absolute right-0 top-0 -translate-y-1 translate-x-1 rounded-full bg-card/95 px-1.5 py-0.5 text-[11px] font-bold text-danger-500 shadow-sm ring-1 ring-border hover:bg-card max-sm:inline-flex max-sm:h-9 max-sm:w-9 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:items-center max-sm:justify-center max-sm:p-0"
               >
                 ✕
               </button>
@@ -539,7 +544,7 @@ function SpotPhotos({
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
                   aria-label="前へ"
-                  className="bg-card/90 px-1 text-[11px] font-bold text-foreground/70 disabled:opacity-30"
+                  className="bg-card/90 px-1 text-[11px] font-bold text-foreground/70 disabled:opacity-30 max-sm:inline-flex max-sm:h-9 max-sm:w-9 max-sm:items-center max-sm:justify-center max-sm:p-0"
                 >
                   ‹
                 </button>
@@ -548,7 +553,7 @@ function SpotPhotos({
                   onClick={() => move(i, 1)}
                   disabled={i === value.length - 1}
                   aria-label="後ろへ"
-                  className="bg-card/90 px-1 text-[11px] font-bold text-foreground/70 disabled:opacity-30"
+                  className="bg-card/90 px-1 text-[11px] font-bold text-foreground/70 disabled:opacity-30 max-sm:inline-flex max-sm:h-9 max-sm:w-9 max-sm:items-center max-sm:justify-center max-sm:p-0"
                 >
                   ›
                 </button>

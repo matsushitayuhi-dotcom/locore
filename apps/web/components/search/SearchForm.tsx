@@ -80,6 +80,33 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Goth
 .srch-c-input{flex:1;min-width:0;border:0;background:none;font-size:15px;color:#14140f;padding:9px 6px;outline:none}
 .srch-c-cta{flex:none;display:inline-flex;align-items:center;gap:7px;background:#14140f;color:#A8E01C;font-weight:700;font-size:14px;border:0;border-radius:999px;padding:0 22px;cursor:pointer;font-family:'Zen Kaku Gothic New',sans-serif}
 .srch-c-cta svg{width:16px;height:16px}
+
+/* ── スマホ (402px / 320px) 調整。生 CSS なので Tailwind の max-sm: は使えず
+   自前の @media で分岐する。PC 側の指定は一切上書きしない ── */
+/* BottomNav (.app-main-pad の 5rem) は md(768px) 未満で効くため、min-height の
+   打ち消しも 768px 未満で行う（640px 区切りだと 641〜767px で 80px はみ出す） */
+@media (max-width:767.98px){
+  /* BottomNav (5rem) + ヘッダ (56px) 分を引き、CTA が画面外に落ちないようにする */
+  .srch{min-height:calc(100vh - 136px)}
+}
+@media (max-width:640px){
+  .srch-stage{padding:36px 16px}
+  /* 320px でも入力欄に幅を残すため、国セレクトの上限を詰める */
+  .srch-country{max-width:112px}
+  .srch-c-country{max-width:104px}
+  /* 10px は実機で読めないため 11px 以上に引き上げ（PC は 10px のまま） */
+  .srch-filt-badge{font-size:11px;min-width:20px;height:20px}
+  .srch-grp-h{font-size:11px}
+  /* タップ領域 36px 以上を確保 */
+  .srch-filt-toggle{min-height:38px}
+  .srch-pill{padding:9px 13px}
+  .srch-filt-act{min-height:36px;display:inline-flex;align-items:center}
+  /* 検索バーは 1 行を占有し、CTA は次行に全幅で置く（横並びだと 320px で潰れる） */
+  .srch-c-bar{min-width:100%}
+  .srch-c-cta{width:100%;min-height:44px;justify-content:center;padding:0 16px}
+  /* iOS の自動ズーム防止（フォントが 16px 未満だと focus でズームする） */
+  .srch-c-input{font-size:16px}
+}
 `;
 
 function DotGlobe() {

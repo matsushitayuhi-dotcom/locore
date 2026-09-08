@@ -35,8 +35,9 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-head .sub .loc{text-decoration:underline;text-underline-offset:2px}
 .job-head .sub .dot{color:var(--bd2)}
 .job-head .sub .posted{font-family:var(--mono);font-size:12px;color:var(--mu)}
-.job-head .acts{margin-left:auto;display:flex;gap:6px}
-.job-head .acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px}
+/* スマホ: .sub は wrap するので acts は縮ませず丸ごと次行へ落とす (ボタン内の文字が1文字ずつ折れるのを防ぐ) */
+.job-head .acts{margin-left:auto;display:flex;gap:6px;flex:none}
+.job-head .acts button{display:inline-flex;align-items:center;gap:7px;background:transparent;border:0;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2);padding:7px 11px;border-radius:9px;white-space:nowrap}
 .job-head .acts button:hover{background:rgba(0,0,0,.05)}
 .job-head .acts button.on{color:var(--lime-d)}
 .job-head .acts svg{width:17px;height:17px}
@@ -45,7 +46,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-hero{display:block;position:relative;width:100%;margin:6px 0 0;padding:0;border:0;cursor:pointer;border-radius:20px;overflow:hidden;background:#e9e9e1;aspect-ratio:16/7}
 .job-hero img{width:100%;height:100%;object-fit:cover;transition:.4s}
 .job-hero:hover img{transform:scale(1.03)}
-.job-herocount{position:absolute;bottom:14px;right:14px;display:inline-flex;align-items:center;gap:7px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:8px 13px;font-size:12.5px;font-weight:700;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+/* 枚数バッジ: 絶対配置なので折り返させない (狭幅で「1 / 2 / 枚」と縦積みになる) */
+.job-herocount{position:absolute;bottom:14px;right:14px;display:inline-flex;align-items:center;gap:7px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:8px 13px;font-size:12.5px;font-weight:700;white-space:nowrap;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
 .job-herocount svg{width:14px;height:14px}
 
 /* ===== gallery (仕事の様子: 1大+最大4小) ===== */
@@ -58,12 +60,15 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-gallery .cell:hover img{transform:scale(1.04)}
 .job-gallery .cell.big{grid-row:1/3}
 .job-gallery.one .cell.big,.job-gallery.two .cell.big{grid-row:auto}
-.job-allphotos{position:absolute;bottom:16px;right:16px;display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
+/* 絶対配置のボタン。狭幅で1文字ずつ折れないよう nowrap + 画面内に収まる上限幅 */
+.job-allphotos{position:absolute;bottom:16px;right:16px;display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--ink);border:1px solid var(--bd2);border-radius:11px;padding:9px 15px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;max-width:calc(100% - 32px);box-shadow:0 4px 14px -6px rgba(0,0,0,.4)}
 .job-allphotos svg{width:15px;height:15px}
 
 /* status banner */
 .job-banner{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin:4px 0 0}
 .job-banner svg{width:20px;height:20px;color:var(--mu);flex:none;margin-top:2px}
+/* アイコンは縮まない側。テキスト側に min-width:0 が無いと狭幅ではみ出す */
+.job-banner>div{min-width:0}
 .job-banner b{font-weight:700;font-size:14px}
 .job-banner p{color:var(--mu);font-size:12.5px;margin-top:2px}
 
@@ -73,11 +78,14 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 
 /* ===== key conditions band ===== */
 .job-band{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:18px;overflow:hidden;margin-top:6px}
-.job-band .c{background:var(--card);padding:16px 18px;display:flex;gap:12px;align-items:flex-start}
+/* グリッドの子は既定で min-content 未満に縮まない = 中身が広いとトラックごと画面外へ出る。min-width:0 で止める */
+.job-band .c{background:var(--card);padding:16px 18px;display:flex;gap:12px;align-items:flex-start;min-width:0}
+.job-band .c>div{min-width:0}
 .job-band .c .ic{flex:none;width:26px;height:26px;color:var(--lime-d);margin-top:1px}
 .job-band .c .ic svg{width:26px;height:26px;stroke-width:1.6}
 .job-band .c .k{font-size:11px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em}
-.job-band .c .v{font-weight:700;font-size:15px;margin-top:2px;line-height:1.5}
+/* 値は自由入力 (勤務地・試用期間など)。長いラテン語 1 語で枠から溢れる (親は overflow:hidden) ので必ず途中で折る */
+.job-band .c .v{font-weight:700;font-size:15px;margin-top:2px;line-height:1.5;overflow-wrap:anywhere}
 .job-band .c .v small{font-weight:500;color:var(--mu);font-size:11.5px;display:block;margin-top:1px;font-family:var(--jp)}
 .job-band .c.ok .v{color:var(--lime-d)}
 /* 欠落枠: ミュートのプレースホルダ・バー */
@@ -138,14 +146,17 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 
 /* spec table */
 .job-spec{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 18px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px}
+.job-spec>div{min-width:0} /* グリッドの子。長い値でトラックが広がって表がはみ出すのを防ぐ */
 .job-spec .k{font-size:10px;color:var(--mu);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:5px}
-.job-spec .k svg{width:12px;height:12px}
-.job-spec .v{font-size:13.5px;font-weight:500;color:var(--ink);margin-top:3px}
+.job-spec .k svg{width:12px;height:12px;flex:none} /* アイコンは縮まない側 */
+/* 値は自由入力。min-width:0 はトラックの拡大を止めるだけなので、折り返しも併せて指定する */
+.job-spec .v{font-size:13.5px;font-weight:500;color:var(--ink);margin-top:3px;overflow-wrap:anywhere}
 
 /* selection steps */
 .job-steps{display:flex;flex-direction:column;gap:0}
 .job-step{display:flex;gap:16px;position:relative;padding-bottom:22px}
 .job-step:last-child{padding-bottom:0}
+.job-step>div{min-width:0} /* 番号丸は shrink-0、テキスト側は min-width:0 */
 .job-step .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--lime);color:var(--ink);font-family:var(--disp);font-weight:700;font-size:14px;display:grid;place-items:center;z-index:1}
 .job-step:not(:last-child)::before{content:"";position:absolute;left:14.5px;top:30px;bottom:0;width:2px;background:var(--bd)}
 .job-step .t{font-weight:700;font-size:14.5px}
@@ -155,7 +166,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-cocard{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:22px}
 .job-cocard .lg{width:62px;height:62px;border-radius:14px;object-fit:cover;flex:none;border:1px solid var(--bd)}
 .job-cocard .lgf{width:62px;height:62px;border-radius:14px;flex:none;border:1px solid var(--bd);background:var(--lime-l);color:var(--lime-d);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:24px}
-.job-cocard .nm{font-weight:700;font-size:17px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.job-cocard>div{min-width:0} /* ロゴは flex:none、社名側は min-width:0 でカードからはみ出させない */
+.job-cocard .nm{font-weight:700;font-size:17px;overflow-wrap:anywhere;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
 .job-cocard .badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--lime-d)}
 .job-cocard .badge svg{width:13px;height:13px}
 .job-cocard .meta{color:var(--mu);font-size:12.5px;font-family:var(--mono);margin:3px 0 6px}
@@ -175,8 +187,9 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .job-apply .facts{margin:18px 0;border:1px solid var(--bd);border-radius:14px;overflow:hidden}
 .job-apply .facts .row{display:flex;justify-content:space-between;gap:12px;padding:11px 16px;font-size:13px;color:var(--ink2);border-bottom:1px solid var(--bd)}
 .job-apply .facts .row:last-child{border-bottom:0}
-.job-apply .facts .row span:first-child{color:var(--mu)}
-.job-apply .facts .row span:last-child{font-weight:700;color:var(--ink);text-align:right}
+/* 見出し語は縮まない側 (nowrap)、値側は min-width:0 で折り返させる */
+.job-apply .facts .row span:first-child{color:var(--mu);flex:none;white-space:nowrap}
+.job-apply .facts .row span:last-child{font-weight:700;color:var(--ink);text-align:right;min-width:0}
 .job-apply .facts .row .hot{color:var(--warn)}
 .job-apply .ctawrap{margin-top:2px}
 .job-apply .save{display:block;width:100%;text-align:center;margin-top:10px;background:#fff;border:1px solid var(--bd2);border-radius:13px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;color:var(--ink)}
@@ -219,13 +232,35 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
   .job-band .c{padding:11px 12px;gap:8px;flex-direction:column}
   .job-band .c .ic{width:18px;height:18px;margin-top:0}
   .job-band .c .ic svg{width:18px;height:18px;stroke-width:1.8}
-  .job-band .c .k{font-size:9.5px;letter-spacing:.02em}
+  /* 実機で読めない字を作らない: スマホでは 11px 未満にしない (PC 側の指定は据え置き) */
+  .job-band .c .k{font-size:11px;letter-spacing:.02em}
   .job-band .c .v{font-size:13px;margin-top:1px}
-  .job-band .c .v small{font-size:10.5px}
+  .job-band .c .v small{font-size:11px}
   .job-band .c .ph{margin-top:4px}
   .job-band .c .ph .bar{height:7px}
-  .job-band .c .ph small{font-size:10px;margin-top:4px}
+  .job-band .c .ph small{font-size:11px;margin-top:4px}
   .job-ben{grid-template-columns:1fr}
-  .job-lang .lvl{width:auto}
+  /* 勤務条件: ラベルが 10px だと読めないので 11px に。2 カラムのまま余白だけ詰める */
+  .job-spec{gap:12px 14px;padding:14px}
+  .job-spec .k{font-size:11px;letter-spacing:.02em}
+  /* 語学行: 320px では「名前 + メーター + レベル」が一列に収まらず文字が潰れる。
+     名前とレベルを 1 行目、メーターを 2 行目に回す */
+  .job-lang{flex-wrap:wrap;gap:5px 10px}
+  .job-lang .nm{width:auto}
+  .job-lang .lvl{width:auto;margin-left:auto}
+  .job-lang .meter{flex:1 1 100%;order:3}
+  /* 応募カード: 320px では padding 24 + 給与 27px が入りきらない */
+  .job-apply{padding:18px}
+  .job-apply .payv b{font-size:23px}
+  .job-apply .facts .row{padding:10px 13px}
+  /* 会社カード: ロゴを小さくして社名・紹介文に幅を残す */
+  .job-cocard{padding:16px;gap:13px}
+  .job-cocard .lg,.job-cocard .lgf{width:52px;height:52px;border-radius:12px}
+  .job-cocard .lgf{font-size:20px}
+  /* 会社プロフィールへの唯一の導線。文字だけだと高さ 23px しかないのでタップ領域を 44px 確保する */
+  .job-cocard .link{min-height:44px}
+  /* 上限幅は実際の inset (10px) に合わせる。32px のままだと nowrap の文字が白箱からはみ出て切れる */
+  .job-allphotos{bottom:10px;right:10px;padding:8px 12px;font-size:12px;gap:6px;max-width:calc(100% - 20px)}
+  .job-herocount{bottom:10px;right:10px}
 }
 `;

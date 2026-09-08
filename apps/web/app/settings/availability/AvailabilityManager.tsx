@@ -542,7 +542,7 @@ export function AvailabilityManager({
                   className="relative text-right"
                   style={{ height: ROW_H * 2 }}
                 >
-                  <span className="absolute -top-2 right-1.5 text-[10.5px] tabular-nums text-neutral-400">
+                  <span className="absolute -top-2 right-1.5 text-[10.5px] max-sm:text-[11px] tabular-nums text-neutral-400">
                     {h === 0 ? '' : `${h}:00`}
                   </span>
                 </div>
@@ -594,11 +594,11 @@ export function AvailabilityManager({
                           }}
                         >
                           {/* 9px は実機で読めないので 10.5px（枠ラベルと同じ）に */}
-                          <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] font-bold tabular-nums text-white">
+                          <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] max-sm:text-[11px] font-bold tabular-nums text-white">
                             {hmFromRow(minR)}
                           </span>
                           {maxR > minR ? (
-                            <span className="absolute bottom-0 left-0.5 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] font-bold tabular-nums text-white">
+                            <span className="absolute bottom-0 left-0.5 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] max-sm:text-[11px] font-bold tabular-nums text-white">
                               {endHm}
                             </span>
                           ) : null}
@@ -616,7 +616,7 @@ export function AvailabilityManager({
                     className="pointer-events-none absolute inset-x-0 rounded-sm bg-primary-100 ring-2 ring-inset ring-primary-500"
                     style={{ top: hover.r * ROW_H, height: ROW_H }}
                   >
-                    <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] font-bold tabular-nums text-white">
+                    <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] max-sm:text-[11px] font-bold tabular-nums text-white">
                       {hmFromRow(hover.r)}
                     </span>
                   </div>
@@ -643,7 +643,7 @@ export function AvailabilityManager({
                     >
                       <div
                         className={
-                          'text-[10.5px] font-bold leading-tight tabular-nums ' +
+                          'text-[10.5px] max-sm:text-[11px] font-bold leading-tight tabular-nums ' +
                           (b.hasBooking ? 'text-primary-900' : 'text-neutral-950')
                         }
                       >
@@ -651,7 +651,7 @@ export function AvailabilityManager({
                       </div>
                       {b.hasBooking ? (
                         // 9.5px は実機で読めないので 10.5px（上の時刻ラベルと同じ）に
-                        <span className="mt-0.5 inline-flex items-center gap-0.5 text-[10.5px] font-bold text-primary-900">
+                        <span className="mt-0.5 inline-flex items-center gap-0.5 text-[10.5px] max-sm:text-[11px] font-bold text-primary-900">
                           <Check className="h-2.5 w-2.5 shrink-0" strokeWidth={3} aria-hidden />
                           予約あり
                         </span>

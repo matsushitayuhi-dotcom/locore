@@ -81,7 +81,8 @@ export function ExpertCard({
         {expert.cityNameJa ? (
           <span
             className={
-              'absolute right-2.5 top-2.5 whitespace-nowrap rounded-md bg-black/45 px-2 py-0.5 text-[10.5px] font-bold tracking-[0.06em] text-white backdrop-blur-sm' +
+              // 10.5px は 402px の実機で読めないので、スマホだけ 11px に上げる（PC は据え置き）
+              'absolute right-2.5 top-2.5 whitespace-nowrap rounded-md bg-black/45 px-2 py-0.5 text-[11px] font-bold tracking-[0.06em] text-white backdrop-blur-sm sm:text-[10.5px]' +
               (enrollment ? ' max-sm:hidden' : '')
             }
           >
@@ -100,7 +101,8 @@ export function ExpertCard({
         {/* ホバー: 得意分野がせり上がる */}
         {chips.length > 0 ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 flex translate-y-2 flex-col justify-end bg-gradient-to-t from-black/90 via-black/60 to-transparent px-3 pb-3 pt-14 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 motion-reduce:transition-none">
-            <span className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-500">
+            {/* focus-visible ではタッチ端末でも出る見出し。10px → スマホ 11px（PC は据え置き） */}
+            <span className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-500 sm:text-[10px]">
               得意分野
             </span>
             <ul className="flex flex-wrap gap-1">
@@ -140,11 +142,13 @@ export function ExpertCard({
           <b className="font-semibold text-foreground">応相談</b>
         )}
         {expert.hasPlan ? (
+          // カード幅 174px（320px では 133px）の行末に来ると inline-flex が潰れて
+          // 「継 / 続 / プ / ラ / ン」と 1 文字ずつ縦に割れるので nowrap。文字も 11px 以上に
           <span
-            className="ml-2 inline-flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-[1px] align-[1px] text-[10.5px] font-bold text-primary-500"
+            className="ml-2 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-neutral-900 px-2 py-[1px] align-[1px] text-[11px] font-bold text-primary-500 sm:text-[10.5px]"
             title="月額の継続プラン（伴走）があります"
           >
-            <Repeat className="h-3 w-3" aria-hidden />
+            <Repeat className="h-3 w-3 shrink-0" aria-hidden />
             継続プラン
           </span>
         ) : null}
@@ -178,9 +182,10 @@ export function ExpertCard({
       {chips.length > 0 ? (
         <ul className="mt-2 flex flex-wrap gap-1 [@media(hover:hover)]:hidden">
           {chips.slice(0, 3).map((c) => (
+            // スマホ（hover 不可）専用のリストなので、10.5px は実機で読めない。11px に上げる
             <li
               key={c.code}
-              className="max-w-full truncate rounded-full bg-muted px-2 py-0.5 text-[10.5px] font-medium text-neutral-700"
+              className="max-w-full truncate rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-neutral-700"
             >
               {c.label}
             </li>
@@ -211,7 +216,11 @@ export function EnrollmentChip({
       className={
         // 402px の 2 列（カード 174px）でも 1 行に保つ: whitespace-nowrap
         'absolute left-2.5 top-2.5 inline-flex items-center gap-1 whitespace-nowrap rounded-md font-bold shadow-sm ' +
-        (size === 'md' ? 'px-2.5 py-1 text-[12px]' : 'px-2 py-0.5 text-[10.5px]') +
+        // sm は写真の上（スマホの 2 列カード）で使う。10.5px は実機で読めないので
+        // スマホだけ 11px に上げ、PC は sm: で従来どおり 10.5px に戻す
+        (size === 'md'
+          ? 'px-2.5 py-1 text-[12px]'
+          : 'px-2 py-0.5 text-[11px] sm:text-[10.5px]') +
         (current ? ' bg-primary-500 text-neutral-950' : ' bg-white/95 text-neutral-900')
       }
     >

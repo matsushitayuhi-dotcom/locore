@@ -35,9 +35,11 @@ export function MapView({
   purchasedArticleIds,
   myArticleIds,
 }: MapViewProps) {
-  // SiteHeader (56px) + BottomNav (約 64px) を引いて画面いっぱい
+  // SiteHeader (h-14 = 56px) + .app-main-pad の下余白 (5rem = 80px) = 8.5rem を
+  // 引いて画面いっぱい。7rem だと 24px 分だけ縦に溢れて余分なスクロールが出る。
+  // md 以上は BottomNav が消え .app-main-pad も 0 になるので 4rem のまま。
   return (
-    <div className="relative h-[calc(100vh-7rem)] w-full md:h-[calc(100vh-4rem)]">
+    <div className="relative h-[calc(100vh-8.5rem)] w-full md:h-[calc(100vh-4rem)]">
       <InnerMap
         spots={spots}
         articles={articles}

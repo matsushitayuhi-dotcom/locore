@@ -56,7 +56,9 @@ function badgeLabel(l: Pick<SocialLink, 'platform' | 'siteName'>): string {
 
 function PlatformBadge({ platform, label }: { platform: string; label?: string }) {
   return (
-    <span className="absolute left-2 top-2 rounded-full bg-white/95 px-2 py-[3px] text-[10px] font-bold text-neutral-900 shadow-sm">
+    // サムネ上の小バッジ。10px は実機で読めないのでスマホだけ 11px。
+    // サイト名（可変長）が写真の上で折り返さないよう nowrap も足す
+    <span className="absolute left-2 top-2 whitespace-nowrap rounded-full bg-white/95 px-2 py-[3px] text-[11px] font-bold text-neutral-900 shadow-sm sm:text-[10px]">
       {label ?? PLATFORM_LABEL[platform] ?? platform}
     </span>
   );
@@ -175,7 +177,8 @@ function ArticleCard({ a }: { a: MediaArticle }) {
             <span className="text-[13px] font-bold tracking-wide text-primary-500">{a.typeLabel}</span>
           </div>
         )}
-        <span className="absolute left-2 top-2 rounded-full bg-neutral-900 px-2 py-[3px] text-[10px] font-bold text-primary-500 shadow-sm">
+        {/* 10px → スマホ 11px。「Locore 記事」の空白で折れないよう nowrap */}
+        <span className="absolute left-2 top-2 whitespace-nowrap rounded-full bg-neutral-900 px-2 py-[3px] text-[11px] font-bold text-primary-500 shadow-sm sm:text-[10px]">
           Locore 記事
         </span>
       </div>

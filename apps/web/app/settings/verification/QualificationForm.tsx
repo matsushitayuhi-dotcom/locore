@@ -205,7 +205,7 @@ export function QualificationForm({ master }: { master: QualificationMasterRow[]
       <div>
         <label className="mb-2 block text-[12px] font-medium text-foreground/70">
           合格証明 <span className="text-danger-500">*</span>
-          <span className="ml-1 text-[10px] font-normal text-foreground/50">
+          <span className="ml-1 text-[10px] max-sm:text-[11px] font-normal text-foreground/50">
             （スコアレポート・合格証・認定証。1〜3 枚、各 15MB まで）
           </span>
         </label>

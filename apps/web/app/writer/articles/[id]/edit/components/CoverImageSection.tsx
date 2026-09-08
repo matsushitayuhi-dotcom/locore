@@ -11,7 +11,7 @@ type Props = {
 export function CoverImageSection({ value, onChange, isPublished }: Props) {
   return (
     <section
-      className="space-y-3 rounded-md border border-border bg-card p-5 sm:p-6"
+      className="space-y-3 rounded-md border border-border bg-card p-4 sm:p-6"
       aria-labelledby="cover-section-title"
     >
       <div>
@@ -20,6 +20,7 @@ export function CoverImageSection({ value, onChange, isPublished }: Props) {
         </h3>
         <p className="mt-1 text-[11px] text-foreground/50">3:2 を推奨。一覧カードや記事ヘッダーに表示されます。</p>
       </div>
+      {/* max-w なので 320px でも溢れない（w-[360px] にはしないこと） */}
       <div className="max-w-[360px]">
         <ImageUploader
           value={value}

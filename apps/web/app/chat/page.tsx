@@ -87,7 +87,8 @@ export default async function ChatListPage() {
                   </p>
                 </div>
                 {t.unread > 0 ? (
-                  <span className="shrink-0 self-center rounded-full bg-primary-700 px-2 py-0.5 text-[10px] font-bold text-white">
+                  // 10px は実機で読めないのでスマホだけ 11px に上げる (PC は据え置き)
+                  <span className="shrink-0 self-center rounded-full bg-primary-700 px-2 py-0.5 text-[11px] font-bold text-white sm:text-[10px]">
                     {t.unread}
                   </span>
                 ) : null}

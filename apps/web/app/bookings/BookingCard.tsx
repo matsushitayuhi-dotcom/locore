@@ -129,7 +129,7 @@ export function BookingCard({
   return (
     <article
       className={
-        'mt-3.5 rounded-2xl border bg-card px-5 py-[18px] shadow-xs ' +
+        'mt-3.5 rounded-2xl border bg-card px-4 py-[18px] shadow-xs sm:px-5 ' +
         (isPending
           ? 'border-warning-500/40'
           : isConfirmed
@@ -137,7 +137,7 @@ export function BookingCard({
             : 'border-border opacity-60')
       }
     >
-      <div className="flex items-start gap-3.5">
+      <div className="flex flex-wrap items-start gap-x-3.5 gap-y-2 sm:flex-nowrap">
         {b.counterpartAvatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -150,7 +150,7 @@ export function BookingCard({
             {b.counterpartName.charAt(0) || '？'}
           </span>
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 max-sm:min-w-[8.5rem]">
           <div className="text-[14.5px] font-bold">{b.counterpartName}</div>
           <div className="mt-0.5 text-[12px] text-neutral-500">
             <b className="font-bold text-neutral-700">{b.serviceTitle}</b>
@@ -182,10 +182,10 @@ export function BookingCard({
         <span className="text-[13px] font-bold">
           {formatDateShortInTz(start, mainTz)}
         </span>
-        <div>
+        <div className="min-w-0">
           <span className="text-[14px] font-semibold tabular-nums">
             {formatTimeRangeInTz(start, end, mainTz)}
-            <small className="ml-1 text-[10.5px] font-normal text-neutral-500">
+            <small className="ml-1 text-[11px] font-normal text-neutral-500 sm:text-[10.5px]">
               {tzShortLabel(mainTz)}
             </small>
           </span>
@@ -239,7 +239,7 @@ export function BookingCard({
             >
               辞退
             </button>
-            <span className="ml-auto text-[11px] text-neutral-400">
+            <span className="w-full text-[11px] text-neutral-400 sm:ml-auto sm:w-auto">
               返答期限: 開始時刻（{formatSlotInTz(start, mainTz)} {tzShortLabel(mainTz)}）まで
             </span>
           </>
@@ -260,7 +260,7 @@ export function BookingCard({
             >
               リクエストを取り消す
             </button>
-            <span className="ml-auto text-[11px] text-neutral-400">
+            <span className="w-full text-[11px] text-neutral-400 sm:ml-auto sm:w-auto">
               開始時刻（{formatSlotInTz(start, mainTz)} {tzShortLabel(mainTz)}
               ）までに返答がないと期限切れ
             </span>
@@ -387,7 +387,7 @@ export function BookingCard({
                 保存
               </button>
             </div>
-            <p className="mt-1.5 text-[10.5px] leading-relaxed text-neutral-500">
+            <p className="mt-1.5 text-[11px] leading-relaxed text-neutral-500 sm:text-[10.5px]">
               保存すると相手のマイ相談ページとチャットに共有されます。
             </p>
           </div>

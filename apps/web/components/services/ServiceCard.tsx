@@ -76,15 +76,19 @@ export function ServiceCard({ service: s, href }: Props) {
       <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="flex flex-wrap items-start gap-1.5 sm:gap-2">
           {shown.map((t) => (
+            // 10px は実機で読めないのでスマホだけ 11px。タグは自由文字列で長くなり得るため、
+            // スマホ（<640px）だけ 1 行に切って（truncate）カード幅（320px で約 264px）を
+            // 超えないようにする。PC は従来どおり折り返して全文が読める
             <span
               key={t}
-              className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300"
+              className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[11px] font-semibold text-primary-300 max-sm:max-w-full max-sm:truncate sm:text-[10px]"
             >
               {TAG_LABEL[t] ?? t}
             </span>
           ))}
           {rest > 0 ? (
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground/55">
+            // 「+2」は縮んではいけない側。10px → スマホ 11px
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-foreground/55 sm:text-[10px]">
               +{rest}
             </span>
           ) : null}
@@ -123,7 +127,8 @@ export function ServiceCard({ service: s, href }: Props) {
                 {s.ownerDisplayName?.[0]?.toUpperCase() ?? '?'}
               </AvatarFallback>
             </Avatar>
-            <span className="truncate text-[10px] font-medium text-foreground/75 sm:text-[11px]">
+            {/* スマホだけ 10px と PC（11px）より小さかった。11px に揃える（PC は変更なし） */}
+            <span className="truncate text-[11px] font-medium text-foreground/75">
               {s.ownerDisplayName}
             </span>
           </div>

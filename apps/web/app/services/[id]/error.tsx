@@ -26,9 +26,11 @@ export default function ServiceDetailError({
     <main className="bg-background">
       <div className="mx-auto max-w-screen-md px-4 py-10 sm:px-6 sm:py-14">
         <div className="rounded-2xl bg-danger-50 p-6 ring-1 ring-danger-500/30 sm:p-8">
-          <div className="flex items-center gap-2 text-danger-500">
-            <AlertTriangle className="h-5 w-5" />
-            <h1 className="text-[18px] font-bold">
+          {/* 見出しは 402px で 2 行になる。アイコンに shrink-0 が無いと三角が横に潰れる。
+              見出しが 1 行に収まる PC 側は元の中央揃えのまま（sm: で据え置き） */}
+          <div className="flex items-start gap-2 text-danger-500 sm:items-center">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 sm:mt-0" />
+            <h1 className="min-w-0 text-[18px] font-bold">
               サービス詳細の読み込みで例外が発生しました
             </h1>
           </div>
@@ -52,7 +54,8 @@ export default function ServiceDetailError({
                 <summary className="cursor-pointer text-[12px] font-bold text-foreground/55">
                   スタックトレース (タップして開く)
                 </summary>
-                <pre className="mt-2 max-h-72 overflow-auto rounded bg-foreground/5 p-3 text-[10px] leading-relaxed text-foreground/80">
+                {/* スタックは 10px だと実機で読めない。スマホは 11px、PC は sm: で据え置き */}
+                <pre className="mt-2 max-h-72 overflow-auto rounded bg-foreground/5 p-3 text-[11px] leading-relaxed text-foreground/80 sm:text-[10px]">
                   {error.stack}
                 </pre>
               </details>

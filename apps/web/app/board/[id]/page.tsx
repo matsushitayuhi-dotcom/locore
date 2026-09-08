@@ -36,15 +36,18 @@ export default async function BoardDetailPage({ params }: Props) {
       </Link>
 
       <header className="mt-4">
-        {/* バッジと日付は割らない（「AI 自動収集」は半角スペースで割れる） */}
+        {/*
+          バッジと日付は割らない（「AI 自動収集」は半角スペースで割れる）。
+          バッジ文字はスマホだけ 11px に上げる（10px は実機で読めない）。PC は sm: で据え置き。
+        */}
         <div className="flex flex-wrap items-center gap-2">
           {post.autoCollected ? (
-            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-accent-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-500">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-accent-500/10 px-2 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-accent-500">
               <Sparkles className="h-3 w-3 shrink-0" />
               AI 自動収集
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-300">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/10 px-2 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-primary-300">
               編集部
             </span>
           )}
@@ -54,7 +57,7 @@ export default async function BoardDetailPage({ params }: Props) {
         </div>
 
         <h1
-          className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
+          className="mt-3 break-words text-[28px] font-bold leading-tight tracking-tight text-foreground"
         >
           {post.title}
         </h1>

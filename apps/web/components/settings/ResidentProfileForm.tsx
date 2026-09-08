@@ -324,16 +324,19 @@ export function ResidentProfileForm({ initial }: Props) {
               {offerings.map((o) => (
                 <li
                   key={o}
-                  className="inline-flex items-center gap-1 rounded-full bg-neutral-900 px-3 py-1 text-[12px] font-medium text-white"
+                  // max-w-full: 長い一文でもチップが画面外へ出ないようにする
+                  className="inline-flex max-w-full items-center gap-1 rounded-full bg-neutral-900 px-3 py-1 text-[12px] font-medium text-white max-sm:py-1.5"
                 >
-                  {o}
+                  <span className="min-w-0">{o}</span>
                   <button
                     type="button"
                     aria-label={`${o} を削除`}
                     onClick={() => removeOffering(o)}
-                    className="rounded-full p-0.5 text-neutral-400 hover:text-white"
+                    // shrink-0 で × が潰れないように。スマホは 24px の枠に加えて
+                    // after で見えない当たり判定を 36px まで広げる（見た目は不変）
+                    className="relative inline-flex shrink-0 items-center justify-center rounded-full p-0.5 text-neutral-400 hover:text-white max-sm:h-6 max-sm:w-6 max-sm:after:absolute max-sm:after:-inset-1.5 max-sm:after:content-['']"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-3 w-3 shrink-0" />
                   </button>
                 </li>
               ))}
@@ -353,15 +356,18 @@ export function ResidentProfileForm({ initial }: Props) {
               maxLength={120}
               placeholder="入力して Enter で追加"
               disabled={offerings.length >= 8}
-              className="h-9 flex-1 rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+              // min-w-0 が無いと input の既定幅(約 176px)で止まり、320px で
+              // 「追加」ボタンが押し出されて縦に割れる
+              className="h-9 min-w-0 flex-1 rounded-md border border-border bg-background px-3 text-[13px] focus:border-2 focus:border-primary-500 focus:outline-none disabled:opacity-50"
             />
             <button
               type="button"
               onClick={addOffering}
               disabled={offerings.length >= 8}
-              className="inline-flex h-9 items-center gap-1 rounded-md border border-border-strong bg-card px-3 text-[12.5px] font-semibold hover:border-foreground disabled:opacity-50"
+              // 縮まない側。しわ寄せは入力欄へ
+              className="inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-border-strong bg-card px-3 text-[12.5px] font-semibold hover:border-foreground disabled:opacity-50"
             >
-              <Plus className="h-3.5 w-3.5" aria-hidden />
+              <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden />
               追加
             </button>
           </div>
@@ -376,9 +382,11 @@ export function ResidentProfileForm({ initial }: Props) {
                   key={l.code}
                   type="button"
                   onClick={() => addLanguage(l.code)}
-                  className="inline-flex items-center gap-1 rounded-full border border-border-strong bg-card px-2.5 py-1 text-[11.5px] font-medium text-foreground/70 hover:border-foreground hover:text-foreground"
+                  // nowrap で「フ / ラ / ン / ス / 語」の縦割れを防ぐ。
+                  // 高さ 25px はタップしづらいのでスマホは 36px
+                  className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-border-strong bg-card px-2.5 py-1 text-[11.5px] font-medium text-foreground/70 hover:border-foreground hover:text-foreground max-sm:min-h-9"
                 >
-                  <Plus className="h-3 w-3" aria-hidden /> {l.label}
+                  <Plus className="h-3 w-3 shrink-0" aria-hidden /> {l.label}
                 </button>
               ),
             )}
@@ -389,11 +397,17 @@ export function ResidentProfileForm({ initial }: Props) {
                 const label = COMMON_LANGUAGES.find((x) => x.code === l.code)?.label ?? l.code;
                 return (
                   <li key={l.code} className="flex items-center gap-2">
-                    <span className="w-24 shrink-0 text-[12.5px] font-semibold">{label}</span>
+                    {/* 320px では w-24(96px) を引くとセレクトに 110px しか残らない。
+                        言語名は最長でも「フランス語」（12.5px × 全角 5 字 = 62.5px）
+                        なのでスマホは詰めるが、w-16(64px) だとフォントメトリクス差で
+                        省略されかねない。68px にして余裕を持たせる */}
+                    <span className="w-24 shrink-0 truncate text-[12.5px] font-semibold max-sm:w-[68px]">
+                      {label}
+                    </span>
                     <select
                       value={l.level}
                       onChange={(e) => updateLanguageLevel(l.code, e.target.value as LanguageLevel)}
-                      className="h-8 flex-1 rounded-md border border-border bg-background px-2 text-[12px]"
+                      className="h-8 min-w-0 flex-1 rounded-md border border-border bg-background px-2 text-[12px] max-sm:h-9"
                     >
                       {LANGUAGE_LEVELS.map((lv) => (
                         <option key={lv} value={lv}>
@@ -405,9 +419,10 @@ export function ResidentProfileForm({ initial }: Props) {
                       type="button"
                       aria-label={`${label} を削除`}
                       onClick={() => removeLanguage(l.code)}
-                      className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500"
+                      // 22px しかなかったのでスマホは 36px の当たりを確保
+                      className="inline-flex shrink-0 items-center justify-center rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500 max-sm:h-9 max-sm:w-9"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-3.5 w-3.5 shrink-0" />
                     </button>
                   </li>
                 );
@@ -425,8 +440,9 @@ export function ResidentProfileForm({ initial }: Props) {
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-bold tabular-nums text-neutral-700">
               6
             </span>
-            <span className="text-[13.5px] font-semibold">職歴・職業</span>
-            <span className="rounded-full bg-muted px-2 py-px text-[10px] font-semibold text-foreground/55">
+            <span className="min-w-0 text-[13.5px] font-semibold">職歴・職業</span>
+            {/* 10px は実機で読めないのでスマホだけ 11px。nowrap で縦割れも防ぐ */}
+            <span className="shrink-0 whitespace-nowrap rounded-full bg-muted px-2 py-px text-[10px] font-semibold text-foreground/55 max-sm:text-[11px]">
               任意
             </span>
             <span className="ml-auto hidden text-[11.5px] text-foreground/50 sm:inline">
@@ -460,9 +476,12 @@ export function ResidentProfileForm({ initial }: Props) {
         </details>
       </div>
 
-      {/* 固定の保存バー */}
-      <div className="sticky bottom-0 z-10 mt-3 flex items-center gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-md backdrop-blur-md">
-        <p className="text-[12px] text-foreground/60">
+      {/* 固定の保存バー。
+          md 未満はルートレイアウトの BottomNav（border 1 + pt 4 + h-14 56 + safe-area）が
+          bottom:0 を覆うので、その分だけ持ち上げる。md 以上は BottomNav が消えるので従来位置。 */}
+      <div className="sticky bottom-[calc(61px_+_env(safe-area-inset-bottom,0px))] z-10 mt-3 flex items-center gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-md backdrop-blur-md md:bottom-0">
+        {/* 縮んでいいのは説明文だけ（min-w-0）。ボタンは shrink-0 のまま */}
+        <p className="min-w-0 text-[12px] text-foreground/60">
           {hasSchool && specialties.length > 0
             ? '必須項目は揃っています。保存後、公開ステータスから公開できます。'
             : '必須: 学校 1 校以上・得意分野 1 つ以上'}
@@ -470,9 +489,18 @@ export function ResidentProfileForm({ initial }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="ml-auto inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-primary-500 px-6 text-[13.5px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+          className="ml-auto inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-primary-500 px-6 text-[13.5px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50 max-sm:px-5"
         >
-          {isPending ? '保存中…' : 'エキスパート情報を保存'}
+          {/* 402px ではボタンが 200px 近くを占め、左の説明文が 1 行 4 文字まで
+              潰れていた。スマホは「保存」に詰め、PC 用の文言は max-sm:hidden で温存 */}
+          {isPending ? (
+            '保存中…'
+          ) : (
+            <>
+              <span className="max-sm:hidden">エキスパート情報を保存</span>
+              <span className="hidden max-sm:inline">保存</span>
+            </>
+          )}
         </button>
       </div>
     </form>
@@ -501,14 +529,17 @@ function Block({
         <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-neutral-900 text-[11px] font-bold tabular-nums text-primary-500">
           {no}
         </span>
-        <h4 className="text-[13.5px] font-semibold">{title}</h4>
+        <h4 className="min-w-0 text-[13.5px] font-semibold">{title}</h4>
+        {/* バッジは縮まない側。10px は実機で読めないのでスマホだけ 11px に上げる */}
         {required ? (
-          <span className="rounded-full bg-primary-100 px-2 py-px text-[10px] font-bold text-primary-900">
+          <span className="shrink-0 whitespace-nowrap rounded-full bg-primary-100 px-2 py-px text-[10px] font-bold text-primary-900 max-sm:text-[11px]">
             必須
           </span>
         ) : null}
         {count ? (
-          <span className="ml-auto text-[11px] tabular-nums text-foreground/50">{count}</span>
+          <span className="ml-auto shrink-0 whitespace-nowrap text-[11px] tabular-nums text-foreground/50">
+            {count}
+          </span>
         ) : null}
       </div>
       {helper ? <p className="mb-2.5 text-[11.5px] text-foreground/55">{helper}</p> : null}

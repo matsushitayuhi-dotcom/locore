@@ -153,7 +153,8 @@ export default async function ResidentHubPage({ params }: Params) {
 
 function SectionHead({ num, title }: { num: string; title: string }) {
   return (
-    <div className="mb-7 flex items-baseline gap-4">
+    /* スマホでは番号と見出しの間隔を詰めて 1 かたまりに見せる（PC は gap-4 のまま） */
+    <div className="mb-7 flex items-baseline gap-4 max-sm:gap-2.5">
       <span className="shrink-0 font-mono text-[13px] font-semibold text-primary-700">
         {num}
       </span>
@@ -198,7 +199,8 @@ function AboutSection({ resident: r }: { resident: ResidentProfileBundle }) {
                   key={f.k}
                   className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
                 >
-                  <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-primary-700">
+                  {/* 10px は実機で読めない。スマホだけ 11px に上げ PC は sm: で据え置き */}
+                  <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-700 sm:text-[10px]">
                     {f.k}
                   </div>
                   <div className="mt-1 text-[14px] font-bold">{f.v}</div>
@@ -259,7 +261,8 @@ function ArticlesSection({ resident: r }: { resident: ResidentProfileBundle }) {
                   ) : null}
                 </div>
                 <div className="flex flex-1 flex-col gap-2 p-4 sm:p-5">
-                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-primary-700">
+                  {/* 10px は実機で読めない。スマホだけ 11px に上げ PC は sm: で据え置き */}
+                  <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.1em] text-primary-700 sm:text-[10px]">
                     {ARTICLE_TYPE_LABEL[a.articleType] ?? a.articleType}
                   </span>
                   <h3 className="line-clamp-2 text-[15px] font-bold leading-snug tracking-tight">
