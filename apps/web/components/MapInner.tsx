@@ -565,7 +565,7 @@ function MapBody({
         />
       </GoogleMap>
 
-      {/* タップしたピン / ヘキサのボトムシート (BottomNav を避けるため bottom-16) */}
+      {/* タップしたピン / ヘキサのボトムシート。下部タブ廃止後は画面下端に置く */}
       {activeGroup ? (
         <GroupBottomSheet
           group={activeGroup}

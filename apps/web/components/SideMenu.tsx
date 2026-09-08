@@ -231,7 +231,7 @@ export function SideMenu({
       {/*
         オーバーレイ + ドロワーは React Portal で body 直下に描画する。
         親 (SiteHeader = sticky z-30) の stacking context に閉じ込められると
-        BottomNav (z-40) より下に潜って下半分が隠れてしまうため。
+        ページ内の固定バー (z-40) より下に潜って下半分が隠れてしまうため。
       */}
       {mounted &&
         createPortal(

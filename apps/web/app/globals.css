@@ -181,16 +181,11 @@
 }
 
 @layer components {
-  /* レイアウト主要 children の余白。
-     - モバイル: BottomNav (h-14 ≒ 56px) + safe-area-inset-bottom
-     - md+: BottomNav が消えるので 0 (上書き済み) */
+  /* レイアウト主要 children の下余白。
+     下部タブ（BottomNav）を廃止したので、ホームバー分の safe-area だけを見る。
+     PC では env(safe-area-inset-bottom) が 0 なので実質 0。 */
   .app-main-pad {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
-  }
-  @media (min-width: 768px) {
-    .app-main-pad {
-      padding-bottom: 0;
-    }
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 

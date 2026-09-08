@@ -9,10 +9,9 @@ import { Logo } from './Logo';
  * 法務 4 文書は /legal/* 配下。
  */
 export function SiteFooter() {
-  // app-main-pad = BottomNav (fixed, 約 60px + safe-area) の高さ分の下余白。
-  // md 未満だけ効く（md 以上は BottomNav が消えるので padding 0 = PC は据え置き）。
-  // SiteFooter は layout.tsx で .app-main-pad の外（兄弟）に置かれているため、これが
-  // 無いと最下部の著作権バーがモバイルでタブに隠れて読めない。
+  // app-main-pad = ホームバー分の safe-area。下部タブ廃止後はこれだけ。
+  // SiteFooter は layout.tsx で .app-main-pad の外（兄弟）に置かれているため、
+  // 最下部の著作権バーがホームバーに被らないよう自前で持つ。
   return (
     <footer className="app-main-pad mt-16 border-t border-border bg-surface-muted/40">
       <div className="mx-auto grid max-w-screen-xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-4">

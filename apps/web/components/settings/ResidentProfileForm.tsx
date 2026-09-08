@@ -479,7 +479,8 @@ export function ResidentProfileForm({ initial }: Props) {
       {/* 固定の保存バー。
           md 未満はルートレイアウトの BottomNav（border 1 + pt 4 + h-14 56 + safe-area）が
           bottom:0 を覆うので、その分だけ持ち上げる。md 以上は BottomNav が消えるので従来位置。 */}
-      <div className="sticky bottom-[calc(61px_+_env(safe-area-inset-bottom,0px))] z-10 mt-3 flex items-center gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-md backdrop-blur-md md:bottom-0">
+      {/* 下部タブを廃止したので持ち上げは不要。画面下端に貼り付ける */}
+      <div className="sticky bottom-0 z-10 mt-3 flex items-center gap-3 rounded-md border border-border bg-card/95 px-4 py-3 shadow-md backdrop-blur-md">
         {/* 縮んでいいのは説明文だけ（min-w-0）。ボタンは shrink-0 のまま */}
         <p className="min-w-0 text-[12px] text-foreground/60">
           {hasSchool && specialties.length > 0
