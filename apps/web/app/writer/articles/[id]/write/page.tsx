@@ -21,8 +21,6 @@ export default async function WriteArticlePage({ params }: { params: { id: strin
       id: schema.articles.id,
       writerId: schema.articles.writerId,
       title: schema.articles.title,
-      subtitle: schema.articles.subtitle,
-      lead: schema.articles.lead,
       topic: schema.articles.topic,
       coverImageUrl: schema.articles.coverImageUrl,
       blocks: schema.articles.blocks,
@@ -44,8 +42,6 @@ export default async function WriteArticlePage({ params }: { params: { id: strin
       initial={{
         id: a.id,
         title: a.title === '新しい記事' ? '' : a.title,
-        subtitle: a.subtitle ?? '',
-        lead: a.lead ?? '',
         topic: a.topic ?? '',
         coverImageUrl: a.coverImageUrl ?? '',
         blocks: blocks.length > 0 ? blocks : a.body ? legacyBodyToBlocks(a.body) : [],

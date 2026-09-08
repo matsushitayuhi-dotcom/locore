@@ -105,15 +105,17 @@ export default async function DashboardPage() {
 
           <div className="min-w-0">
             {/* ===== ヘッダー ===== */}
+            {/* flex-1 は flex-basis 0 なので、min-w を与えないと右側に押されて
+                挨拶（22px）が 74px 幅の 4 行まで潰れる。入り切らないときは右側を次の行へ。 */}
             <header className="flex flex-wrap items-start gap-3">
-              <div className="min-w-0 flex-1">
+              <div className="min-w-[15rem] flex-1">
                 <h1 className="text-[22px] font-semibold tracking-[-0.01em] sm:text-[24px]">{msg.greeting}</h1>
                 <p className="mt-1 text-[13px] leading-[1.7] text-neutral-500">{msg.summary}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <span
                   className={
-                    'rounded-full border px-3 py-1.5 text-[12px] font-bold ' +
+                    'shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[12px] font-bold ' +
                     (m.profilePublished ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong bg-card text-neutral-600')
                   }
                 >
@@ -121,7 +123,7 @@ export default async function DashboardPage() {
                 </span>
                 <Link
                   href={`/experts/${me.id}`}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12px] font-bold transition hover:border-foreground"
+                  className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12px] font-bold transition hover:border-foreground"
                 >
                   公開プロフィールを見る <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                 </Link>
@@ -205,7 +207,8 @@ export default async function DashboardPage() {
               <GoalCard goal={m.goal} bookings={m.month.bookings} daysLeft={daysLeft} message={msg.goal} suggestSlots={m.todo.openSlots7d < 5} />
               <div className="rounded-2xl border border-border bg-card p-5">
                 <h2 className="text-[15px] font-bold">マイルストーン</h2>
-                <div className="mt-3 grid grid-cols-4 gap-2">
+                {/* 402px だと 4 列で 1 枚 56px しか無く、ラベルが折り返す。スマホは 2 列に */}
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {milestones.map((s) => (
                     <div key={s.code} className={'rounded-xl border border-border px-1.5 py-2.5 text-center ' + (s.achieved ? '' : 'opacity-45')}>
                       <div className={'mx-auto mb-1.5 grid h-8 w-8 place-items-center rounded-full text-[12px] font-extrabold ' + (s.achieved ? 'bg-primary-100 text-primary-900' : 'bg-muted text-neutral-500')}>

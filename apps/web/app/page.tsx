@@ -83,26 +83,31 @@ export default async function HomePage() {
           </div>
 
           {/* hero visual: エキスパートカード + チャット（装飾） */}
-          <div className="relative mx-auto min-h-[360px] w-full max-w-[520px] sm:min-h-[420px]" aria-hidden>
-            <div className="absolute inset-[8%_4%_6%_2%] rounded-3xl border border-border bg-muted" />
-            <div className="absolute left-[16%] top-[13%] h-[190px] w-[63%] rotate-3 rounded-2xl border border-border bg-card opacity-55 shadow-md" />
-            <div className="absolute left-[8%] top-[6%] w-[76%] rounded-2xl border border-border bg-card p-5 shadow-md sm:w-[63%]">
+          {/* 携帯（sm 未満）では重ねる演出をやめ、カード → 吹き出しの縦並びにする。
+              幅 390px だと重なって文字が潰れ、名前や肩書きが 1 文字ずつ折り返してしまうため。 */}
+          <div className="relative mx-auto w-full max-w-[520px] max-sm:min-h-0 sm:min-h-[420px]" aria-hidden>
+            <div className="absolute inset-[8%_4%_6%_2%] rounded-3xl border border-border bg-muted max-sm:hidden" />
+            <div className="absolute left-[16%] top-[13%] h-[190px] w-[63%] rotate-3 rounded-2xl border border-border bg-card opacity-55 shadow-md max-sm:hidden" />
+            <div className="absolute left-[8%] top-[6%] w-[76%] rounded-2xl border border-border bg-card p-5 shadow-md max-sm:static max-sm:w-full sm:w-[63%]">
               <div className="flex items-center gap-3.5">
                 <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-full bg-primary-100 text-[19px] font-bold text-primary-900">
                   里
                 </span>
-                <div>
-                  <div className="text-[15.5px] font-bold leading-tight">
-                    高村 里奈
+                {/* バッジは肩書きではなく名前の隣に置く。肩書きは 1 行まるごと使えるので折り返さない */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 truncate text-[15.5px] font-bold leading-tight">
+                      高村 里奈
+                    </span>
+                    <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
+                      <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden />
+                      在籍確認済み
+                    </span>
                   </div>
-                  <div className="mt-0.5 text-[12px] text-neutral-500">
+                  <div className="mt-0.5 truncate text-[12px] text-neutral-500">
                     🇺🇸 ボストン・HBS在学中
                   </div>
                 </div>
-                <span className="ml-auto inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-2.5 py-0.5 text-[11px] font-bold text-primary-900">
-                  <ShieldCheck className="h-3 w-3 shrink-0" aria-hidden />
-                  在籍確認済み
-                </span>
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {['MBA', 'エッセイ・出願書類', '面接対策'].map((t) => (
@@ -119,13 +124,13 @@ export default async function HomePage() {
                 <span className="text-[12px] text-neutral-500">/ 30分〜</span>
               </div>
             </div>
-            <div className="absolute bottom-[24%] right-0 max-w-[78%] rounded-2xl rounded-br-md bg-neutral-900 px-4 py-3 text-[12.5px] leading-relaxed text-white shadow-md sm:max-w-[66%]">
+            <div className="absolute bottom-[24%] right-0 max-w-[78%] rounded-2xl rounded-br-md bg-neutral-900 px-4 py-3 text-[12.5px] leading-relaxed text-white shadow-md max-sm:static max-sm:ml-auto max-sm:mt-3 max-sm:max-w-[88%] sm:max-w-[66%]">
               <span className="block text-[10.5px] text-white/60">
                 相談者
               </span>
               来年秋入学でMBA出願を予定しています。エッセイの方向性を相談したいです…!
             </div>
-            <div className="absolute bottom-[4%] left-[4%] flex max-w-[66%] items-start gap-2.5 rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-[12.5px] leading-relaxed shadow-md">
+            <div className="absolute bottom-[4%] left-[4%] flex max-w-[66%] items-start gap-2.5 rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-[12.5px] leading-relaxed shadow-md max-sm:static max-sm:mt-3 max-sm:max-w-[92%]">
               <span className="mt-0.5 grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full bg-primary-100 text-[12px] font-bold text-primary-900">
                 里
               </span>

@@ -31,8 +31,6 @@ export default function WriterDemoPage() {
       initial={{
         id: '00000000-0000-4000-8000-000000000000',
         title: 'MBAエッセイ、日本人がいちばん最初につまずく3つの罠',
-        subtitle: '実績の列挙、謙遜、浅い Why this school。2024 年出願で HBS と Wharton に受かるまでに、直した順番で書きます。',
-        lead: 'MBA 出願のエッセイで、日本人受験者が最初につまずくポイントはだいたい共通しています。私自身が 2024 年の出願でハマりかけ、合格者仲間と答え合わせをして見えてきた「3 つの罠」を、直した順番で書きます。',
         topic: 'mba',
         coverImageUrl: '',
         blocks: BLOCKS,
