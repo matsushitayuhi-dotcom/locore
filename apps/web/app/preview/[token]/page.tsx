@@ -7,6 +7,8 @@ import { getArticleVideos } from '@/lib/articles/v2';
 import { ArticleRendererV2 } from '@/components/article/v2/ArticleRendererV2';
 import { isExpertUser } from '@/lib/experts/list';
 import { isUserVerified } from '@/lib/residents/verification';
+import { getEditorialArticleRow } from '@/lib/articles/editorial';
+import { EditorialArticleView } from '@/components/articles/EditorialArticleView';
 
 export const metadata = {
   title: '共有プレビュー',
@@ -32,6 +34,16 @@ export const dynamic = 'force-dynamic';
  * 参照: `manual/0049_article_preview_token.sql`,
  *      `apps/web/app/writer/articles/[id]/edit/actions.ts` の
  *      `generatePreviewToken` / `revokePreviewToken`。
+ *
+ * TODO(引き継ぎ): token を発行する UI は旧ウィザード（WizardShell）にしか無く、
+ * /edit をリダイレクト＋確認画面に置き換えた時点でアプリ内から到達できなくなった。
+ * このページ自体は生きている（token を手で作れば見られる）が、書き手は共有リンクを作れない。
+ * generatePreviewToken / revokePreviewToken を edit/actions.ts から write/actions.ts か
+ * lib/articles/ へ移し、新エディタのヘッダに「共有リンクを作る」を置くこと。
+ * edit/ を物理削除するのはその移設が終わってから（今消すと共有プレビューごと死ぬ）。
+ *
+ * ブロック形式（body_style='blocks'）の記事は ArticleRendererV2 が描けず本文が空だったので、
+ * ライターの公開前プレビューと同じ EditorialArticleView（記事ページと同じ <Prose>）に振り分ける。
  */
 export default async function PreviewByTokenPage({
   params,
@@ -66,6 +78,19 @@ export default async function PreviewByTokenPage({
     return notFound();
   }
 
+  // ===== ブロック形式（新エディタ /write で書いた記事） =====
+  // token が有効なら第三者にも全文見せる。閲覧者は本人ではないので isOwner=false。
+  const ed = await getEditorialArticleRow(row.id);
+  if (ed && ed.bodyStyle === 'blocks') {
+    return (
+      <div className="space-y-3">
+        <ShareNotice articleId={ed.id} />
+        <EditorialArticleView row={ed} variant="shared" />
+      </div>
+    );
+  }
+
+  // ===== 旧形式（classic / photo_journal）: 従来どおり =====
   // 下書き / pending_review / archived も表示可能にするため allowUnpublished=true
   const bundle = await getDbArticleBundle(row.id, { allowUnpublished: true });
   if (!bundle) return notFound();
@@ -80,14 +105,7 @@ export default async function PreviewByTokenPage({
 
   return (
     <div className="space-y-3">
-      <aside
-        role="note"
-        className="rounded-md border border-primary-300/40 bg-primary-500/10 px-3 py-2 text-[12px] text-primary-300"
-      >
-        これは <strong>公開前の共有プレビュー</strong> です。
-        リンクを知っている人なら誰でも閲覧できます。
-        公開後は通常の記事ページ (/articles/{bundle.article.id}) からアクセスしてください。
-      </aside>
+      <ShareNotice articleId={bundle.article.id} />
 
       <ArticleRendererV2
         article={bundle.article}
@@ -121,5 +139,19 @@ export default async function PreviewByTokenPage({
         authorIsVerified={authorIsVerified}
       />
     </div>
+  );
+}
+
+/** 共有プレビューの注意書き（ブロック形式・旧形式で同じ文言を出す） */
+function ShareNotice({ articleId }: { articleId: string }) {
+  return (
+    <aside
+      role="note"
+      className="rounded-md border border-primary-300/40 bg-primary-500/10 px-3 py-2 text-[12px] text-primary-300"
+    >
+      これは <strong>公開前の共有プレビュー</strong> です。
+      リンクを知っている人なら誰でも閲覧できます。
+      公開後は通常の記事ページ (/articles/{articleId}) からアクセスしてください。
+    </aside>
   );
 }

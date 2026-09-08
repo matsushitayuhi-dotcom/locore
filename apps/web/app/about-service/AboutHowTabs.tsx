@@ -29,10 +29,13 @@ export function AboutHowTabs({
 
   return (
     <>
+      {/* mt-[26px] / 下の mt-14 は 1080px 幅の PC 基準。402px では見出しから
+          ①まで 26+56+8 = 90px 空き、詰めたステップ間（44px）に対して間延びする。
+          スマホだけ 20px + 32px に詰める（sm 以上は元の値のまま = PC は不変） */}
       <div
         role="tablist"
         aria-label="使い方の切り替え"
-        className="mx-auto mt-[26px] flex w-max max-w-full rounded-full border border-border bg-muted p-1"
+        className="mx-auto mt-[26px] flex w-max max-w-full rounded-full border border-border bg-muted p-1 max-sm:mt-5"
       >
         <button
           type="button"
@@ -56,7 +59,7 @@ export function AboutHowTabs({
 
       {/* 左タイムライン軸: rail 40px + gap 24px（モバイル 12px + 14px）。
           線は 1px 連続で上下端フェード、上端ライムノード・下端グレードット */}
-      <div className="mt-14 grid grid-cols-[12px_1fr] gap-x-3.5 sm:grid-cols-[40px_1fr] sm:gap-x-6">
+      <div className="mt-14 grid grid-cols-[12px_1fr] gap-x-3.5 max-sm:mt-8 sm:grid-cols-[40px_1fr] sm:gap-x-6">
         <div className="relative" aria-hidden>
           <span className="absolute bottom-0 left-[5px] top-0 w-px bg-[linear-gradient(to_bottom,transparent,var(--color-neutral-200)_34px,var(--color-neutral-200)_calc(100%-34px),transparent)] sm:left-[19px]" />
           <span className="absolute left-[5px] top-5 h-[9px] w-[9px] -translate-x-1/2 rounded-full bg-primary-500 ring-4 ring-primary-100 sm:left-[19px]" />

@@ -110,9 +110,11 @@ export const articles = pgTable(
     writerId: uuid('writer_id')
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
-    cityId: uuid('city_id')
-      .notNull()
-      .references(() => cities.id, { onDelete: 'restrict' }),
+    /**
+     * 都市。2026-09 以降の読みもの記事は都市に紐付かないので nullable。
+     * 既存の旅行記事は今まで通り値が入る。manual/0092_articles_city_optional.sql
+     */
+    cityId: uuid('city_id').references(() => cities.id, { onDelete: 'restrict' }),
     title: text('title').notNull(),
     /** 無料プレビュー本文（購入前にも見える）。Markdown。 */
     body: text('body').notNull(),

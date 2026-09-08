@@ -1,32 +1,87 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from 'react';
+import type { ChangeEvent, KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { flushSync } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowUp, ExternalLink, GripVertical, ImagePlus, Loader2, Plus, Redo2, Trash2, Undo2, X } from 'lucide-react';
-import { newBlockId, type ArticleBlock, type BlockType } from '@/lib/articles/blocks';
+import { ArrowLeft, Ellipsis, ExternalLink, Eye, GripVertical, Loader2, Pencil, Plus } from 'lucide-react';
+import { Prose } from '@/components/articles/Prose';
+import type { ArticleBlock } from '@/lib/articles/blocks';
 import { SPECIALTY_GROUPS } from '@/lib/experts/specialties';
 import { uploadImage } from '@/lib/storage/uploadImage';
-import { publishBlocksArticle, resolveUrlBlock, saveArticleBlocks, unpublishBlocksArticle } from './actions';
+import { publishBlocksArticle, saveArticleBlocks, unpublishBlocksArticle } from './actions';
+import { BLOCK_KINDS, TEXT_KINDS, TURN_INTO_KINDS, type EditorKind } from './BLOCK_KINDS';
+import {
+  caretAtEnd,
+  caretAtStart,
+  compact,
+  createBlock,
+  cycleHeading,
+  cycleList,
+  duplicate,
+  findBlock,
+  indexOfBlock,
+  insertAfter,
+  isEditableText,
+  isLinkAction,
+  kindOf,
+  move,
+  remove,
+  replaceBlock,
+  toggleQuote,
+  turnInto,
+  type Caret,
+  type OpResult,
+} from './blockOps';
+import {
+  BlockField,
+  BOXED_INPUT,
+  FieldFocusProvider,
+  HINT,
+  MAX_UPLOAD_BYTES,
+  OUTLINE_BUTTON,
+  prepareImage,
+  SOLID_BUTTON,
+  useCreateFieldFocus,
+  useLinkResolver,
+  type FieldContext,
+} from './fields';
+import { FormatBar } from './FormatBar';
+import { InsertSheet, Sheet } from './InsertSheet';
+import { useBlockKeymap, type FieldPos } from './useBlockKeymap';
 
 /**
- * ブロック形式の記事エディタ（0091）。記事ページ（案 B）と同じ部品で書ける。
+ * ブロック形式の記事エディタ（0091 / エディタ作り直し）。402px の画面をそのまま作る。
  *
- * 操作:
- *   - 空の段落で「/」を打つと部品メニュー。矢印キーで選び Enter、または文字で絞り込み
- *   - 段落で Enter → 次の段落。空の段落で Backspace → 削除
- *   - 段落に URL を 1 本だけ貼って Enter → リンクカード / 埋め込みに自動変換（サーバーで判定・プレビュー取得）
- *   - 各ブロックの右上: 上へ / 下へ / 削除
- *   - 自動保存（1.5 秒後）。公開はヘッダーのボタン
+ *   44px のヘッダ（← / 状態 / 見る / …。**公開ボタンは置かない**）
+ *   カバー写真 → タイトル → ひとこと説明 → 本文のブロック列
+ *   キーボードの真上に書式バー（＋ / 見出し / 箇条書き / 引用 / 写真 / リンク / 戻す / この行）
  *
- * 複数行の部品（箇条書き・表・Q&A …）は 1 行 1 項目のテキストで編集する（"|" で列を区切る）。
- * 装飾は **太字** と [文字](URL) だけ。
+ * 「見る（プレビュー）」だけヘッダに置いてあるのは、402px の書式バーに 8 個より多く並べると
+ * 右端が画面外に出て、隠れていること自体が書き手に伝わらないため。
+ * 見る／書くは行ではなく記事全体の切り替えなので、保存状態と同じヘッダが収まりもよい。
+ *
+ * このファイルが持つのは「外枠」だけ。
+ * ブロック 1 つぶんの中身は fields/BlockField、キー処理は useBlockKeymap、
+ * 配列の書き換えは blockOps（純粋関数）に置いてある。
+ *
+ * 作り直しで直したこと:
+ *   - 挿入の入口を ＋ のボトムシートに一本化した（「/」は PC の速記として残すだけ）
+ *   - 書式を変えても本文テキストが消えない（blockOps.turnInto がテキストを持ち回す）
+ *   - キーの分岐は必ず isComposing を先に見る（useBlockKeymap）。日本語の変換確定で崩れない
+ *   - 行の key は b.id だけ（rev を混ぜない）。⌘Z を window で横取りするのもやめたので、
+ *     文字の取り消しは textarea 標準のまま。エディタ側の履歴は**構造の変更だけ**を積み、
+ *     書式バーの「戻す」がそれ
+ *   - 入力欄は全て 16px 以上、タップできるものは 44px 以上、hover でしか出ない UI は無し
  */
 
 type Initial = {
   id: string;
   title: string;
+  /** ひとこと説明。saveSchema（actions.ts:148）が受け取り、:463 で articles.subtitle に保存される */
+  subtitle?: string;
   topic: string;
   coverImageUrl: string;
   blocks: ArticleBlock[];
@@ -35,275 +90,371 @@ type Initial = {
   updatedAt: string;
 };
 
-type MenuItem = { type: BlockType | 'aside_point' | 'aside_caution' | 'aside_memo' | 'list_number' | 'heading3' | 'video'; label: string; hint: string; keys: string };
+/** 構造の変更だけを積む履歴の上限 */
+const HISTORY_LIMIT = 60;
 
-const MENU: MenuItem[] = [
-  { type: 'heading', label: 'H2', hint: '大きな見出し', keys: 'h2 見出し heading' },
-  { type: 'heading3', label: 'H3', hint: '小さな見出し', keys: 'h3 見出し heading' },
-  { type: 'paragraph', label: '本文', hint: 'テキスト', keys: 'text 本文 段落 p' },
-  { type: 'list', label: '箇条書きリスト', hint: '1 行 1 項目', keys: 'list ul 箇条書き bullet' },
-  { type: 'list_number', label: '番号付きリスト', hint: '1 行 1 項目', keys: 'ol 番号 number' },
-  { type: 'aside_point', label: 'コールアウト', hint: '補足・注意・強調（ブロック内で切替）', keys: 'callout コールアウト 補足 注意 強調' },
-  { type: 'quote', label: '引用', hint: '言葉と出典', keys: 'quote 引用' },
-  { type: 'table', label: 'テーブル', hint: '1 行 1 段。列は | で区切る。1 行目は見出し', keys: 'table テーブル 表' },
-  { type: 'timeline', label: 'タイムライン', hint: '日付 | 出来事', keys: 'timeline 時系列' },
-  { type: 'divider', label: '区切り線', hint: '短い罫', keys: 'divider hr 区切り' },
-  { type: 'image', label: '画像', hint: 'アップロード＋キャプション', keys: 'image 画像 写真' },
-  { type: 'video', label: '動画', hint: 'YouTube の URL', keys: 'video youtube 動画' },
-  { type: 'link_card', label: '埋め込み 1 · リンク', hint: '記事 / エキスパート / 外部サイトの URL をカードに', keys: 'embed1 link bookmark リンク 埋め込み' },
-  { type: 'embed', label: '埋め込み 2 · SNS・地図', hint: 'Google マップ / X / Instagram / TikTok / Spotify', keys: 'embed2 sns map 地図 埋め込み' },
-];
+/** SSR では useLayoutEffect が警告になるので、サーバーでは useEffect にする */
+const useIsoLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
 
-function make(type: MenuItem['type']): ArticleBlock {
-  const id = newBlockId();
-  switch (type) {
-    case 'heading':
-      return { id, type: 'heading', level: 2, text: '' };
-    case 'heading3':
-      return { id, type: 'heading', level: 3, text: '' };
-    case 'list':
-      return { id, type: 'list', style: 'bullet', items: [''] };
-    case 'list_number':
-      return { id, type: 'list', style: 'number', items: [''] };
-    case 'quote':
-      return { id, type: 'quote', text: '' };
-    case 'aside_point':
-      return { id, type: 'aside', kind: 'point', text: '' };
-    case 'aside_caution':
-      return { id, type: 'aside', kind: 'caution', text: '' };
-    case 'aside_memo':
-      return { id, type: 'aside', kind: 'memo', text: '' };
-    case 'takeaways':
-      return { id, type: 'takeaways', items: [''] };
-    case 'checklist':
-      return { id, type: 'checklist', items: [{ text: '' }] };
-    case 'faq':
-      return { id, type: 'faq', items: [{ q: '', a: '' }] };
-    case 'terms':
-      return { id, type: 'terms', items: [{ term: '', def: '' }] };
-    case 'timeline':
-      return { id, type: 'timeline', items: [{ date: '', text: '' }] };
-    case 'proscons':
-      return { id, type: 'proscons', pros: [''], cons: [''] };
-    case 'stats':
-      return { id, type: 'stats', items: [{ value: '', label: '' }] };
-    case 'table':
-      return { id, type: 'table', rows: [['', ''], ['', '']] };
-    case 'image':
-      return { id, type: 'image', url: '' } as unknown as ArticleBlock;
-    case 'images':
-      return { id, type: 'images', urls: [] } as unknown as ArticleBlock;
-    case 'link_card':
-      return { id, type: 'link_card', url: '', kind: 'external' } as unknown as ArticleBlock;
-    case 'video':
-      return { id, type: 'embed', url: '', provider: 'youtube' } as unknown as ArticleBlock;
-    case 'embed':
-      return { id, type: 'embed', url: '', provider: 'other' } as unknown as ArticleBlock;
-    case 'footnotes':
-      return { id, type: 'footnotes', items: [''] };
-    case 'divider':
-      return { id, type: 'divider' };
-    default:
-      return { id, type: 'paragraph', text: '' };
-  }
+/** 書式バーのトグルが効く行か（1 つの文章として読める種類だけ） */
+function canFormatKind(kind: EditorKind | null): boolean {
+  return kind !== null && TEXT_KINDS.includes(kind);
 }
-
-/** 保存前に「空のまま」のブロックを落とす（url 未入力の画像・リンクなど） */
-function compact(blocks: ArticleBlock[]): ArticleBlock[] {
-  return blocks.filter((b) => {
-    switch (b.type) {
-      case 'image':
-        return !!b.url;
-      case 'images':
-        return b.urls.length > 0;
-      case 'link_card':
-      case 'embed':
-        return !!b.url;
-      default:
-        return true;
-    }
-  });
-}
-
-const lines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
-const cells = (l: string) => l.split('|').map((c) => c.trim());
-
-/** 履歴（元に戻す / やり直す）で扱う記事全体のスナップショット */
-type Doc = { title: string; topic: string; cover: string; blocks: ArticleBlock[] };
-const HISTORY_LIMIT = 100;
-const same = (a: Doc, b: Doc) => JSON.stringify(a) === JSON.stringify(b);
-/** ブロックの並びと種類だけを見る鍵。ここが変わったら「構造の変更」として即座に履歴へ積む */
-const shape = (d: Doc) => d.blocks.map((b) => `${b.id}:${b.type}`).join(',');
 
 export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?: boolean }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial.title);
+  const [subtitle, setSubtitle] = useState(initial.subtitle ?? '');
   const [topic, setTopic] = useState(initial.topic);
   const [cover, setCover] = useState(initial.coverImageUrl);
-  const [blocks, setBlocks] = useState<ArticleBlock[]>(initial.blocks.length ? initial.blocks : [{ id: newBlockId(), type: 'paragraph', text: '' }]);
+  const [blocks, setBlocks] = useState<ArticleBlock[]>(() => (initial.blocks.length > 0 ? initial.blocks : [createBlock('paragraph')]));
   const [status, setStatus] = useState(initial.status);
   const [savedAt, setSavedAt] = useState<string | null>(initial.updatedAt);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const [preview, setPreview] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [pending, start] = useTransition();
-  const [focusId, setFocusId] = useState<string | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [sheet, setSheet] = useState<'none' | 'insert' | 'turn' | 'link' | 'more'>('none');
 
-  // ===== 履歴（⌘Z / ⇧⌘Z） =====
-  const doc = useMemo<Doc>(() => ({ title, topic, cover, blocks }), [title, topic, cover, blocks]);
-  const docRef = useRef(doc);
-  const prevDoc = useRef(doc);
-  const past = useRef<Doc[]>([]);
-  const future = useRef<Doc[]>([]);
-  const pendingBase = useRef<Doc | null>(null); // まだ履歴に積んでいない編集の起点
-  const restoring = useRef(false);
-  const histTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [hist, setHist] = useState({ undo: 0, redo: 0 });
-  const [rev, setRev] = useState(0); // 履歴を戻したら各行を作り直す（行内のローカル state を同期させるため）
+  const blocksRef = useRef(blocks);
+  blocksRef.current = blocks;
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
 
-  // ===== ドラッグでの並べ替え =====
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [dropAt, setDropAt] = useState<{ id: string; place: 'before' | 'after' } | null>(null);
-
-  const payload = useCallback(
-    () => ({ id: initial.id, title, topic, coverImageUrl: cover, blocks: compact(blocks) }),
-    [initial.id, title, topic, cover, blocks],
-  );
-
-  const save = useCallback(async () => {
-    if (demo) {
-      // デモ: サーバーに送らず「保存済み」扱いにする
-      setSavedAt(new Date().toISOString());
-      setDirty(false);
-      return true;
-    }
-    setSaving(true);
-    const res = await saveArticleBlocks(payload());
-    setSaving(false);
-    if (res.ok) {
-      setSavedAt(res.data?.savedAt ?? new Date().toISOString());
-      setDirty(false);
-    } else toast.error(res.error);
-    return res.ok;
-  }, [payload, demo]);
-
-  // 自動保存（1.5 秒）
-  useEffect(() => {
-    if (!dirty) return;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      void save();
-    }, 1500);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [dirty, title, topic, cover, blocks, save]);
-
-  const touch = () => setDirty(true);
-
-  /** 溜めていた編集を 1 手として履歴に積む。upto を渡すとそこまでを 1 手にする */
-  const flush = useCallback((upto?: Doc) => {
-    if (histTimer.current) {
-      clearTimeout(histTimer.current);
-      histTimer.current = null;
-    }
-    const base = pendingBase.current;
-    pendingBase.current = null;
-    if (!base) return;
-    if (same(base, upto ?? docRef.current)) return;
-    past.current = [...past.current, base].slice(-HISTORY_LIMIT);
-    future.current = [];
-    setHist({ undo: past.current.length, redo: 0 });
-  }, []);
-
-  // 変更を見張って履歴に積む。文字入力は 600ms まとめて 1 手、構造の変更は即座に 1 手
-  useEffect(() => {
-    const prev = prevDoc.current;
-    prevDoc.current = doc;
-    docRef.current = doc;
-    if (restoring.current) {
-      restoring.current = false;
-      pendingBase.current = null;
-      if (histTimer.current) {
-        clearTimeout(histTimer.current);
-        histTimer.current = null;
-      }
-      return;
-    }
-    if (same(doc, prev)) return;
-    if (pendingBase.current === null) pendingBase.current = prev;
-    if (histTimer.current) {
-      clearTimeout(histTimer.current);
-      histTimer.current = null;
-    }
-    if (shape(doc) !== shape(prev)) {
-      flush(prev); // 直前までの文字入力を先に 1 手として確定させる
-      pendingBase.current = prev;
-      flush(doc);
-    } else {
-      histTimer.current = setTimeout(() => flush(), 600);
-    }
-  }, [doc, flush]);
-
-  const apply = useCallback((d: Doc) => {
-    restoring.current = true;
-    setTitle(d.title);
-    setTopic(d.topic);
-    setCover(d.cover);
-    setBlocks(d.blocks);
-    setFocusId(null);
-    setRev((n) => n + 1);
+  /**
+   * 「書き手が何か変えた」回数。保存を始めた時点の値を控えておき、
+   * 返事が返ってきたときに変わっていたら **dirty を落とさない**。
+   * これが無いと、通信中に打った文字が「保存済み」表示のまま消える
+   */
+  const editSeq = useRef(0);
+  /** 変更があったことの記録。setDirty(true) は必ずこれ経由で呼ぶ */
+  const markDirty = useCallback(() => {
+    editSeq.current += 1;
     setDirty(true);
   }, []);
 
-  const undo = useCallback(() => {
-    flush();
-    if (past.current.length === 0) return;
-    const target = past.current[past.current.length - 1]!;
-    past.current = past.current.slice(0, -1);
-    future.current = [...future.current, docRef.current];
-    setHist({ undo: past.current.length, redo: future.current.length });
-    apply(target);
-  }, [flush, apply]);
+  // ===== キャレットの復元（入力欄の登録簿は fields/fieldFocus が持つ） =====
+  const fieldFocus = useCreateFieldFocus();
+  const [active, setActive] = useState<FieldPos | null>(null);
+  /** タイトル / ひとこと説明にカーソルがある（＝本文の行はどこも選んでいない） */
+  const [atHead, setAtHead] = useState(false);
+  const [wanted, setWanted] = useState<{ caret: Caret; n: number } | null>(null);
+  const caretSeq = useRef(0);
 
-  const redo = useCallback(() => {
-    if (pendingBase.current) {
-      flush(); // 新しい編集が入っていたら、やり直しは捨てる
+  /** 操作のあと、この場所にキャレットを戻す（実際の focus は state が反映されたあとの effect で） */
+  const focusCaret = useCallback((caret: Caret) => {
+    caretSeq.current += 1;
+    setWanted({ caret, n: caretSeq.current });
+  }, []);
+
+  useEffect(() => {
+    if (!wanted) return;
+    fieldFocus.focus(wanted.caret);
+    // すでに focus 済みの要素だと onFocus が飛ばないので、ここでも今の行を記録する
+    const next: FieldPos = { blockId: wanted.caret.blockId, row: wanted.caret.row, col: wanted.caret.col };
+    setAtHead(false);
+    setActive((cur) => (samePos(cur, next) ? cur : next));
+  }, [wanted, fieldFocus]);
+
+  // ===== 履歴（構造の変更だけ） =====
+  /** 戻し先。blocks と「そのときカーソルがあった行」を一緒に持つ（戻したあと行方不明にならないように） */
+  type Snap = { blocks: ArticleBlock[]; blockId: string | null };
+  const past = useRef<Snap[]>([]);
+  const future = useRef<Snap[]>([]);
+  const [undoCount, setUndoCount] = useState(0);
+  const activeRef = useRef<FieldPos | null>(null);
+  activeRef.current = active;
+
+  const snapshot = useCallback((): Snap => ({ blocks: blocksRef.current, blockId: activeRef.current?.blockId ?? null }), []);
+
+  /** 戻す／やり直すで共通の書き戻し。戻した先の行の末尾にキャレットを置く */
+  const restore = useCallback(
+    (snap: Snap) => {
+      blocksRef.current = snap.blocks;
+      setBlocks(snap.blocks);
+      markDirty();
+      const target = (snap.blockId ? findBlock(snap.blocks, snap.blockId) : undefined) ?? snap.blocks[0];
+      if (target) focusCaret(caretAtEnd(target));
+    },
+    [focusCaret, markDirty],
+  );
+
+  /** 行が増える・種類が変わるなど、構造が変わる操作 */
+  const apply = useCallback(
+    (r: OpResult) => {
+      if (r.blocks !== blocksRef.current) {
+        // 文字入力の取り消しは textarea 標準の ⌘Z に任せ、ここには積まない
+        past.current = [...past.current, snapshot()].slice(-HISTORY_LIMIT);
+        future.current = []; // 新しい操作をしたら「やり直す」の行き先は消える
+        setUndoCount(past.current.length);
+        blocksRef.current = r.blocks;
+        setBlocks(r.blocks);
+        markDirty();
+      }
+      if (r.caret) focusCaret(r.caret);
+    },
+    [focusCaret, markDirty, snapshot],
+  );
+
+  /** 1 文字打つたびの書き戻し。キャレットは動かさないし履歴にも積まない */
+  const update = useCallback(
+    (fn: (bs: ArticleBlock[]) => ArticleBlock[]) => {
+      const next = fn(blocksRef.current);
+      if (next === blocksRef.current) return;
+      blocksRef.current = next;
+      setBlocks(next);
+      markDirty();
+    },
+    [markDirty],
+  );
+
+  const redoStructure = useCallback(() => {
+    const next = future.current[future.current.length - 1];
+    if (!next) return;
+    future.current = future.current.slice(0, -1);
+    past.current = [...past.current, snapshot()].slice(-HISTORY_LIMIT);
+    setUndoCount(past.current.length);
+    restore(next);
+  }, [restore, snapshot]);
+
+  /**
+   * 書式バーの「戻す」。**戻す前の状態は future に積む**ので、
+   * 「見出しにしてから打った文字」を戻してしまっても、やり直しで取り返せる。
+   * バーは 402px に 8 個までなので「やり直す」はトーストのボタンとして出す
+   */
+  const undoStructure = useCallback(() => {
+    const prev = past.current[past.current.length - 1];
+    if (!prev) return;
+    past.current = past.current.slice(0, -1);
+    future.current = [...future.current, snapshot()].slice(-HISTORY_LIMIT);
+    setUndoCount(past.current.length);
+    restore(prev);
+    toast('戻しました', {
+      duration: 6000,
+      action: { label: 'やり直す', onClick: () => redoStructure() },
+    });
+  }, [redoStructure, restore, snapshot]);
+
+  const keymap = useBlockKeymap({ blocks, apply, moveCaret: focusCaret });
+
+  const onFocusField = useCallback((pos: FieldPos) => {
+    setAtHead(false);
+    setActive((cur) => (samePos(cur, pos) ? cur : pos));
+  }, []);
+
+  // ===== 追加（＋ のボトムシートが唯一の正規ルート） =====
+  /**
+   * いまの行の下に入れる。空の段落を選んでいたらそこを置き換える（空行が残らない）。
+   * タイトル / ひとこと説明にカーソルがあるときは「記事の先頭」に入れる。
+   * （書き手の感覚では「タイトルの次」であって、記事の末尾ではない）
+   */
+  const insertBlock = useCallback(
+    (made: ArticleBlock) => {
+      const list = blocksRef.current;
+      const cur = !atHead && active?.blockId ? findBlock(list, active.blockId) : undefined;
+      const emptyPara = cur && cur.type === 'paragraph' && cur.text.trim() === '';
+      let res: OpResult;
+      if (emptyPara && cur) res = replaceBlock(list, cur.id, made);
+      else if (cur) res = insertAfter(list, cur.id, made);
+      else if (atHead) res = { blocks: [made, ...list], caret: caretAtStart(made) };
+      // どこも選んでいない（開いた直後など）ときだけ末尾に足す
+      else res = insertAfter(list, list[list.length - 1]?.id ?? null, made);
+
+      if (isEditableText(made)) {
+        // 入れたばかりのブロックは先頭から書き始める（表なら左上のセル）
+        res = { blocks: res.blocks, caret: caretAtStart(made) };
+      } else {
+        // 写真・区切り線・リンクの後ろには必ず空の段落を置く（書き続けられなくなるのを防ぐ）
+        const i = indexOfBlock(res.blocks, made.id);
+        const after = i >= 0 ? res.blocks[i + 1] : undefined;
+        // キャレットは「その次の書ける行」へ。写真そのものは文字が打てないので、
+        // ここを写真のままにするとキーボードが閉じて書き手がもう一度タップすることになる
+        if (!after || !isEditableText(after)) res = insertAfter(res.blocks, made.id, createBlock('paragraph'));
+        else res = { blocks: res.blocks, caret: caretAtStart(after) };
+      }
+      // iOS Safari は「ユーザー操作のコールスタックの外」で focus() してもキーボードを出さない。
+      // state 反映を待つ effect 任せにすると ＋ → 見出し のあと自分でもう一度行をタップさせることになるので、
+      // flushSync で描き切ってから**同じスタックの中で**キャレットを移す
+      const caret = res.caret;
+      flushSync(() => apply(res));
+      if (caret) fieldFocus.focus(caret);
+    },
+    [active, apply, atHead, fieldFocus],
+  );
+
+  const [linkUrl, setLinkUrl] = useState('');
+  const openLinkSheet = useCallback(() => {
+    setLinkUrl('');
+    setSheet('link');
+  }, []);
+
+  const pickInsert = (kind: EditorKind) => {
+    setSheet('none');
+    // 「リンクを貼る」だけは挿入ではなく URL を尋ねる操作（空のリンクは保存形式に無い）
+    if (isLinkAction(kind)) {
+      openLinkSheet();
       return;
     }
-    if (future.current.length === 0) return;
-    const target = future.current[future.current.length - 1]!;
-    future.current = future.current.slice(0, -1);
-    past.current = [...past.current, docRef.current].slice(-HISTORY_LIMIT);
-    setHist({ undo: past.current.length, redo: future.current.length });
-    apply(target);
-  }, [flush, apply]);
+    insertBlock(createBlock(kind));
+  };
 
-  // ⌘S 保存 / ⌘Z 元に戻す / ⇧⌘Z・⌘Y やり直す
+  // ===== リンク（URL 1 本 → カード / 埋め込み。2 択は見せない） =====
+  const { resolving, resolve } = useLinkResolver();
+  const submitUrl = () => {
+    void (async () => {
+      const made = await resolve(linkUrl);
+      if (!made) return;
+      setSheet('none');
+      setLinkUrl('');
+      insertBlock(made);
+    })();
+  };
+
+  // ===== 写真のアップロード（カバーと「本文への貼り付け」で同じ手順を通す） =====
+  /**
+   * iPhone の写真は 1 枚 10〜12MB・HEIC で、Server Action の body 上限（既定 1MB）に届く前に落ちる。
+   * fields/ImageField と同じく **prepareImage で長辺 1600px・JPEG に落としてから**送る。
+   * ここを素通しにすると、スマホからカバー写真を選ぶとほぼ必ず失敗する
+   */
+  const uploadPhoto = useCallback(async (file: File): Promise<string | null> => {
+    setPhotoBusy(true);
+    try {
+      const prepared = await prepareImage(file);
+      if (prepared.file.size > MAX_UPLOAD_BYTES) {
+        toast.error('この写真は大きすぎます。別の写真か、写真アプリで小さくしたものを選んでください');
+        return null;
+      }
+      const fd = new FormData();
+      fd.set('file', prepared.file);
+      const res = await uploadImage(fd);
+      if (!res.ok) {
+        toast.error(res.error);
+        return null;
+      }
+      return res.url;
+    } catch {
+      toast.error('写真を読み込めませんでした。もう一度お試しください');
+      return null;
+    } finally {
+      setPhotoBusy(false);
+    }
+  }, []);
+
+  const coverRef = useRef<HTMLInputElement>(null);
+  const onCoverFile = async (file: File | undefined) => {
+    if (!file) return;
+    const url = await uploadPhoto(file);
+    if (!url) return;
+    setCover(url);
+    markDirty();
+  };
+
+  /** 本文を書いている途中で写真を貼り付けた（⌘V / ドロップ）とき。その行の直後に写真ブロックを足す */
+  const onPasteFiles = useCallback(
+    (files: FileList, afterBlockId: string) => {
+      // HEIC はブラウザによって type が空で来るので、拡張子でも拾う（ImageField と同じ判定）
+      const file = Array.from(files).find((f) => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name));
+      if (!file) return;
+      void (async () => {
+        const url = await uploadPhoto(file);
+        if (!url) return;
+        const made = createBlock('image');
+        const photo: ArticleBlock = made.type === 'image' ? { ...made, url } : made;
+        // キャレットは書いていた行に残す（貼り付けた瞬間に写真へ飛ばさない）
+        apply({ blocks: insertAfter(blocksRef.current, afterBlockId, photo).blocks, caret: null });
+      })();
+    },
+    [apply, uploadPhoto],
+  );
+
+  const ctx = useMemo<FieldContext>(
+    () => ({ blocks, apply, update, keymap, onFocusField, onPasteFiles }),
+    [blocks, apply, update, keymap, onFocusField, onPasteFiles],
+  );
+
+  // ===== 保存 =====
+  const payload = useCallback(
+    () => ({
+      id: initial.id,
+      title,
+      // subtitle は saveSchema（actions.ts:148）が受け取り、:463 で articles.subtitle に入る
+      subtitle,
+      topic,
+      coverImageUrl: cover,
+      blocks: compact(blocksRef.current),
+    }),
+    [initial.id, title, subtitle, topic, cover],
+  );
+
+  /** 飛行中の保存。同じものが 2 本走らないようにする（多重 POST と、遅れて届く返事の取り違えを防ぐ） */
+  const inflight = useRef<Promise<boolean> | null>(null);
+
+  const save = useCallback((): Promise<boolean> => {
+    if (demo) {
+      setSavedAt(new Date().toISOString());
+      setDirty(false);
+      setFailed(false);
+      return Promise.resolve(true);
+    }
+    if (inflight.current) return inflight.current; // 飛行中なら、その保存に相乗りする
+    // 送り出した時点の編集回数を控える。返事が返るまでに書き手が打っていたら dirty を落とさない
+    const seq = editSeq.current;
+    setSaving(true);
+    const run = (async () => {
+      const res = await saveArticleBlocks(payload());
+      inflight.current = null;
+      setSaving(false);
+      if (res.ok) {
+        setSavedAt(res.data?.savedAt ?? new Date().toISOString());
+        setFailed(false);
+        setAttempt(0);
+        // 通信中に打った文字は今回の送信に入っていない。dirty を残して次の自動保存に拾わせる
+        if (seq === editSeq.current) setDirty(false);
+        return true;
+      }
+      // 失敗しても書いたものは消さない。間隔を空けて自動でやり直す（旧エディタは toast を出すだけだった）
+      setFailed(true);
+      setAttempt((n) => n + 1);
+      return false;
+    })();
+    inflight.current = run;
+    return run;
+  }, [demo, payload]);
+
+  /** 公開の前など「いま書いてあるものを確実に送りたい」とき。相乗りした場合はもう一度送る */
+  const saveAll = useCallback(async (): Promise<boolean> => {
+    const ok = await save();
+    if (!ok) return false;
+    if (dirtyRef.current) return save();
+    return true;
+  }, [save]);
+
+  // 自動保存（1.5 秒）。失敗したら 4 秒 → 8 秒 …と空けて 4 回まで。それ以上は状態表示のタップで手動。
+  // saving を deps に入れてあるので、飛行中に打ったぶんは保存が終わった時点で予約し直される
+  useEffect(() => {
+    if (!dirty || saving) return;
+    if (failed && attempt >= 4) return;
+    const wait = failed ? Math.min(30000, 4000 * 2 ** Math.max(0, attempt - 1)) : 1500;
+    const t = setTimeout(() => {
+      void save();
+    }, wait);
+    return () => clearTimeout(t);
+  }, [dirty, saving, failed, attempt, blocks, title, subtitle, topic, cover, save]);
+
+  // ⌘S だけ受ける。⌘Z は textarea 標準の取り消しに返すので**横取りしない**
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey)) return;
-      const k = e.key.toLowerCase();
-      if (k === 's') {
-        e.preventDefault();
-        void save();
-        return;
-      }
-      if (k === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-        return;
-      }
-      if ((k === 'z' && e.shiftKey) || k === 'y') {
-        e.preventDefault();
-        redo();
-      }
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 's') return;
+      e.preventDefault();
+      void save();
     };
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [save, undo, redo]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [save]);
 
-  // 未保存のまま離れようとしたら止める
   useEffect(() => {
     if (demo || !dirty) return;
     const onLeave = (e: BeforeUnloadEvent) => {
@@ -314,82 +465,19 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
     return () => window.removeEventListener('beforeunload', onLeave);
   }, [demo, dirty]);
 
-  const update = (id: string, patch: Partial<ArticleBlock>) => {
-    setBlocks((prev) => prev.map((b) => (b.id === id ? ({ ...b, ...patch } as ArticleBlock) : b)));
-    touch();
-  };
-  const replace = (id: string, next: ArticleBlock) => {
-    setBlocks((prev) => prev.map((b) => (b.id === id ? next : b)));
-    setFocusId(next.id);
-    touch();
-  };
-  const insertAfter = (id: string | null, next: ArticleBlock) => {
-    setBlocks((prev) => {
-      if (id == null) return [...prev, next];
-      const i = prev.findIndex((b) => b.id === id);
-      return [...prev.slice(0, i + 1), next, ...prev.slice(i + 1)];
-    });
-    setFocusId(next.id);
-    touch();
-  };
-  const remove = (id: string) => {
-    setBlocks((prev) => {
-      const i = prev.findIndex((b) => b.id === id);
-      const next = prev.filter((b) => b.id !== id);
-      const target = next[Math.max(0, i - 1)];
-      if (target) setFocusId(target.id);
-      return next.length ? next : [{ id: newBlockId(), type: 'paragraph', text: '' }];
-    });
-    touch();
-  };
-  const move = (id: string, dir: -1 | 1) => {
-    setBlocks((prev) => {
-      const i = prev.findIndex((b) => b.id === id);
-      const j = i + dir;
-      if (j < 0 || j >= prev.length) return prev;
-      const copy = [...prev];
-      [copy[i], copy[j]] = [copy[j]!, copy[i]!];
-      return copy;
-    });
-    touch();
-  };
-  /** ドラッグした fromId を toId の前 / 後ろへ差し込む */
-  const reorder = (fromId: string, toId: string, place: 'before' | 'after') => {
-    if (fromId === toId) return;
-    setBlocks((prev) => {
-      const item = prev.find((b) => b.id === fromId);
-      if (!item) return prev;
-      const rest = prev.filter((b) => b.id !== fromId);
-      const i = rest.findIndex((b) => b.id === toId);
-      if (i < 0) return prev;
-      const at = place === 'after' ? i + 1 : i;
-      return [...rest.slice(0, at), item, ...rest.slice(at)];
-    });
-    touch();
-  };
-
-  const convertUrl = (id: string, url: string) => {
-    start(async () => {
-      const res = await resolveUrlBlock({ url });
-      if (res.ok && res.data) {
-        replace(id, res.data);
-        const after = { id: newBlockId(), type: 'paragraph', text: '' } as ArticleBlock;
-        insertAfter(res.data.id, after);
-      } else toast.error(res.ok ? '変換できませんでした' : res.error);
-    });
-  };
-
+  // ===== 公開（ヘッダには置かず「…」の中に入れる） =====
   const onPublish = () => {
     if (demo) {
       toast('デモでは公開できません', { description: 'ログインして「ブログを書く」から実際の記事を作成できます' });
       return;
     }
     start(async () => {
-      const ok = await save();
+      const ok = await saveAll();
       if (!ok) return;
       const res = await publishBlocksArticle({ id: initial.id });
       if (res.ok) {
         setStatus('published');
+        setSheet('none');
         toast.success('公開しました');
         router.refresh();
       } else toast.error(res.error);
@@ -397,90 +485,303 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
   };
   const onUnpublish = () => {
     if (demo) return;
-    if (!confirm('非公開（下書き）に戻しますか？')) return;
     start(async () => {
       const res = await unpublishBlocksArticle({ id: initial.id });
       if (res.ok) {
         setStatus('draft');
+        setSheet('none');
         toast.success('下書きに戻しました');
       } else toast.error(res.error);
     });
   };
 
-  const onCover = async (f: File) => {
-    const fd = new FormData();
-    fd.set('file', f);
-    const res = await uploadImage(fd);
-    if (res.ok) {
-      setCover(res.url);
-      touch();
-    } else toast.error(res.error);
+  // ===== 書式バーがつなぐ操作 =====
+  const activeBlock = active ? findBlock(blocks, active.blockId) ?? null : null;
+  const activeKind = activeBlock ? kindOf(activeBlock) : null;
+  const activeIndex = activeBlock ? indexOfBlock(blocks, activeBlock.id) : -1;
+  const canFormat = canFormatKind(activeKind);
+  const turnActive = (kind: EditorKind) => {
+    if (!activeBlock) return;
+    apply(turnInto(blocksRef.current, activeBlock.id, kind));
   };
 
-  const chars = useMemo(() => blocks.reduce((n, b) => n + ('text' in b && typeof b.text === 'string' ? b.text.length : 0), 0), [blocks]);
+  const chars = useMemo(
+    () => blocks.reduce((n, b) => n + ('text' in b && typeof b.text === 'string' ? b.text.length : 0), 0),
+    [blocks],
+  );
+
+  // ===== ドラッグでの並べ替え（PC の速記。402px の主導線は書式バーの ↑ ↓） =====
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropAt, setDropAt] = useState<{ id: string; place: 'before' | 'after' } | null>(null);
+  const reorder = (fromId: string, toId: string, place: 'before' | 'after') => {
+    if (fromId === toId) return;
+    const list = blocksRef.current;
+    const item = findBlock(list, fromId);
+    if (!item) return;
+    const rest = list.filter((b) => b.id !== fromId);
+    const i = rest.findIndex((b) => b.id === toId);
+    if (i < 0) return;
+    const at = place === 'after' ? i + 1 : i;
+    apply({ blocks: [...rest.slice(0, at), item, ...rest.slice(at)], caret: null });
+  };
+
+  const statusText = demo
+    ? 'デモ（保存されません）'
+    : saving
+      ? '保存中…'
+      : failed
+        ? '保存できません・タップで再試行'
+        : dirty
+          ? '書きかけ'
+          : savedAt
+            ? `保存済み ${fmtTime(savedAt)}`
+            : '';
+  const dotClass = failed ? 'bg-danger-500' : saving || dirty ? 'bg-neutral-300' : 'bg-primary-500';
 
   return (
-    <main className="bg-background text-foreground">
-      {/* ===== ヘッダー（固定） ===== */}
-      <div className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
-        {/* 携帯では文字が 1 文字ずつ折り返さないよう、全部 nowrap + shrink-0。
-            入り切らないものは畳む（戻る先とプレビューはアイコンだけ、状態バッジと保存ボタンは隠す）。
-            保存ボタンを隠しても 1.5 秒の自動保存と左の「保存済み …」で足りる。 */}
-        <div className="mx-auto flex max-w-[1120px] items-center gap-3 px-5 py-2.5 max-sm:gap-2 sm:px-8">
+    <main className="min-h-[100dvh] bg-background text-foreground">
+      {/* ===== 44px のヘッダ。← / 状態 / 見る / …（公開ボタンは置かない） ===== */}
+      <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-11 max-w-[720px] items-center gap-1 px-1.5 sm:px-6">
           <Link
             href={demo ? '/' : '/writer/articles'}
             aria-label={demo ? 'Locore へ戻る' : '記事一覧へ戻る'}
-            className="shrink-0 whitespace-nowrap text-[12.5px] text-neutral-500 hover:text-foreground"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-neutral-600 active:bg-neutral-100"
           >
-            <span aria-hidden>←</span>
-            <span className="ml-1 max-sm:hidden">{demo ? 'Locore' : '記事一覧'}</span>
+            <ArrowLeft className="h-5 w-5" aria-hidden />
           </Link>
-          <span className="min-w-0 truncate whitespace-nowrap text-[12px] text-neutral-400">
-            {saving ? '保存中…' : dirty ? '未保存の変更' : savedAt ? `保存済み ${fmtTime(savedAt)}` : ''}
-          </span>
-          <span className={'shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] font-bold max-sm:hidden ' + (status === 'published' ? 'border-primary-500 bg-primary-100 text-primary-900' : 'border-border-strong text-neutral-600')}>
-            {demo ? 'デモ（保存されません）' : status === 'published' ? '公開中' : '下書き'}
-          </span>
-          <div className="ml-auto flex shrink-0 items-center gap-2 max-sm:gap-1">
-            <Link
-              href={demo ? '/articles/e9cc342f-e475-5161-a3b4-006706e81c6d' : `/articles/${initial.id}`}
-              target="_blank"
-              aria-label={demo ? '記事ページの例を開く' : 'プレビューを開く'}
-              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground max-sm:px-2"
-            >
-              <span className="max-sm:hidden">{demo ? '記事ページの例' : 'プレビュー'}</span>
-              <ExternalLink className="h-3 w-3" aria-hidden />
-            </Link>
-            <div className="flex shrink-0 items-center">
-              <button type="button" onClick={undo} disabled={hist.undo === 0} className="rounded-full p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-foreground disabled:opacity-25 disabled:hover:bg-transparent" aria-label="元に戻す" title="元に戻す（⌘Z）">
-                <Undo2 className="h-4 w-4" aria-hidden />
-              </button>
-              <button type="button" onClick={redo} disabled={hist.redo === 0} className="rounded-full p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-foreground disabled:opacity-25 disabled:hover:bg-transparent" aria-label="やり直す" title="やり直す（⇧⌘Z）">
-                <Redo2 className="h-4 w-4" aria-hidden />
-              </button>
+          <button
+            type="button"
+            onClick={() => {
+              setAttempt(0);
+              void save();
+            }}
+            className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full px-2 text-left"
+            aria-label={statusText || 'いま保存する'}
+          >
+            <span className={'h-2 w-2 shrink-0 rounded-full ' + dotClass} aria-hidden />
+            <span className="min-w-0 truncate text-[12.5px] text-neutral-500">{statusText}</span>
+            {saving || photoBusy ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-neutral-400" aria-hidden /> : null}
+          </button>
+          {/* 見る／書くは記事全体の切り替えなのでヘッダに置く。
+              書式バーは 402px に 8 個までしか置けず、ここに入れると右端が画面外に出る */}
+          <button
+            type="button"
+            onClick={() => setPreview((v) => !v)}
+            aria-pressed={preview}
+            aria-label={preview ? '書くに戻る' : '記事の見え方を見る'}
+            className={
+              'grid h-11 w-11 shrink-0 place-items-center rounded-full active:bg-neutral-100 ' +
+              (preview ? 'text-foreground' : 'text-neutral-600')
+            }
+          >
+            {preview ? <Pencil className="h-5 w-5" aria-hidden /> : <Eye className="h-5 w-5" aria-hidden />}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSheet('more')}
+            aria-label="この記事の設定"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-neutral-600 active:bg-neutral-100"
+          >
+            <Ellipsis className="h-5 w-5" aria-hidden />
+          </button>
+        </div>
+      </header>
+
+      {/* 書式バー（52px）に隠れないよう、下を空けておく */}
+      <div className="mx-auto max-w-[720px] px-5 pb-[calc(104px+env(safe-area-inset-bottom))] pt-5 sm:px-8">
+        {cover ? (
+          <div className="mb-5">
+            <div className="overflow-hidden rounded-xl bg-neutral-100 aspect-[3/2]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={cover} alt="" className="h-full w-full object-cover" />
             </div>
-            <button type="button" onClick={() => void save()} disabled={saving || !dirty} title="保存（⌘S）" className="shrink-0 whitespace-nowrap rounded-full border border-border-strong bg-card px-3 py-1.5 text-[12px] font-bold hover:border-foreground disabled:opacity-40 max-sm:hidden">
-              保存
-            </button>
-            {status === 'published' ? (
-              <button type="button" onClick={onUnpublish} disabled={pending} className="shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-bold text-neutral-500 hover:text-foreground max-sm:px-2">
-                非公開にする
-              </button>
-            ) : (
-              <button type="button" onClick={onPublish} disabled={pending} className="shrink-0 whitespace-nowrap rounded-full bg-neutral-900 px-4 py-1.5 text-[12px] font-bold text-white hover:bg-neutral-700 disabled:opacity-60 max-sm:px-3">
-                {pending ? '処理中…' : '公開する'}
-              </button>
+            {preview ? null : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button type="button" onClick={() => coverRef.current?.click()} className={OUTLINE_BUTTON}>
+                  カバー写真を変える
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCover('');
+                    markDirty();
+                  }}
+                  className={OUTLINE_BUTTON}
+                >
+                  外す
+                </button>
+              </div>
             )}
           </div>
-        </div>
+        ) : null}
+
+        {preview ? (
+          <article>
+            <h1 className="text-[26px] font-bold leading-[1.34] tracking-[-0.02em] sm:text-[34px]">{title || 'タイトルがまだありません'}</h1>
+            {subtitle ? <p className="mt-3 text-[16px] leading-[1.75] text-neutral-700">{subtitle}</p> : null}
+            <div className="mt-7">
+              <Prose blocks={compact(blocks)} />
+            </div>
+          </article>
+        ) : (
+          <>
+            <PlainTextarea
+              value={title}
+              placeholder="タイトル"
+              ariaLabel="タイトル"
+              className="text-[26px] font-bold leading-[1.34] tracking-[-0.02em] sm:text-[34px]"
+              onFocus={() => {
+                // 本文のどの行も選んでいない状態。この間に ＋ を押したら「記事の先頭」に入れる
+                setActive(null);
+                setAtHead(true);
+              }}
+              onValue={(v) => {
+                setTitle(v.replace(/\n/g, ''));
+                markDirty();
+              }}
+            />
+            {/* 16px を下回ると iOS Safari がフォーカスのたびに拡大するので、
+                小さく見せたいひとこと説明も 16px のまま色で従属させる */}
+            <PlainTextarea
+              value={subtitle}
+              placeholder="ひとこと説明（任意）"
+              ariaLabel="ひとこと説明"
+              className="mt-2 text-[16px] leading-[1.75] text-neutral-500"
+              onFocus={() => {
+                setActive(null);
+                setAtHead(true);
+              }}
+              onValue={(v) => {
+                setSubtitle(v.replace(/\n/g, ''));
+                markDirty();
+              }}
+            />
+
+            <FieldFocusProvider value={fieldFocus}>
+              <div className="mt-6">
+                {blocks.map((b) => (
+                  <BlockRow
+                    key={b.id}
+                    block={b}
+                    ctx={ctx}
+                    selected={active?.blockId === b.id}
+                    onSlash={() => {
+                      setActive({ blockId: b.id });
+                      setSheet('insert');
+                    }}
+                    dragging={dragId === b.id}
+                    dragActive={dragId !== null}
+                    dropHint={dropAt && dropAt.id === b.id ? dropAt.place : null}
+                    onDragStart={() => setDragId(b.id)}
+                    onDragOver={(place) => setDropAt((cur) => (cur && cur.id === b.id && cur.place === place ? cur : { id: b.id, place }))}
+                    onDrop={() => {
+                      if (dragId) reorder(dragId, b.id, dropAt?.place ?? 'before');
+                      setDragId(null);
+                      setDropAt(null);
+                    }}
+                    onDragEnd={() => {
+                      setDragId(null);
+                      setDropAt(null);
+                    }}
+                  />
+                ))}
+              </div>
+            </FieldFocusProvider>
+
+            {/* 記事のいちばん下から書き足すための入口 */}
+            <button
+              type="button"
+              onClick={() => {
+                const last = blocksRef.current[blocksRef.current.length - 1];
+                if (last && last.type === 'paragraph' && last.text === '') focusCaret({ blockId: last.id, offset: 0 });
+                else apply(insertAfter(blocksRef.current, last?.id ?? null, createBlock('paragraph')));
+              }}
+              className="mt-3 flex min-h-[44px] w-full items-center gap-2 rounded-lg px-2 text-left text-[14px] text-neutral-400 active:bg-neutral-100"
+            >
+              <Plus className="h-4 w-4" aria-hidden /> ここから書き足す
+            </button>
+          </>
+        )}
       </div>
 
-      <div className="mx-auto max-w-[720px] px-5 pb-40 pt-8 sm:px-8">
-        {/* ===== 一番上: テーマとカバー写真（本文と同じ列） ===== */}
-        <div className="mb-6 flex flex-wrap items-start gap-3 text-[12.5px]">
-          <label className="flex items-center gap-2">
-            <span className="text-[11px] font-bold tracking-[0.14em] text-neutral-500">テーマ</span>
-            <select value={topic} onChange={(e) => (setTopic(e.target.value), touch())} className="h-9 rounded-md border border-border bg-background px-2 text-[13px] focus:border-primary-500 focus:outline-none">
+      {/* 見ている間は書式バーを出さない（直せるものが 1 つも無い）。ヘッダの鉛筆で書くに戻る */}
+      {preview ? null : (
+      <FormatBar
+        kind={activeKind}
+        canFormat={canFormat}
+        hasBlock={!!activeBlock}
+        canUndo={undoCount > 0}
+        canMoveUp={activeIndex > 0}
+        canMoveDown={activeIndex >= 0 && activeIndex < blocks.length - 1}
+        onInsert={() => setSheet('insert')}
+        onHeading={() => turnActive(cycleHeading(activeKind))}
+        onList={() => turnActive(cycleList(activeKind))}
+        onQuote={() => turnActive(toggleQuote(activeKind))}
+        onPhoto={() => insertBlock(createBlock('image'))}
+        onLink={openLinkSheet}
+        onUndo={undoStructure}
+        onTurnInto={() => setSheet('turn')}
+        onMove={(dir) => activeBlock && apply(move(blocksRef.current, activeBlock.id, dir))}
+        onDuplicate={() => activeBlock && apply(duplicate(blocksRef.current, activeBlock.id))}
+        onRemove={() => activeBlock && apply(remove(blocksRef.current, activeBlock.id))}
+      />
+      )}
+
+      {/* ＋ = 挿入の唯一の正規ルート。ここに載っているものが作れる全部 */}
+      <InsertSheet open={sheet === 'insert'} title="追加する" items={BLOCK_KINDS} onPick={pickInsert} onClose={() => setSheet('none')} />
+      <InsertSheet
+        open={sheet === 'turn'}
+        title="種類を変える"
+        items={TURN_INTO_KINDS}
+        activeKind={activeKind}
+        onPick={(kind) => {
+          setSheet('none');
+          turnActive(kind);
+        }}
+        onClose={() => setSheet('none')}
+      />
+
+      <Sheet open={sheet === 'link'} title="リンクを貼る" onClose={() => setSheet('none')}>
+        <div className="flex flex-col gap-2 pb-2">
+          <input
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            onKeyDown={(e) => {
+              // 変換中の Enter は確定。ここでは何もしない
+              if (e.key !== 'Enter' || e.nativeEvent.isComposing) return;
+              e.preventDefault();
+              submitUrl();
+            }}
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            // シートを開いたタップと同じ流れで focus する（iOS は操作の外で focus してもキーボードが出ない）
+            autoFocus
+            placeholder="https://…"
+            aria-label="貼りたい URL"
+            className={BOXED_INPUT}
+          />
+          <p className={HINT}>記事・お店の地図・動画・SNS の URL を貼ると、その形で表示されます</p>
+          <button type="button" onClick={submitUrl} disabled={resolving || !linkUrl.trim()} className={SOLID_BUTTON}>
+            {resolving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+            {resolving ? '読み込み中…' : '読み込む'}
+          </button>
+        </div>
+      </Sheet>
+
+      <Sheet open={sheet === 'more'} title="この記事" onClose={() => setSheet('none')}>
+        <div className="flex flex-col gap-3 pb-2">
+          <label className="flex flex-col gap-1">
+            <span className="text-[12.5px] font-bold text-neutral-500">テーマ</span>
+            <select
+              value={topic}
+              onChange={(e) => {
+                setTopic(e.target.value);
+                markDirty();
+              }}
+              className="min-h-[44px] rounded-lg border border-border bg-background px-3 text-[16px] focus:border-primary-500 focus:outline-none"
+            >
               <option value="">— 選ぶ —</option>
               {SPECIALTY_GROUPS.map((g) => (
                 <option key={g.code} value={g.code}>
@@ -489,102 +790,59 @@ export function BlockEditor({ initial, demo = false }: { initial: Initial; demo?
               ))}
             </select>
           </label>
-          {cover ? (
-            <div className="relative h-9 w-[54px] overflow-hidden rounded-md bg-neutral-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cover} alt="" className="h-full w-full object-cover" />
-              <button type="button" onClick={() => (setCover(''), touch())} className="absolute inset-0 grid place-items-center bg-black/0 text-white opacity-0 transition hover:bg-black/50 hover:opacity-100" aria-label="カバーを外す">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ) : (
-            <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-border px-3 text-[12px] text-neutral-500 hover:border-primary-300 hover:text-primary-700">
-              <ImagePlus className="h-3.5 w-3.5" /> カバー写真
-              <input type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && void onCover(e.target.files[0])} />
-            </label>
-          )}
-          <span className="ml-auto self-center text-[11px] text-neutral-400">
-            {chars.toLocaleString('ja-JP')} 文字 · 読了 約 {Math.max(1, Math.round(chars / 500))} 分
-          </span>
-        </div>
-        {cover ? (
-          <div className="mb-6 overflow-hidden rounded-xl bg-neutral-100 aspect-[3/2]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={cover} alt="" className="h-full w-full object-cover" />
-          </div>
-        ) : null}
-
-        {/* ===== 本文 ===== */}
-        <div className="min-w-0">
-          <textarea
-            value={title}
-            onChange={(e) => (setTitle(e.target.value.replace(/\n/g, '')), touch())}
-            placeholder="タイトル"
-            rows={2}
-            className="w-full resize-none border-0 bg-transparent p-0 text-[36px] font-bold leading-[1.32] tracking-[-0.025em] placeholder:text-neutral-300 focus:outline-none max-sm:text-[26px]"
-          />
-          <div className="mt-8 space-y-1">
-            {blocks.map((b, i) => (
-              <BlockRow
-                key={`${b.id}:${rev}`}
-                block={b}
-                index={i}
-                total={blocks.length}
-                autoFocus={focusId === b.id}
-                onChange={(patch) => update(b.id, patch)}
-                onReplace={(next) => replace(b.id, next)}
-                onEnter={() => insertAfter(b.id, { id: newBlockId(), type: 'paragraph', text: '' })}
-                onRemove={() => remove(b.id)}
-                onMove={(d) => move(b.id, d)}
-                onInsertAfter={() => insertAfter(b.id, { id: newBlockId(), type: 'paragraph', text: '' })}
-                onUrl={(url) => convertUrl(b.id, url)}
-                onPick={(t) => replace(b.id, make(t))}
-                dragging={dragId === b.id}
-                dragActive={dragId !== null}
-                dropHint={dropAt && dropAt.id === b.id ? dropAt.place : null}
-                onDragStart={() => setDragId(b.id)}
-                onDragOver={(place) => setDropAt((cur) => (cur && cur.id === b.id && cur.place === place ? cur : { id: b.id, place }))}
-                onDrop={() => {
-                  if (dragId) reorder(dragId, b.id, dropAt?.place ?? 'before');
-                  setDragId(null);
-                  setDropAt(null);
-                }}
-                onDragEnd={() => {
-                  setDragId(null);
-                  setDropAt(null);
-                }}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => insertAfter(blocks[blocks.length - 1]?.id ?? null, { id: newBlockId(), type: 'paragraph', text: '' })}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-neutral-700 hover:border-foreground"
-          >
-            <Plus className="h-3.5 w-3.5" /> ブロックを追加
+          <button type="button" onClick={() => coverRef.current?.click()} className={OUTLINE_BUTTON}>
+            {cover ? 'カバー写真を変える' : 'カバー写真を選ぶ'}
           </button>
-          <p className="mt-4 text-[11px] leading-[1.7] text-neutral-400">空の行で「/」を打つとブロックを選べます。URL を 1 行貼って Enter でブックマーク・埋め込みになります。**太字**、[文字](URL) が使えます。行の右にある ⠿ をつかむと並べ替え、＋ で下に段落を足せます。⌘Z で元に戻す、⇧⌘Z でやり直す、⌘S で保存。</p>
+          <Link
+            href={demo ? '/articles/e9cc342f-e475-5161-a3b4-006706e81c6d' : `/articles/${initial.id}`}
+            target="_blank"
+            className={OUTLINE_BUTTON}
+          >
+            {demo ? '記事ページの例を開く' : '記事ページを開く'}
+            <ExternalLink className="h-4 w-4 text-neutral-400" aria-hidden />
+          </Link>
+          {status === 'published' ? (
+            <button type="button" onClick={onUnpublish} disabled={pending} className={OUTLINE_BUTTON}>
+              下書きに戻す
+            </button>
+          ) : (
+            <button type="button" onClick={onPublish} disabled={pending} className={SOLID_BUTTON}>
+              {pending ? '処理中…' : '公開する'}
+            </button>
+          )}
+          <p className={HINT}>
+            {chars.toLocaleString('ja-JP')} 文字 · 読むのに約 {Math.max(1, Math.round(chars / 500))} 分
+            {status === 'published' ? ' · 公開中' : ' · 下書き'}
+          </p>
         </div>
-      </div>
+      </Sheet>
+
+      <input
+        ref={coverRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = ''; // 同じ写真をもう一度選べるようにする
+          void onCoverFile(f);
+        }}
+      />
     </main>
   );
 }
 
-/* ===================== 各ブロックの編集 ===================== */
+/* ===================== ブロックの枠 ===================== */
 
+/**
+ * ブロック 1 つぶんの外枠。中身は fields/BlockField に任せ、ここは
+ * 「選ばれている見た目」「並べ替え」「PC の / 速記」だけを持つ。
+ */
 function BlockRow({
   block,
-  index,
-  total,
-  autoFocus,
-  onChange,
-  onReplace,
-  onEnter,
-  onRemove,
-  onMove,
-  onInsertAfter,
-  onUrl,
-  onPick,
+  ctx,
+  selected,
+  onSlash,
   dragging,
   dragActive,
   dropHint,
@@ -594,17 +852,10 @@ function BlockRow({
   onDragEnd,
 }: {
   block: ArticleBlock;
-  index: number;
-  total: number;
-  autoFocus: boolean;
-  onChange: (patch: Partial<ArticleBlock>) => void;
-  onReplace: (next: ArticleBlock) => void;
-  onEnter: () => void;
-  onRemove: () => void;
-  onMove: (d: -1 | 1) => void;
-  onInsertAfter: () => void;
-  onUrl: (url: string) => void;
-  onPick: (t: MenuItem['type']) => void;
+  ctx: FieldContext;
+  selected: boolean;
+  /** PC の速記: 空の段落で「/」を打ったとき（スマホの主導線は書式バーの ＋） */
+  onSlash: () => void;
   dragging: boolean;
   dragActive: boolean;
   dropHint: 'before' | 'after' | null;
@@ -613,144 +864,29 @@ function BlockRow({
   onDrop: () => void;
   onDragEnd: () => void;
 }) {
-  const [menu, setMenu] = useState<{ q: string; cursor: number } | null>(null);
-  const [grab, setGrab] = useState(false); // ⠿ を押している間だけ draggable にする（本文の選択を邪魔しない）
-  const label = LABEL[block.type];
-  const filtered = useMemo(() => (menu ? MENU.filter((m) => !menu.q || (m.label + ' ' + m.keys).toLowerCase().includes(menu.q.toLowerCase())) : []), [menu]);
-
-  const body = (() => {
-    switch (block.type) {
-      case 'paragraph':
-        return (
-          <div className="relative">
-            <AutoTextarea
-              value={block.text}
-              autoFocus={autoFocus}
-              placeholder={index === 0 ? 'テキストを入力。「/」でブロックを選択' : ''}
-              className="text-[16.5px] leading-[2] text-neutral-800"
-              onChange={(v) => {
-                if (v === '/' ) setMenu({ q: '', cursor: 0 });
-                else if (menu && v.startsWith('/')) setMenu({ q: v.slice(1), cursor: 0 });
-                else if (menu) setMenu(null);
-                onChange({ text: v });
-              }}
-              onKeyDown={(e) => {
-                if (menu) {
-                  if (e.key === 'ArrowDown') { e.preventDefault(); setMenu({ ...menu, cursor: Math.min(filtered.length - 1, menu.cursor + 1) }); return; }
-                  if (e.key === 'ArrowUp') { e.preventDefault(); setMenu({ ...menu, cursor: Math.max(0, menu.cursor - 1) }); return; }
-                  if (e.key === 'Enter') { e.preventDefault(); const m = filtered[menu.cursor]; if (m) { setMenu(null); onPick(m.type); } return; }
-                  if (e.key === 'Escape') { setMenu(null); return; }
-                }
-                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                  const t = block.text.trim();
-                  if (/^https?:\/\/\S+$/.test(t)) { e.preventDefault(); onUrl(t); return; }
-                  e.preventDefault();
-                  onEnter();
-                }
-                if (e.key === 'Backspace' && block.text === '' && total > 1) { e.preventDefault(); onRemove(); }
-              }}
-            />
-            {menu ? (
-              <div className="absolute left-0 top-full z-20 mt-1 w-[300px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-white shadow-xl">
-                <div className="max-h-[320px] overflow-y-auto py-1">
-                  {filtered.length === 0 ? <p className="px-3 py-2 text-[12px] text-neutral-400">該当なし</p> : null}
-                  {filtered.map((m, i) => (
-                    <button key={m.type} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { setMenu(null); onPick(m.type); }} className={'flex w-full items-baseline gap-2 px-3 py-2 text-left text-[13px] ' + (i === menu.cursor ? 'bg-neutral-100' : 'hover:bg-neutral-50')}>
-                      <b className="w-[128px] shrink-0">{m.label}</b>
-                      <span className="text-[11.5px] text-neutral-500">{m.hint}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        );
-      case 'heading':
-        return (
-          <AutoTextarea
-            value={block.text}
-            autoFocus={autoFocus}
-            placeholder={block.level === 2 ? '見出し' : '小見出し'}
-            className={block.level === 2 ? 'text-[24px] font-bold leading-[1.45] tracking-[-0.015em]' : 'text-[17.5px] font-bold'}
-            onChange={(v) => onChange({ text: v.replace(/\n/g, '') })}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); onEnter(); } if (e.key === 'Backspace' && block.text === '') { e.preventDefault(); onRemove(); } }}
-            extra={
-              block.level === 2 ? (
-                <label className="inline-flex items-center gap-1 text-[11px] text-neutral-500">
-                  <input type="checkbox" checked={!!block.numbered} onChange={(e) => onChange({ numbered: e.target.checked } as Partial<ArticleBlock>)} /> 番号を付ける
-                </label>
-              ) : null
-            }
-          />
-        );
-      case 'list':
-        return <Lines value={block.items.join('\n')} placeholder="1 行 1 項目" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v) } as Partial<ArticleBlock>)} />;
-      case 'quote':
-        return (
-          <div className="border-l border-foreground pl-[22px]">
-            <AutoTextarea value={block.text} autoFocus={autoFocus} placeholder="引用する言葉" className="text-[18.5px] leading-[1.8]" onChange={(v) => onChange({ text: v })} />
-            <input value={block.cite ?? ''} onChange={(e) => onChange({ cite: e.target.value } as Partial<ArticleBlock>)} placeholder="— 出典・誰の言葉か（任意）" className="mt-1 w-full border-0 bg-transparent p-0 text-[12.5px] text-neutral-500 placeholder:text-neutral-300 focus:outline-none" />
-          </div>
-        );
-      case 'aside':
-        return (
-          <div className={block.kind === 'memo' ? 'border-l-[3px] border-primary-500 pl-[18px]' : 'border-y border-border py-3'}>
-            <div className="mb-1 flex items-center gap-2">
-              <input value={block.label ?? ''} onChange={(e) => onChange({ label: e.target.value } as Partial<ArticleBlock>)} placeholder="ラベル（任意）" className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] placeholder:text-neutral-300 focus:outline-none" />
-              <select value={block.kind} onChange={(e) => onChange({ kind: e.target.value } as Partial<ArticleBlock>)} className="h-7 rounded-md border border-border bg-white px-1.5 text-[11px] text-neutral-600 focus:border-primary-500 focus:outline-none" aria-label="コールアウトの種類">
-                <option value="point">標準</option>
-                <option value="caution">注意</option>
-                <option value="memo">強調</option>
-              </select>
-            </div>
-            <AutoTextarea value={block.text} autoFocus={autoFocus} placeholder="本文" className="text-[15px] leading-[1.85] text-neutral-700" onChange={(v) => onChange({ text: v })} />
-          </div>
-        );
-      case 'takeaways':
-        return (
-          <div className="border-l-[3px] border-primary-500 py-1 pl-[18px]">
-            <input value={block.label ?? 'サマリー'} onChange={(e) => onChange({ label: e.target.value } as Partial<ArticleBlock>)} placeholder="見出し（空にすると出ない）" className="mb-1.5 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] placeholder:text-neutral-300 focus:outline-none" />
-            <Lines value={block.items.join('\n')} placeholder="1 行 1 項目（3〜5 行）" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v) } as Partial<ArticleBlock>)} />
-          </div>
-        );
-      case 'checklist':
-        return <Lines value={block.items.map((i) => (i.done ? '[x] ' : '') + i.text).join('\n')} placeholder="1 行 1 項目。先頭に [x] で済み" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v).map((l) => ({ text: l.replace(/^\[x\]\s*/i, ''), done: /^\[x\]/i.test(l) })) } as Partial<ArticleBlock>)} />;
-      case 'faq':
-        return <Lines value={block.items.map((i) => `Q: ${i.q}\nA: ${i.a}`).join('\n\n')} placeholder={'Q: 質問\nA: 答え\n\nQ: …'} autoFocus={autoFocus} onChange={(v) => onChange({ items: parseFaq(v) } as Partial<ArticleBlock>)} minRows={4} />;
-      case 'terms':
-        return <Lines value={block.items.map((i) => `${i.term} | ${i.def}`).join('\n')} placeholder="語 | 説明（1 行 1 つ）" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v).map((l) => { const [term = '', ...d] = cells(l); return { term, def: d.join(' | ') }; }) } as Partial<ArticleBlock>)} />;
-      case 'timeline':
-        return <Lines value={block.items.map((i) => `${i.date} | ${i.text}`).join('\n')} placeholder="2024.05 | 推薦者に打診（1 行 1 つ）" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v).map((l) => { const [date = '', ...t] = cells(l); return { date, text: t.join(' | ') }; }) } as Partial<ArticleBlock>)} />;
-      case 'proscons':
-        return (
-          <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-            <div><input value={block.prosLabel ?? 'メリット'} onChange={(e) => onChange({ prosLabel: e.target.value } as Partial<ArticleBlock>)} className="mb-1 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] text-neutral-500 focus:outline-none" /><Lines value={block.pros.join('\n')} placeholder="1 行 1 つ" autoFocus={autoFocus} onChange={(v) => onChange({ pros: lines(v) } as Partial<ArticleBlock>)} /></div>
-            <div><input value={block.consLabel ?? 'デメリット'} onChange={(e) => onChange({ consLabel: e.target.value } as Partial<ArticleBlock>)} className="mb-1 w-full border-0 bg-transparent p-0 text-[11.5px] font-bold tracking-[0.18em] text-neutral-500 focus:outline-none" /><Lines value={block.cons.join('\n')} placeholder="1 行 1 つ" onChange={(v) => onChange({ cons: lines(v) } as Partial<ArticleBlock>)} /></div>
-          </div>
-        );
-      case 'stats':
-        return <Lines value={block.items.map((i) => `${i.value} | ${i.label}`).join('\n')} placeholder="¥1,400 万 | 1 年の学費＋生活費（3 つまで）" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v).slice(0, 4).map((l) => { const [value = '', ...lab] = cells(l); return { value, label: lab.join(' | ') }; }) } as Partial<ArticleBlock>)} />;
-      case 'table':
-        return <Lines value={block.rows.map((r) => r.join(' | ')).join('\n')} placeholder={'時期 | やること | 費用\n5〜7 月 | GMAT | ¥120,000'} autoFocus={autoFocus} minRows={3} onChange={(v) => onChange({ rows: lines(v).map(cells) } as Partial<ArticleBlock>)} mono />;
-      case 'footnotes':
-        return <Lines value={block.items.join('\n')} placeholder="出典を 1 行 1 つ（本文には 1、2 と番号を書く）" autoFocus={autoFocus} onChange={(v) => onChange({ items: lines(v) } as Partial<ArticleBlock>)} />;
-      case 'divider':
-        return <hr className="my-2 w-16 border-0 border-t border-foreground" />;
-      case 'image':
-        return <ImageField urls={block.url ? [block.url] : []} max={1} caption={block.caption ?? ''} onChange={(urls, caption) => onChange({ url: urls[0] ?? '', caption } as Partial<ArticleBlock>)} />;
-      case 'images':
-        return <ImageField urls={block.urls} max={3} caption={block.caption ?? ''} onChange={(urls, caption) => onChange({ urls, caption } as Partial<ArticleBlock>)} />;
-      case 'link_card':
-      case 'embed':
-        return <UrlField block={block} onReplace={onReplace} />;
-      default:
-        return null;
-    }
-  })();
+  const [grab, setGrab] = useState(false);
+  const editable = isEditableText(block);
 
   return (
     <div
       draggable={grab}
+      // 文字が打てないブロック（写真・区切り線・リンク）も、触れば「選ばれている」状態にする。
+      // タブ順は増やさない（-1）ので、キーボード操作の邪魔にはならない
+      tabIndex={editable ? undefined : -1}
+      onFocusCapture={() => ctx.onFocusField?.({ blockId: block.id })}
+      onClick={(e) => {
+        if (editable) return;
+        const t = e.target as HTMLElement;
+        if (t.closest('button, a, input, textarea, label, select')) return;
+        e.currentTarget.focus();
+      }}
+      onKeyUpCapture={(e) => {
+        // PC の速記: 空の段落で「/」→ 追加シート。IME 変換中は無視する
+        if (e.key !== '/' || e.nativeEvent.isComposing) return;
+        if (block.type !== 'paragraph' || block.text !== '/') return;
+        ctx.update((bs) => bs.map((b) => (b.id === block.id && b.type === 'paragraph' ? { ...b, text: '' } : b)));
+        onSlash();
+      }}
       onDragStart={(e) => {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', block.id); // Firefox は setData しないとドラッグが始まらない
@@ -773,228 +909,109 @@ function BlockRow({
         setGrab(false);
         onDrop();
       }}
-      className={'group relative rounded-lg px-3 py-1.5 transition hover:bg-neutral-50' + (dragging ? ' opacity-40' : '')}
+      className={
+        'relative rounded-lg border-l-2 py-1.5 pl-2.5 pr-1 transition focus:outline-none ' +
+        (selected ? 'border-neutral-900 bg-neutral-50/70 ' : 'border-transparent ') +
+        (dragging ? 'opacity-40' : '')
+      }
     >
-      {dropHint ? <div className={'pointer-events-none absolute inset-x-2 z-10 h-[2px] rounded-full bg-primary-500 ' + (dropHint === 'before' ? '-top-px' : '-bottom-px')} aria-hidden /> : null}
-      <div className="pointer-events-none absolute -left-1 top-1.5 whitespace-nowrap text-[10px] tracking-[0.1em] text-neutral-300 opacity-0 transition group-hover:opacity-100 max-lg:hidden" style={{ transform: 'translateX(-100%)' }}>
-        {label}
-      </div>
-      <div className="absolute right-2 top-1 flex items-center gap-0.5 opacity-0 transition group-focus-within:opacity-100 group-hover:opacity-100">
-        <span
-          role="button"
-          tabIndex={-1}
-          aria-label="ドラッグして並べ替え"
-          title="ドラッグして並べ替え"
-          onPointerDown={() => setGrab(true)}
-          onPointerUp={() => setGrab(false)}
-          className="cursor-grab rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground active:cursor-grabbing max-lg:hidden"
-        >
-          <GripVertical className="h-3.5 w-3.5" />
-        </span>
-        <button type="button" onClick={onInsertAfter} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground" aria-label="下に段落を追加" title="下に段落を追加"><Plus className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={() => onMove(-1)} disabled={index === 0} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="上へ"><ArrowUp className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={() => onMove(1)} disabled={index === total - 1} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-foreground disabled:opacity-30" aria-label="下へ"><ArrowDown className="h-3.5 w-3.5" /></button>
-        <button type="button" onClick={onRemove} className="rounded p-1 text-neutral-400 hover:bg-neutral-200 hover:text-danger-500" aria-label="削除"><Trash2 className="h-3.5 w-3.5" /></button>
-      </div>
-      {body}
+      {dropHint ? (
+        <div className={'pointer-events-none absolute inset-x-1 z-10 h-[2px] rounded-full bg-primary-500 ' + (dropHint === 'before' ? '-top-px' : '-bottom-px')} aria-hidden />
+      ) : null}
+      {/* PC だけの速記（つかんで並べ替え）。402px では書式バーの ↑ ↓ が主導線なので、
+          これが無くてもスマホの操作は 1 つも欠けない */}
+      <span
+        role="button"
+        tabIndex={-1}
+        aria-label="ドラッグして並べ替え"
+        title="ドラッグして並べ替え"
+        onPointerDown={() => setGrab(true)}
+        onPointerUp={() => setGrab(false)}
+        className="absolute -left-8 top-2 hidden h-8 w-8 cursor-grab place-items-center rounded text-neutral-300 hover:bg-neutral-100 hover:text-neutral-500 active:cursor-grabbing sm:grid"
+      >
+        <GripVertical className="h-4 w-4" aria-hidden />
+      </span>
+      <BlockField {...ctx} block={block} />
     </div>
   );
 }
 
-const LABEL: Record<ArticleBlock['type'], string> = {
-  paragraph: '本文',
-  heading: '見出し',
-  list: 'リスト',
-  quote: '引用',
-  aside: 'コールアウト',
-  table: 'テーブル',
-  image: '画像',
-  images: 'ギャラリー',
-  takeaways: 'サマリー',
-  checklist: 'ToDo',
-  faq: 'トグル',
-  terms: '定義',
-  timeline: 'タイムライン',
-  proscons: '比較',
-  stats: '数値',
-  footnotes: '脚注',
-  divider: '区切り',
-  link_card: '埋め込み 1',
-  embed: '埋め込み 2',
-};
+/* ===================== 小さな部品 ===================== */
 
-function parseFaq(v: string): Array<{ q: string; a: string }> {
-  const out: Array<{ q: string; a: string }> = [];
-  let cur: { q: string; a: string } | null = null;
-  for (const raw of v.split('\n')) {
-    const l = raw.trim();
-    if (/^Q[:：]/i.test(l)) {
-      if (cur) out.push(cur);
-      cur = { q: l.replace(/^Q[:：]\s*/i, ''), a: '' };
-    } else if (/^A[:：]/i.test(l)) {
-      if (!cur) cur = { q: '', a: '' };
-      cur.a = l.replace(/^A[:：]\s*/i, '');
-    } else if (l && cur) {
-      cur.a = cur.a ? `${cur.a}\n${l}` : l;
-    }
-  }
-  if (cur) out.push(cur);
-  return out.filter((i) => i.q || i.a);
-}
-
-function AutoTextarea({
+/**
+ * タイトル・ひとこと説明の入力欄。
+ * 値を非制御で持ち、外から変わったときだけ流し込む（＝ textarea 標準の ⌘Z がそのまま効く）。
+ */
+function PlainTextarea({
   value,
-  onChange,
-  onKeyDown,
+  onValue,
+  onFocus,
   placeholder,
+  ariaLabel,
   className = '',
-  autoFocus,
-  extra,
 }: {
   value: string;
-  onChange: (v: string) => void;
-  onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  onValue: (v: string) => void;
+  onFocus?: () => void;
   placeholder?: string;
+  ariaLabel?: string;
   className?: string;
-  autoFocus?: boolean;
-  extra?: React.ReactNode;
 }) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-  useAutoHeight(ref, value, 0);
-  useEffect(() => {
-    if (autoFocus) ref.current?.focus();
-  }, [autoFocus]);
-  return (
-    <div>
-      <textarea ref={ref} value={value} onChange={(e) => onChange(e.target.value)} onKeyDown={onKeyDown} placeholder={placeholder} rows={1} style={FIELD_SIZING} className={'block w-full resize-none overflow-hidden border-0 bg-transparent p-0 placeholder:text-neutral-300 focus:outline-none ' + className} />
-      {extra ? <div className="mt-1">{extra}</div> : null}
-    </div>
-  );
-}
+  const ref = useRef<HTMLTextAreaElement | null>(null);
 
-/** 1 行 1 項目のテキストエリア（ローカル state で編集し、blur / 入力ごとに parse して親へ） */
-function Lines({ value, onChange, placeholder, autoFocus, minRows = 2, mono = false }: { value: string; onChange: (v: string) => void; placeholder?: string; autoFocus?: boolean; minRows?: number; mono?: boolean }) {
-  const [local, setLocal] = useState(value);
-  const ref = useRef<HTMLTextAreaElement>(null);
-  useAutoHeight(ref, local, minRows * 28);
+  useIsoLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (el.value !== value) {
+      const focused = document.activeElement === el;
+      const s = el.selectionStart;
+      const e = el.selectionEnd;
+      el.value = value;
+      if (focused) el.setSelectionRange(Math.min(s, value.length), Math.min(e, value.length));
+    }
+    fitHeight(el);
+  });
+
+  // フォントが後から入ると行の高さが変わるので、読み込み後にもう一度測る
   useEffect(() => {
-    if (autoFocus) ref.current?.focus();
-  }, [autoFocus]);
+    if (typeof document === 'undefined' || !('fonts' in document)) return;
+    let alive = true;
+    void (document as Document & { fonts: FontFaceSet }).fonts.ready.then(() => {
+      if (alive && ref.current) fitHeight(ref.current);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
   return (
     <textarea
       ref={ref}
-      style={FIELD_SIZING}
-      value={local}
-      onChange={(e) => {
-        setLocal(e.target.value);
-        onChange(e.target.value);
-      }}
+      defaultValue={value}
+      rows={1}
       placeholder={placeholder}
-      className={'block w-full resize-none overflow-hidden rounded-md border border-border bg-white px-3 py-2 text-[14.5px] leading-[1.8] placeholder:text-neutral-300 focus:border-primary-500 focus:outline-none ' + (mono ? 'font-mono text-[13px]' : '')}
+      aria-label={ariaLabel}
+      onFocus={onFocus}
+      onKeyDown={(e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+        // 見出しと同じで 1 行。変換確定の Enter は奪わない
+        if (e.key === 'Enter' && !e.nativeEvent.isComposing) e.preventDefault();
+      }}
+      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
+        onValue(e.currentTarget.value);
+        fitHeight(e.currentTarget);
+      }}
+      className={'block w-full resize-none overflow-hidden border-0 bg-transparent p-0 placeholder:text-neutral-300 focus:outline-none ' + className}
     />
   );
 }
 
-function ImageField({ urls, max, caption, onChange }: { urls: string[]; max: number; caption: string; onChange: (urls: string[], caption: string) => void }) {
-  const [busy, setBusy] = useState(false);
-  const pick = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setBusy(true);
-    const next = [...urls];
-    for (const f of Array.from(files).slice(0, max - urls.length)) {
-      const fd = new FormData();
-      fd.set('file', f);
-      const res = await uploadImage(fd);
-      if (res.ok) next.push(res.url);
-      else toast.error(res.error);
-    }
-    setBusy(false);
-    onChange(next, caption);
-  };
-  return (
-    <div>
-      <div className={'grid gap-2 ' + (max > 1 ? 'grid-cols-3' : 'grid-cols-1')}>
-        {urls.map((u, i) => (
-          <div key={i} className={'relative overflow-hidden rounded-xl bg-neutral-100 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={u} alt="" className="h-full w-full object-cover" />
-            <button type="button" onClick={() => onChange(urls.filter((_, j) => j !== i), caption)} className="absolute right-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-neutral-700 shadow" aria-label="削除"><X className="h-3.5 w-3.5" /></button>
-          </div>
-        ))}
-        {urls.length < max ? (
-          <label className={'flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border text-[12.5px] text-neutral-500 hover:border-primary-300 hover:text-primary-700 ' + (max > 1 ? 'aspect-square' : 'aspect-[4/3]')}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} {busy ? 'アップロード中' : max > 1 ? `追加（${urls.length}/${max}）` : '画像を選ぶ'}
-            <input type="file" accept="image/*" multiple={max > 1} hidden onChange={(e) => void pick(e.target.files)} />
-          </label>
-        ) : null}
-      </div>
-      <input value={caption} onChange={(e) => onChange(urls, e.target.value)} placeholder="キャプション（任意）" className="mt-2 w-full border-0 bg-transparent p-0 text-[12px] text-neutral-500 placeholder:text-neutral-300 focus:outline-none" />
-    </div>
-  );
+function fitHeight(el: HTMLTextAreaElement) {
+  el.style.height = '0px';
+  el.style.height = `${el.scrollHeight}px`;
 }
 
-function UrlField({ block, onReplace }: { block: Extract<ArticleBlock, { type: 'link_card' | 'embed' }>; onReplace: (b: ArticleBlock) => void }) {
-  const [url, setUrl] = useState(block.url);
-  const [pending, start] = useTransition();
-  const resolve = () => {
-    const u = url.trim();
-    if (!/^https?:\/\/\S+$/.test(u)) {
-      toast.error('URL を入力してください');
-      return;
-    }
-    start(async () => {
-      const res = await resolveUrlBlock({ url: u });
-      if (res.ok && res.data) onReplace({ ...res.data, id: block.id });
-      else toast.error(res.ok ? '変換できませんでした' : res.error);
-    });
-  };
-  const p = block.preview;
-  return (
-    <div className="rounded-xl border border-border bg-white p-3">
-      <div className="flex items-center gap-2">
-        <span className="shrink-0 whitespace-nowrap rounded-full bg-neutral-100 px-2 py-[3px] text-[11px] font-bold sm:text-[10.5px]">{block.type === 'embed' ? (block.provider === 'youtube' ? '動画' : `埋め込み 2 · ${block.provider}`) : `埋め込み 1 · ${block.kind}`}</span>
-        <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder={block.type === 'embed' && block.provider === 'youtube' ? 'https://www.youtube.com/watch?v=…' : block.type === 'embed' ? 'https://…（Google マップ / X / Instagram / TikTok / Spotify）' : 'https://…（記事 / エキスパート / 外部サイト）'} className="h-9 min-w-0 flex-1 rounded-md border border-border px-2 text-[13px] focus:border-primary-500 focus:outline-none" />
-        <button type="button" onClick={resolve} disabled={pending} className="rounded-full bg-neutral-900 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-60">{pending ? '取得中…' : '取得'}</button>
-      </div>
-      {block.url ? (
-        <div className="mt-2 flex items-center gap-3 text-[12.5px] text-neutral-600">
-          {p?.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.imageUrl} alt="" referrerPolicy="no-referrer" className="h-12 w-16 rounded-md object-cover" />
-          ) : null}
-          <span className="min-w-0 truncate">{p?.title ?? (block.type === 'link_card' && block.kind !== 'external' ? `${block.kind === 'article' ? '記事' : 'エキスパート'}のカード（表示時に最新情報を出します）` : block.url)}</span>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-/** textarea の高さを内容に合わせる。フォント読み込み後と幅変更時にも測り直す（初回の測定ずれ対策） */
-const FIELD_SIZING = { fieldSizing: 'content' } as React.CSSProperties;
-function useAutoHeight(ref: React.RefObject<HTMLTextAreaElement>, value: string, min: number) {
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const fit = () => {
-      el.style.height = '0px';
-      el.style.height = `${Math.max(el.scrollHeight, min)}px`;
-    };
-    fit();
-    const raf = requestAnimationFrame(fit);
-    const onResize = () => fit();
-    window.addEventListener('resize', onResize);
-    let cancelled = false;
-    if (typeof document !== 'undefined' && 'fonts' in document) {
-      void (document as Document & { fonts: FontFaceSet }).fonts.ready.then(() => {
-        if (!cancelled) fit();
-      });
-    }
-    return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', onResize);
-    };
-  }, [ref, value, min]);
+function samePos(a: FieldPos | null, b: FieldPos): boolean {
+  return !!a && a.blockId === b.blockId && (a.row ?? 0) === (b.row ?? 0) && (a.col ?? 0) === (b.col ?? 0);
 }
 
 function fmtTime(iso: string): string {

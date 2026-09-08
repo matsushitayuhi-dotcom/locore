@@ -1,7 +1,24 @@
 import Link from 'next/link';
 import { Button, Badge } from '@locore/ui';
 import { Plus, Clock } from '@locore/ui/icons';
-import { listMyArticles } from './actions';
+import { listMyArticles, type WriterArticleSummary } from './actions';
+
+/**
+ * 「編集」の行き先。
+ *
+ * ブロック形式（新エディタで書いた記事）は迷わず /write。
+ * それ以外（photo_journal / classic / html / plain）は /edit に送る。/edit はもう
+ * 旧ウィザードではなく、
+ *   - スポット・動画・有料パートを持たない記事 … そのまま /write へ転送
+ *   - 持っている記事 … 「/write で保存すると公開ページから見えなくなる」と伝える確認画面
+ * を出すだけの入口。/write の自動保存は 1.5 秒で body_style を blocks に書き換えるので、
+ * 書き手が中身を知らないまま 1 文字打っただけで旧レイアウトが落ちるのを防ぐ。
+ */
+function editHref(a: WriterArticleSummary): string {
+  return a.bodyStyle === 'blocks'
+    ? `/writer/articles/${a.id}/write`
+    : `/writer/articles/${a.id}/edit`;
+}
 
 export const metadata = {
   title: '記事管理',
@@ -140,7 +157,7 @@ export default async function WriterArticlesPage({
               >
                 {/* カード全体クリックの「下敷き」リンク（編集ボタンより z-index 下） */}
                 <Link
-                  href={`/writer/articles/${a.id}/${a.bodyStyle === 'blocks' ? 'write' : 'edit'}`}
+                  href={editHref(a)}
                   aria-label={`${a.title || '（無題）'} を編集`}
                   className="absolute inset-0 z-10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                 />
@@ -213,15 +230,27 @@ export default async function WriterArticlesPage({
                     ) : null}
                   </div>
 
-                  {/* 編集ボタン（右下、常時表示） */}
-                  <div className="flex items-center justify-end pt-1">
+                  {/* 操作ボタン（右下、常時表示）。
+                      hover では出さない・44px 未満にしない。size は既定の md（h-11）のまま使う。
+                      「プレビュー」は公開前プレビュー（/writer/articles/[id]/preview）への
+                      唯一の入口。旧ウィザードを畳んだ時点でアプリ内リンクが全部消えたので、
+                      ここから開けるようにしている */}
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="relative z-20 px-4 text-[13px]"
+                    >
+                      <Link href={`/writer/articles/${a.id}/preview`}>
+                        プレビュー
+                      </Link>
+                    </Button>
                     <Button
                       asChild
                       variant="primary"
-                      size="sm"
-                      className="relative z-20 h-8 px-3 text-[12px]"
+                      className="relative z-20 px-4 text-[13px]"
                     >
-                      <Link href={`/writer/articles/${a.id}/${a.bodyStyle === 'blocks' ? 'write' : 'edit'}`}>編集</Link>
+                      <Link href={editHref(a)}>編集</Link>
                     </Button>
                   </div>
                 </div>

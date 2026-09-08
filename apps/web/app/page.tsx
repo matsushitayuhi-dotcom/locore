@@ -1,13 +1,16 @@
 import Link from 'next/link';
 import {
   ArrowRight,
+  ChevronDown,
   Clock,
+  Info,
   MessageCircle,
   Search,
   ShieldCheck,
   Video,
 } from 'lucide-react';
 import { listFeaturedExperts } from '@/lib/experts/list';
+import { CardCarousel } from '@/components/CardCarousel';
 import { ExpertCard } from '@/components/experts/ExpertCard';
 
 /**
@@ -41,7 +44,9 @@ export default async function HomePage() {
               <span className="h-[7px] w-[7px] rounded-full bg-primary-500" aria-hidden />
               在学生・アルムナイによる留学相談・伴走
             </span>
-            <h1 className="text-[clamp(30px,4.6vw,46px)] font-bold leading-[1.36] tracking-tight">
+            {/* 見出しが大きすぎるという指摘を受けて約 1 割縮小（46→41px / スマホ 30→27px）。
+                本文・注釈は読みやすさのため据え置き（11px 未満は禁止） */}
+            <h1 className="text-[clamp(27px,4.15vw,41px)] font-bold leading-[1.36] tracking-tight">
               いまその大学に通う先輩に、
               <br />
               <span className="text-primary-700">30分から</span>相談できる。
@@ -59,11 +64,13 @@ export default async function HomePage() {
                 エキスパートを探す
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
+              {/* 下の #pricing（料金 & FAQ）へ。詳しい説明はそのセクションの
+                  末尾から /about-service へ送る */}
               <Link
-                href="/about-service"
+                href="#pricing"
                 className="inline-flex w-full items-center justify-center rounded-full border border-border-strong px-[18px] py-2.5 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground sm:w-auto"
               >
-                使い方を見る
+                料金とよくある質問
               </Link>
             </div>
             <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[12.5px] text-neutral-500">
@@ -157,7 +164,7 @@ export default async function HomePage() {
             <span className="mb-2.5 block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">
               How it works
             </span>
-            <h2 className="text-[clamp(23px,3vw,30px)] font-bold">
+            <h2 className="text-[clamp(21px,2.7vw,27px)] font-bold">
               使い方は、3ステップ。
             </h2>
             <p className="mt-3 text-[14.5px] text-neutral-500">
@@ -191,31 +198,35 @@ export default async function HomePage() {
       {experts.length > 0 ? (
         <section className="px-6 py-14 sm:py-[72px]">
           <div className="mx-auto max-w-[1120px]">
-            <div className="mb-9 flex flex-col items-start gap-3.5 sm:flex-row sm:items-end sm:gap-5">
-              <div className="max-w-[640px]">
-                <span className="mb-2.5 block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">
-                  Experts
-                </span>
-                <h2 className="text-[clamp(23px,3vw,30px)] font-bold">
-                  その大学の「先輩」に聞く。
-                </h2>
-                <p className="mt-3 text-[14.5px] text-neutral-500">
-                  全員が学生証・入学証明書・卒業証書による在籍確認済み。いま、本当にその学校で学んでいる・学んだ人たちです。
-                </p>
-              </div>
+            <div className="mb-7 max-w-[640px]">
+              <span className="mb-2.5 block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">
+                Experts
+              </span>
+              <h2 className="text-[clamp(21px,2.7vw,27px)] font-bold">
+                その大学の「先輩」に聞く。
+              </h2>
+              <p className="mt-3 text-[14.5px] text-neutral-500">
+                全員が学生証・入学証明書・卒業証書による在籍確認済み。いま、本当にその学校で学んでいる・学んだ人たちです。
+              </p>
+              {/* /experts への主要導線。CardCarousel の viewAllHref は上下 padding が
+                  無くタップ領域 36px を満たさないので、見出し側に枠線ピルとして置く
+                  （両方に置くと同じリンクが 2 つ並ぶので、カルーセルには渡さない） */}
               <Link
                 href="/experts"
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border-strong px-[18px] py-2 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground sm:ml-auto"
+                className="mt-5 inline-flex max-w-full items-center gap-2 rounded-full border border-border-strong px-[18px] py-2.5 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground"
               >
                 すべてのエキスパート
-                <ArrowRight className="h-4 w-4" aria-hidden />
+                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* 縦グリッドだとスマホで 1 画面に 1〜2 枚しか入らず一覧性が悪いので、
+                横スワイプのカルーセルにする。PC の送り矢印は CardCarousel の
+                ヘッダーが持つ */}
+            <CardCarousel ariaLabel="注目のエキスパート">
               {experts.map((e) => (
                 <ExpertCard key={e.userId} expert={e} />
               ))}
-            </div>
+            </CardCarousel>
           </div>
         </section>
       ) : null}
@@ -227,7 +238,7 @@ export default async function HomePage() {
             <span className="mb-2.5 block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">
               Trust
             </span>
-            <h2 className="text-[clamp(23px,3vw,30px)] font-bold leading-snug">
+            <h2 className="text-[clamp(21px,2.7vw,27px)] font-bold leading-snug">
               「本当にそこで学んだ人」だけが、
               <br />
               答えられることがある。
@@ -262,6 +273,79 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ===== 料金 & よくある質問（/about-service の要点をトップに要約） ===== */}
+      {/* 「使い方はトップにあった方がいい」という要望。ページの入れ替えはせず、
+          about-service の「料金の考え方」と FAQ の主要な数問だけを、入口に合う
+          密度に要約して置く。続き（在籍確認の詳細・全 FAQ）は /about-service へ */}
+      <section className="border-t border-border bg-muted px-6 py-14 sm:py-[72px]" id="pricing">
+        <div className="mx-auto max-w-[1120px]">
+          <div className="mx-auto mb-9 max-w-[640px] text-center">
+            <span className="mb-2.5 block text-[12px] font-semibold uppercase tracking-[0.14em] text-primary-700">
+              Pricing &amp; FAQ
+            </span>
+            <h2 className="text-[clamp(21px,2.7vw,27px)] font-bold">
+              料金と、はじめる前の疑問。
+            </h2>
+            <p className="mt-3 text-[14.5px] text-neutral-500">
+              相談メニューの料金は、内容に応じてエキスパートが設定します。申し込む前のチャットは無料です。
+            </p>
+          </div>
+
+          {/* 3 カラム化は md から。sm(640px) で 3 列にすると 1 枚の内容幅が
+              約 147px しかなく、「月額 / 内容に応じて設定」が必ず折り返す */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <PriceCard label="30分相談" price="¥3,000" unit="〜 / 税込" highlight>
+              聞きたいことがはっきりしているとき。
+            </PriceCard>
+            <PriceCard label="60分相談" price="¥6,000" unit="〜 / 税込">
+              書類を見てもらいながら、出願全体を整理したいとき。
+            </PriceCard>
+            <PriceCard label="継続プラン" price="月額" unit="内容に応じて設定">
+              出願から渡航までを、同じ先輩とやり切りたいとき。
+            </PriceCard>
+          </div>
+
+          <p className="mt-4 flex items-start gap-2.5 rounded-2xl border border-dashed border-border-strong bg-card px-5 py-3.5 text-[13px] leading-relaxed text-neutral-700">
+            <Info className="mt-[3px] h-4 w-4 shrink-0 text-primary-700" aria-hidden />
+            <span className="min-w-0">
+              エキスパート探しも、申し込み前のチャットでの質問も無料。決済機能は現在準備中です。
+            </span>
+          </p>
+
+          {/* トップに置くのは 3 問だけ。回答も 1〜2 行に圧縮し、続きは /about-service へ。
+              about-service の FAQ をそのまま並べると重複コンテンツになり、詳細ページへ
+              送る動機も消える。在籍確認の話は上の trust セクションが持っているので外した。
+              JS を足さずに畳めるよう details/summary で書く */}
+          <div className="mx-auto mt-9 max-w-[760px] space-y-2.5">
+            <TopFaq q="いくらかかりますか？">
+              金額はエキスパートが自分で決めます。目安は
+              <b className="font-bold text-neutral-700">30分 ¥3,000〜、60分 ¥6,000〜</b>
+              。申し込む前に、その人のページで確認できます。
+            </TopFaq>
+            <TopFaq q="どこから有料になりますか？">
+              エキスパートを探すのも、
+              <b className="font-bold text-neutral-700">申し込み前のチャット</b>
+              も無料。お金がかかるのは、相談メニューを申し込んだあとだけです。
+            </TopFaq>
+            <TopFaq q="相手が海外にいても大丈夫？">
+              日時はすべて
+              <b className="font-bold text-neutral-700">あなたの現地時間で表示</b>
+              されるので、時差の計算はいりません。
+            </TopFaq>
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link
+              href="/about-service"
+              className="inline-flex max-w-full items-center justify-center gap-2 rounded-full border border-border-strong bg-card px-[18px] py-2.5 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground"
+            >
+              使い方とよくある質問をすべて見る
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ===== final CTA ===== */}
       <section className="px-6 pb-24 pt-[88px]">
         {/* 320px では px-10 だと内側が約 192px しか残らず、CTA ボタンの
@@ -270,7 +354,7 @@ export default async function HomePage() {
           <span className="absolute -right-[70px] -top-[90px] h-60 w-60 rounded-full bg-primary-50" aria-hidden />
           <span className="absolute -bottom-[110px] -left-20 h-[260px] w-[260px] rounded-full bg-muted" aria-hidden />
           <div className="relative">
-            <h2 className="text-[clamp(24px,3.4vw,34px)] font-bold">
+            <h2 className="text-[clamp(22px,3.1vw,31px)] font-bold">
               その疑問、<span className="text-primary-700">現地の30分</span>
               で解決するかもしれない。
             </h2>
@@ -328,6 +412,56 @@ function HowStep({
         </span>
       ) : null}
     </div>
+  );
+}
+
+/** トップの料金カード（about-service の料金表を 1 行ずつに要約したもの） */
+function PriceCard({
+  label,
+  price,
+  unit,
+  highlight = false,
+  children,
+}: {
+  label: string;
+  price: string;
+  unit: string;
+  highlight?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={
+        'flex flex-col rounded-2xl bg-background px-5 py-6 ' +
+        (highlight ? 'border-[1.5px] border-primary-500 shadow-sm' : 'border border-border')
+      }
+    >
+      <span className="text-[13.5px] font-bold">{label}</span>
+      {/* 狭い幅では「月額」と「内容に応じて設定」が 1 行に入らないので折り返させる。
+          26px の数字の直下に貼り付かないよう gap-y も要る */}
+      <span className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <b className="shrink-0 text-[26px] font-bold tabular-nums tracking-tight">{price}</b>
+        <span className="shrink-0 whitespace-nowrap text-[12px] text-neutral-500">{unit}</span>
+      </span>
+      <p className="mt-2.5 text-[13px] leading-relaxed text-neutral-500">{children}</p>
+    </div>
+  );
+}
+
+/** トップの FAQ 1 問。JS なしで開閉できる details/summary */
+function TopFaq({ q, children }: { q: string; children: React.ReactNode }) {
+  return (
+    <details className="group rounded-2xl border border-border bg-card px-5">
+      {/* タップ領域は 14px の行 + py-3.5 で 36px 以上。ブラウザ既定の三角は消す */}
+      <summary className="flex cursor-pointer list-none items-center gap-3 py-3.5 text-[14px] font-bold [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0 flex-1">{q}</span>
+        <ChevronDown
+          className="h-4 w-4 shrink-0 text-neutral-500 transition-transform group-open:rotate-180"
+          aria-hidden
+        />
+      </summary>
+      <p className="pb-4 text-[13px] leading-loose text-neutral-500">{children}</p>
+    </details>
   );
 }
 

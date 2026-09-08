@@ -5,6 +5,8 @@ import { ArticleRendererV2 } from '@/components/article/v2/ArticleRendererV2';
 import { requireUser } from '@/lib/auth/require-user';
 import { isExpertUser } from '@/lib/experts/list';
 import { isUserVerified } from '@/lib/residents/verification';
+import { getEditorialArticleRow } from '@/lib/articles/editorial';
+import { EditorialArticleView } from '@/components/articles/EditorialArticleView';
 
 export const metadata = {
   title: '公開前プレビュー',
@@ -15,13 +17,16 @@ export const dynamic = 'force-dynamic';
 /**
  * ライター向け公開前プレビュー。
  *
- * 本番 `/articles/[id]` ページと同じ `<ArticleRendererV2 />` を使って
- * 「公開後の見え方」を再現する。違いは:
+ * 本番 `/articles/[id]` ページと同じ描画（ブロック形式は <EditorialArticleView>、
+ * 旧形式は <ArticleRendererV2 />）で「公開後の見え方」を再現する。違いは:
  *   - 下書きや審査中（status != published）も表示可能
  *   - 有料パートは強制解除
  *   - いいね / 購入導線は無効化
  *
  * 認可: 自分の記事 or editor のみアクセス可。
+ *
+ * ブロック形式（body_style='blocks'）の記事は ArticleRendererV2 が描けず本文が空になっていたので、
+ * 記事ページと同じ <EditorialArticle>（= 同じ <Prose>）を使う EditorialArticleView に先に振り分ける。
  */
 export default async function PreviewArticlePage({
   params,
@@ -29,6 +34,15 @@ export default async function PreviewArticlePage({
   params: { id: string };
 }) {
   const user = await requireUser();
+
+  // ===== ブロック形式（新エディタ /write で書いた記事） =====
+  const ed = await getEditorialArticleRow(params.id);
+  if (ed && ed.bodyStyle === 'blocks') {
+    if (ed.writerId !== user.id && user.role !== 'editor') return notFound();
+    return <EditorialArticleView row={ed} variant="owner" />;
+  }
+
+  // ===== 旧形式（classic / photo_journal）: 従来どおり =====
   const bundle = await getDbArticleBundle(params.id, { allowUnpublished: true });
   if (!bundle) return notFound();
 

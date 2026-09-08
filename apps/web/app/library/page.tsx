@@ -97,7 +97,7 @@ export default async function LibraryPage({ searchParams }: SearchProps) {
           writerAvatarUrl: r.writerAvatar ?? null,
           writerTier: (r.writerTier ?? 'B') as 'S' | 'A' | 'B',
           writerYears: r.writerYears ?? 0,
-          cityId: r.cityId,
+          cityId: r.cityId ?? '', // 0092: 都市なし記事は空文字
           area: r.cityNameJa ?? 'パリ',
           priceJpy: r.priceJpy,
           tags: r.tags ?? [],

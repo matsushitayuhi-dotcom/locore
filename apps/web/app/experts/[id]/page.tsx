@@ -16,7 +16,6 @@ import { recordProfileView } from '@/lib/dashboard/views';
 import { getPublicBadges } from '@/lib/dashboard/milestones';
 import { CONSULTATION_TAG, topicLabel } from '@/lib/experts/constants';
 import { isExperienceOnly, specialtyLabel } from '@/lib/experts/specialties';
-import { EnrollmentChip } from '@/components/experts/ExpertCard';
 import { LocalSlotTime, LocalTzLabel } from '@/components/experts/LocalSlotTime';
 import { formatSchoolName } from '@/lib/experts/education';
 import { deriveEnrollment } from '@/lib/experts/enrollment';
@@ -37,14 +36,18 @@ import { countAdmissions, groupAdmissions } from '@/lib/experts/admissions';
  * /experts/[id] — エキスパート詳細（Intro 型）。id は users.id。
  * mockups/v2/expert-detail-intro.html の実装。
  *
- * 縦長対策（2026-09）: ヒーローは写真を小さく横並びにして「学校＋在学/卒業 → 得意分野 →
- * 認証・言語・評価」を 1 画面に。長いリスト（相談できること / 自己紹介 / 経歴 / レビュー）は
- * 最初の数件だけ見せて <details> で展開。使い方・FAQ は /about-service への 1 行リンクに。
+ * LinkedIn 準拠の刷新（2026-09）:
+ *   - ヒーローは「写真 ＋ 名前 ＋ 見出し（学校）＋ 所在地」だけを横並びにし、
+ *     バッジ・言語・SNS・得意分野は写真の下の全幅に置く（写真の下に空白を作らない）。
+ *     在学中 / アルムナイのチップは写真に重ねず名前の下の学校名の隣へ（顔に被らない）。
+ *   - ページ内アンカー（タブ）は廃止。セクションを縦に積み、区切り線だけで読ませる。
+ *   - 長いリスト（自己紹介 / 相談できること / 経歴 / レビュー）は最初の数件を見せて <details> で展開。
+ *   - 使い方・FAQ は /about-service への 1 行リンク。
  *
- * 左: ヒーロー（アイコン列つき）→ ページ内アンカー → 自己紹介 → こんな相談に乗れます → 合格実績 → 経歴 → 資格 →
- *     発信・メディア（Locore 記事が最優先、外部リンクは featured / card / button・0088）→ レビュー（最後）
+ * 左: ヒーロー → 自己紹介 → こんな相談に乗れます →（モバイルはここに相談メニュー）→ 合格実績 →
+ *     経歴 → 資格 → 発信・メディア（Locore 記事が最優先、外部リンクは featured / card / button・0088）→ レビュー
  * 右 (sticky、画面より長ければ中でスクロール): 相談メニュー → 継続プラン → 直近の空き枠
- * モバイル（1 カラム）では DOM 順どおり「ヒーロー → 相談メニュー（サービス）→ 本文 → レビュー」。
+ * モバイル（1 カラム）では DOM 順どおり「人物（自己紹介）が先、サービスは後」。
  *
  * 留学オンライン相談に合わない項目は表示しない（データは残す）:
  *   在住年数の生表示、オンライン相談 / 30分・60分の汎用メタ、使い方タイル、FAQ 一覧。
@@ -208,16 +211,8 @@ export default async function ExpertDetailPage({
   const admissionGroups = groupAdmissions(profile.education, profile.admissions);
   const admissionCount = countAdmissions(admissionGroups);
 
-  // ページ内アンカー（存在するセクションだけ）
-  const anchors: Array<{ id: string; label: string }> = [
-    ...(bioParagraphs.length > 0 ? [{ id: 'about', label: '自己紹介' }] : []),
-    ...(profile.offerings.length > 0 ? [{ id: 'offerings', label: '相談できること' }] : []),
-    ...(admissionCount > 0 ? [{ id: 'admissions', label: '合格実績' }] : []),
-    ...(hasCareer ? [{ id: 'career', label: '経歴' }] : []),
-    ...(qualifications.length > 0 ? [{ id: 'qualifications', label: '資格・スコア' }] : []),
-    ...(mediaCount > 0 ? [{ id: 'media', label: '発信' }] : []),
-    { id: 'reviews', label: 'レビュー' },
-  ];
+  // ページ内アンカー（タブ）の一覧は廃止（LinkedIn 同様、縦スクロールで読ませる）。
+  // 各セクションの id 自体は #reviews / #consult-menu を使うので残してある。
 
   const renderReview = (r: (typeof recent)[number], i: number) => (
     <div key={r.id} className={'py-4' + (i === 0 ? '' : ' border-t border-border')}>
@@ -301,159 +296,229 @@ export default async function ExpertDetailPage({
           <span className="text-neutral-400">{profile.displayName}</span>
         </nav>
 
-        <div className="grid items-start gap-7 pb-28 lg:grid-cols-[1fr_360px] lg:gap-12 lg:pb-16">
-          {/* ===== left-top: ヒーロー＋アンカー（モバイルでは相談メニューがこの直後に来る）===== */}
+        {/* 縦の間隔は Section 側（mt-6 + border-t + pt-6）が持つので grid の gap-y は 0。
+            下部の余白: 以前は pb-28（112px）を「固定 CTA の逃げ」として入れていたが、
+            この下には必ず SiteFooter（mt-16 = 64px）が続くので逃げは二重。
+            最後の「使い方とよくある質問」の下に 176px の空白ができていた。
+            本文の最後が CTA に隠れることは footer 分で起こり得ないので、pb は余白ぶんだけに戻す */}
+        <div className="grid items-start gap-y-0 pb-4 lg:grid-cols-[1fr_360px] lg:gap-x-12 lg:pb-10">
+          {/* ===== left-top: ヒーロー ＋ 自己紹介 ＋ 相談できること
+               （モバイルでは相談メニューがこの直後に来るので、サービスより先に人物が読める）===== */}
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-            {/* ===== hero: 写真は小さく横並び、決め手（学校・在学/卒業・得意分野）を 1 画面に ===== */}
-            <section className="grid grid-cols-[104px_1fr] gap-4 sm:grid-cols-[168px_1fr] sm:gap-6">
-              <div className="relative aspect-square overflow-hidden rounded-xl bg-neutral-900">
-                {profile.avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div
-                    className="grid h-full w-full place-items-center bg-[radial-gradient(120%_90%_at_20%_10%,#2b3a12_0%,#141513_55%,#0e0e0f_100%)]"
-                    aria-hidden
-                  >
-                    <span className="select-none text-[44px] font-bold leading-none text-primary-500 sm:text-[64px]">
-                      {profile.displayName.charAt(0)}
-                    </span>
-                  </div>
-                )}
-                {enrollment ? <EnrollmentChip enrollment={enrollment} /> : null}
-              </div>
+            {/* ===== hero（LinkedIn 準拠）: 写真 ＋ 名前 ＋ 見出し（学校）＋ 所在地 だけを横に並べ、
+                 バッジ・言語・SNS・得意分野は写真の下の「全幅」に置く。
+                 以前は右カラムに全部を積んでいたため、写真（104px）の下だけが大きく空いていた。
+                 写真を 92px にして右を 3 行（名前 / 学校 / 職業・所在地）に絞ると高さがほぼ揃う ===== */}
+            <section>
+              <div className="flex items-start gap-3.5 sm:gap-5">
+                <div className="aspect-square w-[92px] max-w-full shrink-0 overflow-hidden rounded-xl bg-neutral-900 sm:w-[132px]">
+                  {profile.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.avatarUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div
+                      className="grid h-full w-full place-items-center bg-[radial-gradient(120%_90%_at_20%_10%,#2b3a12_0%,#141513_55%,#0e0e0f_100%)]"
+                      aria-hidden
+                    >
+                      <span className="select-none text-[38px] font-bold leading-none text-primary-500 sm:text-[56px]">
+                        {profile.displayName.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+                  {/* 在学中 / アルムナイのチップは写真に重ねると顔に被るので、隣の学校名の行へ移した */}
+                </div>
 
-              <div className="min-w-0">
-                {/* 402px 以下では名前が長いとお気に入りボタンが次の行へ回るので gap-y で行間を確保 */}
-                <h1 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[24px] font-semibold leading-[1.25] tracking-[-0.01em] sm:text-[28px]">
-                  {profile.displayName}
-                  {profile.isVerified ? (
-                    <BadgeCheck
-                      className="h-[20px] w-[20px] shrink-0 text-primary-700"
-                      aria-label="在籍確認済み"
-                    />
-                  ) : null}
-                  {!isMe ? (
-                    <span className="ml-auto">
-                      <FavoriteExpertButton
-                        targetUserId={profile.id}
-                        initialFavorited={favorited}
-                        viewerLoggedIn={!!me}
+                <div className="min-w-0 flex-1">
+                  <h1 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[21px] font-semibold leading-[1.25] tracking-[-0.01em] sm:text-[28px]">
+                    {profile.displayName}
+                    {profile.isVerified ? (
+                      <BadgeCheck
+                        className="h-[18px] w-[18px] shrink-0 text-primary-700"
+                        aria-label="在籍確認済み"
                       />
-                    </span>
+                    ) : null}
+                  </h1>
+                  {/* 見出し行（LinkedIn の headline）。学校名は縮む側 min-w-0、ステータスは縮まない側 */}
+                  {enrollment && schoolLabel ? (
+                    <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[14px] font-medium leading-snug text-neutral-700 sm:text-[16px]">
+                      <span className="min-w-0">{schoolLabel}</span>
+                      <span
+                        className={
+                          'inline-flex shrink-0 items-center whitespace-nowrap rounded-md px-1.5 py-px text-[11px] font-bold ' +
+                          (enrollment.status === 'current'
+                            ? 'bg-primary-100 text-primary-900'
+                            : 'bg-muted text-neutral-600')
+                        }
+                      >
+                        {enrollment.status === 'current'
+                          ? '在学中'
+                          : `アルムナイ${enrollment.year != null ? `（${enrollment.year}年卒）` : ''}`}
+                      </span>
+                    </div>
                   ) : null}
-                </h1>
-                {enrollment && schoolLabel ? (
-                  <div className="mt-1 text-[15px] font-medium text-neutral-700 sm:text-[16px]">
-                    {schoolLabel}
-                    <span className="ml-2 inline-block whitespace-nowrap text-[12.5px] font-normal text-neutral-500">
-                      {enrollment.status === 'current'
-                        ? '在学中'
-                        : `アルムナイ${enrollment.year != null ? `（${enrollment.year}年卒）` : ''}`}
-                    </span>
-                  </div>
-                ) : null}
-                {profile.occupation || placeLine ? (
-                  <div className="mt-0.5 text-[13.5px] text-neutral-500">
-                    {[profile.occupation, placeLine].filter(Boolean).join(' ・ ')}
-                  </div>
-                ) : null}
-
-                <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5 text-[12.5px] text-neutral-700">
-                  {profile.isVerified ? (
-                    <span className="inline-flex items-center gap-1.5 font-semibold">
-                      <ShieldCheck className="h-[14px] w-[14px] shrink-0 text-primary-700" aria-hidden />
-                      在籍確認済み
-                    </span>
-                  ) : null}
-                  {publicBadges.map((b) => (
-                    <span key={b} className="inline-flex items-center rounded-full bg-primary-100 px-2 py-px text-[11px] font-bold text-primary-900">
-                      {b}
-                    </span>
-                  ))}
-                  {languages.length > 0 ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Globe className="h-[14px] w-[14px] shrink-0 text-neutral-400" aria-hidden />
-                      {languages.join('・')}
-                    </span>
-                  ) : null}
-                  {reviewCount > 0 && avgStars != null ? (
-                    <a href="#reviews" className="inline-flex items-center gap-1 whitespace-nowrap hover:underline">
-                      <span className="text-primary-700">★</span>
-                      <b>{avgStars}</b>
-                      <span className="text-neutral-500">（{reviewCount}件）</span>
-                    </a>
+                  {profile.occupation || placeLine ? (
+                    <div className="mt-1 text-[13px] leading-snug text-neutral-500">
+                      {[profile.occupation, placeLine].filter(Boolean).join(' ・ ')}
+                    </div>
                   ) : null}
                 </div>
-                {/* SNS アイコン列（platform ごとに 1 件）。内容は下部の「発信・メディア」で見せる */}
-                {profile.socialLinks.length > 0 ? (
-                  <div className="mt-2.5">
-                    <SocialIcons links={profile.socialLinks} variant="light" size="sm" />
-                  </div>
-                ) : null}
+              </div>
 
-                {/* 得意分野（コンパクトなチップ。第 1 階層のラベルは省く） */}
-                {specialties.length > 0 || menuTopics.length > 0 ? (
-                  <div className="mt-3.5">
-                    <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-700">
-                      得意分野
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(specialties.length > 0 ? specialties : menuTopics).map((code) => (
-                        // 320px では右カラムが 160px しかなく長いラベルは pill 内で折り返す。
-                        // スマホだけ角丸を弱めて 2 行でも形が崩れないようにする
-                        <span
-                          key={code}
-                          className="rounded-full max-sm:rounded-lg border border-border-strong px-3 py-1 text-[12.5px] font-medium text-neutral-700"
-                        >
-                          {specialties.length > 0 ? specialtyLabel(code) : topicLabel(code)}
-                          {isExperienceOnly(code) ? (
-                            <span className="ml-1 text-[10px] max-sm:text-[11px] text-neutral-400">※</span>
-                          ) : null}
-                        </span>
-                      ))}
-                    </div>
-                    {hasExperienceOnly ? (
-                      <p className="mt-1.5 text-[11px] text-neutral-400">
-                        ※ ビザ・奨学金・ローンなどは本人の体験談としてお話しします。専門家による助言ではありません。
-                      </p>
-                    ) : null}
-                  </div>
+              {/* 認証・実績バッジ・言語・評価・お気に入り。写真の右ではなく全幅の行に置くと
+                  402px でも 1〜2 行に収まり、写真の下の空白も埋まる */}
+              <div className="mt-3 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-[12.5px] text-neutral-700">
+                {profile.isVerified ? (
+                  <span className="inline-flex items-center gap-1.5 font-semibold">
+                    <ShieldCheck className="h-[14px] w-[14px] shrink-0 text-primary-700" aria-hidden />
+                    在籍確認済み
+                  </span>
+                ) : null}
+                {publicBadges.map((b) => (
+                  <span key={b} className="inline-flex items-center rounded-full bg-primary-100 px-2 py-px text-[11px] font-bold text-primary-900">
+                    {b}
+                  </span>
+                ))}
+                {languages.length > 0 ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Globe className="h-[14px] w-[14px] shrink-0 text-neutral-400" aria-hidden />
+                    {languages.join('・')}
+                  </span>
+                ) : null}
+                {reviewCount > 0 && avgStars != null ? (
+                  <a href="#reviews" className="inline-flex items-center gap-1 whitespace-nowrap hover:underline">
+                    <span className="text-primary-700">★</span>
+                    <b>{avgStars}</b>
+                    <span className="text-neutral-500">（{reviewCount}件）</span>
+                  </a>
+                ) : null}
+                {/* お気に入りは h1 から下ろした。名前の横に置くと 320px でボタンだけ次の行に落ち、
+                    その分だけ写真の下に余白ができていた */}
+                {!isMe ? (
+                  // 402px/320px ではメタ項目が 1 行に収まらず、ml-auto のままだとボタンだけが
+                  // 最終行に単独で右寄せされる。狭い幅では他の項目に続けて普通に流す
+                  <span className="ml-auto shrink-0 max-sm:ml-0">
+                    <FavoriteExpertButton
+                      targetUserId={profile.id}
+                      initialFavorited={favorited}
+                      viewerLoggedIn={!!me}
+                    />
+                  </span>
                 ) : null}
               </div>
+
+              {/* SNS アイコン列（platform ごとに 1 件）。内容は下部の「発信・メディア」で見せる */}
+              {profile.socialLinks.length > 0 ? (
+                <div className="mt-2.5">
+                  <SocialIcons links={profile.socialLinks} variant="light" size="sm" />
+                </div>
+              ) : null}
+
+              {/* 得意分野（LinkedIn の Skills 相当）。チップが大きいと視認性が落ちるので
+                  11.5px / px-2.5 / py-0.5 の小ぶりにする（11px 未満にはしない） */}
+              {specialties.length > 0 || menuTopics.length > 0 ? (
+                <div className="mt-3">
+                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-primary-700">
+                    得意分野
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(specialties.length > 0 ? specialties : menuTopics).map((code) => (
+                      // 320px でも長いラベルはチップ内で折り返す。
+                      // スマホだけ角丸を弱めて 2 行でも形が崩れないようにする
+                      <span
+                        key={code}
+                        className="rounded-full max-sm:rounded-lg border border-border px-2.5 py-0.5 text-[11.5px] font-medium text-neutral-700"
+                      >
+                        {specialties.length > 0 ? specialtyLabel(code) : topicLabel(code)}
+                        {isExperienceOnly(code) ? (
+                          <span className="ml-1 text-[11px] text-neutral-400">※</span>
+                        ) : null}
+                      </span>
+                    ))}
+                  </div>
+                  {hasExperienceOnly ? (
+                    <p className="mt-1.5 text-[11px] text-neutral-400">
+                      ※ ビザ・奨学金・ローンなどは本人の体験談としてお話しします。専門家による助言ではありません。
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </section>
 
-            {/* ページ内アンカー */}
-            <nav
-              aria-label="ページ内"
-              className="mt-6 flex gap-1.5 overflow-x-auto border-b border-border pb-3 text-[12.5px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {anchors.map((a) => (
-                <a
-                  key={a.id}
-                  href={`#${a.id}`}
-                  className="shrink-0 rounded-full bg-muted px-3 py-1 font-medium text-neutral-700 transition hover:bg-neutral-900 hover:text-white"
-                >
-                  {a.label}
-                </a>
-              ))}
-              <a
-                href="#consult-menu"
-                className="shrink-0 rounded-full bg-primary-500 px-3 py-1 font-bold text-neutral-950 lg:hidden"
-              >
-                相談メニュー
-              </a>
-            </nav>
+            {/* ページ内アンカー（タブ）は廃止。LinkedIn と同じく、セクションを素直に縦へ積んで
+                スクロールで読ませる。#reviews / #consult-menu の id はヒーローの評価と
+                下部固定 CTA から使うので残している */}
+
+            {/* ===== 自己紹介（先頭段落 + 続きを読む）。相談メニューより先に人物を読ませる ===== */}
+            {bioLead ? (
+              <Section title="自己紹介" id="about">
+                <div className="max-w-[36em]">
+                  <p className="text-[14.5px] leading-[1.85] text-neutral-700">{bioLead}</p>
+                  {bioRest.length > 0 ? (
+                    <details className="group mt-2.5">
+                      <summary className="inline-flex cursor-pointer list-none items-center whitespace-nowrap rounded-full border border-border-strong px-3.5 py-1.5 max-sm:py-2.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
+                        …さらに表示
+                      </summary>
+                      <div className="space-y-3 pt-3">
+                        {bioRest.map((p, i) => (
+                          <p key={i} className="text-[14.5px] leading-[1.85] text-neutral-700">
+                            {p}
+                          </p>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
+                </div>
+              </Section>
+            ) : null}
+
+            {/* ===== 相談できること（最初の 4 件 + 展開）。この直後にモバイルの相談メニューが続く ===== */}
+            {profile.offerings.length > 0 ? (
+              <Section title="こんな相談に乗れます" id="offerings">
+                <ul className="flex max-w-[36em] flex-col gap-2.5">
+                  {offeringsShown.map((o) => (
+                    <li key={o} className="flex items-start gap-3 text-[14.5px] text-neutral-700">
+                      <span className="mt-[3px] grid h-[20px] w-[20px] shrink-0 place-items-center rounded-full bg-neutral-900 text-primary-500">
+                        <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+                      </span>
+                      {o}
+                    </li>
+                  ))}
+                </ul>
+                {offeringsRest.length > 0 ? (
+                  <details className="group mt-2.5">
+                    <summary className="inline-flex cursor-pointer list-none items-center whitespace-nowrap rounded-full border border-border-strong px-3.5 py-1.5 max-sm:py-2.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
+                      ほか {offeringsRest.length} 件を表示
+                    </summary>
+                    <ul className="flex max-w-[36em] flex-col gap-2.5 pt-2.5">
+                      {offeringsRest.map((o) => (
+                        <li key={o} className="flex items-start gap-3 text-[14.5px] text-neutral-700">
+                          <span className="mt-[3px] grid h-[20px] w-[20px] shrink-0 place-items-center rounded-full bg-neutral-900 text-primary-500">
+                            <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
+                          </span>
+                          {o}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
+              </Section>
+            ) : null}
           </div>
 
           {/* ===== right (sticky。画面より長いときは中でスクロール) ===== */}
           <aside
             id="consult-menu"
-            className="scroll-mt-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]"
+            // モバイルでは他セクションと同じ区切り（mt-6 + border-t + pt-6）。PC の右カラムでは打ち消す
+            className="scroll-mt-4 mt-6 border-t border-border pt-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:border-t-0 lg:pt-0 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto lg:pr-1 lg:[scrollbar-width:thin]"
           >
-            <div className="mb-3 text-[13px] text-neutral-500">
-              相談メニュー — <b className="text-foreground">{profile.displayName}</b>さん
-            </div>
+            {/* タブを廃したので、モバイルではここも他と同じ大きさの見出しとして読ませる */}
+            <h2 className="mb-3 text-[19px] font-semibold text-foreground lg:text-[13px] lg:font-normal lg:text-neutral-500">
+              相談メニュー
+              <span className="text-[13px] font-normal text-neutral-500">
+                {' '}
+                — <b className="font-semibold text-foreground">{profile.displayName}</b>さん
+              </span>
+            </h2>
             {isEmptyPreview ? (
               <div className="mt-3.5 rounded-[6px] border border-dashed border-border-strong px-4 py-6 text-center">
                 <b className="block text-[15px] font-semibold">相談メニューがまだありません</b>
@@ -558,62 +623,7 @@ export default async function ExpertDetailPage({
 
           {/* ===== left-bottom: 本文（レビューは最後）===== */}
           <div className="min-w-0 lg:col-start-1 lg:row-start-2">
-
-            {/* ===== 自己紹介（先頭段落 + 続きを読む）===== */}
-            {bioLead ? (
-              <Section title="自己紹介" id="about">
-                <div className="max-w-[36em]">
-                  <p className="text-[14.5px] leading-[1.85] text-neutral-700">{bioLead}</p>
-                  {bioRest.length > 0 ? (
-                    <details className="group mt-2.5">
-                      <summary className="inline-flex cursor-pointer list-none items-center whitespace-nowrap rounded-full border border-border-strong px-3.5 py-1.5 max-sm:py-2.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
-                        続きを読む
-                      </summary>
-                      <div className="space-y-3 pt-3">
-                        {bioRest.map((p, i) => (
-                          <p key={i} className="text-[14.5px] leading-[1.85] text-neutral-700">
-                            {p}
-                          </p>
-                        ))}
-                      </div>
-                    </details>
-                  ) : null}
-                </div>
-              </Section>
-            ) : null}
-
-            {/* ===== 相談できること（最初の 4 件 + 展開）===== */}
-            {profile.offerings.length > 0 ? (
-              <Section title="こんな相談に乗れます" id="offerings">
-                <ul className="flex max-w-[36em] flex-col gap-2.5">
-                  {offeringsShown.map((o) => (
-                    <li key={o} className="flex items-start gap-3 text-[14.5px] text-neutral-700">
-                      <span className="mt-[3px] grid h-[20px] w-[20px] shrink-0 place-items-center rounded-full bg-neutral-900 text-primary-500">
-                        <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
-                      </span>
-                      {o}
-                    </li>
-                  ))}
-                </ul>
-                {offeringsRest.length > 0 ? (
-                  <details className="group mt-2.5">
-                    <summary className="inline-flex cursor-pointer list-none items-center whitespace-nowrap rounded-full border border-border-strong px-3.5 py-1.5 max-sm:py-2.5 text-[12.5px] font-semibold text-neutral-700 transition hover:border-foreground [&::-webkit-details-marker]:hidden group-open:hidden">
-                      ほか {offeringsRest.length} 件を表示
-                    </summary>
-                    <ul className="flex max-w-[36em] flex-col gap-2.5 pt-2.5">
-                      {offeringsRest.map((o) => (
-                        <li key={o} className="flex items-start gap-3 text-[14.5px] text-neutral-700">
-                          <span className="mt-[3px] grid h-[20px] w-[20px] shrink-0 place-items-center rounded-full bg-neutral-900 text-primary-500">
-                            <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
-                          </span>
-                          {o}
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                ) : null}
-              </Section>
-            ) : null}
+            {/* 自己紹介 / 相談できること は上（相談メニューの前）へ移動した */}
 
             {/* ===== 合格実績（出願年ごと。進学校にはタグ）===== */}
             {admissionCount > 0 ? (
@@ -758,8 +768,9 @@ export default async function ExpertDetailPage({
               )}
             </Section>
 
-            {/* 使い方・FAQ は一覧と /about-service にあるので、ここは 1 行のリンクに */}
-            <div className="mt-10 border-t border-border pt-5 text-[13px] text-neutral-500">
+            {/* 使い方・FAQ は一覧と /about-service にあるので、ここは 1 行のリンクに。
+                区切りの寸法は Section と揃える（この下に余分な逃げ余白を足さない） */}
+            <div className="mt-6 border-t border-border pt-6 text-[13px] text-neutral-500">
               相談の流れ・料金の支払い・時差については
               <Link
                 href="/about-service"
@@ -870,8 +881,10 @@ function Section({
   id?: string;
   children: React.ReactNode;
 }) {
+  // タブを廃したので、区切り線（LinkedIn のセクション境界相当）でセクションの切れ目を示す。
+  // 上下の間隔はここが唯一の担当（親の grid gap は 0）なので、二重に空くことがない
   return (
-    <section id={id} className="mt-8 scroll-mt-4">
+    <section id={id} className="mt-6 scroll-mt-4 border-t border-border pt-6">
       <h2 className="mb-3 text-[19px] font-semibold tracking-[-0.005em] sm:text-[20px]">{title}</h2>
       {children}
     </section>
