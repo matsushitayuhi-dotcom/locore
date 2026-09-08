@@ -22,15 +22,17 @@ import {
 } from '@/lib/experts/specialties';
 import { getSpecialtiesByUser } from '@/lib/experts/specialtiesByUser';
 import { ExpertCard } from '@/components/experts/ExpertCard';
-import { ExpertRail } from '@/components/experts/ExpertRail';
+import { CardCarousel } from '@/components/CardCarousel';
 import { CityPriceSelects } from './FilterSelects';
 
 /**
  * /experts — エキスパート一覧（Intro 型）。mockups/v2/experts-list-intro.html の実装。
  *
  * 構成: 大見出し → 国のタブ（テキストのリスト・リンク）→ 都市・料金・テーマの絞り込み行 →
- *   絞り込み無し: 得意分野の第 1 階層ごとの横スクロール列（Intro の "Top Experts." 列）
- *   絞り込み有り: 1 つのグリッド
+ *   テーマ未選択: 得意分野の第 1 階層ごとのカルーセル（Intro の "Top Experts." 列）。
+ *     国・都市・料金の絞り込みは「列の中身」に効く（絞り込んでもテーマの見出しは残す）。
+ *     得意分野が未登録でどの列にも入らない人は、列の下の「その他」グリッドで必ず出す
+ *   テーマ選択時 / 人数が少ないとき: 1 つのグリッドで全件
  * → 使い方 3 タイル → 登録 CTA。
  *
  * URL クエリ（GET フォーム + リンク）:
@@ -52,6 +54,19 @@ export const metadata = {
   description:
     '海外の大学・大学院に在学中／卒業した日本人に、30分からオンライン相談。全員、書類（学生証・入学証明書・卒業証書）で在籍確認済み。留学先の国とテーマで絞り込めます。',
 };
+
+/**
+ * 1 つのテーマ列に載せる人数の上限。ここを超えた分は「すべて見る」（= そのテーマで
+ * 絞り込んだグリッド）に送る。横に延々と続く列は端まで見られないし、カード 1 枚に
+ * 写真が 1 枚あるので DOM と画像も無駄に増える。
+ */
+const ROW_MAX = 12;
+
+/**
+ * テーマ列に分けるのに必要な最小人数。これ未満のときは列にせずグリッドで出す。
+ * 1〜2 人しか入っていない列がテーマの数だけ縦に並ぶと、かえって探しにくいため。
+ */
+const ROWS_MIN_EXPERTS = 8;
 
 type Search = {
   country?: string | string[];
@@ -99,15 +114,27 @@ export default async function ExpertsPage({
 
   const selectedCountry = countryOptions.find((c) => c.code === country);
   const selectedGroup = topic ? specialtyGroup(topic) : null;
-  const filtered = !!(topic || country || city || price);
 
-  // 絞り込み無しのときだけテーマ列を組む。1 人以上いる列だけ、定義順で
-  const rows = filtered
+  // テーマ列は「テーマ未選択」なら常に組む（国・都市・料金で絞り込んでいても）。
+  // 絞り込んだ結果の全員をのっぺりした 1 枚のグリッドに流すより、得意分野という
+  // 意味のある単位に分かれていた方が選びやすいため。1 人以上いる列だけ、定義順で。
+  // 元は experts（= topic 絞り込み済み）ではなく all を見ていたが、国・都市・料金の
+  // 絞り込みを列にも効かせるため、絞り込み後の experts から組む
+  const rows = topic
     ? []
     : SPECIALTY_GROUPS.map((g) => ({
         group: g,
-        experts: all.filter((e) => groupsFor(e).has(g.code)),
+        experts: experts.filter((e) => groupsFor(e).has(g.code)),
       })).filter((r) => r.experts.length > 0);
+
+  // テーマを選んだとき、または母数が少なくて列が痩せるときはグリッドで全件出す
+  const useRows = rows.length >= 2 && experts.length >= ROWS_MIN_EXPERTS;
+
+  // 得意分野（users.specialties の親 ∪ 相談メニューの tags）を 1 つも持たない人は、
+  // どのテーマ列にも入らない。列だけを出すとその人がページのどこにも出ず、
+  // プロフィール＝予約への導線が消えるので、列の下に「その他」として必ず出す。
+  // ROW_MAX で切られた人はここに入れない（そのテーマの「すべて見る」から辿れる）
+  const uncategorized = useRows ? experts.filter((e) => groupsFor(e).size === 0) : [];
 
   const href = (q: Record<string, string>) => ({
     pathname: '/experts',
@@ -262,7 +289,66 @@ export default async function ExpertsPage({
               </Link>
             </div>
           </div>
-        ) : filtered ? (
+        ) : useRows ? (
+          <>
+            {rows.map((r, ri) => (
+              <section key={r.group.code} className="pt-9">
+                <h2 className="max-w-[36em] text-[clamp(18px,2.2vw,24px)] font-light leading-[1.45] text-neutral-500">
+                  <b className="font-bold text-foreground">{r.group.label}。</b>
+                  {r.group.lede}
+                </h2>
+                {/* スマホだけ上下に余白を足してタップ領域を 36px 以上にする。
+                    列は ROW_MAX 人で切るので、切ったときだけ総数を添えて「まだ居る」と伝える。
+                    この文言は CardCarousel の viewAllHref には渡さない（あちらのリンクは
+                    素の 13px でタップ領域が 36px に届かず、見出しの lede とも離れるため） */}
+                <Link
+                  href={href({ ...base, topic: r.group.code })}
+                  className="mt-1.5 inline-flex items-center gap-1.5 whitespace-nowrap text-[13.5px] text-neutral-700 underline decoration-border-strong underline-offset-[5px] transition hover:text-foreground hover:decoration-foreground max-sm:py-2"
+                >
+                  {/* 1 つのテキストノードにまとめる（flex の子に分けると gap が入り、
+                      狭い幅では子ごとに 1 文字幅まで潰れる） */}
+                  <span className="whitespace-nowrap">
+                    {r.experts.length > ROW_MAX
+                      ? `すべて見る（${r.experts.length}名）`
+                      : 'すべて見る'}
+                  </span>
+                  <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                </Link>
+                {/* 横スクロール列は共通の CardCarousel に寄せた（旧 ExpertRail）。
+                    スナップ・矢印・現在位置のドット・キーボード操作（← →）が付き、
+                    スマホでは 1 枚 80vw になって写真と得意分野チップが読める幅になる。
+                    見出しは各テーマの lede 付きなのでこのページ側に残し、
+                    カルーセルには読み上げ用の ariaLabel だけ渡す（列が縦に並ぶので
+                    「カード一覧」だと区別できない） */}
+                <CardCarousel
+                  // CardCarousel の見出し行（矢印 + mb-3）はカードが 2 枚以上のときだけ出る。
+                  // 1 人だけの列ではその行ごと消えるので、消えたぶん（スマホは mb-3 の 12px、
+                  // sm 以上は矢印 h-9 + mb-3 の 48px）をこちらの余白で埋めて、
+                  // テーマ列が縦に並んだときの間隔を全列そろえる
+                  className={
+                    r.experts.length > 1 ? 'mt-2 sm:mt-4' : 'mt-5 sm:mt-16'
+                  }
+                  ariaLabel={`${r.group.label}のエキスパート`}
+                >
+                  {r.experts.slice(0, ROW_MAX).map((e, i) => card(e, ri === 0 && i < 6))}
+                </CardCarousel>
+              </section>
+            ))}
+            {/* 得意分野が未登録でどの列にも入らなかった人。列だけだと一覧から丸ごと
+                消えてしまうので、必ずここで拾う（横スクロールに隠す理由も無いのでグリッド） */}
+            {uncategorized.length > 0 ? (
+              <section className="pt-9">
+                <h2 className="max-w-[36em] text-[clamp(18px,2.2vw,24px)] font-light leading-[1.45] text-neutral-500">
+                  <b className="font-bold text-foreground">その他。</b>
+                  得意分野はこれから登録される先輩たち。学校・専攻と相談メニューはプロフィールで見られます
+                </h2>
+                <div className="mt-5 grid grid-cols-2 gap-x-[14px] gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  {uncategorized.map((e) => card(e))}
+                </div>
+              </section>
+            ) : null}
+          </>
+        ) : (
           <section className="pt-8">
             {selectedGroup ? (
               <h2 className="mb-5 max-w-[36em] text-[clamp(18px,2.2vw,24px)] font-light leading-[1.45] text-neutral-500">
@@ -270,30 +356,12 @@ export default async function ExpertsPage({
                 {selectedGroup.lede}
               </h2>
             ) : null}
+            {/* 検索結果は隠さず全件を一覧で見せたいのでグリッドのまま
+                （カルーセルにすると 2 枚目以降が画面外に隠れて件数と合わなく見える） */}
             <div className="grid grid-cols-2 gap-x-[14px] gap-y-6 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {experts.map((e, i) => card(e, i < 5))}
             </div>
           </section>
-        ) : (
-          rows.map((r, ri) => (
-            <section key={r.group.code} className="pt-9">
-              <h2 className="max-w-[36em] text-[clamp(18px,2.2vw,24px)] font-light leading-[1.45] text-neutral-500">
-                <b className="font-bold text-foreground">{r.group.label}。</b>
-                {r.group.lede}
-              </h2>
-              {/* スマホだけ上下に余白を足してタップ領域を 36px 以上にする */}
-              <Link
-                href={href({ ...base, topic: r.group.code })}
-                className="mt-1.5 inline-flex items-center gap-1.5 text-[13.5px] text-neutral-700 underline decoration-border-strong underline-offset-[5px] transition hover:text-foreground hover:decoration-foreground max-sm:py-2"
-              >
-                すべて見る
-                <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              </Link>
-              <div className="mt-4">
-                <ExpertRail>{r.experts.map((e, i) => card(e, ri === 0 && i < 6))}</ExpertRail>
-              </div>
-            </section>
-          ))
         )}
 
         {/* ===== 5. 使い方 ===== */}

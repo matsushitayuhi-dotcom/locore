@@ -165,8 +165,9 @@ function StepRow({
 }) {
   return (
     // グリッドの子は既定で min-content 未満に縮まない。UI モックが要求する幅で
-    // 列ごと画面外に出ていたので、両方の子に min-w-0 を置く
-    <div className="mt-[26px] grid items-center gap-6 md:grid-cols-[.9fr_1.1fr] md:gap-11">
+    // 列ごと画面外に出ていたので、両方の子に min-w-0 を置く。
+    // 縦の 26px / 24px は 1 カラムになるスマホでは効きすぎるので max-sm で詰める
+    <div className="mt-[26px] grid items-center gap-6 max-sm:mt-4 max-sm:gap-4 md:grid-cols-[.9fr_1.1fr] md:gap-11">
       <div className="min-w-0">{cop}</div>
       <div className={'min-w-0 ' + (small ? 'max-w-[440px]' : 'max-w-[540px] md:max-w-none')}>
         {shot}
@@ -208,7 +209,10 @@ function UserFlowPanel() {
   return (
     <>
       {/* ① 探す */}
-      <div className="pb-[72px] pt-2">
+      {/* ステップ間の 72px は PC の 1080px 幅を前提にした間隔。402px では
+          1 ステップだけで 1 画面を超え、送りが間延びして見えるのでスマホは半分に
+          （以下 ①〜④ の各ステップと、エキスパート側の ①〜④ も同じ） */}
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={1} now>
           情報収集
         </Milestone>
@@ -260,7 +264,7 @@ function UserFlowPanel() {
       </div>
 
       {/* ② チャット */}
-      <div className="pb-[72px] pt-2">
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={2}>出願校決め</Milestone>
         <StepRow
           cop={
@@ -314,7 +318,7 @@ function UserFlowPanel() {
       </div>
 
       {/* ③ 日程（時差の話を統合） */}
-      <div className="pb-[72px] pt-2">
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={3}>出願書類</Milestone>
         <StepRow
           cop={
@@ -402,7 +406,7 @@ function UserFlowPanel() {
       </div>
 
       {/* ④ 通話（アプリ不要・Zoom/Meet を統合） */}
-      <div className="pb-[72px] pt-2">
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={4}>合否・渡航準備</Milestone>
         <StepRow
           cop={
@@ -441,8 +445,9 @@ function UserFlowPanel() {
           現地生活
         </Milestone>
         {/* スマホは 34px の余白で中身が 260px まで痩せるので p-6 に。
-            グリッドの子は min-w-0（中のパネルで列が押し広がるのを防ぐ） */}
-        <div className="about-darkcard-bg mt-[26px] grid items-center gap-8 rounded-[22px] p-[34px] text-white shadow-lg max-sm:p-6 md:grid-cols-[1.04fr_.96fr] md:gap-12 md:p-12">
+            グリッドの子は min-w-0（中のパネルで列が押し広がるのを防ぐ）。
+            見出しと白パネルの 32px も 1 カラムでは開きすぎるので max-sm で詰める */}
+        <div className="about-darkcard-bg mt-[26px] grid items-center gap-8 rounded-[22px] p-[34px] text-white shadow-lg max-sm:mt-4 max-sm:gap-5 max-sm:p-6 md:grid-cols-[1.04fr_.96fr] md:gap-12 md:p-12">
           <div className="min-w-0">
             <h3 className="text-[clamp(22px,3vw,30px)] font-black leading-[1.45] tracking-[-0.022em]">
               合格のあとも、<b className="font-black text-primary-500">継続的なメンター</b>に
@@ -499,7 +504,9 @@ function UserFlowPanel() {
         </div>
       </div>
 
-      <div className="mt-11">
+      {/* タイムライン末尾の CTA。44px はスマホだと「本文が終わった」ではなく
+          「余白で終わった」ように見えるので詰める */}
+      <div className="mt-11 max-sm:mt-7">
         <Link
           href="/experts"
           className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
@@ -605,7 +612,7 @@ function ExpertFlowPanel() {
   return (
     <>
       {/* ① 登録 */}
-      <div className="pb-[72px] pt-2">
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={1} now>
           登録する
         </Milestone>
@@ -634,7 +641,7 @@ function ExpertFlowPanel() {
       </div>
 
       {/* ② 在籍確認 */}
-      <div className="pb-[72px] pt-2">
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={2}>在籍確認を受ける</Milestone>
         <StepRow
           small
@@ -668,7 +675,7 @@ function ExpertFlowPanel() {
       </div>
 
       {/* ③ メニュー作成 */}
-      <div className="pb-[72px] pt-2">
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={3}>相談メニューを作る</Milestone>
         <StepRow
           small
@@ -705,7 +712,7 @@ function ExpertFlowPanel() {
       </div>
 
       {/* ④ 予約が入る */}
-      <div className="pb-[72px] pt-2">
+      <div className="pb-[72px] pt-2 max-sm:pb-9">
         <Milestone n={4}>予約が入る</Milestone>
         <StepRow
           small
@@ -781,7 +788,9 @@ function ExpertFlowPanel() {
         />
       </div>
 
-      <div className="mt-11">
+      {/* タイムライン末尾の CTA。44px はスマホだと「本文が終わった」ではなく
+          「余白で終わった」ように見えるので詰める */}
+      <div className="mt-11 max-sm:mt-7">
         <Link
           href="/become-writer"
           className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
@@ -880,10 +889,16 @@ export default function AboutServicePage() {
   return (
     <main className="overflow-hidden bg-background text-foreground">
       {/* ===== hero（写真帯・線なし）。写真はデモ用プレースホルダ ===== */}
-      <section className="about-hero-bg relative px-6 pb-[92px] pt-[76px] text-white">
+      {/* セクションの上下 76〜92px は 1080px 幅の PC でこそ効く間隔で、402px では
+          1 画面（約 800px）の 2 割が余白になり、見出しだけで 1 スクロール消える。
+          以下すべてのセクションで、スマホだけ上 44px / 下 48px に詰める
+          （sm 以上は元の値のまま = PC の見た目は不変） */}
+      <section className="about-hero-bg relative px-6 pb-[92px] pt-[76px] text-white max-sm:pb-12 max-sm:pt-11">
         {/* グリッドの子は既定で min-content 未満に縮まない。中のピルやモックが
             要求する幅で列が 410px まで広がり、402px の画面からはみ出していた */}
-        <div className="mx-auto grid max-w-[1080px] items-center gap-[52px] lg:grid-cols-[1.04fr_.96fr]">
+        {/* lg 未満は 1 カラムなので gap-[52px] はそのまま行間になる。52px は
+            1080px 幅の 2 カラムで効く値なので、スマホだけ 28px に詰める */}
+        <div className="mx-auto grid max-w-[1080px] items-center gap-[52px] max-sm:gap-7 lg:grid-cols-[1.04fr_.96fr]">
           <div className="min-w-0">
             <span className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary-500/50 bg-white/10 px-4 py-[5px] text-[12.5px] font-bold text-primary-500">
               <i className="h-[7px] w-[7px] shrink-0 rounded-full bg-primary-500 not-italic" aria-hidden />
@@ -901,7 +916,9 @@ export default function AboutServicePage() {
               <b className="font-bold text-white">いまその大学で学ぶ先輩</b>
               に、30分からオンラインで相談できます。
             </p>
-            <div className="mt-[30px] flex flex-wrap items-center gap-6">
+            {/* mt-[30px] は PC 基準。スマホはファーストビューに入る情報量を
+                優先して 20px に詰める（sm 以上は不変） */}
+            <div className="mt-[30px] flex flex-wrap items-center gap-6 max-sm:mt-5">
               <Link
                 href="/experts"
                 className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
@@ -920,7 +937,7 @@ export default function AboutServicePage() {
             </div>
             {/* アバター列だけで 190px 固定。402px だと文が 150px に潰れて
                 1 行 11 文字になるので、入らないときは文を次の行へ落とす */}
-            <div className="mt-[30px] flex flex-wrap items-center gap-x-3.5 gap-y-3">
+            <div className="mt-[30px] flex flex-wrap items-center gap-x-3.5 gap-y-3 max-sm:mt-5">
               <span className="flex shrink-0" aria-hidden>
                 {['aya', 'kentaro', 'misaki', 'daisuke', 'eri', 'haruka'].map(
                   (n, i) => (
@@ -1017,7 +1034,7 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== 使い方（ここだけ左タイムライン） ===== */}
-      <section className="px-6 pb-[92px] pt-[84px]">
+      <section className="px-6 pb-[92px] pt-[84px] max-sm:pb-12 max-sm:pt-11">
         <div className="mx-auto max-w-[1080px]">
           <div className="mx-auto max-w-[720px] text-center">
             <Kicker>How it works</Kicker>
@@ -1028,13 +1045,15 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== よくある相談 ===== */}
-      <section className="about-tint-b px-6 pb-[84px] pt-[76px]">
+      <section className="about-tint-b px-6 pb-[84px] pt-[76px] max-sm:pb-12 max-sm:pt-11">
         <div className="mx-auto max-w-[1080px]">
           <div className="mx-auto max-w-[720px] text-center">
             <Kicker>Use cases</Kicker>
             <SectionH>よくある相談内容</SectionH>
           </div>
-          <div className="mt-[38px] grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* 見出しと中身の間の 38〜42px も PC 基準。スマホは 24px に統一する
+              （料金・30分・FAQ・在籍確認の各セクションも同様） */}
+          <div className="mt-[38px] grid gap-4 max-sm:mt-6 sm:grid-cols-2 lg:grid-cols-3">
             {USE_CASES.map((u) => (
               <Link
                 key={u.q}
@@ -1059,7 +1078,7 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== 在籍確認（ダーク帯） ===== */}
-      <section className="about-trust-bg px-6 pb-[84px] pt-[76px] text-white">
+      <section className="about-trust-bg px-6 pb-[84px] pt-[76px] text-white max-sm:pb-12 max-sm:pt-11">
         <div className="mx-auto max-w-[1080px]">
           <Kicker dark>Trust — Locoreの核</Kicker>
           <h2 className="mt-5 text-[clamp(25px,3.6vw,38px)] font-black leading-[1.4] tracking-[-0.028em] text-white">
@@ -1070,7 +1089,7 @@ export default function AboutServicePage() {
           <p className="mt-3.5 max-w-[38em] text-[15.5px] leading-[2.05] text-white/75">
             SNSで見つけた「合格者」「在学生」は、本当にその学校の人でしょうか。Locoreに掲載される全エキスパートは、在学・卒業の実態を書類で確認済みです。
           </p>
-          <div className="mt-10 grid items-center gap-9 lg:grid-cols-[1.04fr_.96fr] lg:gap-14">
+          <div className="mt-10 grid items-center gap-9 max-sm:mt-6 max-sm:gap-6 lg:grid-cols-[1.04fr_.96fr] lg:gap-14">
             {/* 3ステップ縦タイムライン（丸数字 + 縦ライン）。
                 グリッドの子は min-w-0（中身の min-content で列が広がるのを防ぐ） */}
             <div className="flex min-w-0 flex-col">
@@ -1153,7 +1172,7 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== 料金（ユーザー指定のコピー修正済み） ===== */}
-      <section className="about-tint-t px-6 pb-[84px] pt-[76px]">
+      <section className="about-tint-t px-6 pb-[84px] pt-[76px] max-sm:pb-12 max-sm:pt-11">
         <div className="mx-auto max-w-[1080px]">
           <div className="mx-auto max-w-[720px] text-center">
             <Kicker>Pricing</Kicker>
@@ -1161,7 +1180,7 @@ export default function AboutServicePage() {
               料金は、エキスパートが<Em>サービス内容に応じて</Em>設定。
             </SectionH>
           </div>
-          <div className="mx-auto mb-[26px] mt-10 flex max-w-[720px] items-center gap-[18px] rounded-[18px] border-[1.5px] border-primary-300 bg-card px-[26px] py-5 shadow-sm max-sm:items-start max-sm:px-5">
+          <div className="mx-auto mb-[26px] mt-10 flex max-w-[720px] items-center gap-[18px] rounded-[18px] border-[1.5px] border-primary-300 bg-card px-[26px] py-5 shadow-sm max-sm:mb-4 max-sm:mt-6 max-sm:items-start max-sm:px-5">
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-primary-500 text-[16px] font-extrabold tabular-nums text-neutral-950">
               ¥0
             </span>
@@ -1229,7 +1248,7 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== 30分でここまで ===== */}
-      <section className="px-6 pb-[84px] pt-[76px]">
+      <section className="px-6 pb-[84px] pt-[76px] max-sm:pb-12 max-sm:pt-11">
         <div className="mx-auto max-w-[1080px]">
           <div className="mx-auto max-w-[720px] text-center">
             <Kicker>In 30 minutes</Kicker>
@@ -1240,7 +1259,7 @@ export default function AboutServicePage() {
               実際にできる相談の「例」です。あなたの事情に合わせて、もっと具体的に聞けます。
             </p>
           </div>
-          <div className="mt-[42px] grid gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-[42px] grid gap-[18px] max-sm:mt-6 sm:grid-cols-2 lg:grid-cols-3">
             <OutcomeCard
               theme="MBA"
               title="MBAエッセイ、何を軸にする？"
@@ -1264,7 +1283,9 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== FAQ ===== */}
-      <section className="about-tint-t px-6 pb-[84px] pt-[76px]">
+      {/* FAQ の下は最終CTA まで 84 + 24px 空く。スマホでは「ページが終わった」ように
+          見えるほど白いので、ここも 48 + 24px に詰める */}
+      <section className="about-tint-t px-6 pb-[84px] pt-[76px] max-sm:pb-12 max-sm:pt-11">
         <div className="mx-auto max-w-[1080px]">
           <div className="mx-auto max-w-[720px] text-center">
             <Kicker>FAQ</Kicker>
@@ -1272,7 +1293,7 @@ export default function AboutServicePage() {
               はじめる前に、<Em>気になること</Em>。
             </SectionH>
           </div>
-          <div className="mx-auto mt-[38px] max-w-[760px] space-y-3">
+          <div className="mx-auto mt-[38px] max-w-[760px] space-y-3 max-sm:mt-6">
             <FaqItem q="料金はいくらですか？">
               相談メニューごとにエキスパートが設定しています。目安は
               <b>30分 ¥3,000〜、60分 ¥6,000〜</b>
@@ -1312,9 +1333,12 @@ export default function AboutServicePage() {
       </section>
 
       {/* ===== 最終CTA（写真帯）。写真はデモ用プレースホルダ ===== */}
-      <section className="px-6 pb-[88px] pt-6">
+      {/* ページ末尾。88px の下余白に SiteFooter の mt-16（64px）が続くので、
+          スマホでは CTA のあとに 150px 以上の空白が残っていた。ここは footer 側の
+          余白が separator を兼ねるため 32px まで削る */}
+      <section className="px-6 pb-[88px] pt-6 max-sm:pb-8">
         <div className="mx-auto max-w-[1080px]">
-          <div className="about-final-bg overflow-hidden rounded-3xl px-10 py-[72px] text-center text-white max-sm:px-[22px] max-sm:py-12">
+          <div className="about-final-bg overflow-hidden rounded-3xl px-10 py-[72px] text-center text-white max-sm:px-[22px] max-sm:py-10">
             <h2 className="text-[clamp(27px,4.2vw,44px)] font-black leading-[1.35] tracking-[-0.03em] text-white [text-shadow:0_2px_24px_rgba(0,0,0,0.35)]">
               あなたの海外を、
               <b className="font-black text-primary-500">経験者</b>と。
