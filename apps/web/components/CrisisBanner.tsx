@@ -15,9 +15,10 @@ export function CrisisBanner({ event }: { event: CrisisEvent }) {
       role="status"
     >
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em]">
+          {/* 10px はスマホで読めないので 11px。PC は sm: で据え置き（規約7） */}
+          <span className="shrink-0 whitespace-nowrap text-[11px] font-semibold uppercase tracking-[0.18em] sm:text-[10px]">
             severity {event.severity}
           </span>
           <p className="text-[14px] font-semibold leading-snug">{event.title}</p>

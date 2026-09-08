@@ -134,6 +134,9 @@ export function Paywall({
             ? 'スポット詳細、地図の正確な位置、駐在員からの細かな情報がすべて開きます。1 クリックで OK です。'
             : '購入すると本文の続き、スポット名、住所、地図の正確な位置がすべて開きます。支払いの 70% は書き手にお渡しします。'}
         </p>
+        {/* スマホ幅: min-width は max-width より後勝ちなので max-w-full では
+            260px 固定を打ち消せない。スマホは w-full にして min-width を外し、
+            sm: 以上で従来どおり min-w-[260px] の中央寄せに戻す。 */}
         <div className="mt-4 flex flex-col items-center gap-2">
           {isFree ? (
             <Button
@@ -141,7 +144,7 @@ export function Paywall({
               size="lg"
               onClick={onUnlockFree}
               disabled={isPending}
-              className="mt-2 min-w-[260px]"
+              className="mt-2 w-full min-w-0 sm:w-auto sm:min-w-[260px]"
             >
               {isPending ? '処理中…' : '🔓 無料でアンロック'}
             </Button>
@@ -152,7 +155,7 @@ export function Paywall({
                 variant="primary"
                 size="lg"
                 onClick={() => setOpen(true)}
-                className="mt-2 min-w-[260px]"
+                className="mt-2 w-full min-w-0 sm:w-auto sm:min-w-[260px]"
               >
                 ¥{article.priceJpy.toLocaleString('ja-JP')} で読み進める
               </Button>
@@ -247,13 +250,13 @@ function SpotList({
         {spots.map((s, i) => (
           <li key={s.id} className="px-4 py-3 text-[14px]">
             <div className="flex items-baseline justify-between gap-3">
-              <p className="font-medium">
+              <p className="min-w-0 font-medium">
                 <span className="mr-2 text-[11px] text-foreground/40 tabular">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 {unlocked ? s.name : maskName(s.name)}
               </p>
-              <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] text-foreground/60">
+              <span className="shrink-0 whitespace-nowrap rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] text-foreground/60 sm:text-[10px]">
                 {s.category}
               </span>
             </div>

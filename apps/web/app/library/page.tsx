@@ -154,7 +154,8 @@ export default async function LibraryPage({ searchParams }: SearchProps) {
       <div className="mx-auto max-w-screen-xl px-4 py-10 sm:px-6 sm:py-14">
         <header className="mb-4">
           <p className="mb-1.5 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/60">
-            <Bookmark className="h-3 w-3" />
+            {/* アイコンは縮ませない */}
+            <Bookmark className="h-3 w-3 shrink-0" />
             Library
           </p>
           <h1 className="text-[24px] font-bold tracking-tight sm:text-[26px]">

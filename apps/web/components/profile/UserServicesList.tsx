@@ -98,23 +98,24 @@ export function UserServicesList({
             key={s.id}
             className="flex flex-col rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border transition hover:shadow-md hover:ring-primary-300"
           >
+            {/* カテゴリは縮む側、価格は縮まない側。文字はスマホで 11px 以上（PC は sm: で従来サイズ） */}
             <div className="flex flex-wrap items-start gap-2">
               {s.category ? (
-                <span className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
+                <span className="max-w-full rounded-full bg-primary-500/10 px-2 py-0.5 text-[11px] font-semibold text-primary-300 sm:text-[10px]">
                   {CATEGORY_LABEL[s.category] ?? s.category}
                 </span>
               ) : null}
               {s.priceJpy != null ? (
-                <span className="ml-auto text-[14px] font-bold tabular text-primary-300">
+                <span className="ml-auto shrink-0 whitespace-nowrap text-[14px] font-bold tabular text-primary-300">
                   ¥{s.priceJpy.toLocaleString('ja-JP')}
                   {s.priceUnit ? (
-                    <span className="ml-0.5 text-[10px] font-medium text-foreground/60">
+                    <span className="ml-0.5 text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                       / {s.priceUnit}
                     </span>
                   ) : null}
                 </span>
               ) : (
-                <span className="ml-auto text-[12px] font-medium text-foreground/50">
+                <span className="ml-auto shrink-0 whitespace-nowrap text-[12px] font-medium text-foreground/50">
                   応相談
                 </span>
               )}
@@ -128,8 +129,8 @@ export function UserServicesList({
               </p>
             ) : null}
             {s.cityNameJa ? (
-              <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-foreground/55">
-                <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5">
+              <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-foreground/55 sm:text-[10px]">
+                <span className="inline-flex max-w-full items-center rounded-full bg-muted px-2 py-0.5">
                   📍 {s.cityNameJa}
                 </span>
               </div>

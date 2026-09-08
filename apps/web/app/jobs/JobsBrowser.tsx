@@ -1067,13 +1067,13 @@ function JobCard({ post }: { post: JobListPost }) {
             ) : null}
           </ul>
 
-          {/* 福利厚生ミニ表示 */}
+          {/* 福利厚生ミニ表示。10px は実機で読めないのでスマホだけ 11px（PC は据え置き） */}
           {benefitLabels.length > 0 ? (
             <div className="mt-2 flex flex-wrap gap-1">
               {benefitLabels.map((b) => (
                 <span
                   key={b}
-                  className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-medium text-primary-700"
+                  className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[11px] sm:text-[10px] font-medium text-primary-700"
                 >
                   {b}
                 </span>
@@ -1081,8 +1081,9 @@ function JobCard({ post }: { post: JobListPost }) {
             </div>
           ) : null}
 
+          {/* 投稿日時: 10px は実機で読めないためスマホだけ 11px に上げる（PC は据え置き） */}
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] text-foreground/45">
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
               <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>

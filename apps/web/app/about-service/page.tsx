@@ -127,7 +127,8 @@ function SfHit({ shadow = true }: { shadow?: boolean }) {
           {/* 9.5px は実機で読めないのでスマホだけ 11px（PC は据え置き） */}
           <small className="text-[11px] font-normal text-neutral-500 sm:text-[9.5px]"> / 30分〜</small>
         </span>
-        <span className="ml-auto whitespace-nowrap text-[10.5px] font-bold text-neutral-700">
+        {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き */}
+        <span className="ml-auto whitespace-nowrap text-[11px] font-bold text-neutral-700 sm:text-[10.5px]">
           <i className="not-italic text-primary-700">★</i> 4.9 ・ レビュー12件
         </span>
       </div>
@@ -232,14 +233,15 @@ function UserFlowPanel() {
                   探す
                 </span>
               </div>
+              {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き（絞り込みチップ 2 種） */}
               <div className="mt-3 flex flex-wrap gap-1.5">
-                <span className="rounded-full bg-neutral-900 px-3 py-1 text-[10.5px] font-bold text-white">
+                <span className="rounded-full bg-neutral-900 px-3 py-1 text-[11px] font-bold text-white sm:text-[10.5px]">
                   🇺🇸 アメリカ
                 </span>
                 {['MBA', 'エッセイ', '¥6,000まで'].map((t) => (
                   <span
                     key={t}
-                    className="rounded-full border border-border bg-card px-3 py-1 text-[10.5px] font-bold text-neutral-700"
+                    className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-bold text-neutral-700 sm:text-[10.5px]"
                   >
                     {t}
                   </span>
@@ -283,9 +285,11 @@ function UserFlowPanel() {
                     バッジを次の行へ落とす（402px の 128px は超えないので PC/402 は不変） */}
                 <div className="min-w-0 flex-1 max-sm:min-w-[7rem]">
                   <div className="truncate text-[13px] font-extrabold">高村 里奈</div>
-                  <div className="truncate text-[10px] font-bold text-primary-700">● オンライン</div>
+                  {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き */}
+                  <div className="truncate text-[11px] font-bold text-primary-700 sm:text-[10px]">● オンライン</div>
                 </div>
-                <span className="ml-auto inline-flex shrink-0 items-center gap-[5px] whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-[11px] py-[3px] text-[10px] font-extrabold text-primary-900">
+                {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き。幅が増えるぶんは上の min-w-[7rem] が折り返しの引き金になる */}
+                <span className="ml-auto inline-flex shrink-0 items-center gap-[5px] whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-[11px] py-[3px] text-[11px] font-extrabold text-primary-900 sm:text-[10px]">
                   事前チャット無料
                 </span>
               </div>
@@ -346,11 +350,13 @@ function UserFlowPanel() {
                 <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border-[1.5px] border-border-strong bg-card text-neutral-700">
                   <ChevronRight className="h-[11px] w-[11px]" aria-hidden />
                 </span>
-                <span className="ml-auto inline-flex shrink-0 items-center gap-[5px] whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-3 py-[3px] text-[10.5px] font-extrabold text-primary-900">
+                {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き。増えた幅は flex-wrap が次の行へ逃がす */}
+                <span className="ml-auto inline-flex shrink-0 items-center gap-[5px] whitespace-nowrap rounded-full border border-primary-300 bg-primary-100 px-3 py-[3px] text-[11px] font-extrabold text-primary-900 sm:text-[10.5px]">
                   <Clock className="h-[11px] w-[11px] text-primary-700" aria-hidden />
                   すべて日本時間
                 </span>
               </div>
+              {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き（曜日ラベル） */}
               <div className="mt-[13px] grid grid-cols-4 gap-[7px]">
                 {[
                   { w: '水', d: '16', slots: ['20:00', '20:30', '21:00'], on: -1 },
@@ -365,7 +371,9 @@ function UserFlowPanel() {
                         (c.slots ? '' : 'opacity-40')
                       }
                     >
-                      <span className="block text-[10px] font-bold text-neutral-500">{c.w}</span>
+                      <span className="block text-[11px] font-bold text-neutral-500 sm:text-[10px]">
+                        {c.w}
+                      </span>
                       <span className="block text-[14px] font-extrabold tabular-nums">{c.d}</span>
                     </div>
                     {c.slots ? (
@@ -442,7 +450,8 @@ function UserFlowPanel() {
             <p className="mt-3.5 max-w-[32em] text-[14.5px] leading-[2.05] text-white/75">
               合格して終わりではありません。住まい探し、履修の組み方、現地生活の立ち上げまで、先輩に継続的に伴走してもらえます。1回では解決できないことも一緒なら最後まで走り切れます。
             </p>
-            <p className="mt-[18px] text-[10.5px] tracking-[0.08em] text-white/50">
+            {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き */}
+            <p className="mt-[18px] text-[11px] tracking-[0.08em] text-white/50 sm:text-[10.5px]">
               SESSION NOTES ・ CHAT LOG ・ REBOOK
             </p>
           </div>
@@ -453,13 +462,14 @@ function UserFlowPanel() {
               SESSION NOTES — 9/18<span className="max-sm:hidden"> 高村 里奈さん</span>
             </span>
             <div className="mt-[11px] flex items-start gap-2.5 text-[13px] leading-[1.8]">
-              <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-muted px-[9px] py-0.5 text-[10px] font-extrabold text-neutral-500">
+              {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き（以下 3 つのラベル） */}
+              <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-muted px-[9px] py-0.5 text-[11px] font-extrabold text-neutral-500 sm:text-[10px]">
                 相談前
               </span>
               <span className="text-neutral-500">エッセイのテーマが決まらず白紙のまま</span>
             </div>
             <div className="mt-[11px] flex items-start gap-2.5 text-[13px] leading-[1.8]">
-              <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-primary-500 px-[9px] py-0.5 text-[10px] font-extrabold text-neutral-950">
+              <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-primary-500 px-[9px] py-0.5 text-[11px] font-extrabold text-neutral-950 sm:text-[10px]">
                 相談後
               </span>
               <span className="font-semibold text-neutral-700">
@@ -467,7 +477,7 @@ function UserFlowPanel() {
               </span>
             </div>
             <div className="mt-[11px] flex items-start gap-2.5 text-[13px] leading-[1.8]">
-              <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-primary-500 px-[9px] py-0.5 text-[10px] font-extrabold text-neutral-950">
+              <span className="mt-0.5 shrink-0 whitespace-nowrap rounded-[7px] bg-primary-500 px-[9px] py-0.5 text-[11px] font-extrabold text-neutral-950 sm:text-[10px]">
                 次にやる
               </span>
               <span className="font-semibold text-neutral-700">
@@ -525,11 +535,12 @@ function CallShot({
   return (
     <div className={`${shotCls} about-call-bg p-[18px]`}>
       <div className="flex items-center px-0.5 pb-2.5">
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.08em] text-white">
+        {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き（REC と通話時間） */}
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.08em] text-white sm:text-[10px]">
           <i className="h-2 w-2 rounded-full bg-danger-500 not-italic" aria-hidden />
           REC
         </span>
-        <span className="ml-auto rounded-full bg-white/10 px-[11px] py-[3px] text-[10px] text-white/75">
+        <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-white/10 px-[11px] py-[3px] text-[11px] text-white/75 sm:text-[10px]">
           オンライン ・ 30分
         </span>
       </div>
@@ -682,10 +693,11 @@ function ExpertFlowPanel() {
                 <div className="mt-2 h-1.5 rounded bg-muted" />
                 <div className="mt-2 h-1.5 w-[60%] rounded bg-muted" />
               </div>
+              {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き（タグ 3 つ） */}
               <div className="mt-2.5 flex flex-wrap gap-[5px]">
-                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[10px] font-bold text-white">MBA</span>
-                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[10px] font-bold text-white">エッセイ・出願書類</span>
-                <span className="rounded-full border border-border bg-card px-[11px] py-[3px] text-[10px] font-bold text-neutral-700">面接対策</span>
+                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[11px] font-bold text-white sm:text-[10px]">MBA</span>
+                <span className="rounded-full bg-neutral-900 px-[11px] py-[3px] text-[11px] font-bold text-white sm:text-[10px]">エッセイ・出願書類</span>
+                <span className="rounded-full border border-border bg-card px-[11px] py-[3px] text-[11px] font-bold text-neutral-700 sm:text-[10px]">面接対策</span>
               </div>
             </div>
           }
@@ -709,26 +721,31 @@ function ExpertFlowPanel() {
           shot={
             <div className={`${shotCls} about-shot-faint p-5`}>
               <div className="rounded-[13px] border-[1.5px] border-warning-500/40 bg-card px-3.5 py-3">
-                <div className="flex items-center gap-2 text-[12px] font-extrabold">
+                {/* 320px ではバッジまで入れると名前に 48px しか残らず末尾が切れる。
+                    名前に下限幅を与え、あふれたバッジを flex-wrap で次の行へ逃がす */}
+                <div className="flex flex-wrap items-center gap-2 gap-y-1 text-[12px] font-extrabold">
                   <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-bold text-neutral-700">
                     伊
                   </span>
                   {/* しわ寄せを受ける側。裸のテキストノードだと日本語 min-content
                       （1 文字）まで潰れて縦積みになるので min-w-0 + truncate */}
-                  <span className="min-w-0 flex-1 truncate">伊藤さん</span>
+                  <span className="min-w-0 flex-1 truncate max-sm:min-w-[5rem]">伊藤さん</span>
                   {/* 9px は実機で読めないのでスマホだけ 11px。潰れないよう shrink-0 */}
                   <span className="ml-auto shrink-0 whitespace-nowrap rounded-full border border-warning-500/40 bg-warning-50 px-[9px] py-0.5 text-[11px] font-extrabold text-warning-700 sm:text-[9px]">
                     リクエスト中
                   </span>
                 </div>
-                <div className="mt-[7px] text-[10.5px] tabular-nums text-neutral-500">
+                {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き（日時・ボタン・辞退） */}
+                <div className="mt-[7px] text-[11px] tabular-nums text-neutral-500 sm:text-[10.5px]">
                   9/18（金）13:00 現地時間 ・ 30分相談 ¥6,000
                 </div>
                 <div className="mt-[9px] flex items-center gap-2">
-                  <span className="rounded-full bg-primary-500 px-4 py-[5px] text-[10.5px] font-extrabold text-neutral-950">
+                  <span className="rounded-full bg-primary-500 px-4 py-[5px] text-[11px] font-extrabold text-neutral-950 sm:text-[10.5px]">
                     承諾する
                   </span>
-                  <span className="text-[10.5px] font-semibold text-neutral-500">辞退</span>
+                  <span className="text-[11px] font-semibold text-neutral-500 sm:text-[10.5px]">
+                    辞退
+                  </span>
                 </div>
               </div>
             </div>
@@ -819,13 +836,14 @@ function OutcomeCard({
       <h3 className="mt-3 text-[16px] font-extrabold leading-[1.6]">{title}</h3>
       <div className="mt-[15px] flex flex-col gap-2.5 text-[13.5px] leading-[1.85]">
         <div className="flex items-start gap-[9px]">
-          <span className="mt-[3px] shrink-0 whitespace-nowrap rounded-[7px] bg-muted px-[9px] py-0.5 text-[10px] font-extrabold text-neutral-500">
+          {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き（相談前・30分後ラベル） */}
+          <span className="mt-[3px] shrink-0 whitespace-nowrap rounded-[7px] bg-muted px-[9px] py-0.5 text-[11px] font-extrabold text-neutral-500 sm:text-[10px]">
             相談前
           </span>
           <span className="text-neutral-500">{before}</span>
         </div>
         <div className="flex items-start gap-[9px]">
-          <span className="mt-[3px] shrink-0 whitespace-nowrap rounded-[7px] bg-primary-500 px-[9px] py-0.5 text-[10px] font-extrabold text-neutral-950">
+          <span className="mt-[3px] shrink-0 whitespace-nowrap rounded-[7px] bg-primary-500 px-[9px] py-0.5 text-[11px] font-extrabold text-neutral-950 sm:text-[10px]">
             30分後
           </span>
           <span className="font-semibold text-neutral-700">{after}</span>
@@ -935,7 +953,10 @@ export default function AboutServicePage() {
               <i className="h-[9px] w-[9px] rounded-full bg-border-strong not-italic" />
               <i className="h-[9px] w-[9px] rounded-full bg-border-strong not-italic" />
               <i className="h-[9px] w-[9px] rounded-full bg-border-strong not-italic" />
-              <span className="ml-2 text-[10.5px] text-neutral-500">locore.app</span>
+              {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き */}
+              <span className="ml-2 shrink-0 text-[11px] text-neutral-500 sm:text-[10.5px]">
+                locore.app
+              </span>
               {/* 9.5px は実機で読めないのでスマホだけ 11px（PC は据え置き） */}
               <span className="ml-auto inline-flex shrink-0 items-center gap-[5px] whitespace-nowrap rounded-full bg-primary-100 px-[9px] py-0.5 text-[11px] font-semibold text-primary-900 sm:text-[9.5px]">
                 <b className="h-1.5 w-1.5 rounded-full bg-primary-700" />
@@ -964,7 +985,10 @@ export default function AboutServicePage() {
                 </div>
                 <div className="ml-auto shrink-0 text-right leading-[1.3]">
                   <b className="block text-[15px] font-bold tabular-nums">¥6,000</b>
-                  <span className="text-[10px] text-neutral-500">/ 30分〜</span>
+                  {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き */}
+                  <span className="whitespace-nowrap text-[11px] text-neutral-500 sm:text-[10px]">
+                    / 30分〜
+                  </span>
                 </div>
               </div>
             </div>
@@ -983,7 +1007,10 @@ export default function AboutServicePage() {
               <span className="relative h-1.5 flex-1 rounded-full bg-muted">
                 <i className="absolute bottom-0 left-0 top-0 w-[38%] rounded-full bg-primary-500 not-italic" />
               </span>
-              <time className="text-[10px] tabular-nums text-neutral-500">11:23 / 30:00</time>
+              {/* スマホで 11px 未満は実機で読めない。スマホだけ 11px に上げ PC は据え置き。スペースで折り返さないよう nowrap + shrink-0 */}
+              <time className="shrink-0 whitespace-nowrap text-[11px] tabular-nums text-neutral-500 sm:text-[10px]">
+                11:23 / 30:00
+              </time>
             </div>
           </div>
         </div>

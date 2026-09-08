@@ -407,9 +407,11 @@ export function ArticleRenderer({
                   key={r.id}
                   className="rounded-md border border-border bg-card p-4 text-[14px]"
                 >
+                  {/* スマホ幅: 名前側は min-w-0、日付側は shrink-0。日本語名が
+                      1 文字ずつ縦に潰れるのを防ぐ */}
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <p className="font-medium">{r.authorName}</p>
-                    <p className="text-[11px] text-foreground/40 tabular">
+                    <p className="min-w-0 font-medium">{r.authorName}</p>
+                    <p className="shrink-0 whitespace-nowrap text-[11px] text-foreground/40 tabular">
                       訪問 {new Date(r.visitedAt).toLocaleDateString('ja-JP')}
                     </p>
                   </div>
@@ -425,10 +427,11 @@ export function ArticleRenderer({
                     {r.body}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1">
+                    {/* スマホは 11px 未満にしない。PC は sm: で従来の 10px 据え置き */}
                     {r.tags.map((t) => (
                       <span
                         key={t}
-                        className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] text-foreground/60"
+                        className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] text-foreground/60 sm:text-[10px]"
                       >
                         {t}
                       </span>
@@ -466,9 +469,10 @@ export function ArticleRenderer({
           >
             {related.map((a) => (
               <li key={a.id} className="snap-start">
+                {/* 固定幅 w-[170px] には max-w-full を併記（320px の本文幅は約 288px） */}
                 <Link
                   href={`/articles/${a.id}`}
-                  className="group flex w-[170px] flex-col overflow-hidden rounded-md border border-border bg-card transition hover:bg-muted"
+                  className="group flex w-[170px] max-w-full flex-col overflow-hidden rounded-md border border-border bg-card transition hover:bg-muted"
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
                     <Image
@@ -483,7 +487,7 @@ export function ArticleRenderer({
                     <p className="line-clamp-2 text-[12px] font-medium leading-snug">
                       {a.title}
                     </p>
-                    <p className="mt-auto truncate text-[10px] text-foreground/50 tabular">
+                    <p className="mt-auto truncate text-[11px] text-foreground/50 tabular sm:text-[10px]">
                       {a.writerName ? `${a.writerName} ・ ` : ''}¥
                       {a.priceJpy.toLocaleString('ja-JP')}
                     </p>

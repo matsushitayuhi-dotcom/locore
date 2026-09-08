@@ -195,7 +195,7 @@ export function PostForm() {
             className={`mt-1.5 ${FIELD_CLS}`}
             placeholder="パリ 日仏ランゲージエクスチェンジ・カフェ会（初心者歓迎・一人参加OK）"
           />
-          <p className="mt-0.5 text-right text-[10px] text-foreground/45">{title.length} / 140</p>
+          <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">{title.length} / 140</p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -504,7 +504,7 @@ export function PostForm() {
               'パリで日本語とフランス語を学び合う、ゆるい交流カフェ会です。\n\n前半は日本語、後半はフランス語、と時間で言語を切り替えながら、少人数のテーブルでおしゃべりします。'
             }
           />
-          <p className="mt-0.5 text-right text-[10px] text-foreground/45">{body.length} / 8000</p>
+          <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">{body.length} / 8000</p>
         </div>
 
         <div>

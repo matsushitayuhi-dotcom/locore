@@ -136,8 +136,11 @@ export function BookmarkFolderDialog({
               disabled={isPending}
               className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[13px] hover:bg-primary-500/10 disabled:opacity-50"
             >
-              <span className="font-medium">未分類</span>
-              <span className="text-[10px] text-foreground/50">既定フォルダ</span>
+              <span className="min-w-0 truncate font-medium">未分類</span>
+              {/* スマホは 11px 未満にしない（PC は据え置き） */}
+              <span className="ml-2 shrink-0 whitespace-nowrap text-[11px] text-foreground/50 sm:text-[10px]">
+                既定フォルダ
+              </span>
             </button>
           </li>
           {folders.map((f) => (
@@ -148,8 +151,9 @@ export function BookmarkFolderDialog({
                 disabled={isPending}
                 className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[13px] hover:bg-primary-500/10 disabled:opacity-50"
               >
-                <span className="truncate font-medium">{f.name}</span>
-                <span className="ml-2 shrink-0 text-[10px] text-foreground/50">
+                <span className="min-w-0 truncate font-medium">{f.name}</span>
+                {/* スマホは 11px 未満にしない（PC は据え置き） */}
+                <span className="ml-2 shrink-0 whitespace-nowrap text-[11px] text-foreground/50 sm:text-[10px]">
                   {f.count}
                 </span>
               </button>
@@ -173,13 +177,13 @@ export function BookmarkFolderDialog({
                     onCreateAndPick();
                   }
                 }}
-                className="h-9 flex-1 rounded-sm border border-primary-500/40 bg-card px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
+                className="h-9 min-w-0 flex-1 rounded-sm border border-primary-500/40 bg-card px-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={onCreateAndPick}
                 disabled={isPending || !draftName.trim()}
-                className="rounded-sm bg-primary-700 px-3 text-[12px] font-bold text-white hover:bg-primary-500 disabled:opacity-40"
+                className="shrink-0 whitespace-nowrap rounded-sm bg-primary-700 px-3 text-[12px] font-bold text-white hover:bg-primary-500 disabled:opacity-40"
               >
                 追加
               </button>
@@ -190,7 +194,7 @@ export function BookmarkFolderDialog({
               onClick={() => setDrafting(true)}
               className="inline-flex w-full items-center justify-center gap-1 rounded-md px-3 py-2 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-3.5 w-3.5 shrink-0" />
               新しいフォルダを作る
             </button>
           )}

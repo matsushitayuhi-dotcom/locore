@@ -194,11 +194,14 @@ export default async function PurchasesPage() {
                       <p className="mt-1 truncate text-[12px] text-foreground/60">
                         {article.writerName}
                       </p>
+                      {/* 金額・日付は語中で折り返さない（狭い幅では flex-wrap で次行へ） */}
                       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[11px] text-foreground/50 tabular">
-                        <span>
+                        <span className="whitespace-nowrap">
                           ¥{p.amountJpy.toLocaleString('ja-JP')} で購入
                         </span>
-                        <span>{formatDate(p.purchasedAt.toISOString())}</span>
+                        <span className="whitespace-nowrap">
+                          {formatDate(p.purchasedAt.toISOString())}
+                        </span>
                       </div>
                     </div>
                   </Link>
@@ -209,11 +212,14 @@ export default async function PurchasesPage() {
                       <p className="text-[14px] font-semibold text-foreground/60">
                         （記事情報を取得できませんでした）
                       </p>
+                      {/* 金額・日付は語中で折り返さない（狭い幅では flex-wrap で次行へ） */}
                       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5 text-[11px] text-foreground/50 tabular">
-                        <span>
+                        <span className="whitespace-nowrap">
                           ¥{p.amountJpy.toLocaleString('ja-JP')} で購入
                         </span>
-                        <span>{formatDate(p.purchasedAt.toISOString())}</span>
+                        <span className="whitespace-nowrap">
+                          {formatDate(p.purchasedAt.toISOString())}
+                        </span>
                       </div>
                     </div>
                   </div>

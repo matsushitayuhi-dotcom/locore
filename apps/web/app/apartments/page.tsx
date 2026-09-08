@@ -420,7 +420,8 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                         {rent != null ? `€${rent.toLocaleString()}` : '応相談'}
                       </span>
                       {rent != null ? (
-                        <span className="shrink-0 whitespace-nowrap text-[10px] text-foreground/55">
+                        // 単位はスマホ 11px（PC は 10px のまま）
+                        <span className="shrink-0 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/55">
                           / 月
                         </span>
                       ) : null}
@@ -484,8 +485,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                           className="object-cover transition group-hover:scale-[1.02]"
                           unoptimized
                         />
+                        {/* 枚数バッジ: スマホは 11px（PC は 10px のまま） */}
                         {photos.length > 1 ? (
-                          <span className="absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-full bg-neutral-900/70 px-2 py-0.5 text-[10px] font-bold text-white">
+                          <span className="absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-full bg-neutral-900/70 px-2 py-0.5 text-[11px] sm:text-[10px] font-bold text-white">
                             <Camera className="h-3 w-3" />+{photos.length - 1}
                           </span>
                         ) : null}
@@ -526,8 +528,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                           / 月
                         </span>
                       ) : null}
+                      {/* 管理費もスマホは 11px（PC は 10px のまま） */}
                       {meta.charges_monthly ? (
-                        <span className="shrink-0 whitespace-nowrap text-[10px] text-foreground/45">
+                        <span className="shrink-0 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
                           + 管理費 €{meta.charges_monthly.toLocaleString()}
                         </span>
                       ) : null}
@@ -579,8 +582,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       </p>
                     ) : null}
 
-                    {/* 左右 2 点なので gap を入れて両方 whitespace-nowrap にする */}
-                    <p className="mt-2 flex flex-wrap items-center justify-between gap-x-2 text-[10px] text-foreground/45">
+                    {/* 左右 2 点なので gap を入れて両方 whitespace-nowrap にする。
+                        併せてスマホだけ 11px に上げる（PC は 10px のまま） */}
+                    <p className="mt-2 flex flex-wrap items-center justify-between gap-x-2 text-[11px] sm:text-[10px] text-foreground/45">
                       <span className="whitespace-nowrap">{formatPosted(p.createdAt)}</span>
                       {p.expiresAt ? (
                         <span className="whitespace-nowrap">

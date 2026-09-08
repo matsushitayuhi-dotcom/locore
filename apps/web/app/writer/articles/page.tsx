@@ -160,10 +160,10 @@ export default async function WriterArticlesPage({
                       カバー未設定
                     </div>
                   )}
-                  {/* 状態バッジ（左上） */}
+                  {/* 状態バッジ（左上）。10px は実機で読めないのでスマホだけ 11px（PC は据え置き） */}
                   <span
                     className={
-                      'absolute left-2 top-2 z-20 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm ' +
+                      'absolute left-2 top-2 z-20 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] sm:text-[10px] font-semibold shadow-sm ' +
                       badge.cls
                     }
                   >
@@ -171,7 +171,7 @@ export default async function WriterArticlesPage({
                     {badge.label}
                   </span>
                   {a.warned ? (
-                    <span className="absolute right-2 top-2 z-20 inline-flex items-center gap-1 rounded-full bg-warning-500/95 px-2 py-0.5 text-[10px] font-semibold text-neutral-950 shadow-sm">
+                    <span className="absolute right-2 top-2 z-20 inline-flex items-center gap-1 rounded-full bg-warning-500/95 px-2 py-0.5 text-[11px] sm:text-[10px] font-semibold text-neutral-950 shadow-sm">
                       警告あり
                     </span>
                   ) : null}

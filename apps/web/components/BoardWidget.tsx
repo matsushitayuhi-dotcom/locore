@@ -59,23 +59,25 @@ export function BoardWidget({
   }
   return (
     <div className="overflow-hidden rounded-lg bg-card ring-1 ring-border">
-      <header className="flex items-center justify-between gap-2 border-b border-border bg-primary-500/10 px-3 py-1.5">
-        <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-primary-300">
+      {/* 320px だと「新着ニュース」+ 2 リンクが 1 行に収まらないので折り返しを許可。
+          見出し・リンクとも縮ませない（縮むと日本語が 1 文字ずつ縦に潰れる） */}
+      <header className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-primary-500/10 px-3 py-1.5">
+        <p className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300 sm:text-[10px]">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-primary-500" />
           新着ニュース
         </p>
         {showLinks ? (
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-3">
             <Link
               href={calendarHref}
-              className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-primary-300 hover:underline"
+              className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-[11px] font-semibold text-primary-300 hover:underline"
             >
               <CalendarDays className="h-3 w-3" />
               カレンダー
             </Link>
             <Link
               href={allHref}
-              className="text-[11px] font-semibold text-primary-300 hover:underline"
+              className="shrink-0 whitespace-nowrap text-[11px] font-semibold text-primary-300 hover:underline"
             >
               すべて見る →
             </Link>
@@ -103,7 +105,9 @@ export function BoardWidget({
               </span>
               {catLabel ? (
                 <span
-                  className={`shrink-0 rounded-sm px-1 py-0.5 text-[9px] font-bold uppercase tracking-wider ${catColor}`}
+                  // 9px はスマホで読めないので 11px へ（規約7、PC は sm: で据え置き）。
+                  // 広がった分は max-sm:tracking-normal で戻し、タイトルの取り分を守る
+                  className={`shrink-0 whitespace-nowrap rounded-sm px-1 py-0.5 text-[11px] font-bold uppercase tracking-wider max-sm:tracking-normal sm:text-[9px] ${catColor}`}
                   aria-label={`カテゴリ: ${catLabel}`}
                 >
                   {catLabel}
@@ -118,7 +122,7 @@ export function BoardWidget({
                   p.eventEndDate ?? p.eventDate,
                 );
                 return range ? (
-                  <span className="shrink-0 tabular text-[10px] font-semibold text-primary-300">
+                  <span className="shrink-0 whitespace-nowrap tabular text-[11px] font-semibold text-primary-300 sm:text-[10px]">
                     {range}
                   </span>
                 ) : null;

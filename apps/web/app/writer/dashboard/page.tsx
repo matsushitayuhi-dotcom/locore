@@ -252,7 +252,8 @@ export default async function WriterDashboardPage() {
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
             <header className="mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50">
+              {/* セクションラベルはスマホ 11px（PC は 10px のまま） */}
+              <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50">
                 Per article
               </p>
               <h2 className="mt-1 text-[18px] font-semibold tracking-tight">
@@ -300,7 +301,8 @@ export default async function WriterDashboardPage() {
 
           <section className="rounded-xl border border-border bg-card p-5 sm:p-6">
             <header className="mb-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50">
+              {/* セクションラベルはスマホ 11px（PC は 10px のまま） */}
+              <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/50">
                 Recent
               </p>
               <h2 className="mt-1 text-[18px] font-semibold tracking-tight">
@@ -330,7 +332,8 @@ export default async function WriterDashboardPage() {
                       <p className="text-[13px] font-semibold tabular text-foreground">
                         ¥{row.payoutJpy.toLocaleString('ja-JP')}
                       </p>
-                      <p className="text-[10px] tabular text-foreground/50">
+                      {/* 売上原価の補助表示もスマホは 11px（PC は 10px のまま） */}
+                      <p className="text-[11px] sm:text-[10px] tabular text-foreground/50">
                         / ¥{row.amountJpy.toLocaleString('ja-JP')}
                       </p>
                     </div>

@@ -14,7 +14,8 @@ const avatarVariants = cva(
   {
     variants: {
       size: {
-        xs: "size-4 text-[10px]",
+        // イニシャルの 10px は実機で読めないのでスマホだけ 11px。PC は sm: で据え置き
+        xs: "size-4 text-[11px] sm:text-[10px]",
         sm: "size-6 text-[11px]",
         md: "size-10 text-body-sm",
         lg: "size-16 text-heading-sm",

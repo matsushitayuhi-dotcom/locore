@@ -177,7 +177,8 @@ export function ServiceInquiryButton({
                   placeholder="ご希望の日時 / 人数 / 相談したい内容など"
                   className="mt-1 w-full rounded-md bg-background px-3 py-2 text-[13px] ring-1 ring-border placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
-                <span className="mt-1 block text-right text-[10px] text-foreground/45">
+                {/* 文字数カウンタ。10px はスマホで読めないので 11px、PC は据え置き（規約7） */}
+                <span className="mt-1 block text-right text-[11px] sm:text-[10px] text-foreground/45">
                   {message.length} / 2000
                 </span>
               </label>

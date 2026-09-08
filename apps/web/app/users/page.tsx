@@ -380,8 +380,9 @@ function ResidentCard({
             </p>
           ) : null}
         </div>
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
         {resident.openToMeetups ? (
-          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-bold text-primary-300">
+          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] sm:text-[10px] font-bold text-primary-300">
             <Coffee className="h-3 w-3 shrink-0" />
             会える
           </span>
@@ -417,9 +418,10 @@ function ResidentCard({
             const label =
               COMMON_LANGUAGES.find((x) => x.code === l.code)?.label ?? l.code;
             return (
+              // 言語チップ: スマホは 11px（PC は 10px のまま）
               <span
                 key={l.code}
-                className="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] tabular text-foreground/65"
+                className="rounded-sm bg-muted px-1.5 py-0.5 text-[11px] sm:text-[10px] tabular text-foreground/65"
               >
                 {label}
               </span>
@@ -463,9 +465,10 @@ function TagLink({
       ? 'bg-primary-500/15 text-primary-300 hover:bg-primary-500/25'
       : 'bg-muted text-foreground/65 hover:bg-primary-500/10 hover:text-primary-300';
   return (
+    // タグピル: スマホは 11px まで上げる（PC は 10px のまま）
     <Link
       href={{ pathname: '/users', query: { ...baseQuery, tag } }}
-      className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition max-sm:inline-flex max-sm:min-h-9 max-sm:items-center max-sm:px-2.5 ${cls}`}
+      className={`rounded-full px-2 py-0.5 text-[11px] sm:text-[10px] font-medium transition max-sm:inline-flex max-sm:min-h-9 max-sm:items-center max-sm:px-2.5 ${cls}`}
     >
       {tag}
     </Link>

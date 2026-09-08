@@ -255,7 +255,8 @@ export default function AboutPage() {
               className="mt-[26px] inline-flex items-center gap-2 text-[14.5px] font-bold text-primary-500 hover:underline hover:underline-offset-4"
             >
               審査のステップをくわしく見る
-              <ArrowRight className="h-[15px] w-[15px]" aria-hidden />
+              {/* 矢印は縮ませない */}
+              <ArrowRight className="h-[15px] w-[15px] shrink-0" aria-hidden />
             </Link>
           </div>
           {/* 白カード。text-foreground 明示でダーク帯の白文字継承を遮断 */}
@@ -296,7 +297,8 @@ export default function AboutPage() {
                         <VBadge label="認証済み" />
                       </span>
                     </div>
-                    <div className="mt-px truncate text-[11.5px] text-neutral-500">
+                    {/* 320px では truncate だと「HBS在学中」が切れて消えるので、スマホは折り返す */}
+                    <div className="mt-px truncate text-[11.5px] text-neutral-500 max-sm:whitespace-normal">
                       🇺🇸 ボストン ・ HBS在学中
                     </div>
                   </div>
@@ -382,12 +384,13 @@ export default function AboutPage() {
               検索を3時間続けるより、暮らした人にひとこと聞いてみませんか。
             </p>
             <div className="mt-[30px] flex flex-wrap items-center justify-center gap-6">
+              {/* 320px の帯の内側は 228px しかなく px-8 だとラベルが折り返す。スマホだけ px-6 */}
               <Link
                 href="/experts"
-                className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
+                className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300 max-sm:px-6"
               >
-                エキスパートを探す
-                <ArrowRight className="h-4 w-4" aria-hidden />
+                <span className="whitespace-nowrap">エキスパートを探す</span>
+                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
               </Link>
               <Link
                 href="/become-writer"

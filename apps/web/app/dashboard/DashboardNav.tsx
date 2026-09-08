@@ -76,8 +76,9 @@ export function DashboardNav({
       </div>
       {groups.map((g, gi) => (
         <div key={gi} className="mb-2">
+          {/* グループ見出しはスマホ 11px（PC は 10px のまま） */}
           {g.title ? (
-            <p className="mb-1 mt-3 px-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">{g.title}</p>
+            <p className="mb-1 mt-3 px-2.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-neutral-400">{g.title}</p>
           ) : null}
           <ul className="space-y-0.5">
             {g.items.map((it) => {
@@ -95,8 +96,9 @@ export function DashboardNav({
                   >
                     <span className="min-w-0 flex-1">{it.label}</span>
                     {it.badge ? (
-                      // バッジは縮ませない。しわ寄せはラベル側（min-w-0）で受ける
-                      <span className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-primary-500 px-1.5 text-[10px] font-extrabold text-neutral-950">
+                      // バッジは縮ませない。しわ寄せはラベル側（min-w-0）で受ける。
+                      // 数字はスマホ 11px（PC は 10px のまま）
+                      <span className="grid h-[18px] min-w-[18px] shrink-0 place-items-center rounded-full bg-primary-500 px-1.5 text-[11px] sm:text-[10px] font-extrabold text-neutral-950">
                         {it.badge > 99 ? '99+' : it.badge}
                       </span>
                     ) : null}

@@ -200,9 +200,11 @@ export function ItineraryTimeline({
                   'shadow-sm'
                 }
               >
-                {/* 時刻バッジ。カード上部に小さく */}
+                {/* 時刻バッジ。カード上部に小さく。
+                    スマホ幅: 時刻側 min-w-0 / #番号側 shrink-0 で潰れを防ぎ、
+                    番号の文字は 11px 以上（PC は sm: で 10px 据え置き）。 */}
                 <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/30 px-4 py-2">
-                  <p className="inline-flex items-center gap-1.5 text-[12px] font-bold tabular text-primary-300">
+                  <p className="inline-flex min-w-0 items-center gap-1.5 text-[12px] font-bold tabular text-primary-300">
                     <Clock className="h-3.5 w-3.5" />
                     {b.startTime}
                     {b.endTime ? (
@@ -212,7 +214,7 @@ export function ItineraryTimeline({
                       </span>
                     ) : null}
                   </p>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground/40 tabular">
+                  <span className="shrink-0 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wider text-foreground/40 tabular sm:text-[10px]">
                     #{idx + 1}
                   </span>
                 </div>
@@ -254,7 +256,11 @@ export function ItineraryTimeline({
                       }
                     >
                       <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary-500" />
-                      <span className={unlocked ? '' : 'tracking-[0.2em]'}>
+                      <span
+                        className={
+                          'min-w-0 ' + (unlocked ? '' : 'tracking-[0.2em]')
+                        }
+                      >
                         {placeName}
                       </span>
                     </h4>
@@ -264,7 +270,7 @@ export function ItineraryTimeline({
                       </p>
                     ) : null}
                     {spot?.category ? (
-                      <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary-500/5 px-2 py-0.5 text-[10px] font-semibold text-primary-300">
+                      <p className="mt-1 inline-flex max-w-full items-center gap-1 rounded-full bg-primary-500/5 px-2 py-0.5 text-[11px] font-semibold text-primary-300 sm:text-[10px]">
                         {spot.category}
                       </p>
                     ) : null}
@@ -443,8 +449,9 @@ function SpotActionRow({
     fallbackQuery: spot.name + ' ' + (spot.address ?? ''),
   });
 
+  // スマホではタップ領域を 36px 以上（h-9 w-9）に。PC は従来の h-7 w-7 のまま。
   const baseBtn =
-    'inline-flex h-7 w-7 items-center justify-center rounded-full ring-1 transition';
+    'inline-flex h-9 w-9 items-center justify-center rounded-full ring-1 transition sm:h-7 sm:w-7';
 
   return (
     <div className="mt-3 flex items-center justify-end gap-1.5">

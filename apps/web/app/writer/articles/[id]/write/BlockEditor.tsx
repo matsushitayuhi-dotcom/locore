@@ -651,7 +651,7 @@ function BlockRow({
               }}
             />
             {menu ? (
-              <div className="absolute left-0 top-full z-20 mt-1 w-[300px] overflow-hidden rounded-xl border border-border bg-white shadow-xl">
+              <div className="absolute left-0 top-full z-20 mt-1 w-[300px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-border bg-white shadow-xl">
                 <div className="max-h-[320px] overflow-y-auto py-1">
                   {filtered.length === 0 ? <p className="px-3 py-2 text-[12px] text-neutral-400">該当なし</p> : null}
                   {filtered.map((m, i) => (
@@ -952,7 +952,7 @@ function UrlField({ block, onReplace }: { block: Extract<ArticleBlock, { type: '
   return (
     <div className="rounded-xl border border-border bg-white p-3">
       <div className="flex items-center gap-2">
-        <span className="rounded-full bg-neutral-100 px-2 py-[3px] text-[10.5px] font-bold">{block.type === 'embed' ? (block.provider === 'youtube' ? '動画' : `埋め込み 2 · ${block.provider}`) : `埋め込み 1 · ${block.kind}`}</span>
+        <span className="shrink-0 whitespace-nowrap rounded-full bg-neutral-100 px-2 py-[3px] text-[11px] font-bold sm:text-[10.5px]">{block.type === 'embed' ? (block.provider === 'youtube' ? '動画' : `埋め込み 2 · ${block.provider}`) : `埋め込み 1 · ${block.kind}`}</span>
         <input value={url} onChange={(e) => setUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); resolve(); } }} placeholder={block.type === 'embed' && block.provider === 'youtube' ? 'https://www.youtube.com/watch?v=…' : block.type === 'embed' ? 'https://…（Google マップ / X / Instagram / TikTok / Spotify）' : 'https://…（記事 / エキスパート / 外部サイト）'} className="h-9 min-w-0 flex-1 rounded-md border border-border px-2 text-[13px] focus:border-primary-500 focus:outline-none" />
         <button type="button" onClick={resolve} disabled={pending} className="rounded-full bg-neutral-900 px-3 py-1.5 text-[12px] font-bold text-white disabled:opacity-60">{pending ? '取得中…' : '取得'}</button>
       </div>

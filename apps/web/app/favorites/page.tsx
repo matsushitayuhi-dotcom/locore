@@ -48,7 +48,8 @@ export default async function FavoritesPage() {
       <div className="mx-auto max-w-[1180px] px-5 pb-24 sm:px-10">
         <section className="pb-6 pt-9 sm:pt-11">
           <p className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-700">
-            <Heart className="h-3 w-3 fill-current" aria-hidden />
+            {/* アイコンは縮ませない */}
+            <Heart className="h-3 w-3 shrink-0 fill-current" aria-hidden />
             Favorites
           </p>
           <h1 className="mt-2 text-[24px] font-semibold tracking-[-0.01em] sm:text-[28px]">お気に入りのエキスパート</h1>
@@ -67,7 +68,7 @@ export default async function FavoritesPage() {
               href="/experts"
               className="mt-5 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-2.5 text-[13.5px] font-bold text-white transition hover:bg-neutral-700"
             >
-              <Search className="h-4 w-4" aria-hidden />
+              <Search className="h-4 w-4 shrink-0" aria-hidden />
               エキスパートを探す
             </Link>
           </section>

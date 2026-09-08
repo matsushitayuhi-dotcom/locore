@@ -460,8 +460,9 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
             ) : null}
           </ul>
 
+          {/* 投稿日時: 10px は実機で読めないためスマホだけ 11px に上げる（PC は据え置き） */}
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] text-foreground/45">
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
               <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>

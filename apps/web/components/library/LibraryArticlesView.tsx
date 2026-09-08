@@ -111,18 +111,20 @@ export function LibraryArticlesView({
 
     return (
       <div>
-        <div className="mb-4 flex items-center gap-3">
+        {/* 戻るボタンは縮まない側 (shrink-0 + nowrap、スマホは 36px 以上のタップ領域)、
+            フォルダ名は縮む側 (min-w-0)。入り切らないときは flex-wrap で次行へ */}
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           <button
             type="button"
             onClick={() => setOpenFolder(null)}
-            className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-[12px] font-medium text-foreground/80 ring-1 ring-border transition hover:bg-card hover:text-foreground"
+            className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-muted px-3 py-1.5 text-[12px] font-medium text-foreground/80 ring-1 ring-border transition hover:bg-card hover:text-foreground max-sm:min-h-[36px]"
           >
-            <ChevronRight className="h-3.5 w-3.5 rotate-180" aria-hidden />
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 rotate-180" aria-hidden />
             ライブラリへ戻る
           </button>
-          <p className="text-[14px] font-semibold text-foreground">
+          <p className="min-w-0 text-[14px] font-semibold text-foreground">
             {folderName}
-            <span className="ml-2 text-[12px] font-normal text-foreground/55 tabular">
+            <span className="ml-2 whitespace-nowrap text-[12px] font-normal text-foreground/55 tabular">
               {filtered.length} 件
             </span>
           </p>
@@ -191,11 +193,14 @@ export function LibraryArticlesView({
 
         {/* 新規フォルダ作成カード */}
         {drafting ? (
-          <div className="flex flex-col gap-2">
+          // グリッドの子は min-w-0（日本語は 1 文字まで縮むため）
+          <div className="flex min-w-0 flex-col gap-2">
             <div className="flex aspect-square items-center justify-center rounded-xl bg-muted ring-1 ring-dashed ring-border">
               <Plus className="h-8 w-8 text-foreground/30" aria-hidden />
             </div>
-            <div className="flex gap-1.5 px-0.5">
+            {/* input の min-width:auto は既定サイズ（約 20 文字）なので min-w-0 が要る。
+                スマホ幅（グリッド 2 列 = 約 138px）では入力欄を 1 行使い、ボタンは次行へ回す */}
+            <div className="flex flex-wrap gap-1.5 px-0.5">
               <input
                 type="text"
                 value={draftName}
@@ -212,13 +217,13 @@ export function LibraryArticlesView({
                     setDraftName('');
                   }
                 }}
-                className="h-8 flex-1 rounded-sm border border-primary-500/40 bg-card px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
+                className="h-9 min-w-0 flex-1 basis-full rounded-sm border border-primary-500/40 bg-card px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none sm:h-8 sm:basis-0"
               />
               <button
                 type="button"
                 onClick={onCreateFolder}
                 disabled={isPending || !draftName.trim()}
-                className="rounded-sm bg-primary-500 px-2 text-[11px] font-bold text-neutral-950 hover:bg-primary-300 disabled:opacity-40"
+                className="shrink-0 whitespace-nowrap rounded-sm bg-primary-500 px-2 text-[11px] font-bold text-neutral-950 hover:bg-primary-300 disabled:opacity-40 max-sm:min-h-[36px] max-sm:px-3"
               >
                 追加
               </button>
@@ -229,9 +234,9 @@ export function LibraryArticlesView({
                   setDraftName('');
                 }}
                 aria-label="キャンセル"
-                className="rounded-sm p-1 text-foreground/50 hover:bg-muted"
+                className="shrink-0 rounded-sm p-1 text-foreground/50 hover:bg-muted max-sm:inline-flex max-sm:min-h-[36px] max-sm:w-9 max-sm:items-center max-sm:justify-center"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5 shrink-0" />
               </button>
             </div>
           </div>
@@ -239,7 +244,7 @@ export function LibraryArticlesView({
           <button
             type="button"
             onClick={() => setDrafting(true)}
-            className="group flex flex-col gap-2 text-left"
+            className="group flex min-w-0 flex-col gap-2 text-left"
           >
             <div className="flex aspect-square w-full items-center justify-center rounded-xl bg-muted ring-1 ring-dashed ring-border transition-colors group-hover:ring-primary-500/40">
               <div className="flex flex-col items-center gap-2 text-foreground/40 group-hover:text-primary-300">

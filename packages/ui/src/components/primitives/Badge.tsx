@@ -5,10 +5,14 @@ import { cn } from "../../lib/utils";
 const badgeVariants = cva(
   [
     "inline-flex items-center gap-1",
-    "h-5 px-2 rounded-full",
-    "font-sans text-[10px] font-semibold leading-none",
+    // h-5 固定なので折り返すとピルからはみ出す。日本語は 1 文字ずつ改行できるため
+    // 狭い横並びで縦一列に潰れるのも防ぐ
+    "h-5 px-2 rounded-full whitespace-nowrap",
+    // 10px は実機（iPhone 402px / 320px）で読めないのでスマホだけ 11px に上げ、
+    // PC は sm: で従来どおり 10px に戻す
+    "font-sans text-[11px] sm:text-[10px] font-semibold leading-none",
     "transition-colors duration-base ease-out",
-    "[&_svg]:size-2.5",
+    "[&_svg]:size-2.5 [&_svg]:shrink-0",
   ].join(" "),
   {
     variants: {

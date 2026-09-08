@@ -445,8 +445,9 @@ function MarketplaceListItem({ post }: { post: CommunityPostListItem }) {
             <Tag className="h-3 w-3 shrink-0 self-center" />
             <span className="min-w-0 truncate">{price ?? '価格応相談'}</span>
           </p>
-          {/* アイコンは shrink-0。長い地名が来るとアイコン側が潰れて線になる */}
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/50">
+          {/* アイコンは shrink-0。長い地名が来るとアイコン側が潰れて線になる。
+              文字はスマホだけ 11px に上げる（PC は 10px のまま） */}
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-[10px] text-foreground/50">
             {post.locationText ? (
               <span className="inline-flex min-w-0 items-center gap-0.5">
                 <MapPin className="h-2.5 w-2.5 shrink-0" />
@@ -556,8 +557,9 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
             ) : null}
           </ul>
 
+          {/* 投稿日時: 10px は実機で読めないためスマホだけ 11px に上げる（PC は据え置き） */}
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[10px] text-foreground/45">
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
               <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>

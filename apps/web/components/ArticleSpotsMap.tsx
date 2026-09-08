@@ -593,11 +593,13 @@ function SpotBottomSheet({
   return (
     <div className="pointer-events-none absolute inset-x-2 bottom-2 z-[5] sm:inset-x-3 sm:bottom-3">
       <div className="pointer-events-auto relative flex items-stretch gap-3 rounded-xl bg-card/95 p-3 shadow-lg ring-1 ring-border backdrop-blur">
+        {/* スマホではタップ領域 36px 以上を確保（PC は従来の h-6 w-6）。
+            そのぶん右のテキスト列の余白も pr-10 に広げている。 */}
         <button
           type="button"
           onClick={onClose}
           aria-label="閉じる"
-          className="absolute right-2 top-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-foreground/50 hover:bg-primary-500/10 hover:text-foreground"
+          className="absolute right-1 top-1 inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground/50 hover:bg-primary-500/10 hover:text-foreground sm:right-2 sm:top-2 sm:h-6 sm:w-6"
         >
           <X className="h-3.5 w-3.5" />
         </button>
@@ -611,14 +613,14 @@ function SpotBottomSheet({
               className="object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-[10px] text-foreground/40">
+            <div className="flex h-full w-full items-center justify-center text-[11px] text-foreground/40 sm:text-[10px]">
               No photo
             </div>
           )}
         </div>
-        <div className="min-w-0 flex-1 pr-6">
+        <div className="min-w-0 flex-1 pr-10 sm:pr-6">
           {typeof label === 'number' ? (
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/50">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/50 sm:text-[10px]">
               #{String(label).padStart(2, '0')}
             </p>
           ) : null}
@@ -634,7 +636,7 @@ function SpotBottomSheet({
             href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 inline-flex items-center gap-1 text-[11px] font-semibold text-foreground/70 underline-offset-4 hover:text-foreground hover:underline"
+            className="mt-1 inline-flex max-w-full items-center gap-1 text-[11px] font-semibold text-foreground/70 underline-offset-4 hover:text-foreground hover:underline"
           >
             <ExternalLink className="h-3 w-3" />
             Google マップで開く →

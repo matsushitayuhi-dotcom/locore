@@ -156,7 +156,7 @@ export function PostForm() {
               : '今週末、CDG 空港送迎します（無料）'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">
           {title.length} / 140
         </p>
       </div>
@@ -282,7 +282,7 @@ export function PostForm() {
               : '【内容】6/15（土）朝 9 時 CDG 空港着の方をお迎えに行きます\n【車】Renault Clio、スーツケース 2 個まで OK\n【場所】13 区方面なら帰宅ついでで OK'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">
           {body.length} / 8000
         </p>
       </div>

@@ -128,12 +128,13 @@ export function BulkSpotFavoriteButton({
         disabled={isPending}
         className="inline-flex items-center gap-1.5 rounded-md bg-primary-500/10 px-3 py-1.5 text-[12px] font-semibold text-primary-300 ring-1 ring-primary-300/40 transition hover:bg-primary-500/15 hover:ring-primary-300"
       >
-        <Bookmark className="h-3.5 w-3.5" />
+        <Bookmark className="h-3.5 w-3.5 shrink-0" />
         全 {total} スポットを保存
       </button>
 
       {open ? (
-        <div className="absolute right-0 z-30 mt-2 w-[300px] rounded-lg bg-card p-3 shadow-md ring-1 ring-border">
+        // スマホ: 300px 固定だと 320px 幅ではみ出すので画面幅までに制限
+        <div className="absolute right-0 z-30 mt-2 w-[300px] max-w-[calc(100vw-2rem)] rounded-lg bg-card p-3 shadow-md ring-1 ring-border">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
               一括でフォルダに保存
@@ -168,8 +169,11 @@ export function BulkSpotFavoriteButton({
                 disabled={isPending}
                 className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] hover:bg-primary-500/10"
               >
-                <span className="font-medium">未分類</span>
-                <span className="text-[10px] text-foreground/50">既定</span>
+                <span className="min-w-0 truncate font-medium">未分類</span>
+                {/* スマホは 11px 未満にしない（PC は据え置き） */}
+                <span className="ml-2 shrink-0 whitespace-nowrap text-[11px] text-foreground/50 sm:text-[10px]">
+                  既定
+                </span>
               </button>
             </li>
             {folders.map((f) => (
@@ -180,8 +184,9 @@ export function BulkSpotFavoriteButton({
                   disabled={isPending}
                   className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-[13px] hover:bg-primary-500/10"
                 >
-                  <span className="truncate font-medium">{f.name}</span>
-                  <span className="ml-2 shrink-0 text-[10px] text-foreground/50">
+                  <span className="min-w-0 truncate font-medium">{f.name}</span>
+                  {/* スマホは 11px 未満にしない（PC は据え置き） */}
+                  <span className="ml-2 shrink-0 whitespace-nowrap text-[11px] text-foreground/50 sm:text-[10px]">
                     {f.count}
                   </span>
                 </button>
@@ -199,13 +204,13 @@ export function BulkSpotFavoriteButton({
                   placeholder="新しいフォルダ名"
                   maxLength={60}
                   autoFocus
-                  className="h-8 flex-1 rounded-sm border border-primary-500/40 bg-card px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
+                  className="h-8 min-w-0 flex-1 rounded-sm border border-primary-500/40 bg-card px-2 text-[12px] focus:border-2 focus:border-primary-500 focus:px-[7px] focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={onCreateFolder}
                   disabled={isPending || !draftName.trim()}
-                  className="rounded-sm bg-primary-700 px-2 text-[11px] font-bold text-white hover:bg-primary-500 disabled:opacity-40"
+                  className="shrink-0 whitespace-nowrap rounded-sm bg-primary-700 px-2 text-[11px] font-bold text-white hover:bg-primary-500 disabled:opacity-40"
                 >
                   作って追加
                 </button>
@@ -216,7 +221,7 @@ export function BulkSpotFavoriteButton({
                 onClick={() => setDrafting(true)}
                 className="inline-flex w-full items-center gap-1 rounded-md px-2 py-1.5 text-[12px] font-medium text-primary-300 hover:bg-primary-500/10"
               >
-                <Plus className="h-3.5 w-3.5" />
+                <Plus className="h-3.5 w-3.5 shrink-0" />
                 新しいフォルダを作って追加
               </button>
             )}

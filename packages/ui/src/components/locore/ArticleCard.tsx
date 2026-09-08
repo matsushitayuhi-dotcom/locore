@@ -204,7 +204,7 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
               )}
             >
               <Heart
-                className="size-4"
+                className="size-4 shrink-0"
                 fill={bookmarked ? "currentColor" : "none"}
                 strokeWidth={2.2}
                 aria-hidden
@@ -224,9 +224,11 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
           <div className="flex items-center justify-between gap-2">
             <p className="min-w-0 truncate text-[11px] font-medium text-foreground/70">
               {area ? (
-                <span className="inline-flex items-center gap-0.5">
+                // inline-flex だと親の truncate が効かないので、内側でも
+                // min-w-0 + truncate してエリア名を省略する（320px 対策）
+                <span className="inline-flex min-w-0 max-w-full items-center gap-0.5">
                   <MapPin className="size-3 shrink-0" aria-hidden />
-                  {area}
+                  <span className="min-w-0 truncate">{area}</span>
                 </span>
               ) : null}
             </p>
@@ -263,7 +265,8 @@ export const ArticleCard = React.forwardRef<HTMLElement, ArticleCardProps>(
           {/* 320px（カード幅 約133px）では価格とメタが 1 行に収まらないことがあるので、
               スマホだけ折り返しを許す。PC は 1 行のまま */}
           <div className="mt-0.5 flex items-center justify-between gap-1 max-sm:flex-wrap">
-            <p className="text-[13px] font-semibold tabular text-foreground">
+            {/* 価格は折り返させない（¥1,200 が縦に割れるのを防ぐ） */}
+            <p className="shrink-0 whitespace-nowrap text-[13px] font-semibold tabular text-foreground">
               ¥{priceJpy.toLocaleString("ja-JP")}
             </p>
             {durationLabel || typeof spotsCount === "number" ? (

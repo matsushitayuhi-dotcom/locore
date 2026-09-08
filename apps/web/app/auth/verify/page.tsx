@@ -31,7 +31,8 @@ export default function VerifyPage({
           <p>
             {email ? (
               <>
-                <span className="font-medium text-foreground">{email}</span>{' '}
+                {/* 長いメールアドレスは途中で折り返せず 320px で横にはみ出すので break-all */}
+                <span className="break-all font-medium text-foreground">{email}</span>{' '}
                 宛に確認メールを送信しました。
               </>
             ) : (

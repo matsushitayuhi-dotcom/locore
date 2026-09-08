@@ -40,7 +40,7 @@ export default function FoundersPage() {
     <main className="bg-background">
       <section className="border-b border-border bg-secondary-50/30">
         <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-20">
-          <Badge variant="accent" className="text-[10px] uppercase tracking-[0.18em]">
+          <Badge variant="accent" className="uppercase tracking-[0.18em]">
             <Sparkles className="mr-1 h-3 w-3" /> Founders 枠
           </Badge>
           <h1

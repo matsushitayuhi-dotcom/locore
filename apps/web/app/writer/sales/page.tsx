@@ -272,7 +272,8 @@ export default async function WriterSalesPage({
                     <span className="whitespace-nowrap text-[13px] font-semibold tabular">
                       {hasSales ? `¥${row!.payoutJpy.toLocaleString('ja-JP')}` : '¥0'}
                     </span>
-                    <span className="whitespace-nowrap text-[10px] text-foreground/40">
+                    {/* 開閉ラベルはスマホ 11px（PC は 10px のまま） */}
+                    <span className="whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/40">
                       {isOpen ? '▲ 閉じる' : hasSales ? '▼ 詳細' : ''}
                     </span>
                   </span>
@@ -334,7 +335,8 @@ function SummaryCard({
 }) {
   return (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
-      <p className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+      {/* ラベルはスマホ 11px（PC は 10px のまま） */}
+      <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
         {label}
       </p>
       <p

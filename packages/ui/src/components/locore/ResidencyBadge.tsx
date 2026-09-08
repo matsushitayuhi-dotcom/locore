@@ -65,14 +65,19 @@ export const ResidencyBadge = React.forwardRef<HTMLSpanElement, ResidencyBadgePr
         title={tooltip}
         aria-label={tooltip}
         className={cn(
-          "inline-flex items-center gap-1 rounded-full text-caption leading-none",
+          // 「居住3年」等が 1 文字ずつ縦に潰れないよう nowrap
+          "inline-flex items-center gap-1 whitespace-nowrap rounded-full text-caption leading-none",
           style.container,
           className,
         )}
         {...rest}
       >
         <BadgeCheck
-          className={cn("size-3.5", style.iconColor)}
+          className={cn(
+            // flex 内でアイコンが潰れないように shrink-0
+            "size-3.5 shrink-0",
+            style.iconColor,
+          )}
           fill={style.variant === "solid" ? "currentColor" : "none"}
           aria-hidden="true"
         />

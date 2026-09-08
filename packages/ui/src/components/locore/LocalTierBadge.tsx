@@ -112,7 +112,8 @@ export const LocalTierBadge = React.forwardRef<
         aria-label={`ローカル ${label}`}
         title={`ローカル ${label} (${Math.round(score)})`}
         className={cn(
-          "inline-flex items-center rounded-full font-bold tracking-wider",
+          // 狭い横並びで「ブロンズ」が 1 文字ずつ縦に潰れないよう nowrap
+          "inline-flex items-center whitespace-nowrap rounded-full font-bold tracking-wider",
           sizeClass,
           palette.bg,
           palette.text,
@@ -122,7 +123,12 @@ export const LocalTierBadge = React.forwardRef<
       >
         <span
           aria-hidden
-          className={cn("rounded-full", dotSize, palette.dot)}
+          className={cn(
+            // flex 内でドットが潰れないように shrink-0
+            "shrink-0 rounded-full",
+            dotSize,
+            palette.dot,
+          )}
         />
         {showLabel ? <span className="leading-none">{label}</span> : null}
       </span>

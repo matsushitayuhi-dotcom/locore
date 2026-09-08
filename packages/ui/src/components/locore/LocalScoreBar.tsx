@@ -48,7 +48,11 @@ export const LocalScoreBar = React.forwardRef<HTMLDivElement, LocalScoreBarProps
         ref={ref}
         data-locore-component="LocalScoreBar"
         data-locore-size={size}
-        className={cn("flex flex-col gap-2", className)}
+        className={cn(
+          // 横並びの子として置かれてもバーが縮めるように min-w-0
+          "flex min-w-0 flex-col gap-2",
+          className,
+        )}
         {...rest}
       >
         <div
@@ -68,7 +72,7 @@ export const LocalScoreBar = React.forwardRef<HTMLDivElement, LocalScoreBarProps
           />
         </div>
         {showLabel ? (
-          <span className="text-caption text-neutral-500 tabular self-end">
+          <span className="self-end whitespace-nowrap text-caption text-neutral-500 tabular">
             {text}
           </span>
         ) : null}

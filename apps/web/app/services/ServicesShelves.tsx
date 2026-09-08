@@ -1940,8 +1940,10 @@ function ScopedStyle() {
           width: 22px;
           height: 22px;
         }
+        /* 規約7: スマホで 11px 未満にしない。基底(.phph-mark)の 11px から
+           わざわざ 10px へ下げていたので、下げるのをやめる */
         .phph-mark {
-          font-size: 10px;
+          font-size: 11px;
         }
         /* 絞り込みチップの ✕ は 12px 角しか無くタップできない。
            ボタン自体は 12px のまま（負マージンで幅を食わせるとチップが太り、

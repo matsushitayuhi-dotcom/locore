@@ -55,13 +55,15 @@ export const CreatorBadge = React.forwardRef<HTMLSpanElement, CreatorBadgeProps>
         title={style.tooltip}
         aria-label={style.tooltip}
         className={cn(
-          "inline-flex items-center gap-1 rounded-full text-caption font-medium leading-none",
+          // 「認証」等が 1 文字ずつ縦に潰れないよう nowrap
+          "inline-flex items-center gap-1 whitespace-nowrap rounded-full text-caption font-medium leading-none",
           style.container,
           className,
         )}
         {...rest}
       >
-        <Icon className={cn("size-3.5", style.iconColor)} aria-hidden />
+        {/* flex 内でアイコンが潰れないように shrink-0 */}
+        <Icon className={cn("size-3.5 shrink-0", style.iconColor)} aria-hidden />
         {!iconOnly && <span>{style.label}</span>}
       </span>
     );
