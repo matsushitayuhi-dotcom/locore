@@ -85,6 +85,10 @@ export function ProfileForm({ initial }: Props) {
               {displayName ? displayName[0]!.toUpperCase() : '?'}
             </AvatarFallback>
           </Avatar>
+          {/* 402px だとアバター(80px)+gap を引いた残りが 230px ほど、320px では
+              120px まで潰れて説明文が数文字ずつ折り返される。スマホだけ
+              basis-full で 1 行下に落として幅いっぱいに使う。
+              min-w-0 は flex-1 が min-content で止まらないようにする保険。 */}
           <div
             tabIndex={0}
             onClick={() => inputRef.current?.click()}
@@ -93,7 +97,7 @@ export function ProfileForm({ initial }: Props) {
               e.preventDefault();
               handleFiles(e.dataTransfer.files);
             }}
-            className="flex flex-1 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-primary-500/40 bg-primary-500/10 px-4 py-6 text-center text-[12px] outline-none transition hover:border-primary-300 hover:bg-primary-500/10 focus:border-primary-500"
+            className="flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed border-primary-500/40 bg-primary-500/10 px-4 py-6 text-center text-[12px] outline-none transition hover:border-primary-300 hover:bg-primary-500/10 focus:border-primary-500 max-sm:basis-full"
           >
             <p className="font-medium text-primary-300">
               {isUploading ? 'アップロード中…' : '画像をドラッグ & ドロップ、またはクリック'}
@@ -122,7 +126,8 @@ export function ProfileForm({ initial }: Props) {
             <button
               type="button"
               onClick={() => setAvatarUrl('')}
-              className="shrink-0 rounded-sm px-2 py-0.5 text-[11px] font-medium text-foreground/60 hover:bg-muted hover:text-danger-500"
+              // 高さ 20px しかなく指で押せなかったので、スマホだけ 36px 確保する
+              className="inline-flex shrink-0 items-center rounded-sm px-2 py-0.5 text-[11px] font-medium text-foreground/60 hover:bg-muted hover:text-danger-500 max-sm:min-h-9"
             >
               画像を外す
             </button>

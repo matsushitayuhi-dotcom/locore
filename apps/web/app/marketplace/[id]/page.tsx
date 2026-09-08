@@ -96,9 +96,10 @@ export default async function MarketplaceDetailPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
+      {/* スマホでは上下に余白を足してタップ領域を 36px 以上にする（見た目は -my で据え置き） */}
       <Link
         href="/marketplace"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
+        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline max-sm:-my-2.5 max-sm:py-2.5"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         一覧に戻る
@@ -121,11 +122,15 @@ export default async function MarketplaceDetailPage({ params }: Props) {
           <MarketplaceGallery photos={post.photos} title={post.title} />
 
           <header className="mt-5">
+            {/*
+              バッジのラベルは割らない（日本語はどこでも改行できるので放置すると縦 1 列に潰れる）。
+              小さいラベル類はスマホだけ 11px に上げる（10px は実機で読めない）。PC は sm: で据え置き。
+            */}
             <div className="flex flex-wrap items-center gap-1.5">
               {meta.side ? (
                 <span
                   className={
-                    'rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
+                    'whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider ' +
                     (meta.side === 'sell'
                       ? 'bg-primary-500 text-neutral-950'
                       : 'bg-accent-500 text-neutral-950')
@@ -135,19 +140,19 @@ export default async function MarketplaceDetailPage({ params }: Props) {
                 </span>
               ) : null}
               {meta.category ? (
-                <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/65">
+                <span className="whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/65">
                   {MARKETPLACE_CATEGORY_LABEL[meta.category]}
                 </span>
               ) : null}
               {meta.condition ? (
-                <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-300">
+                <span className="whitespace-nowrap rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-primary-300">
                   {MARKETPLACE_CONDITION_LABEL[meta.condition]}
                 </span>
               ) : null}
             </div>
 
             <h1
-              className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
+              className="mt-3 break-words text-[28px] font-bold leading-tight tracking-tight text-foreground"
             >
               {post.title}
             </h1>
@@ -158,8 +163,8 @@ export default async function MarketplaceDetailPage({ params }: Props) {
             {post.locationText ? (
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                <div className="min-w-0">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     受け渡し場所
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -171,8 +176,8 @@ export default async function MarketplaceDetailPage({ params }: Props) {
             {meta.pickup_required ? (
               <div className="flex items-start gap-2">
                 <PackageCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                <div className="min-w-0">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     引き取り
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">引き取りのみ</dd>
@@ -182,8 +187,8 @@ export default async function MarketplaceDetailPage({ params }: Props) {
             {meta.delivery_available ? (
               <div className="flex items-start gap-2">
                 <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                <div className="min-w-0">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     配達
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">配達対応可（要相談）</dd>
@@ -216,7 +221,7 @@ export default async function MarketplaceDetailPage({ params }: Props) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+              <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
                 投稿者
               </p>
               {post.authorId ? (
@@ -239,13 +244,13 @@ export default async function MarketplaceDetailPage({ params }: Props) {
         <aside className="sm:sticky sm:top-6 sm:self-start">
           <div className="space-y-4 rounded-lg bg-card p-5 ring-1 ring-border">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+              <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
                 価格
               </p>
               <p
                 className="mt-1 inline-flex items-baseline gap-1 text-[22px] font-bold leading-tight text-primary-300"
               >
-                <Tag className="h-4 w-4 self-center" />
+                <Tag className="h-4 w-4 shrink-0 self-center" />
                 {price ?? '応相談'}
               </p>
             </div>
@@ -281,8 +286,12 @@ export default async function MarketplaceDetailPage({ params }: Props) {
                   <Clock className="mt-0.5 h-3 w-3 shrink-0 text-foreground/45" />
                   <div className="min-w-0 flex-1">
                     <dt className="text-foreground/55">
-                      閲覧 (
-                      {isOwn ? '投稿者にのみ表示' : 'editor のみに表示'})
+                      閲覧
+                      {/* 括弧書きの補足はスマホでは省く（幅を本文に返す）。PC には残す */}
+                      <span className="max-sm:hidden">
+                        {' ('}
+                        {isOwn ? '投稿者にのみ表示' : 'editor のみに表示'})
+                      </span>
                     </dt>
                     <dd className="font-medium tabular text-foreground/80">
                       👁 {post.viewCount.toLocaleString()} views
@@ -292,7 +301,7 @@ export default async function MarketplaceDetailPage({ params }: Props) {
               ) : null}
             </dl>
 
-            <div className="rounded-md border border-amber-500/30 bg-amber-50/60 p-2.5 text-[10px] leading-relaxed text-amber-900">
+            <div className="rounded-md border border-amber-500/30 bg-amber-50/60 p-2.5 text-[11px] sm:text-[10px] leading-relaxed text-amber-900">
               <p className="flex items-start gap-1 font-bold">
                 <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
                 取引前に

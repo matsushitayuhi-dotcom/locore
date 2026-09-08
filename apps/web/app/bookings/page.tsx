@@ -106,11 +106,11 @@ export default async function BookingsPage({
 
   return (
     <main className="bg-background text-foreground">
-      <div className="mx-auto max-w-[760px] px-6 pb-20 pt-9">
+      <div className="mx-auto max-w-[760px] px-4 pb-20 pt-9 sm:px-6">
         <h1 className="text-[21px] font-bold">マイ相談</h1>
 
         {/* tabs */}
-        <nav className="mt-4 flex gap-6 border-b border-border text-[14px]">
+        <nav className="mt-4 flex gap-4 border-b border-border text-[14px] max-sm:overflow-x-auto max-sm:[scrollbar-width:none] sm:gap-6 max-sm:[&::-webkit-scrollbar]:hidden">
           <TabLink href="/bookings" active={tab === 'mine'} count={mine.length}>
             依頼した相談
           </TabLink>
@@ -199,7 +199,10 @@ function TabLink({
       href={href}
       aria-current={active ? 'page' : undefined}
       className={
-        '-mb-px inline-flex items-center gap-1.5 border-b-2 px-0.5 pb-2.5 transition ' +
+        // -mb-px はスマホでは打ち消す: max-sm の overflow-x-auto でスクロール
+        // コンテナになるため、1px はみ出した border-b-2 が切り取られてしまう。
+        // スクロールコンテナは既定のフォーカスリングも切るので ring-inset で見せる。
+        '-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-0.5 pb-2.5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500 max-sm:mb-0 max-sm:min-h-[38px] ' +
         (active
           ? 'border-primary-500 font-bold text-foreground'
           : 'border-transparent font-medium text-neutral-500 hover:text-foreground')

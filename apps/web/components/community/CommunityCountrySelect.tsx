@@ -33,13 +33,16 @@ export function CommunityCountrySelect({
   };
 
   return (
-    <label className="relative inline-flex items-center">
+    // 国名が長いと select の固有幅が 320px を超えるので max-w-full で頭打ちに。
+    // label が inline-flex = select は flex アイテムなので、min-w-0 を併記しないと
+    // min-width:auto (= 最長 option の幅) が下限として効き、max-w-full も truncate も死ぬ。
+    <label className="relative inline-flex max-w-full items-center">
       <Globe className="pointer-events-none absolute left-3 h-4 w-4 text-foreground/45" />
       <select
         value={current ?? 'all'}
         onChange={(e) => onChange(e.target.value)}
         aria-label="国で絞り込む"
-        className="h-9 cursor-pointer appearance-none rounded-full border border-border bg-card pl-9 pr-8 text-[13px] font-medium text-foreground transition hover:border-primary-300 focus:border-primary-500 focus:outline-none"
+        className="h-9 min-w-0 max-w-full cursor-pointer appearance-none truncate rounded-full border border-border bg-card pl-9 pr-8 text-[13px] font-medium text-foreground transition hover:border-primary-300 focus:border-primary-500 focus:outline-none"
       >
         <option value="all">すべての国</option>
         {countries.map((c) => (

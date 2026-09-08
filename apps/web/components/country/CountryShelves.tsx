@@ -327,15 +327,23 @@ function ScopedStyle() {
         font-size: 23px;
         letter-spacing: 0.01em;
         color: var(--ink);
+        /* 日本語は 1 文字幅まで縮むので、見出しは縮ませない */
+        flex: none;
+        white-space: nowrap;
       }
       .cty-root .shead .sub {
         color: var(--lime-d);
         font-size: 12.5px;
         font-family: var(--mono);
         font-weight: 500;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .cty-root .shead .seeall {
         margin-left: auto;
+        flex: none;
         font-size: 13px;
         font-weight: 700;
         color: var(--lime-d);
@@ -633,11 +641,15 @@ function ScopedStyle() {
         .cty-root .shead h2 {
           font-size: 17px;
         }
+        /* 320px では「アパート（住居）」+ 英字サブ +「すべて見る」が 1 行に入らない。
+           装飾の英字サブだけスマホで畳む（PC には残す） */
         .cty-root .shead .sub {
-          font-size: 11px;
+          display: none;
         }
         .cty-root .shead .seeall {
           font-size: 12px;
+          /* タップ領域 36px 以上 */
+          padding: 10px 0 10px 6px;
         }
         .cty-root .slide {
           display: none;
@@ -651,7 +663,8 @@ function ScopedStyle() {
           height: 22px;
         }
         .cty-root .phph-mark {
-          font-size: 10px;
+          /* 11px 未満は実機で読めないため 10px → 11px */
+          font-size: 11px;
         }
       }
     ` }} />

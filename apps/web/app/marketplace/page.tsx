@@ -268,13 +268,13 @@ export default async function MarketplaceIndexPage({ searchParams }: Props) {
                       cond: null,
                       price: null,
                     })}
-                    className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                    className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
                   >
                     リセット
                   </Link>
                   <button
                     type="submit"
-                    className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                    className="ml-auto inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
                   >
                     適用
                   </button>
@@ -414,7 +414,7 @@ function MarketplaceListItem({ post }: { post: CommunityPostListItem }) {
             {meta.side ? (
               <span
                 className={
-                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                  'rounded-sm px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider ' +
                   (meta.side === 'sell'
                     ? 'bg-primary-500 text-neutral-950'
                     : 'bg-accent-500 text-neutral-950')
@@ -424,12 +424,12 @@ function MarketplaceListItem({ post }: { post: CommunityPostListItem }) {
               </span>
             ) : null}
             {meta.category ? (
-              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
+              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/65">
                 {MARKETPLACE_CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
             {meta.condition ? (
-              <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
+              <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-primary-300">
                 {MARKETPLACE_CONDITION_LABEL[meta.condition]}
               </span>
             ) : null}
@@ -437,19 +437,25 @@ function MarketplaceListItem({ post }: { post: CommunityPostListItem }) {
           <h2 className="mt-1 line-clamp-2 text-[13px] font-bold leading-snug">
             {post.title}
           </h2>
-          <p className="mt-0.5 inline-flex items-baseline gap-1 text-[14px] font-bold tabular text-primary-300">
-            <Tag className="h-3 w-3 self-center" />
-            {price ?? '価格応相談'}
+          {/* 価格は縮ませない。サムネの右は 320px だと 150px 程度しか無く、
+              放っておくと「€ / 1 / 2 / 0」と 1 文字ずつ縦積みになる。
+              nowrap だけだと収まらない時に文字が途中で切れるので、
+              テキスト側を min-w-0 + truncate にして「…」で終わらせる */}
+          <p className="mt-0.5 flex max-w-full items-baseline gap-1 text-[14px] font-bold tabular text-primary-300">
+            <Tag className="h-3 w-3 shrink-0 self-center" />
+            <span className="min-w-0 truncate">{price ?? '価格応相談'}</span>
           </p>
-          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/50">
+          {/* アイコンは shrink-0。長い地名が来るとアイコン側が潰れて線になる。
+              文字はスマホだけ 11px に上げる（PC は 10px のまま） */}
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] sm:text-[10px] text-foreground/50">
             {post.locationText ? (
-              <span className="inline-flex items-center gap-0.5">
-                <MapPin className="h-2.5 w-2.5" />
-                {post.locationText}
+              <span className="inline-flex min-w-0 items-center gap-0.5">
+                <MapPin className="h-2.5 w-2.5 shrink-0" />
+                <span className="truncate">{post.locationText}</span>
               </span>
             ) : null}
-            <span className="inline-flex items-center gap-0.5">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>
           </p>
@@ -491,31 +497,38 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
             </div>
           )}
 
-          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
-            {meta.side ? (
-              <span
-                className={
-                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
-                  (meta.side === 'sell'
-                    ? 'bg-primary-500 text-neutral-950'
-                    : 'bg-accent-500 text-neutral-950')
-                }
-              >
-                {SIDE_LABEL[meta.side]}
-              </span>
-            ) : null}
-            {meta.condition ? (
-              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
-                {MARKETPLACE_CONDITION_LABEL[meta.condition]}
+          {/*
+            バッジ群と価格は 1 本の flex にまとめる。左上と右上で別々の absolute に
+            すると、402px / 320px でバッジが折り返して価格ピルの下に潜り込み重なる。
+            バッジ側は min-w-0 で縮ませ、価格は shrink-0 whitespace-nowrap で守る。
+          */}
+          <div className="absolute inset-x-2 top-2 flex items-start gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1">
+              {meta.side ? (
+                <span
+                  className={
+                    'rounded-sm px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider shadow-sm ' +
+                    (meta.side === 'sell'
+                      ? 'bg-primary-500 text-neutral-950'
+                      : 'bg-accent-500 text-neutral-950')
+                  }
+                >
+                  {SIDE_LABEL[meta.side]}
+                </span>
+              ) : null}
+              {meta.condition ? (
+                <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                  {MARKETPLACE_CONDITION_LABEL[meta.condition]}
+                </span>
+              ) : null}
+            </div>
+
+            {price ? (
+              <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
+                {price}
               </span>
             ) : null}
           </div>
-
-          {price ? (
-            <span className="absolute right-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
-              {price}
-            </span>
-          ) : null}
         </div>
 
         <div className="p-3">
@@ -523,29 +536,31 @@ function MarketplaceCard({ post }: { post: CommunityPostListItem }) {
             {post.title}
           </h2>
 
+          {/* アイコンは shrink-0。地名が長いとアイコンが 0 幅まで潰れる */}
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {meta.category ? (
-              <li className="inline-flex items-center gap-0.5">
+              <li className="min-w-0 truncate">
                 {MARKETPLACE_CATEGORY_LABEL[meta.category]}
               </li>
             ) : null}
             {!price ? (
-              <li className="inline-flex items-center gap-0.5 text-foreground/55">
-                <Tag className="h-3 w-3" />
+              <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-foreground/55">
+                <Tag className="h-3 w-3 shrink-0" />
                 価格応相談
               </li>
             ) : null}
             {post.locationText ? (
-              <li className="inline-flex items-center gap-0.5 text-foreground/55">
-                <MapPin className="h-3 w-3" />
-                {post.locationText}
+              <li className="inline-flex min-w-0 items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{post.locationText}</span>
               </li>
             ) : null}
           </ul>
 
+          {/* 投稿日時: 10px は実機で読めないためスマホだけ 11px に上げる（PC は据え置き） */}
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>
           </div>

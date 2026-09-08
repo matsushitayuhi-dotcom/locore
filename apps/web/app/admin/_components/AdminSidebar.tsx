@@ -32,7 +32,7 @@ export function AdminSidebar() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="管理メニューを開く"
-        className="fixed bottom-20 right-4 z-30 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12px] font-bold text-background shadow-lg ring-1 ring-border lg:hidden"
+        className="fixed bottom-5 right-4 z-30 inline-flex items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-[12px] font-bold text-background shadow-lg ring-1 ring-border lg:hidden"
       >
         <Menu className="h-4 w-4" />
         Admin

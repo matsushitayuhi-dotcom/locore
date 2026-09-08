@@ -24,7 +24,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .es-hero h1 em{font-style:italic;color:var(--lime);font-weight:600}
 .es-hsub{margin:22px auto 0;max-width:540px;font-size:clamp(15px,1.7vw,17px);line-height:1.85;color:rgba(255,255,255,.84)}
 .es-hauthor{margin-top:28px;display:inline-flex;align-items:center;gap:12px}
-.es-hauthor img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.4)}
+.es-hauthor img{flex:none;width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.4)}
 .es-hauthor .nm{font-weight:700;color:#fff;font-size:14px;text-align:left}
 .es-hauthor .meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.7);margin-top:2px;text-align:left}
 .es-scroll{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:3;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.6);display:flex;flex-direction:column;align-items:center;gap:9px;animation:esbob 2.4s ease-in-out infinite}
@@ -87,7 +87,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .es-revsec .who .dt{font-family:var(--mono);font-size:11px;color:var(--mu);margin-top:3px}
 .es-revsec .sc{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .es-revsec .stars{display:inline-flex;gap:2px}
-.es-revsec .stars svg{width:16px;height:16px;fill:var(--bd2)}
+.es-revsec .stars svg{width:16px;height:16px;fill:var(--bd2);flex:none}
 .es-revsec .stars svg.on{fill:var(--lime)}
 .es-revsec .local{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--mu)}
 .es-revsec .local b{color:var(--lime-d);font-weight:700}
@@ -98,7 +98,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .es-revcta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--lime-l);border:1px solid rgba(168,224,28,.5);border-radius:14px;padding:15px 18px;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 10px 26px -18px var(--glow)}
 .es-revcta:hover{background:#d6f29a;transform:translateY(-1px)}
 .es-revcta .left{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:14.5px;color:var(--lime-d)}
-.es-revcta .left svg{width:18px;height:18px;fill:var(--lime-d)}
+.es-revcta .left svg{width:18px;height:18px;fill:var(--lime-d);flex:none}
 .es-revcta .right{font-family:var(--mono);font-size:11px;color:var(--mu)}
 .es-revform{display:flex;flex-direction:column;gap:8px}
 .es-revform .closeRow{display:flex;justify-content:flex-end}
@@ -115,10 +115,13 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .es-byline .body{flex:1;min-width:0}
 .es-authcta{margin-top:14px;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12.5px;font-weight:600;color:#0b0c09;background:var(--lime);padding:10px 20px;border-radius:999px;transition:transform .2s;box-shadow:0 12px 28px -10px var(--glow)}
 .es-authcta:hover{transform:translateY(-2px)}
-.es-authcta svg{width:13px;height:13px}
+.es-authcta svg{width:13px;height:13px;flex:none}
 .es-authlinks{margin-top:12px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 .es-authlink{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
 .es-authlink:hover{text-decoration:underline}
+/* ArrowIcon は width/height 属性を持たない。寸法を与えないと svg が既定サイズまで
+   膨らみ、inline-flex の .es-authlink が縮まなくなる（tj / pg と同じ 12px に揃える）*/
+.es-authlink svg{width:12px;height:12px;flex:none}
 /* 著者の他のサービス（自前クリーンカード・ランディングのトーン）*/
 .es-svcsec{margin-top:24px}
 .es-svcsec .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:13px}
@@ -154,7 +157,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .es-hact{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:#fff;border:1px solid rgba(255,255,255,.7);padding:10px 18px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s,box-shadow .2s;box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
 .es-hact:hover{transform:translateY(-1px)}
 .es-hact:disabled{opacity:.7;cursor:default}
-.es-hact svg{width:16px;height:16px}
+.es-hact svg{width:16px;height:16px;flex:none}
 .es-hact .ct{font-variant-numeric:tabular-nums}
 .es-hact.on{background:var(--lime);color:#0b0c09;border-color:var(--lime);box-shadow:0 10px 26px -10px var(--glow)}
 .es-body-extras{padding:20px 0 10px}
@@ -175,5 +178,33 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 @media(max-width:720px){
   .es-scroll{display:none}
   .es-byline{flex-direction:column;text-align:center}
+}
+
+/* ===== スマホ（≤640px）調整 =====
+   日本語はどこでも改行できるため、flex / grid の子は放っておくと min-content
+   （＝1文字幅）まで潰れて縦一列になる。ここでは PC（≥641px）の見た目を変えずに
+   (1) 11px 未満の文字を 11px 以上へ戻し、(2) 左右余白を詰めて本文幅を稼ぎ、
+   (3) 表を横スワイプにし、(4) タップ領域を 36px 以上にする。 */
+@media(max-width:640px){
+  /* 左右 24px は 320px 端末で本文が狭くなりすぎる。16px に詰める */
+  .es-read,.es-body,.es-wide,.es-figcap,.es-video{padding-left:16px;padding-right:16px}
+  /* 10〜10.5px は実機で読めない。11px 以上へ（PC 側は据え置き） */
+  .es-vbadge,.es-svccard .cat{font-size:11px}
+  .es-revsec .local,.es-revsec .rvtag,.es-byline .k,.es-svcsec .lab .k,.es-rb .c{font-size:11px}
+  /* 表は幅を潰さず横スワイプ。セルに最低幅を与えて min-content を画面幅より広くする。
+     display:block により内側に匿名テーブル（width:auto）ができるため、2 列程度の
+     小さい表はスマホでのみ全幅をやめて内容幅・左寄せになる（許容する副作用）*/
+  .es-body table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-left:0;margin-right:0}
+  .es-body th,.es-body td{min-width:7em}
+  /* 長い URL などが画面外へ出ないように（.es は overflow-x:clip なので出ると読めない） */
+  .es-body,.es-revsec .rvbody{overflow-wrap:anywhere}
+  /* 著者ブロックは ≤720px で中央寄せになるが、flex のリンク行は左に残るため揃える */
+  .es-authlinks{justify-content:center}
+  /* 有料本文（.es-read > .es-body）は padding が二重に効き、無料本文より 32px 狭くなる。
+     直接子セレクタで内側だけ 0 にして本文幅を揃える（PC 側は据え置き）*/
+  .es-read>.es-body{padding-left:0;padding-right:0}
+  /* タップ領域 36px 以上 */
+  .es-authlink{min-height:36px}
+  .es-revform .closeRow button{padding:10px 6px}
 }
 `;

@@ -149,14 +149,15 @@ export function SpotList({
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-3 p-4">
+              <div className="flex items-center gap-3 p-3 sm:p-4">
                 <div className="flex flex-col gap-1">
                   <button
                     type="button"
                     aria-label="上に移動"
                     onClick={() => move(idx, -1)}
                     disabled={idx === 0}
-                    className="rounded-sm p-1 text-foreground/50 hover:bg-muted hover:text-foreground disabled:opacity-30"
+                    // スマホのタップ領域確保（36px）。PC は sm: で従来の 24px
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-sm text-foreground/50 hover:bg-muted hover:text-foreground disabled:opacity-30 sm:h-6 sm:w-6"
                   >
                     <ChevronUp className="h-4 w-4" />
                   </button>
@@ -165,7 +166,7 @@ export function SpotList({
                     aria-label="下に移動"
                     onClick={() => move(idx, 1)}
                     disabled={idx === rows.length - 1}
-                    className="rounded-sm p-1 text-foreground/50 hover:bg-muted hover:text-foreground disabled:opacity-30"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-sm text-foreground/50 hover:bg-muted hover:text-foreground disabled:opacity-30 sm:h-6 sm:w-6"
                   >
                     <ChevronDown className="h-4 w-4" />
                   </button>
@@ -187,7 +188,14 @@ export function SpotList({
                     {row.priceEstimate ? ` ・ ${row.priceEstimate}` : ''}
                   </p>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={() => setEditingId(row.id)}>
+                {/* shrink-0: 長いスポット名に押されて潰れないように */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 max-sm:h-9"
+                  onClick={() => setEditingId(row.id)}
+                >
                   編集
                 </Button>
               </div>

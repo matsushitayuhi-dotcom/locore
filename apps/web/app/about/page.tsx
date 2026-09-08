@@ -255,11 +255,14 @@ export default function AboutPage() {
               className="mt-[26px] inline-flex items-center gap-2 text-[14.5px] font-bold text-primary-500 hover:underline hover:underline-offset-4"
             >
               審査のステップをくわしく見る
-              <ArrowRight className="h-[15px] w-[15px]" aria-hidden />
+              {/* 矢印は縮ませない */}
+              <ArrowRight className="h-[15px] w-[15px] shrink-0" aria-hidden />
             </Link>
           </div>
           {/* 白カード。text-foreground 明示でダーク帯の白文字継承を遮断 */}
-          <div className="rounded-[22px] bg-card px-8 py-[34px] text-center text-foreground shadow-[0_26px_60px_-20px_rgba(0,0,0,0.5)]">
+          {/* スマホは px-8 だと中のサンプルカードの名前が 320px で 1 文字まで削られる。
+              max-sm だけパディングを詰めて幅を返す（PC は px-8 のまま） */}
+          <div className="rounded-[22px] bg-card px-8 py-[34px] text-center text-foreground shadow-[0_26px_60px_-20px_rgba(0,0,0,0.5)] max-sm:px-5">
             <div className="mx-auto mb-4 grid h-[84px] w-[84px] place-items-center rounded-full border-[1.5px] border-primary-200 bg-primary-50 text-primary-700">
               <ShieldCheck className="h-10 w-10" strokeWidth={1.8} aria-hidden />
             </div>
@@ -271,7 +274,8 @@ export default function AboutPage() {
               このバッジは、現地での居住実績を運営が書類で確認したエキスパートだけのものです。
             </p>
             <div className="mt-5 border-t border-dashed border-border-strong pt-4 text-left">
-              <div className="mb-2.5 text-[9.5px] tracking-[0.12em] text-neutral-500">
+              {/* 9.5px は実機で読めないのでスマホだけ 11px に。字間も少し詰めて 1 行に収める（PC は 9.5px のまま） */}
+              <div className="mb-2.5 text-[9.5px] tracking-[0.12em] text-neutral-500 max-sm:text-[11px] max-sm:tracking-[0.08em]">
                 ▼ 一覧でもプロフィールでも
               </div>
               <div className="rounded-[14px] border border-border bg-card px-4 py-3.5">
@@ -285,13 +289,16 @@ export default function AboutPage() {
                   {/* バッジは肩書きの行から外して名前の隣へ。肩書きが 1 行を丸ごと使える。
                       320px では、この形にしないと「ボ / ス / ト / ン」と縦積みになる */}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    {/* 320px では名前 + バッジが 1 行に入らず氏名が truncate される。
+                        スマホだけ折り返してバッジを次の行へ落とす（402px / PC は 1 行のまま） */}
+                    <div className="flex items-center gap-2 max-sm:flex-wrap">
                       <span className="min-w-0 truncate text-[13.5px] font-extrabold">高村 里奈</span>
                       <span className="shrink-0">
                         <VBadge label="認証済み" />
                       </span>
                     </div>
-                    <div className="mt-px truncate text-[11.5px] text-neutral-500">
+                    {/* 320px では truncate だと「HBS在学中」が切れて消えるので、スマホは折り返す */}
+                    <div className="mt-px truncate text-[11.5px] text-neutral-500 max-sm:whitespace-normal">
                       🇺🇸 ボストン ・ HBS在学中
                     </div>
                   </div>
@@ -377,12 +384,13 @@ export default function AboutPage() {
               検索を3時間続けるより、暮らした人にひとこと聞いてみませんか。
             </p>
             <div className="mt-[30px] flex flex-wrap items-center justify-center gap-6">
+              {/* 320px の帯の内側は 228px しかなく px-8 だとラベルが折り返す。スマホだけ px-6 */}
               <Link
                 href="/experts"
-                className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
+                className="inline-flex items-center gap-[9px] rounded-full bg-primary-500 px-8 py-3.5 text-[15px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300 max-sm:px-6"
               >
-                エキスパートを探す
-                <ArrowRight className="h-4 w-4" aria-hidden />
+                <span className="whitespace-nowrap">エキスパートを探す</span>
+                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
               </Link>
               <Link
                 href="/become-writer"

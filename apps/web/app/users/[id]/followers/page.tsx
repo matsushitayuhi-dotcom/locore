@@ -39,9 +39,9 @@ export default async function FollowersPage({
     <main className="mx-auto max-w-screen-md px-4 py-6 sm:px-6 sm:py-10">
       <Link
         href={`/users/${params.id}`}
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
+        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline max-sm:min-h-9"
       >
-        <ArrowLeft className="h-3.5 w-3.5" />
+        <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
         プロフィールに戻る
       </Link>
 
@@ -49,9 +49,9 @@ export default async function FollowersPage({
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
           Followers
         </p>
-        <h1 className="mt-1 text-[22px] font-semibold tracking-tight">
+        <h1 className="mt-1 break-words text-[22px] font-semibold tracking-tight">
           {user.displayName} さんのフォロワー
-          <span className="ml-2 text-[13px] font-normal tabular text-foreground/55">
+          <span className="ml-2 whitespace-nowrap text-[13px] font-normal tabular text-foreground/55">
             {followers.length} 人
           </span>
         </h1>
@@ -107,8 +107,8 @@ function FollowEntryCard({
             {user.displayName}
           </p>
           {user.residencyCity || countryLabel ? (
-            <p className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-foreground/55">
-              <MapPin className="h-3 w-3" />
+            <p className="mt-0.5 inline-flex max-w-full items-center gap-1 text-[11px] text-foreground/55">
+              <MapPin className="h-3 w-3 shrink-0" />
               {user.residencyCity ?? ''}
               {user.residencyCity && countryLabel ? '、' : ''}
               {countryLabel ?? ''}

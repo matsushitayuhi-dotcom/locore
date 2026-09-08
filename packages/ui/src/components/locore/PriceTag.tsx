@@ -30,7 +30,8 @@ export const PriceTag = React.forwardRef<HTMLSpanElement, PriceTagProps>(
         data-locore-component="PriceTag"
         data-locore-size={size}
         className={cn(
-          "inline-flex items-baseline gap-1 font-mono tabular text-neutral-900",
+          // 金額と「/ 1記事」等の接尾辞が狭い横並びで 1 文字ずつ潰れないよう nowrap
+          "inline-flex items-baseline gap-1 whitespace-nowrap font-mono tabular text-neutral-900",
           SIZE_CLASS[size],
           className,
         )}

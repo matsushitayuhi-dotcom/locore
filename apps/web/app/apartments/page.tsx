@@ -339,13 +339,13 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       pets: undefined,
                       sort: undefined,
                     })}
-                    className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                    className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
                   >
                     リセット
                   </Link>
                   <button
                     type="submit"
-                    className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                    className="ml-auto inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
                   >
                     適用
                   </button>
@@ -405,7 +405,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       {lt ? (
                         <span
                           className={
-                            'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                            'rounded-sm px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider ' +
                             (LISTING_TYPE_BADGE[lt] ?? 'bg-foreground/10 text-foreground/65')
                           }
                         >
@@ -413,34 +413,43 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-1 flex items-baseline gap-1.5">
-                      <span className="text-[15px] font-bold tracking-tight tabular">
+                    {/* 賃料と単位は縮ませない。サムネの右は 320px で 150px 程度しか
+                        無く、放っておくと「/ 月」が縦に割れる */}
+                    <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                      <span className="shrink-0 whitespace-nowrap text-[15px] font-bold tracking-tight tabular">
                         {rent != null ? `€${rent.toLocaleString()}` : '応相談'}
                       </span>
                       {rent != null ? (
-                        <span className="text-[10px] text-foreground/55">/ 月</span>
+                        // 単位はスマホ 11px（PC は 10px のまま）
+                        <span className="shrink-0 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/55">
+                          / 月
+                        </span>
                       ) : null}
                     </div>
                     <h2 className="mt-0.5 line-clamp-2 text-[13px] font-bold leading-snug">
                       {p.title}
                     </h2>
+                    {/* 条件（寝室・広さ）は shrink-0、地名は min-w-0 + truncate。
+                        アイコンにも shrink-0 が無いと長い地名で線状に潰れる */}
                     <ul className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-foreground/65">
                       {typeof meta.bedrooms === 'number' ? (
-                        <li className="inline-flex items-center gap-0.5">
-                          <Bed className="h-3 w-3" />
+                        <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                          <Bed className="h-3 w-3 shrink-0" />
                           {meta.bedrooms === 0 ? 'Studio' : `${meta.bedrooms} 寝室`}
                         </li>
                       ) : null}
                       {typeof meta.size_sqm === 'number' ? (
-                        <li className="inline-flex items-center gap-0.5">
-                          <Maximize className="h-3 w-3" />
+                        <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                          <Maximize className="h-3 w-3 shrink-0" />
                           {meta.size_sqm} m²
                         </li>
                       ) : null}
                       {meta.arrondissement || p.locationText ? (
-                        <li className="inline-flex items-center gap-0.5 text-foreground/55">
-                          <MapPin className="h-3 w-3" />
-                          {[meta.arrondissement, p.locationText].filter(Boolean).join(' / ')}
+                        <li className="inline-flex min-w-0 items-center gap-0.5 text-foreground/55">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">
+                            {[meta.arrondissement, p.locationText].filter(Boolean).join(' / ')}
+                          </span>
                         </li>
                       ) : null}
                     </ul>
@@ -476,8 +485,9 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                           className="object-cover transition group-hover:scale-[1.02]"
                           unoptimized
                         />
+                        {/* 枚数バッジ: スマホは 11px（PC は 10px のまま） */}
                         {photos.length > 1 ? (
-                          <span className="absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-full bg-neutral-900/70 px-2 py-0.5 text-[10px] font-bold text-white">
+                          <span className="absolute right-2 bottom-2 inline-flex items-center gap-1 rounded-full bg-neutral-900/70 px-2 py-0.5 text-[11px] sm:text-[10px] font-bold text-white">
                             <Camera className="h-3 w-3" />+{photos.length - 1}
                           </span>
                         ) : null}
@@ -495,7 +505,7 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       {lt ? (
                         <span
                           className={
-                            'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                            'rounded-sm px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider ' +
                             (LISTING_TYPE_BADGE[lt] ?? 'bg-foreground/10 text-foreground/65')
                           }
                         >
@@ -506,15 +516,21 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                   </div>
 
                   <div className="p-3">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-[18px] font-bold tracking-tight text-foreground tabular">
+                    {/* 賃料 + 「/ 月」+ 管理費 の 3 点は 320px で 1 行に収まらない。
+                        各要素を whitespace-nowrap で守り、溢れたら flex-wrap で
+                        次の行へ落とす（1 文字ずつの縦積みを防ぐ） */}
+                    <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                      <span className="shrink-0 whitespace-nowrap text-[18px] font-bold tracking-tight text-foreground tabular">
                         {rent != null ? `€${rent.toLocaleString()}` : '応相談'}
                       </span>
                       {rent != null ? (
-                        <span className="text-[11px] text-foreground/55">/ 月</span>
+                        <span className="shrink-0 whitespace-nowrap text-[11px] text-foreground/55">
+                          / 月
+                        </span>
                       ) : null}
+                      {/* 管理費もスマホは 11px（PC は 10px のまま） */}
                       {meta.charges_monthly ? (
-                        <span className="text-[10px] text-foreground/45">
+                        <span className="shrink-0 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
                           + 管理費 €{meta.charges_monthly.toLocaleString()}
                         </span>
                       ) : null}
@@ -524,47 +540,56 @@ export default async function ApartmentsIndexPage({ searchParams }: Props) {
                       {p.title}
                     </h2>
 
+                    {/* 各条件は shrink-0 + whitespace-nowrap。アイコンにも shrink-0 */}
                     <ul className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-foreground/65">
                       {typeof meta.bedrooms === 'number' ? (
-                        <li className="inline-flex items-center gap-0.5">
-                          <Bed className="h-3 w-3" />
+                        <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                          <Bed className="h-3 w-3 shrink-0" />
                           {meta.bedrooms === 0 ? 'Studio' : `${meta.bedrooms} 寝室`}
                         </li>
                       ) : null}
                       {typeof meta.size_sqm === 'number' ? (
-                        <li className="inline-flex items-center gap-0.5">
-                          <Maximize className="h-3 w-3" />
+                        <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                          <Maximize className="h-3 w-3 shrink-0" />
                           {meta.size_sqm} m²
                         </li>
                       ) : null}
                       {meta.furnished ? (
-                        <li className="inline-flex items-center gap-0.5">
-                          <Sofa className="h-3 w-3" />
+                        <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                          <Sofa className="h-3 w-3 shrink-0" />
                           家具付き
                         </li>
                       ) : null}
                     </ul>
 
+                    {/* 「区 / 最寄駅 / 地名」を連結した長い文字列。アイコンが潰れないよう
+                        shrink-0、テキスト側は min-w-0 で折り返させる */}
                     {meta.arrondissement || meta.nearest_station || p.locationText ? (
-                      <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-foreground/60">
-                        <MapPin className="h-3 w-3" />
-                        {[meta.arrondissement, meta.nearest_station, p.locationText]
-                          .filter(Boolean)
-                          .join(' / ')}
+                      <p className="mt-2 flex items-start gap-1 text-[11px] text-foreground/60">
+                        <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+                        <span className="min-w-0">
+                          {[meta.arrondissement, meta.nearest_station, p.locationText]
+                            .filter(Boolean)
+                            .join(' / ')}
+                        </span>
                       </p>
                     ) : null}
 
                     {meta.available_from ? (
-                      <p className="mt-1 inline-flex items-center gap-1 text-[11px] text-foreground/60">
-                        <Calendar className="h-3 w-3" />
+                      <p className="mt-1 inline-flex items-center gap-1 whitespace-nowrap text-[11px] text-foreground/60">
+                        <Calendar className="h-3 w-3 shrink-0" />
                         {formatAvailableFrom(meta.available_from)}
                       </p>
                     ) : null}
 
-                    <p className="mt-2 flex items-center justify-between text-[10px] text-foreground/45">
-                      <span>{formatPosted(p.createdAt)}</span>
+                    {/* 左右 2 点なので gap を入れて両方 whitespace-nowrap にする。
+                        併せてスマホだけ 11px に上げる（PC は 10px のまま） */}
+                    <p className="mt-2 flex flex-wrap items-center justify-between gap-x-2 text-[11px] sm:text-[10px] text-foreground/45">
+                      <span className="whitespace-nowrap">{formatPosted(p.createdAt)}</span>
                       {p.expiresAt ? (
-                        <span>掲載 〜{formatShortDate(p.expiresAt)}</span>
+                        <span className="whitespace-nowrap">
+                          掲載 〜{formatShortDate(p.expiresAt)}
+                        </span>
                       ) : null}
                     </p>
                   </div>

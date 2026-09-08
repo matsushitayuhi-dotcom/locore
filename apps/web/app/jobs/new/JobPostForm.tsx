@@ -302,7 +302,8 @@ export function JobPostForm() {
             className={`mt-1.5 ${FIELD_CLS}`}
             placeholder="11区 République 駅徒歩 5 分、日系オフィスでの事務職"
           />
-          <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+          {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+          <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
             {title.length} / 140
           </p>
         </div>
@@ -317,7 +318,10 @@ export function JobPostForm() {
               <label
                 key={t}
                 className={
-                  'flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
+                  // スマホは 2 列（sm 以上は 3 列）。320px だとタイル 1 枚の内寸が約 121px で、
+                  // 最長の「契約社員 / 業務委託」が約 109px とほぼ余裕が無い。左右の余白を詰めて
+                  // 中央寄せで 2 行に折れるようにし、min-h-9 でタップ領域（36px）を確保する
+                  'flex cursor-pointer items-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition max-sm:min-h-9 max-sm:px-1 max-sm:leading-tight max-sm:text-center ' +
                   (employmentType === t
                     ? 'border-primary-500 bg-primary-500/10 text-primary-300'
                     : 'border-border bg-card text-foreground/70 hover:border-foreground/30')
@@ -470,7 +474,8 @@ export function JobPostForm() {
           <legend className={LABEL_CLS}>給与</legend>
           <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div>
-              <label htmlFor="amount" className="block text-[10px] text-foreground/55">
+              {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+              <label htmlFor="amount" className="block text-[11px] text-foreground/55 sm:text-[10px]">
                 下限 / 金額
               </label>
               <input
@@ -486,7 +491,8 @@ export function JobPostForm() {
               />
             </div>
             <div>
-              <label htmlFor="salaryMax" className="block text-[10px] text-foreground/55">
+              {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+              <label htmlFor="salaryMax" className="block text-[11px] text-foreground/55 sm:text-[10px]">
                 上限（任意）
               </label>
               <input
@@ -502,7 +508,8 @@ export function JobPostForm() {
               />
             </div>
             <div>
-              <label htmlFor="currency" className="block text-[10px] text-foreground/55">
+              {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+              <label htmlFor="currency" className="block text-[11px] text-foreground/55 sm:text-[10px]">
                 通貨
               </label>
               <select
@@ -516,7 +523,8 @@ export function JobPostForm() {
               </select>
             </div>
             <div>
-              <label htmlFor="salaryPeriod" className="block text-[10px] text-foreground/55">
+              {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+              <label htmlFor="salaryPeriod" className="block text-[11px] text-foreground/55 sm:text-[10px]">
                 期間
               </label>
               <select
@@ -535,19 +543,20 @@ export function JobPostForm() {
           </div>
 
           {/* 額面 / 手取り */}
+          {/* 見出しとラジオはどれも縮ませない。入らないときは flex-wrap で次の行へ送る */}
           <div className="mt-3 flex flex-wrap items-center gap-4">
-            <span className="text-[11px] font-semibold text-foreground/60">給与の種別</span>
+            <span className="shrink-0 text-[11px] font-semibold text-foreground/60">給与の種別</span>
             {(['gross', 'net'] as const).map((k) => (
               <label
                 key={k}
-                className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] text-foreground/80"
+                className="inline-flex cursor-pointer items-center gap-1.5 whitespace-nowrap text-[12px] text-foreground/80 max-sm:min-h-9"
               >
                 <input
                   type="radio"
                   name="salary_kind"
                   checked={salaryKind === k}
                   onChange={() => setSalaryKind(k)}
-                  className="h-4 w-4"
+                  className="h-4 w-4 shrink-0"
                 />
                 {k === 'gross' ? '額面（控除前）' : '手取り'}
               </label>
@@ -696,14 +705,16 @@ export function JobPostForm() {
                   key={l}
                   className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card px-2.5 py-2"
                 >
-                  <label className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] font-medium text-foreground/80">
+                  {/* 言語名・レベル・必須 はどれも縮ませない。入らないときは
+                      flex-wrap で行ごと折り返す（1 文字ずつの縦積み・セレクトの潰れを防ぐ） */}
+                  <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-[12px] font-medium text-foreground/80">
                     <input
                       type="checkbox"
                       checked={on}
                       onChange={() => toggleLang(l)}
-                      className="h-4 w-4 rounded border-border"
+                      className="h-4 w-4 shrink-0 rounded border-border"
                     />
-                    <span className="w-16">{LANG_LABEL[l]}</span>
+                    <span className="w-16 shrink-0">{LANG_LABEL[l]}</span>
                   </label>
                   <select
                     value={langLevel[l]}
@@ -713,7 +724,7 @@ export function JobPostForm() {
                         [l]: e.target.value as JobLanguageLevel | '',
                       }))
                     }
-                    className="h-8 rounded-md border border-border bg-background px-2 text-[12px]"
+                    className="h-8 max-w-full shrink-0 rounded-md border border-border bg-background px-2 text-[12px]"
                   >
                     <option value="">レベル未設定</option>
                     {JOB_LANGUAGE_LEVELS.map((lv) => (
@@ -722,14 +733,14 @@ export function JobPostForm() {
                       </option>
                     ))}
                   </select>
-                  <label className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] text-foreground/70">
+                  <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[11px] text-foreground/70 max-sm:min-h-9">
                     <input
                       type="checkbox"
                       checked={langRequired[l]}
                       onChange={(e) =>
                         setLangRequired((prev) => ({ ...prev, [l]: e.target.checked }))
                       }
-                      className="h-3.5 w-3.5 rounded border-border"
+                      className="h-3.5 w-3.5 shrink-0 rounded border-border"
                     />
                     必須
                   </label>
@@ -760,31 +771,33 @@ export function JobPostForm() {
           </div>
         </div>
 
+        {/* チェックボックスは shrink-0、ラベルは折らずに行ごと wrap させる
+            （狭い幅で「ビ / ザ / サ / ポ」と 1 文字ずつ縦に積まれるのを防ぐ） */}
         <div className="flex flex-wrap gap-3">
-          <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+          <label className="inline-flex cursor-pointer items-center gap-2 whitespace-nowrap text-[12px] text-foreground/80 max-sm:min-h-9">
             <input
               type="checkbox"
               checked={visaSponsorship}
               onChange={(e) => setVisaSponsorship(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+              className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
             />
             ビザサポートあり
           </label>
-          <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+          <label className="inline-flex cursor-pointer items-center gap-2 whitespace-nowrap text-[12px] text-foreground/80 max-sm:min-h-9">
             <input
               type="checkbox"
               checked={experienceRequired}
               onChange={(e) => setExperienceRequired(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+              className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
             />
             経験者優遇
           </label>
-          <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+          <label className="inline-flex cursor-pointer items-center gap-2 whitespace-nowrap text-[12px] text-foreground/80 max-sm:min-h-9">
             <input
               type="checkbox"
               checked={remoteOk}
               onChange={(e) => setRemoteOk(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+              className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
             />
             リモート勤務可
           </label>
@@ -802,7 +815,9 @@ export function JobPostForm() {
               <label
                 key={b.key}
                 className={
-                  'flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
+                  // スマホは 1 列全幅なので「食事補助（Tickets Resto）」も 1 行に収まる。
+                  // 行間は詰めず、min-h-9 でタップ領域（36px）を確保する
+                  'flex cursor-pointer items-center gap-2 rounded-md border px-2.5 py-2 text-[12px] font-medium transition max-sm:min-h-9 ' +
                   (on
                     ? 'border-primary-500 bg-primary-500/10 text-primary-300'
                     : 'border-border bg-card text-foreground/70 hover:border-foreground/30')
@@ -886,12 +901,14 @@ export function JobPostForm() {
             />
           </div>
           <div className="flex items-end">
-            <label className="inline-flex cursor-pointer items-center gap-2 pb-2 text-[12px] text-foreground/80">
+            {/* pb-2 は sm の 3 列で入力欄と底を揃えるためのもの。1 列になるスマホでは
+                下余白を消し、代わりに min-h-9 でタップ領域（36px）を確保する */}
+            <label className="inline-flex cursor-pointer items-center gap-2 whitespace-nowrap pb-2 text-[12px] text-foreground/80 max-sm:min-h-9 max-sm:pb-0">
               <input
                 type="checkbox"
                 checked={urgent}
                 onChange={(e) => setUrgent(e.target.checked)}
-                className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+                className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
               />
               急募
             </label>
@@ -943,12 +960,12 @@ export function JobPostForm() {
           </div>
         </div>
 
-        <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+        <label className="inline-flex cursor-pointer items-center gap-2 whitespace-nowrap text-[12px] text-foreground/80 max-sm:min-h-9">
           <input
             type="checkbox"
             checked={japaneseStaff}
             onChange={(e) => setJapaneseStaff(e.target.checked)}
-            className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+            className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
           />
           日本人スタッフ在籍
         </label>
@@ -994,7 +1011,8 @@ export function JobPostForm() {
             '【業務内容】\n・受発注、請求書発行などの事務サポート\n\n【職場について】\n・チームは日本人3名・フランス人4名。社内の主要なやり取りは日本語でも進められます。'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
           {body.length} / 8000
         </p>
       </div>
@@ -1015,7 +1033,8 @@ export function JobPostForm() {
           rows={3}
           className={`mt-1.5 text-[13px] leading-relaxed ${FIELD_CLS}`}
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
           {notes.length} / 500
         </p>
       </div>
@@ -1023,17 +1042,18 @@ export function JobPostForm() {
       <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+        {/* ボタンは縮ませない（文字が 1 文字ずつ縦に積まれるのを防ぐ） */}
         <button
           type="button"
           onClick={() => router.push('/jobs')}
-          className="rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
+          className="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+          className="shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
         >
           {isPending ? '公開中…' : '公開する'}
         </button>

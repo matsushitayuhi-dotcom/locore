@@ -141,7 +141,7 @@ export default async function AdminReportsPage({
                         {TARGET_TYPE_LABEL[r.targetType] ?? r.targetType}
                       </td>
                       <td className="px-3 py-2">
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge variant="outline">
                           {r.reason}
                         </Badge>
                       </td>

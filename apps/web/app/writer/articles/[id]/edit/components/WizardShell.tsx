@@ -774,11 +774,18 @@ export function WizardShell({
           className="sticky bottom-2 z-50 flex items-center justify-between gap-2 rounded-2xl bg-card/95 p-2 shadow-xl ring-1 ring-border backdrop-blur sm:bottom-4 sm:p-3"
           style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <p className="pl-1 text-[10px] text-foreground/55 sm:text-[11px]">
+          {/* min-w-0: 説明文が公開ボタン (whitespace-nowrap) を押し出さないように。
+              文言はスマホだけ短縮し、PC には元の説明文を残す */}
+          <p className="min-w-0 pl-1 text-[11px] text-foreground/55">
             {isSavingDraft ? (
               <span className="text-primary-300">保存しています…</span>
             ) : (
-              '下書きは上部の「下書き保存」から保存できます'
+              <>
+                <span className="sm:hidden">下書き保存は上部から</span>
+                <span className="hidden sm:inline">
+                  下書きは上部の「下書き保存」から保存できます
+                </span>
+              </>
             )}
           </p>
           <PublishButton
@@ -798,6 +805,8 @@ export function WizardShell({
             type="button"
             variant="outline"
             size="sm"
+            // size="sm" は h-8(32px)。スマホのタップ領域 36px を確保（PC は h-8 のまま）
+            className="max-sm:h-9"
             onClick={goPrev}
             disabled={stepSequence.indexOf(step) === 0}
           >
@@ -805,7 +814,7 @@ export function WizardShell({
             <span className="hidden sm:inline">戻る</span>
           </Button>
 
-          <p className="text-[10px] text-foreground/55 sm:text-[11px]">
+          <p className="min-w-0 whitespace-nowrap text-[11px] text-foreground/55">
             {visibleStepIndex} / {totalSteps}
             {isSavingDraft ? (
               <span className="ml-2 text-primary-300">保存しています…</span>
@@ -827,6 +836,7 @@ export function WizardShell({
               type="button"
               variant="primary"
               size="sm"
+              className="max-sm:h-9"
               onClick={goNext}
               disabled={isSavingDraft}
             >
@@ -935,7 +945,11 @@ function Header({
 }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
-      <div>
+      {/* min-w-0: line-clamp が効くように。
+          max-sm:basis-full: flex-1 の basis:0% だとスマホでも折り返しが起きず、
+          右のボタン群（約 237px）と同じ行に押し込まれてタイトルが 6 文字程度しか
+          読めなくなる。スマホだけ basis を 100% に戻してタイトルを自分の行へ。 */}
+      <div className="min-w-0 flex-1 max-sm:basis-full">
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
           記事を編集
         </p>
@@ -945,11 +959,13 @@ function Header({
           {title}
         </h1>
       </div>
-      <div className="flex items-center gap-2">
+      {/* 402px では 3 要素が 1 行に収まらないので折り返す */}
+      <div className="flex flex-wrap items-center gap-2">
         <SaveStatus isDirty={isDirty} lastSavedAt={lastSavedAt} />
         <Button
           variant={isDirty ? 'primary' : 'outline'}
           size="sm"
+          className="max-sm:h-9"
           onClick={onSaveDraft}
           disabled={isSavingDraft}
         >
@@ -1036,6 +1052,21 @@ const STEP_LABEL_MAP: Record<StepKind, string> = {
   publish: '公開準備',
 };
 
+/**
+ * スマホ (402px / 320px) 用の短縮ラベル。
+ * 「タイトル + 本文」のままだと 1 ピルで 130px 超になり、ステップ列が
+ * 3 行に折り返して画面上部を占領してしまうため、スマホだけ縮める。
+ * PC は STEP_LABEL_MAP の正式名をそのまま出す。
+ */
+const STEP_LABEL_MAP_SM: Record<StepKind, string> = {
+  category: 'カテゴリ',
+  itinerary: '旅程',
+  spots: 'スポット',
+  photos: '写真',
+  titleBody: '本文',
+  publish: '公開',
+};
+
 function StepProgress({
   current,
   total,
@@ -1059,7 +1090,8 @@ function StepProgress({
           <li key={kind} className="flex items-center gap-2">
             <span
               className={
-                'inline-flex h-7 min-w-7 items-center justify-center gap-1.5 rounded-full px-2.5 ring-1 ' +
+                // shrink-0 + whitespace-nowrap: 日本語ラベルが 1 文字ずつ縦積みになるのを防ぐ
+                'inline-flex h-7 min-w-7 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 ring-1 ' +
                 (on
                   ? 'bg-primary-500 text-neutral-950 ring-primary-500'
                   : done
@@ -1068,7 +1100,12 @@ function StepProgress({
               }
             >
               <span className="tabular text-[11px]">{n}</span>
-              <span className="text-[11px]">{STEP_LABEL_MAP[kind]}</span>
+              <span className="text-[11px] sm:hidden">
+                {STEP_LABEL_MAP_SM[kind]}
+              </span>
+              <span className="hidden text-[11px] sm:inline">
+                {STEP_LABEL_MAP[kind]}
+              </span>
             </span>
             {n < total ? (
               <span
@@ -1121,7 +1158,7 @@ function Step4TitleBody({
     // 2026-05 Notion ライク改修: スマホで縦長になりすぎないよう、外側余白を圧縮
     <div className="space-y-3 sm:space-y-6">
       <header className="space-y-1">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-300 sm:text-[11px]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
           ステップ {stepNumber}
         </p>
         <h2 className="text-[18px] font-bold tracking-tight sm:text-[22px]">
@@ -1129,7 +1166,7 @@ function Step4TitleBody({
         </h2>
         <p className="hidden text-[12px] text-foreground/65 sm:block">
           スポット・写真を踏まえて、タイトルと本文を仕上げます。本文中で
-          <kbd className="mx-1 rounded-sm border border-border bg-muted px-1 text-[10px]">/</kbd>
+          <kbd className="mx-1 rounded-sm border border-border bg-muted px-1 text-[11px] sm:text-[10px]">/</kbd>
           を打つと、見出し・画像・YouTube・スポットカードなどの挿入メニューが開きます。
         </p>
       </header>
@@ -1333,7 +1370,7 @@ function Step0CategorySelect({
               }
             >
               {opt.recommended ? (
-                <span className="absolute -top-2 right-3 inline-flex items-center gap-1 rounded-full bg-warning-500 px-2 py-0.5 text-[10px] font-bold text-neutral-950 shadow-sm">
+                <span className="absolute -top-2 right-3 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-warning-500 px-2 py-0.5 text-[11px] font-bold text-neutral-950 shadow-sm sm:text-[10px]">
                   <span aria-hidden>⭐</span>
                   おすすめ
                 </span>
@@ -1556,7 +1593,7 @@ function Step4Publish({
                 <button
                   type="button"
                   onClick={() => onJumpToMissing(m)}
-                  className="inline-flex items-center gap-1 rounded-full border border-warning-500/60 bg-card px-2.5 py-1 text-[11px] font-semibold text-warning-700 underline-offset-2 transition hover:bg-warning-500/15 hover:underline focus:outline-none focus:ring-2 focus:ring-warning-500"
+                  className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-warning-500/60 bg-card px-2.5 py-1 text-[11px] font-semibold text-warning-700 underline-offset-2 transition hover:bg-warning-500/15 hover:underline focus:outline-none focus:ring-2 focus:ring-warning-500 max-sm:min-h-9"
                 >
                   {m}
                   <span aria-hidden>→</span>
@@ -1564,7 +1601,7 @@ function Step4Publish({
               </li>
             ))}
           </ul>
-          <p className="text-[10px] text-warning-700/80">
+          <p className="text-[11px] text-warning-700/80 sm:text-[10px]">
             項目をクリックすると、該当ステップ・該当フィールドへ移動します。
           </p>
         </aside>
@@ -1677,7 +1714,7 @@ function BasicMetaSection({
           価格・タグ・都市
         </h3>
         {isPublished ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 sm:text-[10px]">
             価格は変更できます
           </span>
         ) : null}
@@ -1707,7 +1744,8 @@ function BasicMetaSection({
               }
               className="h-11 w-full min-w-0 rounded-md border border-border bg-background px-3 text-[15px] font-bold tabular focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
             />
-            <span className="inline-flex h-11 items-center rounded-md bg-muted px-3 text-[12px] font-semibold text-foreground/65">
+            {/* shrink-0: 単位が縮んで「円」が縦積みにならないように */}
+            <span className="inline-flex h-11 shrink-0 items-center rounded-md bg-muted px-3 text-[12px] font-semibold text-foreground/65">
               円
             </span>
             {isPublished ? (
@@ -1725,7 +1763,7 @@ function BasicMetaSection({
               </Button>
             ) : null}
           </div>
-          <p className="mt-1 text-[10px] text-foreground/55">
+          <p className="mt-1 text-[11px] text-foreground/55 sm:text-[10px]">
             {isPublished
               ? '公開済み記事の価格は変更できます。購入済み読者の閲覧には影響しません。'
               : '自由に設定できます。手数料はクリエイターランクに応じます。'}
@@ -1801,11 +1839,12 @@ function BasicMetaSection({
             onChange={(t) => onChange({ ...value, tagsText: t })}
             placeholder="例: 朝食 マレ 路地裏（カンマ / 空白 / Enter で確定）"
           />
-          <p className="mt-1 text-[10px] text-foreground/55">
-            <kbd className="rounded-sm border border-border bg-muted px-1 text-[9px]">,</kbd>
-            <kbd className="ml-0.5 rounded-sm border border-border bg-muted px-1 text-[9px]">空白</kbd>
-            <kbd className="ml-0.5 rounded-sm border border-border bg-muted px-1 text-[9px]">Enter</kbd>
-            のいずれかでタグ確定。先頭の <code className="rounded-sm bg-muted px-1 text-[9px]">#</code> は自動で外れます。backspace で末尾削除。
+          {/* 9px はスマホ実機で読めないため 11px へ。PC は sm: で従来サイズを維持 */}
+          <p className="mt-1 text-[11px] text-foreground/55 sm:text-[10px]">
+            <kbd className="rounded-sm border border-border bg-muted px-1 text-[11px] sm:text-[9px]">,</kbd>
+            <kbd className="ml-0.5 rounded-sm border border-border bg-muted px-1 text-[11px] sm:text-[9px]">空白</kbd>
+            <kbd className="ml-0.5 rounded-sm border border-border bg-muted px-1 text-[11px] sm:text-[9px]">Enter</kbd>
+            のいずれかでタグ確定。先頭の <code className="rounded-sm bg-muted px-1 text-[11px] sm:text-[9px]">#</code> は自動で外れます。backspace で末尾削除。
           </p>
         </div>
       </div>
@@ -1870,7 +1909,7 @@ function PublishTimingSection({
             <span className="block text-[13px] font-bold text-foreground">
               今すぐ公開
             </span>
-            <span className="block text-[10px] leading-relaxed text-foreground/55">
+            <span className="block text-[11px] leading-relaxed text-foreground/55 sm:text-[10px]">
               ボタンを押した時点で読者に表示されます
             </span>
           </span>
@@ -1896,7 +1935,7 @@ function PublishTimingSection({
             <span className="block text-[13px] font-bold text-foreground">
               予約公開
             </span>
-            <span className="block text-[10px] leading-relaxed text-foreground/55">
+            <span className="block text-[11px] leading-relaxed text-foreground/55 sm:text-[10px]">
               指定した日時に達するまで読者には表示されません
             </span>
           </span>
@@ -1919,7 +1958,7 @@ function PublishTimingSection({
             onChange={(e) => onChangeScheduledAt(e.target.value)}
             className="h-11 w-full max-w-xs rounded-md border border-border bg-background px-3 text-[14px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:outline-none"
           />
-          <p className="mt-1 text-[10px] text-foreground/55">
+          <p className="mt-1 text-[11px] text-foreground/55 sm:text-[10px]">
             タイムゾーンは端末ローカル。予約日時を過ぎると、次のアクセス時点で自動的に公開状態になります。
           </p>
         </div>
@@ -1946,14 +1985,15 @@ function PriceChangeConfirmDialog({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-neutral-900/50 px-4"
+      // スマホ: 内容が画面高を超えたときにボタンへ届くようスクロールさせる
+      className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-neutral-900/50 px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="price-change-title"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl"
+        className="max-h-[calc(100dvh_-_3rem)] w-full max-w-md overflow-y-auto rounded-lg border border-border bg-card p-4 shadow-xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
@@ -1981,7 +2021,7 @@ function PriceChangeConfirmDialog({
           購入済み読者の閲覧には影響しません。新規購入者には変更後の価格が適用されます。
         </p>
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
           <Button variant="ghost" onClick={onCancel} disabled={isLoading}>
             キャンセル
           </Button>
@@ -2014,11 +2054,14 @@ function PublishButton({
       ? `未入力: ${missing.join(' / ')}`
       : 'この内容で公開します';
   return (
-    <span title={tooltip}>
+    // shrink-0: 下部バーの中で説明文に押し潰されないように
+    <span title={tooltip} className="shrink-0">
       <Button
         type="button"
         variant="primary"
         size="sm"
+        // 下部固定バーの主 CTA。size="sm" の h-8(32px) をスマホだけ 36px に上げる
+        className="max-sm:h-9"
         onClick={onClick}
         disabled={disabled}
       >
@@ -2063,14 +2106,15 @@ function PublishConfirmDialog({
   const isScheduled = !!scheduledAt;
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-neutral-900/50 px-4"
+      // スマホ: 内容が画面高を超えたときにボタンへ届くようスクロールさせる
+      className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-neutral-900/50 px-4 py-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="publish-confirm-title"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-xl"
+        className="max-h-[calc(100dvh_-_3rem)] w-full max-w-md overflow-y-auto rounded-lg border border-border bg-card p-4 shadow-xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
@@ -2089,14 +2133,16 @@ function PublishConfirmDialog({
             <img
               src={coverImageUrl}
               alt=""
-              className="h-20 w-28 shrink-0 rounded-md border border-border bg-muted object-cover"
+              className="h-16 w-24 shrink-0 rounded-md border border-border bg-muted object-cover sm:h-20 sm:w-28"
             />
           ) : (
-            <div className="flex h-20 w-28 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-muted text-[10px] text-foreground/40">
+            <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-muted text-[11px] text-foreground/40 sm:h-20 sm:w-28 sm:text-[10px]">
               カバー未設定
             </div>
           )}
-          <dl className="grid flex-1 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
+          {/* min-w-0: grid の子は min-content 未満に縮まないため、これが無いと
+              1fr トラックごとダイアログ幅からはみ出す */}
+          <dl className="grid min-w-0 flex-1 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px]">
             <dt className="text-foreground/55">タイトル</dt>
             <dd className="line-clamp-2 font-medium">{title || '（無題）'}</dd>
             <dt className="text-foreground/55">種類</dt>
@@ -2130,7 +2176,7 @@ function PublishConfirmDialog({
             : '公開後はすぐに読者に表示されます。価格やカバー画像はあとから変更可能ですが、公開後の購入者には旧バージョンが届きます。'}
         </p>
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
           <Button variant="ghost" onClick={onCancel} disabled={isLoading}>
             キャンセル
           </Button>
@@ -2391,13 +2437,15 @@ function SeoChecklist(props: {
         className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left sm:px-6"
         aria-expanded={open}
       >
-        <div className="space-y-0.5">
+        {/* min-w-0: 見出しが chevron を押し出さないように */}
+        <div className="min-w-0 space-y-0.5">
           <h3 className="text-[14px] font-semibold tracking-tight">
             SEO チェック (品質向上の提案)
           </h3>
           <p className="text-[11px] text-foreground/55">
             合格 {counts.ok} / 警告 {counts.warn} / 要対応 {counts.fail}
-            <span className="ml-2 text-foreground/40">
+            {/* 402px では折り返して 3 行になるので補足はスマホで省略（PC には残す） */}
+            <span className="ml-2 hidden text-foreground/40 sm:inline">
               ※ 警告があっても公開はブロックされません
             </span>
           </p>
@@ -2567,6 +2615,9 @@ function SharePreviewSection({
               variant="outline"
               size="sm"
               onClick={handleCopy}
+              // shrink-0: URL 入力欄に押されて潰れないように
+              // max-sm:h-9: size="sm" の h-8(32px) をスマホだけ 36px に
+              className="shrink-0 max-sm:h-9"
             >
               {copied ? (
                 <>
@@ -2585,11 +2636,13 @@ function SharePreviewSection({
             <p className="text-[11px] text-foreground/55">
               有効期限: {expiresAt ? formatDateTime(expiresAt) : '無期限'}
             </p>
-            <div className="flex items-center gap-2">
+            {/* 320px では 2 ボタンが 1 行に収まらないので折り返す */}
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
+                className="max-sm:h-9"
                 onClick={handleGenerate}
                 disabled={isGenerating || isRevoking}
               >
@@ -2599,6 +2652,7 @@ function SharePreviewSection({
                 type="button"
                 variant="outline"
                 size="sm"
+                className="max-sm:h-9"
                 onClick={handleRevoke}
                 disabled={isGenerating || isRevoking}
               >
@@ -2622,12 +2676,24 @@ function SharePreviewSection({
             type="button"
             variant="primary"
             size="sm"
+            className="max-sm:h-9"
             onClick={handleGenerate}
             disabled={isGenerating}
           >
             <Link2 className="mr-1 h-4 w-4" />
-            {isGenerating ? '発行中…' : 'プレビューを共有 (14 日間有効)'}
+            {isGenerating ? (
+              '発行中…'
+            ) : (
+              // Button の base に whitespace-nowrap があり縮まないので、
+              // 320px で溢れないようスマホだけラベルを短縮（有効期間は下に出す）
+              <span>
+                プレビューを共有<span className="max-sm:hidden"> (14 日間有効)</span>
+              </span>
+            )}
           </Button>
+          <p className="text-[11px] text-foreground/55 sm:hidden">
+            発行したリンクは 14 日間有効です。
+          </p>
         </div>
       )}
     </section>

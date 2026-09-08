@@ -285,14 +285,18 @@ function SortablePhotoItem({
         aria-label={`${index + 1} 枚目を並べ替え`}
         {...attributes}
         {...listeners}
-        className="flex items-start justify-center pt-2 text-foreground/40 hover:text-foreground/70 touch-none cursor-grab active:cursor-grabbing"
+        // max-sm: 1 カラム grid ではハンドルが幅いっぱいの帯になり、touch-none が
+        // 全幅に効いて縦スクロールが止まる。スマホでは 36px 角に閉じ込める
+        className="flex items-start justify-center pt-2 text-foreground/40 hover:text-foreground/70 touch-none cursor-grab active:cursor-grabbing max-sm:h-9 max-sm:w-9 max-sm:items-center max-sm:justify-self-start max-sm:pt-0"
       >
         <GripVertical className="h-5 w-5" />
       </button>
 
-      {/* サムネ + 操作 */}
-      <div>
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-muted ring-1 ring-border">
+      {/* サムネ + 操作
+          スマホは 1 カラムなので、そのままだとサムネが幅いっぱい (= 高さ 265px) に
+          なって 1 枚で画面を占領する。max-sm では横並びにして幅を 128px に抑える。 */}
+      <div className="max-sm:flex max-sm:items-start max-sm:gap-2">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-muted ring-1 ring-border max-sm:w-32 max-sm:shrink-0">
           <Image
             src={entry.imageUrl}
             alt=""
@@ -301,16 +305,17 @@ function SortablePhotoItem({
             className="object-cover"
             unoptimized
           />
-          <span className="absolute left-1 top-1 rounded-sm bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950">
+          <span className="absolute left-1 top-1 rounded-sm bg-primary-500 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-neutral-950 sm:text-[9px]">
             {index + 1}
           </span>
         </div>
-        <div className="mt-2 flex items-center justify-end gap-1">
+        <div className="mt-2 flex items-center justify-end gap-1 max-sm:mt-0">
           <button
             type="button"
             aria-label="削除"
             onClick={onRemove}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-card text-danger-500 ring-1 ring-border transition hover:bg-danger-50"
+            // スマホのタップ領域確保（36px）。PC は sm: で従来の 28px
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-card text-danger-500 ring-1 ring-border transition hover:bg-danger-50 sm:h-7 sm:w-7"
           >
             <X className="h-4 w-4" />
           </button>
@@ -334,7 +339,7 @@ function SortablePhotoItem({
             placeholder="この写真で伝えたいこと（500 字まで）"
             className="w-full rounded-md border border-border bg-card px-3 py-2 text-[13px] leading-relaxed focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
           />
-          <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+          <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
             {entry.caption.length} / 500
           </p>
         </div>
@@ -391,7 +396,7 @@ function LocationPicker({
   if (spots.length === 0) {
     return (
       <>
-        <p className="mb-1 rounded-sm bg-primary-500/10 px-2 py-1 text-[10px] text-primary-300">
+        <p className="mb-1 rounded-sm bg-primary-500/10 px-2 py-1 text-[11px] text-primary-300 sm:text-[10px]">
           先に下の「スポット」セクションで場所を追加すると、ここから選べるようになります。
         </p>
         <input

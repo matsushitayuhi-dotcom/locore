@@ -19,8 +19,10 @@ export function AboutHowTabs({
 }) {
   const [tab, setTab] = useState<'user' | 'expert'>('user');
 
+  // 402px ではタブ 2 つ（10 文字 + 13 文字）が 1 行に入らず、括弧の補足まで
+  // 折り返して 2 行になっていた。スマホでは括弧を畳んで 1 行に収める
   const btnCls = (on: boolean) =>
-    'rounded-full px-5 py-2.5 text-[13px] font-bold transition sm:px-7 sm:text-[14px] ' +
+    'whitespace-nowrap rounded-full px-5 py-2.5 text-[13px] font-bold transition sm:px-7 sm:text-[14px] ' +
     (on
       ? 'bg-neutral-900 text-white'
       : 'bg-transparent text-neutral-500 hover:text-foreground');
@@ -39,7 +41,7 @@ export function AboutHowTabs({
           onClick={() => setTab('user')}
           className={btnCls(tab === 'user')}
         >
-          相談する（ユーザー）
+          相談する<span className="max-sm:hidden">（ユーザー）</span>
         </button>
         <button
           type="button"
@@ -48,7 +50,7 @@ export function AboutHowTabs({
           onClick={() => setTab('expert')}
           className={btnCls(tab === 'expert')}
         >
-          相談にのる（エキスパート）
+          相談にのる<span className="max-sm:hidden">（エキスパート）</span>
         </button>
       </div>
 
@@ -60,7 +62,9 @@ export function AboutHowTabs({
           <span className="absolute left-[5px] top-5 h-[9px] w-[9px] -translate-x-1/2 rounded-full bg-primary-500 ring-4 ring-primary-100 sm:left-[19px]" />
           <span className="absolute bottom-5 left-[5px] h-[7px] w-[7px] -translate-x-1/2 rounded-full bg-border-strong sm:left-[19px]" />
         </div>
-        <div>
+        {/* 1fr のトラックは既定で min-content 未満に縮まない。中のモックが
+            402px を超える幅を要求するとトラックごと画面外に出るので min-w-0 */}
+        <div className="min-w-0">
           <div hidden={tab !== 'user'}>{userPanel}</div>
           <div hidden={tab !== 'expert'}>{expertPanel}</div>
         </div>

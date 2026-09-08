@@ -53,14 +53,15 @@ export const SatisfactionStars = React.forwardRef<
         data-locore-size={size}
         aria-label={ariaLabel}
         className={cn(
-          "inline-flex items-center gap-1.5 text-neutral-500",
+          // 星と数値が狭い横並びで潰れ／折り返さないよう nowrap
+          "inline-flex items-center whitespace-nowrap text-neutral-500 gap-1.5",
           TEXT_SIZE[size],
           className,
         )}
         {...rest}
       >
         {showStars ? (
-          <span className="inline-flex items-center gap-[2px]" aria-hidden>
+          <span className="inline-flex shrink-0 items-center gap-[2px]" aria-hidden>
             {Array.from({ length: full }).map((_, i) => (
               <Star
                 key={`f-${i}`}
@@ -90,11 +91,11 @@ export const SatisfactionStars = React.forwardRef<
             aria-hidden
           />
         )}
-        <span className="font-mono tabular text-neutral-700">
+        <span className="shrink-0 font-mono tabular text-neutral-700">
           {clamped.toFixed(1)}
         </span>
         {typeof count === "number" ? (
-          <span className="font-mono tabular text-neutral-500">({count})</span>
+          <span className="shrink-0 font-mono tabular text-neutral-500">({count})</span>
         ) : null}
       </span>
     );

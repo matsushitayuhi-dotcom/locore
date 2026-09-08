@@ -173,7 +173,7 @@ export function VerificationForm({
       <div>
         <p className="mb-2 text-[12px] font-medium text-foreground/70">
           氏名 <span className="text-danger-500">*</span>
-          <span className="ml-1 text-[10px] font-normal text-foreground/50">
+          <span className="ml-1 text-[10px] max-sm:text-[11px] font-normal text-foreground/50">
             （書類と同じ表記。日本語か英語のどちらか）
           </span>
         </p>
@@ -199,7 +199,7 @@ export function VerificationForm({
       <div>
         <label className="mb-2 block text-[12px] font-medium text-foreground/70">
           書類ファイル <span className="text-danger-500">*</span>
-          <span className="ml-1 text-[10px] font-normal text-foreground/50">
+          <span className="ml-1 text-[10px] max-sm:text-[11px] font-normal text-foreground/50">
             （1〜3 枚、各 15MB まで、JPEG/PNG/HEIC/PDF）
           </span>
         </label>
@@ -220,14 +220,15 @@ export function VerificationForm({
               >
                 <FileText className="h-4 w-4 shrink-0 text-foreground/55" />
                 <span className="min-w-0 flex-1 truncate text-[12px]">{f.name}</span>
-                <span className="shrink-0 text-[10px] tabular-nums text-foreground/55">
+                <span className="shrink-0 text-[10px] max-sm:text-[11px] tabular-nums text-foreground/55">
                   {(f.size / 1024).toFixed(0)} KB
                 </span>
+                {/* 縮まない側。タップ領域が 22px しか無かったのでスマホだけ 36px に */}
                 <button
                   type="button"
                   aria-label="削除"
                   onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                  className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500"
+                  className="inline-flex shrink-0 items-center justify-center rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500 max-sm:h-9 max-sm:w-9"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -275,11 +276,12 @@ export function VerificationForm({
 
       {/* 6. 同意 */}
       <label className="flex cursor-pointer items-start gap-3 rounded-md bg-muted p-3 ring-1 ring-border">
+        {/* 同意文の横で潰れないよう shrink-0 */}
         <input
           type="checkbox"
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
-          className="mt-0.5 h-4 w-4"
+          className="mt-0.5 h-4 w-4 shrink-0"
         />
         <span className="text-[12px] leading-relaxed text-foreground/75">
           書類は本人のものであること、運営の目視確認後 <strong>30 日以内に物理削除</strong>

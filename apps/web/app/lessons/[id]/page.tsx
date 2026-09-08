@@ -131,9 +131,10 @@ export default async function LessonDetailPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-screen-lg px-4 py-8 sm:px-6 sm:py-12">
+      {/* スマホでは上下に余白を足してタップ領域を 36px 以上にする（見た目は -my で据え置き） */}
       <Link
         href="/lessons"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
+        className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline max-sm:-my-2.5 max-sm:py-2.5"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         一覧に戻る
@@ -153,11 +154,15 @@ export default async function LessonDetailPage({ params }: Props) {
       <div className="mt-5 grid grid-cols-1 gap-8 sm:grid-cols-[1fr_280px]">
         <article className="min-w-0">
           <header>
+            {/*
+              バッジのラベルは割らない（日本語はどこでも改行できるので放置すると縦 1 列に潰れる）。
+              小さいラベル類はスマホだけ 11px に上げる（10px は実機で読めない）。PC は sm: で据え置き。
+            */}
             <div className="flex flex-wrap items-center gap-1.5">
               {meta.side ? (
                 <span
                   className={
-                    'rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ' +
+                    'whitespace-nowrap rounded-sm px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider ' +
                     (meta.side === 'teach'
                       ? 'bg-primary-500 text-neutral-950'
                       : 'bg-accent-500 text-neutral-950')
@@ -167,26 +172,26 @@ export default async function LessonDetailPage({ params }: Props) {
                 </span>
               ) : null}
               {meta.category ? (
-                <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground/65">
+                <span className="whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/65">
                   {LESSON_CATEGORY_LABEL[meta.category]}
                 </span>
               ) : null}
               {meta.format ? (
-                <span className="inline-flex items-center gap-0.5 rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-300">
-                  {meta.format === 'online' ? <Wifi className="h-2.5 w-2.5" /> : null}
+                <span className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-primary-300">
+                  {meta.format === 'online' ? <Wifi className="h-2.5 w-2.5 shrink-0" /> : null}
                   {FORMAT_LABEL[meta.format]}
                 </span>
               ) : null}
               {meta.trial_available ? (
-                <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-500">
-                  <Coffee className="h-2.5 w-2.5" />
+                <span className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm bg-accent-500/10 px-1.5 py-0.5 text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-accent-500">
+                  <Coffee className="h-2.5 w-2.5 shrink-0" />
                   体験あり
                 </span>
               ) : null}
             </div>
 
             <h1
-              className="mt-3 text-[28px] font-bold leading-tight tracking-tight text-foreground"
+              className="mt-3 break-words text-[28px] font-bold leading-tight tracking-tight text-foreground"
             >
               {post.title}
             </h1>
@@ -196,8 +201,8 @@ export default async function LessonDetailPage({ params }: Props) {
             {post.locationText ? (
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                <div className="min-w-0">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     場所
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -209,8 +214,8 @@ export default async function LessonDetailPage({ params }: Props) {
             {meta.format ? (
               <div className="flex items-start gap-2">
                 <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                <div className="min-w-0">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     形式
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -222,8 +227,8 @@ export default async function LessonDetailPage({ params }: Props) {
             {meta.level ? (
               <div className="flex items-start gap-2">
                 <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                <div className="min-w-0">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     対象レベル
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -235,8 +240,8 @@ export default async function LessonDetailPage({ params }: Props) {
             {meta.max_students ? (
               <div className="flex items-start gap-2">
                 <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary-300" />
-                <div>
-                  <dt className="text-[10px] font-bold uppercase tracking-wider text-foreground/55">
+                <div className="min-w-0">
+                  <dt className="text-[11px] sm:text-[10px] font-bold uppercase tracking-wider text-foreground/55">
                     最大人数
                   </dt>
                   <dd className="mt-0.5 font-medium text-foreground">
@@ -269,7 +274,7 @@ export default async function LessonDetailPage({ params }: Props) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+              <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
                 {meta.side === 'teach' ? '講師' : '生徒希望者'}
               </p>
               {post.authorId ? (
@@ -291,13 +296,13 @@ export default async function LessonDetailPage({ params }: Props) {
         <aside className="sm:sticky sm:top-6 sm:self-start">
           <div className="space-y-4 rounded-lg bg-card p-5 ring-1 ring-border">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+              <p className="text-[11px] sm:text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/55">
                 料金
               </p>
               <p
                 className="mt-1 inline-flex items-baseline gap-1 text-[22px] font-bold leading-tight text-primary-300"
               >
-                <Tag className="h-4 w-4 self-center" />
+                <Tag className="h-4 w-4 shrink-0 self-center" />
                 {price ?? '応相談'}
               </p>
             </div>
@@ -326,7 +331,7 @@ export default async function LessonDetailPage({ params }: Props) {
               </div>
             </dl>
 
-            <div className="rounded-md border border-amber-500/30 bg-amber-50/60 p-2.5 text-[10px] leading-relaxed text-amber-900">
+            <div className="rounded-md border border-amber-500/30 bg-amber-50/60 p-2.5 text-[11px] sm:text-[10px] leading-relaxed text-amber-900">
               <p className="flex items-start gap-1 font-bold">
                 <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
                 申込前に

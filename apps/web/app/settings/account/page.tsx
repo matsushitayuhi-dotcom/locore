@@ -75,9 +75,11 @@ export default async function AccountSettingsPage() {
 
       <section className="space-y-3 rounded-md border border-border bg-card p-5 sm:p-6">
         <h3 className="text-[14px] font-semibold">基本情報</h3>
-        <dl className="grid gap-2 text-[13px] sm:grid-cols-[120px_1fr]">
+        {/* グリッドの子に min-w-0。長いメールは折り返し先が無いと 320px で
+            カードからはみ出すので break-words で折る（入りきらない時だけ折るので PC の通常表示は従来どおり） */}
+        <dl className="grid gap-2 text-[13px] [&>*]:min-w-0 sm:grid-cols-[120px_1fr]">
           <dt className="text-foreground/55">メール</dt>
-          <dd className="text-foreground">{user.email}</dd>
+          <dd className="break-words text-foreground">{user.email}</dd>
           <dt className="text-foreground/55">表示名</dt>
           <dd className="text-foreground">{user.displayName ?? '—'}</dd>
           <dt className="text-foreground/55">ロール</dt>

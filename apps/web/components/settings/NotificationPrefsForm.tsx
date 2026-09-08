@@ -60,17 +60,21 @@ export function NotificationPrefsForm({ initial }: Props) {
       className="space-y-6 rounded-md border border-border bg-card p-5 sm:p-6"
     >
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[360px] text-left text-[13px]">
+        {/* min-w-[360px] だと 402px（カード内 330px）でも横スクロールになっていた。
+            さらに 320px ではカード内寸が 248px（px-4 + p-5）しか無いので、
+            2 列しかなく説明文は折り返せることを踏まえて 220px まで下げる。
+            それ未満に潰れたときは overflow-x-auto で横スワイプになる。 */}
+        <table className="w-full min-w-[220px] text-left text-[13px]">
           <thead>
             <tr className="border-b border-border text-[11px] uppercase tracking-wider text-foreground/50">
-              <th className="py-2 pr-4 font-medium">通知タイプ</th>
+              <th className="py-2 pr-4 font-medium max-sm:pr-2">通知タイプ</th>
               <th className="pl-2 py-2 text-center font-medium">Email</th>
             </tr>
           </thead>
           <tbody>
             {TOPICS.map((t) => (
               <tr key={t.key} className="border-b border-border/60 last:border-0">
-                <td className="py-3 pr-4 align-top">
+                <td className="py-3 pr-4 align-top max-sm:pr-2">
                   <div className="font-medium text-foreground">{t.label}</div>
                   <div className="text-[11px] text-foreground/55">
                     {t.description}
@@ -117,7 +121,9 @@ function Toggle({
       aria-checked={checked}
       aria-label={label}
       onClick={onChange}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150 ${
+      // スイッチ自体は 44x24 のまま（見た目を変えない）。after で上下に
+      // 見えない当たり判定を広げ、スマホのタップ領域を 40px 確保する。
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-150 max-sm:after:absolute max-sm:after:inset-x-0 max-sm:after:-inset-y-2 max-sm:after:content-[''] ${
         checked ? 'bg-primary-700' : 'bg-neutral-200'
       }`}
     >

@@ -40,14 +40,16 @@ export default function FoundersPage() {
     <main className="bg-background">
       <section className="border-b border-border bg-secondary-50/30">
         <div className="mx-auto max-w-screen-xl px-4 py-16 sm:px-6 sm:py-20">
-          <Badge variant="accent" className="text-[10px] uppercase tracking-[0.18em]">
+          <Badge variant="accent" className="uppercase tracking-[0.18em]">
             <Sparkles className="mr-1 h-3 w-3" /> Founders 枠
           </Badge>
           <h1
             className="mt-3 text-[36px] font-semibold leading-[1.15] tracking-tight sm:text-[52px]"
           >
             先着50人
-            <br className="hidden sm:block" />
+            {/* hidden sm:block だとスマホで改行が消え「先着50人Locore」と繋がって読めた。
+                JSX は行末の改行を空白として残さないので、改行は常に入れる */}
+            <br />
             Locore を街と一緒に育てる人へ
           </h1>
           <p className="mt-5 max-w-2xl text-[16px] leading-[1.95] text-foreground/70">
@@ -55,12 +57,13 @@ export default function FoundersPage() {
             Phase 1 はパリ。NYC・ロンドンは Phase 2 で募集を開始します。
           </p>
 
-          <div className="mt-8 inline-flex items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-xs">
-            <span className="relative flex h-2.5 w-2.5">
+          {/* ドットは中身が absolute なので min-content が 0。shrink-0 が無いと潰れる */}
+          <div className="mt-8 inline-flex max-w-full items-center gap-3 rounded-full border border-border bg-card px-5 py-3 shadow-xs">
+            <span className="relative flex h-2.5 w-2.5 shrink-0">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary-500 opacity-60" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-secondary-500" />
             </span>
-            <span className="text-[14px] font-medium">
+            <span className="min-w-0 text-[14px] font-medium">
               現在の残席：<span className="tabular text-secondary-700">23名</span>
               <span className="ml-1 text-foreground/50 tabular">/ 50</span>
             </span>

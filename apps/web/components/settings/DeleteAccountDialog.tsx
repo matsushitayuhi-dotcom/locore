@@ -47,13 +47,17 @@ export function DeleteAccountDialog({ disabled, hasUnsettled }: Props) {
 
       {open ? (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-neutral-900/40 px-4"
+          // z-40 では同じ z-40 の BottomNav（md 未満で固定表示）が後ろの DOM に
+          // あるぶん上に描かれ、ダイアログ下部のボタンが隠れていた。z-50 で上に出す。
+          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/40 px-4"
           role="dialog"
           aria-modal="true"
           onClick={() => !isPending && !done && setOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-md border border-border bg-card p-6 shadow-md"
+            // 402px の縦でも本文＋テキストエリア＋確認入力で画面を超えるので、
+            // パネル内でスクロールできるようにする（p-6 はスマホだけ p-5 に）
+            className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-md border border-border bg-card p-6 shadow-md max-sm:p-5"
             onClick={(e) => e.stopPropagation()}
           >
             {done ? (

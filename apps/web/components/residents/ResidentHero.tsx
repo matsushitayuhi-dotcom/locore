@@ -144,7 +144,8 @@ export function ResidentHero({
       {/* content */}
       <div className="relative z-10 w-full p-6 sm:p-10">
         <p className="flex items-center gap-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.24em] text-primary-300">
-          <span className="inline-block h-px w-5 bg-primary-300" />
+          {/* 飾り罫は縮ませない */}
+          <span className="inline-block h-px w-5 shrink-0 bg-primary-300" />
           {eyebrow}
         </p>
 
@@ -172,21 +173,22 @@ export function ResidentHero({
               </p>
             ) : null}
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[12.5px] text-white/85">
+              {/* バッジ / 区切りドットは縮まない側。スマホで 1 文字ずつ縦積みにならないよう nowrap + shrink-0 */}
               {tierLabel ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-3 py-1 text-[11px] font-semibold tracking-wide text-neutral-950">
-                  <span className="h-1.5 w-1.5 rounded-full bg-neutral-950" />
+                <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary-500 px-3 py-1 text-[11px] font-semibold tracking-wide text-neutral-950">
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-950" />
                   {tierLabel}
                 </span>
               ) : null}
               {isVerified ? (
-                <span className="inline-flex items-center rounded-full border border-primary-500/50 bg-primary-500/15 px-2.5 py-1 text-[11px] font-semibold text-primary-200">
+                <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-primary-500/50 bg-primary-500/15 px-2.5 py-1 text-[11px] font-semibold text-primary-200">
                   在住確認済み
                 </span>
               ) : null}
               {metaParts.map((part, i) => (
                 <span key={i} className="inline-flex items-center gap-3">
                   {i > 0 ? (
-                    <span className="h-[3px] w-[3px] rounded-full bg-white/45" />
+                    <span className="h-[3px] w-[3px] shrink-0 rounded-full bg-white/45" />
                   ) : null}
                   {part}
                 </span>

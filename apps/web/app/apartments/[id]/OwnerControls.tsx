@@ -61,15 +61,16 @@ export function OwnerControls({
   };
 
   return (
+    /* スマホは py を増やしてタップ領域を 36px 以上に。ボタン文言は折らない */
     <div className="flex flex-wrap items-center gap-2">
       {status === 'active' ? (
         <button
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground/75 hover:border-foreground/30 disabled:opacity-50"
+          className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground/75 hover:border-foreground/30 disabled:opacity-50 max-sm:py-2.5"
         >
-          <Lock className="h-3.5 w-3.5" />
+          <Lock className="h-3.5 w-3.5 shrink-0" />
           締切る
         </button>
       ) : (
@@ -77,9 +78,9 @@ export function OwnerControls({
           type="button"
           onClick={onReopen}
           disabled={isPending}
-          className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground/75 hover:border-foreground/30 disabled:opacity-50"
+          className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground/75 hover:border-foreground/30 disabled:opacity-50 max-sm:py-2.5"
         >
-          <Unlock className="h-3.5 w-3.5" />
+          <Unlock className="h-3.5 w-3.5 shrink-0" />
           再公開する
         </button>
       )}
@@ -87,9 +88,9 @@ export function OwnerControls({
         type="button"
         onClick={onDelete}
         disabled={isPending}
-        className="inline-flex items-center gap-1 rounded-md border border-rose-500/30 bg-rose-50/50 px-3 py-1.5 text-[12px] font-medium text-rose-700 hover:bg-rose-100/60 disabled:opacity-50"
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-rose-500/30 bg-rose-50/50 px-3 py-1.5 text-[12px] font-medium text-rose-700 hover:bg-rose-100/60 disabled:opacity-50 max-sm:py-2.5"
       >
-        <Trash2 className="h-3.5 w-3.5" />
+        <Trash2 className="h-3.5 w-3.5 shrink-0" />
         削除
       </button>
     </div>

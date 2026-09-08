@@ -292,7 +292,7 @@ function Timeline({
               ) : null}
               <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-foreground/60">
                 {spot ? (
-                  <Badge variant="outline" className="text-[10px]">
+                  <Badge variant="outline">
                     {spot.category}
                   </Badge>
                 ) : null}
@@ -320,7 +320,7 @@ function DayBudget({ day }: { day: TripDay }) {
   const total = day.items.reduce((a, i) => a + (i.budgetJpy ?? 0), 0);
   return (
     <div className="rounded-md border border-border bg-card p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
+      <p className="text-[11px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-foreground/50">
         この日の予算
       </p>
       <p className="mt-1 text-[24px] font-semibold tabular">

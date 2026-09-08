@@ -25,7 +25,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-hero h1 em{font-style:normal;color:var(--lime)}
 .pg-hsub{margin-top:22px;max-width:560px;font-size:clamp(15px,1.7vw,18px);line-height:1.85;color:rgba(255,255,255,.84)}
 .pg-hauthor{margin-top:28px;display:flex;align-items:center;gap:13px}
-.pg-hauthor img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.4)}
+.pg-hauthor img{flex:none;width:46px;height:46px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,.4)}
+.pg-hauthor>div{min-width:0}
 .pg-hauthor .nm{font-weight:700;color:#fff;font-size:14.5px}
 .pg-hauthor .meta{font-family:var(--mono);font-size:11.5px;color:rgba(255,255,255,.7);margin-top:2px}
 .pg-hmeta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
@@ -50,6 +51,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-placeshead p{color:var(--mu);font-size:15px;margin-top:12px}
 .pg-prich{display:flex;flex-direction:column;gap:46px}
 .pg-prow{display:grid;grid-template-columns:1fr 1fr;gap:38px;align-items:center}
+.pg-prow>*{min-width:0}
 .pg-prow.nophoto{grid-template-columns:1fr}
 .pg-prow:nth-child(even) .pg-pphoto{order:2}
 .pg-pphoto{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:20px;background:var(--bg2);box-shadow:0 18px 44px -26px rgba(17,17,17,.3)}
@@ -57,8 +59,8 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-prow:hover .pg-pphoto img{transform:scale(1.05)}
 .pg-pcat{position:absolute;top:14px;left:14px;z-index:2;font-family:var(--mono);font-size:10.5px;font-weight:600;color:#0b0c09;background:var(--lime);padding:6px 12px;border-radius:999px}
 .pg-pname{display:flex;align-items:baseline;gap:12px}
-.pg-pidx{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--lime-d)}
-.pg-pbody h3{color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.015em;line-height:1.2}
+.pg-pidx{flex:none;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--lime-d)}
+.pg-pbody h3{min-width:0;color:var(--ink);font-family:var(--disp);font-weight:700;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.015em;line-height:1.2}
 .pg-pplace{margin-top:9px;font-family:var(--mono);font-size:11.5px;color:var(--mu);display:flex;align-items:center;gap:6px}
 .pg-pplace svg{width:12px;height:12px;color:var(--lime-d);flex:none}
 .pg-ptxt{margin-top:14px;font-size:15px;line-height:1.95;color:var(--ink2)}
@@ -70,9 +72,10 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-cost{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);background:var(--lime-l);border:1px solid rgba(168,224,28,.45);padding:6px 13px;border-radius:999px}
 .pg-maplink{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink);border:1px solid var(--bd2);padding:7px 13px;border-radius:999px;transition:border-color .2s,color .2s}
 .pg-maplink:hover{border-color:var(--lime);color:var(--lime-d)}
-.pg-maplink svg{width:13px;height:13px}
+.pg-maplink svg{width:13px;height:13px;flex:none}
 .pg-ptip{margin-top:14px;display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-radius:12px;background:var(--bg);border:1px dashed var(--bd2);font-size:12.5px;line-height:1.7;color:var(--ink2)}
 .pg-ptip svg{flex:none;color:var(--lime-d);margin-top:1px;width:15px;height:15px}
+.pg-ptip>div{min-width:0}
 .pg-ptip b{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--lime-d);display:block;margin-bottom:2px}
 .pg-ptip .tx{white-space:pre-line}
 
@@ -103,7 +106,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-lplace{font-family:var(--mono);font-size:11px;color:var(--mu);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pg-lgo{flex:none;display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--lime-d);border:1px solid var(--bd2);padding:8px 13px;border-radius:999px;transition:border-color .2s,background .2s}
 .pg-lgo:hover{border-color:var(--lime);background:var(--lime-l)}
-.pg-lgo svg{width:14px;height:14px}
+.pg-lgo svg{width:14px;height:14px;flex:none}
 
 .pg-authsec{padding:40px 0 56px}
 .pg-authcard{display:flex;gap:26px;align-items:center;background:var(--white);border:1px solid var(--bd);border-radius:24px;padding:32px 34px;box-shadow:0 18px 44px -26px rgba(17,17,17,.22)}
@@ -115,11 +118,11 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-authcard .body{flex:1;min-width:0}
 .pg-authcta{margin-top:16px;display:inline-flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:var(--lime);padding:11px 22px;border-radius:999px;transition:transform .2s;box-shadow:0 12px 28px -10px var(--glow)}
 .pg-authcta:hover{transform:translateY(-2px)}
-.pg-authcta svg{width:14px;height:14px}
+.pg-authcta svg{width:14px;height:14px;flex:none}
 .pg-authlinks{margin-top:14px;display:flex;flex-wrap:wrap;gap:16px;align-items:center}
 .pg-authlink{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--lime-d);display:inline-flex;align-items:center;gap:6px}
 .pg-authlink:hover{text-decoration:underline}
-.pg-authlink svg{width:12px;height:12px}
+.pg-authlink svg{width:12px;height:12px;flex:none}
 /* 著者の他のサービス（自前クリーンカード・ランディングのトーン）*/
 .pg-svcsec{margin-top:22px}
 .pg-svcsec .lab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -155,7 +158,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-hact{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:13px;font-weight:600;color:#0b0c09;background:#fff;border:1px solid rgba(255,255,255,.7);padding:10px 18px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s,box-shadow .2s;box-shadow:0 6px 18px -10px rgba(0,0,0,.5)}
 .pg-hact:hover{transform:translateY(-1px)}
 .pg-hact:disabled{opacity:.7;cursor:default}
-.pg-hact svg{width:16px;height:16px}
+.pg-hact svg{width:16px;height:16px;flex:none}
 .pg-hact .ct{font-variant-numeric:tabular-nums}
 .pg-hact.on{background:var(--lime);color:#0b0c09;border-color:var(--lime);box-shadow:0 10px 26px -10px var(--glow)}
 .pg-body{padding:54px 0 20px}
@@ -177,7 +180,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-revsec .who .dt{font-family:var(--mono);font-size:11px;color:var(--mu);margin-top:3px}
 .pg-revsec .sc{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
 .pg-revsec .stars{display:inline-flex;gap:2px}
-.pg-revsec .stars svg{width:16px;height:16px;fill:var(--bd2)}
+.pg-revsec .stars svg{width:16px;height:16px;fill:var(--bd2);flex:none}
 .pg-revsec .stars svg.on{fill:var(--lime)}
 .pg-revsec .local{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--mu)}
 .pg-revsec .local b{color:var(--lime-d);font-weight:700}
@@ -188,7 +191,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .pg-revcta{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--lime-l);border:1px solid rgba(168,224,28,.5);border-radius:14px;padding:15px 18px;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 10px 26px -18px var(--glow)}
 .pg-revcta:hover{background:#d6f29a;transform:translateY(-1px)}
 .pg-revcta .left{display:inline-flex;align-items:center;gap:9px;font-family:var(--disp);font-weight:700;font-size:14.5px;color:var(--lime-d)}
-.pg-revcta .left svg{width:18px;height:18px;fill:var(--lime-d)}
+.pg-revcta .left svg{width:18px;height:18px;fill:var(--lime-d);flex:none}
 .pg-revcta .right{font-family:var(--mono);font-size:11px;color:var(--mu)}
 .pg-revform{display:flex;flex-direction:column;gap:8px}
 .pg-revform .closeRow{display:flex;justify-content:flex-end}
@@ -216,5 +219,33 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
   .pg-intro{padding:64px 0 8px}
   .pg-scroll{display:none}
   .pg-lthumb{width:72px}
+}
+
+/* ===== スマホ（≤640px）調整 =====
+   日本語はどこでも改行できるため、flex / grid の子は放っておくと min-content
+   （＝1文字幅）まで潰れて縦一列になる。PC（≥641px）の見た目は変えずに
+   (1) 11px 未満を 11px 以上へ、(2) 左右余白を詰めて本文幅を稼ぎ、
+   (3) 表を横スワイプに、(4) タップ領域を 36px 以上にする。 */
+@media(max-width:640px){
+  /* 左右 24px は 320px 端末（スポット行はサムネ 72px 固定）で本文が残らない */
+  .pg-wrap,.pg-wide,.pg-bodywrap{padding-left:16px;padding-right:16px}
+  .pg-hinner{padding:0 20px 44px}
+  .pg-lrow{gap:12px}
+  /* 10〜10.5px は実機で読めない。11px 以上へ（PC 側は据え置き） */
+  .pg-pcat,.pg-ptip b,.pg-mapbadge,.pg-lcat,.pg-svccard .cat{font-size:11px}
+  .pg-revsec .local,.pg-revsec .rvtag,.pg-rb .c{font-size:11px}
+  /* 本文 HTML（有料パート）の表は潰さず横スワイプ */
+  .pg-ptxt table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+  .pg-ptxt th,.pg-ptxt td{min-width:7em}
+  .pg-ptxt pre{overflow-x:auto}
+  /* 長い URL などが画面外へ出ないように（.pg は overflow-x:clip） */
+  .pg-ptxt,.pg-intro-body,.pg-revsec .rvbody{overflow-wrap:anywhere}
+  /* 著者ブロックは ≤820px で中央寄せになるため、リンク行も揃える */
+  .pg-authlinks{justify-content:center}
+  /* タップ領域 36px 以上 */
+  .pg-maplink{padding:10px 14px}
+  .pg-lgo{padding:10px 12px}
+  .pg-authlink{min-height:36px}
+  .pg-revform .closeRow button{padding:10px 6px}
 }
 `;

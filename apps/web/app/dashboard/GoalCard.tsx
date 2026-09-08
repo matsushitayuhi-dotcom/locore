@@ -42,17 +42,18 @@ export function GoalCard({
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5">
-      <div className="flex items-baseline gap-3">
-        <h2 className="text-[15px] font-bold">今月の目標</h2>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 className="shrink-0 text-[15px] font-bold">今月の目標</h2>
         {!editing && goal != null ? (
-          <button type="button" onClick={() => setEditing(true)} className="text-[11.5px] text-neutral-500 underline underline-offset-4 hover:text-foreground">
+          // スマホでは文字だけのボタンが 16px 高でタップしづらいので、負のマージンで見た目を変えずに当たり判定だけ広げる（上下 10px で約 38px）
+          <button type="button" onClick={() => setEditing(true)} className="shrink-0 whitespace-nowrap text-[11.5px] text-neutral-500 underline underline-offset-4 hover:text-foreground max-sm:-my-2.5 max-sm:py-2.5">
             目標を変える
           </button>
         ) : null}
       </div>
       {editing ? (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <label className="inline-flex items-center gap-2 text-[13px]">
+          <label className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap text-[13px]">
             今月の相談
             <input
               type="number"
@@ -68,12 +69,12 @@ export function GoalCard({
             type="button"
             onClick={save}
             disabled={pending}
-            className="rounded-full bg-neutral-900 px-4 py-2 text-[12.5px] font-bold text-white transition hover:bg-neutral-700 disabled:opacity-60"
+            className="shrink-0 whitespace-nowrap rounded-full bg-neutral-900 px-4 py-2 text-[12.5px] font-bold text-white transition hover:bg-neutral-700 disabled:opacity-60 max-sm:py-2.5"
           >
             {pending ? '保存中…' : '目標にする'}
           </button>
           {goal != null ? (
-            <button type="button" onClick={() => setEditing(false)} className="text-[12px] text-neutral-500 hover:text-foreground">
+            <button type="button" onClick={() => setEditing(false)} className="shrink-0 whitespace-nowrap text-[12px] text-neutral-500 hover:text-foreground max-sm:-my-2.5 max-sm:py-2.5">
               キャンセル
             </button>
           ) : null}
@@ -82,8 +83,9 @@ export function GoalCard({
         <>
           <div className="mt-2 flex flex-wrap items-baseline gap-2">
             <b className="text-[32px] leading-none tracking-[-0.02em] tabular-nums">{bookings}</b>
-            <span className="text-[13px] text-neutral-500">/ {goal} 件の相談</span>
-            <span className="ml-auto text-[12px] text-neutral-500">
+            <span className="whitespace-nowrap text-[13px] text-neutral-500">/ {goal} 件の相談</span>
+            {/* 320px だと「あと N 件 ・ 残り N 日」まで 1 行に入らない。ml-auto を残したまま次の行へ落とす */}
+            <span className="ml-auto whitespace-nowrap text-[12px] text-neutral-500">
               {goal != null && bookings >= goal ? '達成' : `あと ${Math.max(0, (goal ?? 0) - bookings)} 件 ・ 残り ${daysLeft} 日`}
             </span>
           </div>
@@ -95,11 +97,11 @@ export function GoalCard({
       <p className="mt-3 text-[12.5px] leading-[1.7] text-neutral-700">{message}</p>
       <div className="mt-3 flex flex-wrap gap-2">
         {suggestSlots ? (
-          <Link href="/settings/availability" className="rounded-full bg-neutral-900 px-4 py-2 text-[12.5px] font-bold text-white transition hover:bg-neutral-700">
+          <Link href="/settings/availability" className="whitespace-nowrap rounded-full bg-neutral-900 px-4 py-2 text-[12.5px] font-bold text-white transition hover:bg-neutral-700 max-sm:py-2.5">
             空き枠を追加する
           </Link>
         ) : (
-          <Link href="/settings/services" className="rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold transition hover:border-foreground">
+          <Link href="/settings/services" className="whitespace-nowrap rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold transition hover:border-foreground max-sm:py-2.5">
             相談メニューを見直す
           </Link>
         )}

@@ -113,8 +113,8 @@ export function ServiceInquiryButton({
   const className =
     buttonClassName ??
     (variant === 'footer'
-      ? 'inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-primary-500 px-5 py-3 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300'
-      : 'inline-flex items-center justify-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300');
+      ? 'inline-flex w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-primary-500 px-5 py-3 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300'
+      : 'inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-primary-500 px-5 py-2.5 text-[14px] font-bold text-neutral-950 transition hover:bg-primary-300');
 
   return (
     <>
@@ -125,9 +125,9 @@ export function ServiceInquiryButton({
         className={className}
       >
         {isExternal ? (
-          <ExternalLink className="h-4 w-4" aria-hidden />
+          <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
         ) : (
-          <MessageCircle className="h-4 w-4" aria-hidden />
+          <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
         )}
         {ctaLabel}
       </button>
@@ -144,16 +144,17 @@ export function ServiceInquiryButton({
         >
           <div className="w-full max-w-md overflow-hidden rounded-t-2xl bg-card shadow-xl ring-1 ring-border sm:rounded-2xl">
             <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-              <h2 className="text-[15px] font-semibold">
+              <h2 className="min-w-0 text-[15px] font-semibold">
                 {ownerName} さんに問い合わせる
               </h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="閉じる"
-                className="rounded-full p-1.5 text-foreground/60 hover:bg-muted hover:text-foreground"
+                // p-1.5 だと 28px でタップ領域が足りないので、スマホだけ 36px にする
+                className="shrink-0 rounded-full p-1.5 text-foreground/60 hover:bg-muted hover:text-foreground max-sm:p-2.5"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 shrink-0" />
               </button>
             </div>
             <div className="space-y-3 p-5">
@@ -176,7 +177,8 @@ export function ServiceInquiryButton({
                   placeholder="ご希望の日時 / 人数 / 相談したい内容など"
                   className="mt-1 w-full rounded-md bg-background px-3 py-2 text-[13px] ring-1 ring-border placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
-                <span className="mt-1 block text-right text-[10px] text-foreground/45">
+                {/* 文字数カウンタ。10px はスマホで読めないので 11px、PC は据え置き（規約7） */}
+                <span className="mt-1 block text-right text-[11px] sm:text-[10px] text-foreground/45">
                   {message.length} / 2000
                 </span>
               </label>

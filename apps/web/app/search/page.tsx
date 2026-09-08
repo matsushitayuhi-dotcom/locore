@@ -267,9 +267,10 @@ function ResultSection({
 }) {
   return (
     <section>
-      <h2 className="mb-3 flex items-baseline gap-2 text-[18px] font-semibold tracking-tight sm:text-[20px]">
+      <h2 className="mb-3 flex flex-wrap items-baseline gap-2 text-[18px] font-semibold tracking-tight sm:text-[20px]">
         {title}
-        <span className="rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-bold tabular text-primary-300">
+        {/* 件数バッジは縮めない（縮むと 320px で数字が縦積みになる） */}
+        <span className="shrink-0 rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-bold tabular text-primary-300">
           {count}
         </span>
       </h2>
@@ -328,7 +329,7 @@ function ArticleHitGrid({ hits }: { hits: SearchArticleHit[] }) {
                 {a.writerName ? <span>{a.writerName}</span> : null}
                 {a.cityNameJa ? (
                   <span className="inline-flex items-center gap-0.5">
-                    <MapPin className="h-3 w-3" />
+                    <MapPin className="h-3 w-3 shrink-0" />
                     {a.cityNameJa}
                   </span>
                 ) : null}
@@ -354,7 +355,8 @@ function UserHitGrid({ hits }: { hits: SearchUserHit[] }) {
           className="rounded-xl bg-card p-4 ring-1 ring-border transition hover:ring-primary-300"
         >
           <Link href={`/users/${u.id}`} className="flex items-start gap-3">
-            <Avatar size="lg" className="ring-1 ring-border">
+            {/* shrink-0 が無いと 320px でアバターが楕円に潰れる */}
+            <Avatar size="lg" className="shrink-0 ring-1 ring-border">
               {u.avatarUrl ? <AvatarImage src={u.avatarUrl} alt="" /> : null}
               <AvatarFallback>
                 {u.displayName[0]?.toUpperCase() ?? '?'}
@@ -367,7 +369,7 @@ function UserHitGrid({ hits }: { hits: SearchUserHit[] }) {
               <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/55">
                 {u.residencyCity || u.residencyCountry ? (
                   <span className="inline-flex items-center gap-0.5">
-                    <MapPin className="h-3 w-3" />
+                    <MapPin className="h-3 w-3 shrink-0" />
                     {u.residencyCity ?? ''}
                     {u.residencyCity && u.residencyCountry ? ', ' : ''}
                     {u.residencyCountry ?? ''}
@@ -375,7 +377,7 @@ function UserHitGrid({ hits }: { hits: SearchUserHit[] }) {
                 ) : null}
                 {u.occupation ? (
                   <span className="inline-flex items-center gap-0.5">
-                    <Briefcase className="h-3 w-3" />
+                    <Briefcase className="h-3 w-3 shrink-0" />
                     {u.occupation}
                   </span>
                 ) : null}
@@ -413,11 +415,12 @@ function CommunityHitGrid({
           className="rounded-xl bg-card p-4 ring-1 ring-border transition hover:ring-primary-300"
         >
           <Link href={`${base}/${c.id}`} className="block">
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-bold text-primary-300">
+            {/* 10px は実機で読めないためスマホだけ 11px に上げる */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="shrink-0 rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-bold text-primary-300 sm:text-[10px]">
                 {KIND_LABEL[kind]}
               </span>
-              <span className="text-[10px] font-semibold text-foreground/50">
+              <span className="shrink-0 text-[11px] font-semibold text-foreground/50 sm:text-[10px]">
                 {STATUS_LABEL[c.status]}
               </span>
             </div>
@@ -433,7 +436,7 @@ function CommunityHitGrid({
               {c.authorName ? <span>{c.authorName}</span> : null}
               {c.locationText ? (
                 <span className="inline-flex items-center gap-0.5">
-                  <MapPin className="h-3 w-3" />
+                  <MapPin className="h-3 w-3 shrink-0" />
                   {c.locationText}
                 </span>
               ) : null}

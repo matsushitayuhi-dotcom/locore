@@ -162,7 +162,7 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
           <SlidersHorizontal className="h-3.5 w-3.5" />
           絞り込み
           {advancedActiveCount > 0 ? (
-            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary-500 px-1.5 text-[10px] font-bold text-neutral-950">
+            <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary-500 px-1.5 text-[11px] sm:text-[10px] font-bold text-neutral-950">
               {advancedActiveCount}
             </span>
           ) : null}
@@ -247,7 +247,7 @@ export function FeedFilters({ articles, socialCounts }: FeedFiltersProps) {
                 onValueChange={(v) => setLocalRange(v)}
                 aria-label="ローカル度範囲"
               />
-              <div className="mt-2 flex justify-between text-[10px] uppercase tracking-[0.1em] text-foreground/40">
+              <div className="mt-2 flex justify-between text-[11px] sm:text-[10px] uppercase tracking-[0.1em] text-foreground/40">
                 <span>定番寄り</span>
                 <span>ローカル寄り</span>
               </div>

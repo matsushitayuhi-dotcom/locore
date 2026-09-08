@@ -124,11 +124,18 @@ export function BodyEditorSection({
       />
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+        {/* 402px では 1 行に収まらないので、スマホは文言を短縮（PC には全文を残す） */}
         <p className={overLimit ? 'text-danger-500' : 'text-foreground/50'}>
           {charCount.toLocaleString('ja-JP')} 文字
-          ・ 公開申請には 100 文字以上が必要です
+          <span className="sm:hidden"> ・ 公開には 100 字以上</span>
+          <span className="hidden sm:inline">
+            {' '}
+            ・ 公開申請には 100 文字以上が必要です
+          </span>
         </p>
-        <p className="text-foreground/50">読了 約 {readingMin} 分</p>
+        <p className="whitespace-nowrap text-foreground/50">
+          読了 約 {readingMin} 分
+        </p>
       </div>
     </section>
   );

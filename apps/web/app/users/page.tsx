@@ -150,7 +150,9 @@ export default async function ResidentsPage({
     <main className="bg-background">
       <div className="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
+          {/* 見出し側に min-w を持たせて、入らないときはリンクを次の行へ落とす。
+              flex-1 だけだと basis:0 なので折り返しの引き金にならない */}
+          <div className="min-w-[15rem] flex-1">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-primary-300">
               Residents
             </p>
@@ -161,9 +163,11 @@ export default async function ResidentsPage({
               出身地・興味・探していることでフィルタできます。プロフィールを埋めるほど、声をかけてもらいやすくなります。
             </p>
           </div>
+          {/* ボタンは縮ませない。スマホはタップ領域 36px 以上になるよう縦を足す。
+              次の行に落ちたときも右寄せを保つため ml-auto（1 行に収まる PC 幅では効果なし） */}
           <Link
             href="/settings/profile"
-            className="rounded-full bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+            className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-card px-3 py-1.5 text-[11px] font-semibold text-foreground ring-1 ring-border hover:bg-muted max-sm:py-2.5"
           >
             自分のプロフィールを編集
           </Link>
@@ -236,25 +240,28 @@ export default async function ResidentsPage({
             <button
               type="submit"
               className={
-                'inline-flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1 transition ring-1 ' +
+                // ラベルは日本語なので shrink すると 1 文字ずつ縦積みになる。
+                // 縮ませず、入らなければ親の flex-wrap で次の行へ落とす
+                'inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 transition ring-1 max-sm:py-2.5 ' +
                 (meetupsOnly
                   ? 'bg-primary-500/15 text-primary-300 ring-primary-500/40'
                   : 'bg-background text-foreground/70 ring-border hover:bg-muted')
               }
             >
-              <Coffee className="h-3 w-3 text-primary-300" />
+              <Coffee className="h-3 w-3 shrink-0 text-primary-300" />
               気軽に会える人だけ
             </button>
           </form>
           {tag ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-medium text-primary-300">
-              タグ: {tag}
+            <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-medium text-primary-300">
+              <span className="min-w-0 truncate">タグ: {tag}</span>
               <Link
                 href={{
                   pathname: '/users',
                   query: { q, country, city, meetups: meetupsOnly ? '1' : undefined },
                 }}
-                className="ml-1 text-primary-300/70 hover:text-primary-300"
+                className="ml-1 shrink-0 text-primary-300/70 hover:text-primary-300 max-sm:-my-1 max-sm:inline-flex max-sm:min-h-9 max-sm:min-w-9 max-sm:items-center max-sm:justify-center"
+                aria-label="タグの絞り込みを解除"
               >
                 ✕
               </Link>
@@ -263,7 +270,7 @@ export default async function ResidentsPage({
           {(q || country || city || meetupsOnly || tag) ? (
             <Link
               href="/users"
-              className="ml-auto text-[11px] text-foreground/55 hover:underline"
+              className="ml-auto shrink-0 whitespace-nowrap text-[11px] text-foreground/55 hover:underline max-sm:inline-flex max-sm:min-h-9 max-sm:items-center"
             >
               条件をリセット
             </Link>
@@ -272,7 +279,9 @@ export default async function ResidentsPage({
 
         {/* 結果 */}
         {residents.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/65">
+          // 空表示: スマホは p-10 が左右 80px を食うので詰める。
+          // 中のボタンは日本語なので nowrap にして、入らなければ 2 行に落とす
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-10 text-center text-[13px] text-foreground/65 max-sm:p-6">
             <SearchX className="h-8 w-8 text-foreground/35" />
             <p className="text-[14px] font-medium text-foreground/75">
               ぴったりのユーザーはまだ見つかりませんでした
@@ -283,13 +292,13 @@ export default async function ResidentsPage({
             <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
               <Link
                 href="/users"
-                className="rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted"
+                className="whitespace-nowrap rounded-full bg-card px-3 py-1.5 text-[12px] font-semibold text-foreground ring-1 ring-border hover:bg-muted max-sm:py-2.5"
               >
                 条件を変えてもう一度
               </Link>
               <Link
                 href="/settings/profile"
-                className="rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300"
+                className="whitespace-nowrap rounded-full bg-primary-500 px-3 py-1.5 text-[12px] font-bold text-neutral-950 hover:bg-primary-300 max-sm:py-2.5"
               >
                 自分のプロフィールを編集
               </Link>
@@ -341,24 +350,26 @@ function ResidentCard({
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
+          {/* 氏名リンクは高さ 21px しかないので、スマホだけ上下パディングでタップ領域を 37px に。
+              同量の負マージンで打ち消すので、見た目の位置と余白は変わらない */}
           <Link
             href={`/users/${resident.id}`}
-            className="line-clamp-1 text-[14px] font-semibold text-foreground hover:text-primary-300"
+            className="line-clamp-1 text-[14px] font-semibold text-foreground hover:text-primary-300 max-sm:-my-2 max-sm:py-2"
           >
             {resident.displayName}
           </Link>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/55">
             {resident.residencyCity || resident.residencyCountry ? (
-              <span className="inline-flex items-center gap-0.5">
-                <MapPin className="h-3 w-3" />
+              <span className="inline-flex min-w-0 items-center gap-0.5">
+                <MapPin className="h-3 w-3 shrink-0" />
                 {resident.residencyCity ?? ''}
                 {resident.residencyCity && resident.residencyCountry ? ', ' : ''}
                 {resident.residencyCountry ?? ''}
               </span>
             ) : null}
             {yearsHere !== null ? (
-              <span className="inline-flex items-center gap-0.5 tabular">
-                <Calendar className="h-3 w-3" />
+              <span className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap tabular">
+                <Calendar className="h-3 w-3 shrink-0" />
                 在住 {yearsHere}年
               </span>
             ) : null}
@@ -369,9 +380,10 @@ function ResidentCard({
             </p>
           ) : null}
         </div>
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
         {resident.openToMeetups ? (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-bold text-primary-300">
-            <Coffee className="h-3 w-3" />
+          <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] sm:text-[10px] font-bold text-primary-300">
+            <Coffee className="h-3 w-3 shrink-0" />
             会える
           </span>
         ) : null}
@@ -381,8 +393,8 @@ function ResidentCard({
       {(resident.occupation || resident.familyStage) ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-foreground/65">
           {resident.occupation ? (
-            <span className="inline-flex items-center gap-0.5">
-              <Briefcase className="h-3 w-3" />
+            <span className="inline-flex min-w-0 items-center gap-0.5">
+              <Briefcase className="h-3 w-3 shrink-0" />
               {resident.occupation}
             </span>
           ) : null}
@@ -406,9 +418,10 @@ function ResidentCard({
             const label =
               COMMON_LANGUAGES.find((x) => x.code === l.code)?.label ?? l.code;
             return (
+              // 言語チップ: スマホは 11px（PC は 10px のまま）
               <span
                 key={l.code}
-                className="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] tabular text-foreground/65"
+                className="rounded-sm bg-muted px-1.5 py-0.5 text-[11px] sm:text-[10px] tabular text-foreground/65"
               >
                 {label}
               </span>
@@ -417,9 +430,9 @@ function ResidentCard({
         </div>
       ) : null}
 
-      {/* 探していること（強調） */}
+      {/* 探していること（強調）。スマホはピル同士の間隔も少し広げて誤タップを減らす */}
       {resident.lookingFor.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 max-sm:gap-1.5">
           {resident.lookingFor.slice(0, 4).map((t) => (
             <TagLink key={t} tag={t} baseQuery={baseQuery} variant="primary" />
           ))}
@@ -428,7 +441,7 @@ function ResidentCard({
 
       {/* 興味 */}
       {resident.interests.length > 0 ? (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 max-sm:gap-1.5">
           {resident.interests.slice(0, 5).map((t) => (
             <TagLink key={t} tag={t} baseQuery={baseQuery} variant="muted" />
           ))}
@@ -452,9 +465,10 @@ function TagLink({
       ? 'bg-primary-500/15 text-primary-300 hover:bg-primary-500/25'
       : 'bg-muted text-foreground/65 hover:bg-primary-500/10 hover:text-primary-300';
   return (
+    // タグピル: スマホは 11px まで上げる（PC は 10px のまま）
     <Link
       href={{ pathname: '/users', query: { ...baseQuery, tag } }}
-      className={`rounded-full px-2 py-0.5 text-[10px] font-medium transition ${cls}`}
+      className={`rounded-full px-2 py-0.5 text-[11px] sm:text-[10px] font-medium transition max-sm:inline-flex max-sm:min-h-9 max-sm:items-center max-sm:px-2.5 ${cls}`}
     >
       {tag}
     </Link>

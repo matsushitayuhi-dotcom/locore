@@ -147,7 +147,9 @@ export function TagsInput({
       {tags.map((t, i) => (
         <span
           key={`${t}-${i}`}
-          className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2.5 py-1 text-[12px] font-semibold text-primary-300 ring-1 ring-primary-500/30"
+          // スマホでは中の × を 36px にするのでピル高さは 40px になる。
+          // 上下パディングは詰める（PC は py-1 のまま）
+          className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/15 px-2.5 py-1 text-[12px] font-semibold text-primary-300 ring-1 ring-primary-500/30 max-sm:py-0.5"
         >
           <span className="text-primary-300/70">#</span>
           <span>{t}</span>
@@ -158,7 +160,8 @@ export function TagsInput({
               e.stopPropagation();
               removeAt(i);
             }}
-            className="inline-flex h-4 w-4 items-center justify-center rounded-full text-primary-300/70 transition hover:bg-primary-500/20 hover:text-primary-300"
+            // 16px は指で押せないのでスマホだけ 36px に（PC は据え置き）
+            className="inline-flex h-4 w-4 items-center justify-center rounded-full text-primary-300/70 transition hover:bg-primary-500/20 hover:text-primary-300 max-sm:h-9 max-sm:w-9"
           >
             <X className="h-3 w-3" />
           </button>

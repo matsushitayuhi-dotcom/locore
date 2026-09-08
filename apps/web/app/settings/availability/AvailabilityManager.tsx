@@ -419,11 +419,15 @@ export function AvailabilityManager({
           <Globe className="h-[15px] w-[15px] text-primary-700" aria-hidden />
           タイムゾーン
         </span>
+        {/*
+          select の幅は最長の選択肢（Australia/Melbourne（メルボルン））で決まるため
+          320px では行からはみ出す。min-w-0 で縮めるのを許し、max-w-full で親幅に収める
+        */}
         <select
           value={timezone}
           onChange={(e) => setTimezone(e.target.value)}
           aria-label="タイムゾーン"
-          className={selectCls}
+          className={`${selectCls} min-w-0 max-w-full`}
         >
           {tzOptions.map((o) => (
             <option key={o.value} value={o.value}>
@@ -448,14 +452,15 @@ export function AvailabilityManager({
           onClick={() => setWeekOffset((w) => w - 1)}
           disabled={weekOffset <= 0}
           aria-label="前の週"
-          className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground disabled:opacity-40"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground disabled:opacity-40"
         >
           <ChevronLeft className="h-[18px] w-[18px]" aria-hidden />
         </button>
+        {/* 「今日から」「9/8 〜 9/14」は縮むと 1 文字ずつ縦積みになるので nowrap */}
         <button
           type="button"
           onClick={() => setWeekOffset(0)}
-          className="rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold text-neutral-700 transition hover:border-foreground"
+          className="shrink-0 whitespace-nowrap rounded-full border border-border-strong bg-card px-4 py-2 text-[12.5px] font-bold text-neutral-700 transition hover:border-foreground"
         >
           今日から
         </button>
@@ -463,26 +468,37 @@ export function AvailabilityManager({
           type="button"
           onClick={() => setWeekOffset((w) => w + 1)}
           aria-label="次の週"
-          className="grid h-9 w-9 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-border-strong bg-card text-neutral-700 transition hover:border-foreground"
         >
           <ChevronRight className="h-[18px] w-[18px]" aria-hidden />
         </button>
-        <span className="ml-2 text-[13.5px] font-bold tabular-nums text-foreground">
+        <span className="ml-2 whitespace-nowrap text-[13.5px] font-bold tabular-nums text-foreground">
           {rangeLabel}
         </span>
       </div>
 
+      {/* 「マウスを乗せて」は PC だけの話。スマホでは削除アイコンが常時出るので但し書きを省く */}
       <p className="mt-2 text-[11.5px] text-neutral-500">
-        カレンダーを縦にドラッグして時間帯を選ぶと、曜日・くり返し・期間を設定するウィンドウが開きます。既存の枠はマウスを乗せて削除できます。
+        カレンダーを縦にドラッグして時間帯を選ぶと、曜日・くり返し・期間を設定するウィンドウが開きます。既存の枠は右上のゴミ箱アイコンで削除できます
+        <span className="max-sm:hidden">（マウスを乗せると表示されます）</span>。
       </p>
 
       {/* カレンダー */}
       <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-card">
-        {/* スクロール領域（ヘッダーも中に入れて同一グリッド幅にし、列ズレを防ぐ） */}
-        <div ref={scrollRef} className="max-h-[62vh] overflow-y-auto">
+        {/*
+          スクロール領域（ヘッダーも中に入れて同一グリッド幅にし、列ズレを防ぐ）。
+          402px だと 7 列が 1 枚 45px、320px では 34px しか無く、枠の時刻ラベルが
+          潰れてドラッグもできない。min-w-[580px] を与えて実際にはみ出させ、
+          横スワイプで読ませる（ヘッダーと本体に同じ min-w を付けて列ズレを防ぐ）。
+          min-w は max-sm 限定。settings/layout.tsx は md で 200px + 本文の 2 カラムに
+          なるため、無条件だと iPad 縦（768px）〜861px で今まで無かった横スクロールが
+          出てしまう。sm（640px）以上は本文 592px あり 1 列 77px 取れるので min-w 不要
+        */}
+        <div ref={scrollRef} className="max-h-[62vh] overflow-auto">
           {/* 曜日ヘッダー（sticky） */}
-          <div className="sticky top-0 z-20 grid grid-cols-[52px_repeat(7,1fr)] border-b border-border bg-background">
-            <div />
+          <div className="sticky top-0 z-20 grid grid-cols-[52px_repeat(7,1fr)] border-b border-border bg-background max-sm:min-w-[580px]">
+            {/* 左上の角。本体の時刻ガターと合わせて横スクロール中も残す */}
+            <div className="max-sm:sticky max-sm:left-0 max-sm:z-10 max-sm:bg-background" />
             {days.map((day) => (
               <div
                 key={day.key}
@@ -510,16 +526,23 @@ export function AvailabilityManager({
             ))}
           </div>
 
-          <div className="grid select-none grid-cols-[52px_repeat(7,1fr)]">
-            {/* 時間ラベル（0〜23時） */}
-            <div className="relative" style={{ height: ROWS * ROW_H }}>
+          <div className="grid select-none grid-cols-[52px_repeat(7,1fr)] max-sm:min-w-[580px]">
+            {/*
+              時間ラベル（0〜23時）。スマホでは左に貼り付けて、右へスクロールしても
+              時刻が読める＆ここを指で押せば縦横どちらにもスクロールできるようにする
+              （日付の列は枠の選択のため touch-none で、指の動きが届かないため）
+            */}
+            <div
+              className="relative max-sm:sticky max-sm:left-0 max-sm:z-10 max-sm:bg-card"
+              style={{ height: ROWS * ROW_H }}
+            >
               {Array.from({ length: 24 }, (_, h) => (
                 <div
                   key={h}
                   className="relative text-right"
                   style={{ height: ROW_H * 2 }}
                 >
-                  <span className="absolute -top-2 right-1.5 text-[10.5px] tabular-nums text-neutral-400">
+                  <span className="absolute -top-2 right-1.5 text-[10.5px] max-sm:text-[11px] tabular-nums text-neutral-400">
                     {h === 0 ? '' : `${h}:00`}
                   </span>
                 </div>
@@ -570,11 +593,12 @@ export function AvailabilityManager({
                             height: (maxR - minR + 1) * ROW_H,
                           }}
                         >
-                          <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
+                          {/* 9px は実機で読めないので 10.5px（枠ラベルと同じ）に */}
+                          <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] max-sm:text-[11px] font-bold tabular-nums text-white">
                             {hmFromRow(minR)}
                           </span>
                           {maxR > minR ? (
-                            <span className="absolute bottom-0 left-0.5 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
+                            <span className="absolute bottom-0 left-0.5 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] max-sm:text-[11px] font-bold tabular-nums text-white">
                               {endHm}
                             </span>
                           ) : null}
@@ -592,7 +616,7 @@ export function AvailabilityManager({
                     className="pointer-events-none absolute inset-x-0 rounded-sm bg-primary-100 ring-2 ring-inset ring-primary-500"
                     style={{ top: hover.r * ROW_H, height: ROW_H }}
                   >
-                    <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[9px] font-bold tabular-nums text-white">
+                    <span className="absolute left-0.5 top-0 rounded-sm bg-neutral-900 px-1 py-px text-[10.5px] max-sm:text-[11px] font-bold tabular-nums text-white">
                       {hmFromRow(hover.r)}
                     </span>
                   </div>
@@ -619,15 +643,16 @@ export function AvailabilityManager({
                     >
                       <div
                         className={
-                          'text-[10.5px] font-bold leading-tight tabular-nums ' +
+                          'text-[10.5px] max-sm:text-[11px] font-bold leading-tight tabular-nums ' +
                           (b.hasBooking ? 'text-primary-900' : 'text-neutral-950')
                         }
                       >
                         {b.label}
                       </div>
                       {b.hasBooking ? (
-                        <span className="mt-0.5 inline-flex items-center gap-0.5 text-[9.5px] font-bold text-primary-900">
-                          <Check className="h-2.5 w-2.5" strokeWidth={3} aria-hidden />
+                        // 9.5px は実機で読めないので 10.5px（上の時刻ラベルと同じ）に
+                        <span className="mt-0.5 inline-flex items-center gap-0.5 text-[10.5px] max-sm:text-[11px] font-bold text-primary-900">
+                          <Check className="h-2.5 w-2.5 shrink-0" strokeWidth={3} aria-hidden />
                           予約あり
                         </span>
                       ) : (
@@ -636,7 +661,12 @@ export function AvailabilityManager({
                           disabled={pending}
                           onClick={() => onDelete(b.id)}
                           aria-label="この枠を削除"
-                          className="absolute right-0.5 top-0.5 hidden h-5 w-5 place-items-center rounded-full bg-neutral-950/15 text-neutral-950 hover:bg-neutral-950/30 group-hover:grid"
+                          /*
+                            スマホには hover が無く、hidden group-hover:grid のままだと
+                            削除する手段が画面上に無くなる。max-sm では常時表示にし、
+                            タップ領域も 20px → 36px に広げる（PC は従来どおり hover で出す）
+                          */
+                          className="absolute right-0.5 top-0.5 hidden h-5 w-5 place-items-center rounded-full bg-neutral-950/15 text-neutral-950 hover:bg-neutral-950/30 group-hover:grid max-sm:grid max-sm:h-9 max-sm:w-9"
                         >
                           <Trash2 className="h-3 w-3" aria-hidden />
                         </button>
@@ -648,18 +678,18 @@ export function AvailabilityManager({
           </div>
         </div>
 
-        {/* 凡例 */}
-        <div className="flex flex-wrap items-center gap-4 border-t border-border bg-background px-4 py-2.5 text-[11px] text-neutral-500">
+        {/* 凡例。色見本は縮ませない（shrink-0）、ラベルは折り返させる */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border bg-background px-4 py-2.5 text-[11px] text-neutral-500">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm border border-primary-700 bg-primary-500" aria-hidden />
+            <span className="h-3 w-3 shrink-0 rounded-sm border border-primary-700 bg-primary-500" aria-hidden />
             空き枠
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm border border-primary-300 bg-primary-100" aria-hidden />
+            <span className="h-3 w-3 shrink-0 rounded-sm border border-primary-300 bg-primary-100" aria-hidden />
             予約あり（削除不可）
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-sm bg-muted" aria-hidden />
+            <span className="h-3 w-3 shrink-0 rounded-sm bg-muted" aria-hidden />
             過去（登録不可）
           </span>
         </div>
@@ -792,8 +822,13 @@ export function AvailabilityManager({
                     })}
                   </div>
                 </div>
+                {/*
+                  grid の子は min-width:auto（＝ date input の実寸）が下限。w-full だけでは
+                  解除されず、WebKit の日付コントロールがトラック幅を超えるとカードから
+                  はみ出す。min-w-0 で input 側を縮ませる（QualificationForm と同じ扱い）
+                */}
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <label className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
                       開始日
                     </label>
@@ -806,7 +841,7 @@ export function AvailabilityManager({
                       className="w-full rounded-full border border-border-strong bg-card px-3 py-2 text-[12.5px] font-bold tabular-nums text-foreground outline-none focus:border-primary-500"
                     />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="mb-1.5 block text-[11.5px] font-bold text-neutral-600">
                       終了日
                     </label>

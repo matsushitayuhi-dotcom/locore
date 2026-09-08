@@ -59,14 +59,15 @@ export function ResidentHeader({ resident: r }: Props) {
           <h1 className="text-[24px] font-semibold tracking-tight sm:text-[28px]">
             {r.displayName}
           </h1>
+          {/* バッジはスマホで 11px 以上（PC は sm: で従来サイズ）。縮まない側なので nowrap + shrink-0 */}
           {r.isVerified ? (
             <span
               title="在住確認済み"
               aria-label="在住確認済み"
-              className="inline-flex items-center gap-1 rounded-full bg-success-500/10 px-2 py-0.5 text-[10px] font-bold text-success-500 ring-1 ring-success-500/30"
+              className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-success-500/10 px-2 py-0.5 text-[11px] font-bold text-success-500 ring-1 ring-success-500/30 sm:text-[10px]"
             >
               <BadgeCheck
-                className="h-3.5 w-3.5"
+                className="h-3.5 w-3.5 shrink-0"
                 fill="currentColor"
                 stroke="white"
                 strokeWidth={2}
@@ -77,18 +78,18 @@ export function ResidentHeader({ resident: r }: Props) {
           {r.tier ? (
             <span
               title={`tier ${r.tier}`}
-              className="inline-flex items-center rounded-full bg-primary-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary-300"
+              className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-primary-500/15 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary-300 sm:text-[10px]"
             >
               {TIER_LABEL[r.tier]}
             </span>
           ) : null}
         </div>
 
-        {/* メタ行 (在住都市 / 在住年数 / 出身) */}
+        {/* メタ行 (在住都市 / 在住年数 / 出身)。アイコンは shrink-0 で潰さない */}
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-foreground/65">
           {countryLabel || r.residencyCity ? (
             <span className="inline-flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
+              <MapPin className="h-3.5 w-3.5 shrink-0" />
               {r.residencyCity ?? ''}
               {r.residencyCity && countryLabel ? '、' : ''}
               {countryLabel ?? ''}
@@ -96,13 +97,13 @@ export function ResidentHeader({ resident: r }: Props) {
           ) : null}
           {yearsLabel ? (
             <span className="inline-flex items-center gap-1 tabular">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3.5 w-3.5 shrink-0" />
               {yearsLabel}
             </span>
           ) : null}
           {r.homeRegion ? (
             <span className="inline-flex items-center gap-1">
-              <HomeIcon className="h-3.5 w-3.5" />
+              <HomeIcon className="h-3.5 w-3.5 shrink-0" />
               出身: {r.homeRegion}
             </span>
           ) : null}

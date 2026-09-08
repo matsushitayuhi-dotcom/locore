@@ -575,9 +575,15 @@ function SlashMenu({
         const coords = editor.view.coordsAtPos(q.from);
         const containerRect = containerRef.current?.getBoundingClientRect();
         if (containerRect) {
+          // メニュー幅は w-72 = 288px。スマホ (402px / 320px) で行の途中に
+          // カーソルがあると、そのままの left では右へはみ出して読めなくなるので
+          // コンテナ内に収まる範囲へクランプする。
+          const MENU_W = 288;
+          const rawLeft = coords.left - containerRect.left;
+          const maxLeft = Math.max(0, containerRect.width - MENU_W);
           setPos({
             top: coords.bottom - containerRect.top + 4,
-            left: coords.left - containerRect.left,
+            left: Math.max(0, Math.min(rawLeft, maxLeft)),
           });
         }
       } catch {
@@ -653,7 +659,8 @@ function SlashMenu({
     <div
       role="listbox"
       aria-label="ブロック挿入メニュー"
-      className="absolute z-30 max-h-80 w-72 overflow-y-auto rounded-md border border-border bg-card p-1 shadow-xl"
+      // max-w-full: 320px 端末でコンテナ幅 < 288px になっても溢れないように
+      className="absolute z-30 max-h-80 w-72 max-w-full overflow-y-auto rounded-md border border-border bg-card p-1 shadow-xl"
       style={{ top: pos.top, left: pos.left }}
       // クリックでフォーカスが外れないように
       onMouseDown={(e) => e.preventDefault()}
@@ -665,7 +672,7 @@ function SlashMenu({
       ) : (
         grouped.map((group) => (
           <div key={group.category} className="mb-1 last:mb-0">
-            <p className="px-2 pb-0.5 pt-1 text-[10px] font-bold uppercase tracking-[0.16em] text-foreground/40">
+            <p className="px-2 pb-0.5 pt-1 text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/40 sm:text-[10px]">
               {group.category}
             </p>
             {group.items.map((cmd) => {
@@ -696,12 +703,12 @@ function SlashMenu({
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium">{cmd.label}</span>
-                    <span className="block truncate text-[10px] text-foreground/55">
+                    <span className="block truncate text-[11px] text-foreground/55 sm:text-[10px]">
                       {cmd.hint}
                     </span>
                   </span>
                   {cmd.shortcut ? (
-                    <kbd className="ml-1 rounded-sm border border-border bg-background px-1 text-[9px] font-bold text-foreground/55">
+                    <kbd className="ml-1 shrink-0 rounded-sm border border-border bg-background px-1 text-[11px] font-bold text-foreground/55 sm:text-[9px]">
                       {cmd.shortcut}
                     </kbd>
                   ) : null}
@@ -744,7 +751,11 @@ function InlineBubbleMenu({
         if (!containerRect) return;
         const left = (start.left + end.left) / 2 - containerRect.left - 80;
         const top = start.top - containerRect.top - 40;
-        setPos({ top, left: Math.max(0, left) });
+        // スマホでは行末を選択するとバブルが右へはみ出すので、
+        // コンテナ内（バブル幅 ≒ 160px）へクランプする。
+        const BUBBLE_W = 160;
+        const maxLeft = Math.max(0, containerRect.width - BUBBLE_W);
+        setPos({ top, left: Math.max(0, Math.min(left, maxLeft)) });
         setVisible(true);
       } catch {
         setVisible(false);
@@ -828,7 +839,8 @@ function BubbleBtn({
       title={ariaLabel}
       onClick={onClick}
       className={
-        'inline-flex h-7 min-w-7 items-center justify-center rounded-sm px-2 text-[12px] transition ' +
+        // スマホのタップ領域確保（36px）。PC は sm: で従来の 28px のまま
+        'inline-flex h-9 min-w-9 items-center justify-center rounded-sm px-2 text-[12px] transition sm:h-7 sm:min-w-7 ' +
         (active
           ? 'bg-primary-500/15 text-primary-300'
           : 'text-foreground/80 hover:bg-muted')
@@ -1069,7 +1081,8 @@ export function RichTextEditor({
             <span aria-hidden>🔒</span>
             {hasPaywall ? '有料の区切りを解除' : 'ここから下を有料に'}
           </button>
-          <span className="text-[11px] text-foreground/55">
+          {/* スマホでは説明をボタンの下の行に落とす（同じ行だと 1 行 100px 程度しか残らない） */}
+          <span className="w-full text-[11px] text-foreground/55 sm:w-auto">
             {hasPaywall
               ? 'この区切りより下が、購入後だけ表示されます。'
               : 'カーソル位置に「ここから下を有料」の区切りを 1 つ挿入できます。'}
@@ -1095,9 +1108,13 @@ export function RichTextEditor({
       {/* スマホ用キーボード追従ツールバー (PC では非表示) */}
       <MobileEditorToolbar editor={editor} onPickImage={pickImage} />
       <p className="text-[11px] text-foreground/40">
-        ヒント: 行頭で <kbd className="rounded-sm border border-border bg-muted px-1 text-[10px]">/</kbd> を打つとブロック挿入メニュー。
-        文章を選択すると Bold / Italic / Link が浮上します。
-        画像はコピー → 貼り付け（⌘V / Ctrl+V）／ドラッグ&ドロップでも追加できます。
+        ヒント: 行頭で <kbd className="rounded-sm border border-border bg-muted px-1 text-[11px] sm:text-[10px]">/</kbd> を打つとブロック挿入メニュー。
+        {/* スマホでは 2 文目以降を省略。PC には従来どおり全文を出す */}
+        <span className="hidden sm:inline">
+          {' '}
+          文章を選択すると Bold / Italic / Link が浮上します。
+          画像はコピー → 貼り付け（⌘V / Ctrl+V）／ドラッグ&ドロップでも追加できます。
+        </span>
         {isPending ? ' （画像アップロード中…）' : ''}
       </p>
     </div>

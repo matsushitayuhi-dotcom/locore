@@ -125,7 +125,8 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="absolute bottom-[24%] right-0 max-w-[78%] rounded-2xl rounded-br-md bg-neutral-900 px-4 py-3 text-[12.5px] leading-relaxed text-white shadow-md max-sm:static max-sm:ml-auto max-sm:mt-3 max-sm:max-w-[88%] sm:max-w-[66%]">
-              <span className="block text-[10.5px] text-white/60">
+              {/* 話者ラベルはスマホ 11px（PC は 10.5px のまま） */}
+              <span className="block text-[11px] sm:text-[10.5px] text-white/60">
                 相談者
               </span>
               来年秋入学でMBA出願を予定しています。エッセイの方向性を相談したいです…!
@@ -135,7 +136,8 @@ export default async function HomePage() {
                 里
               </span>
               <div>
-                <span className="block text-[10.5px] text-neutral-500">
+                {/* 話者ラベルはスマホ 11px（PC は 10.5px のまま） */}
+                <span className="block text-[11px] sm:text-[10.5px] text-neutral-500">
                   高村さん
                 </span>
                 もちろんです。ご職歴とターゲット校を教えてください。エッセイの軸を一緒に絞りましょう。
@@ -262,7 +264,9 @@ export default async function HomePage() {
 
       {/* ===== final CTA ===== */}
       <section className="px-6 pb-24 pt-[88px]">
-        <div className="relative mx-auto max-w-[1120px] overflow-hidden rounded-3xl border border-border bg-card px-10 py-16 text-center shadow-sm">
+        {/* 320px では px-10 だと内側が約 192px しか残らず、CTA ボタンの
+            「エキスパートを探す」が途中で折り返す。スマホだけ余白を詰める（PC は据え置き） */}
+        <div className="relative mx-auto max-w-[1120px] overflow-hidden rounded-3xl border border-border bg-card px-10 py-16 text-center shadow-sm max-sm:px-5 max-sm:py-11">
           <span className="absolute -right-[70px] -top-[90px] h-60 w-60 rounded-full bg-primary-50" aria-hidden />
           <span className="absolute -bottom-[110px] -left-20 h-[260px] w-[260px] rounded-full bg-muted" aria-hidden />
           <div className="relative">
@@ -273,9 +277,10 @@ export default async function HomePage() {
             <p className="mt-3.5 text-[14.5px] text-neutral-500">
               検索を3時間続けるより、住んでいる人にひとこと聞いてみませんか。
             </p>
+            {/* 狭い端末ではラベルを折り返させないため左右余白を詰める（PC は据え置き） */}
             <Link
               href="/experts"
-              className="mt-7 inline-flex items-center gap-2 rounded-full bg-primary-500 px-9 py-[15px] text-[15.5px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300"
+              className="mt-7 inline-flex max-w-full items-center gap-2 whitespace-nowrap rounded-full bg-primary-500 px-9 py-[15px] text-[15.5px] font-bold text-neutral-950 shadow-sm transition hover:bg-primary-300 max-sm:px-6"
             >
               エキスパートを探す
               <ArrowRight className="h-4 w-4" aria-hidden />

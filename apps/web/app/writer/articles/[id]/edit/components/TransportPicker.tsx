@@ -333,7 +333,9 @@ export function TransportPicker({
               type="button"
               onClick={() => onPickCategory(c.value)}
               className={
-                'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
+                // whitespace-nowrap: 「公共交通機関」等が 1 文字ずつ縦積みになるのを防ぐ
+                // max-sm:min-h-9: スマホのタップ領域確保
+                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-semibold transition max-sm:min-h-9 ' +
                 (isOn
                   ? 'bg-primary-700 text-white shadow-sm'
                   : 'bg-card text-primary-300 ring-1 ring-primary-200 hover:bg-primary-500/10')
@@ -349,8 +351,9 @@ export function TransportPicker({
       {active === 'public_transit' ? (
         <div className="space-y-2 rounded-md bg-primary-500/10 p-2.5">
           <div className="flex items-end gap-2">
-            <div className="w-[100px]">
-              <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+            {/* 固定幅は 320px で溢れうるので max-w-full を併記。shrink-0 で潰れも防ぐ */}
+            <div className="w-[100px] max-w-full shrink-0">
+              <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                 所要分
               </label>
               <Input
@@ -370,14 +373,14 @@ export function TransportPicker({
                   ? '起点・終点の両方にスポットを紐付けると自動取得できます'
                   : '路線・出発駅・到着駅・時間を自動取得'
               }
-              className="ml-auto rounded-md bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-primary-500 disabled:opacity-40"
+              className="ml-auto shrink-0 whitespace-nowrap rounded-md bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-primary-500 disabled:opacity-40 max-sm:min-h-9"
             >
               {isFetching ? '取得中…' : '経路取得'}
             </button>
           </div>
           <div className="grid gap-2 sm:grid-cols-3">
             <div>
-              <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+              <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                 線（路線名）
               </label>
               <Input
@@ -395,7 +398,7 @@ export function TransportPicker({
               />
             </div>
             <div>
-              <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+              <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                 出発駅
               </label>
               <Input
@@ -413,7 +416,7 @@ export function TransportPicker({
               />
             </div>
             <div>
-              <label className="mb-0.5 block text-[10px] font-medium text-foreground/60">
+              <label className="mb-0.5 block text-[11px] font-medium text-foreground/60 sm:text-[10px]">
                 到着駅
               </label>
               <Input
@@ -431,7 +434,7 @@ export function TransportPicker({
               />
             </div>
           </div>
-          <p className="text-[10px] leading-relaxed text-foreground/50">
+          <p className="text-[11px] leading-relaxed text-foreground/50 sm:text-[10px]">
             起終点のスポットに位置情報が入っていれば、「Google で経路取得」で
             線・出発駅・到着駅・所要分をまとめて自動入力できます。
           </p>
@@ -463,7 +466,7 @@ export function TransportPicker({
                   ? '起点・終点の両方にスポットを紐付けると自動取得できます'
                   : '所要時間を自動取得'
               }
-              className="rounded-md bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-primary-500 disabled:opacity-40"
+              className="whitespace-nowrap rounded-md bg-primary-700 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-primary-500 disabled:opacity-40 max-sm:min-h-9"
             >
               {isFetching ? '取得中…' : '時間取得'}
             </button>

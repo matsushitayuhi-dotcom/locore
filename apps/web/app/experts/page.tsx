@@ -137,14 +137,26 @@ export default async function ExpertsPage({
             <b className="font-bold text-foreground">先輩を選ぶ。</b>
             日程を決める。留学先のリアルを、30分オンラインで聞く。
           </h1>
+          {/* アイコンは shrink-0。長文と横並びのままだと 14px のアイコンまで一緒に潰れる。
+              テキストは 1 つの子にまとめて min-w-0（分割すると flex の子ごとに 1 文字幅まで潰れる）。
+              書類の内訳はスマホでは省く（PC には残す）。
+              320px など狭い端末では省いた後でも 2 行に折り返すので、スマホだけ
+              items-start にしてアイコンを 1 行目の高さに合わせる */}
           <p className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-neutral-700">
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-primary-700" aria-hidden />
-              全員、在学生またはアルムナイ。書類（学生証・入学証明書・卒業証書）で在籍確認済み
+            <span className="inline-flex items-center gap-1.5 max-sm:items-start">
+              <ShieldCheck
+                className="h-3.5 w-3.5 shrink-0 text-primary-700 max-sm:mt-[3px]"
+                aria-hidden
+              />
+              <span className="min-w-0">
+                全員、在学生またはアルムナイ。書類
+                <span className="max-sm:hidden">（学生証・入学証明書・卒業証書）</span>
+                で在籍確認済み
+              </span>
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-primary-700" aria-hidden />
-              30分 ¥3,000〜
+              <Clock className="h-3.5 w-3.5 shrink-0 text-primary-700" aria-hidden />
+              <span className="whitespace-nowrap">30分 ¥3,000〜</span>
             </span>
           </p>
         </section>
@@ -206,7 +218,9 @@ export default async function ExpertsPage({
               絞り込む
             </button>
           </noscript>
-          <div className="flex gap-1.5 overflow-x-auto py-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* テーマのチップ列。スマホでは 1 行に収まらないので幅いっぱいを取って横スワイプ
+              （min-w-0 で親の flex から縮められる側だと明示する） */}
+          <div className="flex min-w-0 gap-1.5 overflow-x-auto py-0.5 [scrollbar-width:none] max-sm:w-full [&::-webkit-scrollbar]:hidden">
             <TopicChip href={href({ ...base, topic: '' })} active={!topic}>
               すべて
             </TopicChip>
@@ -233,7 +247,8 @@ export default async function ExpertsPage({
 
         {/* ===== 4. 本体 ===== */}
         {experts.length === 0 ? (
-          <div className="px-5 py-20 text-center text-[13px] text-neutral-500">
+          // 親（.mx-auto）が既に px-5 なので、スマホでは二重の左右余白をやめて幅を残す
+          <div className="px-5 py-20 text-center text-[13px] text-neutral-500 max-sm:px-0 max-sm:py-14">
             <b className="mb-1.5 block text-[16px] text-neutral-700">
               この条件のエキスパートは、まだいません
             </b>
@@ -241,7 +256,7 @@ export default async function ExpertsPage({
             <div className="mt-4">
               <Link
                 href="/experts"
-                className="inline-flex rounded-full border border-border-strong bg-card px-5 py-2 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground"
+                className="inline-flex rounded-full border border-border-strong bg-card px-5 py-2 text-[13.5px] font-bold text-neutral-700 transition hover:border-foreground hover:text-foreground max-sm:py-2.5"
               >
                 絞り込みをリセット
               </Link>
@@ -266,12 +281,13 @@ export default async function ExpertsPage({
                 <b className="font-bold text-foreground">{r.group.label}。</b>
                 {r.group.lede}
               </h2>
+              {/* スマホだけ上下に余白を足してタップ領域を 36px 以上にする */}
               <Link
                 href={href({ ...base, topic: r.group.code })}
-                className="mt-1.5 inline-flex items-center gap-1.5 text-[13.5px] text-neutral-700 underline decoration-border-strong underline-offset-[5px] transition hover:text-foreground hover:decoration-foreground"
+                className="mt-1.5 inline-flex items-center gap-1.5 text-[13.5px] text-neutral-700 underline decoration-border-strong underline-offset-[5px] transition hover:text-foreground hover:decoration-foreground max-sm:py-2"
               >
                 すべて見る
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                <ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden />
               </Link>
               <div className="mt-4">
                 <ExpertRail>{r.experts.map((e, i) => card(e, ri === 0 && i < 6))}</ExpertRail>
@@ -307,9 +323,11 @@ export default async function ExpertsPage({
             あなたの「留学のリアル」が、
             <b className="font-bold text-primary-500">誰かの30分</b>になります。
           </h3>
+          {/* 320px だと px-7 の内側は約 224px しか無く、この文言（約 210px）が入り切らない。
+              スマホでは横幅いっぱいのボタンにして中央寄せ（PC は従来どおり右寄せ） */}
           <Link
             href="/become-writer"
-            className="rounded-[10px] border border-white px-6 py-3.5 text-[15px] font-semibold transition hover:bg-white hover:text-neutral-900 sm:ml-auto"
+            className="rounded-[10px] border border-white px-6 py-3.5 text-[15px] font-semibold transition hover:bg-white hover:text-neutral-900 max-sm:w-full max-sm:text-center sm:ml-auto"
           >
             エキスパートとして登録
           </Link>
@@ -361,7 +379,8 @@ function TopicChip({
     <Link
       href={href}
       className={
-        'shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[12.5px] transition ' +
+        // スマホは py を厚くしてタップ領域を 36px 以上にする（横スクロール列の中で押しにくい）
+        'shrink-0 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[12.5px] transition max-sm:py-2.5 ' +
         (active
           ? 'border-neutral-900 bg-neutral-900 font-bold text-white'
           : 'border-border-strong bg-card font-medium text-neutral-700 hover:border-foreground hover:text-foreground')

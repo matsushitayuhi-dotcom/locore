@@ -231,7 +231,7 @@ export function SideMenu({
       {/*
         オーバーレイ + ドロワーは React Portal で body 直下に描画する。
         親 (SiteHeader = sticky z-30) の stacking context に閉じ込められると
-        BottomNav (z-40) より下に潜って下半分が隠れてしまうため。
+        ページ内の固定バー (z-40) より下に潜って下半分が隠れてしまうため。
       */}
       {mounted &&
         createPortal(
@@ -282,8 +282,13 @@ function DrawerPanel({
         // h-[100dvh] = モバイル Safari の動的ビューポートにも追従。
         // safe-area-inset-top/bottom 分も内側で確保する (ノッチ / ホームバー被り防止)。
         className={
-          'fixed right-0 top-0 z-[1001] flex h-[100dvh] w-[320px] max-w-[88vw] flex-col bg-card shadow-xl transition-transform duration-200 ease-out ' +
-          (open ? 'translate-x-0' : 'translate-x-full')
+          // 閉じている間は translate で画面外に出すだけでなく invisible にする。
+          // transform を見ない計測（offsetLeft 系）では本文の上に居るままに見え、
+          // /experts で 31 件の「重なり」として検出されていた。
+          // visibility を transition に含めると 開く=即表示 / 閉じる=スライドし終えてから消える
+          // になるので、開いたときの見た目と閉じるアニメーションは変わらない。
+          'fixed right-0 top-0 z-[1001] flex h-[100dvh] w-[320px] max-w-[88vw] flex-col bg-card shadow-xl transition-[transform,visibility] duration-200 ease-out ' +
+          (open ? 'translate-x-0' : 'invisible pointer-events-none translate-x-full')
         }
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -293,12 +298,13 @@ function DrawerPanel({
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5"
+            className="inline-flex min-w-0 items-center gap-1.5"
             onClick={onClose}
             aria-label="Locore ホームへ"
           >
             <Logo variant="wordmark" height={26} />
-            <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950">
+            {/* 9px は実機で読めないのでスマホだけ 11px に上げる（PC の見た目は据え置き） */}
+            <span className="shrink-0 rounded-full bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-neutral-950 max-sm:text-[11px]">
               β
             </span>
           </Link>
@@ -306,7 +312,7 @@ function DrawerPanel({
             type="button"
             aria-label="メニューを閉じる"
             onClick={onClose}
-            className="inline-flex h-11 min-h-[44px] w-11 min-w-[44px] items-center justify-center rounded-full text-foreground/60 transition active:scale-[0.92] hover:bg-muted hover:text-foreground"
+            className="inline-flex h-11 min-h-[44px] w-11 min-w-[44px] shrink-0 items-center justify-center rounded-full text-foreground/60 transition active:scale-[0.92] hover:bg-muted hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -346,13 +352,15 @@ function DrawerPanel({
             </Section>
           ) : viewerLoggedIn ? (
             <Section title="エキスパート">
-              <Link
-                href="/become-writer"
-                className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
-              >
-                <Sparkles className="h-4 w-4" />
-                エキスパートとして参加
-              </Link>
+              <li>
+                <Link
+                  href="/become-writer"
+                  className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  <span>エキスパートとして参加</span>
+                </Link>
+              </li>
             </Section>
           ) : null}
 
@@ -362,31 +370,39 @@ function DrawerPanel({
               {ACCOUNT_ITEMS.map((it) => (
                 <NavLink key={it.href} item={it} pathname={pathname} />
               ))}
-              <form method="post" action="/auth/logout" className="px-3 pt-1">
-                <button
-                  type="submit"
-                  className="text-[12px] text-foreground/55 hover:text-foreground"
-                >
-                  ログアウト
-                </button>
-              </form>
+              <li>
+                <form method="post" action="/auth/logout" className="px-3 pt-1">
+                  {/* スマホだけタップ領域 44px を確保（12px の文字だけだと指で押せない）。
+                      PC の見た目は据え置き */}
+                  <button
+                    type="submit"
+                    className="inline-flex items-center whitespace-nowrap text-[12px] text-foreground/55 hover:text-foreground max-sm:min-h-[44px]"
+                  >
+                    ログアウト
+                  </button>
+                </form>
+              </li>
             </Section>
           ) : (
             <Section title="アカウント">
-              <Link
-                href="/auth/login"
-                className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
-              >
-                <User className="h-4 w-4" />
-                ログイン
-              </Link>
-              <Link
-                href="/auth/signup?redirect_to=%2Fexperts"
-                className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
-              >
-                <Sparkles className="h-4 w-4" />
-                無料ではじめる
-              </Link>
+              <li>
+                <Link
+                  href="/auth/login"
+                  className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
+                >
+                  <User className="h-4 w-4 shrink-0" />
+                  <span>ログイン</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/auth/signup?redirect_to=%2Fexperts"
+                  className="flex min-h-[44px] items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-primary-300 hover:bg-primary-500/10"
+                >
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  <span>無料ではじめる</span>
+                </Link>
+              </li>
             </Section>
           )}
 
@@ -398,7 +414,8 @@ function DrawerPanel({
           </Section>
         </nav>
 
-        <footer className="border-t border-border px-4 py-3 text-[10px] text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC の見た目は据え置き） */}
+        <footer className="border-t border-border px-4 py-3 text-[10px] text-foreground/45 max-sm:text-[11px]">
           © Locore — 留学先の先輩に、30分から相談
         </footer>
       </aside>
@@ -415,14 +432,15 @@ function Section({
 }) {
   return (
     <div className="mb-3">
-      <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45">
+      {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC の見た目は据え置き） */}
+      <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-foreground/45 max-sm:text-[11px]">
         {title}
       </p>
-      <ul className="space-y-0.5">
-        {Array.isArray(children)
-          ? children.map((c, i) => <li key={i}>{c}</li>)
-          : children}
-      </ul>
+      {/* 子（NavLink）が自分で <li> を返すので、ここでは包まない。
+          以前は children を <li> で包んでいて <li> の入れ子になり、
+          "In HTML, <li> cannot be a descendant of <li>" の hydration warning が出ていた。
+          NavLink 以外を渡すときは呼び出し側で <li> に入れること。 */}
+      <ul className="space-y-0.5">{children}</ul>
     </div>
   );
 }
@@ -448,8 +466,9 @@ function NavLink({
           className="flex min-h-[44px] cursor-not-allowed items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-medium text-foreground/35"
         >
           <Icon className="h-4 w-4 shrink-0 text-foreground/30" />
-          <span className="flex-1">{item.label}</span>
-          <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/45">
+          <span className="min-w-0 flex-1">{item.label}</span>
+          {/* バッジは縮ませない。9px は実機で読めないのでスマホだけ 11px に上げる */}
+          <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em] text-foreground/45 max-sm:text-[11px]">
             β版準備中
           </span>
         </div>
@@ -476,9 +495,12 @@ function NavLink({
             (active ? 'text-primary-300' : 'text-foreground/55')
           }
         />
-        <span className="flex-1">{item.label}</span>
+        {/* ラベルが縮む側（flex-1 + min-w-0 で、幅が足りなければ未読バッジに譲る）、
+            バッジは shrink-0 で縮まない側。min-w-0 が効くのはこの綱引きがある
+            ここだけで、バッジの無い単独リンクに付けても意味は無い */}
+        <span className="min-w-0 flex-1">{item.label}</span>
         {badge > 0 ? (
-          <span className="inline-flex min-w-[18px] items-center justify-center rounded-full bg-accent-500 px-1.5 text-[10px] font-bold leading-none text-white">
+          <span className="inline-flex min-w-[18px] shrink-0 items-center justify-center whitespace-nowrap rounded-full bg-accent-500 px-1.5 text-[10px] font-bold leading-none text-white max-sm:text-[11px]">
             {badge > 99 ? '99+' : badge}
           </span>
         ) : null}

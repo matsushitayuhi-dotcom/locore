@@ -94,23 +94,27 @@ export default function PrivacyPage() {
           <a href="/contact" className="text-primary-300 hover:underline">お問い合わせフォーム</a>
           よりご請求があれば遅滞なく開示します。
         </p>
-        <table className="my-4 w-full border-collapse text-[12px]">
-          <thead>
-            <tr className="border-b border-border">
-              <th className="py-2 text-left font-semibold">サービス区分</th>
-              <th className="py-2 text-left font-semibold">目的</th>
-              <th className="py-2 text-left font-semibold">提供データ</th>
-            </tr>
-          </thead>
-          <tbody className="text-foreground/75">
-            <Row name="ホスティング・配信" purpose="Web サイトの配信" data="リクエスト IP / User-Agent" />
-            <Row name="データベース・ストレージ・認証" purpose="アカウント管理・データ保存" data="登録情報全般" />
-            <Row name="決済処理" purpose="購入決済・売上配分" data="メール / 決済関連情報" />
-            <Row name="メール配信" purpose="トランザクションメール送信" data="メールアドレス / 送信内容" />
-            <Row name="外部 ID 連携" purpose="ソーシャルログイン" data="連携元アカウントの公開プロフィール" />
-            <Row name="AI コンテンツ生成" purpose="掲示板向けの公開情報の自動整形" data="個人情報を含まない公開情報のみ" />
-          </tbody>
-        </table>
+        {/* 3 列の表は 402px だと 1 列 6 文字ほどまで潰れる。
+            最小幅を与えて、狭い画面では横スワイプで読ませる（PC は従来どおり幅いっぱい） */}
+        <div className="my-4 overflow-x-auto">
+          <table className="w-full min-w-[420px] border-collapse text-[12px]">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="py-2 text-left font-semibold">サービス区分</th>
+                <th className="py-2 text-left font-semibold">目的</th>
+                <th className="py-2 text-left font-semibold">提供データ</th>
+              </tr>
+            </thead>
+            <tbody className="text-foreground/75">
+              <Row name="ホスティング・配信" purpose="Web サイトの配信" data="リクエスト IP / User-Agent" />
+              <Row name="データベース・ストレージ・認証" purpose="アカウント管理・データ保存" data="登録情報全般" />
+              <Row name="決済処理" purpose="購入決済・売上配分" data="メール / 決済関連情報" />
+              <Row name="メール配信" purpose="トランザクションメール送信" data="メールアドレス / 送信内容" />
+              <Row name="外部 ID 連携" purpose="ソーシャルログイン" data="連携元アカウントの公開プロフィール" />
+              <Row name="AI コンテンツ生成" purpose="掲示板向けの公開情報の自動整形" data="個人情報を含まない公開情報のみ" />
+            </tbody>
+          </table>
+        </div>
       </Section>
 
       <Section n="5" title="EU 居住者の権利 (GDPR)">

@@ -346,15 +346,16 @@ function GroupListItem({ post }: { post: CommunityPostListItem }) {
           )}
         </div>
         <div className="min-w-0 flex-1">
+          {/* バッジ: 9px はスマホ実機で読めないので 11px に上げる。潰れないよう nowrap */}
           <div className="flex flex-wrap items-center gap-1">
             {meta.category ? (
-              <span className="rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
+              <span className="whitespace-nowrap rounded-sm bg-primary-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300 max-sm:text-[11px]">
                 {GROUP_CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
             {meta.meeting_frequency ? (
-              <span className="inline-flex items-center gap-0.5 rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
-                <Repeat className="h-2.5 w-2.5" />
+              <span className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65 max-sm:text-[11px]">
+                <Repeat className="h-2.5 w-2.5 shrink-0" />
                 {FREQUENCY_LABEL[meta.meeting_frequency]}
               </span>
             ) : null}
@@ -363,17 +364,18 @@ function GroupListItem({ post }: { post: CommunityPostListItem }) {
             {post.title}
           </h2>
           <dl className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
+            {/* アイコンと件数は潰さない。地名だけが縮んで折り返す */}
             {meta.group_size ? (
-              <div className="inline-flex items-center gap-0.5">
-                <UserCheck className="h-3 w-3" />
+              <div className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                <UserCheck className="h-3 w-3 shrink-0" />
                 {meta.group_size} 名
               </div>
             ) : null}
             {post.locationText ? (
-              <div className="text-foreground/55">{post.locationText}</div>
+              <div className="min-w-0 text-foreground/55">{post.locationText}</div>
             ) : null}
-            <div className="inline-flex items-center gap-0.5 text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <div className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </div>
           </dl>
@@ -420,15 +422,16 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
             </div>
           )}
 
-          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
+          {/* 狭い幅では右端に余白を残し、バッジが写真の縁に貼り付く前に折り返させる */}
+          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1 max-sm:right-2">
             {meta.category ? (
-              <span className="rounded-sm bg-primary-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
+              <span className="whitespace-nowrap rounded-sm bg-primary-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm max-sm:text-[11px]">
                 {GROUP_CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
             {meta.meeting_frequency ? (
-              <span className="inline-flex items-center gap-0.5 rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
-                <Repeat className="h-2.5 w-2.5" />
+              <span className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur max-sm:text-[11px]">
+                <Repeat className="h-2.5 w-2.5 shrink-0" />
                 {FREQUENCY_LABEL[meta.meeting_frequency]}
               </span>
             ) : null}
@@ -442,24 +445,25 @@ function GroupCard({ post }: { post: CommunityPostListItem }) {
 
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {meta.group_size ? (
-              <li className="inline-flex items-center gap-0.5">
-                <UserCheck className="h-3 w-3" />
+              <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                <UserCheck className="h-3 w-3 shrink-0" />
                 {meta.group_size} 名規模
               </li>
             ) : null}
             {meta.age_range ? (
-              <li className="text-foreground/55">対象: {meta.age_range}</li>
+              <li className="min-w-0 text-foreground/55">対象: {meta.age_range}</li>
             ) : null}
             {post.locationText ? (
-              <li className="inline-flex items-center gap-0.5 text-foreground/55">
+              <li className="inline-flex min-w-0 items-center gap-0.5 text-foreground/55">
                 {post.locationText}
               </li>
             ) : null}
           </ul>
 
+          {/* 投稿日時: 10px は実機で読めないためスマホだけ 11px に上げる（PC は据え置き） */}
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>
           </div>

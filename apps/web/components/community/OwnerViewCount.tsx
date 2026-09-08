@@ -42,7 +42,8 @@ export function OwnerViewCount({
     >
       <Eye className="h-3 w-3" />
       <span className="tabular">{count.toLocaleString()}</span>
-      <span className="text-[10px] text-foreground/35">views</span>
+      {/* 10px は実機で読めないのでスマホは 11px、PC は据え置き */}
+      <span className="text-[11px] text-foreground/35 sm:text-[10px]">views</span>
     </span>
   );
 }

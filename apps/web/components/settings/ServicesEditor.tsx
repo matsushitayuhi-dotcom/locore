@@ -255,22 +255,27 @@ export function ServicesEditor({ initial }: Props) {
             <MenuBody value={r} onPatch={(patch) => patchRow(idx, patch)} />
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-              <label className="inline-flex items-center gap-2 text-[12px] text-foreground/70">
+              {/* 402px では「公開する」ラベルとボタン 2 つが 1 行に収まらない。
+                  ラベル側を縮む側（min-w-0）、ボタン側を縮まない側（shrink-0）に
+                  決めて、入りきらないときは flex-wrap で次行へ送る */}
+              <label className="inline-flex min-w-0 items-center gap-2 text-[12px] text-foreground/70 max-sm:min-h-9">
                 <input
                   type="checkbox"
                   checked={r.isActive}
                   onChange={(e) => patchRow(idx, { isActive: e.target.checked })}
-                  className="h-4 w-4 accent-primary-700"
+                  className="h-4 w-4 shrink-0 accent-primary-700"
                 />
                 このメニューを公開する
               </label>
-              <div className="flex gap-2">
+              <div className="flex shrink-0 gap-2">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(idx)}
                   disabled={isPending}
+                  // size=sm は h-8(32px)。スマホのタップ領域として小さいので 40px に
+                  className="max-sm:h-10"
                 >
                   <Trash2 className="h-4 w-4" />
                   削除
@@ -281,7 +286,7 @@ export function ServicesEditor({ initial }: Props) {
                   size="sm"
                   onClick={() => onSave(idx)}
                   disabled={isPending}
-                  className="border-transparent bg-foreground text-background hover:bg-foreground/90"
+                  className="border-transparent bg-foreground text-background hover:bg-foreground/90 max-sm:h-10"
                 >
                   保存
                 </Button>
@@ -309,6 +314,7 @@ export function ServicesEditor({ initial }: Props) {
                 setDrafting(false);
                 setDraft(empty());
               }}
+              className="max-sm:h-10"
             >
               キャンセル
             </Button>
@@ -318,7 +324,7 @@ export function ServicesEditor({ initial }: Props) {
               size="sm"
               onClick={onAddDraft}
               disabled={isPending}
-              className="border-transparent bg-foreground text-background hover:bg-foreground/90"
+              className="border-transparent bg-foreground text-background hover:bg-foreground/90 max-sm:h-10"
             >
               追加する
             </Button>
@@ -330,6 +336,7 @@ export function ServicesEditor({ initial }: Props) {
           variant="outline"
           size="sm"
           onClick={() => setDrafting(true)}
+          className="max-sm:h-10"
         >
           <Plus className="h-4 w-4" />
           相談メニューを追加
@@ -501,7 +508,8 @@ function MenuBody({
             className="pl-7"
           />
         </div>
-        <p className="mt-1 text-[10.5px] text-foreground/50">
+        {/* 10.5px は実機で読めない。スマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-1 text-[10.5px] text-foreground/50 max-sm:text-[11px]">
           {isMonthly
             ? '目安: 月2回 ¥20,000〜30,000 / 月4回 ¥36,000〜50,000（1回30〜60分）'
             : '目安: 30分 ¥3,000〜5,000 / 60分 ¥6,000〜9,000'}
@@ -510,7 +518,11 @@ function MenuBody({
 
       {/* 相談テーマ */}
       <div>
-        <label className={fieldLabel}>相談テーマ（複数選択可・一覧の絞り込みに使われます）</label>
+        {/* 402px では 11px でも 1 行に入らない補足。スマホは短く、PC 用は温存する */}
+        <label className={fieldLabel}>
+          相談テーマ（複数選択可
+          <span className="max-sm:hidden">・一覧の絞り込みに使われます</span>）
+        </label>
         <div className="flex flex-wrap gap-1.5">
           {TOPIC_TAGS.map((t) => {
             const on = value.topics.includes(t.value);
@@ -521,7 +533,9 @@ function MenuBody({
                 onClick={() => toggleTopic(t.value)}
                 aria-pressed={on}
                 className={
-                  'rounded-sm border px-3 py-1 text-[12px] font-medium transition ' +
+                  // whitespace-nowrap:「大学院 / 出願」と割れないように。
+                  // max-sm:min-h-9: 26px しかなくタップしづらかったので 36px に
+                  'inline-flex items-center whitespace-nowrap rounded-sm border px-3 py-1 text-[12px] font-medium transition max-sm:min-h-9 ' +
                   (on
                     ? 'border-foreground bg-foreground text-background'
                     : 'border-border bg-card text-foreground/65 hover:border-foreground/40 hover:text-foreground')
@@ -582,15 +596,20 @@ function LanguagesField({
         {value.map((lang, idx) => (
           <span
             key={`${lang}-${idx}`}
-            className="inline-flex items-center gap-1 rounded-full bg-primary-500/15 px-2 py-0.5 text-[12px] font-medium text-primary-300"
+            // nowrap: 言語名が「日 / 本 / 語」と縦に割れないように
+            className="inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full bg-primary-500/15 px-2 py-0.5 text-[12px] font-medium text-primary-300 max-sm:py-1.5"
           >
             {lang}
             <button
               type="button"
               onClick={() => onChange(value.filter((_, i) => i !== idx))}
               aria-label={`${lang} を削除`}
+              // × は 12px しかなく指で押せないので、スマホは 24px の枠に加えて
+              // after で見えない当たり判定を 36px（24 + 6×2）まで広げる。
+              // チップの高さは変えない（after は絶対配置なのでレイアウトに効かない）
+              className="relative inline-flex shrink-0 items-center justify-center max-sm:h-6 max-sm:w-6 max-sm:after:absolute max-sm:after:-inset-1.5 max-sm:after:content-['']"
             >
-              <XIcon className="h-3 w-3" />
+              <XIcon className="h-3 w-3 shrink-0" />
             </button>
           </span>
         ))}
@@ -607,7 +626,8 @@ function LanguagesField({
           }}
           onBlur={commit}
           placeholder={value.length === 0 ? '例: 日本語、英語' : ''}
-          className="min-w-[100px] flex-1 bg-transparent text-body-md outline-none"
+          // max-w-full: 320px でもタグ枠から溢れないようにする
+          className="min-w-[100px] max-w-full flex-1 bg-transparent text-body-md outline-none max-sm:h-9"
         />
       </div>
     </div>

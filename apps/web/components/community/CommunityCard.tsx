@@ -81,22 +81,24 @@ export function CommunityCard({ post, showKindBadge }: Props) {
         {post.locationText ? (
           <p className="inline-flex items-center gap-1 text-[11px] text-foreground/60">
             <MapPin className="h-3 w-3 shrink-0" />
-            <span className="line-clamp-1">{post.locationText}</span>
+            {/* min-w-0 が無いと地名が min-content (1 文字) まで縮まず親からはみ出す */}
+            <span className="min-w-0 line-clamp-1">{post.locationText}</span>
           </p>
         ) : null}
       </Link>
 
       {/* フッター: 投稿者リンクと日時。 Link の入れ子を避けるためカード本体の外に */}
-      <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-0 text-[10px] text-foreground/50 sm:px-4 sm:pb-4">
+      {/* 10px は実機で読めないのでスマホは 11px。PC は sm: で据え置き */}
+      <div className="flex items-center justify-between gap-2 px-3 pb-3 pt-0 text-[11px] text-foreground/50 sm:px-4 sm:pb-4 sm:text-[10px]">
         {post.authorId ? (
           <Link
             href={`/users/${post.authorId}`}
-            className="line-clamp-1 underline-offset-2 hover:text-primary-300 hover:underline"
+            className="min-w-0 line-clamp-1 underline-offset-2 hover:text-primary-300 hover:underline"
           >
             {post.authorName ?? '匿名'}
           </Link>
         ) : (
-          <span className="line-clamp-1">{post.authorName ?? '匿名'}</span>
+          <span className="min-w-0 line-clamp-1">{post.authorName ?? '匿名'}</span>
         )}
         <span className="shrink-0 tabular">{timeAgo(post.createdAt)}</span>
       </div>
@@ -144,7 +146,7 @@ function PhotoStrip({
           <ImageIcon className="h-8 w-8" />
         </div>
         {showKindBadge ? (
-          <span className="absolute left-2 top-2 rounded-full bg-card/95 px-2 py-0.5 text-[10px] font-bold tracking-wider text-foreground shadow-sm ring-1 ring-border/60 backdrop-blur">
+          <span className="absolute left-2 top-2 rounded-full bg-card/95 px-2 py-0.5 text-[11px] font-bold tracking-wider text-foreground shadow-sm ring-1 ring-border/60 backdrop-blur sm:text-[10px]">
             {KIND_LABEL[kind]}
           </span>
         ) : null}
@@ -188,7 +190,7 @@ function PhotoStrip({
 
       {/* オーバーレイバッジ */}
       {showKindBadge ? (
-        <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-card/95 px-2 py-0.5 text-[10px] font-bold tracking-wider text-foreground shadow-sm ring-1 ring-border/60 backdrop-blur">
+        <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-card/95 px-2 py-0.5 text-[11px] font-bold tracking-wider text-foreground shadow-sm ring-1 ring-border/60 backdrop-blur sm:text-[10px]">
           {KIND_LABEL[kind]}
         </span>
       ) : null}
@@ -217,7 +219,7 @@ function PhotoStrip({
 
       {/* 枚数チップ */}
       {multi ? (
-        <span className="pointer-events-none absolute right-2 bottom-2 rounded-full bg-neutral-900/70 px-2 py-0.5 text-[10px] font-bold tabular text-white backdrop-blur">
+        <span className="pointer-events-none absolute right-2 bottom-2 rounded-full bg-neutral-900/70 px-2 py-0.5 text-[11px] font-bold tabular text-white backdrop-blur sm:text-[10px]">
           {activeIndex + 1} / {photos.length}
         </span>
       ) : null}

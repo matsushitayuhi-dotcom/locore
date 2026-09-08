@@ -87,7 +87,14 @@ export default async function ChatThreadPage({ params }: PageProps) {
     );
 
   return (
-    <main className="flex h-[calc(100vh-56px)] flex-col">
+    /*
+      高さは 100vh ではなく動的ビューポート (dvh) − safe-area で取り直し、
+      iOS のツールバー分ずれないようにする。差し引く 57px は SiteHeader の
+      h-14 (56px) + border-b (1px)。HeaderShell が safe-area-inset-top 分の
+      padding を足すので、それも引かないと standalone / 横持ちで入力欄が
+      画面外に押し出される。md 以上は従来どおり 100vh−56px。
+    */
+    <main className="flex h-[calc(100dvh_-_57px_-_env(safe-area-inset-top,0px)_-_env(safe-area-inset-bottom,0px))] flex-col md:h-[calc(100vh-56px)]">
       {/*
         モバイルではタップ領域が極小だった「←」アイコンを、
         フル幅 sticky のテキスト付きボタン「メッセージ一覧へ」に拡張。
@@ -102,11 +109,13 @@ export default async function ChatThreadPage({ params }: PageProps) {
         <ChevronLeft className="h-4 w-4" aria-hidden />
         <span>メッセージ一覧へ</span>
       </Link>
-      <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
+      <header className="flex min-w-0 items-center gap-3 border-b border-border bg-card px-4 py-3">
         {partner ? (
+          // 表示名が長いと 402px で 1 文字ずつ縦積みになる。アバターは縮まない側
+          // (Avatar 自体が shrink-0)、名前は縮む側なので min-w-0 + truncate。
           <Link
             href={`/users/${partner.id}`}
-            className="flex items-center gap-2"
+            className="flex min-w-0 items-center gap-2"
           >
             <Avatar size="sm">
               {partner.avatarUrl ? (
@@ -116,7 +125,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
                 {(partner.displayName ?? '?')[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <span className="text-[14px] font-semibold">
+            <span className="min-w-0 truncate text-[14px] font-semibold">
               {partner.displayName}
             </span>
           </Link>

@@ -57,7 +57,8 @@ export function BecomeWriterForm() {
           }}
           placeholder="例: ハーバード大学 / Harvard"
         />
-        <p className="text-[10.5px] text-foreground/55">
+        {/* 補足文はスマホ 11px（PC は 10.5px のまま） */}
+        <p className="text-[11px] sm:text-[10.5px] text-foreground/55">
           リストに無い学校は、そのまま入力して構いません。学位・専攻・年はあとで追加できます。
         </p>
         {/* becomeWriter に渡す値。name は state と同期させる */}

@@ -1907,18 +1907,25 @@ function ScopedStyle() {
         .shelf {
           padding: 12px 0 2px;
         }
+        /* 見出し行は「タイトル + Category + すべて見る」の横並び。320px だと
+           1 行に収まらず、日本語タイトルが 1 文字ずつ縦積みになる。
+           折り返しを許可し、「すべて見る」は margin-left:auto のまま次行の右端へ落とす */
         .shead {
           margin-bottom: 10px;
           gap: 8px;
+          flex-wrap: wrap;
         }
         .shead h2 {
           font-size: 17px;
+          min-width: 0;
         }
         .shead .sub {
           font-size: 11px;
         }
         .shead .seeall {
           font-size: 12px;
+          flex: none;
+          white-space: nowrap;
         }
         /* スライド矢印はスワイプ運用なので非表示 (タッチ前提) */
         .slide {
@@ -1933,8 +1940,98 @@ function ScopedStyle() {
           width: 22px;
           height: 22px;
         }
+        /* 規約7: スマホで 11px 未満にしない。基底(.phph-mark)の 11px から
+           わざわざ 10px へ下げていたので、下げるのをやめる */
         .phph-mark {
-          font-size: 10px;
+          font-size: 11px;
+        }
+        /* 絞り込みチップの ✕ は 12px 角しか無くタップできない。
+           ボタン自体は 12px のまま（負マージンで幅を食わせるとチップが太り、
+           ✕ の位置も動く）、疑似要素で当たり判定だけ 36x40px へ広げる。
+           広げる量はチップの内側に収まる範囲なので隣のチップのタップは奪わない */
+        .afchip button {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 12px;
+          height: 12px;
+          padding: 0;
+          line-height: 1;
+        }
+        .afchip button::after {
+          content: '';
+          position: absolute;
+          inset: -14px -12px;
+        }
+        /* 結果画面のカード表示 (.cgrid)。PC 側に基底ルールが無く、子の .card は
+           <a>（display:inline）なので flex:none / width:258px も 43vw も効かず、
+           全幅の巨大カードが縦一列に流れる。スマホだけ 2 列グリッドにして
+           棚 (.row) のカードと同じ見え方へ揃える。PC 側の構造は別件として残す */
+        .cgrid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 18px 12px;
+        }
+        .cgrid .card {
+          width: auto;
+          max-width: none;
+        }
+        /* 結果画面ツールバー。.lbar / .lbar-tools / .viewtoggle / .vt も PC 側に
+           基底ルールが無い（別件）。スマホだけ先に、折り返し・タップ領域 36px・
+           アイコン寸法（未指定だと SVG が既定サイズで描かれる）を与える。
+           「もどる」が縮む側、ツール類は縮まない側で、入らなければ次行の右端へ */
+        .lbar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px;
+        }
+        .lbar-tools {
+          margin-left: auto;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          align-items: center;
+          gap: 8px;
+        }
+        .lbar-tools > * {
+          flex: none;
+        }
+        /* ツールバー内は .back / .vt と高さを揃える (基底の 46px だと段差になる) */
+        .lbar-tools .gd-btn {
+          height: 40px;
+          padding: 0 14px;
+          font-size: 12.5px;
+        }
+        .viewtoggle {
+          display: inline-flex;
+          gap: 6px;
+        }
+        .vt {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          min-height: 40px;
+          padding: 8px 12px;
+          white-space: nowrap;
+          border: 1px solid var(--bd2);
+          border-radius: 999px;
+          background: var(--card);
+          color: var(--ink2);
+          font-family: var(--jp);
+          font-size: 12.5px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+        .vt.on {
+          background: var(--lime);
+          border-color: var(--lime);
+          color: #1c2a06;
+        }
+        .vt svg {
+          width: 14px;
+          height: 14px;
         }
         /* 検索バーはモバイルで縦積みにして詰める */
         .searchbar {

@@ -165,7 +165,7 @@ function Chip({
       }
     >
       <span>{label}</span>
-      <span className={'text-[10px] ' + (active ? 'text-white/70' : 'text-foreground/50')}>
+      <span className={'text-[11px] sm:text-[10px] ' + (active ? 'text-white/70' : 'text-foreground/50')}>
         {count}
       </span>
     </button>

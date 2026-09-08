@@ -34,15 +34,15 @@ export function ResidentReviewsSummary({ summary, displayName }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* サマリ */}
-      <div className="flex items-center gap-4 rounded-2xl bg-card p-5 ring-1 ring-border sm:p-6">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+      {/* サマリ。スマホ幅で見出しが 1 文字ずつ縦に潰れないよう各ブロックを shrink-0 + nowrap に */}
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-card p-5 ring-1 ring-border sm:p-6">
+        <div className="shrink-0">
+          <p className="whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
             平均満足度
           </p>
-          <p className="mt-1 flex items-baseline gap-1.5">
+          <p className="mt-1 flex items-baseline gap-1.5 whitespace-nowrap">
             <Star
-              className="h-5 w-5 text-primary-500"
+              className="h-5 w-5 shrink-0 text-primary-500"
               fill="currentColor"
               strokeWidth={0}
             />
@@ -52,9 +52,9 @@ export function ResidentReviewsSummary({ summary, displayName }: Props) {
             <span className="text-[12px] text-foreground/55">/ 5</span>
           </p>
         </div>
-        <div className="h-10 w-px bg-border" />
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
+        <div className="h-10 w-px shrink-0 bg-border" />
+        <div className="shrink-0">
+          <p className="whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/55">
             レビュー件数
           </p>
           <p className="mt-1 text-[28px] font-bold tabular tracking-tight">
@@ -80,16 +80,21 @@ export function ResidentReviewsSummary({ summary, displayName }: Props) {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
+                {/* 日付は縮まない側 (shrink-0 + nowrap)。名前が長いときは flex-wrap で次行へ */}
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="text-[13px] font-semibold">{r.reviewerName}</p>
-                  <p className="text-[11px] tabular text-foreground/45">
+                  <p className="shrink-0 whitespace-nowrap text-[11px] tabular text-foreground/45">
                     {formatDate(r.createdAt)}
                   </p>
                 </div>
-                <div className="mt-1 inline-flex items-center gap-1 text-[12px] font-semibold tabular text-primary-300">
-                  <Star className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />
+                <div className="mt-1 flex flex-wrap items-center gap-1 text-[12px] font-semibold tabular text-primary-300">
+                  <Star
+                    className="h-3.5 w-3.5 shrink-0"
+                    fill="currentColor"
+                    strokeWidth={0}
+                  />
                   {r.satisfactionStars}.0
-                  <span className="ml-2 text-foreground/55">
+                  <span className="ml-2 whitespace-nowrap text-foreground/55">
                     ローカル {r.localScore}
                   </span>
                 </div>

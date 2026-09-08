@@ -82,7 +82,8 @@ export function SpecialtyPicker({
                       disabled={disabled}
                       aria-pressed={on}
                       className={
-                        'rounded-full border px-3 py-1.5 text-[12.5px] transition disabled:cursor-not-allowed ' +
+                        // py-1.5 だと高さ約 31px でタップ領域が足りない。スマホだけ 36px 確保する
+                        'rounded-full border px-3 py-1.5 text-[12.5px] transition disabled:cursor-not-allowed max-sm:min-h-9 ' +
                         (on
                           ? 'border-neutral-900 bg-neutral-900 font-bold text-white'
                           : 'border-border-strong bg-card font-medium text-neutral-700 hover:border-foreground disabled:hover:border-border-strong')
@@ -90,7 +91,8 @@ export function SpecialtyPicker({
                     >
                       {c.label}
                       {isExperienceOnly(c.code) ? (
-                        <span className="ml-1 text-[10px] opacity-70">※</span>
+                        // 10px は実機で潰れて見えないのでスマホだけ 11px（PC は据え置き）
+                        <span className="ml-1 text-[11px] opacity-70 sm:text-[10px]">※</span>
                       ) : null}
                     </button>
                   );

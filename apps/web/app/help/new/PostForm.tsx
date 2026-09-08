@@ -115,7 +115,9 @@ export function PostForm() {
             <label
               key={t}
               className={
-                'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
+                // 選択タイルは 320px だと 1 枚 141px。スマホだけ左右の余白を詰め、
+                // 入り切らないときは中央寄せで 2 行に折る（1 文字ずつの縦積みを防ぐ）
+                'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition max-sm:px-1 max-sm:leading-tight max-sm:text-center ' +
                 (requestType === t
                   ? 'border-primary-500 bg-primary-500/10 text-primary-300'
                   : 'border-border bg-card text-foreground/70 hover:border-foreground/30')
@@ -154,7 +156,7 @@ export function PostForm() {
               : '今週末、CDG 空港送迎します（無料）'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">
           {title.length} / 140
         </p>
       </div>
@@ -185,7 +187,9 @@ export function PostForm() {
             <label
               key={u}
               className={
-                'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
+                // 3 列タイルは 320px だと 1 枚 92px しかない。スマホだけ左右の余白を詰め、
+                // 入り切らないときは中央寄せで 2 行に折る（1 文字ずつの縦積みを防ぐ）
+                'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition max-sm:px-1 max-sm:leading-tight max-sm:text-center ' +
                 (urgency === u
                   ? u === 'now'
                     ? 'border-danger-500 bg-danger-500/10 text-danger-500'
@@ -215,7 +219,9 @@ export function PostForm() {
             <label
               key={c}
               className={
-                'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
+                // 3 列タイルは 320px だと 1 枚 92px しかない。スマホだけ左右の余白を詰め、
+                // 入り切らないときは中央寄せで 2 行に折る（1 文字ずつの縦積みを防ぐ）
+                'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition max-sm:px-1 max-sm:leading-tight max-sm:text-center ' +
                 (compensation === c
                   ? 'border-primary-500 bg-primary-500/10 text-primary-300'
                   : 'border-border bg-card text-foreground/70 hover:border-foreground/30')
@@ -276,7 +282,7 @@ export function PostForm() {
               : '【内容】6/15（土）朝 9 時 CDG 空港着の方をお迎えに行きます\n【車】Renault Clio、スーツケース 2 個まで OK\n【場所】13 区方面なら帰宅ついでで OK'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">
           {body.length} / 8000
         </p>
       </div>
@@ -284,17 +290,18 @@ export function PostForm() {
       <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+        {/* ボタンは縮ませない（文字が 1 文字ずつ縦に積まれるのを防ぐ） */}
         <button
           type="button"
           onClick={() => router.push('/help')}
-          className="rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
+          className="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+          className="shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
         >
           {isPending ? '公開中…' : '公開する'}
         </button>

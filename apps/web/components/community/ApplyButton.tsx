@@ -100,18 +100,20 @@ export function ApplyButton({
         <button
           type="button"
           onClick={onTrigger}
-          className="inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
+          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-primary-500 px-5 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300"
         >
-          <MessageCircle className="h-4 w-4" />
+          <MessageCircle className="h-4 w-4 shrink-0" />
           {applyLabel}
         </button>
         {mailtoHref ? (
           <a
             href={mailtoHref}
-            className="inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
+            className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground ring-1 ring-border transition hover:bg-primary-500/10 hover:ring-primary-300"
           >
-            <Mail className="h-4 w-4" />
-            メールで問い合わせる
+            <Mail className="h-4 w-4 shrink-0" />
+            {/* 2 ボタンが 320px に並ばないので、スマホだけ短縮。PC は元の文言を温存 */}
+            <span className="max-sm:hidden">メールで問い合わせる</span>
+            <span className="sm:hidden">メール</span>
           </a>
         ) : null}
       </div>
@@ -120,7 +122,7 @@ export function ApplyButton({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[60] flex items-end justify-center bg-neutral-900/40 px-4 sm:items-center"
+          className="fixed inset-0 z-[60] flex items-end justify-center bg-neutral-900/40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:items-center sm:pb-0"
           onClick={(e) => {
             if (e.target === e.currentTarget) setOpen(false);
           }}
@@ -130,7 +132,8 @@ export function ApplyButton({
             className="w-full max-w-md rounded-2xl bg-card p-5 shadow-xl"
           >
             <header className="mb-3 flex items-start justify-between gap-2">
-              <div>
+              {/* 見出し側が縮む側。min-w-0 が無いと閉じるボタンが押し出される */}
+              <div className="min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-300">
                   メッセージを送る
                 </p>
@@ -144,7 +147,7 @@ export function ApplyButton({
                 type="button"
                 aria-label="閉じる"
                 onClick={() => setOpen(false)}
-                className="rounded-sm p-1 text-foreground/45 hover:bg-muted hover:text-foreground"
+                className="inline-flex shrink-0 items-center justify-center rounded-sm p-1 text-foreground/45 hover:bg-muted hover:text-foreground max-sm:h-9 max-sm:w-9"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -166,7 +169,8 @@ export function ApplyButton({
               }
               className="w-full rounded-md border border-border bg-card px-3 py-2 text-[13px] leading-relaxed focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
             />
-            <p className="mt-1 text-right text-[10px] text-foreground/45">
+            {/* 10px は実機で読めないのでスマホは 11px、PC は据え置き */}
+            <p className="mt-1 text-right text-[11px] text-foreground/45 sm:text-[10px]">
               {body.length} / 2000
             </p>
 

@@ -18,7 +18,9 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .sd-wrap{max-width:1120px;margin:0 auto;padding:0 28px}
 .sd-st{color:var(--lime-d)}
 .sd-back{display:inline-flex;align-items:center;gap:6px;margin-top:22px;font-size:12.5px;font-weight:700;color:var(--lime-d)}
-.sd-back svg{width:15px;height:15px}
+/* 小アイコンは flex の子として縮ませない（潰れて形が歪む） */
+.sd-back svg{width:15px;height:15px;flex:none}
+.sd-acts svg,.sd-allphotos svg,.sd-vbadge svg,.sd-other h3 svg{flex:none}
 
 /* ===== title block ===== */
 .sd-head{padding:18px 0 14px}
@@ -49,14 +51,19 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 
 /* ===== two-column ===== */
 .sd-cols{display:grid;grid-template-columns:1fr 360px;gap:54px;padding:34px 0 70px;align-items:start}
+/* grid の子は既定で min-content 未満に縮まない。長い本文でトラックごと
+   画面外へ出るのを防ぐため min-width:0 を明示する。 */
+.sd-cols>*{min-width:0}
 .sd-sec{padding:26px 0;border-top:1px solid var(--bd)}
 .sd-sec:first-child{border-top:0;padding-top:30px}
 .sd-sec h2{font-family:var(--jp);font-weight:900;font-size:20px;margin-bottom:14px;color:var(--ink)}
 
 /* host row */
 .sd-hostrow{display:flex;align-items:center;gap:14px;padding:24px 0 4px}
-.sd-hostrow .ava{width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid var(--lime);background:var(--lime-l)}
-.sd-hostrow .avaf{width:54px;height:54px;border-radius:50%;border:2px solid var(--lime);background:var(--lime-l);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:20px;color:var(--lime-d)}
+/* アバター＝縮まない側 / テキスト＝縮む側。両方 auto だと名前が 1 文字ずつ潰れる */
+.sd-hostrow>div{min-width:0}
+.sd-hostrow .ava{width:54px;height:54px;border-radius:50%;object-fit:cover;border:2px solid var(--lime);background:var(--lime-l);flex:none}
+.sd-hostrow .avaf{width:54px;height:54px;border-radius:50%;border:2px solid var(--lime);background:var(--lime-l);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:20px;color:var(--lime-d);flex:none}
 .sd-hostrow .t{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .sd-hostrow .t .yrs{font-weight:500;color:var(--mu);font-size:13px;font-family:var(--mono)}
 .sd-hostrow .s{color:var(--mu);font-size:13px;margin-top:2px}
@@ -71,7 +78,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .sd-fact b{font-weight:700;font-size:14.5px}
 .sd-fact span{display:block;color:var(--mu);font-size:12.5px;margin-top:1px}
 
-.sd-lead{font-size:15px;line-height:2;color:var(--ink2);white-space:pre-line}
+.sd-lead{font-size:15px;line-height:2;color:var(--ink2);white-space:pre-line;overflow-wrap:break-word}
 
 /* highlight bullets */
 .sd-hl{display:flex;flex-direction:column;gap:13px;list-style:none}
@@ -87,12 +94,14 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 
 /* host card */
 .sd-hostcard{display:flex;gap:18px;align-items:flex-start;background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:20px}
+.sd-hostcard>div{min-width:0}
 .sd-hostcard .ava{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none;border:2px solid var(--lime);background:var(--lime-l)}
 .sd-hostcard .avaf{width:72px;height:72px;border-radius:50%;flex:none;border:2px solid var(--lime);background:var(--lime-l);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:26px;color:var(--lime-d)}
 .sd-hostcard .nm{font-weight:700;font-size:17px}
 .sd-hostcard .meta{color:var(--mu);font-size:12.5px;font-family:var(--mono);margin:2px 0 9px}
 .sd-hostcard .bio{font-size:13.5px;color:var(--ink2);line-height:1.9;white-space:pre-line}
 .sd-hostcard .link{display:inline-flex;align-items:center;gap:6px;margin-top:11px;font-size:13px;font-weight:700;color:var(--lime-d)}
+.sd-hostcard .link svg{width:13px;height:13px;flex:none}
 
 /* map */
 .sd-mapframe{border-radius:18px;overflow:hidden;border:1px solid var(--bd);aspect-ratio:16/8;background:#dfe4e8;position:relative}
@@ -101,7 +110,7 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 /* ===== contact card (sticky) ===== */
 .sd-book{position:sticky;top:24px;background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:22px;box-shadow:0 26px 60px -34px rgba(20,20,15,.5)}
 .sd-book .price{display:flex;align-items:baseline;gap:7px}
-.sd-book .price b{font-family:var(--disp);font-size:26px;font-weight:700;color:var(--ink)}
+.sd-book .price b{font-family:var(--disp);font-size:26px;font-weight:700;color:var(--ink);white-space:nowrap}
 .sd-book .price span{color:var(--mu);font-size:13px}
 .sd-book .price .free{font-family:var(--jp);color:var(--lime-d)}
 .sd-book .ctawrap{margin-top:16px}
@@ -110,7 +119,9 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
 .sd-book .safe svg{width:15px;height:15px;color:var(--lime-d);flex:none;margin-top:2px}
 .sd-book .qf{margin-top:16px;padding-top:14px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px}
 .sd-book .qf div{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--ink2)}
-.sd-book .qf div b{font-weight:700;color:var(--ink);text-align:right}
+/* 「言語」等のラベルは縮まない側。値だけ折り返す（320px で両方潰れていた） */
+.sd-book .qf div>span{flex:none;white-space:nowrap}
+.sd-book .qf div b{font-weight:700;color:var(--ink);text-align:right;min-width:0}
 
 /* other (articles/services) carryover styles */
 .sd-other{padding:0 0 60px}
@@ -134,4 +145,24 @@ export const CSS = `@import url('https://fonts.googleapis.com/css2?family=Space+
   .sd-gallery.one .cell.big{grid-column:1/2}
   .sd-facts,.sd-inc{grid-template-columns:1fr}
   .sd-acard{width:72%}
+}
+
+/* 402px(iPhone) / 320px 用。従来は 900px の分岐しか無く、左右 18px の余白と
+   見出し 24px のまま本文幅が足りていなかったので専用ブロックを足す。 */
+@media(max-width:640px){
+  .sd-wrap{padding:0 16px}
+  .sd-head h1{font-size:22px}
+  .sd-sec:first-child{padding-top:22px}
+  /* 「サービス一覧に戻る」のタップ領域を 36px 以上に */
+  .sd-back{min-height:36px}
+  /* プロフィールへのリンクも同じくタップ領域 36px 以上に */
+  .sd-hostcard .link{min-height:36px}
+  /* 共有/保存は縮まない側。縮むと「共 / 有」と 1 文字ずつ縦積みになる */
+  .sd-acts{flex:none}
+  .sd-acts button{white-space:nowrap}
+  /* カード内の余白を詰めて、右カラムの本文に幅を残す */
+  .sd-book{padding:18px}
+  .sd-hostcard{padding:16px;gap:14px}
+  .sd-hostcard .ava,.sd-hostcard .avaf{width:56px;height:56px}
+  .sd-hostcard .avaf{font-size:22px}
 }`;

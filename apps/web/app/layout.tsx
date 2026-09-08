@@ -10,7 +10,6 @@ import './globals.css';
 import jaMessages from '../messages/ja.json';
 import { SiteHeader } from '../components/SiteHeader';
 import { SiteFooter } from '../components/SiteFooter';
-import { BottomNav } from '../components/BottomNav';
 import { HeaderShell } from '../components/HeaderShell';
 import { ViewerProvider } from '../components/viewer/ViewerProvider';
 import { getSiteUrl } from '../lib/seo/siteUrl';
@@ -144,18 +143,17 @@ export default function RootLayout({
             <HeaderShell>
               <SiteHeader />
             </HeaderShell>
-            {/* モバイルは BottomNav (h-14) + safe-area-inset-bottom 分の余白を確保。
-                max-w-full + overflow-x-hidden で意図しない横スクロールを最終遮断。
-                md+ は BottomNav が消えるので padding 不要 (.app-main-pad 内で分岐)。 */}
+            {/* 下部タブ（BottomNav）は廃止。スマホの導線は右上の ☰（SideMenu）に集約した。
+                .app-main-pad は safe-area 分だけを見る。
+                max-w-full + overflow-x-hidden で意図しない横スクロールを最終遮断。 */}
             <div className="app-main-pad min-h-[calc(100vh-180px)] max-w-full overflow-x-hidden">
               {children}
             </div>
             <SiteFooter />
-            <BottomNav />
           </ViewerProvider>
           <Toaster
             position="bottom-center"
-            offset={80}
+            offset={16}
             toastOptions={{
               style: {
                 fontFamily: 'var(--font-sans-jp), var(--font-sans), sans-serif',

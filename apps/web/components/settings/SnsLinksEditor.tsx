@@ -175,7 +175,9 @@ export function SnsLinksEditor({ initial }: { initial: SnsLinkRow[] }) {
                     <span>・{KIND_LABEL[(r.kind as LinkKind) ?? 'profile'] ?? r.kind}</span>
                     {r.siteName ? <span>・{r.siteName}</span> : null}
                     {r.previewStatus === 'failed' ? (
-                      <span className="rounded-full bg-warning-500/15 px-2 py-px text-[10px] font-bold text-warning-700">
+                      // 10px は実機で読めないのでスマホは 11px。
+                      // nowrap で「プ / レ / ビ…」の縦割れも止める
+                      <span className="shrink-0 whitespace-nowrap rounded-full bg-warning-500/15 px-2 py-px text-[10px] font-bold text-warning-700 max-sm:text-[11px]">
                         プレビュー未取得
                       </span>
                     ) : null}
@@ -187,6 +189,9 @@ export function SnsLinksEditor({ initial }: { initial: SnsLinkRow[] }) {
                         onChange={(e) => setTitleDraft(e.target.value)}
                         placeholder="表示するタイトル"
                         maxLength={160}
+                        // input の既定幅(約 176px)で止まらないよう min-w-0。
+                        // 無いと 320px で保存ボタンが行からはみ出す
+                        className="min-w-0"
                         autoFocus
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
@@ -199,7 +204,7 @@ export function SnsLinksEditor({ initial }: { initial: SnsLinkRow[] }) {
                       <button
                         type="button"
                         onClick={() => commitEdit(r.id)}
-                        className="rounded-sm p-1.5 text-primary-700 hover:bg-muted"
+                        className="inline-flex shrink-0 items-center justify-center rounded-sm p-1.5 text-primary-700 hover:bg-muted max-sm:h-9 max-sm:w-9"
                         aria-label="タイトルを保存"
                       >
                         <Check className="h-4 w-4" />
@@ -227,12 +232,14 @@ export function SnsLinksEditor({ initial }: { initial: SnsLinkRow[] }) {
                     {r.url}
                   </a>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <label className="inline-flex items-center gap-1.5 text-[11.5px] text-foreground/65">
+                    {/* ラベル＋セレクトは 1 かたまりで縮ませない（shrink-0）。
+                        入らないときは親の flex-wrap で次行に送る。h-9 はタップ領域 */}
+                    <label className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11.5px] text-foreground/65">
                       表示
                       <select
                         value={r.display}
                         onChange={(e) => onDisplay(r.id, e.target.value as LinkDisplay)}
-                        className="h-8 rounded-sm border border-border bg-card px-2 text-[12px] focus:border-primary-500 focus:outline-none"
+                        className="h-8 rounded-sm border border-border bg-card px-2 text-[12px] focus:border-primary-500 focus:outline-none max-sm:h-9"
                       >
                         {LINK_DISPLAYS.filter((d) => d !== 'embed' || r.platform === 'youtube').map((d) => (
                           <option key={d} value={d}>
@@ -246,13 +253,14 @@ export function SnsLinksEditor({ initial }: { initial: SnsLinkRow[] }) {
                     ) : (r.display === 'card' || r.display === 'featured') && !r.imageUrl ? (
                       <span className="text-[11px] text-warning-700">画像が無いのでボタンで表示されます</span>
                     ) : null}
-                    <span className="ml-auto flex items-center gap-1">
+                    {/* アイコン 2 つは常に横並びのまま（shrink-0）。しわ寄せは左の注記へ */}
+                    <span className="ml-auto flex shrink-0 items-center gap-1">
                       {r.platform !== 'email' ? (
                         <button
                           type="button"
                           onClick={() => onRefresh(r.id)}
                           disabled={busy}
-                          className="rounded-sm p-1.5 text-foreground/50 transition hover:bg-muted hover:text-foreground disabled:opacity-50"
+                          className="inline-flex items-center justify-center rounded-sm p-1.5 text-foreground/50 transition hover:bg-muted hover:text-foreground disabled:opacity-50 max-sm:h-9 max-sm:w-9"
                           aria-label="プレビューを再取得"
                           title="プレビューを再取得"
                         >
@@ -263,7 +271,7 @@ export function SnsLinksEditor({ initial }: { initial: SnsLinkRow[] }) {
                         type="button"
                         onClick={() => onDelete(r.id)}
                         disabled={busy}
-                        className="rounded-sm p-1.5 text-foreground/50 transition hover:bg-muted hover:text-danger-500 disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded-sm p-1.5 text-foreground/50 transition hover:bg-muted hover:text-danger-500 disabled:opacity-50 max-sm:h-9 max-sm:w-9"
                         aria-label="削除"
                       >
                         <Trash2 className="h-4 w-4" />

@@ -137,7 +137,8 @@ export function NewArticleEntry({ candidates, initialDuplicateOpen }: Props) {
           aria-label="複製元の記事を選ぶ"
         >
           <div className="flex items-center justify-between gap-2">
-            <div>
+            {/* 説明文は縮んでよい / 閉じるボタンは縮ませない + スマホはタップ領域 36px 確保 */}
+            <div className="min-w-0">
               <h2 className="text-[14px] font-semibold tracking-tight">
                 複製元の記事を選ぶ
                 <span className="ml-2 text-[11px] font-normal text-foreground/55">
@@ -152,7 +153,7 @@ export function NewArticleEntry({ candidates, initialDuplicateOpen }: Props) {
               type="button"
               aria-label="複製パネルを閉じる"
               onClick={() => setOpen(false)}
-              className="rounded-sm p-1 text-foreground/55 transition hover:bg-muted hover:text-foreground"
+              className="shrink-0 rounded-sm p-1 text-foreground/55 transition hover:bg-muted hover:text-foreground max-sm:p-2.5"
             >
               <X className="h-4 w-4" />
             </button>
@@ -188,8 +189,16 @@ export function NewArticleEntry({ candidates, initialDuplicateOpen }: Props) {
                         {c.updatedAt.toLocaleDateString('ja-JP')}
                       </p>
                     </div>
-                    <span className="text-[12px] font-semibold text-primary-300 group-hover:underline">
-                      {isDuplicating ? '複製中…' : 'この記事を複製 →'}
+                    {/* 402/320px ではこのラベルが「こ / の / 記 / 事」と縦一列に潰れる。
+                        縮ませず、スマホでは「複製 →」に文言を詰めてタイトル幅を残す */}
+                    <span className="shrink-0 whitespace-nowrap text-[12px] font-semibold text-primary-300 group-hover:underline">
+                      {isDuplicating ? (
+                        '複製中…'
+                      ) : (
+                        <>
+                          <span className="max-sm:hidden">この記事を</span>複製 →
+                        </>
+                      )}
                     </span>
                   </button>
                 </li>

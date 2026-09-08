@@ -138,7 +138,8 @@ export function QualificationForm({ master }: { master: QualificationMasterRow[]
   return (
     <form onSubmit={onSubmit} className="space-y-4 rounded-md border border-border bg-background/40 p-4">
       <div className="grid gap-3 sm:grid-cols-[1fr_140px_120px]">
-        <div>
+        {/* select の幅は最長の選択肢で決まる。min-w-0 が無いと列ごと親幅を超える */}
+        <div className="min-w-0">
           <label className="mb-1 block text-[12px] font-medium text-foreground/70">
             資格・試験 <span className="text-danger-500">*</span>
           </label>
@@ -204,7 +205,7 @@ export function QualificationForm({ master }: { master: QualificationMasterRow[]
       <div>
         <label className="mb-2 block text-[12px] font-medium text-foreground/70">
           合格証明 <span className="text-danger-500">*</span>
-          <span className="ml-1 text-[10px] font-normal text-foreground/50">
+          <span className="ml-1 text-[10px] max-sm:text-[11px] font-normal text-foreground/50">
             （スコアレポート・合格証・認定証。1〜3 枚、各 15MB まで）
           </span>
         </label>
@@ -222,11 +223,12 @@ export function QualificationForm({ master }: { master: QualificationMasterRow[]
               <li key={i} className="flex items-center gap-2 rounded-md bg-card px-3 py-2 ring-1 ring-border">
                 <FileText className="h-4 w-4 shrink-0 text-foreground/55" />
                 <span className="min-w-0 flex-1 truncate text-[12px]">{f.name}</span>
+                {/* 縮まない側。タップ領域が 22px しか無かったのでスマホだけ 36px に */}
                 <button
                   type="button"
                   aria-label="削除"
                   onClick={() => setFiles(files.filter((_, j) => j !== i))}
-                  className="rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500"
+                  className="inline-flex shrink-0 items-center justify-center rounded-sm p-1 text-foreground/40 hover:bg-muted hover:text-danger-500 max-sm:h-9 max-sm:w-9"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -263,15 +265,19 @@ export function QualificationForm({ master }: { master: QualificationMasterRow[]
         />
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      {/*
+        320px ではこの 2 つが 1 行に収まらず、「キャンセル」が 1 文字ずつ縦積みになる。
+        nowrap で縮むのを止め、入り切らないときは flex-wrap で次の行に落とす
+      */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-full px-4 py-2 text-[13px] font-medium text-foreground/60 hover:text-foreground"
+          className="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-medium text-foreground/60 hover:text-foreground"
         >
           キャンセル
         </button>
-        <Button type="submit" variant="primary" disabled={!canSubmit}>
+        <Button type="submit" variant="primary" disabled={!canSubmit} className="shrink-0">
           {isSubmitting ? '送信中…' : '確認を申請する'}
         </Button>
       </div>
@@ -298,7 +304,7 @@ export function QualificationDeleteButton({ id }: { id: string }) {
         });
       }}
       aria-label="取り下げる"
-      className="rounded-sm p-1.5 text-foreground/40 transition hover:bg-muted hover:text-danger-500 disabled:opacity-50"
+      className="inline-flex shrink-0 items-center justify-center rounded-sm p-1.5 text-foreground/40 transition hover:bg-muted hover:text-danger-500 disabled:opacity-50 max-sm:h-9 max-sm:w-9"
     >
       <Trash2 className="h-4 w-4" />
     </button>

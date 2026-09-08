@@ -149,12 +149,17 @@ function InstaCarousel({
 
       {/* 下のドット + カウンター（モバイルでも見えるように） */}
       <div className="flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3 text-[11px] text-white/65 sm:px-6">
-        <span className="tabular">
+        <span className="shrink-0 whitespace-nowrap tabular">
           <span className="font-bold text-white">{activeIndex + 1}</span>
           <span className="mx-1 text-white/40">/</span>
           {sorted.length}
         </span>
-        <div className="flex items-center gap-1">
+        {/* スマホ幅: 枚数が多いとドット列が溢れるので flex-wrap。
+            ドット自体は見た目そのままで、擬似要素だけタップ領域を広げるが、
+            広げる量は必ず gap 以内・バーの py-3 以内に収める。はみ出すと
+            隣のドットや上の写真のタップを奪ってしまう。
+            そのぶんスマホだけ gap を広げ、PC は sm: で従来値に戻す。 */}
+        <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-3 gap-y-6 sm:gap-x-1 sm:gap-y-2">
           {sorted.map((_, i) => (
             <button
               key={i}
@@ -162,7 +167,8 @@ function InstaCarousel({
               aria-label={`${i + 1} 枚目へ`}
               onClick={() => goTo(i)}
               className={
-                'h-1.5 rounded-full transition-all ' +
+                'relative h-1.5 rounded-full transition-all ' +
+                "before:absolute before:-inset-x-1.5 before:-inset-y-3 before:content-[''] sm:before:hidden " +
                 (i === activeIndex
                   ? 'w-5 bg-white'
                   : 'w-1.5 bg-white/30 hover:bg-white/60')
@@ -230,7 +236,7 @@ function InstaSlide({
         ) : null}
 
         {/* カウンター（右上） */}
-        <span className="pointer-events-none absolute right-3 top-8 z-20 inline-flex items-center rounded-full bg-neutral-950/60 px-2 py-0.5 text-[10px] font-bold tabular tracking-wider text-white/90 backdrop-blur">
+        <span className="pointer-events-none absolute right-3 top-8 z-20 inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-neutral-950/60 px-2 py-0.5 text-[11px] font-bold tabular tracking-wider text-white/90 backdrop-blur sm:text-[10px]">
           {index + 1} / {total}
         </span>
 
@@ -251,7 +257,7 @@ function InstaSlide({
               >
                 {entry.caption}
               </p>
-              <p className="mt-3 text-[10px] uppercase tracking-[0.18em] text-white/55">
+              <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-white/55 sm:text-[10px]">
                 タップで閉じる
               </p>
             </div>
@@ -262,7 +268,7 @@ function InstaSlide({
                 {entry.caption}
               </p>
               {entry.caption.length > 60 ? (
-                <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-white/55">
+                <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/55 sm:text-[10px]">
                   タップで全文
                 </p>
               ) : null}

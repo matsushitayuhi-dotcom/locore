@@ -99,7 +99,9 @@ export const LocalTierBadge = React.forwardRef<
     const sizeClass =
       size === "md"
         ? "px-2.5 py-0.5 text-[11px] gap-1.5"
-        : "px-2 py-0.5 text-[10px] gap-1";
+        // sm は記事カードの写真の上（スマホ 2 列 = カード 174px）で使う。10px は実機で
+        // 読めないのでスマホだけ 11px に上げ、PC は sm: で従来どおり 10px に戻す
+        : "px-2 py-0.5 text-[11px] sm:text-[10px] gap-1";
     const dotSize = size === "md" ? "size-1.5" : "size-1";
 
     return (
@@ -110,7 +112,8 @@ export const LocalTierBadge = React.forwardRef<
         aria-label={`ローカル ${label}`}
         title={`ローカル ${label} (${Math.round(score)})`}
         className={cn(
-          "inline-flex items-center rounded-full font-bold tracking-wider",
+          // 狭い横並びで「ブロンズ」が 1 文字ずつ縦に潰れないよう nowrap
+          "inline-flex items-center whitespace-nowrap rounded-full font-bold tracking-wider",
           sizeClass,
           palette.bg,
           palette.text,
@@ -120,7 +123,12 @@ export const LocalTierBadge = React.forwardRef<
       >
         <span
           aria-hidden
-          className={cn("rounded-full", dotSize, palette.dot)}
+          className={cn(
+            // flex 内でドットが潰れないように shrink-0
+            "shrink-0 rounded-full",
+            dotSize,
+            palette.dot,
+          )}
         />
         {showLabel ? <span className="leading-none">{label}</span> : null}
       </span>

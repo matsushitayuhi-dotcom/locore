@@ -16,7 +16,8 @@ export default function ContactThanksPage({
   return (
     <main className="bg-background">
       <section className="mx-auto max-w-xl px-4 py-16 sm:px-6">
-        <div className="rounded-md border border-border bg-card p-8 text-center">
+        {/* 320px では p-8 だと中の受付番号ボックスに幅が残らないので、スマホだけ詰める */}
+        <div className="rounded-md border border-border bg-card p-8 text-center max-sm:p-6">
           <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent-50 text-accent-500">
             <Check className="h-6 w-6" />
           </span>
@@ -37,7 +38,8 @@ export default function ContactThanksPage({
               <span className="text-[11px] uppercase tracking-[0.18em] text-foreground/50">
                 受付番号
               </span>
-              <span className="mt-1 font-mono text-[18px] font-semibold tabular text-foreground">
+              {/* 受付番号は URL 由来。想定外に長くても枠からはみ出さないように */}
+              <span className="mt-1 break-all font-mono text-[18px] font-semibold tabular text-foreground">
                 {code}
               </span>
             </div>

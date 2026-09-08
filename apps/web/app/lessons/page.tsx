@@ -293,13 +293,13 @@ export default async function LessonsIndexPage({ searchParams }: Props) {
                       fmt: null,
                       trial: null,
                     })}
-                    className="inline-flex h-10 items-center rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
+                    className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-card px-4 text-[12px] font-medium text-foreground/70 ring-1 ring-border hover:bg-muted"
                   >
                     リセット
                   </Link>
                   <button
                     type="submit"
-                    className="ml-auto inline-flex h-10 items-center rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
+                    className="ml-auto inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-primary-500 px-6 text-[13px] font-bold text-neutral-950 hover:bg-primary-300"
                   >
                     適用
                   </button>
@@ -421,7 +421,7 @@ function LessonListItem({ post }: { post: CommunityPostListItem }) {
             {meta.side ? (
               <span
                 className={
-                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ' +
+                  'rounded-sm px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider ' +
                   (meta.side === 'teach'
                     ? 'bg-primary-500 text-neutral-950'
                     : 'bg-accent-500 text-neutral-950')
@@ -431,13 +431,15 @@ function LessonListItem({ post }: { post: CommunityPostListItem }) {
               </span>
             ) : null}
             {meta.category ? (
-              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/65">
+              <span className="rounded-sm bg-foreground/10 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/65">
                 {LESSON_CATEGORY_LABEL[meta.category]}
               </span>
             ) : null}
             {meta.format ? (
-              <span className="inline-flex items-center gap-0.5 rounded-sm bg-primary-500/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary-300">
-                {meta.format === 'online' ? <Wifi className="h-2.5 w-2.5" /> : null}
+              <span className="inline-flex items-center gap-0.5 rounded-sm bg-primary-500/10 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-primary-300">
+                {meta.format === 'online' ? (
+                  <Wifi className="h-2.5 w-2.5 shrink-0" />
+                ) : null}
                 {FORMAT_LABEL[meta.format]}
               </span>
             ) : null}
@@ -445,21 +447,24 @@ function LessonListItem({ post }: { post: CommunityPostListItem }) {
           <h2 className="mt-1 line-clamp-2 text-[14px] font-bold leading-snug text-foreground">
             {post.title}
           </h2>
+          {/* 料金は whitespace-nowrap。サムネの右は 320px で 150px 程度しか無く、
+              放っておくと「€ / 3 / 0 / ／ / 回」と 1 文字ずつ縦積みになる。
+              アイコンは shrink-0（長い地名でアイコンが潰れるため） */}
           <dl className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {price ? (
-              <div className="inline-flex items-center gap-0.5 font-semibold text-primary-300">
-                <Tag className="h-3 w-3" />
+              <div className="inline-flex max-w-full shrink-0 items-center gap-0.5 whitespace-nowrap font-semibold text-primary-300">
+                <Tag className="h-3 w-3 shrink-0" />
                 {price}
               </div>
             ) : null}
             {post.locationText ? (
-              <div className="inline-flex items-center gap-0.5">
-                <MapPin className="h-3 w-3" />
-                {post.locationText}
+              <div className="inline-flex min-w-0 items-center gap-0.5">
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{post.locationText}</span>
               </div>
             ) : null}
-            <div className="inline-flex items-center gap-0.5 text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <div className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </div>
           </dl>
@@ -506,37 +511,44 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
             </div>
           )}
 
-          <div className="absolute top-2 left-2 flex flex-wrap items-center gap-1">
-            {meta.side ? (
-              <span
-                className={
-                  'rounded-sm px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider shadow-sm ' +
-                  (meta.side === 'teach'
-                    ? 'bg-primary-500 text-neutral-950'
-                    : 'bg-accent-500 text-neutral-950')
-                }
-              >
-                {SIDE_LABEL[meta.side]}
-              </span>
-            ) : null}
-            {meta.category ? (
-              <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
-                {LESSON_CATEGORY_LABEL[meta.category]}
-              </span>
-            ) : null}
-            {meta.trial_available ? (
-              <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
-                <Coffee className="h-2.5 w-2.5" />
-                体験
+          {/*
+            バッジ群と料金は 1 本の flex にまとめる。左上と右上で別々の absolute に
+            すると、402px / 320px でバッジが折り返して料金ピルの下に潜り込み重なる。
+            バッジ側は min-w-0 で縮ませ、料金は shrink-0 whitespace-nowrap で守る。
+          */}
+          <div className="absolute inset-x-2 top-2 flex items-start gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1">
+              {meta.side ? (
+                <span
+                  className={
+                    'rounded-sm px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider shadow-sm ' +
+                    (meta.side === 'teach'
+                      ? 'bg-primary-500 text-neutral-950'
+                      : 'bg-accent-500 text-neutral-950')
+                  }
+                >
+                  {SIDE_LABEL[meta.side]}
+                </span>
+              ) : null}
+              {meta.category ? (
+                <span className="rounded-sm bg-card/95 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/75 shadow-sm ring-1 ring-border/60 backdrop-blur">
+                  {LESSON_CATEGORY_LABEL[meta.category]}
+                </span>
+              ) : null}
+              {meta.trial_available ? (
+                <span className="inline-flex items-center gap-0.5 rounded-sm bg-accent-500/90 px-1.5 py-0.5 text-[9px] max-sm:text-[11px] font-bold uppercase tracking-wider text-neutral-950 shadow-sm">
+                  <Coffee className="h-2.5 w-2.5 shrink-0" />
+                  体験
+                </span>
+              ) : null}
+            </div>
+
+            {price ? (
+              <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
+                {price}
               </span>
             ) : null}
           </div>
-
-          {price ? (
-            <span className="absolute right-2 top-2 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tabular text-background shadow-sm">
-              {price}
-            </span>
-          ) : null}
         </div>
 
         <div className="p-3">
@@ -544,30 +556,34 @@ function LessonCard({ post }: { post: CommunityPostListItem }) {
             {post.title}
           </h2>
 
+          {/* アイコンは shrink-0。地名が長いとアイコンが 0 幅まで潰れる */}
           <ul className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-foreground/65">
             {meta.format ? (
-              <li className="inline-flex items-center gap-0.5">
-                {meta.format === 'online' ? <Wifi className="h-3 w-3" /> : null}
+              <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap">
+                {meta.format === 'online' ? (
+                  <Wifi className="h-3 w-3 shrink-0" />
+                ) : null}
                 {FORMAT_LABEL[meta.format]}
               </li>
             ) : null}
             {!price && (
-              <li className="inline-flex items-center gap-0.5 text-foreground/45">
-                <Tag className="h-3 w-3" />
+              <li className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-foreground/45">
+                <Tag className="h-3 w-3 shrink-0" />
                 料金応相談
               </li>
             )}
             {post.locationText ? (
-              <li className="inline-flex items-center gap-0.5 text-foreground/55">
-                <MapPin className="h-3 w-3" />
-                {post.locationText}
+              <li className="inline-flex min-w-0 items-center gap-0.5 text-foreground/55">
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{post.locationText}</span>
               </li>
             ) : null}
           </ul>
 
+          {/* 投稿日時: 10px は実機で読めないためスマホだけ 11px に上げる（PC は据え置き） */}
           <div className="mt-2 flex items-center justify-between gap-1">
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-foreground/45">
-              <Clock className="h-2.5 w-2.5" />
+            <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-[11px] sm:text-[10px] text-foreground/45">
+              <Clock className="h-2.5 w-2.5 shrink-0" />
               {formatPostedAt(post.createdAt)}
             </span>
           </div>

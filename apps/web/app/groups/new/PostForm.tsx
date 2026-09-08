@@ -195,7 +195,7 @@ export function PostForm() {
             className={`mt-1.5 ${FIELD_CLS}`}
             placeholder="パリ 日仏ランゲージエクスチェンジ・カフェ会（初心者歓迎・一人参加OK）"
           />
-          <p className="mt-0.5 text-right text-[10px] text-foreground/45">{title.length} / 140</p>
+          <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">{title.length} / 140</p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -298,7 +298,9 @@ export function PostForm() {
               <label
                 key={f}
                 className={
-                  'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
+                  // 3 列タイルは 320px だと 1 枚 92px しかない。スマホだけ左右の余白を詰め、
+                  // 入り切らないときは中央寄せで 2 行に折る（1 文字ずつの縦積みを防ぐ）
+                  'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition max-sm:px-1 max-sm:leading-tight max-sm:text-center ' +
                   (locationFormat === f
                     ? 'border-primary-500 bg-primary-500/10 text-primary-300'
                     : 'border-border bg-card text-foreground/70 hover:border-foreground/30')
@@ -405,7 +407,9 @@ export function PostForm() {
                 <label
                   key={l}
                   className={
-                    'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
+                    // 3 列タイルは 320px だと 1 枚 92px しかない。スマホだけ左右の余白を詰め、
+                    // 入り切らないときは中央寄せで 2 行に折る（1 文字ずつの縦積みを防ぐ）
+                    'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition max-sm:px-1 max-sm:leading-tight max-sm:text-center ' +
                     (on
                       ? 'border-primary-500 bg-primary-500/10 text-primary-300'
                       : 'border-border bg-card text-foreground/70 hover:border-foreground/30')
@@ -500,7 +504,7 @@ export function PostForm() {
               'パリで日本語とフランス語を学び合う、ゆるい交流カフェ会です。\n\n前半は日本語、後半はフランス語、と時間で言語を切り替えながら、少人数のテーブルでおしゃべりします。'
             }
           />
-          <p className="mt-0.5 text-right text-[10px] text-foreground/45">{body.length} / 8000</p>
+          <p className="mt-0.5 text-right text-[11px] sm:text-[10px] text-foreground/45">{body.length} / 8000</p>
         </div>
 
         <div>
@@ -571,17 +575,18 @@ export function PostForm() {
       </fieldset>
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+        {/* ボタンは縮ませない（文字が 1 文字ずつ縦に積まれるのを防ぐ） */}
         <button
           type="button"
           onClick={() => router.push('/groups')}
-          className="rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
+          className="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+          className="shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
         >
           {isPending ? '公開中…' : '公開する'}
         </button>

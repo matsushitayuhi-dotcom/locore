@@ -73,10 +73,11 @@ export default async function WriterArticlesPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-[12px] text-foreground/60">
+        {/* 件数は縮んでよい / ボタンは縮ませない（狭幅で「新規作成」が潰れるため） */}
+        <p className="min-w-0 text-[12px] text-foreground/60">
           {articles.length} 件の記事
         </p>
-        <Button asChild variant="primary">
+        <Button asChild variant="primary" className="shrink-0">
           <Link href="/writer/articles/new">
             <Plus className="h-4 w-4" />
             新規作成
@@ -84,9 +85,12 @@ export default async function WriterArticlesPage({
         </Button>
       </div>
 
-      {/* タブ */}
+      {/* タブ: 320px だと 3 つ分の幅が足りず日本語が 1 文字ずつに潰れる。
+          潰さず（shrink-0）横スワイプに逃がし、スマホだけ左右 padding を詰める。
+          overflow-x-auto はスクロールコンテナ化して既定のフォーカスアウトラインを
+          切り取るため、タブ側は内側に描かれる ring-inset でフォーカスを見せる */}
       <div
-        className="flex gap-1 border-b border-border"
+        className="flex gap-1 overflow-x-auto border-b border-border"
         role="tablist"
         aria-label="記事ステータス"
       >
@@ -99,7 +103,7 @@ export default async function WriterArticlesPage({
               aria-selected={isActive}
               href={`/writer/articles?status=${tab}`}
               className={
-                'rounded-t-sm px-4 py-2 text-[13px] transition-colors ' +
+                'shrink-0 whitespace-nowrap rounded-t-sm px-4 py-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500 max-sm:px-3 ' +
                 (isActive
                   ? 'border-b-2 border-primary-700 font-medium text-foreground'
                   : 'text-foreground/60 hover:text-foreground')
@@ -156,10 +160,10 @@ export default async function WriterArticlesPage({
                       カバー未設定
                     </div>
                   )}
-                  {/* 状態バッジ（左上） */}
+                  {/* 状態バッジ（左上）。10px は実機で読めないのでスマホだけ 11px（PC は据え置き） */}
                   <span
                     className={
-                      'absolute left-2 top-2 z-20 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold shadow-sm ' +
+                      'absolute left-2 top-2 z-20 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] sm:text-[10px] font-semibold shadow-sm ' +
                       badge.cls
                     }
                   >
@@ -167,7 +171,7 @@ export default async function WriterArticlesPage({
                     {badge.label}
                   </span>
                   {a.warned ? (
-                    <span className="absolute right-2 top-2 z-20 inline-flex items-center gap-1 rounded-full bg-warning-500/95 px-2 py-0.5 text-[10px] font-semibold text-neutral-950 shadow-sm">
+                    <span className="absolute right-2 top-2 z-20 inline-flex items-center gap-1 rounded-full bg-warning-500/95 px-2 py-0.5 text-[11px] sm:text-[10px] font-semibold text-neutral-950 shadow-sm">
                       警告あり
                     </span>
                   ) : null}

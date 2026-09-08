@@ -98,7 +98,11 @@ export function MobileEditorToolbar({ editor, onPickImage }: Props) {
   return (
     <div
       // PC は非表示 (md 未満で表示)
-      className="locore-mobile-toolbar fixed left-0 right-0 z-40 flex items-center gap-1 overflow-x-auto border-t border-border bg-card px-2 py-1.5 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.12)] md:hidden"
+      // z-[55]: ウィザードの下部固定バー (sticky z-50) より前面に出す。
+      //   同じ z だと DOM 順で下部バーが上に来て、入力中にツールバーが隠れる。
+      // pb-[safe-area]: キーボードを閉じた状態 (offset 0) でホームインジケータに
+      //   ボタンが重ならないように。
+      className="locore-mobile-toolbar fixed left-0 right-0 z-[55] flex items-center gap-1 overflow-x-auto border-t border-border bg-card px-2 py-1.5 pb-[calc(0.375rem_+_env(safe-area-inset-bottom))] shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.12)] md:hidden"
       style={{ bottom: keyboardOffset }}
       role="toolbar"
       aria-label="本文クイックツールバー"

@@ -28,7 +28,7 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
           href="/"
           className="inline-flex items-center gap-1 text-[12px] font-medium text-primary-300 hover:underline"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
+          <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
           ホームに戻る
         </Link>
 
@@ -46,8 +46,9 @@ export default function LegalLayout({ children }: { children: ReactNode }) {
                       href={item.href}
                       className="group flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] text-foreground/75 transition hover:bg-muted hover:text-foreground"
                     >
-                      <Icon className="h-3.5 w-3.5 text-foreground/45 group-hover:text-primary-300" />
-                      <span>{item.label}</span>
+                      {/* アイコンは縮ませず、ラベル側で幅を吸収する（狭い画面での潰れ防止） */}
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-foreground/45 group-hover:text-primary-300" />
+                      <span className="min-w-0">{item.label}</span>
                     </Link>
                   </li>
                 );

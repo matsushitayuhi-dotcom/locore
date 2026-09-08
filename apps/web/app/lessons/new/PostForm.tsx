@@ -144,6 +144,8 @@ export function PostForm() {
             <label
               key={s}
               className={
+                // 2 列タイルは 320px でも内寸 121px あり、「教えます」「習いたい」の 4 文字
+                // （約 48px）は余裕で 1 行に収まる。スマホ専用の余白調整は不要
                 'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
                 (side === s
                   ? 'border-primary-500 bg-primary-500/10 text-primary-300'
@@ -183,7 +185,8 @@ export function PostForm() {
               : 'フランス語家庭教師を探しています（中級者）'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
           {title.length} / 140
         </p>
       </div>
@@ -285,7 +288,8 @@ export function PostForm() {
         <legend className="text-[12px] font-bold text-foreground">料金</legend>
         <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div>
-            <label htmlFor="amount" className="block text-[10px] text-foreground/55">
+            {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+            <label htmlFor="amount" className="block text-[11px] text-foreground/55 sm:text-[10px]">
               金額
             </label>
             <input
@@ -301,7 +305,8 @@ export function PostForm() {
             />
           </div>
           <div>
-            <label htmlFor="currency" className="block text-[10px] text-foreground/55">
+            {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+            <label htmlFor="currency" className="block text-[11px] text-foreground/55 sm:text-[10px]">
               通貨
             </label>
             <select
@@ -315,7 +320,8 @@ export function PostForm() {
             </select>
           </div>
           <div>
-            <label htmlFor="unit" className="block text-[10px] text-foreground/55">
+            {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+            <label htmlFor="unit" className="block text-[11px] text-foreground/55 sm:text-[10px]">
               単位
             </label>
             <select
@@ -334,12 +340,14 @@ export function PostForm() {
         </div>
       </fieldset>
 
-      <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+      {/* チェックボックスは shrink-0。横の文字が 1 文字ずつ縦に積まれるのを防ぐ。
+          min-h-9 はスマホのタップ領域（36px）確保 */}
+      <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80 max-sm:min-h-9">
         <input
           type="checkbox"
           checked={trialAvailable}
           onChange={(e) => setTrialAvailable(e.target.checked)}
-          className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+          className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
         />
         体験レッスンあり
       </label>
@@ -367,7 +375,8 @@ export function PostForm() {
               : '【希望内容】DELF B2 対策\n【現状】B1 取得済み、口頭表現を伸ばしたい\n【頻度】週 1 回、1 時間\n【希望】カフェ or Zoom、フランス人 / バイリンガル先生'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
           {body.length} / 8000
         </p>
       </div>
@@ -375,17 +384,18 @@ export function PostForm() {
       <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+        {/* ボタンは縮ませない（文字が 1 文字ずつ縦に積まれるのを防ぐ） */}
         <button
           type="button"
           onClick={() => router.push('/lessons')}
-          className="rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
+          className="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+          className="shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
         >
           {isPending ? '公開中…' : '公開する'}
         </button>

@@ -33,7 +33,11 @@ export default async function SettingsLayout({
           </p>
         </header>
 
-        <div className="grid gap-8 md:grid-cols-[200px_1fr]">
+        {/* グリッドの子は既定で min-content 未満に縮まない。ナビ（横スクロールの
+            タブ列）の min-content は 785px あり、402px ではトラックごと画面外に
+            出ていた。子に min-w-0 を付けてトラックを親幅に収め、はみ出しは
+            ナビ側の overflow-x-auto に任せる。 */}
+        <div className="grid gap-8 [&>*]:min-w-0 md:grid-cols-[200px_1fr]">
           <SettingsNav role={user.role} />
           <section>{children}</section>
         </div>

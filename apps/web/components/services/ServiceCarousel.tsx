@@ -76,31 +76,35 @@ export function ServiceCarousel({ services }: Props) {
               )}
             </div>
             <div className="flex flex-1 flex-col p-4 sm:p-5">
+            {/* タグ・価格単位・地名の 10px はスマホだと読めないので 11px へ。
+                PC は sm: で従来の 10px に据え置く（規約7） */}
             <div className="flex flex-wrap items-start gap-2">
               {shown.map((t) => (
                 <span
                   key={t}
-                  className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[10px] font-semibold text-primary-300"
+                  className="rounded-full bg-primary-500/10 px-2 py-0.5 text-[11px] sm:text-[10px] font-semibold text-primary-300"
                 >
                   {TAG_LABEL[t] ?? t}
                 </span>
               ))}
               {rest > 0 ? (
-                <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground/55">
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] sm:text-[10px] font-semibold text-foreground/55">
                   +{rest}
                 </span>
               ) : null}
+              {/* 価格は縮ませない（ml-auto を残したまま flex-wrap で次行に落ちる）。
+                  ServiceCard.tsx と同じ扱いに揃える */}
               {s.priceJpy != null ? (
-                <span className="ml-auto text-[14px] font-bold tabular text-primary-300">
+                <span className="ml-auto shrink-0 whitespace-nowrap text-[14px] font-bold tabular text-primary-300">
                   ¥{s.priceJpy.toLocaleString('ja-JP')}
                   {s.priceUnit ? (
-                    <span className="ml-0.5 text-[10px] font-medium text-foreground/60">
+                    <span className="ml-0.5 text-[11px] sm:text-[10px] font-medium text-foreground/60">
                       / {s.priceUnit}
                     </span>
                   ) : null}
                 </span>
               ) : (
-                <span className="ml-auto text-[12px] font-medium text-foreground/50">
+                <span className="ml-auto shrink-0 whitespace-nowrap text-[12px] font-medium text-foreground/50">
                   応相談
                 </span>
               )}
@@ -130,8 +134,8 @@ export function ServiceCarousel({ services }: Props) {
                 </span>
               </div>
               {s.cityNameJa ? (
-                <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-foreground/60">
-                  <MapPin className="h-2.5 w-2.5" />
+                <span className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-[11px] sm:text-[10px] font-medium text-foreground/60">
+                  <MapPin className="h-2.5 w-2.5 shrink-0" />
                   {s.cityNameJa}
                 </span>
               ) : null}

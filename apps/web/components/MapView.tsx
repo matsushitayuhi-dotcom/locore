@@ -35,9 +35,9 @@ export function MapView({
   purchasedArticleIds,
   myArticleIds,
 }: MapViewProps) {
-  // SiteHeader (56px) + BottomNav (約 64px) を引いて画面いっぱい
+  // 下部タブを廃止したので、引くのは SiteHeader (h-14 = 56px) 分だけ。
   return (
-    <div className="relative h-[calc(100vh-7rem)] w-full md:h-[calc(100vh-4rem)]">
+    <div className="relative h-[calc(100vh-4rem)] w-full">
       <InnerMap
         spots={spots}
         articles={articles}

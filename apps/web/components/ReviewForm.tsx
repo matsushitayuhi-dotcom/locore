@@ -105,7 +105,9 @@ export function ReviewForm({ articleId, initial }: Props) {
         <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/60">
           満足度
         </label>
-        <div className="flex gap-1">
+        {/* 星 5 個 (各 40px) + ラベルは 320px だと 1 行に収まらない。
+            折り返しを許可し、ラベル側は縮ませない */}
+        <div className="flex flex-wrap items-center gap-1">
           {[1, 2, 3, 4, 5].map((n) => (
             <button
               key={n}
@@ -125,7 +127,7 @@ export function ReviewForm({ articleId, initial }: Props) {
               />
             </button>
           ))}
-          <span className="ml-2 self-center text-[13px] font-semibold tabular text-foreground/70">
+          <span className="ml-2 shrink-0 self-center whitespace-nowrap text-[13px] font-semibold tabular text-foreground/70">
             {stars > 0 ? `${stars}.0` : '未選択'}
           </span>
         </div>
@@ -154,16 +156,21 @@ export function ReviewForm({ articleId, initial }: Props) {
           onChange={(e) => setLocalScore(Number(e.target.value))}
           className="w-full accent-primary-500"
         />
-        <div className="mt-1 flex justify-between text-[10px] uppercase tracking-wider text-foreground/45">
-          <span>定番寄り</span>
-          <span>ローカル寄り</span>
+        {/* スライダー両端のラベル。10px はスマホで読めないので 11px、PC は据え置き（規約7）。
+            2 語が寄り切らないよう縮ませない */}
+        <div className="mt-1 flex justify-between gap-2 text-[11px] uppercase tracking-wider text-foreground/45 sm:text-[10px]">
+          <span className="shrink-0 whitespace-nowrap">定番寄り</span>
+          <span className="shrink-0 whitespace-nowrap">ローカル寄り</span>
         </div>
       </div>
 
       {/* タグ */}
       <div className="mb-5">
         <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/60">
-          タグ <span className="ml-1 text-[10px] font-normal">（3 個まで）</span>
+          タグ{' '}
+          <span className="ml-1 text-[11px] font-normal sm:text-[10px]">
+            （3 個まで）
+          </span>
         </p>
         <div className="flex flex-wrap gap-1.5">
           {QUICK_TAGS.map((t) => {
@@ -193,7 +200,10 @@ export function ReviewForm({ articleId, initial }: Props) {
           htmlFor="review-body"
           className="mb-2 block text-[11px] font-bold uppercase tracking-[0.14em] text-foreground/60"
         >
-          コメント <span className="ml-1 text-[10px] font-normal">（任意、2000 字まで）</span>
+          コメント{' '}
+          <span className="ml-1 text-[11px] font-normal sm:text-[10px]">
+            （任意、2000 字まで）
+          </span>
         </label>
         <textarea
           id="review-body"
@@ -204,7 +214,7 @@ export function ReviewForm({ articleId, initial }: Props) {
           placeholder="記事のとおりに辿ってみて、どうでしたか？"
           className="w-full rounded-md border border-border bg-card px-3 py-2 text-[13px] leading-relaxed focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
         />
-        <p className="mt-1 text-right text-[10px] text-foreground/45">
+        <p className="mt-1 text-right text-[11px] text-foreground/45 sm:text-[10px]">
           {body.length} / 2000
         </p>
       </div>

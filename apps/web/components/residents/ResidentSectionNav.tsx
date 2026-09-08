@@ -71,10 +71,11 @@ export function ResidentSectionNav({ items, topOffset = 56 }: Props) {
               }
             >
               {it.label}
+              {/* 件数バッジ: スマホは 11px 以上（PC は sm: で従来サイズ） */}
               {typeof it.count === 'number' && it.count > 0 ? (
                 <span
                   className={
-                    'ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ' +
+                    'ml-1.5 rounded-full px-1.5 py-0.5 text-[11px] font-semibold sm:text-[10px] ' +
                     (on
                       ? 'bg-primary-500 text-neutral-950'
                       : 'bg-primary-500/15 text-primary-700')

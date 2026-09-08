@@ -116,7 +116,13 @@ export default async function VerificationPage() {
               {myQuals.map((q) => (
                 <li key={q.id} className="flex flex-wrap items-center gap-3 py-2.5 text-[13px]">
                   <QualStatus status={q.status} />
-                  <div className="min-w-0 flex-1">
+                  {/*
+                    バッジと削除ボタンが shrink-0 なので、320px では中央に 110px しか
+                    残らず資格名が数文字で折り返す。min-w-[8rem] を下限にして、足りない
+                    ときは削除ボタンを次の行へ落とす（flex-basis:0 の flex-1 だけでは
+                    折り返しの引き金にならない）。PC は 1 行に収まるので見た目は不変
+                  */}
+                  <div className="min-w-[8rem] flex-1">
                     <b className="font-semibold">{qualificationDisplayName(q)}</b>
                     {q.score ? <span className="ml-2 tabular-nums">{q.score}</span> : null}
                     {q.acquiredYear ? (
@@ -143,24 +149,27 @@ export default async function VerificationPage() {
   );
 }
 
+/** 状態バッジ。横並びの中では縮まない側なので shrink-0 + nowrap（「確 / 認 / 待 / ち」を防ぐ） */
 function QualStatus({ status }: { status: 'pending' | 'approved' | 'rejected' }) {
+  const base =
+    'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[10.5px] max-sm:text-[11px] font-bold';
   if (status === 'approved') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2.5 py-1 text-[10.5px] font-bold text-primary-900">
-        <CheckCircle2 className="h-3 w-3" /> 確認済み
+      <span className={`${base} bg-primary-100 text-primary-900`}>
+        <CheckCircle2 className="h-3 w-3 shrink-0" /> 確認済み
       </span>
     );
   }
   if (status === 'rejected') {
     return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-danger-50 px-2.5 py-1 text-[10.5px] font-bold text-danger-500">
-        <XCircle className="h-3 w-3" /> 却下
+      <span className={`${base} bg-danger-50 text-danger-500`}>
+        <XCircle className="h-3 w-3 shrink-0" /> 却下
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[10.5px] font-bold text-neutral-700">
-      <Clock className="h-3 w-3" /> 確認待ち
+    <span className={`${base} bg-muted text-neutral-700`}>
+      <Clock className="h-3 w-3 shrink-0" /> 確認待ち
     </span>
   );
 }
@@ -181,7 +190,8 @@ function StatusCard({
     <section className={`rounded-md p-4 ring-1 sm:p-5 ${meta.bg}`}>
       <div className="flex items-start gap-3">
         <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${meta.cls}`} />
-        <div className="flex-1">
+        {/* 縮む側。min-w-0 が無いと申請日・書類名の行がカードからはみ出す */}
+        <div className="min-w-0 flex-1">
           <p className={`text-[13px] font-bold ${meta.cls}`}>{meta.label}</p>
           <p className="mt-1 text-[12px] text-foreground/75">
             申請日: {latest.submittedAt.toLocaleDateString('ja-JP')}
@@ -195,7 +205,7 @@ function StatusCard({
           </p>
           {latest.status === 'rejected' && latest.rejectedReason ? (
             <div className="mt-3 rounded-md bg-card p-3 text-[12px] leading-relaxed text-foreground/80 ring-1 ring-border">
-              <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-foreground/55">運営から</p>
+              <p className="mb-1 text-[10px] max-sm:text-[11px] font-bold uppercase tracking-wider text-foreground/55">運営から</p>
               <p className="whitespace-pre-line">{latest.rejectedReason}</p>
             </div>
           ) : null}

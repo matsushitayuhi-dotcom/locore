@@ -105,7 +105,9 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
             >
               <div
                 className={
-                  'max-w-[78%] rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed shadow-xs ' +
+                  // 吹き出しは画面幅の 78% までに収める。min-w-0 が無いと長い URL 等で
+                  // 中身の min-content 幅に押し広げられて横スクロールが出る。
+                  'min-w-0 max-w-[78%] rounded-2xl px-3.5 py-2 text-[13px] leading-relaxed shadow-xs ' +
                   (mine
                     ? 'bg-primary-700 text-white'
                     : 'bg-card text-foreground ring-1 ring-border')
@@ -114,7 +116,8 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
                 <p
                   className={
-                    'mt-1 text-right text-[10px] ' +
+                    // 時刻の 10px は実機で読めないのでスマホだけ 11px (PC は据え置き)
+                    'mt-1 text-right text-[11px] sm:text-[10px] ' +
                     (mine ? 'text-white/60' : 'text-foreground/40')
                   }
                 >
@@ -145,12 +148,18 @@ export function ChatThreadClient({ threadId, myUserId, initialMessages }: Props)
               onSend(e);
             }
           }}
-          className="flex-1 resize-none rounded-md border border-border bg-card px-3 py-2 text-[13px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
+          // - min-w-0: textarea は既定で cols=20 相当の最小幅を持つため、これが無いと
+          //   320px で送信ボタンを押し出して横に溢れる
+          // - スマホだけ 16px: iOS Safari は 16px 未満の入力欄でフォーカス時に
+          //   自動ズームしてレイアウトが崩れる。sm 以上は従来の 13px のまま
+          className="min-w-0 flex-1 resize-none rounded-md border border-border bg-card px-3 py-2 text-[16px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none sm:text-[13px]"
         />
         <Button
           type="submit"
           variant="primary"
           size="md"
+          // 送信ボタンは縮まない側
+          className="shrink-0"
           disabled={isSending || draft.trim().length === 0}
         >
           {isSending ? '送信中…' : '送信'}

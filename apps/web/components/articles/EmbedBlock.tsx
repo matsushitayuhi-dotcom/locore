@@ -23,7 +23,8 @@ export function EmbedBlock({ block }: { block: Embed }) {
     <div className="flex items-center gap-2.5 border-t border-border px-3.5 py-2.5 text-[12.5px] text-neutral-700">
       {title ? <b className="min-w-0 truncate text-foreground">{title}</b> : <span className="text-neutral-500">{label}</span>}
       {sub ? <span className="hidden truncate text-neutral-500 sm:inline">{sub}</span> : null}
-      <a href={block.url} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap text-neutral-500 hover:text-foreground">
+      {/* -my-2.5/py-2.5 でバーの高さは変えずにタップ領域だけ 40px に広げる */}
+      <a href={block.url} target="_blank" rel="noopener noreferrer" className="-my-2.5 ml-auto inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap py-2.5 text-neutral-500 hover:text-foreground">
         {action} <ArrowUpRight className="h-3 w-3" aria-hidden />
       </a>
     </div>
@@ -47,7 +48,7 @@ export function EmbedBlock({ block }: { block: Embed }) {
             <button type="button" onClick={() => setLive(true)} className="group absolute inset-0 block h-full w-full" aria-label="再生">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={thumb} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
-              <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2 py-[3px] text-[10.5px] font-bold text-neutral-900 shadow-sm">YouTube</span>
+              <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2 py-[3px] text-[10.5px] font-bold text-neutral-900 shadow-sm max-sm:text-[11px]">YouTube</span>
               <span className="absolute inset-0 grid place-items-center">
                 <span className="grid h-[52px] w-[52px] place-items-center rounded-full bg-primary-500 text-neutral-950 shadow-lg transition group-hover:scale-105">
                   <Play className="ml-0.5 h-5 w-5" fill="currentColor" aria-hidden />
@@ -72,7 +73,7 @@ export function EmbedBlock({ block }: { block: Embed }) {
             <iframe src={src} title={name ?? 'Google マップ'} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="absolute inset-0 h-full w-full border-0" />
           ) : (
             <button type="button" onClick={() => setLive(true)} disabled={!src} className="absolute inset-0 block h-full w-full" aria-label="地図を読み込む">
-              <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2 py-[3px] text-[10.5px] font-bold text-neutral-900 shadow-sm">Google マップ</span>
+              <span className="absolute left-2.5 top-2.5 rounded-full bg-white px-2 py-[3px] text-[10.5px] font-bold text-neutral-900 shadow-sm max-sm:text-[11px]">Google マップ</span>
               <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                 <MapPin className="h-8 w-8 text-neutral-900" fill="#fff" aria-hidden />
               </span>
@@ -92,7 +93,7 @@ export function EmbedBlock({ block }: { block: Embed }) {
       {hasAny ? (
         <div className="p-3.5">
           <div className="flex items-center gap-2 text-[12px] text-neutral-500">
-            <span className="rounded-full bg-neutral-100 px-2 py-[3px] text-[10.5px] font-bold text-neutral-900">{label}</span>
+            <span className="rounded-full bg-neutral-100 px-2 py-[3px] text-[10.5px] font-bold text-neutral-900 max-sm:text-[11px]">{label}</span>
             {p?.siteName ? <span>{p.siteName}</span> : null}
           </div>
           {p?.title ? <p className="mt-2 text-[15px] leading-[1.8] text-neutral-800">{p.title}</p> : null}

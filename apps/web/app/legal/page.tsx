@@ -74,7 +74,8 @@ export default function LegalIndexPage() {
                 </p>
                 <span className="mt-auto inline-flex items-center gap-1 text-[12px] font-semibold text-primary-300">
                   読む
-                  <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" />
+                  {/* 矢印は縮ませない（狭い画面でつぶれると読めなくなる） */}
+                  <ArrowRight className="h-3 w-3 shrink-0 transition group-hover:translate-x-0.5" />
                 </span>
               </Link>
             </li>

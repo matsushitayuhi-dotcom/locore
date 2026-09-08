@@ -55,8 +55,10 @@ const YEAR_OPTIONS: number[] = Array.from(
 
 const MAX_ROWS = 10;
 
+// shrink-0: 年セレクトは縮んではいけない側（縮むと「2 / 0 / 2 / 6」と割れる）。
+// 足りなければ親の flex-wrap で次行に送る。max-sm:h-9 はスマホのタップ領域 36px 確保。
 const yearSelectCls =
-  'h-8 rounded-sm border border-border bg-background px-1.5 text-[12px] tabular-nums focus:border-primary-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40';
+  'h-8 shrink-0 rounded-sm border border-border bg-background px-1.5 text-[12px] tabular-nums focus:border-primary-500 focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 max-sm:h-9';
 
 function YearSelect({
   value,
@@ -130,7 +132,8 @@ export function CareerHistoryEditor({
     <div>
       <p className="mb-1.5 text-[12px] font-semibold text-foreground/80">
         {label}
-        <span className="ml-1 text-[10px] font-normal text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <span className="ml-1 text-[10px] font-normal text-foreground/45 max-sm:text-[11px]">
           ({rows.length}/{MAX_ROWS})
         </span>
       </p>
@@ -162,14 +165,17 @@ export function CareerHistoryEditor({
                     onChange={(e) => patch(i, { name: e.target.value })}
                     placeholder={namePlaceholder}
                     maxLength={80}
-                    className="flex-1"
+                    // input は min-width:auto が既定サイズ(約 176px)で止まるため、
+                    // min-w-0 が無いと 320px で削除ボタンごと右へはみ出す
+                    className="min-w-0 flex-1"
                   />
                 )}
                 <button
                   type="button"
                   aria-label="この行を削除"
                   onClick={() => remove(i)}
-                  className="rounded-sm p-1.5 text-foreground/40 hover:bg-muted hover:text-danger-500"
+                  // shrink-0 で入力欄側にしわ寄せ。28px では押しづらいのでスマホは 36px
+                  className="inline-flex shrink-0 items-center justify-center rounded-sm p-1.5 text-foreground/40 hover:bg-muted hover:text-danger-500 max-sm:h-9 max-sm:w-9"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -192,7 +198,8 @@ export function CareerHistoryEditor({
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {isSchool ? (
-                  <label className="inline-flex items-center gap-1.5 text-[12px] text-foreground/70">
+                  // shrink-0: 「出 / 願」と 1 文字ずつ割れないよう縮ませない側にする
+                  <label className="inline-flex shrink-0 items-center gap-1.5 text-[12px] text-foreground/70">
                     出願
                     <YearSelect
                       value={r.applicationYear}
@@ -203,25 +210,28 @@ export function CareerHistoryEditor({
                 ) : null}
                 {kind !== 'admission' ? (
                   <>
-                    {isSchool ? <span className="mx-1 h-4 w-px bg-border" aria-hidden /> : null}
+                    {isSchool ? (
+                      <span className="mx-1 h-4 w-px shrink-0 bg-border" aria-hidden />
+                    ) : null}
                     <YearSelect
                       value={r.startYear}
                       onChange={(v) => patch(i, { startYear: v })}
                       ariaLabel="開始年"
                     />
-                    <span className="text-[12px] text-foreground/50">〜</span>
+                    <span className="shrink-0 text-[12px] text-foreground/50">〜</span>
                     <YearSelect
                       value={r.endYear}
                       onChange={(v) => patch(i, { endYear: v })}
                       ariaLabel="終了年"
                       disabled={r.current}
                     />
-                    <label className="inline-flex cursor-pointer items-center gap-1.5 text-[12px] text-foreground/70">
+                    {/* shrink-0 で「現 / 在」の縦割れを防ぎ、スマホは高さ 36px を確保 */}
+                    <label className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[12px] text-foreground/70 max-sm:min-h-9">
                       <input
                         type="checkbox"
                         checked={r.current}
                         onChange={(e) => patch(i, { current: e.target.checked })}
-                        className="h-3.5 w-3.5"
+                        className="h-3.5 w-3.5 shrink-0 max-sm:h-4 max-sm:w-4"
                       />
                       {kind === 'work' ? '現在' : '在学中'}
                     </label>
@@ -236,9 +246,10 @@ export function CareerHistoryEditor({
         type="button"
         onClick={add}
         disabled={rows.length >= MAX_ROWS}
-        className="mt-2 inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-[12px] font-medium text-foreground/70 hover:bg-primary-500/15 hover:text-primary-300 disabled:cursor-not-allowed disabled:opacity-50"
+        // 高さ 30px でタップしづらかったのでスマホだけ 36px に
+        className="mt-2 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-muted px-3 py-1.5 text-[12px] font-medium text-foreground/70 hover:bg-primary-500/15 hover:text-primary-300 disabled:cursor-not-allowed disabled:opacity-50 max-sm:min-h-9"
       >
-        <Plus className="h-3.5 w-3.5" />
+        <Plus className="h-3.5 w-3.5 shrink-0" />
         追加
       </button>
     </div>

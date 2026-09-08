@@ -212,7 +212,7 @@ export function PreviewBanner({
     <div className="mx-auto max-w-screen-lg px-4 pt-4 sm:px-6">
       <div className="rounded-md border border-warning-500 bg-warning-50 px-4 py-3 text-warning-700">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[13px] font-bold">
+          <p className="min-w-0 text-[13px] font-bold">
             <span className="mr-2 rounded-full bg-warning-500/20 px-2 py-0.5 text-[11px] uppercase tracking-[0.16em]">
               プレビュー
             </span>
@@ -220,7 +220,7 @@ export function PreviewBanner({
           </p>
           <Link
             href={`/writer/articles/${article.id}/edit`}
-            className="text-[12px] text-warning-700 underline-offset-4 hover:underline"
+            className="shrink-0 text-[12px] text-warning-700 underline-offset-4 hover:underline"
           >
             編集に戻る →
           </Link>
@@ -381,7 +381,7 @@ export function AuthorCard({
   const body = (
     <div className="body">
       <div className="k">この記事を書いた人</div>
-      <h3 className="flex flex-wrap items-center gap-3">
+      <h3 className="flex flex-wrap items-center gap-3 max-sm:justify-center">
         {writer.name}
         {badge}
       </h3>
@@ -389,7 +389,7 @@ export function AuthorCard({
       {writer.bio ? <p className="bio">{writer.bio}</p> : null}
       {isExpert && expertHref ? (
         <>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 max-sm:justify-center">
             <Link className={`${variant}-authcta`} href={expertHref}>
               <ChatIcon />
               この記事を書いた人に相談する

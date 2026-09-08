@@ -108,6 +108,8 @@ export function PostForm() {
             <label
               key={s}
               className={
+                // 2 列タイルは 320px でも内寸 121px あり、「売ります」「買います」の 4 文字
+                // （約 48px）は余裕で 1 行に収まる。スマホ専用の余白調整は不要
                 'flex cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2.5 py-2 text-[12px] font-medium transition ' +
                 (side === s
                   ? 'border-primary-500 bg-primary-500/10 text-primary-300'
@@ -144,7 +146,8 @@ export function PostForm() {
           className="mt-1.5 w-full rounded-md border border-border bg-card px-3 py-2 text-[14px] focus:border-2 focus:border-primary-500 focus:px-[11px] focus:py-[7px] focus:outline-none"
           placeholder="IKEA ソファ（3 人掛け、ベージュ、2 年使用）"
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
           {title.length} / 140
         </p>
       </div>
@@ -219,7 +222,8 @@ export function PostForm() {
         </legend>
         <div className="mt-1.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div>
-            <label htmlFor="amount" className="block text-[10px] text-foreground/55">
+            {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+            <label htmlFor="amount" className="block text-[11px] text-foreground/55 sm:text-[10px]">
               金額
             </label>
             <input
@@ -234,7 +238,8 @@ export function PostForm() {
             />
           </div>
           <div>
-            <label htmlFor="currency" className="block text-[10px] text-foreground/55">
+            {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+            <label htmlFor="currency" className="block text-[11px] text-foreground/55 sm:text-[10px]">
               通貨
             </label>
             <select
@@ -247,35 +252,38 @@ export function PostForm() {
               <option value="JPY">JPY (¥)</option>
             </select>
           </div>
-          <label className="mt-5 inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+          {/* mt-5 は sm の 3 列で入力欄と高さを揃えるためのもの。1 列になるスマホでは
+              余白を消し、代わりに min-h-9 でタップ領域（36px）を確保する */}
+          <label className="mt-5 inline-flex cursor-pointer items-center gap-2 whitespace-nowrap text-[12px] text-foreground/80 max-sm:mt-0 max-sm:min-h-9">
             <input
               type="checkbox"
               checked={negotiable}
               onChange={(e) => setNegotiable(e.target.checked)}
-              className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+              className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
             />
             応相談
           </label>
         </div>
       </fieldset>
 
-      {/* 配送オプション */}
+      {/* 配送オプション。チェックボックスは shrink-0、ラベルは折らずに行ごと wrap させる
+          （狭い幅で「配 / 達 / 対 / 応」と 1 文字ずつ縦に積まれるのを防ぐ） */}
       <div className="flex flex-wrap gap-3">
-        <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+        <label className="inline-flex cursor-pointer items-center gap-2 whitespace-nowrap text-[12px] text-foreground/80 max-sm:min-h-9">
           <input
             type="checkbox"
             checked={pickupRequired}
             onChange={(e) => setPickupRequired(e.target.checked)}
-            className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+            className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
           />
           引き取りのみ
         </label>
-        <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-foreground/80">
+        <label className="inline-flex cursor-pointer items-center gap-2 whitespace-nowrap text-[12px] text-foreground/80 max-sm:min-h-9">
           <input
             type="checkbox"
             checked={deliveryAvailable}
             onChange={(e) => setDeliveryAvailable(e.target.checked)}
-            className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
+            className="h-4 w-4 shrink-0 rounded border-border text-primary-500 focus:ring-primary-500"
           />
           配達対応可（要相談）
         </label>
@@ -312,7 +320,8 @@ export function PostForm() {
             '【商品】IKEA EKTORP 3 人掛けソファ\n【サイズ】W218 × D88 × H88 cm\n【購入時期】2024 年 4 月\n【状態】カバー洗濯済み、目立った汚れなし\n【受け渡し】帰国に伴い 6 月末まで'
           }
         />
-        <p className="mt-0.5 text-right text-[10px] text-foreground/45">
+        {/* 10px は実機で読めないのでスマホだけ 11px に上げる（PC は据え置き） */}
+        <p className="mt-0.5 text-right text-[11px] text-foreground/45 sm:text-[10px]">
           {body.length} / 8000
         </p>
       </div>
@@ -320,17 +329,18 @@ export function PostForm() {
       <ContactEmailField value={contactEmail} onChange={setContactEmail} />
 
       <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+        {/* ボタンは縮ませない（文字が 1 文字ずつ縦に積まれるのを防ぐ） */}
         <button
           type="button"
           onClick={() => router.push('/marketplace')}
-          className="rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
+          className="shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-[12px] font-medium text-foreground/65 hover:bg-muted"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
+          className="shrink-0 whitespace-nowrap rounded-full bg-primary-500 px-6 py-2.5 text-[13px] font-bold text-neutral-950 transition hover:bg-primary-300 disabled:opacity-50"
         >
           {isPending ? '公開中…' : '公開する'}
         </button>

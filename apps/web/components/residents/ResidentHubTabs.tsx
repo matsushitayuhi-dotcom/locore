@@ -83,10 +83,11 @@ export function ResidentHubTabs({ activeTab, counts }: Props) {
                 }
               >
                 {t.label}
+                {/* 件数バッジ: スマホは 11px 以上（PC は sm: で従来サイズ） */}
                 {typeof count === 'number' && count > 0 ? (
                   <span
                     className={
-                      'ml-1.5 inline-flex items-center justify-center rounded-full px-1.5 text-[10px] tabular ' +
+                      'ml-1.5 inline-flex items-center justify-center rounded-full px-1.5 text-[11px] tabular sm:text-[10px] ' +
                       (active
                         ? 'bg-neutral-950/15 text-neutral-950'
                         : 'bg-muted text-foreground/60')

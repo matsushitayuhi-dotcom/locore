@@ -28,13 +28,13 @@ export function ViewToggle({
         href={buildHref('list')}
         active={currentView === 'list'}
         label="リスト"
-        icon={<List className="h-3.5 w-3.5" />}
+        icon={<List className="h-3.5 w-3.5 shrink-0" />}
       />
       <ToggleButton
         href={buildHref('card')}
         active={currentView === 'card'}
         label="カード"
-        icon={<LayoutGrid className="h-3.5 w-3.5" />}
+        icon={<LayoutGrid className="h-3.5 w-3.5 shrink-0" />}
       />
     </div>
   );
@@ -58,7 +58,8 @@ function ToggleButton({
       aria-selected={active}
       title={label}
       className={
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition ' +
+        // py-1 だと 26px でタップしづらいので、スマホだけ 36px の高さを確保
+        'inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold transition max-sm:min-h-[36px] ' +
         (active
           ? 'bg-primary-500 text-neutral-950 shadow-sm'
           : 'text-foreground/60 hover:text-foreground')

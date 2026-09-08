@@ -122,8 +122,12 @@ export function PhotoUploader({
         onChange={onFilesChange}
       />
 
+      {/* スマホは 2 列。3 列だと 320px で 1 枚 90px 幅 = 68px 高となり、
+          aspect-[4/3] の高さが足りず top-1 の削除ボタンと bottom-1 の
+          移動ボタン (どちらも 32px 角) が縦に重なる。2 列なら 320px でも
+          140px 幅 / 105px 高あり、2 段が余裕で収まる。sm 以上は無変更。 */}
       {photos.length > 0 ? (
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
           {photos.map((url, i) => (
             <li
               key={url}
@@ -137,14 +141,15 @@ export function PhotoUploader({
                 className="object-cover"
                 unoptimized
               />
-              {/* 並び替え + 削除 */}
+              {/* 並び替え + 削除。24px 角ではスマホで押せないので、
+                  スマホのみ 32px 角に広げる (2 列なので 320px でも 140x105px あり入る) */}
               <div className="absolute inset-x-1 bottom-1 flex items-center justify-between gap-1">
                 <button
                   type="button"
                   aria-label="左に移動"
                   disabled={i === 0}
                   onClick={() => onMove(i, -1)}
-                  className="h-6 w-6 rounded-full bg-card/90 text-[10px] font-bold text-foreground/70 backdrop-blur transition hover:bg-card disabled:opacity-30"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-[13px] font-bold text-foreground/70 backdrop-blur transition hover:bg-card disabled:opacity-30 sm:h-6 sm:w-6 sm:text-[10px]"
                 >
                   ←
                 </button>
@@ -153,7 +158,7 @@ export function PhotoUploader({
                   aria-label="右に移動"
                   disabled={i === photos.length - 1}
                   onClick={() => onMove(i, 1)}
-                  className="h-6 w-6 rounded-full bg-card/90 text-[10px] font-bold text-foreground/70 backdrop-blur transition hover:bg-card disabled:opacity-30"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-[13px] font-bold text-foreground/70 backdrop-blur transition hover:bg-card disabled:opacity-30 sm:h-6 sm:w-6 sm:text-[10px]"
                 >
                   →
                 </button>
@@ -162,12 +167,13 @@ export function PhotoUploader({
                 type="button"
                 aria-label="削除"
                 onClick={() => onRemove(i)}
-                className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-card/90 text-danger-500 backdrop-blur transition hover:bg-card"
+                className="absolute right-1 top-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-danger-500 backdrop-blur transition hover:bg-card sm:h-6 sm:w-6"
               >
                 <X className="h-3 w-3" />
               </button>
               {i === 0 ? (
-                <span className="absolute left-1 top-1 rounded-sm bg-primary-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neutral-950">
+                // 9px は実機で読めないのでスマホは 11px、PC は据え置き
+                <span className="absolute left-1 top-1 rounded-sm bg-primary-500 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-neutral-950 sm:text-[9px]">
                   TOP
                 </span>
               ) : null}
@@ -191,13 +197,21 @@ export function PhotoUploader({
           <>最大 {maxPhotos} 枚です</>
         ) : (
           <>
-            <Upload className="h-4 w-4" />
-            写真を選ぶ（残り {maxPhotos - photos.length} 枚、JPEG/PNG/HEIC など 20MB まで）
+            <Upload className="h-4 w-4 shrink-0" />
+            {/* 402px では 2 行に折り返して読みにくいので、スマホだけ補足を省く。
+                対応形式と上限は PC には残す */}
+            <span className="max-sm:hidden">
+              写真を選ぶ（残り {maxPhotos - photos.length} 枚、JPEG/PNG/HEIC など 20MB まで）
+            </span>
+            <span className="sm:hidden">
+              写真を選ぶ（残り {maxPhotos - photos.length} 枚）
+            </span>
           </>
         )}
       </button>
 
-      <p className="text-[10px] text-foreground/55">
+      {/* 10px は実機で読めないのでスマホは 11px、PC は据え置き */}
+      <p className="text-[11px] text-foreground/55 sm:text-[10px]">
         1 枚目がカードのサムネイルになります。「←→」ボタンで並び替えできます。
       </p>
     </div>

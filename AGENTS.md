@@ -18,6 +18,31 @@
 一括検査は `/dev/mobile-audit`。詳細と実機での見かたは
 [docs/mobile-layout.md](./docs/mobile-layout.md)。
 
+## チームで作業するときの必須工程
+
+**画面に手を入れる作業には、必ず「iPhone の見た目チェック」担当を入れる。**
+コードが型として正しくても、402px で文字が縦積みになったり要素が重なったりする。
+チェックの結果に応じて、文字数を詰める・ボタンの並びを組み直すところまでやること。
+
+- 基準幅は **402px**（iPhone 17 実測）。狭い側は **320px**（画面表示「拡大」）まで
+- 見るもの: 画面と親からのはみ出し / 文字同士の重なり / 1 文字ずつの縦積み /
+  10px 未満の文字 / 36px 未満のタップ領域
+- **Xcode の iOS シミュレータを主手段にする。** 数値だけで済ませず、実際の WebKit で
+  目で見ること。iPhone は Chrome アプリでも中身は WebKit なので Chrome の確認は保証にならない
+
+  ```bash
+  xcrun simctl list devices available | grep iPhone
+  xcrun simctl boot <デバイスID> && open -a Simulator
+  xcrun simctl openurl booted "http://localhost:3000/…"   # Mac と同じネットワーク
+  xcrun simctl io booted screenshot /tmp/shot.png          # 撮って目で見る
+  ```
+
+  simctl でできるのは URL を開くこととスクリーンショットまで。タップとスクロールは
+  シミュレータのウィンドウを直接操作する
+- 数を洗うときは `/dev/mobile-audit`（全ページを指定幅の iframe で開いて機械的に数える）
+- **ブラウザとシミュレータは 1 つしか無い。見た目チェックは直列の工程に置く**
+  （並列エージェントで奪い合わせない）。コードの修正だけを並列にする
+
 ## 変更を出す前に
 
 ```bash

@@ -50,13 +50,14 @@ export function FilterSheet({
         type="button"
         onClick={() => setOpen(true)}
         className={
-          'inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-[12px] font-semibold transition ' +
+          // 「絞り込み」は縮まない側。タップ領域 36px をスマホだけ確保
+          'inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-semibold transition max-sm:min-h-[36px] ' +
           (activeCount > 0
             ? 'bg-primary-500 text-neutral-950'
             : 'bg-muted text-foreground/75 hover:bg-foreground/10')
         }
       >
-        <SlidersHorizontal className="h-3.5 w-3.5" />
+        <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
         絞り込み
         {activeCount > 0 ? (
           <span className="tabular">({activeCount})</span>
@@ -86,26 +87,32 @@ export function FilterSheet({
             }
           >
             <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4 text-foreground/75" />
-                <h2 className="text-[14px] font-bold">絞り込み</h2>
+              <div className="flex min-w-0 items-center gap-2">
+                <SlidersHorizontal className="h-4 w-4 shrink-0 text-foreground/75" />
+                <h2 className="whitespace-nowrap text-[14px] font-bold">絞り込み</h2>
                 {activeCount > 0 ? (
-                  <span className="inline-flex items-center justify-center rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-bold tabular text-neutral-950">
+                  // 10px は実機で読めないのでスマホは 11px に上げ、PC は据え置き
+                  <span className="inline-flex shrink-0 items-center justify-center rounded-full bg-primary-500 px-1.5 py-0.5 text-[11px] font-bold tabular text-neutral-950 sm:text-[10px]">
                     {activeCount}
                   </span>
                 ) : null}
               </div>
+              {/* 閉じるボタンは 28px しかなくタップしづらいので、スマホだけ 36px 角に広げる */}
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="閉じる"
-                className="rounded-full p-1.5 text-foreground/65 transition hover:bg-muted hover:text-foreground"
+                className="inline-flex shrink-0 items-center justify-center rounded-full p-1.5 text-foreground/65 transition hover:bg-muted hover:text-foreground max-sm:h-9 max-sm:w-9"
               >
                 <X className="h-4 w-4" />
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4">{children}</div>
+            {/* スマホのボトムシートは画面下端に接するので、
+                ホームインジケータ分の余白を足して最後の項目が押せるようにする */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4">
+              {children}
+            </div>
           </div>
         </div>
       ) : null}
