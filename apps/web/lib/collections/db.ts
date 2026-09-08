@@ -147,7 +147,7 @@ export async function getCollectionWithArticles(id: string): Promise<{
           coverImageUrl:
             a.coverImageUrl ?? `https://picsum.photos/seed/${a.id}/960/640`,
           writerId: a.writerId,
-          cityId: a.cityId,
+          cityId: a.cityId ?? '', // 0092: 都市なし記事は空文字
           area: a.cityNameJa ?? 'パリ',
           priceJpy: a.priceJpy,
           tags: a.tags ?? [],

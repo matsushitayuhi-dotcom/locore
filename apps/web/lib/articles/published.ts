@@ -30,7 +30,7 @@ export async function getPublishedDbArticles(
     body: string | null;
     coverImageUrl: string | null;
     writerId: string;
-    cityId: string;
+    cityId: string | null; // 0092: 読みもの記事は都市なし
     priceJpy: number;
     tags: string[];
     durationType: 'half_day' | 'full_day' | 'few_hours' | 'other' | null;
@@ -136,7 +136,7 @@ export async function getPublishedDbArticles(
       writerAvatarUrl: r.writerAvatar ?? null,
       writerTier: (r.writerTier ?? 'B') as 'S' | 'A' | 'B',
       writerYears: r.writerYears ?? 0,
-      cityId: r.cityId,
+      cityId: r.cityId ?? '', // 0092: 都市なし記事は空文字（都市フィルタに一致しない）
       area,
       priceJpy: r.priceJpy,
       tags: r.tags ?? [],
@@ -358,7 +358,7 @@ export async function getDbArticleBundle(
           id: w.id,
           name: w.name ?? '匿名',
           city: a.cityNameJa ?? 'パリ',
-          cityId: a.cityId,
+          cityId: a.cityId ?? '', // 0092: 都市なし記事は空文字
           tier: (w.tier ?? 'B') as 'S' | 'A' | 'B',
           residencyYears: w.residencyYears ?? 1,
           bio: w.bio ?? '',
@@ -564,7 +564,8 @@ export async function getDbArticleBundle(
           isNull(schema.articles.deletedAt),
           or(
             eq(schema.articles.writerId, a.writerId),
-            eq(schema.articles.cityId, a.cityId),
+            // 0092: 都市なし記事は「同じ都市の記事」で辿らない
+            ...(a.cityId ? [eq(schema.articles.cityId, a.cityId)] : []),
           ),
         ),
       )
@@ -578,7 +579,7 @@ export async function getDbArticleBundle(
       coverImageUrl:
         r.coverImageUrl ?? `https://picsum.photos/seed/${r.id}/960/640`,
       writerId: r.writerId,
-      cityId: r.cityId,
+      cityId: r.cityId ?? '', // 0092: 都市なし記事は空文字
       area: r.cityNameJa ?? 'パリ',
       priceJpy: r.priceJpy,
       tags: r.tags ?? [],
@@ -607,7 +608,7 @@ export async function getDbArticleBundle(
       writerAvatarUrl: writer?.avatarUrl ?? null,
       writerTier: writer?.tier,
       writerYears: writer?.residencyYears,
-      cityId: a.cityId,
+      cityId: a.cityId ?? '', // 0092: 都市なし記事は空文字
       area: a.cityNameJa ?? 'パリ',
       priceJpy: a.priceJpy,
       tags: a.tags ?? [],

@@ -12,13 +12,16 @@ import { requireUser } from '@/lib/auth/require-user';
  * 過去記事から複製して新規下書きを作る Server Action。
  *
  * - source の writer が自分（または editor）であることを検証
- * - コピーするフィールド: bodyStyle / articleType / body / bodyPaid /
- *   photoEntries / tags / priceJpy / cityId / durationType / coverImageUrl /
- *   itineraryBlocks
+ * - コピーするフィールド: blocks / subtitle / lead / topic / bodyStyle / articleType /
+ *   body / bodyPaid / photoEntries / tags / priceJpy / cityId / durationType /
+ *   coverImageUrl / itineraryBlocks
  * - コピー**しない**: title（空にする）/ status（draft）/ publishedAt /
  *   moderationScore / warned / spots（記事に強く紐付くため引き継ぎ無し）
  *
- * 完了後は新記事の編集画面に redirect する（戻り値は never）。
+ * 2026-09: blocks / subtitle / lead / topic を追加（0091）。
+ * 本文の実体が blocks に移ったのに blocks をコピーしていなかったので、
+ * 新形式の記事を複製すると本文が空の下書きができていた。
+ * 完了後は新記事の執筆画面（/write）に redirect する（戻り値は never）。
  */
 const duplicateSchema = z.object({
   sourceId: z.string().uuid(),
@@ -50,8 +53,13 @@ export async function duplicateArticle(input: unknown): Promise<never> {
     .values({
       writerId: user.id,
       cityId: source.cityId,
-      // タイトルは空ベース。ウィザード側のプレースホルダと合わせて「新しい記事」。
+      // タイトルは空ベース。エディタ側のプレースホルダと合わせて「新しい記事」。
       title: '新しい記事',
+      // 本文の実体（ブロック配列）と、その周りの見出し情報
+      blocks: source.blocks ?? null,
+      subtitle: source.subtitle ?? null,
+      lead: source.lead ?? null,
+      topic: source.topic ?? null,
       body: source.body ?? '',
       bodyPaid: source.bodyPaid ?? null,
       bodyStyle: source.bodyStyle,
@@ -70,7 +78,8 @@ export async function duplicateArticle(input: unknown): Promise<never> {
 
   const newId = inserted[0]!.id;
   revalidatePath('/writer/articles');
-  redirect(`/writer/articles/${newId}/edit`);
+  // 複製先はブロックエディタ。旧ウィザード（/edit）には戻さない
+  redirect(`/writer/articles/${newId}/write`);
 }
 
 /** 複製候補（自分の記事すべて）を返す。 */
